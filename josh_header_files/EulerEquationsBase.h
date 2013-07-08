@@ -127,4 +127,6 @@ class EulerEquationsBase : public ConservationLaw
 */
 };
 
+#include "EulerEquationsBase.cc"
+
 #endif

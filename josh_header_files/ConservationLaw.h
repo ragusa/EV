@@ -51,7 +51,6 @@ class ConservationLaw
     Vector<double>       current_solution;
     Vector<double>       old_solution;
     Vector<double>       old_old_solution;
-//    Vector<double>       predictor;
 
     Vector<double>       right_hand_side;
 
@@ -60,5 +59,7 @@ class ConservationLaw
 //    Parameters::AllParameters<dim>  parameters;
 //    ConditionalOStream              verbose_cout;
 };
+
+#include "ConservationLaw.cc"
 
 #endif
