@@ -1,3 +1,5 @@
+#include <iostream>
+
 #include "EulerEquationsBase.h"
 #include "EulerEquationsBaseParameters.h"
 
@@ -8,7 +10,7 @@
 int main(int argc, char ** argv) {
    try {
       dealii::deallog.depth_console(0);
-
+/*
       // input filename
       std::string input_filename;
       if (argc < 2) {
@@ -33,6 +35,7 @@ int main(int argc, char ** argv) {
       // run problem
       EulerEquationsBase<dim> euler_problem(parameters);
       euler_problem.run();
+	  */
 
    } catch (std::exception &exc) {
       std::cerr << std::endl << std::endl
