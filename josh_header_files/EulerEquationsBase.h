@@ -9,67 +9,70 @@
 #ifndef EulerEquationsBase_h
 #define EulerEquationsBase_h
 
+#include <deal.II/dofs/dof_handler.h>
+#include <deal.II/numerics/data_component_interpretation.h>
+#include <deal.II/fe/mapping.h>
+#include <deal.II/lac/vector.h>
+
 #include "ConservationLaw.h"
 #include "EulerEquationsBaseParameters.h"
 
 template <int dim>
-class EulerEquationsBase : public ConservationLaw
+class EulerEquationsBase : public ConservationLaw<dim>
 {
   public:
-    EulerEquationsBase(const EulerEquationsBaseParameters &parameters);
+    EulerEquationsBase(const EulerEquationsBaseParameters<dim> &euler_parameters);
 
   private:
+    // Euler equations parameters
+    EulerEquationsBaseParameters<dim> euler_parameters;
+
     // number of components and position of components in solution vector
-    static const unsigned int n_components             = dim + 2;
+    static const unsigned int n_euler_components       = dim + 2;
     static const unsigned int first_momentum_component = 0;
     static const unsigned int density_component        = dim;
     static const unsigned int energy_component         = dim+1;
 
     // vector of names of each component
-    static
+//    static
     std::vector<std::string>
-    component_names ();
+    get_component_names ();
 
     // data component interpretation (scalar or vector component) for outputting solution
-    static
+//    static
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
     component_interpretation ();
 
-    // gas constant
-    static const double gas_gamma;
-
     // compute kinetic energy
-    template <typename number, typename InputVector>
-    static
-    number
-    compute_kinetic_energy (const InputVector &W);
+//    static
+    double
+    compute_kinetic_energy (const Vector<double> &W);
 
     // compute pressure
-    template <typename number, typename InputVector>
-    static
-    number
-    compute_pressure (const InputVector &W);
+//    static
+    double
+    compute_pressure (const Vector<double> &W);
 
     // compute flux matrix f(c)
-    template <typename InputVector, typename number>
-    static
-    void compute_flux_matrix (const InputVector &W,
-                              number (&flux)[n_components][dim]);
+//    static
+    void compute_flux_matrix (const Vector<double> &W,
+                              double (&flux)[n_euler_components][dim]);
 
     // computes numerical normal flux
-    template <typename InputVector>
+/*
+    template <typename Vector<double>>
     static
     void numerical_normal_flux (const Point<dim>          &normal,
-                                const InputVector         &Wplus,
-                                const InputVector         &Wminus,
+                                const Vector<double>         &Wplus,
+                                const Vector<double>         &Wminus,
                                 const double               alpha,
-                                Sacado::Fad::DFad<double> (&normal_flux)[n_components]);
+                                Sacado::Fad::DFad<double> (&normal_flux)[n_euler_components]);
+*/
 
     // computes forcing vector functions g(c)
-    template <typename InputVector, typename number>
-    static
-    void compute_forcing_vector (const InputVector &W,
-                                 number (&forcing)[n_components]);
+//    static
+    void compute_forcing_vector (const Vector<double> &W,
+                                 double (&forcing)[n_euler_components]);
 
     // boundary condition indicators
     enum BoundaryKind
@@ -80,18 +83,8 @@ class EulerEquationsBase : public ConservationLaw
           pressure_boundary
     };
 
-    // compute W_minus
-    template <typename DataVector>
-    static
-    void
-    compute_Wminus (const BoundaryKind  (&boundary_kind)[n_components],
-                    const Point<dim>     &normal_vector,
-                    const DataVector     &Wplus,
-                    const Vector<double> &boundary_values,
-                    const DataVector     &Wminus);
-
     // compute refinement indicators
-    static
+//    static
     void
     compute_refinement_indicators (const DoFHandler<dim> &dof_handler,
                                    const Mapping<dim>    &mapping,

@@ -10,11 +10,26 @@
 #ifndef ConservationLaw_h
 #define ConservationLaw_h
 
+#include <deal.II/lac/vector.h>
+#include <deal.II/lac/sparse_matrix.h>
+#include <deal.II/grid/tria.h>
+#include <deal.II/dofs/dof_handler.h>
+#include <deal.II/fe/fe_values.h>
+#include <deal.II/fe/fe_system.h>
+#include <deal.II/fe/fe_q.h>
+#include <deal.II/fe/mapping_q1.h>
+#include <deal.II/base/quadrature_lib.h>
+#include <deal.II/base/conditional_ostream.h>
+
+#include "SolverParameters.h"
+
+using namespace dealii;
+
 template <int dim>
 class ConservationLaw
 {
   public:
-    ConservationLaw (const char *input_filename);
+    ConservationLaw (unsigned int n_components);
     void run ();
 
   private:
@@ -39,6 +54,8 @@ class ConservationLaw
 
     void output_results () const;
 
+    unsigned int n_components;
+
     Triangulation<dim>   triangulation;
     const MappingQ1<dim> mapping;
 
@@ -54,10 +71,11 @@ class ConservationLaw
 
     Vector<double>       right_hand_side;
 
-    TrilinosWrappers::SparseMatrix system_matrix;
+    SparseMatrix<double> system_matrix;
 
+    SolverParameters solver_parameters;
 //    Parameters::AllParameters<dim>  parameters;
-//    ConditionalOStream              verbose_cout;
+    ConditionalOStream              verbose_cout;
 };
 
 #include "ConservationLaw.cc"

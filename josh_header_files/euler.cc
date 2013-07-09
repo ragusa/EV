@@ -37,8 +37,8 @@ int main(int argc, char ** argv) {
       parameters.get_parameters(parameter_handler);
 
       // run problem
-      //EulerEquationsBase<1> euler_problem(parameters);
-      //euler_problem.run();
+      EulerEquationsBase<1> euler_problem(parameters);
+      euler_problem.run();
 
    } catch (std::exception &exc) {
       std::cerr << std::endl << std::endl

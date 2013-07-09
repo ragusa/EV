@@ -1,10 +1,17 @@
+#ifndef SolverParameters_h
+#define SolverParameters_h
+
 #include <deal.II/base/parameter_handler.h>
+
+using namespace dealii;
 
 class SolverParameters
 {
   public:
+/*
     SolverParameters()
-	~SolverParameters();
+    ~SolverParameters();
+*/
   
     enum NonlinearSolverType { newton };
     NonlinearSolverType nonlinear_solver;
@@ -31,6 +38,10 @@ class SolverParameters
     int max_nonlin_iterations;
     double damping;
 	
-	void declare_parameters (ParameterHandler &prm);
+    void declare_parameters (ParameterHandler &prm);
     void parse_parameters (ParameterHandler &prm);
 };
+
+#include "SolverParameters.cc"
+
+#endif
