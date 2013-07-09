@@ -1,5 +1,8 @@
 #include <iostream>
 
+#include <deal.II/grid/grid_generator.h>
+#include <deal.II/dofs/dof_tools.h>
+
 using namespace dealii;
 
 template <int dim>
@@ -16,16 +19,46 @@ ConservationLaw<dim>::ConservationLaw(unsigned int n_components):
 template <int dim>
 void ConservationLaw<dim>::run()
 {
-   std::cout << "Running..." << std::endl;
+   // make grid and refine
+   GridGenerator::hyper_cube(triangulation,-1,1);
+   triangulation.refine_global(3);
+
+   // clear and distribute dofs
+   dof_handler.clear();
+   dof_handler.distribute_dofs(fe);
+
+   // resize vectors
+   old_old_solution.reinit(dof_handler.n_dofs());
+   old_solution.reinit(dof_handler.n_dofs());
+   current_solution.reinit(dof_handler.n_dofs());
+   right_hand_side.reinit(dof_handler.n_dofs());
+
+   // setup system
+   setup_system();
+
+   assemble_system();
+//   std::pair<unsigned int, double> solution = solve();
+   output_results();
 }
 
 template <int dim>
 void ConservationLaw<dim>::setup_system ()
-{}
+{
+/*
+   CompressedSparsityPattern sparsity_pattern (dof_handler.n_dofs(),
+                                               dof_handler.n_dofs());
+   DoFTools::make_sparsity_pattern (dof_handler, sparsity_pattern);
+ 
+   system_matrix.reinit (sparsity_pattern);
+*/
+   std::cout << "Setup system" << std::endl;
+}
 
 template <int dim>
 void ConservationLaw<dim>::assemble_system ()
-{}
+{
+   std::cout << "Assemble system" << std::endl;
+}
 
 template <int dim>
 void ConservationLaw<dim>::assemble_cell_term (const FEValues<dim>             &fe_v,
@@ -47,7 +80,7 @@ template <int dim>
 std::pair<unsigned int, double> ConservationLaw<dim>::solve (Vector<double> &solution)
 {
    std::pair<unsigned int, double> solutions;
-
+   std::cout << "Solve" << std::endl;
    return solutions;
 }
 
@@ -61,4 +94,6 @@ void ConservationLaw<dim>::refine_grid (const Vector<double> &indicator)
 
 template <int dim>
 void ConservationLaw<dim>::output_results () const
-{}
+{
+   std::cout << "Output results" << std::endl;
+}

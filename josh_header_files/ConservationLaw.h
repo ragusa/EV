@@ -12,6 +12,7 @@
 
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/sparse_matrix.h>
+#include <deal.II/lac/compressed_sparsity_pattern.h>
 #include <deal.II/grid/tria.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/fe/fe_values.h>
@@ -71,7 +72,8 @@ class ConservationLaw
 
     Vector<double>       right_hand_side;
 
-    SparseMatrix<double> system_matrix;
+    CompressedSparsityPattern  sparsity_pattern;
+    SparseMatrix<double>       system_matrix;
 
     SolverParameters solver_parameters;
 //    Parameters::AllParameters<dim>  parameters;
