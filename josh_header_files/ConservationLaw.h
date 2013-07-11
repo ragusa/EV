@@ -11,8 +11,6 @@
 #define ConservationLaw_h
 
 #include <deal.II/lac/vector.h>
-#include <deal.II/lac/sparse_matrix.h>
-#include <deal.II/lac/compressed_sparsity_pattern.h>
 #include <deal.II/grid/tria.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/fe/fe_values.h>
@@ -21,8 +19,10 @@
 #include <deal.II/fe/mapping_q1.h>
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/conditional_ostream.h>
+#include <deal.II/lac/sparse_matrix.h>
+#include <deal.II/lac/sparsity_pattern.h>
 
-#include "SolverParameters.h"
+#include "ConservationLawParameters.h"
 
 using namespace dealii;
 
@@ -30,7 +30,7 @@ template <int dim>
 class ConservationLaw
 {
   public:
-    ConservationLaw (unsigned int n_components);
+    ConservationLaw (const ConservationLawParameters<dim> &conservation_law_parameters);
     void run ();
 
   private:
@@ -55,7 +55,8 @@ class ConservationLaw
 
     void output_results () const;
 
-    unsigned int n_components;
+    ConservationLawParameters<dim> conservation_law_parameters;
+    int n_components;
 
     Triangulation<dim>   triangulation;
     const MappingQ1<dim> mapping;
@@ -72,10 +73,9 @@ class ConservationLaw
 
     Vector<double>       right_hand_side;
 
-    CompressedSparsityPattern  sparsity_pattern;
-    SparseMatrix<double>       system_matrix;
+    SparsityPattern      sparsity_pattern;
+    SparseMatrix<double> system_matrix;
 
-    SolverParameters solver_parameters;
 //    Parameters::AllParameters<dim>  parameters;
     ConditionalOStream              verbose_cout;
 };

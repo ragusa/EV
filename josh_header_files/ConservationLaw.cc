@@ -1,15 +1,19 @@
 #include <iostream>
 
 #include <deal.II/grid/grid_generator.h>
+#include <deal.II/numerics/vector_tools.h>
 #include <deal.II/dofs/dof_tools.h>
+#include <deal.II/dofs/dof_tools.h>
+#include <deal.II/lac/compressed_sparsity_pattern.h>
 
 using namespace dealii;
 
 template <int dim>
-ConservationLaw<dim>::ConservationLaw(unsigned int n_components):
-   n_components(n_components),
+ConservationLaw<dim>::ConservationLaw(const ConservationLawParameters<dim> &conservation_law_parameters):
+   conservation_law_parameters(conservation_law_parameters),
+   n_components(conservation_law_parameters.n_components),
    mapping(),
-   fe(FE_Q<dim>(1), n_components),
+   fe(FE_Q<dim>(1), conservation_law_parameters.n_components),
    dof_handler(triangulation),
    quadrature(2),
    face_quadrature(2),
@@ -36,21 +40,23 @@ void ConservationLaw<dim>::run()
    // setup system
    setup_system();
 
+   // interpolate the initial conditions to the grid
+   //VectorTools::interpolate(dof_handler,conservation_law_parameters.initial_conditions,old_solution);
+
    assemble_system();
-//   std::pair<unsigned int, double> solution = solve();
+   //std::pair<unsigned int, double> solution = solve();
    output_results();
 }
 
 template <int dim>
 void ConservationLaw<dim>::setup_system ()
 {
-/*
-   CompressedSparsityPattern sparsity_pattern (dof_handler.n_dofs(),
-                                               dof_handler.n_dofs());
-   DoFTools::make_sparsity_pattern (dof_handler, sparsity_pattern);
+   CompressedSparsityPattern compressed_sparsity_pattern (dof_handler.n_dofs(),
+                                                          dof_handler.n_dofs());
+   DoFTools::make_sparsity_pattern (dof_handler, compressed_sparsity_pattern);
+   sparsity_pattern.copy_from(compressed_sparsity_pattern);
  
    system_matrix.reinit (sparsity_pattern);
-*/
    std::cout << "Setup system" << std::endl;
 }
 

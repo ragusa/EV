@@ -2,8 +2,8 @@
 
 #include <deal.II/base/logstream.h>
 
-#include "EulerEquationsBase.h"
-#include "EulerEquationsBaseParameters.h"
+#include "EulerEquations.h"
+#include "EulerEquationsParameters.h"
 
 using namespace dealii;
 
@@ -28,16 +28,25 @@ int main(int argc, char ** argv) {
          std::cout << "Using the input file: " << input_filename << std::endl;
       }
 
+      const int dimension = 2;
+
       // get input parameters
-      ParameterHandler                parameter_handler;
-      EulerEquationsBaseParameters<1> parameters;
+      ParameterHandler                     parameter_handler;
+      EulerEquationsParameters<dimension>  euler_parameters;
+      ConservationLawParameters<dimension> conservation_law_parameters(dimension+2);
 
-      parameters.declare_parameters(parameter_handler);
+      euler_parameters.declare_parameters(parameter_handler);
+      conservation_law_parameters.declare_parameters(parameter_handler);
+
       parameter_handler.read_input(input_filename);
-      parameters.get_parameters(parameter_handler);
 
+      euler_parameters.get_parameters(parameter_handler);
+      conservation_law_parameters.get_parameters(parameter_handler);
+
+      std::cout << "input 1: " << euler_parameters.input1 << std::endl;
+      std::cout << "linear_atol: " << conservation_law_parameters.linear_atol << std::endl;
       // run problem
-      EulerEquationsBase<1> euler_problem(parameters);
+      EulerEquations<dimension> euler_problem(euler_parameters,conservation_law_parameters);
       euler_problem.run();
 
    } catch (std::exception &exc) {

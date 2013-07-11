@@ -1,3 +1,27 @@
 set First input parameter = 1.0
 set Second input parameter = 2.0
 set Third input parameter = 3.0
+
+subsection initial conditions
+   set initial conditions 0 = 0
+   set initial conditions 1 = 0
+   set initial conditions 2 = 0
+   set initial conditions 3 = 0
+end
+
+subsection nonlinear solver
+   set nonlinear verbosity = verbose
+   set nonlinear method = newton
+   set nonlinear absolute tolerance = 1e-8
+   set nonlinear relative tolerance = 1e-8
+   set max nonlinear iterations = 100
+   set damping = 0.9
+end
+
+subsection linear solver
+   set linear verbosity = verbose
+   set linear method = direct
+   set linear absolute tolerance = 1e-10
+   set linear relative tolerance = 1e-10
+   set max linear iterations = 150
+end
