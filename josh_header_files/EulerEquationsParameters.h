@@ -20,14 +20,16 @@ class EulerEquationsParameters
   public:
     EulerEquationsParameters();
 
-    void declare_parameters(ParameterHandler &parameter_handler);
-    void get_parameters    (ParameterHandler &parameter_handler);
+    static void declare_parameters (ParameterHandler &parameter_handler);
+           void get_parameters     (ParameterHandler &parameter_handler);
 
     static const int n_components = dim + 2;
 
     double input1;
     double input2;
     double input3;
+
+    FunctionParser<dim> initial_conditions;
 };
 
 /* The source file must be included here because the class is

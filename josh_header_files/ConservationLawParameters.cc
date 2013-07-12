@@ -1,8 +1,9 @@
+/*
 template <int dim>
 ConservationLawParameters<dim>::ConservationLawParameters(const int &n_comp):
-   n_components(n_comp),
-   initial_conditions(n_comp)
+   n_components(n_comp)
 {}
+*/
 
 // ----------------------------------
 // --- DECLARE SOLVER PARAMETERS
@@ -73,6 +74,7 @@ void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
       }
     prm.leave_subsection();
 
+/*
    // initial conditions
    prm.enter_subsection("initial conditions");
    {
@@ -83,6 +85,7 @@ void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
          "initial conditions for component computed from x,y,z");
    }
    prm.leave_subsection();
+*/
 }
 
 // ----------------------------------
@@ -131,6 +134,7 @@ void ConservationLawParameters<dim>::get_parameters (ParameterHandler &prm)
       }
     prm.leave_subsection();
 
+/*
    // initial conditions
    prm.enter_subsection("initial conditions");
    {
@@ -142,4 +146,5 @@ void ConservationLawParameters<dim>::get_parameters (ParameterHandler &prm)
                                      std::map<std::string, double>());
    }
    prm.leave_subsection();
+*/
 }

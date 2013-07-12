@@ -21,8 +21,8 @@ template <int dim>
 class EulerEquations : public ConservationLaw<dim>
 {
   public:
-    EulerEquations(const EulerEquationsParameters<dim>  &euler_parameters,
-                   const ConservationLawParameters<dim> &conservation_law_parameters);
+    EulerEquations(ParameterHandler &prm);//const std::string &input_filename);
+void test_run();
 
   private:
     // Euler equations parameters

@@ -10,7 +10,7 @@ template<int dim>
 class ConservationLawParameters
 {
   public:
-    ConservationLawParameters(const int &n_components);
+//    ConservationLawParameters(const int &n_components);
 //    ~ConservationLawParameters();
   
     enum NonlinearSolverType { newton };
@@ -23,9 +23,6 @@ class ConservationLawParameters
     Verbosity nonlinear_verbosity;
     Verbosity linear_verbosity;
       
-    int n_components;
-    FunctionParser<dim> initial_conditions;
-
     double linear_atol;
     double linear_rtol;
     int max_linear_iterations;
@@ -41,7 +38,7 @@ class ConservationLawParameters
     int max_nonlin_iterations;
     double damping;
 	
-    void declare_parameters (ParameterHandler &prm);
+    static void declare_parameters (ParameterHandler &prm);
     void get_parameters (ParameterHandler &prm);
 };
 

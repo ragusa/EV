@@ -30,8 +30,10 @@ template <int dim>
 class ConservationLaw
 {
   public:
-    ConservationLaw (const ConservationLawParameters<dim> &conservation_law_parameters);
+    ConservationLaw (ParameterHandler &prm, const int &n_comp);//const std::string &input_file, const int &n_comp);
     void run ();
+void set_message();
+    my_test_message;
 
   private:
     void setup_system ();
@@ -76,8 +78,10 @@ class ConservationLaw
     SparsityPattern      sparsity_pattern;
     SparseMatrix<double> system_matrix;
 
-//    Parameters::AllParameters<dim>  parameters;
-    ConditionalOStream              verbose_cout;
+    ConditionalOStream   verbose_cout;
+
+  protected:
+    FunctionParser<dim>  initial_conditions;
 };
 
 #include "ConservationLaw.cc"

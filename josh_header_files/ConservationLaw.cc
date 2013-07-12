@@ -9,16 +9,24 @@
 using namespace dealii;
 
 template <int dim>
-ConservationLaw<dim>::ConservationLaw(const ConservationLawParameters<dim> &conservation_law_parameters):
-   conservation_law_parameters(conservation_law_parameters),
-   n_components(conservation_law_parameters.n_components),
+ConservationLaw<dim>::ConservationLaw(ParameterHandler &prm,//const std::string &input_filename,
+                                      const int &n_comp):
+//   conservation_law_parameters(n_comp),
+   n_components(n_comp),
    mapping(),
-   fe(FE_Q<dim>(1), conservation_law_parameters.n_components),
+   fe(FE_Q<dim>(1), n_comp),
    dof_handler(triangulation),
    quadrature(2),
    face_quadrature(2),
+   initial_conditions(n_comp),
    verbose_cout(std::cout, false)
-{}
+{
+   // get conservation law parameters
+   //ParameterHandler prm;
+   //conservation_law_parameters.declare_parameters(prm);
+   //prm.read_input(input_filename);
+   conservation_law_parameters.get_parameters(prm);
+}
 
 template <int dim>
 void ConservationLaw<dim>::run()
@@ -41,7 +49,7 @@ void ConservationLaw<dim>::run()
    setup_system();
 
    // interpolate the initial conditions to the grid
-   //VectorTools::interpolate(dof_handler,conservation_law_parameters.initial_conditions,old_solution);
+   VectorTools::interpolate(dof_handler,initial_conditions,old_solution);
 
    assemble_system();
    //std::pair<unsigned int, double> solution = solve();

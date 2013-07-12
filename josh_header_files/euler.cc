@@ -32,22 +32,30 @@ int main(int argc, char ** argv) {
 
       // get input parameters
       ParameterHandler                     parameter_handler;
-      EulerEquationsParameters<dimension>  euler_parameters;
-      ConservationLawParameters<dimension> conservation_law_parameters(dimension+2);
+      //EulerEquationsParameters<dimension>  euler_parameters;
+      //ConservationLawParameters<dimension> conservation_law_parameters(dimension+2);
 
-      euler_parameters.declare_parameters(parameter_handler);
-      conservation_law_parameters.declare_parameters(parameter_handler);
-
+      //euler_parameters.declare_parameters(parameter_handler);
+      //conservation_law_parameters.declare_parameters(parameter_handler);
+      /* we can declare Euler equations parameters using a static function;
+         the conservation law parameters equivalent declare_parameters()
+         function cannot be static because it depends on a non-static
+         member variable: the number of components n_components, which is
+         passed through the ConservationLaw contructor. Therefore, the
+         conservation law parameters declare_parameters() function is
+         called in the ConservationLaw constructor, as well as the
+         input file reading with the parameter handler
+      */
+      EulerEquationsParameters<dimension>::declare_parameters(parameter_handler);
+      ConservationLawParameters<dimension>::declare_parameters(parameter_handler);
       parameter_handler.read_input(input_filename);
 
-      euler_parameters.get_parameters(parameter_handler);
-      conservation_law_parameters.get_parameters(parameter_handler);
+      //euler_parameters.get_parameters(parameter_handler);
+      //conservation_law_parameters.get_parameters(parameter_handler);
 
-      std::cout << "input 1: " << euler_parameters.input1 << std::endl;
-      std::cout << "linear_atol: " << conservation_law_parameters.linear_atol << std::endl;
       // run problem
-      EulerEquations<dimension> euler_problem(euler_parameters,conservation_law_parameters);
-      euler_problem.run();
+      EulerEquations<dimension> euler_problem(parameter_handler);
+      euler_problem.test_run();
 
    } catch (std::exception &exc) {
       std::cerr << std::endl << std::endl

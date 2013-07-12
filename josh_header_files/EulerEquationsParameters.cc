@@ -1,7 +1,8 @@
 using namespace dealii;
 
 template<int dim>
-EulerEquationsParameters<dim>::EulerEquationsParameters()
+EulerEquationsParameters<dim>::EulerEquationsParameters():
+   initial_conditions(n_components)
 {}
 
 /**
@@ -19,7 +20,6 @@ void EulerEquationsParameters<dim>::declare_parameters(
    parameter_handler.declare_entry("Third input parameter", "5.0",
       Patterns::Double(),"Description of third input parameter");
 
-/*
    // initial conditions
    parameter_handler.enter_subsection("initial conditions");
    {
@@ -30,7 +30,6 @@ void EulerEquationsParameters<dim>::declare_parameters(
          "initial conditions for component computed from x,y,z");
    }
    parameter_handler.leave_subsection();
-*/
 }
 
 /**
@@ -45,7 +44,6 @@ void EulerEquationsParameters<dim>::get_parameters(
    input2 = parameter_handler.get_double("Second input parameter");
    input3 = parameter_handler.get_double("Third input parameter");
 
-/*
    // initial conditions
    parameter_handler.enter_subsection("initial conditions");
    {
@@ -57,5 +55,4 @@ void EulerEquationsParameters<dim>::get_parameters(
                                      std::map<std::string, double>());
    }
    parameter_handler.leave_subsection();
-*/
 }
