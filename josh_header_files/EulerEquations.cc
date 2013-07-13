@@ -9,23 +9,20 @@
 */
 
 template <int dim>
-EulerEquations<dim>::EulerEquations(ParameterHandler &prm)://const std::string &input_filename):
-   ConservationLaw<dim>(prm,n_euler_components)//input_filename,n_euler_components)
+void EulerEquations<dim>::print_test_message_from_derived_class()
+{
+   print_test_message_from_base_class();
+}
+
+template <int dim>
+EulerEquations<dim>::EulerEquations(ParameterHandler &prm):
+   ConservationLaw<dim>(prm,n_euler_components)
 {
    // get Euler parameters
-   //ParameterHandler prm;
-   //euler_parameters.declare_parameters(prm);
-   //prm.read_input(input_filename);
    euler_parameters.get_parameters(prm);
    //initial_conditions = euler_parameters.initial_conditions;
 }
 
-template <int dim>
-void EulerEquations<dim>::test_run()
-{
- //  initial_conditions = euler_parameters.initial_conditions;
-std::cout << "test message: " << my_test_message << std::endl;
-}
 // vector of names of each component
 template <int dim>
 //    static

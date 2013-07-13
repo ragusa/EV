@@ -32,8 +32,7 @@ class ConservationLaw
   public:
     ConservationLaw (ParameterHandler &prm, const int &n_comp);//const std::string &input_file, const int &n_comp);
     void run ();
-void set_message();
-    my_test_message;
+    void print_test_message_from_base_class();
 
   private:
     void setup_system ();
@@ -78,10 +77,9 @@ void set_message();
     SparsityPattern      sparsity_pattern;
     SparseMatrix<double> system_matrix;
 
-    ConditionalOStream   verbose_cout;
-
-  protected:
     FunctionParser<dim>  initial_conditions;
+
+    ConditionalOStream   verbose_cout;
 };
 
 #include "ConservationLaw.cc"

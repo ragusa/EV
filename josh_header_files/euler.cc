@@ -28,34 +28,22 @@ int main(int argc, char ** argv) {
          std::cout << "Using the input file: " << input_filename << std::endl;
       }
 
+      // spatial dimensions
       const int dimension = 2;
 
-      // get input parameters
-      ParameterHandler                     parameter_handler;
-      //EulerEquationsParameters<dimension>  euler_parameters;
-      //ConservationLawParameters<dimension> conservation_law_parameters(dimension+2);
-
-      //euler_parameters.declare_parameters(parameter_handler);
-      //conservation_law_parameters.declare_parameters(parameter_handler);
-      /* we can declare Euler equations parameters using a static function;
-         the conservation law parameters equivalent declare_parameters()
-         function cannot be static because it depends on a non-static
-         member variable: the number of components n_components, which is
-         passed through the ConservationLaw contructor. Therefore, the
-         conservation law parameters declare_parameters() function is
-         called in the ConservationLaw constructor, as well as the
-         input file reading with the parameter handler
-      */
+      // declare input parameters and read them from input file into parameter handler
+      ParameterHandler parameter_handler;
       EulerEquationsParameters<dimension>::declare_parameters(parameter_handler);
       ConservationLawParameters<dimension>::declare_parameters(parameter_handler);
       parameter_handler.read_input(input_filename);
 
-      //euler_parameters.get_parameters(parameter_handler);
-      //conservation_law_parameters.get_parameters(parameter_handler);
-
       // run problem
       EulerEquations<dimension> euler_problem(parameter_handler);
-      euler_problem.test_run();
+      // the function below exists in the base class and is being called directly from the derived class
+      euler_problem.print_test_message_from_base_class();
+      // the function below exists in the derived class and only calls the above base class function,
+      //  print_test_message_from_base_class(). This doesn't work.
+      euler_problem.print_test_message_from_derived_class();
 
    } catch (std::exception &exc) {
       std::cerr << std::endl << std::endl

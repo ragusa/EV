@@ -22,7 +22,7 @@ class EulerEquations : public ConservationLaw<dim>
 {
   public:
     EulerEquations(ParameterHandler &prm);//const std::string &input_filename);
-void test_run();
+    void print_test_message_from_derived_class();
 
   private:
     // Euler equations parameters

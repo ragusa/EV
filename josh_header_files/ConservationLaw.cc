@@ -9,6 +9,12 @@
 using namespace dealii;
 
 template <int dim>
+void ConservationLaw<dim>::print_test_message_from_base_class()
+{
+  std::cout << "successfully printed message" << std::endl;
+}
+
+template <int dim>
 ConservationLaw<dim>::ConservationLaw(ParameterHandler &prm,//const std::string &input_filename,
                                       const int &n_comp):
 //   conservation_law_parameters(n_comp),
@@ -22,9 +28,6 @@ ConservationLaw<dim>::ConservationLaw(ParameterHandler &prm,//const std::string 
    verbose_cout(std::cout, false)
 {
    // get conservation law parameters
-   //ParameterHandler prm;
-   //conservation_law_parameters.declare_parameters(prm);
-   //prm.read_input(input_filename);
    conservation_law_parameters.get_parameters(prm);
 }
 
