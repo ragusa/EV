@@ -10,6 +10,9 @@
 #ifndef ConservationLaw_h
 #define ConservationLaw_h
 
+#include <iostream>
+#include <fstream>
+
 #include <deal.II/lac/vector.h>
 #include <deal.II/grid/tria.h>
 #include <deal.II/dofs/dof_handler.h>
@@ -21,6 +24,13 @@
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/sparsity_pattern.h>
+#include <deal.II/grid/grid_generator.h>
+#include <deal.II/numerics/data_out.h>
+#include <deal.II/numerics/data_component_interpretation.h>
+#include <deal.II/numerics/vector_tools.h>
+#include <deal.II/dofs/dof_tools.h>
+#include <deal.II/dofs/dof_tools.h>
+#include <deal.II/lac/compressed_sparsity_pattern.h>
 
 #include "ConservationLawParameters.h"
 
@@ -32,7 +42,6 @@ class ConservationLaw
   public:
     ConservationLaw (ParameterHandler &prm, const int &n_comp);//const std::string &input_file, const int &n_comp);
     void run ();
-    void print_test_message_from_base_class();
 
   private:
     void setup_system ();
@@ -71,15 +80,20 @@ class ConservationLaw
     Vector<double>       current_solution;
     Vector<double>       old_solution;
     Vector<double>       old_old_solution;
+    Vector<double>       predictor;
 
     Vector<double>       right_hand_side;
 
     SparsityPattern      sparsity_pattern;
     SparseMatrix<double> system_matrix;
 
+    ConditionalOStream   verbose_cout;
+  protected:
     FunctionParser<dim>  initial_conditions;
 
-    ConditionalOStream   verbose_cout;
+    std::vector<std::string> component_names;
+    std::vector<DataComponentInterpretation::DataComponentInterpretation>
+       component_interpretations;
 };
 
 #include "ConservationLaw.cc"

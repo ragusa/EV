@@ -11,6 +11,17 @@ ConservationLawParameters<dim>::ConservationLawParameters(const int &n_comp):
 template <int dim>
 void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
 {
+	// time parameters
+	prm.enter_subsection("time");
+	{
+		prm.declare_entry("final time", "1.0",
+				Patterns::Double(),
+				"final time value");
+		prm.declare_entry("time step size", "1e-3",
+				Patterns::Double(),
+				"time step size");
+	}
+
     // nonlinear solver parameters
     prm.enter_subsection("nonlinear solver");
       {
@@ -94,6 +105,14 @@ void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
 template <int dim>
 void ConservationLawParameters<dim>::get_parameters (ParameterHandler &prm)
 {
+	// time parameters
+	prm.enter_subsection("time");
+	{
+		final_time = prm.get_double("final time");
+		time_step_size = prm.get_double("time step size");
+	}
+	prm.leave_subsection();
+
     // nonlinear solver parameters
     prm.enter_subsection("nonlinear solver");
       {

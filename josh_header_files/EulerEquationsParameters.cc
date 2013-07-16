@@ -2,7 +2,7 @@ using namespace dealii;
 
 template<int dim>
 EulerEquationsParameters<dim>::EulerEquationsParameters():
-   initial_conditions(n_components)
+   initial_conditions_expressions(n_components,"0")
 {}
 
 /**
@@ -47,12 +47,9 @@ void EulerEquationsParameters<dim>::get_parameters(
    // initial conditions
    parameter_handler.enter_subsection("initial conditions");
    {
-      std::vector<std::string> expressions (n_components,"0.0");
+      //std::vector<std::string> expressions (n_components,"0.0");
       for (int c = 0; c < n_components; c++)
-          expressions[c] = parameter_handler.get("initial conditions " + Utilities::int_to_string(c));
-      initial_conditions.initialize (FunctionParser<dim>::default_variable_names(),
-                                     expressions,
-                                     std::map<std::string, double>());
+          initial_conditions_expressions[c] = parameter_handler.get("initial conditions " + Utilities::int_to_string(c));
    }
    parameter_handler.leave_subsection();
 }

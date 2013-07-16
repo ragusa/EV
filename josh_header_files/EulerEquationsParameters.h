@@ -29,7 +29,7 @@ class EulerEquationsParameters
     double input2;
     double input3;
 
-    FunctionParser<dim> initial_conditions;
+    std::vector<std::string> initial_conditions_expressions;
 };
 
 /* The source file must be included here because the class is

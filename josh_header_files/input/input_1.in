@@ -2,6 +2,11 @@ set First input parameter = 1.0
 set Second input parameter = 2.0
 set Third input parameter = 3.0
 
+subsection time
+   set final time = 1
+   set time step size = 1e-2
+end
+
 subsection initial conditions
    set initial conditions 0 = 0
    set initial conditions 1 = 0

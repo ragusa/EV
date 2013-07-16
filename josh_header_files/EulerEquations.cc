@@ -1,18 +1,10 @@
 /*
-#include <deal.II/dofs/dof_handler.h>
-#include <deal.II/numerics/data_component_interpretation.h>
-#include <deal.II/fe/mapping.h>
-#include <deal.II/lac/vector.h>
-
-#include "ConservationLaw.h"
-#include "EulerEquationsParameters.h"
-*/
-
 template <int dim>
 void EulerEquations<dim>::print_test_message_from_derived_class()
 {
-   print_test_message_from_base_class();
+   this->print_test_message_from_base_class();
 }
+*/
 
 template <int dim>
 EulerEquations<dim>::EulerEquations(ParameterHandler &prm):
@@ -20,12 +12,16 @@ EulerEquations<dim>::EulerEquations(ParameterHandler &prm):
 {
    // get Euler parameters
    euler_parameters.get_parameters(prm);
-   //initial_conditions = euler_parameters.initial_conditions;
+   // initialize initial conditions
+   this->initial_conditions.initialize (FunctionParser<dim>::default_variable_names(),
+                                        euler_parameters.initial_conditions_expressions,
+                                        std::map<std::string, double>());
+   this->component_names = get_component_names();
+   this->component_interpretations = get_component_interpretations();
 }
 
 // vector of names of each component
 template <int dim>
-//    static
 std::vector<std::string> EulerEquations<dim>::get_component_names ()
 {
    std::vector<std::string> names (dim, "momentum");
@@ -37,9 +33,8 @@ std::vector<std::string> EulerEquations<dim>::get_component_names ()
 
 // data component interpretation (scalar or vector component) for outputting solution
 template <int dim>
-//    static
 std::vector<DataComponentInterpretation::DataComponentInterpretation>
-   EulerEquations<dim>::component_interpretation ()
+   EulerEquations<dim>::get_component_interpretations ()
 {
    std::vector<DataComponentInterpretation::DataComponentInterpretation>
       data_component_interpretation

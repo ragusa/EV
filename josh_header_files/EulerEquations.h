@@ -35,14 +35,12 @@ class EulerEquations : public ConservationLaw<dim>
     static const unsigned int energy_component         = dim+1;
 
     // vector of names of each component
-//    static
     std::vector<std::string>
     get_component_names ();
 
     // data component interpretation (scalar or vector component) for outputting solution
-//    static
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
-    component_interpretation ();
+    get_component_interpretations ();
 
     // compute kinetic energy
 //    static

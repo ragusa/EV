@@ -39,11 +39,7 @@ int main(int argc, char ** argv) {
 
       // run problem
       EulerEquations<dimension> euler_problem(parameter_handler);
-      // the function below exists in the base class and is being called directly from the derived class
-      euler_problem.print_test_message_from_base_class();
-      // the function below exists in the derived class and only calls the above base class function,
-      //  print_test_message_from_base_class(). This doesn't work.
-      euler_problem.print_test_message_from_derived_class();
+      euler_problem.run();
 
    } catch (std::exception &exc) {
       std::cerr << std::endl << std::endl

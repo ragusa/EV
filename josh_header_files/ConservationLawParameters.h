@@ -10,8 +10,9 @@ template<int dim>
 class ConservationLawParameters
 {
   public:
-//    ConservationLawParameters(const int &n_components);
-//    ~ConservationLawParameters();
+
+	double final_time;
+	double time_step_size;
   
     enum NonlinearSolverType { newton };
     NonlinearSolverType nonlinear_solver;
