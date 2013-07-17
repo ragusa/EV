@@ -21,6 +21,7 @@ void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
 				Patterns::Double(),
 				"time step size");
 	}
+        prm.leave_subsection();
 
     // nonlinear solver parameters
     prm.enter_subsection("nonlinear solver");
@@ -56,9 +57,9 @@ void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
                           "State whether output from linear solver runs should be printed. "
                           "Choices are <quiet|verbose>.");
         prm.declare_entry("linear method", "gmres",
-                          Patterns::Selection("gmres|direct"),
+                          Patterns::Selection("gmres|direct|bicgstab"),
                           "The kind of linear solver for the linear system. "
-                          "Choices are <gmres|direct>.");
+                          "Choices are <gmres|direct|bicgstab>.");
         prm.declare_entry("linear absolute tolerance", "1e-10",
                           Patterns::Double(),
                           "Linear absolute tolerance");
@@ -97,6 +98,15 @@ void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
    }
    prm.leave_subsection();
 */
+    prm.enter_subsection("output");
+    {
+    	prm.declare_entry("output period", "1",
+    			Patterns::Integer(),
+    			"Period of time steps for outputting the solution, e.g.,"
+    			" 1 would output every time step,"
+    			" and 2 would output every other time step, etc.");
+    }
+    prm.leave_subsection();
 }
 
 // ----------------------------------
@@ -123,10 +133,10 @@ void ConservationLawParameters<dim>::get_parameters (ParameterHandler &prm)
         const std::string solver = prm.get("nonlinear method");
         if (solver == "newton")     nonlinear_solver = newton;
           
-        nonlinear_atol         = prm.get_double("nonlinear absolute tolerance");
-        nonlinear_rtol         = prm.get_double("nonlinear relative tolerance");
-        max_nonlin_iterations  = prm.get_integer("max nonlinear iterations");
-        damping                = prm.get_double("damping");
+        nonlinear_atol            = prm.get_double("nonlinear absolute tolerance");
+        nonlinear_rtol            = prm.get_double("nonlinear relative tolerance");
+        max_nonlinear_iterations  = prm.get_integer("max nonlinear iterations");
+        damping                   = prm.get_double("damping");
       }
     prm.leave_subsection();
 	

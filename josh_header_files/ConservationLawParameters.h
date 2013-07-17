@@ -13,11 +13,13 @@ class ConservationLawParameters
 
 	double final_time;
 	double time_step_size;
+
+	unsigned int output_period;
   
     enum NonlinearSolverType { newton };
     NonlinearSolverType nonlinear_solver;
 	
-    enum LinearSolverType { gmres, direct };
+    enum LinearSolverType { gmres, direct, bicgstab };
     LinearSolverType linear_solver;
     
     enum Verbosity { quiet, verbose };
@@ -36,7 +38,7 @@ class ConservationLawParameters
     
     double nonlinear_atol;
     double nonlinear_rtol;
-    int max_nonlin_iterations;
+    int max_nonlinear_iterations;
     double damping;
 	
     static void declare_parameters (ParameterHandler &prm);

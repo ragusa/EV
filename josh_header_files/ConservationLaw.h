@@ -24,11 +24,14 @@
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/sparsity_pattern.h>
+//#include <deal.II/lac/sparse_direct.h>
+//#include <deal.II/lac/solver_bicgstab.h>
+//#include <deal.II/lac/precondition.h>
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/data_component_interpretation.h>
 #include <deal.II/numerics/vector_tools.h>
-#include <deal.II/dofs/dof_tools.h>
+//#include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/dofs/dof_tools.h>
 #include <deal.II/lac/compressed_sparsity_pattern.h>
 
@@ -40,10 +43,12 @@ template <int dim>
 class ConservationLaw
 {
   public:
+
     ConservationLaw (ParameterHandler &prm, const int &n_comp);//const std::string &input_file, const int &n_comp);
     void run ();
 
   private:
+
     void setup_system ();
 
     void assemble_system ();
@@ -58,7 +63,7 @@ class ConservationLaw
                              const unsigned int               boundary_id,
                              const double                     face_diameter);
 
-    std::pair<unsigned int, double> solve (Vector<double> &solution);
+    std::pair<unsigned int, double> solve (Vector<double> &newton_update);
 
     void compute_refinement_indicators (Vector<double> &indicator) const;
     void refine_grid (const Vector<double> &indicator);
@@ -88,7 +93,9 @@ class ConservationLaw
     SparseMatrix<double> system_matrix;
 
     ConditionalOStream   verbose_cout;
+
   protected:
+
     FunctionParser<dim>  initial_conditions;
 
     std::vector<std::string> component_names;

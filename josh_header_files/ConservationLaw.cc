@@ -1,15 +1,6 @@
-/*
 template <int dim>
-void ConservationLaw<dim>::print_test_message_from_base_class()
-{
-  std::cout << "successfully printed message" << std::endl;
-}
-*/
-
-template <int dim>
-ConservationLaw<dim>::ConservationLaw(ParameterHandler &prm,//const std::string &input_filename,
+ConservationLaw<dim>::ConservationLaw(ParameterHandler &prm,
                                       const int &n_comp):
-//   conservation_law_parameters(n_comp),
    n_components(n_comp),
    mapping(),
    fe(FE_Q<dim>(1), n_comp),
@@ -48,67 +39,96 @@ void ConservationLaw<dim>::run()
    VectorTools::interpolate(dof_handler,initial_conditions,old_solution);
    
    current_solution = old_solution;
+   predictor = old_solution;
 
    assemble_system();
 
    // output initial solution
    output_results();
 
+   // initialize Newton update
+   Vector<double> newton_update(dof_handler.n_dofs());
+
    // begin time stepping loop
    double time = 0;
-   double next_time_step_output = conservation_law_parameters.output_period;
+   unsigned int next_time_step_output = conservation_law_parameters.output_period;
    while (time < conservation_law_parameters.final_time)
    {
-	   std::cout << "time: " << time << std::endl
-			   << "   Number of active cells:       "
-			   << triangulation.n_active_cells()
-			   << std::endl
-			   << "   Number of degrees of freedom: "
-			   << dof_handler.n_dofs()
-			   << std::endl
-			   << std::endl;
+	   std::cout << "time: " << time << std::endl;
+	   std::cout << "   Number of active cells: ";
+	   std::cout << triangulation.n_active_cells();
+	   std::cout << std::endl;
+	   std::cout << "   Number of degrees of freedom: ";
+	   std::cout << dof_handler.n_dofs();
+	   std::cout << std::endl;
+	   std::cout << std::endl;
 
 	   std::cout << "   NonLin Res     Lin Iter       Lin Res" << std::endl
-			   << "   _____________________________________" << std::endl;
+                 << "   _____________________________________" << std::endl;
 
-	   unsigned int nonlin_iter = 0;
+	   // reset nonlinear iteration number to zero
+	   int nonlin_iter = 0;
+
+	   // set guess for this time step's solution to be predictor from last time step
 	   current_solution = predictor;
+
 	   // initialize convergence flag
 	   bool not_converged_yet = true;
 	   // begin Newton loop for current time step
 	   while (not_converged_yet)
 	   {
+		   // reset system matrix and rhs vector and then recompute
 		   system_matrix = 0;
 		   right_hand_side = 0;
 		   assemble_system ();
 
-		   const double res_norm = right_hand_side.l2_norm();
-		   if (std::fabs(res_norm) < 1e-10)
+		   // compute L2 norm of right hand side
+		   const double nonlinear_residual_norm = right_hand_side.l2_norm();
+		   // determine if nonlinear solution has converged
+		   if (std::fabs(nonlinear_residual_norm) < conservation_law_parameters.nonlinear_atol)
+		   // nonlinear solution has converged
 		   {
-			   // nonlinear solution converged
-			   std::printf("   %-16.3e (converged)\n\n", res_norm);
+			   // print nonlinear residual norm and report convergence
+			   std::printf("   %-16.3e (converged)\n\n", nonlinear_residual_norm);
 			   break;
 		   }
 		   else
+		   // nonlinear solution has not yet converged; take another Newton step
 		   {
-			   // nonlinear solution has not yet converged; take another Newton step
-			   Vector<double> newton_update = 0;
+			   // reset Newton update
+               newton_update = 0;
 
-			   std::pair<unsigned int, double> convergence
-			   = solve (newton_update);
+               // solve linear system
+			   std::pair<unsigned int, double> linear_solve_info = solve (newton_update);
 
+			   // update solution with Newton update
 			   current_solution += newton_update;
 
-			   std::printf("   %-16.3e %04d        %-5.2e\n",
-					   res_norm, convergence.first, convergence.second);
+			   // print nonlinear residual norm, number of linear iterations, and linear residual norm
+			   if (conservation_law_parameters.linear_solver !=
+					   ConservationLawParameters<dim>::direct)
+				   std::printf("   %-16.3e %04d        %-5.2e\n",
+						   nonlinear_residual_norm, linear_solve_info.first,
+						   linear_solve_info.second);
+			   else
+				   std::printf("   %-16.3e N/A        N/A\n",
+						   nonlinear_residual_norm);
 		   }
 
+		   // increment nonlinear iteration number
 		   ++nonlin_iter;
-		   AssertThrow (nonlin_iter <= 10,
+
+		   // throw error if the maximum number of nonlinear iterations has been exceeded
+		   AssertThrow (nonlin_iter <= conservation_law_parameters.max_nonlinear_iterations,
 				   ExcMessage ("No convergence in nonlinear solver"));
 	   }
-	   time += conservation_law_parameters.time_step;
+	   // increment time
+	   time += conservation_law_parameters.time_step_size;
 
+	   /* output solution of this time step if user has specified;
+	      negative numbers for the output_period parameter specify
+	      that solution is to be output every time step
+	   */
 	   if (conservation_law_parameters.output_period < 0)
 		   output_results ();
 	   else if (time >= next_time_step_output)
@@ -117,23 +137,12 @@ void ConservationLaw<dim>::run()
 		   next_time_step_output += conservation_law_parameters.output_period;
 	   }
 
+	   // predict solution for next time step with u^(n+1) ~= 2*u^(n) - u^(n-1)
 	   predictor = current_solution;
 	   predictor.sadd (2.0, -1.0, old_solution);
 
+	   // update old_solution to current_solution for next time step
 	   old_solution = current_solution;
-
-	   /*
-	   if (parameters.do_refine == true)
-	   {
-		   Vector<double> refinement_indicators (triangulation.n_active_cells());
-		   compute_refinement_indicators(refinement_indicators);
-
-		   refine_grid(refinement_indicators);
-		   setup_system();
-
-		   newton_update.reinit (dof_handler.n_dofs());
-	   }
-	   */
    }
 }
 
@@ -146,7 +155,6 @@ void ConservationLaw<dim>::setup_system ()
    sparsity_pattern.copy_from(compressed_sparsity_pattern);
  
    system_matrix.reinit (sparsity_pattern);
-   std::cout << "Setup system" << std::endl;
 }
 
 template <int dim>
@@ -172,11 +180,44 @@ void ConservationLaw<dim>::assemble_face_term (const unsigned int               
 {}
 
 template <int dim>
-std::pair<unsigned int, double> ConservationLaw<dim>::solve (Vector<double> &solution)
+std::pair<unsigned int, double> ConservationLaw<dim>::solve (Vector<double> &newton_update)
 {
-   std::pair<unsigned int, double> solutions;
-   std::cout << "Solve" << std::endl;
-   return solutions;
+	switch (conservation_law_parameters.linear_solver)
+	{
+	case ConservationLawParameters<dim>::direct:
+				{
+		/*
+		SparseDirectUMFPACK A_direct;
+		A_direct.initialize(system_matrix);
+		A_direct.vmult(newton_update, right_hand_side);
+		*/
+		Assert(false,ExcNotImplemented());
+		return std::pair<unsigned int, double> (0,0);
+				}
+	case ConservationLawParameters<dim>::gmres:
+	{
+            Assert(false,ExcNotImplemented());
+            return std::pair<unsigned int, double> (0,0);
+	}
+	case ConservationLawParameters<dim>::bicgstab:
+	{
+/*
+        SolverControl solver_control(1000, 1e-6);
+        SolverBicgstab<> solver(solver_control);
+
+        solver.solve(system_matrix, newton_update, right_hand_side,
+                    PreconditionIdentity());
+        return std::pair<unsigned int, double> (solver_control.last_step(),
+        		solver_control.last_value());
+*/
+            Assert(false,ExcNotImplemented());
+            return std::pair<unsigned int, double> (0,0);
+	}
+	}
+
+	// throw exception if case was not found
+    Assert (false, ExcNotImplemented());
+    return std::pair<unsigned int, double> (0,0);
 }
 
 template <int dim>
@@ -190,9 +231,6 @@ void ConservationLaw<dim>::refine_grid (const Vector<double> &indicator)
 template <int dim>
 void ConservationLaw<dim>::output_results () const
 {
-	//typename EulerEquations<dim>::Postprocessor
-	//postprocessor (parameters.schlieren_plot);
-
 	DataOut<dim> data_out;
 	data_out.attach_dof_handler (dof_handler);
 
@@ -201,7 +239,7 @@ void ConservationLaw<dim>::output_results () const
 			DataOut<dim>::type_dof_data,
 			component_interpretations);
 
-	data_out.add_data_vector (current_solution, "current_solution");//postprocessor);
+	data_out.add_data_vector (current_solution, "current_solution");
 
 	data_out.build_patches ();
 
