@@ -69,7 +69,14 @@ Vector<double> ConservationLaw<dim>::invert_mass_matrix(Vector<double> b)
  *  \brief Solves the transient using explicit Runge-Kutta.
  *
  *  This function contains the transient loop and solves the
- *  transient using explicit Runge-Kutta
+ *  transient using explicit Runge-Kutta:
+ *  \f[
+ *    y_{n+1}=y_n + h\sum\limits^s_{i=1}b_i M^{-1} k_i
+ *  \f]
+ *  where \f$k_i\f$ is
+ *  \f[
+ *    k_i=h f(t_n + c_i h, y_n + h\sum\limits^{i-1}_{j=1}a_{i,j} M^{-1} k_j)
+ *  \f]
  */
 template <int dim>
 void ConservationLaw<dim>::solve_erk()
