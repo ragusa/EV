@@ -1,3 +1,10 @@
+/** \fn ConservationLaw
+ *  \brief Constructor for ConservationLaw class.
+ * 
+ *  In addition to initializing some member variables,
+ *  this funciton gets parameters from the parameter
+ *  handler.
+ */
 template <int dim>
 ConservationLaw<dim>::ConservationLaw(ParameterHandler &prm,
                                       const int &n_comp):
@@ -14,8 +21,183 @@ ConservationLaw<dim>::ConservationLaw(ParameterHandler &prm,
    conservation_law_parameters.get_parameters(prm);
 }
 
+/** \fn run
+ *  \brief Runs the entire program.
+ *
+ *  This function is the uppermost level function that
+ *  calls all other functions.
+ */
 template <int dim>
 void ConservationLaw<dim>::run()
+{
+   // setup system
+   setup_system();
+
+   // interpolate the initial conditions to the grid
+   VectorTools::interpolate(dof_handler,initial_conditions,old_solution);
+   current_solution = old_solution;
+   
+   // output initial solution
+   output_results();
+
+   // begin time stepping loop
+   switch (conservation_law_parameters.temporal_integrator)
+   {
+      case ConservationLawParameters<dim>::erk: // explicit Runge-Kutta
+          solve_erk();
+          break;
+      default:
+          Assert(false,ExcNotImplemented());
+   }
+}
+
+/** \fn invert_mass_matrix
+ *  \brief Inverts the mass matrix implicitly.
+ *
+ *  This function implicitly inverts the mass matrix by solving
+ *  the linear system M*x=b
+ */
+template <int dim>
+Vector<double> ConservationLaw<dim>::invert_mass_matrix(Vector<double> b)
+{
+   // perform direct solve using UMFPACK
+   Vector<double> result;
+   return result;
+}
+
+/** \fn solve_erk
+ *  \brief Solves the transient using explicit Runge-Kutta.
+ *
+ *  This function contains the transient loop and solves the
+ *  transient using explicit Runge-Kutta
+ */
+template <int dim>
+void ConservationLaw<dim>::solve_erk()
+{
+   // get ERK parameters
+   int Ns = conservation_law_parameters.erk_nstages;
+   std::vector<Vector<double> > erk_a(Ns);
+   for (int i = 0; i < Ns; ++i)
+      erk_a[i].reinit(Ns);
+   std::vector<double> erk_b(Ns);
+   std::vector<double> erk_c(Ns);
+   switch (Ns)
+   {
+      case 1:
+         erk_b[0] = 0;
+         erk_c[0] = 1;
+         break;
+      case 2:
+         erk_a[1][0] = 0.5;
+         erk_b[0] = 0;
+         erk_b[1] = 0.5;
+         erk_c[0] = 0;
+         erk_c[1] = 1;
+         break;
+      case 4:
+         erk_a[1][0] = 0.5;
+         erk_a[2][0] = 0;
+         erk_a[2][1] = 0.5;
+         erk_a[3][0] = 0;
+         erk_a[3][1] = 0;
+         erk_a[3][2] = 1;
+         erk_b[0] = 0;
+         erk_b[1] = 0.5;
+         erk_b[2] = 0.5;
+         erk_b[3] = 1;
+         erk_c[0] = 1./6;
+         erk_c[1] = 1./3;
+         erk_c[2] = 1./3;
+         erk_c[3] = 1./6;
+         break;
+      default:
+         Assert(false,ExcNotImplemented());
+         break;
+   }
+
+   // allocate memory for each stage
+   std::vector<Vector<double> > erk_k(Ns);
+   for (int i = 0; i < Ns; ++i)
+      erk_k[i].reinit(dof_handler.n_dofs());
+
+   // allocate memory for intermediate steps
+   Vector<double> y_tmp(dof_handler.n_dofs());
+   Vector<double> x_tmp(dof_handler.n_dofs());
+
+   double time = 0;
+   unsigned int next_time_step_output = conservation_law_parameters.output_period;
+   double dt = conservation_law_parameters.time_step_size;
+   double t_end = conservation_law_parameters.final_time;
+   bool final_time_not_reached_yet = true;
+   while (final_time_not_reached_yet)
+   {
+      std::cout << "time: " << time << std::endl;
+      std::cout << "   Number of active cells: ";
+      std::cout << triangulation.n_active_cells();
+      std::cout << std::endl;
+      std::cout << "   Number of degrees of freedom: ";
+      std::cout << dof_handler.n_dofs();
+      std::cout << std::endl;
+      std::cout << std::endl;
+
+      // check end of transient and shorten last time step if necessary
+      if ((time+dt) >= t_end)
+      {
+         dt = t_end - time;
+         final_time_not_reached_yet = false;
+      }
+
+      // solve here
+      erk_k[0] = compute_ss_residual(time,old_solution);
+      for (int i = 1; i < Ns; ++i)
+      {
+         // compute intermediate solution
+         y_tmp = old_solution;
+         for (int j = 0; j < i-1; ++j)
+         {
+            x_tmp = erk_k[j];
+            x_tmp *= erk_a[i][j];
+            y_tmp += x_tmp;
+         }
+
+         erk_k[i] = compute_ss_residual(time + erk_c[i]*dt, y_tmp);
+      }
+      // compute new solution
+      current_solution = old_solution;
+      for (int i = 0; i < Ns; ++i)
+      {
+         x_tmp = erk_k[i];
+         x_tmp *= (dt * erk_b[i]);
+         current_solution += x_tmp;
+      }
+   
+      // increment time
+      time += dt;
+   
+      // output solution of this time step if user has specified;
+      //  negative numbers for the output_period parameter specify
+      //  that solution is to be output every time step
+      if (conservation_law_parameters.output_period < 0)
+         output_results ();
+      else if (time >= next_time_step_output)
+      {
+         output_results ();
+         next_time_step_output += conservation_law_parameters.output_period;
+      }
+
+      // update old_solution to current_solution for next time step
+      old_solution = current_solution;
+   }
+}
+
+/** \fn setup_system
+ *  \brief Sets up the system before solving.
+ *
+ *  This function makes the sparsity pattern and reinitializes
+ *  the system matrix with the sparsity pattern.
+ */
+template <int dim>
+void ConservationLaw<dim>::setup_system ()
 {
    // make grid and refine
    GridGenerator::hyper_cube(triangulation,-1,1);
@@ -25,144 +207,39 @@ void ConservationLaw<dim>::run()
    dof_handler.clear();
    dof_handler.distribute_dofs(fe);
 
+   // create sparsity pattern and compress
+   sparsity_pattern.reinit (dof_handler.n_dofs(),
+                            dof_handler.n_dofs(),
+                            dof_handler.max_couplings_between_dofs());
+   DoFTools::make_sparsity_pattern (dof_handler, sparsity_pattern);
+   sparsity_pattern.compress();
+
+   // create mass matrix
+   mass_matrix.reinit(sparsity_pattern);
+   MatrixCreator::create_mass_matrix( dof_handler,
+                                      QGauss<dim>(3),
+                                      mass_matrix);
+
    // resize vectors
-   old_old_solution.reinit(dof_handler.n_dofs());
    old_solution.reinit(dof_handler.n_dofs());
    current_solution.reinit(dof_handler.n_dofs());
    right_hand_side.reinit(dof_handler.n_dofs());
-   predictor.reinit(dof_handler.n_dofs());
 
-   // setup system
-   setup_system();
-
-   // interpolate the initial conditions to the grid
-   VectorTools::interpolate(dof_handler,initial_conditions,old_solution);
-   
-   current_solution = old_solution;
-   predictor = old_solution;
-
-   assemble_system();
-
-   // output initial solution
-   output_results();
-
-   // initialize Newton update
-   Vector<double> newton_update(dof_handler.n_dofs());
-
-   // begin time stepping loop
-   double time = 0;
-   unsigned int next_time_step_output = conservation_law_parameters.output_period;
-   while (time < conservation_law_parameters.final_time)
-   {
-	   std::cout << "time: " << time << std::endl;
-	   std::cout << "   Number of active cells: ";
-	   std::cout << triangulation.n_active_cells();
-	   std::cout << std::endl;
-	   std::cout << "   Number of degrees of freedom: ";
-	   std::cout << dof_handler.n_dofs();
-	   std::cout << std::endl;
-	   std::cout << std::endl;
-
-	   std::cout << "   NonLin Res     Lin Iter       Lin Res" << std::endl
-                 << "   _____________________________________" << std::endl;
-
-	   // reset nonlinear iteration number to zero
-	   int nonlin_iter = 0;
-
-	   // set guess for this time step's solution to be predictor from last time step
-	   current_solution = predictor;
-
-	   // initialize convergence flag
-	   bool not_converged_yet = true;
-	   // begin Newton loop for current time step
-	   while (not_converged_yet)
-	   {
-		   // reset system matrix and rhs vector and then recompute
-		   system_matrix = 0;
-		   right_hand_side = 0;
-		   assemble_system ();
-
-		   // compute L2 norm of right hand side
-		   const double nonlinear_residual_norm = right_hand_side.l2_norm();
-		   // determine if nonlinear solution has converged
-		   if (std::fabs(nonlinear_residual_norm) < conservation_law_parameters.nonlinear_atol)
-		   // nonlinear solution has converged
-		   {
-			   // print nonlinear residual norm and report convergence
-			   std::printf("   %-16.3e (converged)\n\n", nonlinear_residual_norm);
-			   break;
-		   }
-		   else
-		   // nonlinear solution has not yet converged; take another Newton step
-		   {
-			   // reset Newton update
-               newton_update = 0;
-
-               // solve linear system
-			   std::pair<unsigned int, double> linear_solve_info = solve (newton_update);
-
-			   // update solution with Newton update
-			   current_solution += newton_update;
-
-			   // print nonlinear residual norm, number of linear iterations, and linear residual norm
-			   if (conservation_law_parameters.linear_solver !=
-					   ConservationLawParameters<dim>::direct)
-				   std::printf("   %-16.3e %04d        %-5.2e\n",
-						   nonlinear_residual_norm, linear_solve_info.first,
-						   linear_solve_info.second);
-			   else
-				   std::printf("   %-16.3e N/A        N/A\n",
-						   nonlinear_residual_norm);
-		   }
-
-		   // increment nonlinear iteration number
-		   ++nonlin_iter;
-
-		   // throw error if the maximum number of nonlinear iterations has been exceeded
-		   AssertThrow (nonlin_iter <= conservation_law_parameters.max_nonlinear_iterations,
-				   ExcMessage ("No convergence in nonlinear solver"));
-	   }
-	   // increment time
-	   time += conservation_law_parameters.time_step_size;
-
-	   /* output solution of this time step if user has specified;
-	      negative numbers for the output_period parameter specify
-	      that solution is to be output every time step
-	   */
-	   if (conservation_law_parameters.output_period < 0)
-		   output_results ();
-	   else if (time >= next_time_step_output)
-	   {
-		   output_results ();
-		   next_time_step_output += conservation_law_parameters.output_period;
-	   }
-
-	   // predict solution for next time step with u^(n+1) ~= 2*u^(n) - u^(n-1)
-	   predictor = current_solution;
-	   predictor.sadd (2.0, -1.0, old_solution);
-
-	   // update old_solution to current_solution for next time step
-	   old_solution = current_solution;
-   }
 }
 
+/** \fn compute_ss_residual
+ *  \brief Computes the steady state residual.
+ *
+ *  This function is to be defined in the derived physics class.
+ */
 template <int dim>
-void ConservationLaw<dim>::setup_system ()
+Vector<double> ConservationLaw<dim>::compute_ss_residual (double t, Vector<double> solution)
 {
-   CompressedSparsityPattern compressed_sparsity_pattern (dof_handler.n_dofs(),
-                                                          dof_handler.n_dofs());
-   DoFTools::make_sparsity_pattern (dof_handler, compressed_sparsity_pattern);
-   sparsity_pattern.copy_from(compressed_sparsity_pattern);
- 
-   system_matrix.reinit (sparsity_pattern);
+   Vector<double> some_vector(dof_handler.n_dofs());
+   return some_vector;
 }
 
-template <int dim>
-void ConservationLaw<dim>::assemble_system ()
-{
-   std::cout << "Assemble system" << std::endl;
-}
-
+/*
 template <int dim>
 void ConservationLaw<dim>::assemble_cell_term (const FEValues<dim>             &fe_v,
                                                const std::vector<unsigned int> &dofs)
@@ -178,19 +255,26 @@ void ConservationLaw<dim>::assemble_face_term (const unsigned int               
                                                const unsigned int               boundary_id,
                                                const double                     face_diameter)
 {}
+*/
 
+/** \fn linear_solve
+ *  \brief Performs a linear solve.
+ *
+ *  This is only called if the time integrator is implicit. The
+ *  function contains a switch for the linear solver type.
+ */
+/*
 template <int dim>
-std::pair<unsigned int, double> ConservationLaw<dim>::solve (Vector<double> &newton_update)
+std::pair<unsigned int, double> ConservationLaw<dim>::linear_solve (Vector<double> &newton_update)
 {
 	switch (conservation_law_parameters.linear_solver)
 	{
 	case ConservationLawParameters<dim>::direct:
 				{
-		/*
-		SparseDirectUMFPACK A_direct;
-		A_direct.initialize(system_matrix);
-		A_direct.vmult(newton_update, right_hand_side);
-		*/
+		//SparseDirectUMFPACK A_direct;
+		//A_direct.initialize(system_matrix);
+		//A_direct.vmult(newton_update, right_hand_side);
+
 		Assert(false,ExcNotImplemented());
 		return std::pair<unsigned int, double> (0,0);
 				}
@@ -201,7 +285,6 @@ std::pair<unsigned int, double> ConservationLaw<dim>::solve (Vector<double> &new
 	}
 	case ConservationLawParameters<dim>::bicgstab:
 	{
-/*
         SolverControl solver_control(1000, 1e-6);
         SolverBicgstab<> solver(solver_control);
 
@@ -209,9 +292,8 @@ std::pair<unsigned int, double> ConservationLaw<dim>::solve (Vector<double> &new
                     PreconditionIdentity());
         return std::pair<unsigned int, double> (solver_control.last_step(),
         		solver_control.last_value());
-*/
-            Assert(false,ExcNotImplemented());
-            return std::pair<unsigned int, double> (0,0);
+            //Assert(false,ExcNotImplemented());
+            //return std::pair<unsigned int, double> (0,0);
 	}
 	}
 
@@ -219,7 +301,9 @@ std::pair<unsigned int, double> ConservationLaw<dim>::solve (Vector<double> &new
     Assert (false, ExcNotImplemented());
     return std::pair<unsigned int, double> (0,0);
 }
+*/
 
+/*
 template <int dim>
 void ConservationLaw<dim>::compute_refinement_indicators (Vector<double> &indicator) const
 {}
@@ -227,7 +311,16 @@ void ConservationLaw<dim>::compute_refinement_indicators (Vector<double> &indica
 template <int dim>
 void ConservationLaw<dim>::refine_grid (const Vector<double> &indicator)
 {}
+*/
 
+/** \fn output_results
+ *  \brief Outputs the solution to .vtk.
+ *
+ *  The user supplies an input parameter that determines
+ *  how often this function is called in the transient.
+ *  A static variable for the output file number is incremented
+ *  the function is called.
+ */
 template <int dim>
 void ConservationLaw<dim>::output_results () const
 {

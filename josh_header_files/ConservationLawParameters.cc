@@ -1,13 +1,9 @@
-/*
-template <int dim>
-ConservationLawParameters<dim>::ConservationLawParameters(const int &n_comp):
-   n_components(n_comp)
-{}
-*/
-
-// ----------------------------------
-// --- DECLARE SOLVER PARAMETERS
-// ----------------------------------
+/** \fn declare_parameters
+ *  \brief Declares the parameters that will be in input file.
+ *
+ *  This function declares all of the input parameters required
+ *  for the ConservationLaw class.
+ */
 template <int dim>
 void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
 {
@@ -22,6 +18,19 @@ void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
 				"time step size");
 	}
         prm.leave_subsection();
+
+    // temporal integrator
+    prm.enter_subsection("temporal integrator");
+    {
+        prm.declare_entry("temporal integrator", "erk",
+                          Patterns::Selection("erk"),
+                          "The method used for advancing time. "
+                          "Choices are <erk>.");
+        prm.declare_entry("erk stages","1",
+                          Patterns::Integer(),
+                          "Number of stages for explicit Runge-Kutta.");
+    }
+    prm.leave_subsection();
 
     // nonlinear solver parameters
     prm.enter_subsection("nonlinear solver");
@@ -109,9 +118,12 @@ void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
     prm.leave_subsection();
 }
 
-// ----------------------------------
-// --- PARSE SOLVER PARAMETERS
-// ----------------------------------
+/** \fn get_parameters
+ *  \brief Gets the parameters from the parameter handler.
+ *
+ *  This function takes the input parameters from the parameter
+ *  handler into the member variables.
+ */
 template <int dim>
 void ConservationLawParameters<dim>::get_parameters (ParameterHandler &prm)
 {
@@ -122,6 +134,19 @@ void ConservationLawParameters<dim>::get_parameters (ParameterHandler &prm)
 		time_step_size = prm.get_double("time step size");
 	}
 	prm.leave_subsection();
+
+    // temporal integrator
+    prm.enter_subsection("temporal integrator");
+    {
+        const std::string temporal_choice = prm.get("temporal integrator");
+        if (temporal_choice == "erk")
+           temporal_integrator = erk;
+        else
+           Assert(false,ExcNotImplemented());
+
+        erk_nstages = prm.get_integer("erk stages");
+    }
+    prm.leave_subsection();
 
     // nonlinear solver parameters
     prm.enter_subsection("nonlinear solver");

@@ -11,11 +11,15 @@ class ConservationLawParameters
 {
   public:
 
-	double final_time;
-	double time_step_size;
+    double final_time;
+    double time_step_size;
 
-	unsigned int output_period;
+    unsigned int output_period;
   
+    enum TemporalIntegrator { erk };
+    TemporalIntegrator temporal_integrator;
+    int erk_nstages; 
+
     enum NonlinearSolverType { newton };
     NonlinearSolverType nonlinear_solver;
 	

@@ -18,12 +18,12 @@ int main(int argc, char ** argv) {
       std::string input_filename;
       if (argc < 2) {
          std::cout << "Need to provide an argument to specify the input file.\n"
-            << "The argument '#' specifies the input file 'test_problem_#.in'"
+            << "The argument '#' specifies the input file 'euler_#.in'"
             << std::endl;
          std::exit(1);
       } else {
          std::stringstream input_filename_ss;
-         input_filename_ss << "input/input_" << argv[1] << ".in";
+         input_filename_ss << "input/euler_" << argv[1] << ".in";
          input_filename = input_filename_ss.str();
          std::cout << "Using the input file: " << input_filename << std::endl;
       }
