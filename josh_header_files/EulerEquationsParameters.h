@@ -1,9 +1,6 @@
-/*
- EulerEquationsParameters class
-
- contains input data relating to Euler equations
-*/
-
+/** \file EulerEquationsParameters.h
+ *  \brief Provides the header for the EulerEquationsParameters class.
+ */
 #ifndef EulerEquationsParameters_h
 #define EulerEquationsParameters_h
 
@@ -14,6 +11,9 @@
 
 using namespace dealii;
 
+/** \class EulerEquationsParameters
+ *  \brief Defines and retrieves input parameters related to Euler equations
+ */
 template <int dim>
 class EulerEquationsParameters
 {
@@ -32,10 +32,6 @@ class EulerEquationsParameters
     std::vector<std::string> initial_conditions_expressions;
 };
 
-/* The source file must be included here because the class is
-   a template; the compiler must be able to see the class template
-   declaration AND definition.
-*/
 #include "EulerEquationsParameters.cc"
 
 #endif

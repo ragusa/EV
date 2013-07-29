@@ -1,12 +1,6 @@
-/*
- ConservationLaw class:
- modified from deal.II step-33 tutorial program
- 
- solves a general conservation law of the form:
- 
- du/dt + div(flux(c)) = rhs(c)
-*/
-
+/** \file ConservationLaw.h
+ *  \brief Provides the header for the ConservationLaw class.
+ */
 #ifndef ConservationLaw_h
 #define ConservationLaw_h
 
@@ -42,6 +36,17 @@
 
 using namespace dealii;
 
+/** \class ConservationLaw
+ *  \brief Class providing framework for solving a general conservation law.
+ *
+ *  This class solves a conservation law of the form:
+ *  \f[
+ *    \frac{\partial\vec{u}}{\partial t} 
+ *    + \nabla \cdot \vec{f}(\vec{u}) = \vec{g}(\vec{u}),
+ *  \f]
+ *  where \f$\vec{u}\f$ is the vector of conservation variables, \f$\vec{f}(\vec{u})\f$
+ *  is the flux, and \f$\vec{g}(\vec{u})\f$ is the forcing term.
+ */
 template <int dim>
 class ConservationLaw
 {
@@ -56,26 +61,7 @@ class ConservationLaw
     void setup_system ();
 
     Vector<double> invert_mass_matrix  (Vector<double>);
-    Vector<double> compute_ss_residual (double t, Vector<double> solution);
-/*
-    void assemble_cell_term (const FEValues<dim>             &fe_v,
-                             const std::vector<unsigned int> &dofs);
-    void assemble_face_term (const unsigned int               face_no,
-                             const FEFaceValuesBase<dim>     &fe_v,
-                             const FEFaceValuesBase<dim>     &fe_v_neighbor,
-                             const std::vector<unsigned int> &dofs,
-                             const std::vector<unsigned int> &dofs_neighbor,
-                             const bool                       external_face,
-                             const unsigned int               boundary_id,
-                             const double                     face_diameter);
-*/
-
-//    std::pair<unsigned int, double> linear_solve (Vector<double> &newton_update);
-
-/*
-    void compute_refinement_indicators (Vector<double> &indicator) const;
-    void refine_grid (const Vector<double> &indicator);
-*/
+    virtual void compute_ss_residual (double t, Vector<double> &solution) = 0;
 
     void output_results () const;
 
@@ -95,8 +81,7 @@ class ConservationLaw
 	
     Vector<double>       current_solution;
     Vector<double>       old_solution;
-
-    Vector<double>       right_hand_side;
+    Vector<double>       ss_residual;
 
     SparsityPattern      sparsity_pattern;
     SparseMatrix<double> mass_matrix;

@@ -1,3 +1,6 @@
+/** \file Burgers.h
+ *  \brief Provides the header for the Burgers class.
+ */
 #ifndef Burgers_h
 #define Burgers_h
 
@@ -10,7 +13,13 @@
 #include "BurgersParameters.h"
 
 /** \class Burgers
- *  \brief Provides the necessary functions for Burgers equation
+ *  \brief Provides the necessary functions for Burgers equation.
+ *
+ *  This class extends the ConservationLaw class to the inviscid
+ *  Burgers equation:
+ *  \f[
+ *    u_t + u u_x = 0
+ *  \f]
  */
 template <int dim>
 class Burgers : public ConservationLaw<dim>

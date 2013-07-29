@@ -1,3 +1,6 @@
+/** \file BurgersParameters.h
+ *  \brief Provides the header for the BurgersParameters class.
+ */
 #ifndef BurgersParameters_h
 #define BurgersParameters_h
 

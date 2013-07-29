@@ -1,9 +1,15 @@
-/** \fn ConservationLaw
+/** \file ConservationLaw.cc
+ *  \brief Provides function definitions for the ConservationLaw class.
+ */
+
+/** \fn ConservationLaw<dim>::ConservationLaw(ParameterHandler &prm, const int &n_comp)
  *  \brief Constructor for ConservationLaw class.
  * 
  *  In addition to initializing some member variables,
  *  this funciton gets parameters from the parameter
  *  handler.
+ *  \param prm parameter handler containing conservation law parameters
+ *  \param n_comp number of components in the system
  */
 template <int dim>
 ConservationLaw<dim>::ConservationLaw(ParameterHandler &prm,
@@ -21,7 +27,7 @@ ConservationLaw<dim>::ConservationLaw(ParameterHandler &prm,
    conservation_law_parameters.get_parameters(prm);
 }
 
-/** \fn run
+/** \fn ConservationLaw<dim>::run()
  *  \brief Runs the entire program.
  *
  *  This function is the uppermost level function that
@@ -51,11 +57,13 @@ void ConservationLaw<dim>::run()
    }
 }
 
-/** \fn invert_mass_matrix
+/** \fn Vector<double> ConservationLaw<dim>::invert_mass_matrix(Vector<double> b)
  *  \brief Inverts the mass matrix implicitly.
  *
  *  This function implicitly inverts the mass matrix by solving
- *  the linear system M*x=b
+ *  the linear system \f$M x = b\f$. The method of inverting the
+ *  mass matrix is determined by user input.
+ *  \param b vector to which the inverse mass matrix is applied
  */
 template <int dim>
 Vector<double> ConservationLaw<dim>::invert_mass_matrix(Vector<double> b)
@@ -65,7 +73,7 @@ Vector<double> ConservationLaw<dim>::invert_mass_matrix(Vector<double> b)
    return result;
 }
 
-/** \fn solve_erk
+/** \fn ConservationLaw<dim>::solve_erk()
  *  \brief Solves the transient using explicit Runge-Kutta.
  *
  *  This function contains the transient loop and solves the
@@ -155,7 +163,8 @@ void ConservationLaw<dim>::solve_erk()
       }
 
       // solve here
-      erk_k[0] = compute_ss_residual(time,old_solution);
+      compute_ss_residual(time,old_solution);
+      erk_k[0] = ss_residual;
       for (int i = 1; i < Ns; ++i)
       {
          // compute intermediate solution
@@ -167,7 +176,8 @@ void ConservationLaw<dim>::solve_erk()
             y_tmp += x_tmp;
          }
 
-         erk_k[i] = compute_ss_residual(time + erk_c[i]*dt, y_tmp);
+         compute_ss_residual(time + erk_c[i]*dt, y_tmp);
+         erk_k[i] = ss_residual;
       }
       // compute new solution
       current_solution = old_solution;
@@ -197,7 +207,7 @@ void ConservationLaw<dim>::solve_erk()
    }
 }
 
-/** \fn setup_system
+/** \fn ConservationLaw<dim>::setup_system()
  *  \brief Sets up the system before solving.
  *
  *  This function makes the sparsity pattern and reinitializes
@@ -230,38 +240,27 @@ void ConservationLaw<dim>::setup_system ()
    // resize vectors
    old_solution.reinit(dof_handler.n_dofs());
    current_solution.reinit(dof_handler.n_dofs());
-   right_hand_side.reinit(dof_handler.n_dofs());
+   ss_residual.reinit(dof_handler.n_dofs());
 
 }
 
-/** \fn compute_ss_residual
+/** \fn Vector<double> ConservationLaw<dim>::compute_ss_residual(double t, Vector<double> solution)
  *  \brief Computes the steady state residual.
  *
- *  This function is to be defined in the derived physics class.
+ *  This function computes the steady state residual, and it
+ *  is to be computed in the derived class.
+ *  \param t time at which the steady state residual is to be evaluated
+ *  \param solution the solution at which to evaluate the steady state residual
+ *  \return the steady state residual vector
  */
+//JEH: made pure virtual
+/*
 template <int dim>
 Vector<double> ConservationLaw<dim>::compute_ss_residual (double t, Vector<double> solution)
 {
    Vector<double> some_vector(dof_handler.n_dofs());
    return some_vector;
 }
-
-/*
-template <int dim>
-void ConservationLaw<dim>::assemble_cell_term (const FEValues<dim>             &fe_v,
-                                               const std::vector<unsigned int> &dofs)
-{}
-
-template <int dim>
-void ConservationLaw<dim>::assemble_face_term (const unsigned int               face_no,
-                                               const FEFaceValuesBase<dim>     &fe_v,
-                                               const FEFaceValuesBase<dim>     &fe_v_neighbor,
-                                               const std::vector<unsigned int> &dofs,
-                                               const std::vector<unsigned int> &dofs_neighbor,
-                                               const bool                       external_face,
-                                               const unsigned int               boundary_id,
-                                               const double                     face_diameter)
-{}
 */
 
 /** \fn linear_solve
@@ -320,7 +319,7 @@ void ConservationLaw<dim>::refine_grid (const Vector<double> &indicator)
 {}
 */
 
-/** \fn output_results
+/** \fn ConservationLaw<dim>::output_results() const
  *  \brief Outputs the solution to .vtk.
  *
  *  The user supplies an input parameter that determines

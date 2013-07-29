@@ -22,7 +22,6 @@ class EulerEquations : public ConservationLaw<dim>
 {
   public:
     EulerEquations(ParameterHandler &prm);//const std::string &input_filename);
-    void print_test_message_from_derived_class();
 
   private:
     // Euler equations parameters
@@ -42,36 +41,17 @@ class EulerEquations : public ConservationLaw<dim>
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
     get_component_interpretations ();
 
+/*
     // compute kinetic energy
-//    static
     double
     compute_kinetic_energy (const Vector<double> &W);
 
     // compute pressure
-//    static
     double
     compute_pressure (const Vector<double> &W);
-
-    // compute flux matrix f(c)
-//    static
-    void compute_flux_matrix (const Vector<double> &W,
-                              double (&flux)[n_euler_components][dim]);
-
-    // computes numerical normal flux
-/*
-    template <typename Vector<double>>
-    static
-    void numerical_normal_flux (const Point<dim>          &normal,
-                                const Vector<double>         &Wplus,
-                                const Vector<double>         &Wminus,
-                                const double               alpha,
-                                Sacado::Fad::DFad<double> (&normal_flux)[n_euler_components]);
 */
 
-    // computes forcing vector functions g(c)
-//    static
-    void compute_forcing_vector (const Vector<double> &W,
-                                 double (&forcing)[n_euler_components]);
+    void compute_ss_residual(double t, Vector<double> &solution);
 
     // boundary condition indicators
     enum BoundaryKind
@@ -82,41 +62,15 @@ class EulerEquations : public ConservationLaw<dim>
           pressure_boundary
     };
 
+/*
     // compute refinement indicators
-//    static
     void
     compute_refinement_indicators (const DoFHandler<dim> &dof_handler,
                                    const Mapping<dim>    &mapping,
                                    const Vector<double>  &solution,
                                    Vector<double>        &refinement_indicators);
-
- /*
-    class Postprocessor : public DataPostprocessor<dim>
-    {
-      public:
-        Postprocessor (const bool do_schlieren_plot);
-
-        virtual
-        void
-        compute_derived_quantities_vector (const std::vector<Vector<double> >              &uh,
-                                           const std::vector<std::vector<Tensor<1,dim> > > &duh,
-                                           const std::vector<std::vector<Tensor<2,dim> > > &dduh,
-                                           const std::vector<Point<dim> >                  &normals,
-                                           const std::vector<Point<dim> >                  &evaluation_points,
-                                           std::vector<Vector<double> >                    &computed_quantities) const;
-
-        virtual std::vector<std::string> get_names () const;
-
-        virtual
-        std::vector<DataComponentInterpretation::DataComponentInterpretation>
-        get_data_component_interpretation () const;
-
-        virtual UpdateFlags get_needed_update_flags () const;
-
-      private:
-        const bool do_schlieren_plot;
-    };
 */
+
 };
 
 #include "EulerEquations.cc"

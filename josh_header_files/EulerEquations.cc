@@ -1,11 +1,3 @@
-/*
-template <int dim>
-void EulerEquations<dim>::print_test_message_from_derived_class()
-{
-   this->print_test_message_from_base_class();
-}
-*/
-
 template <int dim>
 EulerEquations<dim>::EulerEquations(ParameterHandler &prm):
    ConservationLaw<dim>(prm,n_euler_components)
@@ -47,9 +39,9 @@ std::vector<DataComponentInterpretation::DataComponentInterpretation>
    return data_component_interpretation;
 } 
  
+/*
 // compute kinetic energy
 template <int dim>
-//    static
 double EulerEquations<dim>::compute_kinetic_energy (const Vector<double> &W)
 {
    double kinetic_energy = 0.0;
@@ -58,44 +50,23 @@ double EulerEquations<dim>::compute_kinetic_energy (const Vector<double> &W)
 
 // compute pressure
 template <int dim>
-//    static
 double EulerEquations<dim>::compute_pressure (const Vector<double> &W)
 {
    double pressure = 0.0;
    return pressure;
 }
+*/
 
-// compute flux matrix f(c)
 template <int dim>
-//    static
-void EulerEquations<dim>::compute_flux_matrix (const Vector<double> &W,
-                                                   double (&flux)[n_euler_components][dim])
+void EulerEquations<dim>::compute_ss_residual (double t, Vector<double> &solution)
 {}
 
 /*
-// computes numerical normal flux
-template <int dim>
-    template <typename InputVector>
-    static
-    void numerical_normal_flux (const Point<dim>          &normal,
-                                const InputVector         &Wplus,
-                                const InputVector         &Wminus,
-                                const double               alpha,
-                                Sacado::Fad::DFad<double> (&normal_flux)[n_euler_components]);
-*/
-
-// computes forcing vector functions g(c)
-template <int dim>
-//    static
-void EulerEquations<dim>::compute_forcing_vector (const Vector<double> &W,
-                                                      double (&forcing)[n_euler_components])
-{}
-
 // compute refinement indicators
 template <int dim>
-//    static
 void EulerEquations<dim>::compute_refinement_indicators (const DoFHandler<dim> &dof_handler,
                                                              const Mapping<dim>    &mapping,
                                                              const Vector<double>  &solution,
                                                              Vector<double>        &refinement_indicators)
 {}
+*/

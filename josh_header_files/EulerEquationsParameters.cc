@@ -1,13 +1,20 @@
+/** \file EulerEquationsParameters.cc
+ *  \brief Provides the function definitions for the EulerEquationsParameters class.
+ */
 using namespace dealii;
 
+/** \fn EulerEquationsParameters<dim>::EulerEquationsParameters()
+ *  \brief Constructor for the EulerEquationsParametrs class.
+ */
 template<int dim>
 EulerEquationsParameters<dim>::EulerEquationsParameters():
    initial_conditions_expressions(n_components,"0")
 {}
 
 /**
- * \fn    EulerEquationsParameters::declare_parameters
- * \brief defines input parameters
+ * \fn    EulerEquationsParameters<dim>::declare_parameters(ParameterHandler &parameter_handler)
+ * \brief Declares input parameters for the EulerEquations class.
+ * \param parameter_handler parameter handler for EulerEquations class
  */
 template<int dim>
 void EulerEquationsParameters<dim>::declare_parameters(
@@ -33,8 +40,9 @@ void EulerEquationsParameters<dim>::declare_parameters(
 }
 
 /**
- * \fn    EulerEquationsParameters::get_parameters
+ * \fn    EulerEquationsParameters<dim>::get_parameters(ParameterHandler &parameter_handler)
  * \brief get input parameters from parameter handler
+ * \param parameter_handler parameter handler for EulerEquations class
  */
 template<int dim>
 void EulerEquationsParameters<dim>::get_parameters(
