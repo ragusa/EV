@@ -114,12 +114,12 @@ void Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
          ss_residual(local_dof_indices[i]) += cell_residual(i);
    }
 
-   /* JEH: not sure what tools are available in deal for applying
-       BC for nonlinear systems
    // apply boundary conditions: zero Dirichlet
+   std::map<unsigned int, double> boundary_values;
    VectorTools::interpolate_boundary_values(dof_handler,
                                             0,
                                             ZeroFunction<dim>(),
                                             boundary_values);
-  */
+   for (std::map<unsigned int, double>::iterator bv = boundary_values.begin(); bv != boundary_values.end(); ++bv)
+      ss_residual(bv->first) = (bv->second);
 }

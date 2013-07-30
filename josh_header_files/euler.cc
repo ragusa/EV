@@ -1,3 +1,6 @@
+/** \file euler.cc
+ *  \brief Solves Euler equations.
+ */
 #include <iostream>
 
 #include <deal.II/base/logstream.h>
@@ -7,10 +10,6 @@
 
 using namespace dealii;
 
-/**
- * \fn    euler
- * \brief reads input file and then runs problem
- */
 int main(int argc, char ** argv) {
    try {
       dealii::deallog.depth_console(0);

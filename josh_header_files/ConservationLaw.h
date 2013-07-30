@@ -9,10 +9,12 @@
 
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/conditional_ostream.h>
+#include <deal.II/base/function_parser.h>
 
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/sparsity_pattern.h>
+#include <deal.II/lac/sparse_direct.h>
 //#include <deal.II/lac/precondition.h>
 //#include <deal.II/lac/compressed_sparsity_pattern.h>
 
@@ -60,14 +62,20 @@ class ConservationLaw
     void solve_erk();
     void setup_system ();
 
-    Vector<double> invert_mass_matrix  (Vector<double>);
+    void linear_solve (const typename ConservationLawParameters<dim>::LinearSolverType     &linear_solver,
+                       const SparseMatrix<double> &A,
+                       const Vector<double>       &b,
+                             Vector<double>       &x);
+    void invert_mass_matrix (const Vector<double> &b, Vector<double> &x);
     virtual void compute_ss_residual (double t, Vector<double> &solution) = 0;
 
     void output_results () const;
 
+    /** input parameters for conservation law */
     ConservationLawParameters<dim> conservation_law_parameters;
     int n_components;
 
+    /** polynomial degree of finite elements */
     int degree;
 
     Triangulation<dim>   triangulation;
@@ -78,7 +86,7 @@ class ConservationLaw
 
     const QGauss<dim>    quadrature;
     const QGauss<dim-1>  face_quadrature;
-	
+
     Vector<double>       current_solution;
     Vector<double>       old_solution;
     Vector<double>       ss_residual;

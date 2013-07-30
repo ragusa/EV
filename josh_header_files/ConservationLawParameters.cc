@@ -1,23 +1,24 @@
-/** \fn declare_parameters
+/** \fn ConservationLawParameters<dim>::declare_parameters(ParameterHandler &prm)
  *  \brief Declares the parameters that will be in input file.
  *
  *  This function declares all of the input parameters required
- *  for the ConservationLaw class.
+ *  for the ConservationLaw class.	
+ *  \param prm parameter handler for conservation law parameters
  */
 template <int dim>
 void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
 {
-	// time parameters
-	prm.enter_subsection("time");
-	{
-		prm.declare_entry("final time", "1.0",
-				Patterns::Double(),
-				"final time value");
-		prm.declare_entry("time step size", "1e-3",
-				Patterns::Double(),
-				"time step size");
-	}
-        prm.leave_subsection();
+    // time parameters
+    prm.enter_subsection("time");
+    {
+       prm.declare_entry("final time", "1.0",
+                         Patterns::Double(),
+                         "final time value");
+       prm.declare_entry("time step size", "1e-3",
+                         Patterns::Double(),
+                         "time step size");
+    }
+    prm.leave_subsection();
 
     // temporal integrator
     prm.enter_subsection("temporal integrator");
@@ -57,7 +58,7 @@ void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
                           "damping");
       }
     prm.leave_subsection();
-	
+
     // linear solver parameters
     prm.enter_subsection("linear solver");
       {
@@ -65,10 +66,14 @@ void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
                           Patterns::Selection("quiet|verbose"),
                           "State whether output from linear solver runs should be printed. "
                           "Choices are <quiet|verbose>.");
-        prm.declare_entry("linear method", "gmres",
-                          Patterns::Selection("gmres|direct|bicgstab"),
+        prm.declare_entry("linear method", "direct",
+                          Patterns::Selection("direct|gmres"),
                           "The kind of linear solver for the linear system. "
-                          "Choices are <gmres|direct|bicgstab>.");
+                          "Choices are <direct|gmres>.");
+        prm.declare_entry("mass matrix linear method", "direct",
+                          Patterns::Selection("direct|gmres"),
+                          "The linear solver used to implicitly invert the mass matrix. "
+                          "Choices are <direct|gmres>.");
         prm.declare_entry("linear absolute tolerance", "1e-10",
                           Patterns::Double(),
                           "Linear absolute tolerance");
@@ -78,62 +83,38 @@ void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
         prm.declare_entry("max linear iterations", "300",
                           Patterns::Integer(),
                           "Maximum linear solver iterations");
-/*
-        prm.declare_entry("ilut fill", "2",
-                          Patterns::Double(),
-                          "Ilut preconditioner fill");
-        prm.declare_entry("ilut absolute tolerance", "1e-9",
-                          Patterns::Double(),
-                          "Ilut preconditioner tolerance");
-        prm.declare_entry("ilut relative tolerance", "1.1",
-                          Patterns::Double(),
-                          "Ilut relative tolerance");
-        prm.declare_entry("ilut drop tolerance", "1e-10",
-                          Patterns::Double(),
-                          "Ilut drop tolerance");
-*/
       }
     prm.leave_subsection();
 
-/*
-   // initial conditions
-   prm.enter_subsection("initial conditions");
-   {
-      for (int c = 0; c < n_components; ++c)
-         prm.declare_entry("initial conditions " + Utilities::int_to_string(c),
-         "0.0",
-         Patterns::Anything(),
-         "initial conditions for component computed from x,y,z");
-   }
-   prm.leave_subsection();
-*/
+    // output
     prm.enter_subsection("output");
     {
-    	prm.declare_entry("output period", "1",
-    			Patterns::Integer(),
-    			"Period of time steps for outputting the solution, e.g.,"
-    			" 1 would output every time step,"
-    			" and 2 would output every other time step, etc.");
+       prm.declare_entry("output period", "1",
+                         Patterns::Integer(),
+                         "Period of time steps for outputting the solution, e.g.,"
+                         " 1 would output every time step,"
+                         " and 2 would output every other time step, etc.");
     }
     prm.leave_subsection();
 }
 
-/** \fn get_parameters
+/** \fn ConservationLawParameters<dim>::get_parameters(ParameterHandler &prm)
  *  \brief Gets the parameters from the parameter handler.
  *
  *  This function takes the input parameters from the parameter
  *  handler into the member variables.
+ *  \param prm parameter handler for conservation law parameters
  */
 template <int dim>
 void ConservationLawParameters<dim>::get_parameters (ParameterHandler &prm)
 {
-	// time parameters
-	prm.enter_subsection("time");
-	{
-		final_time = prm.get_double("final time");
-		time_step_size = prm.get_double("time step size");
-	}
-	prm.leave_subsection();
+    // time parameters
+    prm.enter_subsection("time");
+    {
+       final_time = prm.get_double("final time");
+       time_step_size = prm.get_double("time step size");
+    }
+    prm.leave_subsection();
 
     // temporal integrator
     prm.enter_subsection("temporal integrator");
@@ -164,7 +145,7 @@ void ConservationLawParameters<dim>::get_parameters (ParameterHandler &prm)
         damping                   = prm.get_double("damping");
       }
     prm.leave_subsection();
-	
+
     // linear solver parameters
     prm.enter_subsection("linear solver");
       {
@@ -176,29 +157,13 @@ void ConservationLawParameters<dim>::get_parameters (ParameterHandler &prm)
         if (solver == "direct")     linear_solver = direct;
         else if (solver == "gmres") linear_solver = gmres;
           
+        const std::string mass_solver = prm.get("mass matrix linear method");
+        if (mass_solver == "direct")     mass_matrix_linear_solver = direct;
+        else if (mass_solver == "gmres") mass_matrix_linear_solver = gmres;
+
         linear_atol     = prm.get_double("linear absolute tolerance");
         linear_rtol     = prm.get_double("linear relative tolerance");
         max_linear_iterations  = prm.get_integer("max linear iterations");
-/*
-        ilut_fill       = prm.get_double("ilut fill");
-        ilut_atol       = prm.get_double("ilut absolute tolerance");
-        ilut_rtol       = prm.get_double("ilut relative tolerance");
-        ilut_drop       = prm.get_double("ilut drop tolerance");
-*/
       }
     prm.leave_subsection();
-
-/*
-   // initial conditions
-   prm.enter_subsection("initial conditions");
-   {
-      std::vector<std::string> expressions (n_components,"0.0");
-      for (int c = 0; c < n_components; c++)
-          expressions[c] = prm.get("initial conditions " + Utilities::int_to_string(c));
-      initial_conditions.initialize (FunctionParser<dim>::default_variable_names(),
-                                     expressions,
-                                     std::map<std::string, double>());
-   }
-   prm.leave_subsection();
-*/
 }

@@ -57,20 +57,24 @@ void ConservationLaw<dim>::run()
    }
 }
 
-/** \fn Vector<double> ConservationLaw<dim>::invert_mass_matrix(Vector<double> b)
+/** \fn void ConservationLaw<dim>::invert_mass_matrix(const Vector<double> &b,
+ *                                                          Vector<double> &x)
  *  \brief Inverts the mass matrix implicitly.
  *
- *  This function implicitly inverts the mass matrix by solving
- *  the linear system \f$M x = b\f$. The method of inverting the
- *  mass matrix is determined by user input.
+ *  This function computes the product \f$M^{-1}b\f$ of the inverse of the
+ *  mass matrix and a vector by solving the linear system \f$M x = b\f$.
+ *  The method of inverting the mass matrix is determined by user input.
  *  \param b vector to which the inverse mass matrix is applied
+ *  \param x the product \f$M^{-1}b\f$
  */
 template <int dim>
-Vector<double> ConservationLaw<dim>::invert_mass_matrix(Vector<double> b)
+void ConservationLaw<dim>::invert_mass_matrix(const Vector<double> &b,
+                                                    Vector<double> &x)
 {
-   // perform direct solve using UMFPACK
-   Vector<double> result;
-   return result;
+   linear_solve(conservation_law_parameters.mass_matrix_linear_solver,
+                mass_matrix,
+                b,
+                x);
 }
 
 /** \fn ConservationLaw<dim>::solve_erk()
@@ -79,23 +83,24 @@ Vector<double> ConservationLaw<dim>::invert_mass_matrix(Vector<double> b)
  *  This function contains the transient loop and solves the
  *  transient using explicit Runge-Kutta:
  *  \f[
- *    y_{n+1}=y_n + h\sum\limits^s_{i=1}b_i M^{-1} k_i
+ *    y_{n+1}=y_n + \sum\limits^s_{i=1}b_i M^{-1} k_i
  *  \f]
  *  where \f$k_i\f$ is
  *  \f[
- *    k_i=h f(t_n + c_i h, y_n + h\sum\limits^{i-1}_{j=1}a_{i,j} M^{-1} k_j)
+ *    k_i=h f(t_n + c_i h, y_n + \sum\limits^{i-1}_{j=1}a_{i,j} M^{-1} k_j)
  *  \f]
  */
 template <int dim>
 void ConservationLaw<dim>::solve_erk()
 {
-   // get ERK parameters
+   // get ERK parameters a, b, and c (Butcher tableau)
    int Ns = conservation_law_parameters.erk_nstages;
    std::vector<Vector<double> > erk_a(Ns);
    for (int i = 0; i < Ns; ++i)
       erk_a[i].reinit(Ns);
    std::vector<double> erk_b(Ns);
    std::vector<double> erk_c(Ns);
+   // for now, assume there is only one ERK method for each number of stages
    switch (Ns)
    {
       case 1:
@@ -164,7 +169,8 @@ void ConservationLaw<dim>::solve_erk()
 
       // solve here
       compute_ss_residual(time,old_solution);
-      erk_k[0] = ss_residual;
+      invert_mass_matrix(ss_residual,erk_k[0]);
+      erk_k[0] *= dt;
       for (int i = 1; i < Ns; ++i)
       {
          // compute intermediate solution
@@ -177,14 +183,15 @@ void ConservationLaw<dim>::solve_erk()
          }
 
          compute_ss_residual(time + erk_c[i]*dt, y_tmp);
-         erk_k[i] = ss_residual;
+         invert_mass_matrix(ss_residual,erk_k[i]);
+         erk_k[i] *= dt;
       }
       // compute new solution
       current_solution = old_solution;
       for (int i = 0; i < Ns; ++i)
       {
          x_tmp = erk_k[i];
-         x_tmp *= (dt * erk_b[i]);
+         x_tmp *= erk_b[i];
          current_solution += x_tmp;
       }
    
@@ -207,7 +214,7 @@ void ConservationLaw<dim>::solve_erk()
    }
 }
 
-/** \fn ConservationLaw<dim>::setup_system()
+/** \fn void ConservationLaw<dim>::setup_system()
  *  \brief Sets up the system before solving.
  *
  *  This function makes the sparsity pattern and reinitializes
@@ -244,70 +251,51 @@ void ConservationLaw<dim>::setup_system ()
 
 }
 
-/** \fn Vector<double> ConservationLaw<dim>::compute_ss_residual(double t, Vector<double> solution)
- *  \brief Computes the steady state residual.
- *
- *  This function computes the steady state residual, and it
- *  is to be computed in the derived class.
- *  \param t time at which the steady state residual is to be evaluated
- *  \param solution the solution at which to evaluate the steady state residual
- *  \return the steady state residual vector
+/** \fn void ConservationLaw<dim>::linear_solve(const typename ConservationLawParameters<dim>::LinearSolverType &linear_solver,
+ *                                              const SparseMatrix<double> &A,
+ *                                              const Vector<double>       &b,
+ *                                                    Vector<double>       &x)
+ *  \brief Solves the linear system \f$A x = b\f$.
+ *  \param linear_solver linear solution technique to be used to solve the system
+ *  \param A the system matrix
+ *  \param b the right-hand side vector
+ *  \param x the solution vector
  */
-//JEH: made pure virtual
-/*
 template <int dim>
-Vector<double> ConservationLaw<dim>::compute_ss_residual (double t, Vector<double> solution)
+void ConservationLaw<dim>::linear_solve (const typename ConservationLawParameters<dim>::LinearSolverType &linear_solver,
+                                         const SparseMatrix<double> &A,
+                                         const Vector<double>       &b,
+                                               Vector<double>       &x)
 {
-   Vector<double> some_vector(dof_handler.n_dofs());
-   return some_vector;
-}
-*/
-
-/** \fn linear_solve
- *  \brief Performs a linear solve.
- *
- *  This is only called if the time integrator is implicit. The
- *  function contains a switch for the linear solver type.
- */
+   switch (linear_solver)
+   {
+      case ConservationLawParameters<dim>::direct:
+      {
+         SparseDirectUMFPACK A_umfpack;
+         A_umfpack.initialize(A);
+         A_umfpack.vmult(x,b);
+      }
+      case ConservationLawParameters<dim>::gmres:
+      {
+         Assert(false,ExcNotImplemented());
+      }
 /*
-template <int dim>
-std::pair<unsigned int, double> ConservationLaw<dim>::linear_solve (Vector<double> &newton_update)
-{
-	switch (conservation_law_parameters.linear_solver)
-	{
-	case ConservationLawParameters<dim>::direct:
-				{
-		//SparseDirectUMFPACK A_direct;
-		//A_direct.initialize(system_matrix);
-		//A_direct.vmult(newton_update, right_hand_side);
+      case ConservationLawParameters<dim>::bicgstab:
+      {
+         SolverControl solver_control(1000, 1e-6);
+         SolverBicgstab<> solver(solver_control);
 
-		Assert(false,ExcNotImplemented());
-		return std::pair<unsigned int, double> (0,0);
-				}
-	case ConservationLawParameters<dim>::gmres:
-	{
-            Assert(false,ExcNotImplemented());
-            return std::pair<unsigned int, double> (0,0);
-	}
-	case ConservationLawParameters<dim>::bicgstab:
-	{
-        SolverControl solver_control(1000, 1e-6);
-        SolverBicgstab<> solver(solver_control);
-
-        solver.solve(system_matrix, newton_update, right_hand_side,
-                    PreconditionIdentity());
-        return std::pair<unsigned int, double> (solver_control.last_step(),
-        		solver_control.last_value());
-            //Assert(false,ExcNotImplemented());
-            //return std::pair<unsigned int, double> (0,0);
-	}
-	}
-
-	// throw exception if case was not found
-    Assert (false, ExcNotImplemented());
-    return std::pair<unsigned int, double> (0,0);
-}
+         solver.solve(system_matrix, newton_update, right_hand_side,
+                      PreconditionIdentity());
+         return std::pair<unsigned int, double> (solver_control.last_step(),
+                                                 solver_control.last_value());
+      }
 */
+   }
+
+   // throw exception if case was not found
+   Assert (false, ExcNotImplemented());
+}
 
 /*
 template <int dim>
@@ -319,7 +307,7 @@ void ConservationLaw<dim>::refine_grid (const Vector<double> &indicator)
 {}
 */
 
-/** \fn ConservationLaw<dim>::output_results() const
+/** \fn void ConservationLaw<dim>::output_results() const
  *  \brief Outputs the solution to .vtk.
  *
  *  The user supplies an input parameter that determines
@@ -330,24 +318,24 @@ void ConservationLaw<dim>::refine_grid (const Vector<double> &indicator)
 template <int dim>
 void ConservationLaw<dim>::output_results () const
 {
-	DataOut<dim> data_out;
-	data_out.attach_dof_handler (dof_handler);
+   DataOut<dim> data_out;
+   data_out.attach_dof_handler (dof_handler);
 
-	data_out.add_data_vector (current_solution,
-			component_names,
-			DataOut<dim>::type_dof_data,
-			component_interpretations);
+   data_out.add_data_vector (current_solution,
+                             component_names,
+                             DataOut<dim>::type_dof_data,
+                             component_interpretations);
 
-	data_out.add_data_vector (current_solution, "current_solution");
+   data_out.add_data_vector (current_solution, "current_solution");
 
-	data_out.build_patches ();
+   data_out.build_patches ();
 
-	static unsigned int output_file_number = 0;
-	std::string filename = "solution-" +
-			Utilities::int_to_string (output_file_number, 3) +
-			".vtk";
-	std::ofstream output (filename.c_str());
-	data_out.write_vtk (output);
+   static unsigned int output_file_number = 0;
+   std::string filename = "solution-" +
+         Utilities::int_to_string (output_file_number, 3) +
+         ".vtk";
+   std::ofstream output (filename.c_str());
+   data_out.write_vtk (output);
 
-	++output_file_number;
+   ++output_file_number;
 }
