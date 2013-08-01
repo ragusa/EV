@@ -21,7 +21,7 @@ template <int dim>
 class EulerEquations : public ConservationLaw<dim>
 {
   public:
-    EulerEquations(ParameterHandler &prm);//const std::string &input_filename);
+    EulerEquations(ParameterHandler &prm);
 
   private:
     // Euler equations parameters
@@ -34,12 +34,11 @@ class EulerEquations : public ConservationLaw<dim>
     static const unsigned int energy_component         = dim+1;
 
     // vector of names of each component
-    std::vector<std::string>
-    get_component_names ();
+    std::vector<std::string> get_component_names();
 
-    // data component interpretation (scalar or vector component) for outputting solution
+    // data component interpretation (scalar or vector) for outputting solution
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
-    get_component_interpretations ();
+       get_component_interpretations();
 
 /*
     // compute kinetic energy

@@ -21,7 +21,7 @@ void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
     prm.leave_subsection();
 
     // temporal integrator
-    prm.enter_subsection("temporal integrator");
+    prm.enter_subsection("temporal integration");
     {
         prm.declare_entry("temporal integrator", "erk",
                           Patterns::Selection("erk"),
@@ -117,7 +117,7 @@ void ConservationLawParameters<dim>::get_parameters (ParameterHandler &prm)
     prm.leave_subsection();
 
     // temporal integrator
-    prm.enter_subsection("temporal integrator");
+    prm.enter_subsection("temporal integration");
     {
         const std::string temporal_choice = prm.get("temporal integrator");
         if (temporal_choice == "erk")

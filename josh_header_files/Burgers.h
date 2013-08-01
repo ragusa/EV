@@ -5,8 +5,17 @@
 #define Burgers_h
 
 #include <deal.II/dofs/dof_handler.h>
+#include <deal.II/dofs/dof_accessor.h>
+
+#include <deal.II/grid/tria_accessor.h>
+#include <deal.II/grid/tria_iterator.h>
+
 #include <deal.II/numerics/data_component_interpretation.h>
+
 #include <deal.II/fe/mapping.h>
+#include <deal.II/fe/fe_values.h>
+#include <deal.II/fe/fe_values_extractors.h>
+
 #include <deal.II/lac/vector.h>
 
 #include "ConservationLaw.h"
@@ -33,23 +42,24 @@ class Burgers : public ConservationLaw<dim>
     // number of components and position of components in solution vector
     static const unsigned int n_burgers_components = 1;
 
-/*
     // vector of names of each component
-    std::vector<std::string>
-    get_component_names ();
+    std::vector<std::string> get_component_names();
 
-    // data component interpretation (scalar or vector component) for outputting solution
+    // data component interpretation (scalar or vector) for outputting solution
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
-    get_component_interpretations ();
-*/
+       get_component_interpretations();
 
+    void compute_ss_residual (double t, Vector<double> &solution);
+
+/*
     // compute flux matrix f(c)
     void compute_flux_matrix (const Vector<double> &W,
-                              double (&flux)[n_euler_components][dim]);
+                              double (&flux)[n_burgers_components][dim]);
 
     // computes forcing vector functions g(c)
     void compute_forcing_vector (const Vector<double> &W,
-                                 double (&forcing)[n_euler_components]);
+                                 double (&forcing)[n_burgers_components]);
+*/
 
 };
 

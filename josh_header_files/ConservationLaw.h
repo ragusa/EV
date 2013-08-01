@@ -15,8 +15,6 @@
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/sparsity_pattern.h>
 #include <deal.II/lac/sparse_direct.h>
-//#include <deal.II/lac/precondition.h>
-//#include <deal.II/lac/compressed_sparsity_pattern.h>
 
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/grid_generator.h>
@@ -55,52 +53,66 @@ class ConservationLaw
   public:
 
     ConservationLaw (ParameterHandler &prm, const int &n_comp);
-    void run ();
+    void run();
 
-  private:
+  protected:
 
     void solve_erk();
-    void setup_system ();
-
+    void setup_system();
     void linear_solve (const typename ConservationLawParameters<dim>::LinearSolverType     &linear_solver,
                        const SparseMatrix<double> &A,
                        const Vector<double>       &b,
                              Vector<double>       &x);
     void invert_mass_matrix (const Vector<double> &b, Vector<double> &x);
     virtual void compute_ss_residual (double t, Vector<double> &solution) = 0;
-
     void output_results () const;
+    virtual std::vector<std::string> get_component_names() = 0;
+    virtual std::vector<DataComponentInterpretation::DataComponentInterpretation>
+       get_component_interpretations() = 0;
 
     /** input parameters for conservation law */
     ConservationLawParameters<dim> conservation_law_parameters;
+    /** number of components in the system */
     int n_components;
 
     /** polynomial degree of finite elements */
     int degree;
 
+    /** triangulation; mesh */
     Triangulation<dim>   triangulation;
     const MappingQ1<dim> mapping;
 
+    /** finite element system */
     const FESystem<dim>  fe;
+    /** DoF handler */
     DoFHandler<dim>      dof_handler;
 
+    /** quadrature formula for cells */
     const QGauss<dim>    quadrature;
+    /** quadrature formula for faces */
     const QGauss<dim-1>  face_quadrature;
 
+    /** solution of current time step */
     Vector<double>       current_solution;
+    /** solution of previous time step */
     Vector<double>       old_solution;
+    /** steady-state residual; used in intermediate stages */
     Vector<double>       ss_residual;
 
+    /* sparsity pattern for the mass matrix */
     SparsityPattern      sparsity_pattern;
+    /* mass matrix */
     SparseMatrix<double> mass_matrix;
 
     ConditionalOStream   verbose_cout;
 
-  protected:
-
+    /** function parser for the initial condition expression given by user
+     *  in input file */ 
     FunctionParser<dim>  initial_conditions;
 
+    /** vector of component names */
     std::vector<std::string> component_names;
+    /** vector of data component interpretations (scalar or vector) */
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
        component_interpretations;
 };

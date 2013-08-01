@@ -7,6 +7,11 @@ subsection initial conditions
    set initial conditions 0 = 0
 end
 
+subsection temporal integration
+   set temporal integrator = erk
+   set erk stages = 2
+end
+
 subsection nonlinear solver
    set nonlinear verbosity = verbose
    set nonlinear method = newton
@@ -19,7 +24,12 @@ end
 subsection linear solver
    set linear verbosity = verbose
    set linear method = direct
+   set mass matrix linear method = direct
    set linear absolute tolerance = 1e-10
    set linear relative tolerance = 1e-10
    set max linear iterations = 150
+end
+
+subsection output
+   set output period = 0
 end

@@ -10,7 +10,7 @@
  */
 template <int dim>
 Burgers<dim>::Burgers(ParameterHandler &prm):
-   ConservationLaw<dim>(prm,n_euler_components)
+   ConservationLaw<dim>(prm,n_burgers_components)
 {
    // get Burgers parameters
    burgers_parameters.get_parameters(prm);
@@ -18,8 +18,8 @@ Burgers<dim>::Burgers(ParameterHandler &prm):
    this->initial_conditions.initialize (FunctionParser<dim>::default_variable_names(),
                                         burgers_parameters.initial_conditions_expressions,
                                         std::map<std::string, double>());
-   this->component_names = get_component_names();
-   this->component_interpretations = get_component_interpretations();
+   this->component_names = this->get_component_names();
+   this->component_interpretations = this->get_component_interpretations();
 }
 
 /** \fn std::vector<std::string> Burgers<dim>::get_component_names()
@@ -71,27 +71,29 @@ std::vector<DataComponentInterpretation::DataComponentInterpretation>
 template <int dim>
 void Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
 {
+   const FEValuesExtractors::Scalar velocity (0);
+
    QGauss<dim> quadrature_formula(5);
-   FEValues<dim> fe_values (fe, quadrature_formula,
+   FEValues<dim> fe_values (this->fe, quadrature_formula,
                             update_values | update_gradients | update_JxW_values);
 
-   const unsigned int dofs_per_cell = fe.dofs_per_cell;
+   const unsigned int dofs_per_cell = this->fe.dofs_per_cell;
    const unsigned int n_q_points    = quadrature_formula.size();
 
    Vector<double> cell_residual(dofs_per_cell);
-   Vector<double> solution_values(n_q_points);
 
    std::vector<unsigned int> local_dof_indices (dofs_per_cell);
 
-   DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
-                                         endc = dof_handler.end();
+   // unit vector in x-direction; used for recovering du/dx from gradient
+   Tensor<1,dim> unit_x_vector; unit_x_vector[0] = 1;
+
+   typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler.begin_active(),
+                                                  endc = this->dof_handler.end();
    // loop over cells
    for (; cell!=endc; ++cell)
    {
       cell_residual = 0;
       fe_values.reinit(cell);
-      // get values of solution at quadrature points in current cell
-      fe_values.get_function_values(solution,solution_values);
       // get global DoF indices
       cell->get_dof_indices(local_dof_indices);
 
@@ -103,23 +105,24 @@ void Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
             for (unsigned int m = 0; m < dofs_per_cell; ++m)
                // loop over quadrature points
                for (unsigned int q = 0; q < n_q_points; ++q)
-                  cell_residual(i) += fe_values.shape_value(i,q)
-                                      *solution_values(local_dof_indices[j])*fe_values.shape_value(j,q)
-                                      *solution_values(local_dof_indices[m])*fe_values.shape_grad (m,q)
+                  cell_residual(i) -= fe_values[velocity].value(i,q)
+                                      *solution(local_dof_indices[j])*fe_values[velocity].value(j,q)
+                                      *solution(local_dof_indices[m])*fe_values[velocity].gradient(m,q)
+                                      *unit_x_vector
                                       *fe_values.JxW(q);
 
       // aggregate local residual into global residual
       // loop over test functions
       for (unsigned int i = 0; i < dofs_per_cell; ++i)
-         ss_residual(local_dof_indices[i]) += cell_residual(i);
+         this->ss_residual(local_dof_indices[i]) += cell_residual(i);
    }
 
    // apply boundary conditions: zero Dirichlet
    std::map<unsigned int, double> boundary_values;
-   VectorTools::interpolate_boundary_values(dof_handler,
+   VectorTools::interpolate_boundary_values(this->dof_handler,
                                             0,
                                             ZeroFunction<dim>(),
                                             boundary_values);
    for (std::map<unsigned int, double>::iterator bv = boundary_values.begin(); bv != boundary_values.end(); ++bv)
-      ss_residual(bv->first) = (bv->second);
+      this->ss_residual(bv->first) = (bv->second);
 }

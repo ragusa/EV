@@ -199,19 +199,22 @@ void ConservationLaw<dim>::solve_erk()
       time += dt;
    
       // output solution of this time step if user has specified;
-      //  negative numbers for the output_period parameter specify
-      //  that solution is to be output every time step
-      if (conservation_law_parameters.output_period < 0)
-         output_results ();
-      else if (time >= next_time_step_output)
-      {
-         output_results ();
-         next_time_step_output += conservation_law_parameters.output_period;
-      }
+      //  non-positive numbers for the output_period parameter specify
+      //  that solution is not to be output; only the final solution
+      //  will be output
+      if (conservation_law_parameters.output_period > 0)
+         if (time >= next_time_step_output)
+         {
+            output_results ();
+            next_time_step_output += conservation_law_parameters.output_period;
+         }
+      else
+         if (!(final_time_not_reached_yet))
+            output_results();
 
       // update old_solution to current_solution for next time step
       old_solution = current_solution;
-   }
+   }// end of time loop
 }
 
 /** \fn void ConservationLaw<dim>::setup_system()
@@ -274,10 +277,12 @@ void ConservationLaw<dim>::linear_solve (const typename ConservationLawParameter
          SparseDirectUMFPACK A_umfpack;
          A_umfpack.initialize(A);
          A_umfpack.vmult(x,b);
+         break;
       }
       case ConservationLawParameters<dim>::gmres:
       {
          Assert(false,ExcNotImplemented());
+         break;
       }
 /*
       case ConservationLawParameters<dim>::bicgstab:
@@ -291,10 +296,13 @@ void ConservationLaw<dim>::linear_solve (const typename ConservationLawParameter
                                                  solver_control.last_value());
       }
 */
+      default:
+      {
+         // throw exception if case was not found
+         Assert (false, ExcNotImplemented());
+         break;
+      }
    }
-
-   // throw exception if case was not found
-   Assert (false, ExcNotImplemented());
 }
 
 /*
@@ -331,7 +339,7 @@ void ConservationLaw<dim>::output_results () const
    data_out.build_patches ();
 
    static unsigned int output_file_number = 0;
-   std::string filename = "solution-" +
+   std::string filename = "output/solution-" +
          Utilities::int_to_string (output_file_number, 3) +
          ".vtk";
    std::ofstream output (filename.c_str());
