@@ -8,6 +8,15 @@
 template <int dim>
 void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
 {
+    // finite element parameters
+    prm.enter_subsection("finite element");
+    {
+       prm.declare_entry("degree",
+                         "1",
+                         Patterns::Integer(),
+                         "polynomial degree of finite elements");
+    }
+
     // time parameters
     prm.enter_subsection("time");
     {
@@ -108,6 +117,12 @@ void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
 template <int dim>
 void ConservationLawParameters<dim>::get_parameters (ParameterHandler &prm)
 {
+    // finite element parameters
+    prm.enter_subsection("finite element");
+    {
+       degree = prm.get_integer("degree");
+    }
+
     // time parameters
     prm.enter_subsection("time");
     {

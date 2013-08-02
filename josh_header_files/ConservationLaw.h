@@ -69,14 +69,12 @@ class ConservationLaw
     virtual std::vector<std::string> get_component_names() = 0;
     virtual std::vector<DataComponentInterpretation::DataComponentInterpretation>
        get_component_interpretations() = 0;
+    void check_nan();
 
     /** input parameters for conservation law */
     ConservationLawParameters<dim> conservation_law_parameters;
     /** number of components in the system */
     int n_components;
-
-    /** polynomial degree of finite elements */
-    int degree;
 
     /** triangulation; mesh */
     Triangulation<dim>   triangulation;

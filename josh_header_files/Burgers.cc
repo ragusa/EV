@@ -111,6 +111,37 @@ void Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
                                       *unit_x_vector
                                       *fe_values.JxW(q);
 
+      // add artificial viscosity if requested
+      if (burgers_parameters.viscosity_type != BurgersParameters<dim>::none)
+      {
+         // compute viscosity
+         Vector<double> viscosity(n_q_points);
+         switch (burgers_parameters.viscosity_type)
+         {
+            case BurgersParameters<dim>::constant:
+            {
+               for (unsigned int q = 0; q < n_q_points; ++q)
+                  viscosity(q) = burgers_parameters.constant_viscosity_value;
+               break;
+            }
+            default:
+            {
+               Assert(false,ExcNotImplemented());
+               break;
+            }
+         }
+         // loop over test functions
+         for (unsigned int i = 0; i < dofs_per_cell; ++i)
+            // loop over linear combination functions
+            for (unsigned int j = 0; j < dofs_per_cell; ++j)
+               // loop over quadrature points
+               for (unsigned int q = 0; q < n_q_points; ++q)
+                  cell_residual(i) -= fe_values[velocity].gradient(i,q)
+                                      *viscosity(q)
+                                      *solution(local_dof_indices[j])*fe_values[velocity].gradient(j,q)
+                                      *fe_values.JxW(q);
+      }
+
       // aggregate local residual into global residual
       // loop over test functions
       for (unsigned int i = 0; i < dofs_per_cell; ++i)

@@ -48,6 +48,8 @@ class ConservationLawParameters
 
     static void declare_parameters (ParameterHandler &prm);
     void get_parameters (ParameterHandler &prm);
+
+    int degree;
 };
 
 #include "ConservationLawParameters.cc"

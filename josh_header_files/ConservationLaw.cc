@@ -214,6 +214,7 @@ void ConservationLaw<dim>::solve_erk()
 
       // update old_solution to current_solution for next time step
       old_solution = current_solution;
+      check_nan();
    }// end of time loop
 }
 
@@ -227,8 +228,8 @@ template <int dim>
 void ConservationLaw<dim>::setup_system ()
 {
    // make grid and refine
-   GridGenerator::hyper_cube(triangulation,-1,1);
-   triangulation.refine_global(3);
+   GridGenerator::hyper_cube(triangulation,0,2*numbers::PI);
+   triangulation.refine_global(6);
 
    // clear and distribute dofs
    dof_handler.clear();
@@ -339,11 +340,33 @@ void ConservationLaw<dim>::output_results () const
    data_out.build_patches ();
 
    static unsigned int output_file_number = 0;
-   std::string filename = "output/solution-" +
-         Utilities::int_to_string (output_file_number, 3) +
-         ".vtk";
-   std::ofstream output (filename.c_str());
-   data_out.write_vtk (output);
+   if (dim == 1)
+   {
+      std::string filename = "output/solution-" +
+                             Utilities::int_to_string (output_file_number, 3) +
+                             ".gpl";
+      std::ofstream output (filename.c_str());
+      data_out.write_gnuplot (output);
+   }
+   else
+   {
+      std::string filename = "output/solution-" +
+                             Utilities::int_to_string (output_file_number, 3) +
+                             ".vtk";
+      std::ofstream output (filename.c_str());
+      data_out.write_vtk (output);
+   }
 
    ++output_file_number;
+}
+
+template <int dim>
+void ConservationLaw<dim>::check_nan()
+{
+   unsigned int n = dof_handler.n_dofs();
+   for (unsigned int i = 0; i < n; ++i)
+   {
+      if (std::isnan(current_solution(i)))
+         Assert(false,ExcNumberNotFinite());
+   }
 }
