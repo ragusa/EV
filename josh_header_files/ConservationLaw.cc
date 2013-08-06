@@ -2,30 +2,22 @@
  *  \brief Provides function definitions for the ConservationLaw class.
  */
 
-/** \fn ConservationLaw<dim>::ConservationLaw(ParameterHandler &prm, const int &n_comp)
+/** \fn ConservationLaw<dim>::ConservationLaw(const ConservationLawParameters<dim> &params)
  *  \brief Constructor for ConservationLaw class.
- * 
- *  In addition to initializing some member variables,
- *  this funciton gets parameters from the parameter
- *  handler.
- *  \param prm parameter handler containing conservation law parameters
- *  \param n_comp number of components in the system
+ *  \param params conservation law parameters
  */
 template <int dim>
-ConservationLaw<dim>::ConservationLaw(ParameterHandler &prm,
-                                      const int &n_comp):
-   n_components(n_comp),
+ConservationLaw<dim>::ConservationLaw(const ConservationLawParameters<dim> &params):
+   conservation_law_parameters(params),
+   n_components(params.n_components),
    mapping(),
-   fe(FE_Q<dim>(1), n_comp),
+   fe(FE_Q<dim>(params.degree), params.n_components),
    dof_handler(triangulation),
    quadrature(2),
    face_quadrature(2),
    verbose_cout(std::cout, false),
-   initial_conditions(n_comp)
-{
-   // get conservation law parameters
-   conservation_law_parameters.get_parameters(prm);
-}
+   initial_conditions(params.n_components)
+{}
 
 /** \fn ConservationLaw<dim>::run()
  *  \brief Runs the entire program.
@@ -145,13 +137,34 @@ void ConservationLaw<dim>::solve_erk()
    Vector<double> x_tmp(dof_handler.n_dofs());
 
    double time = 0;
+   unsigned int n = 1; // time step index
    unsigned int next_time_step_output = conservation_law_parameters.output_period;
-   double dt = conservation_law_parameters.time_step_size;
    double t_end = conservation_law_parameters.final_time;
    bool final_time_not_reached_yet = true;
    while (final_time_not_reached_yet)
    {
-      std::cout << "time: " << time << std::endl;
+      // compute dt
+      double dt;
+      switch (conservation_law_parameters.time_step_size_method)
+      {
+         case ConservationLawParameters<dim>::constant:
+            dt = conservation_law_parameters.time_step_size;
+            break;
+         case ConservationLawParameters<dim>::cfl_condition:
+            dt = this->compute_dt_from_cfl_condition();
+            break;
+         default:
+            Assert(false,ExcNotImplemented());
+            break;
+      }
+      // check end of transient and shorten last time step if necessary
+      if ((time+dt) >= t_end)
+      {
+         dt = t_end - time;
+         final_time_not_reached_yet = false;
+      }
+
+      std::cout << "time step " << n << ": t = " << time << "-> " << time+dt << std::endl;
       std::cout << "   Number of active cells: ";
       std::cout << triangulation.n_active_cells();
       std::cout << std::endl;
@@ -159,13 +172,6 @@ void ConservationLaw<dim>::solve_erk()
       std::cout << dof_handler.n_dofs();
       std::cout << std::endl;
       std::cout << std::endl;
-
-      // check end of transient and shorten last time step if necessary
-      if ((time+dt) >= t_end)
-      {
-         dt = t_end - time;
-         final_time_not_reached_yet = false;
-      }
 
       // solve here
       compute_ss_residual(time,old_solution);
@@ -197,6 +203,7 @@ void ConservationLaw<dim>::solve_erk()
    
       // increment time
       time += dt;
+      n++;
    
       // output solution of this time step if user has specified;
       //  non-positive numbers for the output_period parameter specify
@@ -228,8 +235,16 @@ template <int dim>
 void ConservationLaw<dim>::setup_system ()
 {
    // make grid and refine
-   GridGenerator::hyper_cube(triangulation,0,2*numbers::PI);
-   triangulation.refine_global(6);
+   double domain_start = 0;
+   double domain_width = 2*numbers::PI;
+   GridGenerator::hyper_cube(triangulation, domain_start, domain_start + domain_width);
+   triangulation.refine_global(5);
+   // compute minimum cell diameter; used for CFL condition
+   dx_min = domain_width;
+   typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler.begin_active(),
+                                                  endc = this->dof_handler.end();
+   for (; cell != endc; ++cell)
+      dx_min = std::min( dx_min, cell->diameter()); 
 
    // clear and distribute dofs
    dof_handler.clear();
@@ -285,18 +300,6 @@ void ConservationLaw<dim>::linear_solve (const typename ConservationLawParameter
          Assert(false,ExcNotImplemented());
          break;
       }
-/*
-      case ConservationLawParameters<dim>::bicgstab:
-      {
-         SolverControl solver_control(1000, 1e-6);
-         SolverBicgstab<> solver(solver_control);
-
-         solver.solve(system_matrix, newton_update, right_hand_side,
-                      PreconditionIdentity());
-         return std::pair<unsigned int, double> (solver_control.last_step(),
-                                                 solver_control.last_value());
-      }
-*/
       default:
       {
          // throw exception if case was not found
@@ -358,6 +361,43 @@ void ConservationLaw<dim>::output_results () const
    }
 
    ++output_file_number;
+}
+
+/** \fn double ConservationLaw<dim>::compute_dt_from_cfl_condition()
+ *  \brief Computes time step size using the CFL condition
+ *
+ *  The CFL condition for stability is the following:
+ *  \f[
+ *    \nu = \left|\frac{\lambda_{max}\Delta t}{\Delta x_{min}}\right|\le 1,
+ *  \f]
+ *  where \f$\lambda_{max}\f$ is the maximum speed in the domain,
+ *  \f$\Delta t\f$ is the time step size, and \f$\Delta x_{min}\f$
+ *  is the minimum mesh size in the domain. The user supplies the
+ *  CFL number (which must be less than 1), and the time step
+ *  size is calculated from the CFL definition above.
+ */
+template <int dim>
+double ConservationLaw<dim>::compute_dt_from_cfl_condition()
+{
+   const unsigned int n_q_points = quadrature.size();
+   std::vector<double> local_solution(n_q_points);
+   FEValues<dim> fe_values (fe, quadrature, update_values);
+
+   // compute max speed
+   double max_speed = 0.0;
+   typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler.begin_active(),
+                                                  endc = this->dof_handler.end();
+   for (; cell != endc; ++cell)
+   {
+      fe_values.reinit(cell);
+      fe_values.get_function_values(current_solution, local_solution);
+      for (unsigned int q = 0; q < n_q_points; ++q)
+         max_speed = std::max( max_speed, local_solution[q]); 
+   }
+
+   // compute time step size from CFL condition
+   double dt = conservation_law_parameters.cfl * dx_min / max_speed;
+   return dt;
 }
 
 template <int dim>

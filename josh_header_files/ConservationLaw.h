@@ -52,7 +52,7 @@ class ConservationLaw
 {
   public:
 
-    ConservationLaw (ParameterHandler &prm, const int &n_comp);
+    ConservationLaw (const ConservationLawParameters<dim> &params);
     void run();
 
   protected:
@@ -69,6 +69,7 @@ class ConservationLaw
     virtual std::vector<std::string> get_component_names() = 0;
     virtual std::vector<DataComponentInterpretation::DataComponentInterpretation>
        get_component_interpretations() = 0;
+    double compute_dt_from_cfl_condition();
     void check_nan();
 
     /** input parameters for conservation law */
@@ -113,6 +114,9 @@ class ConservationLaw
     /** vector of data component interpretations (scalar or vector) */
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
        component_interpretations;
+
+    /** minimum cell diameter; used for CFL condition */
+    double dx_min;
 };
 
 #include "ConservationLaw.cc"

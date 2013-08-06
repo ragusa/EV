@@ -17,8 +17,13 @@ class ConservationLawParameters
 {
   public:
 
+    int n_components;
+
+    enum TimeStepSizeMethod { constant, cfl_condition };
+    TimeStepSizeMethod time_step_size_method;
     double final_time;
     double time_step_size;
+    double cfl;
 
     unsigned int output_period;
   
@@ -46,8 +51,8 @@ class ConservationLawParameters
     int max_nonlinear_iterations;
     double damping;
 
-    static void declare_parameters (ParameterHandler &prm);
-    void get_parameters (ParameterHandler &prm);
+    static void declare_conservation_law_parameters (ParameterHandler &prm);
+    void get_conservation_law_parameters (ParameterHandler &prm);
 
     int degree;
 };

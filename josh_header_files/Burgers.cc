@@ -2,23 +2,20 @@
  *  \brief Provides the function definitions for the Burgers class.
  */
 
-/** \fn Burgers<dim>::Burgers(ParameterHandler &prm)
+/** \fn Burgers<dim>::Burgers(const BurgersParameters<dim> &params)
  *  \brief Constructor for the Burgers class.
- *
- *  In addition to initializing member data, this function gets
- *  Burgers parameters.
+ *  \param params Burgers equation parameters
  */
 template <int dim>
-Burgers<dim>::Burgers(ParameterHandler &prm):
-   ConservationLaw<dim>(prm,n_burgers_components)
+Burgers<dim>::Burgers(const BurgersParameters<dim> &params):
+   ConservationLaw<dim>(params),
+   burgers_parameters(params)
 {
-   // get Burgers parameters
-   burgers_parameters.get_parameters(prm);
    // initialize initial conditions
    this->initial_conditions.initialize (FunctionParser<dim>::default_variable_names(),
                                         burgers_parameters.initial_conditions_expressions,
                                         std::map<std::string, double>());
-   this->component_names = this->get_component_names();
+   this->component_names           = this->get_component_names();
    this->component_interpretations = this->get_component_interpretations();
 }
 

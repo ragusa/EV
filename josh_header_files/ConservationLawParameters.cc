@@ -1,4 +1,4 @@
-/** \fn ConservationLawParameters<dim>::declare_parameters(ParameterHandler &prm)
+/** \fn ConservationLawParameters<dim>::declare_conservation_law_parameters(ParameterHandler &prm)
  *  \brief Declares the parameters that will be in input file.
  *
  *  This function declares all of the input parameters required
@@ -6,7 +6,7 @@
  *  \param prm parameter handler for conservation law parameters
  */
 template <int dim>
-void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
+void ConservationLawParameters<dim>::declare_conservation_law_parameters (ParameterHandler &prm)
 {
     // finite element parameters
     prm.enter_subsection("finite element");
@@ -16,16 +16,25 @@ void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
                          Patterns::Integer(),
                          "polynomial degree of finite elements");
     }
+    prm.leave_subsection();
 
     // time parameters
     prm.enter_subsection("time");
     {
+       prm.declare_entry("time step size method",
+                         "cfl_condition",
+                         Patterns::Selection("constant|cfl_condition"),
+                         "method of computing time step size");
        prm.declare_entry("final time", "1.0",
                          Patterns::Double(),
                          "final time value");
        prm.declare_entry("time step size", "1e-3",
                          Patterns::Double(),
                          "time step size");
+       prm.declare_entry("cfl",
+                         "0.9",
+                         Patterns::Double(),
+                         "CFL number to be used if CFL condition is used to compute time step size.");
     }
     prm.leave_subsection();
 
@@ -107,7 +116,7 @@ void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
     prm.leave_subsection();
 }
 
-/** \fn ConservationLawParameters<dim>::get_parameters(ParameterHandler &prm)
+/** \fn ConservationLawParameters<dim>::get_conservation_law_parameters(ParameterHandler &prm)
  *  \brief Gets the parameters from the parameter handler.
  *
  *  This function takes the input parameters from the parameter
@@ -115,19 +124,29 @@ void ConservationLawParameters<dim>::declare_parameters (ParameterHandler &prm)
  *  \param prm parameter handler for conservation law parameters
  */
 template <int dim>
-void ConservationLawParameters<dim>::get_parameters (ParameterHandler &prm)
+void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterHandler &prm)
 {
     // finite element parameters
     prm.enter_subsection("finite element");
     {
        degree = prm.get_integer("degree");
     }
+    prm.leave_subsection();
 
     // time parameters
     prm.enter_subsection("time");
     {
+       const std::string time_choice = prm.get("time step size method");
+       if (time_choice == "constant")
+          time_step_size_method = constant;
+       else if (time_choice == "cfl_condition")
+          time_step_size_method = cfl_condition;
+       else
+          Assert(false,ExcNotImplemented());
+
        final_time = prm.get_double("final time");
        time_step_size = prm.get_double("time step size");
+       cfl = prm.get_double("cfl");
     }
     prm.leave_subsection();
 

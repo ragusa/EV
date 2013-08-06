@@ -3,7 +3,8 @@ subsection finite element
 end
 
 subsection time
-   set final time = 0.25
+   set time step size method = cfl_condition
+   set final time = 1.0 
    set time step size = 1e-4
 end
 
@@ -12,7 +13,7 @@ subsection initial conditions
 end
 
 subsection artificial viscosity
-   set viscosity type = constant
+   set viscosity type = none
    set constant viscosity value = 1e-5
    set first order viscosity coefficient = 1.0
    set entropy viscosity coefficient = 1.0

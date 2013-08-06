@@ -34,7 +34,7 @@ template <int dim>
 class Burgers : public ConservationLaw<dim>
 {
   public:
-    Burgers(ParameterHandler &prm);
+    Burgers(const BurgersParameters<dim> &params);
 
   private:
     BurgersParameters<dim> burgers_parameters;
@@ -50,16 +50,6 @@ class Burgers : public ConservationLaw<dim>
        get_component_interpretations();
 
     void compute_ss_residual (double t, Vector<double> &solution);
-
-/*
-    // compute flux matrix f(c)
-    void compute_flux_matrix (const Vector<double> &W,
-                              double (&flux)[n_burgers_components][dim]);
-
-    // computes forcing vector functions g(c)
-    void compute_forcing_vector (const Vector<double> &W,
-                                 double (&forcing)[n_burgers_components]);
-*/
 
 };
 

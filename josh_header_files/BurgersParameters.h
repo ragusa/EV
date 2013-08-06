@@ -16,15 +16,15 @@ using namespace dealii;
  *         Burgers equation.
  */
 template <int dim>
-class BurgersParameters
+class BurgersParameters : public ConservationLawParameters<dim>
 {
   public:
     BurgersParameters();
 
-    static void declare_parameters (ParameterHandler &parameter_handler);
-           void get_parameters     (ParameterHandler &parameter_handler);
+    static void declare_burgers_parameters (ParameterHandler &parameter_handler);
+           void get_burgers_parameters     (ParameterHandler &parameter_handler);
 
-    static const int n_components = 1;
+    static const int n_burgers_components = 1;
 
     std::vector<std::string> initial_conditions_expressions;
 

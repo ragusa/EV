@@ -29,12 +29,13 @@ int main(int argc, char ** argv) {
 
       // declare input parameters and read them from input file into parameter handler
       ParameterHandler parameter_handler;
-      BurgersParameters<dimension>::declare_parameters(parameter_handler);
-      ConservationLawParameters<dimension>::declare_parameters(parameter_handler);
+      BurgersParameters<dimension>::declare_burgers_parameters(parameter_handler);
       parameter_handler.read_input(input_filename);
+      BurgersParameters<dimension> burgers_parameters;
+      burgers_parameters.get_burgers_parameters(parameter_handler);
 
       // run problem
-      Burgers<dimension> burgers_problem(parameter_handler);
+      Burgers<dimension> burgers_problem(burgers_parameters);
       burgers_problem.run();
 
    } catch (std::exception &exc) {
