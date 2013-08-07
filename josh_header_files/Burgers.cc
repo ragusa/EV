@@ -121,6 +121,22 @@ void Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
                   viscosity(q) = burgers_parameters.constant_viscosity_value;
                break;
             }
+            case BurgersParameters<dim>::first_order:
+            {
+               std::vector<double> local_solution(n_q_points);
+               fe_values.get_function_values(this->current_solution, local_solution);
+               double max_velocity = 0.0;
+               for (unsigned int q = 0; q < n_q_points; ++q)
+                  max_velocity = std::max( max_velocity, local_solution[q]);
+
+               // compute first-order viscosity
+               double cell_diameter = cell->diameter();
+               double viscosity_value = 0.5 * burgers_parameters.first_order_viscosity_coef * cell_diameter * max_velocity;
+               for (unsigned int q = 0; q < n_q_points; ++q)
+                  viscosity(q) = viscosity_value;
+               
+               break;
+            }
             default:
             {
                Assert(false,ExcNotImplemented());
