@@ -13,8 +13,8 @@ ConservationLaw<dim>::ConservationLaw(const ConservationLawParameters<dim> &para
    mapping(),
    fe(FE_Q<dim>(params.degree), params.n_components),
    dof_handler(triangulation),
-   quadrature(2),
-   face_quadrature(2),
+   quadrature(2*params.degree + 1),
+   face_quadrature(2*params.degree),
    verbose_cout(std::cout, false),
    initial_conditions(params.n_components)
 {}
@@ -238,7 +238,7 @@ void ConservationLaw<dim>::setup_system ()
    double domain_start = 0;
    double domain_width = 2*numbers::PI;
    GridGenerator::hyper_cube(triangulation, domain_start, domain_start + domain_width);
-   triangulation.refine_global(5);
+   triangulation.refine_global(conservation_law_parameters.initial_refinement_level);
    // compute minimum cell diameter; used for CFL condition
    dx_min = domain_width;
    typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler.begin_active(),
@@ -400,13 +400,16 @@ double ConservationLaw<dim>::compute_dt_from_cfl_condition()
    return dt;
 }
 
+/** \fn void ConservationLaw<dim>::check_nan()
+ *  \brief Checks that there are no NaNs in the solution vector
+ *
+ *  The NaN check is performed by comparing a value to itself
+ *  since an equality comparison with NaN always returns false.
+ */
 template <int dim>
 void ConservationLaw<dim>::check_nan()
 {
    unsigned int n = dof_handler.n_dofs();
    for (unsigned int i = 0; i < n; ++i)
-   {
-      if (std::isnan(current_solution(i)))
-         Assert(false,ExcNumberNotFinite());
-   }
+      Assert(current_solution(i) == current_solution(i), ExcNumberNotFinite());
 }

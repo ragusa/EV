@@ -18,6 +18,16 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters (Parame
     }
     prm.leave_subsection();
 
+    // refinement parameters
+    prm.enter_subsection("refinement");
+    {
+       prm.declare_entry("initial refinement level",
+                         "3",
+                          Patterns::Integer(),
+                          "initial number of uniform refinements");
+    }
+    prm.leave_subsection();
+
     // time parameters
     prm.enter_subsection("time");
     {
@@ -32,7 +42,7 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters (Parame
                          Patterns::Double(),
                          "time step size");
        prm.declare_entry("cfl",
-                         "0.9",
+                         "0.5",
                          Patterns::Double(),
                          "CFL number to be used if CFL condition is used to compute time step size.");
     }
@@ -130,6 +140,13 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
     prm.enter_subsection("finite element");
     {
        degree = prm.get_integer("degree");
+    }
+    prm.leave_subsection();
+
+    // refinement parameters
+    prm.enter_subsection("refinement");
+    {
+       initial_refinement_level = prm.get_integer("initial refinement level");
     }
     prm.leave_subsection();
 

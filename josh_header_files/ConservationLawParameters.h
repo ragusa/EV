@@ -19,6 +19,8 @@ class ConservationLawParameters
 
     int n_components;
 
+    unsigned int initial_refinement_level;
+
     enum TimeStepSizeMethod { constant, cfl_condition };
     TimeStepSizeMethod time_step_size_method;
     double final_time;

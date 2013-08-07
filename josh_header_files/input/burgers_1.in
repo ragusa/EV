@@ -2,10 +2,15 @@ subsection finite element
    set degree = 2
 end
 
+subsection refinement
+   set initial refinement level = 5
+end
+
 subsection time
    set time step size method = cfl_condition
    set final time = 1.0 
    set time step size = 1e-4
+   set cfl = 0.5
 end
 
 subsection initial conditions

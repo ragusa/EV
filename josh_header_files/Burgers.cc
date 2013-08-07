@@ -4,7 +4,7 @@
 
 /** \fn Burgers<dim>::Burgers(const BurgersParameters<dim> &params)
  *  \brief Constructor for the Burgers class.
- *  \param params Burgers equation parameters
+ *  \param params Burgers' equation parameters
  */
 template <int dim>
 Burgers<dim>::Burgers(const BurgersParameters<dim> &params):
@@ -52,15 +52,25 @@ std::vector<DataComponentInterpretation::DataComponentInterpretation>
 } 
 
 /** \fn Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
- *  \brief Computes the steady-state residual for the Burgers' equation.
+ *  \brief Computes the steady-state residual for Burgers' equation.
  *
- *  This function computes the steady-state residual, where component \f$i\f$ is
+ *  This function computes the steady-state residual \f$\mathbf{f_{ss}}\f$ for the conservation law
  *  \f[
- *    ({\psi}_i,\mathbf{g}(\mathbf{u})-\mathbf{f}(\mathbf{u})).
+ *    \frac{\partial\mathbf{u}}{\partial t} 
+ *    + \nabla \cdot \mathbf{f}(\mathbf{u}) = \mathbf{g}(\mathbf{u}),
  *  \f]
- *  For the inviscid Burgers' equation, this is the following:
+ *  which for component \f$i\f$ is
  *  \f[
- *    ({\psi}_i,-u u_x)
+ *    \mathbf{f_{ss}} = (\mathbf{\psi}, -\nabla \cdot \mathbf{f}(\mathbf{u}) + \mathbf{g}(\mathbf{u}))_\Omega.
+ *  \f]
+ *  For vicous Burgers' equation, this is the following:
+ *  \f[
+ *    \mathbf{f_{ss}} = -(\mathbf{\psi},u u_x)_\Omega + (\mathbf{\psi},\nu u_{xx})_\Omega .
+ *  \f]
+ *  After integration by parts, this is
+ *  \f[
+ *    \mathbf{f_{ss}} = -(\mathbf{\psi},u u_x)_\Omega - (\mathbf{{\psi}_x},\nu u_{x})_\Omega 
+ *    + (\mathbf{\psi},\nu u_{x})_{\partial\Omega}.
  *  \f]
  *  \param t time at which the steady-state residual is to be evaluated
  *  \param solution at which to evaluate the steady-state residual
@@ -70,12 +80,11 @@ void Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
 {
    const FEValuesExtractors::Scalar velocity (0);
 
-   QGauss<dim> quadrature_formula(5);
-   FEValues<dim> fe_values (this->fe, quadrature_formula,
+   FEValues<dim> fe_values (this->fe, this->quadrature,
                             update_values | update_gradients | update_JxW_values);
 
    const unsigned int dofs_per_cell = this->fe.dofs_per_cell;
-   const unsigned int n_q_points    = quadrature_formula.size();
+   const unsigned int n_q_points    = this->quadrature.size();
 
    Vector<double> cell_residual(dofs_per_cell);
 
@@ -123,6 +132,7 @@ void Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
             }
             case BurgersParameters<dim>::first_order:
             {
+               // get max velocity on cell
                std::vector<double> local_solution(n_q_points);
                fe_values.get_function_values(this->current_solution, local_solution);
                double max_velocity = 0.0;
