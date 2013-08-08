@@ -96,15 +96,15 @@ void ConservationLaw<dim>::solve_erk()
    switch (Ns)
    {
       case 1:
-         erk_b[0] = 0;
-         erk_c[0] = 1;
+         erk_b[0] = 1;
+         erk_c[0] = 0;
          break;
       case 2:
          erk_a[1][0] = 0.5;
          erk_b[0] = 0;
-         erk_b[1] = 0.5;
+         erk_b[1] = 1;
          erk_c[0] = 0;
-         erk_c[1] = 1;
+         erk_c[1] = 0.5;
          break;
       case 4:
          erk_a[1][0] = 0.5;
@@ -113,14 +113,14 @@ void ConservationLaw<dim>::solve_erk()
          erk_a[3][0] = 0;
          erk_a[3][1] = 0;
          erk_a[3][2] = 1;
-         erk_b[0] = 0;
-         erk_b[1] = 0.5;
-         erk_b[2] = 0.5;
-         erk_b[3] = 1;
-         erk_c[0] = 1./6;
-         erk_c[1] = 1./3;
-         erk_c[2] = 1./3;
-         erk_c[3] = 1./6;
+         erk_b[0] = 1./6;
+         erk_b[1] = 1./3;
+         erk_b[2] = 1./3;
+         erk_b[3] = 1./6;
+         erk_c[0] = 0;
+         erk_c[1] = 0.5;
+         erk_c[2] = 0.5;
+         erk_c[3] = 1;
          break;
       default:
          Assert(false,ExcNotImplemented());
@@ -134,7 +134,6 @@ void ConservationLaw<dim>::solve_erk()
 
    // allocate memory for intermediate steps
    Vector<double> y_tmp(dof_handler.n_dofs());
-   Vector<double> x_tmp(dof_handler.n_dofs());
 
    double time = 0;
    unsigned int n = 1; // time step index
