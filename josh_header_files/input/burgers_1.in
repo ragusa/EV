@@ -1,5 +1,5 @@
 subsection finite element
-   set degree = 2
+   set degree = 1
 end
 
 subsection refinement
@@ -7,28 +7,32 @@ subsection refinement
 end
 
 subsection time
-   set time step size method = cfl_condition
-   set final time = 1.0 
-   set time step size = 1e-4
+   # options are <constant|cfl_condition>
+   set time step size method = constant
+   set final time = 0.305 
+   set time step size = 0.001
    set cfl = 0.5
 end
 
 subsection initial conditions
-   set initial conditions 0 = 1 - cos(x)
+   set initial conditions 0 = sin(2*pi*x)
 end
 
 subsection artificial viscosity
-   set viscosity type = first_order
-   set constant viscosity value = 1e-5
+   # options are <none|constant|first_order>
+   set viscosity type = constant
+   set constant viscosity value = 0.02
    set first order viscosity coefficient = 1.0
    set entropy viscosity coefficient = 1.0
 end
 
 subsection temporal integration
+   # options are <erk>
    set temporal integrator = erk
    set erk stages = 2
 end
 
+# this section is not yet applicable
 subsection nonlinear solver
    set nonlinear verbosity = verbose
    set nonlinear method = newton

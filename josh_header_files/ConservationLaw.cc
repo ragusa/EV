@@ -182,11 +182,7 @@ void ConservationLaw<dim>::solve_erk()
          // compute intermediate solution
          y_tmp = old_solution;
          for (int j = 0; j < i-1; ++j)
-         {
-            x_tmp = erk_k[j];
-            x_tmp *= erk_a[i][j];
-            y_tmp += x_tmp;
-         }
+            y_tmp.add(erk_a[i][j] , erk_k[j]);
 
          compute_ss_residual(time + erk_c[i]*dt, y_tmp);
          invert_mass_matrix(ss_residual,erk_k[i]);
@@ -195,11 +191,7 @@ void ConservationLaw<dim>::solve_erk()
       // compute new solution
       current_solution = old_solution;
       for (int i = 0; i < Ns; ++i)
-      {
-         x_tmp = erk_k[i];
-         x_tmp *= erk_b[i];
-         current_solution += x_tmp;
-      }
+         current_solution.add(erk_b[i], erk_k[i]);
    
       // increment time
       time += dt;
@@ -236,7 +228,7 @@ void ConservationLaw<dim>::setup_system ()
 {
    // make grid and refine
    double domain_start = 0;
-   double domain_width = 2*numbers::PI;
+   double domain_width = 1.;//2*numbers::PI;
    GridGenerator::hyper_cube(triangulation, domain_start, domain_start + domain_width);
    triangulation.refine_global(conservation_law_parameters.initial_refinement_level);
    // compute minimum cell diameter; used for CFL condition

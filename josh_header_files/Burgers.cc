@@ -12,9 +12,12 @@ Burgers<dim>::Burgers(const BurgersParameters<dim> &params):
    burgers_parameters(params)
 {
    // initialize initial conditions
+   std::map<std::string,double> constants;
+   constants["pi"] = numbers::PI;
+
    this->initial_conditions.initialize (FunctionParser<dim>::default_variable_names(),
                                         burgers_parameters.initial_conditions_expressions,
-                                        std::map<std::string, double>());
+                                        constants);
    this->component_names           = this->get_component_names();
    this->component_interpretations = this->get_component_interpretations();
 }
@@ -90,9 +93,6 @@ void Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
 
    std::vector<unsigned int> local_dof_indices (dofs_per_cell);
 
-   // unit vector in x-direction; used for recovering du/dx from gradient
-   Tensor<1,dim> unit_x_vector; unit_x_vector[0] = 1;
-
    typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler.begin_active(),
                                                   endc = this->dof_handler.end();
    // loop over cells
@@ -103,6 +103,22 @@ void Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
       // get global DoF indices
       cell->get_dof_indices(local_dof_indices);
 
+      std::vector<double>          current_solution_values   (n_q_points);
+      std::vector<Tensor<1, dim> > current_solution_gradients(n_q_points);
+      fe_values[velocity].get_function_values   (this->current_solution,current_solution_values);
+      fe_values[velocity].get_function_gradients(this->current_solution,current_solution_gradients);
+
+      std::vector<Tensor<1, dim> > flux_derivative(n_q_points);
+      // loop over quadrature points
+      for (unsigned int q = 0; q < n_q_points; ++q)
+      {
+         Tensor<1, dim> values_q;
+         for (int d = 0; d < dim; ++d)
+            values_q[d] = current_solution_values[q];
+         flux_derivative[q] = values_q;
+      }
+      
+/*
       // loop over test functions
       for (unsigned int i = 0; i < dofs_per_cell; ++i)
          // loop over components in value term
@@ -116,6 +132,15 @@ void Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
                                       *solution(local_dof_indices[m])*fe_values[velocity].gradient(m,q)
                                       *unit_x_vector
                                       *fe_values.JxW(q);
+*/
+      // loop over test functions
+      for (unsigned int i = 0; i < dofs_per_cell; ++i)
+         // loop over quadrature points
+         for (unsigned int q = 0; q < n_q_points; ++q)
+            cell_residual(i) -= fe_values[velocity].value(i,q)
+                                *flux_derivative[q]
+                                *current_solution_gradients[q]
+                                *fe_values.JxW(q);
 
       // add artificial viscosity if requested
       if (burgers_parameters.viscosity_type != BurgersParameters<dim>::none)
@@ -153,6 +178,7 @@ void Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
                break;
             }
          }
+/*
          // loop over test functions
          for (unsigned int i = 0; i < dofs_per_cell; ++i)
             // loop over linear combination functions
@@ -163,6 +189,15 @@ void Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
                                       *viscosity(q)
                                       *solution(local_dof_indices[j])*fe_values[velocity].gradient(j,q)
                                       *fe_values.JxW(q);
+*/
+         // loop over test functions
+         for (unsigned int i = 0; i < dofs_per_cell; ++i)
+            // loop over quadrature points
+            for (unsigned int q = 0; q < n_q_points; ++q)
+               cell_residual(i) -= fe_values[velocity].gradient(i,q)
+                                   *viscosity(q)
+                                   *current_solution_gradients[q]
+                                   *fe_values.JxW(q);
       }
 
       // aggregate local residual into global residual
