@@ -240,6 +240,7 @@ void Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
    }
 
    // apply boundary conditions: zero Dirichlet
+/*
    std::map<unsigned int, double> boundary_values;
    VectorTools::interpolate_boundary_values(this->dof_handler,
                                             0,
@@ -247,4 +248,5 @@ void Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
                                             boundary_values);
    for (std::map<unsigned int, double>::iterator bv = boundary_values.begin(); bv != boundary_values.end(); ++bv)
       this->ss_residual(bv->first) = (bv->second);
+*/
 }
