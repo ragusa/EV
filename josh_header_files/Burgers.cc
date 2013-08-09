@@ -151,11 +151,11 @@ void Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
                fe_values.get_function_values(solution, local_solution);
                double max_velocity = 0.0;
                for (unsigned int q = 0; q < n_q_points_cell; ++q)
-                  max_velocity = std::max( max_velocity, local_solution[q]);
+                  max_velocity = std::max( max_velocity, std::abs(local_solution[q]));
 
                // compute first-order viscosity
                double cell_diameter = cell->diameter();
-               double viscosity_value = 0.5 * burgers_parameters.first_order_viscosity_coef * cell_diameter * max_velocity;
+               double viscosity_value = burgers_parameters.first_order_viscosity_coef * cell_diameter * max_velocity;
                for (unsigned int q = 0; q < n_q_points_cell; ++q)
                   viscosity(q) = viscosity_value;
                
@@ -234,13 +234,17 @@ void Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
       }
 
       // aggregate local residual into global residual
+      this->constraints.distribute_local_to_global(cell_residual, local_dof_indices, this->ss_residual);
+      /*
       // loop over test functions
       for (unsigned int i = 0; i < dofs_per_cell; ++i)
          this->ss_residual(local_dof_indices[i]) += cell_residual(i);
-   }
+      */
+
+   } // end cell loop
 
    // apply boundary conditions: zero Dirichlet
-/*
+   /*
    std::map<unsigned int, double> boundary_values;
    VectorTools::interpolate_boundary_values(this->dof_handler,
                                             0,

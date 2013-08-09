@@ -14,7 +14,9 @@
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/sparsity_pattern.h>
+#include <deal.II/lac/compressed_sparsity_pattern.h>
 #include <deal.II/lac/sparse_direct.h>
+#include <deal.II/lac/constraint_matrix.h>
 
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/grid_generator.h>
@@ -57,6 +59,7 @@ class ConservationLaw
 
   protected:
 
+    void assemble_mass_matrix();
     void solve_erk();
     void setup_system();
     void linear_solve (const typename ConservationLawParameters<dim>::LinearSolverType     &linear_solver,
@@ -85,6 +88,8 @@ class ConservationLaw
     const FESystem<dim>  fe;
     /** DoF handler */
     DoFHandler<dim>      dof_handler;
+    /** constraint matrix */
+    ConstraintMatrix     constraints;
 
     /** quadrature formula for cells */
     const QGauss<dim>    quadrature;
