@@ -66,7 +66,7 @@ class ConservationLaw
                        const SparseMatrix<double> &A,
                        const Vector<double>       &b,
                              Vector<double>       &x);
-    void invert_mass_matrix (const Vector<double> &b, Vector<double> &x);
+    void mass_matrix_solve (Vector<double> &x);
     virtual void compute_ss_residual (double t, Vector<double> &solution) = 0;
     void output_results () const;
     virtual std::vector<std::string> get_component_names() = 0;
@@ -74,6 +74,7 @@ class ConservationLaw
        get_component_interpretations() = 0;
     double compute_dt_from_cfl_condition();
     void check_nan();
+    void apply_Dirichlet_BC();
 
     /** input parameters for conservation law */
     ConservationLawParameters<dim> conservation_law_parameters;
@@ -100,8 +101,8 @@ class ConservationLaw
     Vector<double>       current_solution;
     /** solution of previous time step */
     Vector<double>       old_solution;
-    /** steady-state residual; used in intermediate stages */
-    Vector<double>       ss_residual;
+    /** system right-hand side */
+    Vector<double>       system_rhs;
 
     /* sparsity pattern for the mass matrix */
     SparsityPattern      sparsity_pattern;

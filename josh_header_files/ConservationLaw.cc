@@ -32,9 +32,13 @@ void ConservationLaw<dim>::run()
    setup_system();
 
    // interpolate the initial conditions to the grid
-   VectorTools::interpolate(dof_handler,initial_conditions,old_solution);
-   current_solution = old_solution;
+   VectorTools::interpolate(dof_handler,initial_conditions,current_solution);
+
+   // apply Dirichlet BC to initial solution or guess
+   apply_Dirichlet_BC();
    
+   old_solution = current_solution;
+
    // output initial solution
    output_results();
 
@@ -49,8 +53,8 @@ void ConservationLaw<dim>::run()
    }
 }
 
-/** \fn void ConservationLaw<dim>::invert_mass_matrix(const Vector<double> &b,
- *                                                          Vector<double> &x)
+/** \fn void ConservationLaw<dim>::mass_matrix_solve(const Vector<double> &b,
+ *                                                         Vector<double> &x)
  *  \brief Inverts the mass matrix implicitly.
  *
  *  This function computes the product \f$M^{-1}b\f$ of the inverse of the
@@ -60,12 +64,11 @@ void ConservationLaw<dim>::run()
  *  \param x the product \f$M^{-1}b\f$
  */
 template <int dim>
-void ConservationLaw<dim>::invert_mass_matrix(const Vector<double> &b,
-                                                    Vector<double> &x)
+void ConservationLaw<dim>::mass_matrix_solve(Vector<double> &x)
 {
    linear_solve(conservation_law_parameters.mass_matrix_linear_solver,
                 mass_matrix,
-                b,
+                system_rhs,
                 x);
 }
 
@@ -128,12 +131,9 @@ void ConservationLaw<dim>::solve_erk()
    }
 
    // allocate memory for each stage
-   std::vector<Vector<double> > invM_k(Ns);
+   std::vector<Vector<double> > erk_f(Ns);
    for (int i = 0; i < Ns; ++i)
-      invM_k[i].reinit(dof_handler.n_dofs());
-
-   // allocate memory for intermediate steps
-   Vector<double> y_tmp(dof_handler.n_dofs());
+      erk_f[i].reinit(dof_handler.n_dofs());
 
    double time = 0;
    unsigned int n = 1; // time step index
@@ -176,23 +176,30 @@ void ConservationLaw<dim>::solve_erk()
       /** First, compute each \f$\mathbf{M}^{-1}\mathbf{k}_i\f$: */
       for (int i = 0; i < Ns; ++i)
       {
-         /** compute intermediate solution: \f$\mathbf{y}_n + \sum\limits^{i-1}_{j=1}a_{i,j} \mathbf{M}^{-1} \mathbf{k}_j\f$ */
-         y_tmp = old_solution;
-         for (int j = 0; j < i-1; ++j)
-            y_tmp.add(erk_a[i][j] , invM_k[j]);
+         // compute stage time
+         double stage_time = time + erk_c[i]*dt;
 
-         compute_ss_residual(time + erk_c[i]*dt, y_tmp);
-         invert_mass_matrix(ss_residual,invM_k[i]);
-         invM_k[i] *= dt;
+         /** compute intermediate solution: \f$\mathbf{y}_n + \sum\limits^{i-1}_{j=1}a_{i,j} \mathbf{M}^{-1} \mathbf{k}_j\f$ */
+         system_rhs = 0.0;
+         mass_matrix.vmult(system_rhs, old_solution);
+         for (int j = 0; j < i-1; ++j)
+            system_rhs.add(dt * erk_a[i][j] , erk_f[j]);
+         mass_matrix_solve(current_solution);
+         apply_Dirichlet_BC();
+
+         compute_ss_residual(stage_time, erk_f[i]);
       }
       /** Now we compute the solution using the computed \f$\mathbf{k}_i\f$:
        *  \f[
        *    \mathbf{y}_{n+1}=\mathbf{y}_n + \sum\limits^s_{i=1}b_i \mathbf{M}^{-1} \mathbf{k}_i
        *  \f]
        */    
-      current_solution = old_solution;
+      system_rhs = 0.0;
+      mass_matrix.vmult(system_rhs, old_solution);
       for (int i = 0; i < Ns; ++i)
-         current_solution.add(erk_b[i], invM_k[i]);
+         system_rhs.add(dt * erk_b[i], erk_f[i]);
+      mass_matrix_solve(current_solution);
+      apply_Dirichlet_BC();
    
       // increment time
       time += dt;
@@ -203,11 +210,13 @@ void ConservationLaw<dim>::solve_erk()
       //  that solution is not to be output; only the final solution
       //  will be output
       if (conservation_law_parameters.output_period > 0)
+      {
          if (time >= next_time_step_output)
          {
             output_results ();
             next_time_step_output += conservation_law_parameters.output_period;
          }
+      }
       else
          if (!(final_time_not_reached))
             output_results();
@@ -216,6 +225,35 @@ void ConservationLaw<dim>::solve_erk()
       old_solution = current_solution;
       check_nan();
    }// end of time loop
+}
+
+/** \fn void ConservationLaw<dim>apply_Dirichlet_BC()
+ *  \brief Applies Dirichlet boundary conditions
+ *
+ *  This function applies Dirichlet boundary conditions
+ *  using the interpolate_boundary_values() tool.
+ */
+template <int dim>
+void ConservationLaw<dim>::apply_Dirichlet_BC()
+{
+   std::map<unsigned int, double> boundary_values;
+   for (unsigned int boundary = 0; boundary < conservation_law_parameters.n_boundaries; ++boundary)
+      for (unsigned int component = 0; component < n_components; ++component)
+      {
+         bool is_dirichlet = true;
+         if (is_dirichlet)
+         {
+            std::vector<bool> component_mask(n_components, false);
+            component_mask[component] = true;
+            VectorTools::interpolate_boundary_values (dof_handler,
+                                                      boundary,
+                                                      ZeroFunction<dim>(),
+                                                      boundary_values,
+                                                      component_mask);
+         }
+      }
+   for (std::map<unsigned int, double>::const_iterator it = boundary_values.begin(); it != boundary_values.end(); ++it)
+      current_solution(it->first) = (it->second);
 }
 
 /** \fn void ConservationLaw<dim>::setup_system()
@@ -229,7 +267,7 @@ void ConservationLaw<dim>::setup_system ()
 {
    // make grid and refine
    double domain_start = 0;
-   double domain_width = 1.;
+   double domain_width = conservation_law_parameters.domain_width;
    GridGenerator::hyper_cube(triangulation, domain_start, domain_start + domain_width);
    triangulation.refine_global(conservation_law_parameters.initial_refinement_level);
    // compute minimum cell diameter; used for CFL condition
@@ -246,7 +284,7 @@ void ConservationLaw<dim>::setup_system ()
    // make constraints
    constraints.clear();
    DoFTools::make_hanging_node_constraints (dof_handler, constraints);
-   for (unsigned int boundary = 0; boundary < 1; ++boundary)
+   for (unsigned int boundary = 0; boundary < conservation_law_parameters.n_boundaries; ++boundary)
    {
       for (int component = 0; component < n_components; ++component)
       {
@@ -273,16 +311,11 @@ void ConservationLaw<dim>::setup_system ()
    // create mass matrix
    mass_matrix.reinit(sparsity_pattern);
    assemble_mass_matrix();
-/*
-   MatrixCreator::create_mass_matrix( dof_handler,
-                                      QGauss<dim>(3),
-                                      mass_matrix);
-*/
 
    // resize vectors
    old_solution.reinit(dof_handler.n_dofs());
    current_solution.reinit(dof_handler.n_dofs());
-   ss_residual.reinit(dof_handler.n_dofs());
+   system_rhs.reinit(dof_handler.n_dofs());
 
 }
 
@@ -322,6 +355,14 @@ void ConservationLaw<dim>::assemble_mass_matrix ()
 
       // add to global mass matrix with contraints
       constraints.distribute_local_to_global (local_mass, local_dof_indices, mass_matrix);
+   }
+
+   // output mass matrix
+   if (conservation_law_parameters.output_mass_matrix)
+   {
+      std::ofstream mass_matrix_out ("mass_matrix.txt");
+      mass_matrix.print_formatted(mass_matrix_out, 10, true, 0, "0", 1);
+      mass_matrix_out.close();
    }
 }
 

@@ -54,7 +54,7 @@ std::vector<DataComponentInterpretation::DataComponentInterpretation>
    return data_component_interpretation;
 } 
 
-/** \fn Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
+/** \fn Burgers<dim>::compute_ss_residual(double t, Vector<double> &f)
  *  \brief Computes the steady-state residual for Burgers' equation.
  *
  *  This function computes the steady-state residual \f$\mathbf{f_{ss}}\f$ for the conservation law
@@ -76,11 +76,14 @@ std::vector<DataComponentInterpretation::DataComponentInterpretation>
  *    + (\mathbf{\psi},\nu u_{x})_{\partial\Omega}.
  *  \f]
  *  \param t time at which the steady-state residual is to be evaluated
- *  \param solution at which to evaluate the steady-state residual
+ *  \param f steady-state residual
  */
 template <int dim>
-void Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
+void Burgers<dim>::compute_ss_residual(double t, Vector<double> &f)
 {
+   // reset vector
+   f = 0.0;
+
    const FEValuesExtractors::Scalar velocity (0);
 
    FEValues<dim> fe_values (this->fe, this->quadrature,
@@ -109,9 +112,50 @@ void Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
 
       std::vector<double>          solution_values   (n_q_points_cell);
       std::vector<Tensor<1, dim> > solution_gradients(n_q_points_cell);
-      fe_values[velocity].get_function_values   (solution,solution_values);
-      fe_values[velocity].get_function_gradients(solution,solution_gradients);
+      fe_values[velocity].get_function_values   (this->current_solution,solution_values);
+      fe_values[velocity].get_function_gradients(this->current_solution,solution_gradients);
 
+      // compute viscosity
+      Vector<double> viscosity(n_q_points_cell);
+      switch (burgers_parameters.viscosity_type)
+      {
+         case BurgersParameters<dim>::none:
+         {
+            for (unsigned int q = 0; q < n_q_points_cell; ++q)
+               viscosity(q) = 0.0;
+            break;
+         }
+         case BurgersParameters<dim>::constant:
+         {
+            for (unsigned int q = 0; q < n_q_points_cell; ++q)
+               viscosity(q) = burgers_parameters.constant_viscosity_value;
+            break;
+         }
+         case BurgersParameters<dim>::first_order:
+         {
+            // get max velocity on cell
+            std::vector<double> local_solution(n_q_points_cell);
+            fe_values.get_function_values(this->current_solution, local_solution);
+            double max_velocity = 0.0;
+            for (unsigned int q = 0; q < n_q_points_cell; ++q)
+               max_velocity = std::max( max_velocity, std::abs(local_solution[q]));
+
+            // compute first-order viscosity
+            double cell_diameter = cell->diameter();
+            double viscosity_value = burgers_parameters.first_order_viscosity_coef * cell_diameter * max_velocity;
+            for (unsigned int q = 0; q < n_q_points_cell; ++q)
+               viscosity(q) = viscosity_value;
+            
+            break;
+         }
+         default:
+         {
+            Assert(false,ExcNotImplemented());
+            break;
+         }
+      }
+ 
+      // compute derivative of flux
       std::vector<Tensor<1, dim> > flux_derivative(n_q_points_cell);
       // loop over quadrature points
       for (unsigned int q = 0; q < n_q_points_cell; ++q)
@@ -126,131 +170,75 @@ void Burgers<dim>::compute_ss_residual(double t, Vector<double> &solution)
       for (unsigned int i = 0; i < dofs_per_cell; ++i)
          // loop over quadrature points
          for (unsigned int q = 0; q < n_q_points_cell; ++q)
-            cell_residual(i) -= fe_values[velocity].value(i,q)
-                                *flux_derivative[q]
-                                *solution_gradients[q]
-                                *fe_values.JxW(q);
-
-      // add artificial viscosity if requested
-      if (burgers_parameters.viscosity_type != BurgersParameters<dim>::none)
-      {
-         // compute viscosity
-         Vector<double> viscosity(n_q_points_cell);
-         switch (burgers_parameters.viscosity_type)
-         {
-            case BurgersParameters<dim>::constant:
-            {
-               for (unsigned int q = 0; q < n_q_points_cell; ++q)
-                  viscosity(q) = burgers_parameters.constant_viscosity_value;
-               break;
-            }
-            case BurgersParameters<dim>::first_order:
-            {
-               // get max velocity on cell
-               std::vector<double> local_solution(n_q_points_cell);
-               fe_values.get_function_values(solution, local_solution);
-               double max_velocity = 0.0;
-               for (unsigned int q = 0; q < n_q_points_cell; ++q)
-                  max_velocity = std::max( max_velocity, std::abs(local_solution[q]));
-
-               // compute first-order viscosity
-               double cell_diameter = cell->diameter();
-               double viscosity_value = burgers_parameters.first_order_viscosity_coef * cell_diameter * max_velocity;
-               for (unsigned int q = 0; q < n_q_points_cell; ++q)
-                  viscosity(q) = viscosity_value;
-               
-               break;
-            }
-            default:
-            {
-               Assert(false,ExcNotImplemented());
-               break;
-            }
-         }
-         // loop over test functions
-         for (unsigned int i = 0; i < dofs_per_cell; ++i)
-            // loop over quadrature points
-            for (unsigned int q = 0; q < n_q_points_cell; ++q)
-               cell_residual(i) -= fe_values[velocity].gradient(i,q)
+            cell_residual(i) -= (
+                                   fe_values[velocity].value(i,q)
+                                   *flux_derivative[q]
+                                   *solution_gradients[q]
+                                +  fe_values[velocity].gradient(i,q)
                                    *viscosity(q)
                                    *solution_gradients[q]
-                                   *fe_values.JxW(q);
+                                ) * fe_values.JxW(q);
 
-         // loop over faces
-         for (unsigned int face = 0; face < faces_per_cell; ++face)
+/*
+      // loop over faces
+      for (unsigned int face = 0; face < faces_per_cell; ++face)
+      {
+         // add term for boundary faces
+         if (cell->at_boundary(face))
          {
-            // add term for boundary faces
-            if (cell->at_boundary(face))
+            fe_face_values.reinit(cell, face);
+
+            std::vector<Tensor<1, dim> > solution_gradients_face(n_q_points_face);
+            fe_face_values[velocity].get_function_gradients   (this->current_solution,solution_gradients_face);
+
+            // compute viscosity
+            Vector<double> viscosity_face(n_q_points_face);
+            switch (burgers_parameters.viscosity_type)
             {
-               fe_face_values.reinit(cell, face);
-
-               std::vector<Tensor<1, dim> > solution_gradients_face(n_q_points_face);
-               fe_face_values[velocity].get_function_gradients   (solution,solution_gradients_face);
-
-               // compute viscosity
-               Vector<double> viscosity_face(n_q_points_face);
-               switch (burgers_parameters.viscosity_type)
+               case BurgersParameters<dim>::constant:
                {
-                  case BurgersParameters<dim>::constant:
-                  {
-                     for (unsigned int q = 0; q < n_q_points_face; ++q)
-                        viscosity(q) = burgers_parameters.constant_viscosity_value;
-                     break;
-                  }
-                  case BurgersParameters<dim>::first_order:
-                  {
-                     // get max velocity on cell
-                     std::vector<double> local_solution(n_q_points_face);
-                     fe_face_values.get_function_values(solution, local_solution);
-                     double max_velocity = 0.0;
-                     for (unsigned int q = 0; q < n_q_points_face; ++q)
-                        max_velocity = std::max( max_velocity, local_solution[q]);
-      
-                     // compute first-order viscosity
-                     double cell_diameter = cell->diameter();
-                     double viscosity_value = 0.5 * burgers_parameters.first_order_viscosity_coef * cell_diameter * max_velocity;
-                     for (unsigned int q = 0; q < n_q_points_face; ++q)
-                        viscosity(q) = viscosity_value;
-                     
-                     break;
-                  }
-                  default:
-                  {
-                     Assert(false,ExcNotImplemented());
-                     break;
-                  }
-               }
-               // loop over test functions
-               for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                  // loop over quadrature points
                   for (unsigned int q = 0; q < n_q_points_face; ++q)
-                     cell_residual(i) += fe_face_values[velocity].value(i,q)
-                                         *viscosity_face(q)
-                                         *solution_gradients_face[q]
-                                         *fe_face_values.normal_vector(q)
-                                         *fe_face_values.JxW(q);
+                     viscosity_face(q) = burgers_parameters.constant_viscosity_value;
+                  break;
+               }
+               case BurgersParameters<dim>::first_order:
+               {
+                  // get max velocity on cell
+                  std::vector<double> local_solution(n_q_points_face);
+                  fe_face_values.get_function_values(this->current_solution, local_solution);
+                  double max_velocity = 0.0;
+                  for (unsigned int q = 0; q < n_q_points_face; ++q)
+                     max_velocity = std::max( max_velocity, local_solution[q]);
+   
+                  // compute first-order viscosity
+                  double cell_diameter = cell->diameter();
+                  double viscosity_value = 0.5 * burgers_parameters.first_order_viscosity_coef * cell_diameter * max_velocity;
+                  for (unsigned int q = 0; q < n_q_points_face; ++q)
+                     viscosity_face(q) = viscosity_value;
+                  
+                  break;
+               }
+               default:
+               {
+                  Assert(false,ExcNotImplemented());
+                  break;
+               }
             }
+            // loop over test functions
+            for (unsigned int i = 0; i < dofs_per_cell; ++i)
+               // loop over quadrature points
+               for (unsigned int q = 0; q < n_q_points_face; ++q)
+                  cell_residual(i) += fe_face_values[velocity].value(i,q)
+                                      *viscosity_face(q)
+                                      *solution_gradients_face[q]
+                                      *fe_face_values.normal_vector(q)
+                                      *fe_face_values.JxW(q);
          }
       }
+*/
 
       // aggregate local residual into global residual
-      this->constraints.distribute_local_to_global(cell_residual, local_dof_indices, this->ss_residual);
-      /*
-      // loop over test functions
-      for (unsigned int i = 0; i < dofs_per_cell; ++i)
-         this->ss_residual(local_dof_indices[i]) += cell_residual(i);
-      */
+      this->constraints.distribute_local_to_global(cell_residual, local_dof_indices, f);
 
    } // end cell loop
-
-   // apply boundary conditions: zero Dirichlet
-   /*
-   std::map<unsigned int, double> boundary_values;
-   VectorTools::interpolate_boundary_values(this->dof_handler,
-                                            0,
-                                            ZeroFunction<dim>(),
-                                            boundary_values);
-   for (std::map<unsigned int, double>::iterator bv = boundary_values.begin(); bv != boundary_values.end(); ++bv)
-      this->ss_residual(bv->first) = (bv->second);
-*/
 }

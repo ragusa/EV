@@ -18,6 +18,9 @@ class ConservationLawParameters
   public:
 
     int n_components;
+    int n_boundaries;
+
+    double domain_width;
 
     unsigned int initial_refinement_level;
 
@@ -28,6 +31,7 @@ class ConservationLawParameters
     double cfl;
 
     unsigned int output_period;
+    bool output_mass_matrix;
   
     enum TemporalIntegrator { erk };
     TemporalIntegrator temporal_integrator;
