@@ -12,9 +12,9 @@ subsection refinement
 end
 
 subsection time
-   # options are <constant|cfl_condition>
+   # options are <constant_dt|cfl_condition>
    set time step size method = cfl_condition
-   set final time = 0.300 
+   set final time = 0.100 
    set time step size = 0.001
    set cfl = 0.5
 end
@@ -24,7 +24,7 @@ subsection initial conditions
 end
 
 subsection artificial viscosity
-   # options are <none|constant|first_order>
+   # options are <none|constant|first_order|entropy|entropy_with_jumps>
    set viscosity type = first_order
    set constant viscosity value = 0.02
    set first order viscosity coefficient = 0.5
@@ -34,7 +34,7 @@ end
 subsection temporal integration
    # options are <erk>
    set temporal integrator = erk
-   set erk stages = 2
+   set erk stages = 3
 end
 
 # this section is not yet applicable

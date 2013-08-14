@@ -27,12 +27,6 @@ class BurgersParameters : public ConservationLawParameters<dim>
     static const int n_burgers_components = 1;
 
     std::vector<std::string> initial_conditions_expressions;
-
-    enum ViscosityType { none, constant, first_order, entropy }; 
-    ViscosityType viscosity_type;
-    double constant_viscosity_value;
-    double first_order_viscosity_coef;
-    double entropy_viscosity_coef;
 };
 
 #include "BurgersParameters.cc"

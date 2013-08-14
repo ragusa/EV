@@ -6,6 +6,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/conditional_ostream.h>
@@ -59,22 +60,43 @@ class ConservationLaw
 
   protected:
 
+    void setup_system();
+    void update_cell_sizes();
     void assemble_mass_matrix();
     void solve_erk();
-    void setup_system();
+
+    void update_flux_speeds();
+    double compute_dt_from_cfl_condition();
+
+    void mass_matrix_solve (Vector<double> &x);
     void linear_solve (const typename ConservationLawParameters<dim>::LinearSolverType     &linear_solver,
                        const SparseMatrix<double> &A,
                        const Vector<double>       &b,
                              Vector<double>       &x);
-    void mass_matrix_solve (Vector<double> &x);
-    virtual void compute_ss_residual (double t, Vector<double> &solution) = 0;
+
+    void apply_Dirichlet_BC();
+
+    // steady state residual functions
+    void compute_ss_residual (double t, Vector<double> &solution);
+    virtual void compute_cell_ss_residual(FEValues<dim> &fe_values,
+                                          const typename DoFHandler<dim>::active_cell_iterator &cell,
+                                          const double &time,
+                                          Vector<double> &cell_residual) = 0;
+    virtual void compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
+                                          const typename DoFHandler<dim>::active_cell_iterator &cell,
+                                          const double &time,
+                                          Vector<double> &cell_residual) = 0;
+    virtual Tensor<1,dim> flux_derivative(const double u) = 0;
+    void update_viscosities();
+    void update_first_order_viscosities();
+
     void output_results () const;
+
+    void check_nan();
+
     virtual std::vector<std::string> get_component_names() = 0;
     virtual std::vector<DataComponentInterpretation::DataComponentInterpretation>
        get_component_interpretations() = 0;
-    double compute_dt_from_cfl_condition();
-    void check_nan();
-    void apply_Dirichlet_BC();
 
     /** input parameters for conservation law */
     ConservationLawParameters<dim> conservation_law_parameters;
@@ -87,6 +109,10 @@ class ConservationLaw
 
     /** finite element system */
     const FESystem<dim>  fe;
+    /** DoFs per cell */
+    const unsigned int   dofs_per_cell;
+    /** faces per cell */
+    const unsigned int   faces_per_cell;
     /** DoF handler */
     DoFHandler<dim>      dof_handler;
     /** constraint matrix */
@@ -94,8 +120,12 @@ class ConservationLaw
 
     /** quadrature formula for cells */
     const QGauss<dim>    quadrature;
+    /** number of quadrature points for cells */
+    const unsigned int   n_q_points_cell;
     /** quadrature formula for faces */
     const QGauss<dim-1>  face_quadrature;
+    /** number of quadrature points for faces */
+    const unsigned int   n_q_points_face;
 
     /** solution of current time step */
     Vector<double>       current_solution;
@@ -123,6 +153,16 @@ class ConservationLaw
 
     /** minimum cell diameter; used for CFL condition */
     double dx_min;
+    /** maximum flux speed; used for CFL condition */
+    double max_flux_speed;
+
+    // maps
+    std::map<typename DoFHandler<dim>::active_cell_iterator, double>          dx;
+    std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > flux_speed_cell_q;
+    std::map<typename DoFHandler<dim>::active_cell_iterator, double>          max_flux_speed_cell;
+    std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > viscosity_cell_q;
+    std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > first_order_viscosity_cell_q;
+    std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > entropy_viscosity_cell_q;
 };
 
 #include "ConservationLaw.cc"

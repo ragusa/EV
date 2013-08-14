@@ -33,29 +33,6 @@ void BurgersParameters<dim>::declare_burgers_parameters(
          "initial conditions for component computed from x,y,z");
    }
    parameter_handler.leave_subsection();
-
-   // artificial viscosity
-   parameter_handler.enter_subsection("artificial viscosity");
-   {
-      parameter_handler.declare_entry("viscosity type",
-                                      "constant",
-                                      Patterns::Anything(),
-                                      "choice for artificial viscosity");
-      parameter_handler.declare_entry("constant viscosity value",
-                                      "1e-3",
-                                      Patterns::Double(),
-                                      "viscosity value if constant viscosity chosen");
-      parameter_handler.declare_entry("first order viscosity coefficient",
-                                      "1e-3",
-                                      Patterns::Double(),
-                                      "tuning constant value to be used with first-order viscosity");
-      parameter_handler.declare_entry("entropy viscosity coefficient",
-                                      "1e-3",
-                                      Patterns::Double(),
-                                      "tuning constant value to be used with entropy viscosity");
-   }
-   parameter_handler.leave_subsection();
- 
 }
 
 /**
@@ -66,6 +43,7 @@ void BurgersParameters<dim>::declare_burgers_parameters(
 template<int dim>
 void BurgersParameters<dim>::get_burgers_parameters(
   ParameterHandler &parameter_handler)
+
 {
    // get conservation law parameters
    this->get_conservation_law_parameters(parameter_handler);
@@ -77,27 +55,6 @@ void BurgersParameters<dim>::get_burgers_parameters(
       //std::vector<std::string> expressions (n_components,"0.0");
       for (int c = 0; c < n_burgers_components; c++)
           initial_conditions_expressions[c] = parameter_handler.get("initial conditions " + Utilities::int_to_string(c));
-   }
-   parameter_handler.leave_subsection();
-
-   // artificial viscosity
-   parameter_handler.enter_subsection("artificial viscosity");
-   {
-      const std::string viscosity_choice = parameter_handler.get("viscosity type");
-      if (viscosity_choice == "none")
-         viscosity_type = none;
-      else if (viscosity_choice == "constant")
-         viscosity_type = constant;
-      else if (viscosity_choice == "first_order")
-         viscosity_type = first_order;
-      else if (viscosity_choice == "entropy")
-         viscosity_type = entropy;
-      else
-         Assert(false,ExcNotImplemented());
-
-      constant_viscosity_value = parameter_handler.get_double("constant viscosity value");
-      first_order_viscosity_coef = parameter_handler.get_double("first order viscosity coefficient");
-      entropy_viscosity_coef = parameter_handler.get_double("entropy viscosity coefficient");
    }
    parameter_handler.leave_subsection();
 }

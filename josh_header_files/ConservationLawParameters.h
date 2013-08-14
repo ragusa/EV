@@ -24,7 +24,7 @@ class ConservationLawParameters
 
     unsigned int initial_refinement_level;
 
-    enum TimeStepSizeMethod { constant, cfl_condition };
+    enum TimeStepSizeMethod { constant_dt, cfl_condition };
     TimeStepSizeMethod time_step_size_method;
     double final_time;
     double time_step_size;
@@ -61,6 +61,12 @@ class ConservationLawParameters
     void get_conservation_law_parameters (ParameterHandler &prm);
 
     int degree;
+
+    enum ViscosityType { none, constant, first_order, entropy, entropy_with_jumps }; 
+    ViscosityType viscosity_type;
+    double constant_viscosity_value;
+    double first_order_viscosity_coef;
+    double entropy_viscosity_coef;
 };
 
 #include "ConservationLawParameters.cc"
