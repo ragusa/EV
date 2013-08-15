@@ -62,7 +62,6 @@ std::vector<DataComponentInterpretation::DataComponentInterpretation>
 template <int dim>
 void Burgers<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
                                             const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                            const double &time,
                                             Vector<double> &cell_residual)
 {
    // reinitialize fe values for cell
@@ -101,7 +100,6 @@ void Burgers<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
 template <int dim>
 void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                                             const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                            const double &time,
                                             Vector<double> &cell_residual)
 {
 /*
@@ -172,4 +170,16 @@ Tensor<1,dim> Burgers<dim>::flux_derivative(const double u)
       dfdu[d] = u;
    
    return dfdu;
+}
+
+template <int dim>
+double Burgers<dim>::entropy(const double u) const
+{
+   return 0.5*std::pow(u,2);
+}
+
+template <int dim>
+double Burgers<dim>::entropy_derivative(const double u) const
+{
+   return u;
 }

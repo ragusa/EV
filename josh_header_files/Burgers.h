@@ -53,13 +53,13 @@ class Burgers : public ConservationLaw<dim>
 
     void compute_cell_ss_residual(FEValues<dim> &fe_values,
                                   const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                  const double &time,
                                   Vector<double> &cell_residual);
     void compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                                   const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                  const double &time,
                                   Vector<double> &cell_residual);
     Tensor<1,dim> flux_derivative(const double u);
+    double entropy           (const double u) const;
+    double entropy_derivative(const double u) const;
 };
 
 #include "Burgers.cc"

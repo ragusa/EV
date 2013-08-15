@@ -24,11 +24,12 @@ subsection initial conditions
 end
 
 subsection artificial viscosity
-   # options are <none|constant|first_order|entropy|entropy_with_jumps>
-   set viscosity type = first_order
+   # options are <none|constant|first_order|entropy>
+   set viscosity type = entropy
    set constant viscosity value = 0.02
    set first order viscosity coefficient = 0.5
    set entropy viscosity coefficient = 15.0
+   set add jumps = true
 end
 
 subsection temporal integration

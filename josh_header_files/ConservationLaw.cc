@@ -73,10 +73,13 @@ void ConservationLaw<dim>::setup_system ()
    viscosity_cell_q.clear();
    first_order_viscosity_cell_q.clear();
    entropy_viscosity_cell_q.clear();
+   entropy_residual_cell_q.clear();
+   max_jumps_cell.clear();
 
    // make grid and refine
    double domain_start = 0;
    double domain_width = conservation_law_parameters.domain_width;
+   domain_volume = std::pow(domain_width,dim);
    GridGenerator::hyper_cube(triangulation, domain_start, domain_start + domain_width);
    triangulation.refine_global(conservation_law_parameters.initial_refinement_level);
    update_cell_sizes();
@@ -129,6 +132,7 @@ void ConservationLaw<dim>::setup_system ()
       viscosity_cell_q[cell]             = Vector<double>(n_q_points_cell);
       first_order_viscosity_cell_q[cell] = Vector<double>(n_q_points_cell);
       entropy_viscosity_cell_q[cell]     = Vector<double>(n_q_points_cell);
+      entropy_residual_cell_q[cell]      = Vector<double>(n_q_points_cell);
    }
 }
 
@@ -342,7 +346,7 @@ void ConservationLaw<dim>::solve_erk()
    for (int i = 0; i < Ns; ++i)
       erk_f[i].reinit(dof_handler.n_dofs());
 
-   double time = 0;
+   old_time = 0.0;
    unsigned int n = 1; // time step index
    unsigned int next_time_step_output = conservation_law_parameters.output_period;
    double t_end = conservation_law_parameters.final_time;
@@ -364,13 +368,13 @@ void ConservationLaw<dim>::solve_erk()
             break;
       }
       // check end of transient and shorten last time step if necessary
-      if ((time+dt) >= t_end)
+      if ((old_time+dt) >= t_end)
       {
-         dt = t_end - time;
+         dt = t_end - old_time;
          final_time_not_reached = false;
       }
 
-      std::cout << "time step " << n << ": t = " << time << "-> " << time+dt << std::endl;
+      std::cout << "time step " << n << ": t = " << old_time << "-> " << old_time+dt << std::endl;
       std::cout << "   Number of active cells: ";
       std::cout << triangulation.n_active_cells();
       std::cout << std::endl;
@@ -384,7 +388,7 @@ void ConservationLaw<dim>::solve_erk()
       for (int i = 0; i < Ns; ++i)
       {
          // compute stage time
-         double stage_time = time + erk_c[i]*dt;
+         current_time = old_time + erk_c[i]*dt;
 
          /** compute intermediate solution: \f$\mathbf{y}_n + \sum\limits^{i-1}_{j=1}a_{i,j} \mathbf{M}^{-1} \mathbf{k}_j\f$ */
          system_rhs = 0.0;
@@ -394,7 +398,7 @@ void ConservationLaw<dim>::solve_erk()
          mass_matrix_solve(current_solution);
          apply_Dirichlet_BC();
 
-         compute_ss_residual(stage_time, erk_f[i]);
+         compute_ss_residual(erk_f[i]);
       }
       /** Now we compute the solution using the computed \f$\mathbf{k}_i\f$:
        *  \f[
@@ -409,7 +413,7 @@ void ConservationLaw<dim>::solve_erk()
       apply_Dirichlet_BC();
    
       // increment time
-      time += dt;
+      old_time += dt;
       n++;
    
       // output solution of this time step if user has specified;
@@ -418,7 +422,7 @@ void ConservationLaw<dim>::solve_erk()
       //  will be output
       if (conservation_law_parameters.output_period > 0)
       {
-         if (time >= next_time_step_output)
+         if (n >= next_time_step_output)
          {
             output_results ();
             next_time_step_output += conservation_law_parameters.output_period;
@@ -492,7 +496,7 @@ void ConservationLaw<dim>::update_flux_speeds()
    }
 }
 
-/** \fn ConservationLaw<dim>::compute_ss_residual(double time, Vector<double> &f)
+/** \fn ConservationLaw<dim>::compute_ss_residual(Vector<double> &f)
  *  \brief Computes the steady-state residual for Burgers' equation.
  *
  *  This function computes the steady-state residual \f$\mathbf{f_{ss}}\f$ for the conservation law
@@ -513,11 +517,10 @@ void ConservationLaw<dim>::update_flux_speeds()
  *    \mathbf{f_{ss}} = -(\mathbf{\psi},u u_x)_\Omega - (\mathbf{{\psi}_x},\nu u_{x})_\Omega 
  *    + (\mathbf{\psi},\nu u_{x})_{\partial\Omega}.
  *  \f]
- *  \param time time at which the steady-state residual is to be evaluated
  *  \param f steady-state residual
  */
 template <int dim>
-void ConservationLaw<dim>::compute_ss_residual(double time, Vector<double> &f)
+void ConservationLaw<dim>::compute_ss_residual(Vector<double> &f)
 {
    // reset vector
    f = 0.0;
@@ -545,13 +548,11 @@ void ConservationLaw<dim>::compute_ss_residual(double time, Vector<double> &f)
       // compute cell contribution to cell residual
       compute_cell_ss_residual(fe_values,
                                cell,
-                               time,
                                cell_residual);
 
       // compute face contribution to face residual
       compute_face_ss_residual(fe_face_values,
                                cell,
-                               time,
                                cell_residual);
 
       // aggregate local residual into global residual
@@ -621,7 +622,7 @@ void ConservationLaw<dim>::linear_solve (const typename ConservationLawParameter
    constraints.distribute(x);
 }
 
-/** \fn void ConservationLaw<dim>::update_viscosities()
+/** \fn void ConservationLaw<dim>::update_viscosities(const double dt)
  *  \brief Updates viscosity at each quadrature point in each cell.
  */
 template <int dim>
@@ -663,13 +664,15 @@ void ConservationLaw<dim>::update_viscosities()
       // entropy viscosity
       case ConservationLawParameters<dim>::entropy:
       {
-         Assert(false,ExcNotImplemented());
-         break;
-      }
-      // entropy viscosity with jumps
-      case ConservationLawParameters<dim>::entropy_with_jumps:
-      {
-         Assert(false,ExcNotImplemented());
+         update_first_order_viscosities();
+         update_entropy_viscosities();
+
+         typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                                        endc = dof_handler.end();
+         for (; cell != endc; ++cell)
+            for (unsigned int q = 0; q < n_q_points_cell; ++q)
+               viscosity_cell_q[cell](q) = std::min(first_order_viscosity_cell_q[cell](q),
+                                                    entropy_viscosity_cell_q[cell](q));
          break;
       }
       default:
@@ -693,7 +696,160 @@ void ConservationLaw<dim>::update_first_order_viscosities()
                                                   endc = dof_handler.end();
    for (; cell != endc; ++cell)
       for (unsigned int q = 0; q < n_q_points_cell; ++q)
-         first_order_viscosity_cell_q[cell](q) = c_max * dx[cell] * flux_speed_cell_q[cell](q);
+         first_order_viscosity_cell_q[cell](q) = std::abs(c_max * dx[cell] * flux_speed_cell_q[cell](q));
+}
+
+/** \fn void ConservationLaw<dim>::update_entropy_viscosities()
+ *  \brief Computes entropy viscosity at each quadrature point in each cell.
+ */
+template <int dim>
+void ConservationLaw<dim>::update_entropy_viscosities()
+{
+   // update entropy residuals and max entropy deviation
+   update_entropy_residuals();
+
+   // compute entropy viscosity
+   double c_s = conservation_law_parameters.entropy_viscosity_coef;
+
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                                  endc = dof_handler.end();
+   if (conservation_law_parameters.add_jumps)
+   {
+      // update jumps
+      update_jumps();
+
+      for (; cell != endc; ++cell)
+         for (unsigned int q = 0; q < n_q_points_cell; ++q)
+            entropy_viscosity_cell_q[cell](q) = c_s * std::pow(dx[cell],2)
+               * (entropy_residual_cell_q[cell](q) + max_jumps_cell[cell])
+               / max_entropy_deviation;
+   } else {
+      for (; cell != endc; ++cell)
+         for (unsigned int q = 0; q < n_q_points_cell; ++q)
+            entropy_viscosity_cell_q[cell](q) = c_s * std::pow(dx[cell],2)
+               * entropy_residual_cell_q[cell](q)
+               / max_entropy_deviation;
+   }
+}
+
+/** \fn void ConservationLaw<dim>::update_entropy_residuals(const double dt)
+ *  \brief Updates the entropy residuals at each quadrature point in each cell.
+ */
+template <int dim>
+void ConservationLaw<dim>::update_entropy_residuals()
+{
+   FEValues<dim> fe_values (fe, quadrature, update_values | update_gradients | update_JxW_values);
+
+   std::vector<double> current_solution_local(n_q_points_cell);
+   std::vector<double> old_solution_local    (n_q_points_cell);
+   std::vector<Tensor<1,dim> > current_gradient_local(n_q_points_cell);
+   std::vector<Tensor<1,dim> > old_gradient_local    (n_q_points_cell);
+   std::vector<Tensor<1,dim> > current_flux_derivative(n_q_points_cell);
+   std::vector<Tensor<1,dim> > old_flux_derivative    (n_q_points_cell);
+
+   std::vector<double> current_entropy(n_q_points_cell);
+   std::vector<double> old_entropy    (n_q_points_cell);
+   std::vector<double> current_entropy_derivative(n_q_points_cell);
+   std::vector<double> old_entropy_derivative    (n_q_points_cell);
+
+   double dt = current_time - old_time;
+
+   // domain-averaged entropy
+   double entropy_average = 0.0;
+
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                                  endc = dof_handler.end();
+   for (; cell != endc; ++cell)
+   {
+      fe_values.reinit(cell);
+      fe_values.get_function_values(current_solution, current_solution_local);
+      fe_values.get_function_values(old_solution,     old_solution_local);
+      fe_values.get_function_gradients(current_solution, current_gradient_local);
+      fe_values.get_function_gradients(old_solution,     old_gradient_local);
+
+      for (unsigned int q = 0; q < n_q_points_cell; ++q)
+      {
+         current_entropy[q] = entropy(current_solution_local[q]);
+         old_entropy[q]     = entropy(old_solution_local[q]);
+         current_entropy_derivative[q] = entropy_derivative(current_solution_local[q]);
+         old_entropy_derivative[q]     = entropy_derivative(old_solution_local[q]);
+         current_flux_derivative[q] = flux_derivative(current_solution_local[q]);
+         old_flux_derivative[q]     = flux_derivative(old_solution_local[q]);
+
+         // compute entropy residual
+         entropy_residual_cell_q[cell](q) = std::abs( (current_solution_local[q] - old_solution_local[q]) / dt
+            + current_entropy_derivative[q] * current_flux_derivative[q] * current_gradient_local[q] );
+
+         // add entropy to volume-weighted sum for use in computation of entropy average
+         entropy_average += entropy(current_solution_local[q]) * fe_values.JxW(q);
+      }
+   }
+   // finish computing entropy average by dividing by the domain volume
+   entropy_average /= domain_volume;
+
+   // compute max entropy deviation to be used as entropy normalization term
+   max_entropy_deviation = 0.0;
+   for (cell = dof_handler.begin_active(); cell != endc; ++cell)
+      for (unsigned int q = 0; q < n_q_points_cell; ++q)
+         max_entropy_deviation = std::max(max_entropy_deviation,
+                                          std::abs(current_entropy[q] - entropy_average));
+}
+
+/** \fn void ConservationLaw<dim>::update_jumps()
+ *  \brief Update the jumps.
+ */
+template <int dim>
+void ConservationLaw<dim>::update_jumps()
+{
+   FEFaceValues<dim> fe_values_face         (fe, face_quadrature, update_values | update_gradients | update_JxW_values | update_normal_vectors);
+   FEFaceValues<dim> fe_values_face_neighbor(fe, face_quadrature, update_values | update_gradients | update_JxW_values | update_normal_vectors);
+
+   std::vector<Tensor<1,dim> > gradients_face         (n_q_points_face);
+   std::vector<Tensor<1,dim> > gradients_face_neighbor(n_q_points_face);
+   std::vector<Point<dim> >    normal_vectors         (n_q_points_face);
+
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                                  endc = dof_handler.end();
+   for (; cell != endc; ++cell)
+   {
+      double max_jump_in_cell = 0.0;
+      double max_jump_on_face;
+
+      for (unsigned int iface = 0; iface < faces_per_cell; ++iface)
+      {
+         typename DoFHandler<dim>::face_iterator face = cell->face(iface);
+         if (face->at_boundary() == false)
+         {
+            Assert(cell->neighbor(iface).state() == IteratorState::valid, ExcInternalError());
+            typename DoFHandler<dim>::cell_iterator neighbor = cell->neighbor(iface);
+            const unsigned int ineighbor = cell->neighbor_of_neighbor(iface);
+            Assert(ineighbor < faces_per_cell, ExcInternalError());
+
+            fe_values_face.reinit(cell,iface);
+            fe_values_face_neighbor.reinit(cell,ineighbor);
+
+            // get gradients on adjacent faces of current cell and neighboring cell
+            fe_values_face.get_function_gradients(current_solution, gradients_face);
+            fe_values_face_neighbor.get_function_gradients(current_solution, gradients_face_neighbor);
+
+            // get normal vectors
+            normal_vectors = fe_values_face.get_normal_vectors();
+
+            max_jump_on_face = 0.0;
+            for (unsigned int q = 0; q < n_q_points_face; ++q)
+            {
+               // compute difference in gradients across face
+               gradients_face[q] -= gradients_face_neighbor[q];
+               double jump_on_face = std::abs(gradients_face[q] * normal_vectors[q]);
+               max_jump_on_face = std::max(max_jump_on_face, jump_on_face);
+            }
+         } // end if (at_boundary())
+         max_jump_in_cell = std::max(max_jump_in_cell, max_jump_on_face);
+      } // end face loop
+
+      max_jumps_cell[cell] = max_jump_in_cell;
+
+   } // end cell loop
 }
 
 /*

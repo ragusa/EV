@@ -62,11 +62,12 @@ class ConservationLawParameters
 
     int degree;
 
-    enum ViscosityType { none, constant, first_order, entropy, entropy_with_jumps }; 
+    enum ViscosityType { none, constant, first_order, entropy }; 
     ViscosityType viscosity_type;
     double constant_viscosity_value;
     double first_order_viscosity_coef;
     double entropy_viscosity_coef;
+    bool add_jumps;
 };
 
 #include "ConservationLawParameters.cc"

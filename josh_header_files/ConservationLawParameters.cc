@@ -37,8 +37,8 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters (Parame
    {
       prm.declare_entry("initial refinement level",
                         "3",
-                         Patterns::Integer(),
-                         "initial number of uniform refinements");
+                        Patterns::Integer(),
+                        "initial number of uniform refinements");
    }
    prm.leave_subsection();
 
@@ -132,21 +132,25 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters (Parame
    prm.enter_subsection("artificial viscosity");
    {
       prm.declare_entry("viscosity type",
-                                      "constant",
-                                      Patterns::Anything(),
-                                      "choice for artificial viscosity");
+                        "constant",
+                        Patterns::Anything(),
+                        "choice for artificial viscosity");
       prm.declare_entry("constant viscosity value",
-                                      "1e-3",
-                                      Patterns::Double(),
-                                      "viscosity value if constant viscosity chosen");
+                        "1e-3",
+                        Patterns::Double(),
+                        "viscosity value if constant viscosity chosen");
       prm.declare_entry("first order viscosity coefficient",
-                                      "1e-3",
-                                      Patterns::Double(),
-                                      "tuning constant value to be used with first-order viscosity");
+                        "1e-3",
+                        Patterns::Double(),
+                        "tuning constant value to be used with first-order viscosity");
       prm.declare_entry("entropy viscosity coefficient",
-                                      "1e-3",
-                                      Patterns::Double(),
-                                      "tuning constant value to be used with entropy viscosity");
+                        "1e-3",
+                        Patterns::Double(),
+                        "tuning constant value to be used with entropy viscosity");
+      prm.declare_entry("add jumps",
+                        "false",
+                        Patterns::Bool(),
+                        "option to include jumps across cell interfaces with entropy residual");
    }
    prm.leave_subsection();
 
@@ -284,6 +288,7 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
       constant_viscosity_value = prm.get_double("constant viscosity value");
       first_order_viscosity_coef = prm.get_double("first order viscosity coefficient");
       entropy_viscosity_coef = prm.get_double("entropy viscosity coefficient");
+      add_jumps = prm.get_bool("add jumps");
    }
    prm.leave_subsection();
 

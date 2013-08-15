@@ -77,18 +77,21 @@ class ConservationLaw
     void apply_Dirichlet_BC();
 
     // steady state residual functions
-    void compute_ss_residual (double t, Vector<double> &solution);
+    void compute_ss_residual (Vector<double> &solution);
     virtual void compute_cell_ss_residual(FEValues<dim> &fe_values,
                                           const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                          const double &time,
                                           Vector<double> &cell_residual) = 0;
     virtual void compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                                           const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                          const double &time,
                                           Vector<double> &cell_residual) = 0;
     virtual Tensor<1,dim> flux_derivative(const double u) = 0;
     void update_viscosities();
     void update_first_order_viscosities();
+    void update_entropy_viscosities();
+    void update_entropy_residuals();
+    void update_jumps();
+    virtual double entropy           (const double u) const = 0;
+    virtual double entropy_derivative(const double u) const = 0;
 
     void output_results () const;
 
@@ -131,6 +134,10 @@ class ConservationLaw
     Vector<double>       current_solution;
     /** solution of previous time step */
     Vector<double>       old_solution;
+    /** current time */
+    double current_time;
+    /** old time (beginning of each time step) */
+    double old_time;
     /** system right-hand side */
     Vector<double>       system_rhs;
 
@@ -155,6 +162,10 @@ class ConservationLaw
     double dx_min;
     /** maximum flux speed; used for CFL condition */
     double max_flux_speed;
+    /** max entropy deviation */
+    double max_entropy_deviation;
+    /** domain volume; used for calculation of domain-averaged entropy */
+    double domain_volume;
 
     // maps
     std::map<typename DoFHandler<dim>::active_cell_iterator, double>          dx;
@@ -163,6 +174,9 @@ class ConservationLaw
     std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > viscosity_cell_q;
     std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > first_order_viscosity_cell_q;
     std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > entropy_viscosity_cell_q;
+    std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > entropy_residual_cell_q;
+    std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > entropy_cell_q;
+    std::map<typename DoFHandler<dim>::active_cell_iterator, double>          max_jumps_cell;
 };
 
 #include "ConservationLaw.cc"
