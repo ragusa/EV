@@ -14,7 +14,7 @@ end
 subsection time
    # options are <constant_dt|cfl_condition>
    set time step size method = cfl_condition
-   set final time = 0.100 
+   set final time = 0.300 
    set time step size = 0.001
    set cfl = 0.5
 end
@@ -25,10 +25,10 @@ end
 
 subsection artificial viscosity
    # options are <none|constant|first_order|entropy>
-   set viscosity type = entropy
+   set viscosity type = none
    set constant viscosity value = 0.02
    set first order viscosity coefficient = 0.5
-   set entropy viscosity coefficient = 15.0
+   set entropy viscosity coefficient = 1.0
    set add jumps = true
 end
 
@@ -60,4 +60,5 @@ end
 subsection output
    set output period = 0
    set output mass matrix = false
+   set output viscosity = false
 end

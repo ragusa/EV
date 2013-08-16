@@ -32,6 +32,7 @@ class ConservationLawParameters
 
     unsigned int output_period;
     bool output_mass_matrix;
+    bool output_viscosity;
   
     enum TemporalIntegrator { erk };
     TemporalIntegrator temporal_integrator;

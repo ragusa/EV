@@ -44,7 +44,7 @@ void ConservationLaw<dim>::run()
    old_solution = current_solution;
 
    // output initial solution
-   output_results();
+   output_solution();
 
    // begin time stepping loop
    switch (conservation_law_parameters.temporal_integrator)
@@ -54,6 +54,27 @@ void ConservationLaw<dim>::run()
           break;
       default:
           Assert(false,ExcNotImplemented());
+   }
+
+   // output final viscosities if non-constant viscosity used
+   switch (conservation_law_parameters.viscosity_type)
+   {
+      case ConservationLawParameters<dim>::none:
+         break;
+      case ConservationLawParameters<dim>::constant:
+         break;
+      case ConservationLawParameters<dim>::first_order:
+         output_map(first_order_viscosity_cell_q, "first_order_viscosity");
+         break;
+      case ConservationLawParameters<dim>::entropy:
+         output_map(first_order_viscosity_cell_q, "first_order_viscosity");
+         output_map(entropy_viscosity_cell_q, "entropy_viscosity");
+         output_map(viscosity_cell_q, "viscosity");
+         if (conservation_law_parameters.add_jumps)
+            output_map(entropy_viscosity_with_jumps_cell_q, "entropy_viscosity_with_jumps");
+         break;
+      default:
+         Assert(false,ExcNotImplemented());
    }
 }
 
@@ -73,6 +94,7 @@ void ConservationLaw<dim>::setup_system ()
    viscosity_cell_q.clear();
    first_order_viscosity_cell_q.clear();
    entropy_viscosity_cell_q.clear();
+   entropy_viscosity_with_jumps_cell_q.clear();
    entropy_residual_cell_q.clear();
    max_jumps_cell.clear();
 
@@ -133,6 +155,7 @@ void ConservationLaw<dim>::setup_system ()
       first_order_viscosity_cell_q[cell] = Vector<double>(n_q_points_cell);
       entropy_viscosity_cell_q[cell]     = Vector<double>(n_q_points_cell);
       entropy_residual_cell_q[cell]      = Vector<double>(n_q_points_cell);
+      entropy_viscosity_with_jumps_cell_q[cell]     = Vector<double>(n_q_points_cell);
    }
 }
 
@@ -228,7 +251,7 @@ void ConservationLaw<dim>::apply_Dirichlet_BC()
       current_solution(it->first) = (it->second);
 }
 
-/** \fn void ConservationLaw<dim>::output_results() const
+/** \fn void ConservationLaw<dim>::output_solution() const
  *  \brief Outputs the solution to .vtk.
  *
  *  The user supplies an input parameter that determines
@@ -237,7 +260,7 @@ void ConservationLaw<dim>::apply_Dirichlet_BC()
  *  the function is called.
  */
 template <int dim>
-void ConservationLaw<dim>::output_results () const
+void ConservationLaw<dim>::output_solution () const
 {
    DataOut<dim> data_out;
    data_out.attach_dof_handler (dof_handler);
@@ -270,6 +293,54 @@ void ConservationLaw<dim>::output_results () const
    }
 
    ++output_file_number;
+}
+
+/** \fn void ConservationLaw<dim>::output_map(const std::map<DoFHandler<dim>::active_cell_iterator &map,
+                                              const std::string &output_filename_base)
+ *  \brief Outputs a mapped quantity at all quadrature points
+ */
+template <int dim>
+void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > &map,
+                                      const std::string &output_filename_base)
+{
+   if (dim == 1)
+   {
+      // get date from maps into vector of point-data pairs
+      unsigned int n_cells = triangulation.n_active_cells();
+      unsigned int total_n_q_points = n_cells * n_q_points_cell;
+      std::vector<std::pair<double,double> > profile(total_n_q_points);
+
+      FEValues<dim> fe_values (fe, quadrature, update_quadrature_points);
+      unsigned int i = 0;
+      typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                                     endc = dof_handler.end();
+      for (; cell != endc; ++cell)
+      {
+         fe_values.reinit(cell);
+
+         for (unsigned int q = 0; q < n_q_points_cell; ++q)
+         {
+            const Point<dim> q_point = fe_values.quadrature_point(q);
+            profile[i] = std::make_pair(q_point(0), map[cell](q));
+            ++i;
+         }
+      }
+
+      // sort data by quadrature point
+      std::sort(profile.begin(), profile.end());
+
+      // output vector to file
+      std::ofstream output;
+      std::string output_file = "output/" + output_filename_base + ".csv";
+      output.open(output_file.c_str(), std::ios::out);
+      for (i = 0; i < total_n_q_points; ++i)
+         output << profile[i].first << "," << profile[i].second << std::endl;
+      output.close();
+   }
+   else
+   {
+      Assert(false, ExcNotImplemented());
+   }
 }
 
 /** \fn ConservationLaw<dim>::solve_erk()
@@ -424,13 +495,13 @@ void ConservationLaw<dim>::solve_erk()
       {
          if (n >= next_time_step_output)
          {
-            output_results ();
+            output_solution ();
             next_time_step_output += conservation_law_parameters.output_period;
          }
       }
       else
          if (!(final_time_not_reached))
-            output_results();
+            output_solution();
 
       // update old_solution to current_solution for next time step
       old_solution = current_solution;
@@ -669,10 +740,16 @@ void ConservationLaw<dim>::update_viscosities()
 
          typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                         endc = dof_handler.end();
-         for (; cell != endc; ++cell)
-            for (unsigned int q = 0; q < n_q_points_cell; ++q)
-               viscosity_cell_q[cell](q) = std::min(first_order_viscosity_cell_q[cell](q),
-                                                    entropy_viscosity_cell_q[cell](q));
+         if (conservation_law_parameters.add_jumps)
+            for (; cell != endc; ++cell)
+               for (unsigned int q = 0; q < n_q_points_cell; ++q)
+                  viscosity_cell_q[cell](q) = std::min(first_order_viscosity_cell_q[cell](q),
+                                                       entropy_viscosity_with_jumps_cell_q[cell](q));
+         else
+            for (; cell != endc; ++cell)
+               for (unsigned int q = 0; q < n_q_points_cell; ++q)
+                  viscosity_cell_q[cell](q) = std::min(first_order_viscosity_cell_q[cell](q),
+                                                       entropy_viscosity_cell_q[cell](q));
          break;
       }
       default:
@@ -720,9 +797,15 @@ void ConservationLaw<dim>::update_entropy_viscosities()
 
       for (; cell != endc; ++cell)
          for (unsigned int q = 0; q < n_q_points_cell; ++q)
-            entropy_viscosity_cell_q[cell](q) = c_s * std::pow(dx[cell],2)
+         {
+            entropy_viscosity_with_jumps_cell_q[cell](q) = c_s * std::pow(dx[cell],2)
                * (entropy_residual_cell_q[cell](q) + max_jumps_cell[cell])
                / max_entropy_deviation;
+            // compute entropy viscosity without jumps as well for plotting
+            entropy_viscosity_cell_q[cell](q) = c_s * std::pow(dx[cell],2)
+               * entropy_residual_cell_q[cell](q)
+               / max_entropy_deviation;
+         }
    } else {
       for (; cell != endc; ++cell)
          for (unsigned int q = 0; q < n_q_points_cell; ++q)
