@@ -96,6 +96,8 @@ class ConservationLaw
     void output_solution () const;
     void output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > &map,
                     const std::string &output_filename_base);
+    void output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, double> &map,
+                    const std::string &output_filename_base);
 
     void check_nan();
 
@@ -178,6 +180,7 @@ class ConservationLaw
     std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > entropy_viscosity_cell_q;
     std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > entropy_viscosity_with_jumps_cell_q;
     std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > entropy_residual_cell_q;
+    std::map<typename DoFHandler<dim>::active_cell_iterator, double>          max_entropy_residual_cell;
     std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > entropy_cell_q;
     std::map<typename DoFHandler<dim>::active_cell_iterator, double>          max_jumps_cell;
 };

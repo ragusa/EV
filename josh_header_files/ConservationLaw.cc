@@ -95,7 +95,9 @@ void ConservationLaw<dim>::setup_system ()
    first_order_viscosity_cell_q.clear();
    entropy_viscosity_cell_q.clear();
    entropy_viscosity_with_jumps_cell_q.clear();
+   entropy_cell_q.clear();
    entropy_residual_cell_q.clear();
+   max_entropy_residual_cell.clear();
    max_jumps_cell.clear();
 
    // make grid and refine
@@ -154,6 +156,7 @@ void ConservationLaw<dim>::setup_system ()
       viscosity_cell_q[cell]             = Vector<double>(n_q_points_cell);
       first_order_viscosity_cell_q[cell] = Vector<double>(n_q_points_cell);
       entropy_viscosity_cell_q[cell]     = Vector<double>(n_q_points_cell);
+      entropy_cell_q[cell]               = Vector<double>(n_q_points_cell);
       entropy_residual_cell_q[cell]      = Vector<double>(n_q_points_cell);
       entropy_viscosity_with_jumps_cell_q[cell]     = Vector<double>(n_q_points_cell);
    }
@@ -295,7 +298,7 @@ void ConservationLaw<dim>::output_solution () const
    ++output_file_number;
 }
 
-/** \fn void ConservationLaw<dim>::output_map(const std::map<DoFHandler<dim>::active_cell_iterator &map,
+/** \fn void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > &map,
                                               const std::string &output_filename_base)
  *  \brief Outputs a mapped quantity at all quadrature points
  */
@@ -305,7 +308,7 @@ void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_
 {
    if (dim == 1)
    {
-      // get date from maps into vector of point-data pairs
+      // get data from maps into vector of point-data pairs
       unsigned int n_cells = triangulation.n_active_cells();
       unsigned int total_n_q_points = n_cells * n_q_points_cell;
       std::vector<std::pair<double,double> > profile(total_n_q_points);
@@ -322,6 +325,54 @@ void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_
          {
             const Point<dim> q_point = fe_values.quadrature_point(q);
             profile[i] = std::make_pair(q_point(0), map[cell](q));
+            ++i;
+         }
+      }
+
+      // sort data by quadrature point
+      std::sort(profile.begin(), profile.end());
+
+      // output vector to file
+      std::ofstream output;
+      std::string output_file = "output/" + output_filename_base + ".csv";
+      output.open(output_file.c_str(), std::ios::out);
+      for (i = 0; i < total_n_q_points; ++i)
+         output << profile[i].first << "," << profile[i].second << std::endl;
+      output.close();
+   }
+   else
+   {
+      Assert(false, ExcNotImplemented());
+   }
+}
+
+/** \fn void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, double> &map,
+                                              const std::string &output_filename_base)
+ *  \brief Outputs a mapped quantity at all quadrature points
+ */
+template <int dim>
+void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, double> &map,
+                                      const std::string &output_filename_base)
+{
+   if (dim == 1)
+   {
+      // get data from maps into vector of point-data pairs
+      unsigned int n_cells = triangulation.n_active_cells();
+      unsigned int total_n_q_points = n_cells * n_q_points_cell;
+      std::vector<std::pair<double,double> > profile(total_n_q_points);
+
+      FEValues<dim> fe_values (fe, quadrature, update_quadrature_points);
+      unsigned int i = 0;
+      typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                                     endc = dof_handler.end();
+      for (; cell != endc; ++cell)
+      {
+         fe_values.reinit(cell);
+
+         for (unsigned int q = 0; q < n_q_points_cell; ++q)
+         {
+            const Point<dim> q_point = fe_values.quadrature_point(q);
+            profile[i] = std::make_pair(q_point(0), map[cell]);
             ++i;
          }
       }
@@ -453,6 +504,9 @@ void ConservationLaw<dim>::solve_erk()
       std::cout << dof_handler.n_dofs();
       std::cout << std::endl;
       std::cout << std::endl;
+
+      current_time = old_time + dt;
+      update_viscosities();
 
       // solve here
       /** First, compute each \f$\mathbf{M}^{-1}\mathbf{k}_i\f$: */
@@ -597,7 +651,7 @@ void ConservationLaw<dim>::compute_ss_residual(Vector<double> &f)
    f = 0.0;
 
    // update viscosities
-   update_viscosities();
+   //update_viscosities();
 
    FEValues<dim>     fe_values      (fe, quadrature,
                             update_values | update_gradients | update_JxW_values);
@@ -773,7 +827,7 @@ void ConservationLaw<dim>::update_first_order_viscosities()
                                                   endc = dof_handler.end();
    for (; cell != endc; ++cell)
       for (unsigned int q = 0; q < n_q_points_cell; ++q)
-         first_order_viscosity_cell_q[cell](q) = std::abs(c_max * dx[cell] * flux_speed_cell_q[cell](q));
+         first_order_viscosity_cell_q[cell](q) = std::abs(c_max * dx[cell] * max_flux_speed_cell[cell]);
 }
 
 /** \fn void ConservationLaw<dim>::update_entropy_viscosities()
@@ -799,18 +853,18 @@ void ConservationLaw<dim>::update_entropy_viscosities()
          for (unsigned int q = 0; q < n_q_points_cell; ++q)
          {
             entropy_viscosity_with_jumps_cell_q[cell](q) = c_s * std::pow(dx[cell],2)
-               * (entropy_residual_cell_q[cell](q) + max_jumps_cell[cell])
+               * (max_entropy_residual_cell[cell] + max_jumps_cell[cell])
                / max_entropy_deviation;
             // compute entropy viscosity without jumps as well for plotting
             entropy_viscosity_cell_q[cell](q) = c_s * std::pow(dx[cell],2)
-               * entropy_residual_cell_q[cell](q)
+               * max_entropy_residual_cell[cell]
                / max_entropy_deviation;
          }
    } else {
       for (; cell != endc; ++cell)
          for (unsigned int q = 0; q < n_q_points_cell; ++q)
             entropy_viscosity_cell_q[cell](q) = c_s * std::pow(dx[cell],2)
-               * entropy_residual_cell_q[cell](q)
+               * max_entropy_residual_cell[cell]
                / max_entropy_deviation;
    }
 }
@@ -830,7 +884,6 @@ void ConservationLaw<dim>::update_entropy_residuals()
    std::vector<Tensor<1,dim> > current_flux_derivative(n_q_points_cell);
    std::vector<Tensor<1,dim> > old_flux_derivative    (n_q_points_cell);
 
-   std::vector<double> current_entropy(n_q_points_cell);
    std::vector<double> old_entropy    (n_q_points_cell);
    std::vector<double> current_entropy_derivative(n_q_points_cell);
    std::vector<double> old_entropy_derivative    (n_q_points_cell);
@@ -852,7 +905,7 @@ void ConservationLaw<dim>::update_entropy_residuals()
 
       for (unsigned int q = 0; q < n_q_points_cell; ++q)
       {
-         current_entropy[q] = entropy(current_solution_local[q]);
+         entropy_cell_q[cell](q) = entropy(current_solution_local[q]);
          old_entropy[q]     = entropy(old_solution_local[q]);
          current_entropy_derivative[q] = entropy_derivative(current_solution_local[q]);
          old_entropy_derivative[q]     = entropy_derivative(old_solution_local[q]);
@@ -864,8 +917,11 @@ void ConservationLaw<dim>::update_entropy_residuals()
             + current_entropy_derivative[q] * current_flux_derivative[q] * current_gradient_local[q] );
 
          // add entropy to volume-weighted sum for use in computation of entropy average
-         entropy_average += entropy(current_solution_local[q]) * fe_values.JxW(q);
+         entropy_average += entropy_cell_q[cell](q) * fe_values.JxW(q);
       }
+
+      // get the max entropy residual on each cell
+      max_entropy_residual_cell[cell] = *std::max_element(entropy_residual_cell_q[cell].begin(),entropy_residual_cell_q[cell].end());
    }
    // finish computing entropy average by dividing by the domain volume
    entropy_average /= domain_volume;
@@ -875,7 +931,7 @@ void ConservationLaw<dim>::update_entropy_residuals()
    for (cell = dof_handler.begin_active(); cell != endc; ++cell)
       for (unsigned int q = 0; q < n_q_points_cell; ++q)
          max_entropy_deviation = std::max(max_entropy_deviation,
-                                          std::abs(current_entropy[q] - entropy_average));
+                                          std::abs(entropy_cell_q[cell](q) - entropy_average));
 }
 
 /** \fn void ConservationLaw<dim>::update_jumps()
@@ -908,11 +964,11 @@ void ConservationLaw<dim>::update_jumps()
             const unsigned int ineighbor = cell->neighbor_of_neighbor(iface);
             Assert(ineighbor < faces_per_cell, ExcInternalError());
 
-            fe_values_face.reinit(cell,iface);
-            fe_values_face_neighbor.reinit(cell,ineighbor);
+            fe_values_face.reinit(         cell,    iface);
+            fe_values_face_neighbor.reinit(neighbor,ineighbor);
 
             // get gradients on adjacent faces of current cell and neighboring cell
-            fe_values_face.get_function_gradients(current_solution, gradients_face);
+            fe_values_face.get_function_gradients(         current_solution, gradients_face);
             fe_values_face_neighbor.get_function_gradients(current_solution, gradients_face_neighbor);
 
             // get normal vectors

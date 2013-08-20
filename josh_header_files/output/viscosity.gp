@@ -6,6 +6,7 @@ set terminal postscript enhanced color
 set output "| ps2pdf - ".output_file
 set ylabel "Viscosity"
 set xlabel "x"
+set logscale y
 plot "viscosity.csv" using 1:2 title "used" with lines,\
 "first_order_viscosity.csv" using 1:2 title "first order" with lines,\
 "entropy_viscosity.csv" using 1:2 title "entropy" with lines,\
