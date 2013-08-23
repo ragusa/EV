@@ -18,20 +18,6 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters (Parame
    }
    prm.leave_subsection();
 
-   // domain parameters
-   prm.enter_subsection("domain");
-   {
-      prm.declare_entry("domain width",
-                        "1.0",
-                        Patterns::Double(),
-                        "width of domain");
-      prm.declare_entry("number of boundaries",
-                        "2",
-                        Patterns::Integer(),
-                        "number of boundaries");
-   }
-   prm.leave_subsection();
-
    // refinement parameters
    prm.enter_subsection("refinement");
    {
@@ -188,14 +174,6 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
    prm.enter_subsection("finite element");
    {
       degree = prm.get_integer("degree");
-   }
-   prm.leave_subsection();
-
-   // domain parameters
-   prm.enter_subsection("domain");
-   {
-      domain_width = prm.get_double("domain width");
-      n_boundaries = prm.get_integer("number of boundaries");
    }
    prm.leave_subsection();
 

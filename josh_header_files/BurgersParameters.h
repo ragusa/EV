@@ -26,7 +26,7 @@ class BurgersParameters : public ConservationLawParameters<dim>
 
     static const int n_burgers_components = 1;
 
-    std::vector<std::string> initial_conditions_expressions;
+    unsigned int problem_id;
 };
 
 #include "BurgersParameters.cc"

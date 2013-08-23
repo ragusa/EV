@@ -105,10 +105,17 @@ class ConservationLaw
     virtual std::vector<DataComponentInterpretation::DataComponentInterpretation>
        get_component_interpretations() = 0;
 
+    virtual void create_domain() = 0;
+
     /** input parameters for conservation law */
     ConservationLawParameters<dim> conservation_law_parameters;
     /** number of components in the system */
-    int n_components;
+    unsigned int n_components;
+
+    unsigned int n_boundaries;
+    /** enumeration for types of boundary conditions */
+    enum BoundaryType {dirichlet, freeflow};
+    std::vector<std::vector<BoundaryType> > boundary_types;
 
     /** triangulation; mesh */
     Triangulation<dim>   triangulation;

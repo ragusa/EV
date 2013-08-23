@@ -101,10 +101,7 @@ void ConservationLaw<dim>::setup_system ()
    max_jumps_cell.clear();
 
    // make grid and refine
-   double domain_start = 0;
-   double domain_width = conservation_law_parameters.domain_width;
-   domain_volume = std::pow(domain_width,dim);
-   GridGenerator::hyper_cube(triangulation, domain_start, domain_start + domain_width);
+   create_domain();
    triangulation.refine_global(conservation_law_parameters.initial_refinement_level);
    update_cell_sizes();
 
@@ -115,12 +112,11 @@ void ConservationLaw<dim>::setup_system ()
    // make constraints
    constraints.clear();
    DoFTools::make_hanging_node_constraints (dof_handler, constraints);
-   for (int boundary = 0; boundary < conservation_law_parameters.n_boundaries; ++boundary)
+   for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
    {
-      for (int component = 0; component < n_components; ++component)
+      for (unsigned int component = 0; component < n_components; ++component)
       {
-         bool is_Dirichlet = true;
-         if (is_Dirichlet)
+         if (boundary_types[boundary][component] == dirichlet)
          {
             std::vector<bool> component_mask(n_components, false);
             component_mask[component] = true;
@@ -169,7 +165,7 @@ template <int dim>
 void ConservationLaw<dim>::update_cell_sizes()
 {
    // reset minimum cell size
-   dx_min = conservation_law_parameters.domain_width;
+   dx_min = domain_volume;
 
    // fill cell size map and find minimum cell size
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
@@ -235,11 +231,10 @@ template <int dim>
 void ConservationLaw<dim>::apply_Dirichlet_BC()
 {
    std::map<unsigned int, double> boundary_values;
-   for (int boundary = 0; boundary < conservation_law_parameters.n_boundaries; ++boundary)
-      for (int component = 0; component < n_components; ++component)
+   for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
+      for (unsigned int component = 0; component < n_components; ++component)
       {
-         bool is_dirichlet = true;
-         if (is_dirichlet)
+         if (boundary_types[boundary][component] == dirichlet)
          {
             std::vector<bool> component_mask(n_components, false);
             component_mask[component] = true;

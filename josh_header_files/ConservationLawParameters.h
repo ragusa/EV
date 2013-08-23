@@ -18,9 +18,6 @@ class ConservationLawParameters
   public:
 
     int n_components;
-    int n_boundaries;
-
-    double domain_width;
 
     unsigned int initial_refinement_level;
 

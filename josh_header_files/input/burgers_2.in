@@ -3,7 +3,7 @@ subsection finite element
 end
 
 subsection problem
-   set problem id = 0
+   set problem id = 1
 end
 
 subsection refinement
@@ -12,8 +12,8 @@ end
 
 subsection time
    # options are <constant_dt|cfl_condition>
-   set time step size method = constant_dt
-   set final time = 0.300 
+   set time step size method = cfl_condition
+   set final time = 0.0300 
    set time step size = 0.001
    set cfl = 0.5
 end
