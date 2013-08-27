@@ -31,9 +31,10 @@ class ConservationLawParameters
     bool output_mass_matrix;
     bool output_viscosity;
   
-    enum TemporalIntegrator { erk };
+    enum TemporalIntegrator { runge_kutta };
     TemporalIntegrator temporal_integrator;
-    int erk_nstages; 
+    enum RungeKuttaMethod {erk1, erk2, erk3, erk4};
+    RungeKuttaMethod runge_kutta_method;
 
     enum NonlinearSolverType { newton };
     NonlinearSolverType nonlinear_solver;

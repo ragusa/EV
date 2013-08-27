@@ -11,35 +11,7 @@ Burgers<dim>::Burgers(const BurgersParameters<dim> &params):
    ConservationLaw<dim>(params),
    burgers_parameters(params),
    velocity(0)
-{
-   // initialize initial conditions
-   std::map<std::string,double> constants;
-   constants["pi"] = numbers::PI;
-
-   std::vector<std::string> initial_conditions_expressions(this->n_components);
-   switch (burgers_parameters.problem_id)
-   {
-      case 0: // sin(2*pi*x)
-      {
-         Assert(dim==1,ExcImpossibleInDim(dim));
-         initial_conditions_expressions[0] = "sin(2*pi*x)";
-         break;
-      }
-      case 1: // Guermond 2-d test problem
-      {
-         Assert(dim==2,ExcImpossibleInDim(dim));
-         initial_conditions_expressions[0] = "if(x<0.5,if(y>0.5,-0.2,0.5),if(y<0.5,0.8,-1))";
-         break;
-      }
-      default:
-         Assert(false,ExcNotImplemented());
-   }
-   this->initial_conditions.initialize (FunctionParser<dim>::default_variable_names(),
-                                        initial_conditions_expressions,
-                                        constants);
-   this->component_names           = this->get_component_names();
-   this->component_interpretations = this->get_component_interpretations();
-}
+{} 
 
 /** \fn std::vector<std::string> Burgers<dim>::get_component_names()
  *  \brief Returns the names of each component.
@@ -72,11 +44,13 @@ std::vector<DataComponentInterpretation::DataComponentInterpretation>
    return data_component_interpretation;
 } 
 
-/** \fn void Burgers<dim>::create_domain()
- *  \brief Create the domain and compute volume.
+/** \fn void Burgers<dim>::define_problem()
+ *  \brief Create the domain, compute volume, define initial
+ *         conditions, and define boundary conditions and exact
+ *         solution if it exists.
  */
 template <int dim>
-void Burgers<dim>::create_domain()
+void Burgers<dim>::define_problem()
 {
    switch (burgers_parameters.problem_id)
    {
@@ -89,13 +63,24 @@ void Burgers<dim>::create_domain()
          GridGenerator::hyper_cube(this->triangulation, domain_start, domain_start + domain_width);
          // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
          this->n_boundaries = 1;
+         // set all boundary indicators to zero
+         typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin(),
+                                                    endc = this->triangulation.end();
+         for (; cell != endc; ++cell)
+            for (unsigned int face = 0; face < this->faces_per_cell; ++face)
+               if (cell->face(face)->at_boundary())
+                  cell->face(face)->set_boundary_indicator(0);
+
          this->boundary_types.resize(this->n_boundaries);
-         for (unsigned int boundary = 0; boundary < this->n_boundaries; ++boundary)
-         {
-            this->boundary_types[boundary].resize(this->n_components);
-            for (unsigned int component = 0; component < this->n_components; ++component)
-               this->boundary_types[boundary][component] = ConservationLaw<dim>::dirichlet;
-         }
+         this->boundary_types[0].resize(this->n_components);
+         this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
+         this->dirichlet_function_strings.resize(this->n_components);
+         this->dirichlet_function_strings[0] = "0";
+         this->use_exact_solution_as_BC = false;
+         // initial conditions
+         this->initial_conditions_strings[0] = "sin(2*pi*x)";
+         // exact solution
+         this->has_exact_solution = false;
          break;
       }
       case 1: // Guermond 2-d test problem
@@ -105,15 +90,61 @@ void Burgers<dim>::create_domain()
          double domain_width = 1.0;
          this->domain_volume = std::pow(domain_width,dim);
          GridGenerator::hyper_cube(this->triangulation, domain_start, domain_start + domain_width);
-         // only 1 type of BC: freeflow; leave boundary indicators as zero
+         // only 1 type of BC: Dirichlet with exact solution
          this->n_boundaries = 1;
+         // set all boundary indicators to zero
+         typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin(),
+                                                    endc = this->triangulation.end();
+         for (; cell != endc; ++cell)
+            for (unsigned int face = 0; face < this->faces_per_cell; ++face)
+               if (cell->face(face)->at_boundary())
+                  cell->face(face)->set_boundary_indicator(0);
+
          this->boundary_types.resize(this->n_boundaries);
-         for (unsigned int boundary = 0; boundary < this->n_boundaries; ++boundary)
-         {
-            this->boundary_types[boundary].resize(this->n_components);
-            for (unsigned int component = 0; component < this->n_components; ++component)
-               this->boundary_types[boundary][component] = ConservationLaw<dim>::freeflow;
-         }
+         this->boundary_types[0].resize(this->n_components);
+         this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
+         this->use_exact_solution_as_BC = true;
+         // initial conditions
+         this->initial_conditions_strings[0] =  "if(x<0.5,";
+         this->initial_conditions_strings[0] +=    "if(y>0.5,";
+         this->initial_conditions_strings[0] +=       "-0.2,0.5),";
+         this->initial_conditions_strings[0] +=    "if(y<0.5,";
+         this->initial_conditions_strings[0] +=       "0.8,-1))";
+         // exact solution
+         this->has_exact_solution = true;
+         this->exact_solution_strings[0] =  "if(x<0.5-0.6*t,";
+         this->exact_solution_strings[0] +=    "if(y>0.5+0.15*t,";
+         this->exact_solution_strings[0] +=       "-0.2,0.5),";
+         this->exact_solution_strings[0] +=  "if(x<0.5-0.25*t,";
+         this->exact_solution_strings[0] +=    "if(y>-8./7.*x+15./14.-15./28.*t,";
+         this->exact_solution_strings[0] +=       "-1.0,0.5),";
+         this->exact_solution_strings[0] +=  "if(x<0.5+0.5*t,";
+         this->exact_solution_strings[0] +=    "if(y>x/6.+5./12.-5./24.*t,";
+         this->exact_solution_strings[0] +=       "-1.0,0.5),";
+         this->exact_solution_strings[0] +=  "if(x<0.5+0.8*t,";
+         this->exact_solution_strings[0] +=    "if(y>x-5./(18.*t)*(x+t-0.5)^2,";
+         this->exact_solution_strings[0] +=       "-1.0,(2*x-1)/(2.*t)),";
+         this->exact_solution_strings[0] +=  "if(y>0.5-0.1*t,";
+         this->exact_solution_strings[0] +=       "-1.0,0.8)";
+         this->exact_solution_strings[0] +=  "))))";
+/*
+         this->has_exact_solution = true;
+         this->exact_solution_strings[0] =  "if(x<0.5-0.6*x,";
+         this->exact_solution_strings[0] +=    "if(y>0.5+0.15*x,";
+         this->exact_solution_strings[0] +=       "-0.2,0.5),";
+         this->exact_solution_strings[0] +=  "if((x>0.5-0.6*x)&(x<0.5-0.25*x),";
+         this->exact_solution_strings[0] +=    "if(y>-8./7.*x+15./14.-15./28.*x,";
+         this->exact_solution_strings[0] +=       "-1.0,0.5),";
+         this->exact_solution_strings[0] +=  "if((x>0.5-0.25*x)&(x<0.5+0.5*x),";
+         this->exact_solution_strings[0] +=    "if(y>x/6.+5./12.-5./24.*x,";
+         this->exact_solution_strings[0] +=       "-1.0,0.5),";
+         this->exact_solution_strings[0] +=  "if((x>0.5+0.5*x)&(x<0.5+0.8*x),";
+         this->exact_solution_strings[0] +=    "if(y>x-5./(18.*x)*(x+x-0.5)^2,";
+         this->exact_solution_strings[0] +=       "-1.0,(2*x-1)/(2.*x)),";
+         this->exact_solution_strings[0] +=  "if(x>0.5+0.8*x,";
+         this->exact_solution_strings[0] +=    "if(y>0.5-0.1*x,";
+         this->exact_solution_strings[0] +=       "-1.0,0.8))))))";
+*/
          break;
       }
       default:

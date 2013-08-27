@@ -60,10 +60,11 @@ class ConservationLaw
 
   protected:
 
+    void initialize_system();
     void setup_system();
     void update_cell_sizes();
     void assemble_mass_matrix();
-    void solve_erk();
+    void solve_runge_kutta();
 
     void update_flux_speeds();
     double compute_dt_from_cfl_condition();
@@ -74,7 +75,7 @@ class ConservationLaw
                        const Vector<double>       &b,
                              Vector<double>       &x);
 
-    void apply_Dirichlet_BC();
+    void apply_Dirichlet_BC(const double &time);
 
     // steady state residual functions
     void compute_ss_residual (Vector<double> &solution);
@@ -85,10 +86,10 @@ class ConservationLaw
                                           const typename DoFHandler<dim>::active_cell_iterator &cell,
                                           Vector<double> &cell_residual) = 0;
     virtual Tensor<1,dim> flux_derivative(const double u) = 0;
-    void update_viscosities();
+    void update_viscosities(const double &dt);
     void update_first_order_viscosities();
-    void update_entropy_viscosities();
-    void update_entropy_residuals();
+    void update_entropy_viscosities(const double &dt);
+    void update_entropy_residuals(const double &dt);
     void update_jumps();
     virtual double entropy           (const double u) const = 0;
     virtual double entropy_derivative(const double u) const = 0;
@@ -105,17 +106,12 @@ class ConservationLaw
     virtual std::vector<DataComponentInterpretation::DataComponentInterpretation>
        get_component_interpretations() = 0;
 
-    virtual void create_domain() = 0;
+    virtual void define_problem() = 0;
 
     /** input parameters for conservation law */
-    ConservationLawParameters<dim> conservation_law_parameters;
+    const ConservationLawParameters<dim> conservation_law_parameters;
     /** number of components in the system */
-    unsigned int n_components;
-
-    unsigned int n_boundaries;
-    /** enumeration for types of boundary conditions */
-    enum BoundaryType {dirichlet, freeflow};
-    std::vector<std::vector<BoundaryType> > boundary_types;
+    const unsigned int n_components;
 
     /** triangulation; mesh */
     Triangulation<dim>   triangulation;
@@ -132,14 +128,16 @@ class ConservationLaw
     /** constraint matrix */
     ConstraintMatrix     constraints;
 
-    /** quadrature formula for cells */
-    const QGauss<dim>    quadrature;
-    /** number of quadrature points for cells */
+    /** number of quadrature points in each dimension */
+    const unsigned int   n_q_points_per_dim;
+    /** number of quadrature points per cell */
     const unsigned int   n_q_points_cell;
+    /** number of quadrature points per face */
+    const unsigned int   n_q_points_face;
+    /** quadrature formula for cells */
+    const QGauss<dim>    cell_quadrature;
     /** quadrature formula for faces */
     const QGauss<dim-1>  face_quadrature;
-    /** number of quadrature points for faces */
-    const unsigned int   n_q_points_face;
 
     /** solution of current time step */
     Vector<double>       current_solution;
@@ -157,11 +155,33 @@ class ConservationLaw
     /* mass matrix */
     SparseMatrix<double> mass_matrix;
 
-    ConditionalOStream   verbose_cout;
+    /** number of boundaries */
+    unsigned int n_boundaries;
+    /** enumeration for types of boundary conditions */
+    enum BoundaryType {dirichlet};
+    /** vector of types of boundary condition for each boundary indicator and component */
+    std::vector<std::vector<BoundaryType> > boundary_types;
+    /** vector of Dirichlet BC function strings, which will be parsed */
+    std::vector<std::string>  dirichlet_function_strings;
+    /** vector of Dirichlet BC functions created from parsed strings */
+    FunctionParser<dim>       dirichlet_function;
+    /** option to use exact solution function as Dirichlet BC */
+    bool use_exact_solution_as_BC;
+    /** option to skip computing the face residual if Dirichlet BCs used at
+     *  all boundaries */
+    bool need_to_compute_face_residual;
 
-    /** function parser for the initial condition expression given by user
-     *  in input file */ 
-    FunctionParser<dim>  initial_conditions;
+    /** initial conditions function strings for each component, which will be parsed */
+    std::vector<std::string> initial_conditions_strings;
+    /** initial conditions functions */
+    FunctionParser<dim>      initial_conditions_function;
+
+    /** option if the problem has an exact solution provided */
+    bool has_exact_solution;
+    /** exact solution function strings for each component, which will be parsed */
+    std::vector<std::string> exact_solution_strings;
+    /** exact solution functions */
+    FunctionParser<dim>      exact_solution_function;
 
     /** vector of component names */
     std::vector<std::string> component_names;

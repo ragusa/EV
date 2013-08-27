@@ -51,13 +51,15 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters (Parame
    // temporal integrator
    prm.enter_subsection("temporal integration");
    {
-       prm.declare_entry("temporal integrator", "erk",
-                         Patterns::Selection("erk"),
+       prm.declare_entry("temporal integrator",
+                         "runge_kutta",
+                         Patterns::Selection("runge_kutta"),
                          "The method used for advancing time. "
-                         "Choices are <erk>.");
-       prm.declare_entry("erk stages","1",
-                         Patterns::Integer(),
-                         "Number of stages for explicit Runge-Kutta.");
+                         "Choices are <runge_kutta>.");
+       prm.declare_entry("runge kutta method",
+                         "erk1",
+                         Patterns::Selection("erk1|erk2|erk3|erk4"),
+                         "Runge-Kutta method to use.");
    }
    prm.leave_subsection();
 
@@ -205,12 +207,22 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
    prm.enter_subsection("temporal integration");
    {
        const std::string temporal_choice = prm.get("temporal integrator");
-       if (temporal_choice == "erk")
-          temporal_integrator = erk;
+       if (temporal_choice == "runge_kutta")
+          temporal_integrator = runge_kutta;
        else
           Assert(false,ExcNotImplemented());
 
-       erk_nstages = prm.get_integer("erk stages");
+       const std::string rk_choice = prm.get("runge kutta method");
+       if (rk_choice == "erk1")
+          runge_kutta_method = erk1;
+       else if (rk_choice == "erk2")
+          runge_kutta_method = erk2;
+       else if (rk_choice == "erk3")
+          runge_kutta_method = erk3;
+       else if (rk_choice == "erk4")
+          runge_kutta_method = erk4;
+       else
+          Assert(false,ExcNotImplemented());
    }
    prm.leave_subsection();
 

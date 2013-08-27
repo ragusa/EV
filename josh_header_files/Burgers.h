@@ -51,7 +51,7 @@ class Burgers : public ConservationLaw<dim>
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
        get_component_interpretations();
 
-    void create_domain();
+    void define_problem();
 
     void compute_cell_ss_residual(FEValues<dim> &fe_values,
                                   const typename DoFHandler<dim>::active_cell_iterator &cell,

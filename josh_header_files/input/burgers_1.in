@@ -12,10 +12,10 @@ end
 
 subsection time
    # options are <constant_dt|cfl_condition>
-   set time step size method = constant_dt
+   set time step size method = cfl_condition
    set final time = 0.300 
    set time step size = 0.001
-   set cfl = 0.5
+   set cfl = 0.25
 end
 
 subsection artificial viscosity
@@ -28,9 +28,10 @@ subsection artificial viscosity
 end
 
 subsection temporal integration
-   # options are <erk>
-   set temporal integrator = erk
-   set erk stages = 1
+   # options are <runge_kutta>
+   set temporal integrator = runge_kutta
+   # options are <erk1|erk2|erk3|erk4>
+   set runge kutta method = erk1
 end
 
 # this section is not yet applicable
