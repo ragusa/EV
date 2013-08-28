@@ -25,6 +25,11 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters (Parame
                         "3",
                         Patterns::Integer(),
                         "initial number of uniform refinements");
+      prm.declare_entry("refinement cycles",
+                        "2",
+                        Patterns::Integer(),
+                        "Number of refinement cycles. Must be >= 1. '1' Corresponds to"
+                        " having only the initial uniform refinement cycles.");
    }
    prm.leave_subsection();
 
@@ -183,6 +188,7 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
    prm.enter_subsection("refinement");
    {
       initial_refinement_level = prm.get_integer("initial refinement level");
+      n_cycle = prm.get_integer("refinement cycles");
    }
    prm.leave_subsection();
 

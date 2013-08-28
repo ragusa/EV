@@ -40,28 +40,47 @@ void ConservationLaw<dim>::run()
    // initialize system
    initialize_system();
 
-   // setup system; to be applied after each refinement
-   setup_system();
-
-   // interpolate the initial conditions to the grid
-   VectorTools::interpolate(dof_handler,initial_conditions_function,current_solution);
-
-   // apply Dirichlet BC to initial solution or guess
-   apply_Dirichlet_BC(0.0);
-   
-   old_solution = current_solution;
-
-   // output initial solution
-   output_solution();
-
-   // begin time stepping loop
-   switch (conservation_law_parameters.temporal_integrator)
+   // loop over adaptive refinement cycles
+   for (unsigned int cycle = 0; cycle < conservation_law_parameters.n_cycle; ++cycle)
    {
-      case ConservationLawParameters<dim>::runge_kutta: // explicit Runge-Kutta
-          solve_runge_kutta();
-          break;
-      default:
-          Assert(false,ExcNotImplemented());
+      std::cout << std::endl;
+      std::cout << "Cycle " << cycle+1 << " of " << conservation_law_parameters.n_cycle << ":" << std::endl;;
+
+      // if in final cycle, set flag to output solution
+      if (cycle == conservation_law_parameters.n_cycle-1)
+         in_final_cycle = true;
+      else
+         in_final_cycle = false;
+
+      // adaptively refine mesh if not the first cycle
+      if (cycle > 0)
+         adaptively_refine_mesh();
+
+      std::cout << "Number of active cells: ";
+      std::cout << triangulation.n_active_cells();
+      std::cout << std::endl;
+
+      // setup system; to be applied after each refinement
+      setup_system();
+   
+      // interpolate the initial conditions to the grid
+      VectorTools::interpolate(dof_handler,initial_conditions_function,current_solution);
+      // apply Dirichlet BC to initial solution or guess
+      apply_Dirichlet_BC(0.0);
+      // set old solution to the current solution
+      old_solution = current_solution;
+      // output initial solution
+      output_solution();
+   
+      // begin time stepping loop
+      switch (conservation_law_parameters.temporal_integrator)
+      {
+         case ConservationLawParameters<dim>::runge_kutta: // explicit Runge-Kutta
+             solve_runge_kutta();
+             break;
+         default:
+             Assert(false,ExcNotImplemented());
+      }
    }
 
    // output final viscosities if non-constant viscosity used
@@ -124,7 +143,16 @@ void ConservationLaw<dim>::initialize_system()
    // create exact solution function if there is one
    if (has_exact_solution)
    {
-      std::string variables = "x,y,t";
+      std::string variables;
+      if (dim == 1)
+         variables = "x,t";
+      else if (dim == 2)
+         variables = "x,y,t";
+      else if (dim == 3)
+         variables = "x,y,z,t";
+      else
+         Assert(false,ExcInvalidState());
+
       exact_solution_function.initialize(variables,
                                          exact_solution_strings,
                                          constants,
@@ -137,6 +165,29 @@ void ConservationLaw<dim>::initialize_system()
                                           constants,
                                           false);
 
+}
+
+/** \fn void ConservationLaw<dim>::adaptively_refine_mesh()
+ *  \brief Adaptively refines mesh.
+ */
+template <int dim>
+void ConservationLaw<dim>::adaptively_refine_mesh()
+{
+   Vector<float> estimated_error_per_cell (triangulation.n_active_cells());
+
+   KellyErrorEstimator<dim>::estimate (dof_handler,
+                                       face_quadrature,
+                                       // for now, assume no Neumann boundary conditions,
+                                       //  so the following argument may be empty
+                                       typename FunctionMap<dim>::type(),
+                                       current_solution,
+                                       estimated_error_per_cell);
+
+   GridRefinement::refine_and_coarsen_fixed_number (triangulation,
+                                                    estimated_error_per_cell,
+                                                    0.3, 0.03);
+
+   triangulation.execute_coarsening_and_refinement();
 }
 
 /** \fn void ConservationLaw<dim>::setup_system()
@@ -168,6 +219,10 @@ void ConservationLaw<dim>::setup_system ()
    // clear and distribute dofs
    dof_handler.clear();
    dof_handler.distribute_dofs(fe);
+
+   std::cout << "Number of degrees of freedom: ";
+   std::cout << dof_handler.n_dofs();
+   std::cout << std::endl;
 
    // make constraints
    constraints.clear();
@@ -339,37 +394,40 @@ void ConservationLaw<dim>::apply_Dirichlet_BC(const double &time)
 template <int dim>
 void ConservationLaw<dim>::output_solution () const
 {
-   DataOut<dim> data_out;
-   data_out.attach_dof_handler (dof_handler);
-
-   data_out.add_data_vector (current_solution,
-                             component_names,
-                             DataOut<dim>::type_dof_data,
-                             component_interpretations);
-
-   data_out.add_data_vector (current_solution, "current_solution");
-
-   data_out.build_patches ();
-
-   static unsigned int output_file_number = 0;
-   if (dim == 1)
+   if (in_final_cycle)
    {
-      std::string filename = "output/solution-" +
-                             Utilities::int_to_string (output_file_number, 3) +
-                             ".gpl";
-      std::ofstream output (filename.c_str());
-      data_out.write_gnuplot (output);
+      DataOut<dim> data_out;
+      data_out.attach_dof_handler (dof_handler);
+   
+      data_out.add_data_vector (current_solution,
+                                component_names,
+                                DataOut<dim>::type_dof_data,
+                                component_interpretations);
+   
+      data_out.add_data_vector (current_solution, "current_solution");
+   
+      data_out.build_patches ();
+   
+      static unsigned int output_file_number = 0;
+      if (dim == 1)
+      {
+         std::string filename = "output/solution-" +
+                                Utilities::int_to_string (output_file_number, 3) +
+                                ".gpl";
+         std::ofstream output (filename.c_str());
+         data_out.write_gnuplot (output);
+      }
+      else
+      {
+         std::string filename = "output/solution-" +
+                                Utilities::int_to_string (output_file_number, 3) +
+                                ".vtk";
+         std::ofstream output (filename.c_str());
+         data_out.write_vtk (output);
+      }
+   
+      ++output_file_number;
    }
-   else
-   {
-      std::string filename = "output/solution-" +
-                             Utilities::int_to_string (output_file_number, 3) +
-                             ".vtk";
-      std::ofstream output (filename.c_str());
-      data_out.write_vtk (output);
-   }
-
-   ++output_file_number;
 }
 
 /** \fn void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > &map,
@@ -567,6 +625,9 @@ void ConservationLaw<dim>::solve_runge_kutta()
    bool final_time_not_reached = true;
    while (final_time_not_reached)
    {
+      // update max speed for use in CFL computation
+      update_flux_speeds();
+
       // compute dt
       double dt;
       switch (conservation_law_parameters.time_step_size_method)
@@ -587,15 +648,11 @@ void ConservationLaw<dim>::solve_runge_kutta()
          dt = t_end - old_time;
          final_time_not_reached = false;
       }
+      // compute CFL number
+      double cfl = compute_cfl_number(dt);
 
-      std::cout << "time step " << n << ": t = " << old_time << "-> " << old_time+dt << std::endl;
-      std::cout << "   Number of active cells: ";
-      std::cout << triangulation.n_active_cells();
-      std::cout << std::endl;
-      std::cout << "   Number of degrees of freedom: ";
-      std::cout << dof_handler.n_dofs();
-      std::cout << std::endl;
-      std::cout << std::endl;
+      std::cout << "   time step " << n << ": t = " << old_time << "-> " << old_time+dt;
+      std::cout << ", CFL number = " << cfl << std::endl;
 
       update_viscosities(dt);
 
@@ -670,13 +727,26 @@ void ConservationLaw<dim>::solve_runge_kutta()
 template <int dim>
 double ConservationLaw<dim>::compute_dt_from_cfl_condition()
 {
-   // update max speed
-   update_flux_speeds();
+   return conservation_law_parameters.cfl * dx_min / max_flux_speed;
+}
 
-   // compute time step size from CFL condition
-   double dt = conservation_law_parameters.cfl * dx_min / max_flux_speed;
-
-   return dt;
+/** \fn double ConservationLaw<dim>::compute_cfl_number(const double &dt) const
+ *  \brief Computes the CFL number.
+ *
+ *  The CFL number is the following:
+ *  \f[
+ *    \nu = \left|\frac{\lambda_{max}\Delta t}{\Delta x_{min}}\right|,
+ *  \f]
+ *  where \f$\lambda_{max}\f$ is the maximum speed in the domain,
+ *  \f$\Delta t\f$ is the time step size, and \f$\Delta x_{min}\f$
+ *  is the minimum mesh size in the domain.
+ *  \param dt time step size
+ *  \return CFL number
+ */
+template <int dim>
+double ConservationLaw<dim>::compute_cfl_number(const double &dt) const
+{
+   return dt * max_flux_speed / dx_min;
 }
 
 /** \fn ConservationLaw<dim>::update_flux_speeds()

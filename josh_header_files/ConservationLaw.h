@@ -21,6 +21,7 @@
 
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/grid_refinement.h>
 
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_tools.h>
@@ -34,6 +35,7 @@
 #include <deal.II/numerics/data_component_interpretation.h>
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
+#include <deal.II/numerics/error_estimator.h>
 
 #include "ConservationLawParameters.h"
 
@@ -62,12 +64,14 @@ class ConservationLaw
 
     void initialize_system();
     void setup_system();
+    void adaptively_refine_mesh();
     void update_cell_sizes();
     void assemble_mass_matrix();
     void solve_runge_kutta();
 
     void update_flux_speeds();
     double compute_dt_from_cfl_condition();
+    double compute_cfl_number(const double &dt) const;
 
     void mass_matrix_solve (Vector<double> &x);
     void linear_solve (const typename ConservationLawParameters<dim>::LinearSolverType     &linear_solver,
@@ -210,6 +214,8 @@ class ConservationLaw
     std::map<typename DoFHandler<dim>::active_cell_iterator, double>          max_entropy_residual_cell;
     std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > entropy_cell_q;
     std::map<typename DoFHandler<dim>::active_cell_iterator, double>          max_jumps_cell;
+
+    bool in_final_cycle;
 };
 
 #include "ConservationLaw.cc"

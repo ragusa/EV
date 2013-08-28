@@ -7,7 +7,8 @@ subsection problem
 end
 
 subsection refinement
-   set initial refinement level = 5
+   set initial refinement level = 3
+   set refinement cycles = 3
 end
 
 subsection time
@@ -15,7 +16,7 @@ subsection time
    set time step size method = constant_dt
    set final time = 0.500 
    set time step size = 0.001
-   set cfl = 0.5
+   set cfl = 0.25
 end
 
 subsection artificial viscosity
