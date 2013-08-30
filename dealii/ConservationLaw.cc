@@ -54,7 +54,7 @@ void ConservationLaw<dim>::run()
 
       // adaptively refine mesh if not the first cycle
       if (cycle > 0)
-         adaptively_refine_mesh();
+         refine_mesh();
 
       std::cout << "Number of active cells: ";
       std::cout << triangulation.n_active_cells();
@@ -167,13 +167,14 @@ void ConservationLaw<dim>::initialize_system()
 
 }
 
-/** \fn void ConservationLaw<dim>::adaptively_refine_mesh()
- *  \brief Adaptively refines mesh.
+/** \fn void ConservationLaw<dim>::compute_error_for_refinement()
+ *  \brief Computes error for adaptive mesh refinement for a time
+ *         step and adds it to an error sum for all time steps.
  */
 template <int dim>
-void ConservationLaw<dim>::adaptively_refine_mesh()
+void ConservationLaw<dim>::compute_error_for_refinement()
 {
-   Vector<float> estimated_error_per_cell (triangulation.n_active_cells());
+   Vector<float> estimated_error_per_cell_time_step (triangulation.n_active_cells());
 
    KellyErrorEstimator<dim>::estimate (dof_handler,
                                        face_quadrature,
@@ -181,11 +182,19 @@ void ConservationLaw<dim>::adaptively_refine_mesh()
                                        //  so the following argument may be empty
                                        typename FunctionMap<dim>::type(),
                                        current_solution,
-                                       estimated_error_per_cell);
+                                       estimated_error_per_cell_time_step);
+}
 
+/** \fn void ConservationLaw<dim>::refine_mesh()
+ *  \brief Adaptively refines mesh.
+ */
+template <int dim>
+void ConservationLaw<dim>::refine_mesh()
+{
    GridRefinement::refine_and_coarsen_fixed_number (triangulation,
                                                     estimated_error_per_cell,
-                                                    0.3, 0.03);
+                                                    conservation_law_parameters.refinement_fraction,
+                                                    conservation_law_parameters.coarsening_fraction);
 
    triangulation.execute_coarsening_and_refinement();
 }
@@ -708,6 +717,10 @@ void ConservationLaw<dim>::solve_runge_kutta()
       // update old_solution to current_solution for next time step
       old_solution = current_solution;
       check_nan();
+
+      // compute error for adaptive mesh refinement
+      compute_error_for_refinement();
+
    }// end of time loop
 }
 

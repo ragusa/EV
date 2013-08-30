@@ -30,6 +30,14 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters (Parame
                         Patterns::Integer(),
                         "Number of refinement cycles. Must be >= 1. '1' Corresponds to"
                         " having only the initial uniform refinement cycles.");
+      prm.declare_entry("refinement fraction",
+                        "0.3",
+                        Patterns::Double(),
+                        "Fraction of cells to refine in an adaptive refinement step");
+      prm.declare_entry("coarsening fraction",
+                        "0.03",
+                        Patterns::Double(),
+                        "Fraction of cells to coarsen in an adaptive refinement step");
    }
    prm.leave_subsection();
 
@@ -189,6 +197,8 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
    {
       initial_refinement_level = prm.get_integer("initial refinement level");
       n_cycle = prm.get_integer("refinement cycles");
+      refinement_fraction.get_double("refinement fraction");
+      coarsening_fraction.get_double("coarsening fraction");
    }
    prm.leave_subsection();
 

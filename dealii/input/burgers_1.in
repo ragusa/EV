@@ -9,6 +9,8 @@ end
 subsection refinement
    set initial refinement level = 4
    set refinement cycles = 6
+   set refinement fraction = 0.3
+   set coarsening fraction = 0.03
 end
 
 subsection time

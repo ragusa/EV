@@ -64,7 +64,8 @@ class ConservationLaw
 
     void initialize_system();
     void setup_system();
-    void adaptively_refine_mesh();
+    void compute_error_for_refinement();
+    void refine_mesh();
     void update_cell_sizes();
     void assemble_mass_matrix();
     void solve_runge_kutta();
@@ -216,6 +217,7 @@ class ConservationLaw
     std::map<typename DoFHandler<dim>::active_cell_iterator, double>          max_jumps_cell;
 
     bool in_final_cycle;
+    Vector<float> estimated_error_per_cell;
 };
 
 #include "ConservationLaw.cc"
