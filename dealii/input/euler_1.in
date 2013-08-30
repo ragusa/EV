@@ -1,19 +1,43 @@
-set First input parameter = 1.0
-set Second input parameter = 2.0
-set Third input parameter = 3.0
+subsection finite element
+   set degree = 1
+end
+
+subsection problem
+   set problem id = 0
+end
+
+subsection refinement
+   set initial refinement level = 4
+   set refinement cycles = 6
+   set refinement fraction = 0.3
+   set coarsening fraction = 0.03
+end
 
 subsection time
-   set final time = 1
-   set time step size = 1e-2
+   # options are <constant_dt|cfl_condition>
+   set time step size method = cfl_condition
+   set final time = 0.300 
+   set time step size = 0.001
+   set cfl = 0.25
 end
 
-subsection initial conditions
-   set initial conditions 0 = 0
-   set initial conditions 1 = 0
-   set initial conditions 2 = 10*(x<-0.7)*(y> 0.3)*(y< 0.45) + (1-(x<-0.7)*(y> 0.3)*(y< 0.45))*1.0
-   set initial conditions 3 = (1.5-(1.0*1.0*y))/0.4
+subsection artificial viscosity
+   # options are <none|constant|first_order|entropy>
+   set viscosity type = entropy
+   set constant viscosity value = 0.02
+   set first order viscosity coefficient = 0.5
+   set entropy viscosity coefficient = 1.0
+   set add jumps = true
 end
 
+subsection temporal integration
+   # options are <runge_kutta>
+   set temporal integrator = runge_kutta
+   # options are <erk1|erk2|erk3|erk4>
+   set runge kutta method = erk1
+end
+
+# this section is not yet applicable
 subsection nonlinear solver
    set nonlinear verbosity = verbose
    set nonlinear method = newton
@@ -26,7 +50,14 @@ end
 subsection linear solver
    set linear verbosity = verbose
    set linear method = direct
+   set mass matrix linear method = direct
    set linear absolute tolerance = 1e-10
    set linear relative tolerance = 1e-10
    set max linear iterations = 150
+end
+
+subsection output
+   set output period = 0
+   set output mass matrix = false
+   set output viscosity = false
 end

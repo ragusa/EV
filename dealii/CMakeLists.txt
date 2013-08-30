@@ -3,7 +3,7 @@
 ##
 
 # Set the name of the project and target:
-SET(TARGET "burgers")
+SET(TARGET "euler")
 
 # Declare all source files the target consists of:
 SET(TARGET_SRC

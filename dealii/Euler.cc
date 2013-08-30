@@ -1,31 +1,38 @@
-/** \file Burgers.cc
- *  \brief Provides the function definitions for the Burgers class.
+/** \file Euler.cc
+ *  \brief Provides the function definitions for the Euler class.
  */
 
-/** \fn Burgers<dim>::Burgers(const BurgersParameters<dim> &params)
- *  \brief Constructor for the Burgers class.
- *  \param params Burgers' equation parameters
+/** \fn Euler<dim>::Euler(const EulerParameters<dim> &params)
+ *  \brief Constructor for the Euler class.
+ *  \param params Euler equation parameters
  */
 template <int dim>
-Burgers<dim>::Burgers(const BurgersParameters<dim> &params):
+Euler<dim>::Euler(const EulerParameters<dim> &params):
    ConservationLaw<dim>(params),
-   burgers_parameters(params),
-   velocity(0)
+   euler_parameters(params),
+   density(0),
+   velocity(1),
+   energy(1+dim)
 {} 
 
-/** \fn std::vector<std::string> Burgers<dim>::get_component_names()
+/** \fn std::vector<std::string> Euler<dim>::get_component_names()
  *  \brief Returns the names of each component.
  *  \return vector of names of each component
  */
 template <int dim>
-std::vector<std::string> Burgers<dim>::get_component_names ()
+std::vector<std::string> Euler<dim>::get_component_names ()
 {
-   std::vector<std::string> names(1,"velocity");
+   std::vector<std::string> names(n_euler_components);
+
+   names[0] = "density";
+   for (int d = 0; d < dim; ++d) names[1+d] = "velocity";
+   names[dim+1] = "energy";
+
    return names;
 }
 
 /** \fn std::vector<DataComponentInterpretation::DataComponentInterpretation>
- *      Burgers<dim>::get_component_interpretations()
+ *      Euler<dim>::get_component_interpretations()
  *  \brief Returns the interpretations for each component.
  *
  *  This function returns the interpretation of each component,
@@ -35,24 +42,28 @@ std::vector<std::string> Burgers<dim>::get_component_names ()
  */
 template <int dim>
 std::vector<DataComponentInterpretation::DataComponentInterpretation>
-   Burgers<dim>::get_component_interpretations ()
+   Euler<dim>::get_component_interpretations ()
 {
    std::vector<DataComponentInterpretation::DataComponentInterpretation>
-      data_component_interpretation
-      (1, DataComponentInterpretation::component_is_scalar);
+      component_interpretations(n_euler_components);
+   
+   component_interpretations[0] = DataComponentInterpretation::component_is_scalar;
+   for (int d = 0; d < dim; ++d)
+      component_interpretations[1+d] = DataComponentInterpretation::component_is_part_of_vector;
+   component_interpretations[dim+1] = DataComponentInterpretation::component_is_scalar;
 
-   return data_component_interpretation;
+   return component_interpretations;
 } 
 
-/** \fn void Burgers<dim>::define_problem()
+/** \fn void Euler<dim>::define_problem()
  *  \brief Create the domain, compute volume, define initial
  *         conditions, and define boundary conditions and exact
  *         solution if it exists.
  */
 template <int dim>
-void Burgers<dim>::define_problem()
+void Euler<dim>::define_problem()
 {
-   switch (burgers_parameters.problem_id)
+   switch (euler_parameters.problem_id)
    {
       case 0: // 1-D, Dirichlet boundary conditions, sin(2*pi*x)
       {
@@ -83,63 +94,17 @@ void Burgers<dim>::define_problem()
          this->has_exact_solution = false;
          break;
       }
-      case 1: // Guermond 2-d test problem
-      {
-         Assert(dim==2,ExcImpossibleInDim(dim));
-         double domain_start = 0;
-         double domain_width = 1.0;
-         this->domain_volume = std::pow(domain_width,dim);
-         GridGenerator::hyper_cube(this->triangulation, domain_start, domain_start + domain_width);
-         // only 1 type of BC: Dirichlet with exact solution
-         this->n_boundaries = 1;
-         // set all boundary indicators to zero
-         typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin(),
-                                                    endc = this->triangulation.end();
-         for (; cell != endc; ++cell)
-            for (unsigned int face = 0; face < this->faces_per_cell; ++face)
-               if (cell->face(face)->at_boundary())
-                  cell->face(face)->set_boundary_indicator(0);
-
-         this->boundary_types.resize(this->n_boundaries);
-         this->boundary_types[0].resize(this->n_components);
-         this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
-         this->use_exact_solution_as_BC = true;
-         // initial conditions
-         this->initial_conditions_strings[0] =  "if(x<0.5,";
-         this->initial_conditions_strings[0] +=    "if(y>0.5,";
-         this->initial_conditions_strings[0] +=       "-0.2,0.5),";
-         this->initial_conditions_strings[0] +=    "if(y<0.5,";
-         this->initial_conditions_strings[0] +=       "0.8,-1))";
-         // exact solution
-         this->has_exact_solution = true;
-         this->exact_solution_strings[0] =  "if(x<0.5-0.6*t,";
-         this->exact_solution_strings[0] +=    "if(y>0.5+0.15*t,";
-         this->exact_solution_strings[0] +=       "-0.2,0.5),";
-         this->exact_solution_strings[0] +=  "if(x<0.5-0.25*t,";
-         this->exact_solution_strings[0] +=    "if(y>-8./7.*x+15./14.-15./28.*t,";
-         this->exact_solution_strings[0] +=       "-1.0,0.5),";
-         this->exact_solution_strings[0] +=  "if(x<0.5+0.5*t,";
-         this->exact_solution_strings[0] +=    "if(y>x/6.+5./12.-5./24.*t,";
-         this->exact_solution_strings[0] +=       "-1.0,0.5),";
-         this->exact_solution_strings[0] +=  "if(x<0.5+0.8*t,";
-         this->exact_solution_strings[0] +=    "if(y>x-5./(18.*t)*(x+t-0.5)^2,";
-         this->exact_solution_strings[0] +=       "-1.0,(2*x-1)/(2.*t)),";
-         this->exact_solution_strings[0] +=  "if(y>0.5-0.1*t,";
-         this->exact_solution_strings[0] +=       "-1.0,0.8)";
-         this->exact_solution_strings[0] +=  "))))";
-         break;
-      }
       default:
          Assert(false,ExcNotImplemented());
    }
 }
 
-/** \fn void Burgers<dim>::compute_cell_ss_residual()
+/** \fn void Euler<dim>::compute_cell_ss_residual()
  *  \brief Computes the contribution of the steady-state residual
  *         from the current cell.
  */
 template <int dim>
-void Burgers<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
+void Euler<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
                                             const typename DoFHandler<dim>::active_cell_iterator &cell,
                                             Vector<double> &cell_residual)
 {
@@ -172,12 +137,12 @@ void Burgers<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
                              ) * fe_values.JxW(q);
 }
 
-/** \fn void Burgers<dim>::compute_face_ss_residual()
+/** \fn void Euler<dim>::compute_face_ss_residual()
  *  \brief Computes the contribution of the steady-state residual
  *         from the faces of the current cell.
  */
 template <int dim>
-void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
+void Euler<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                                             const typename DoFHandler<dim>::active_cell_iterator &cell,
                                             Vector<double> &cell_residual)
 {
@@ -194,15 +159,15 @@ void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
 
          // compute viscosity
          Vector<double> viscosity_face(this->n_q_points_face);
-         switch (burgers_parameters.viscosity_type)
+         switch (euler_parameters.viscosity_type)
          {
-            case BurgersParameters<dim>::constant:
+            case EulerParameters<dim>::constant:
             {
                for (unsigned int q = 0; q < this->n_q_points_face; ++q)
-                  viscosity_face(q) = burgers_parameters.constant_viscosity_value;
+                  viscosity_face(q) = euler_parameters.constant_viscosity_value;
                break;
             }
-            case BurgersParameters<dim>::first_order:
+            case EulerParameters<dim>::first_order:
             {
                // get max velocity on cell
                std::vector<double> local_solution(this->n_q_points_face);
@@ -213,7 +178,7 @@ void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
 
                // compute first-order viscosity
                double cell_diameter = cell->diameter();
-               double viscosity_value = 0.5 * burgers_parameters.first_order_viscosity_coef * cell_diameter * max_velocity;
+               double viscosity_value = 0.5 * euler_parameters.first_order_viscosity_coef * cell_diameter * max_velocity;
                for (unsigned int q = 0; q < this->n_q_points_face; ++q)
                   viscosity_face(q) = viscosity_value;
                
@@ -238,14 +203,14 @@ void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
    }
 }
 
-/** \fn Tensor<1,dim> Burgers<dim>::flux_derivative(const double u)
+/** \fn Tensor<1,dim> Euler<dim>::flux_derivative(const double u)
  *  \brief Computes the derivative of the flux function with respect to
  *         the solution vector.
  *  \param u solution at a point
  *  \return derivative of the flux with respect to u
  */
 template <int dim>
-Tensor<1,dim> Burgers<dim>::flux_derivative(const double u)
+Tensor<1,dim> Euler<dim>::flux_derivative(const double u)
 {
    Tensor<1,dim> dfdu;
    
@@ -255,24 +220,24 @@ Tensor<1,dim> Burgers<dim>::flux_derivative(const double u)
    return dfdu;
 }
 
-/** \fn double Burgers<dim>::entropy(const double u) const
+/** \fn double Euler<dim>::entropy(const double u) const
  *  \brief Computes entropy at a point.
  *  \param u solution at a point
  *  \return entropy at a point
  */
 template <int dim>
-double Burgers<dim>::entropy(const double u) const
+double Euler<dim>::entropy(const double u) const
 {
    return 0.5*std::pow(u,2);
 }
 
-/** \fn double Burgers<dim>::entropy_derivative(const double u) const
+/** \fn double Euler<dim>::entropy_derivative(const double u) const
  *  \brief Computes derivative of entropy at a point.
  *  \param u solution at a point
  *  \return derivative of entropy at a point
  */
 template <int dim>
-double Burgers<dim>::entropy_derivative(const double u) const
+double Euler<dim>::entropy_derivative(const double u) const
 {
    return u;
 }

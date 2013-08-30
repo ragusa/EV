@@ -1,8 +1,8 @@
-/** \file Burgers.h
- *  \brief Provides the header for the Burgers class.
+/** \file Euler.h
+ *  \brief Provides the header for the Euler class.
  */
-#ifndef Burgers_h
-#define Burgers_h
+#ifndef Euler_h
+#define Euler_h
 
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_accessor.h>
@@ -19,30 +19,26 @@
 #include <deal.II/lac/vector.h>
 
 #include "ConservationLaw.h"
-#include "BurgersParameters.h"
+#include "EulerParameters.h"
 
-/** \class Burgers
- *  \brief Provides the necessary functions for Burgers' equation.
- *
- *  This class extends the ConservationLaw class to viscous
- *  Burgers' equation:
- *  \f[
- *    u_t + u u_x = \nu u_{xx}
- *  \f]
+/** \class Euler
+ *  \brief Provides the necessary functions for Euler equations.
  */
 template <int dim>
-class Burgers : public ConservationLaw<dim>
+class Euler : public ConservationLaw<dim>
 {
   public:
-    Burgers(const BurgersParameters<dim> &params);
+    Euler(const EulerParameters<dim> &params);
 
   private:
-    BurgersParameters<dim> burgers_parameters;
+    EulerParameters<dim> euler_parameters;
 
     // number of components and position of components in solution vector
-    static const unsigned int n_burgers_components = 1;
+    static const unsigned int n_euler_components = dim+2;
 
-    const FEValuesExtractors::Scalar velocity;
+    const FEValuesExtractors::Scalar density;
+    const FEValuesExtractors::Vector velocity;
+    const FEValuesExtractors::Scalar energy;
 
     // vector of names of each component
     std::vector<std::string> get_component_names();
@@ -64,6 +60,6 @@ class Burgers : public ConservationLaw<dim>
     double entropy_derivative(const double u) const;
 };
 
-#include "Burgers.cc"
+#include "Euler.cc"
 
 #endif

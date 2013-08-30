@@ -5,8 +5,8 @@
 
 #include <deal.II/base/logstream.h>
 
-#include "EulerEquations.h"
-#include "EulerEquationsParameters.h"
+#include "Euler.h"
+#include "EulerParameters.h"
 
 using namespace dealii;
 
@@ -28,16 +28,17 @@ int main(int argc, char ** argv) {
       }
 
       // spatial dimensions
-      const int dimension = 2;
+      const int dimension = 1;
 
       // declare input parameters and read them from input file into parameter handler
       ParameterHandler parameter_handler;
-      EulerEquationsParameters<dimension>::declare_parameters(parameter_handler);
-      ConservationLawParameters<dimension>::declare_parameters(parameter_handler);
+      EulerParameters<dimension>::declare_euler_parameters(parameter_handler);
       parameter_handler.read_input(input_filename);
+      EulerParameters<dimension> euler_parameters;
+      euler_parameters.get_euler_parameters(parameter_handler);
 
       // run problem
-      EulerEquations<dimension> euler_problem(parameter_handler);
+      Euler<dimension> euler_problem(parameter_handler);
       euler_problem.run();
 
    } catch (std::exception &exc) {
