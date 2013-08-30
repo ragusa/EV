@@ -183,6 +183,8 @@ void ConservationLaw<dim>::compute_error_for_refinement()
                                        typename FunctionMap<dim>::type(),
                                        current_solution,
                                        estimated_error_per_cell_time_step);
+
+   estimated_error_per_cell += estimated_error_per_cell_time_step;
 }
 
 /** \fn void ConservationLaw<dim>::refine_mesh()
@@ -274,6 +276,7 @@ void ConservationLaw<dim>::setup_system ()
    old_solution.reinit(dof_handler.n_dofs());
    current_solution.reinit(dof_handler.n_dofs());
    system_rhs.reinit(dof_handler.n_dofs());
+   estimated_error_per_cell.reinit(triangulation.n_active_cells());
 
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();

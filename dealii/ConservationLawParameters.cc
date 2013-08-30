@@ -197,8 +197,8 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
    {
       initial_refinement_level = prm.get_integer("initial refinement level");
       n_cycle = prm.get_integer("refinement cycles");
-      refinement_fraction.get_double("refinement fraction");
-      coarsening_fraction.get_double("coarsening fraction");
+      refinement_fraction = prm.get_double("refinement fraction");
+      coarsening_fraction= prm.get_double("coarsening fraction");
    }
    prm.leave_subsection();
 
