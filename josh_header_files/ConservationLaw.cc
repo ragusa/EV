@@ -543,7 +543,7 @@ template <int dim>
 void ConservationLaw<dim>::solve_runge_kutta()
 {
    // get RK parameters a, b, and c (Butcher tableau)
-   int Ns;
+   int Ns = 0;
    switch (conservation_law_parameters.runge_kutta_method)
    {
       case ConservationLawParameters<dim>::erk1:
@@ -1111,7 +1111,7 @@ void ConservationLaw<dim>::update_jumps()
    for (; cell != endc; ++cell)
    {
       double max_jump_in_cell = 0.0;
-      double max_jump_on_face;
+      double max_jump_on_face = 0.0;
 
       for (unsigned int iface = 0; iface < faces_per_cell; ++iface)
       {

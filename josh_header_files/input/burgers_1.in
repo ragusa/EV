@@ -8,7 +8,7 @@ end
 
 subsection refinement
    set initial refinement level = 4
-   set refinement cycles = 3
+   set refinement cycles = 6
 end
 
 subsection time

@@ -127,24 +127,6 @@ void Burgers<dim>::define_problem()
          this->exact_solution_strings[0] +=  "if(y>0.5-0.1*t,";
          this->exact_solution_strings[0] +=       "-1.0,0.8)";
          this->exact_solution_strings[0] +=  "))))";
-/*
-         this->has_exact_solution = true;
-         this->exact_solution_strings[0] =  "if(x<0.5-0.6*x,";
-         this->exact_solution_strings[0] +=    "if(y>0.5+0.15*x,";
-         this->exact_solution_strings[0] +=       "-0.2,0.5),";
-         this->exact_solution_strings[0] +=  "if((x>0.5-0.6*x)&(x<0.5-0.25*x),";
-         this->exact_solution_strings[0] +=    "if(y>-8./7.*x+15./14.-15./28.*x,";
-         this->exact_solution_strings[0] +=       "-1.0,0.5),";
-         this->exact_solution_strings[0] +=  "if((x>0.5-0.25*x)&(x<0.5+0.5*x),";
-         this->exact_solution_strings[0] +=    "if(y>x/6.+5./12.-5./24.*x,";
-         this->exact_solution_strings[0] +=       "-1.0,0.5),";
-         this->exact_solution_strings[0] +=  "if((x>0.5+0.5*x)&(x<0.5+0.8*x),";
-         this->exact_solution_strings[0] +=    "if(y>x-5./(18.*x)*(x+x-0.5)^2,";
-         this->exact_solution_strings[0] +=       "-1.0,(2*x-1)/(2.*x)),";
-         this->exact_solution_strings[0] +=  "if(x>0.5+0.8*x,";
-         this->exact_solution_strings[0] +=    "if(y>0.5-0.1*x,";
-         this->exact_solution_strings[0] +=       "-1.0,0.8))))))";
-*/
          break;
       }
       default:
