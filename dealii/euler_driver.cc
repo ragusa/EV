@@ -1,4 +1,4 @@
-/** \file euler.cc
+/** \file euler_driver.cc
  *  \brief Solves Euler equations.
  */
 #include <iostream>

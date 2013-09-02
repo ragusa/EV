@@ -1,4 +1,4 @@
-/** \file burgers.cc
+/** \file burgers_driver.cc
  *  \brief Solves Burger's equation.
  */
 #include <iostream>

@@ -105,17 +105,16 @@ void Euler<dim>::define_problem()
  */
 template <int dim>
 void Euler<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
-                                            const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                            Vector<double> &cell_residual)
+                                          const typename DoFHandler<dim>::active_cell_iterator &cell,
+                                          Vector<double> &cell_residual)
 {
    // reinitialize fe values for cell
    fe_values.reinit(cell);
 
    // get current solution values and gradients
-   std::vector<double>          solution_values   (this->n_q_points_cell);
-   std::vector<Tensor<1, dim> > solution_gradients(this->n_q_points_cell);
+   std::vector<Tensor<1, this->n_components> > solution(this->n_q_points_cell);
+   std::vector<Tensor<1, this->n_components> > flux    (this->n_q_points_cell);
    fe_values[velocity].get_function_values   (this->current_solution,solution_values);
-   fe_values[velocity].get_function_gradients(this->current_solution,solution_gradients);
 
    // compute derivative of flux
    std::vector<Tensor<1, dim> > dfdu(this->n_q_points_cell);
@@ -131,9 +130,11 @@ void Euler<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
                                 fe_values[velocity].value(i,q)
                                 *dfdu[q]
                                 *solution_gradients[q]
+/*
                              +  fe_values[velocity].gradient(i,q)
                                 *this->viscosity_cell_q[cell](q)
                                 *solution_gradients[q]
+*/
                              ) * fe_values.JxW(q);
 }
 
@@ -146,6 +147,7 @@ void Euler<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                                             const typename DoFHandler<dim>::active_cell_iterator &cell,
                                             Vector<double> &cell_residual)
 {
+/*
    // loop over faces
    for (unsigned int face = 0; face < this->faces_per_cell; ++face)
    {
@@ -201,6 +203,20 @@ void Euler<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                                    *fe_face_values.JxW(q);
       }
    }
+*/
+}
+
+/** \fn Tensor<1,dim> Euler<dim>::flux()
+ *  \brief Computes the flux.
+ *  \param
+ *  \return
+ */
+template <int dim>
+Tensor<this->n_components,dim> Euler<dim>::flux()
+{
+   Tensor<this->n_components,dim> f;
+
+   return f;
 }
 
 /** \fn Tensor<1,dim> Euler<dim>::flux_derivative(const double u)
