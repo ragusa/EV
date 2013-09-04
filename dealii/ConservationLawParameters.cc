@@ -18,6 +18,16 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters (Parame
    }
    prm.leave_subsection();
 
+   // quadrature
+   prm.enter_subsection("quadrature");
+   {
+      prm.declare_entry("number of quadrature points",
+                  "3",
+                  Patterns::Integer(),
+                  "number of quadrature points per dimension");
+   }
+   prm.leave_subsection();
+
    // refinement parameters
    prm.enter_subsection("refinement");
    {
@@ -110,13 +120,13 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters (Parame
                          "State whether output from linear solver runs should be printed. "
                          "Choices are <quiet|verbose>.");
        prm.declare_entry("linear method", "direct",
-                         Patterns::Selection("direct|gmres"),
+                         Patterns::Selection("direct|gmres|cg"),
                          "The kind of linear solver for the linear system. "
-                         "Choices are <direct|gmres>.");
-       prm.declare_entry("mass matrix linear method", "direct",
-                         Patterns::Selection("direct|gmres"),
+                         "Choices are <direct|gmres|cg>.");
+       prm.declare_entry("mass matrix linear method", "cg",
+                         Patterns::Selection("direct|gmres|cg"),
                          "The linear solver used to implicitly invert the mass matrix. "
-                         "Choices are <direct|gmres>.");
+                         "Choices are <direct|gmres|cg>.");
        prm.declare_entry("linear absolute tolerance", "1e-10",
                          Patterns::Double(),
                          "Linear absolute tolerance");
@@ -189,6 +199,13 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
    prm.enter_subsection("finite element");
    {
       degree = prm.get_integer("degree");
+   }
+   prm.leave_subsection();
+
+   // quadrature
+   prm.enter_subsection("quadrature");
+   {
+      n_quadrature_points = prm.get_integer("number of quadrature points");
    }
    prm.leave_subsection();
 
@@ -269,10 +286,12 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
        const std::string solver = prm.get("linear method");
        if (solver == "direct")     linear_solver = direct;
        else if (solver == "gmres") linear_solver = gmres;
+       else if (solver == "cg")    linear_solver = cg;
          
        const std::string mass_solver = prm.get("mass matrix linear method");
        if (mass_solver == "direct")     mass_matrix_linear_solver = direct;
        else if (mass_solver == "gmres") mass_matrix_linear_solver = gmres;
+       else if (mass_solver == "cg")    mass_matrix_linear_solver = cg;
 
        linear_atol     = prm.get_double("linear absolute tolerance");
        linear_rtol     = prm.get_double("linear relative tolerance");

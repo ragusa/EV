@@ -60,8 +60,13 @@ class Burgers : public ConservationLaw<dim>
                                   const typename DoFHandler<dim>::active_cell_iterator &cell,
                                   Vector<double> &cell_residual);
     Tensor<1,dim> flux_derivative(const double u);
-    double entropy           (const double u) const;
-    double entropy_derivative(const double u) const;
+
+    void compute_entropy            (const Vector<double> &solution,
+                                     FEValues<dim>        &fe_values,
+                                     Vector<double>       &entropy) const;
+    void compute_entropy_derivative (const Vector<double> &solution,
+                                     FEValues<dim>        &fe_values,
+                                     Vector<double>       &entropy_derivative) const;
 };
 
 #include "Burgers.cc"

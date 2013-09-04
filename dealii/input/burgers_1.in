@@ -2,6 +2,10 @@ subsection finite element
    set degree = 1
 end
 
+subsection quadrature
+   set number of quadrature points = 3
+end
+
 subsection problem
    set problem id = 0
 end

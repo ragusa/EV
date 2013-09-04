@@ -42,7 +42,7 @@ class ConservationLawParameters
     enum NonlinearSolverType { newton };
     NonlinearSolverType nonlinear_solver;
 
-    enum LinearSolverType { direct, gmres };
+    enum LinearSolverType { direct, gmres, cg };
     LinearSolverType linear_solver;
     LinearSolverType mass_matrix_linear_solver;
     
@@ -63,6 +63,7 @@ class ConservationLawParameters
     void get_conservation_law_parameters (ParameterHandler &prm);
 
     int degree;
+    unsigned int n_quadrature_points;
 
     enum ViscosityType { none, constant, first_order, entropy }; 
     ViscosityType viscosity_type;

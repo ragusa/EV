@@ -18,6 +18,8 @@
 #include <deal.II/lac/compressed_sparsity_pattern.h>
 #include <deal.II/lac/sparse_direct.h>
 #include <deal.II/lac/constraint_matrix.h>
+#include <deal.II/lac/precondition.h>
+#include <deal.II/lac/solver_cg.h>
 
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/grid_generator.h>
@@ -47,10 +49,10 @@ using namespace dealii;
  *  This class solves a conservation law of the form:
  *  \f[
  *    \frac{\partial\vec{u}}{\partial t} 
- *    + \nabla \cdot \vec{f}(\vec{u}) = \vec{g}(\vec{u}),
+ *    + \nabla \cdot F(\vec{u}) = \vec{g}(\vec{u}),
  *  \f]
- *  where \f$\vec{u}\f$ is the vector of conservation variables, \f$\vec{f}(\vec{u})\f$
- *  is the flux, and \f$\vec{g}(\vec{u})\f$ is the forcing term.
+ *  where \f$\vec{u}\f$ is the vector of conservation variables, \f$F(\vec{u})\f$
+ *  is the flux tensor, and \f$\vec{g}(\vec{u})\f$ is the forcing term.
  */
 template <int dim>
 class ConservationLaw
@@ -63,6 +65,7 @@ class ConservationLaw
   protected:
 
     void initialize_system();
+    void initialize_runge_kutta();
     void setup_system();
     void compute_error_for_refinement();
     void refine_mesh();
@@ -96,8 +99,12 @@ class ConservationLaw
     void update_entropy_viscosities(const double &dt);
     void update_entropy_residuals(const double &dt);
     void update_jumps();
-    virtual double entropy           (const double u) const = 0;
-    virtual double entropy_derivative(const double u) const = 0;
+    virtual void compute_entropy            (const Vector<double> &solution,
+                                             FEValues<dim>        &fe_values,
+                                             Vector<double>       &entropy) const = 0;
+    virtual void compute_entropy_derivative (const Vector<double> &solution,
+                                             FEValues<dim>        &fe_values,
+                                             Vector<double>       &entropy_derivative) const = 0;
 
     void output_solution () const;
     void output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > &map,
@@ -135,14 +142,14 @@ class ConservationLaw
 
     /** number of quadrature points in each dimension */
     const unsigned int   n_q_points_per_dim;
-    /** number of quadrature points per cell */
-    const unsigned int   n_q_points_cell;
-    /** number of quadrature points per face */
-    const unsigned int   n_q_points_face;
     /** quadrature formula for cells */
     const QGauss<dim>    cell_quadrature;
     /** quadrature formula for faces */
     const QGauss<dim-1>  face_quadrature;
+    /** number of quadrature points per cell */
+    const unsigned int   n_q_points_cell;
+    /** number of quadrature points per face */
+    const unsigned int   n_q_points_face;
 
     /** solution of current time step */
     Vector<double>       current_solution;
@@ -195,7 +202,7 @@ class ConservationLaw
        component_interpretations;
 
     /** minimum cell diameter; used for CFL condition */
-    double dx_min;
+    double minimum_cell_diameter;
     /** maximum flux speed; used for CFL condition */
     double max_flux_speed;
     /** max entropy deviation */
@@ -204,7 +211,7 @@ class ConservationLaw
     double domain_volume;
 
     // maps
-    std::map<typename DoFHandler<dim>::active_cell_iterator, double>          dx;
+    std::map<typename DoFHandler<dim>::active_cell_iterator, double>          cell_diameter;
     std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > flux_speed_cell_q;
     std::map<typename DoFHandler<dim>::active_cell_iterator, double>          max_flux_speed_cell;
     std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > viscosity_cell_q;
@@ -216,8 +223,24 @@ class ConservationLaw
     std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > entropy_cell_q;
     std::map<typename DoFHandler<dim>::active_cell_iterator, double>          max_jumps_cell;
 
+    /** flag for last adaptive refinement cycle; used so that only final cycle is output */
     bool in_final_cycle;
+    /** estimation of error per cell for adaptive mesh refinement */
     Vector<float> estimated_error_per_cell;
+
+    /** structure containing Runge-Kutta constants and memory for f's (steady-state residual evaluations) */
+    struct RungeKuttaParameters
+    {
+       int s;
+       std::vector<Vector<double> > a;
+       std::vector<double>          b;
+       std::vector<double>          c;
+
+       bool solution_computed_in_last_stage;
+
+       std::vector<Vector<double> > f;
+    };
+    RungeKuttaParameters rk;
 };
 
 #include "ConservationLaw.cc"

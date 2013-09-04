@@ -15,11 +15,11 @@ ConservationLaw<dim>::ConservationLaw(const ConservationLawParameters<dim> &para
    dofs_per_cell(fe.dofs_per_cell),
    faces_per_cell(GeometryInfo<dim>::faces_per_cell),
    dof_handler(triangulation),
-   n_q_points_per_dim(2*params.degree + 1),
-   n_q_points_cell(std::pow(n_q_points_per_dim,dim)),
-   n_q_points_face(std::pow(n_q_points_per_dim,dim-1)),
+   n_q_points_per_dim(params.n_quadrature_points),
    cell_quadrature(n_q_points_per_dim),
    face_quadrature(n_q_points_per_dim),
+   n_q_points_cell(cell_quadrature.size()),
+   n_q_points_face(face_quadrature.size()),
    dirichlet_function_strings(params.n_components),
    dirichlet_function        (params.n_components),
    initial_conditions_strings (params.n_components),
@@ -165,6 +165,102 @@ void ConservationLaw<dim>::initialize_system()
                                           constants,
                                           false);
 
+   // initialize Runge-Kutta data if RK is being used
+   if (conservation_law_parameters.temporal_integrator ==
+      ConservationLawParameters<dim>::runge_kutta)
+      initialize_runge_kutta();
+
+}
+
+/** \fn void ConservationLaw<dim>::initialize_runge_kutta()
+ *  \brief Assigns Butcher tableau constants.
+ */
+template <int dim>
+void ConservationLaw<dim>::initialize_runge_kutta()
+{
+   // get RK parameters a, b, and c (Butcher tableau)
+   rk.s = 0;
+   switch (conservation_law_parameters.runge_kutta_method)
+   {
+      case ConservationLawParameters<dim>::erk1:
+         rk.s = 1;
+         break;
+      case ConservationLawParameters<dim>::erk2:
+         rk.s = 2;
+         break;
+      case ConservationLawParameters<dim>::erk3:
+         rk.s = 3;
+         break;
+      case ConservationLawParameters<dim>::erk4:
+         rk.s = 4;
+         break;
+      default:
+         Assert(false,ExcNotImplemented());
+         break;
+   }
+
+   // allocate memory for constants
+   rk.a.resize(rk.s);
+   for (int i = 0; i < rk.s; ++i)
+      rk.a[i].reinit(rk.s);
+   rk.b.resize(rk.s);
+   rk.c.resize(rk.s);
+
+   // assign constants
+   switch (conservation_law_parameters.runge_kutta_method)
+   {
+      case ConservationLawParameters<dim>::erk1:
+         rk.b[0] = 1;
+         rk.c[0] = 0;
+         break;
+      case ConservationLawParameters<dim>::erk2:
+         rk.a[1][0] = 0.5;
+         rk.b[0] = 0;
+         rk.b[1] = 1;
+         rk.c[0] = 0;
+         rk.c[1] = 0.5;
+         break;
+      case ConservationLawParameters<dim>::erk3:
+         rk.a[1][0] = 1.0;
+         rk.a[2][0] = 0.25;
+         rk.a[2][1] = 0.25;
+         rk.b[0] = 1./6;
+         rk.b[1] = 1./6;
+         rk.b[2] = 4./6;
+         rk.c[0] = 0;
+         rk.c[1] = 1.0;
+         rk.c[2] = 0.5;
+         break;
+      case ConservationLawParameters<dim>::erk4:
+         rk.a[1][0] = 0.5;
+         rk.a[2][0] = 0;
+         rk.a[2][1] = 0.5;
+         rk.a[3][0] = 0;
+         rk.a[3][1] = 0;
+         rk.a[3][2] = 1;
+         rk.b[0] = 1./6;
+         rk.b[1] = 1./3;
+         rk.b[2] = 1./3;
+         rk.b[3] = 1./6;
+         rk.c[0] = 0;
+         rk.c[1] = 0.5;
+         rk.c[2] = 0.5;
+         rk.c[3] = 1;
+         break;
+      default:
+         Assert(false,ExcNotImplemented());
+         break;
+   }
+
+   // allocate vectors for steady-state residual evaluations
+   rk.f.resize(rk.s);
+
+   // test to see if last row of A matrix is the same as the b vector;
+   // this implies the last stage solution is the new solution and thus
+   // the final linear combination is not required.
+   for (int i = 0; i < rk.s; ++i)
+      if (std::abs(rk.a[rk.s-1][i]-rk.b[i]) < 1.0e-30)
+         rk.solution_computed_in_last_stage;
 }
 
 /** \fn void ConservationLaw<dim>::compute_error_for_refinement()
@@ -188,7 +284,7 @@ void ConservationLaw<dim>::compute_error_for_refinement()
 }
 
 /** \fn void ConservationLaw<dim>::refine_mesh()
- *  \brief Adaptively refines mesh.
+ *  \brief Adaptively refines mesh based on a previously computed error per cell.
  */
 template <int dim>
 void ConservationLaw<dim>::refine_mesh()
@@ -212,7 +308,7 @@ template <int dim>
 void ConservationLaw<dim>::setup_system ()
 {
    // clear maps
-   dx.clear();
+   cell_diameter.clear();
    flux_speed_cell_q.clear();
    max_flux_speed_cell.clear();
    viscosity_cell_q.clear();
@@ -277,6 +373,12 @@ void ConservationLaw<dim>::setup_system ()
    current_solution.reinit(dof_handler.n_dofs());
    system_rhs.reinit(dof_handler.n_dofs());
    estimated_error_per_cell.reinit(triangulation.n_active_cells());
+   
+   // allocate memory for steady-state residual evaluations if Runge-Kutta is used
+   if (conservation_law_parameters.temporal_integrator ==
+      ConservationLawParameters<dim>::runge_kutta)
+      for (int i = 0; i < rk.s; ++i)
+         rk.f[i].reinit(dof_handler.n_dofs());
 
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
@@ -302,12 +404,12 @@ void ConservationLaw<dim>::update_cell_sizes()
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
    // reset minimum cell size to an arbitrary cell size
-   dx_min = cell->diameter();
+   minimum_cell_diameter = cell->diameter();
 
    for (; cell != endc; ++cell)
    {
-      dx[cell] = cell->diameter();
-      dx_min = std::min( dx_min, dx[cell] );
+      cell_diameter[cell] = cell->diameter();
+      minimum_cell_diameter = std::min( minimum_cell_diameter, cell_diameter[cell] );
    }
 }
 
@@ -319,9 +421,10 @@ void ConservationLaw<dim>::assemble_mass_matrix ()
 {
    mass_matrix = 0.0;
 
-   FEValues<dim> fe_values (fe, cell_quadrature, update_values | update_gradients | update_JxW_values);
+   FEValues<dim> fe_values (fe, cell_quadrature, update_values | update_JxW_values);
 
    std::vector<unsigned int> local_dof_indices (dofs_per_cell);
+   FullMatrix<double> local_mass (dofs_per_cell, dofs_per_cell);
 
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
@@ -330,7 +433,7 @@ void ConservationLaw<dim>::assemble_mass_matrix ()
       fe_values.reinit(cell);
       cell->get_dof_indices(local_dof_indices);
 
-      FullMatrix<double> local_mass (dofs_per_cell, dofs_per_cell);
+      local_mass = 0.0;
 
       // compute local contribution
       for (unsigned int q = 0; q < n_q_points_cell; ++q)
@@ -544,92 +647,20 @@ void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_
  *  This function contains the transient loop and solves the
  *  transient using explicit Runge-Kutta:
  *  \f[
- *    y_{n+1}=y_n + \sum\limits^s_{i=1}b_i M^{-1} k_i
+ *    \mathbf{M} \mathbf{y}_{n+1} = \mathbf{M} \mathbf{y}_n + h\sum\limits^s_{i=1}b_i \mathbf{f}_i
  *  \f]
- *  where \f$k_i\f$ is
+ *  where
  *  \f[
- *    k_i=h f(t_n + c_i h, y_n + \sum\limits^{i-1}_{j=1}a_{i,j} M^{-1} k_j)
+ *    \mathbf{f}_i = \mathbf{f}(t_n + c_i h, \mathbf{Y}_i)
+ *  \f]
+ *  and \f$\mathbf{Y}_i\f$ is computed from the linear solve
+ *  \f[
+ *    \mathbf{M} \mathbf{Y}_i = \mathbf{M} \mathbf{y}_n + h\sum\limits^{i-1}_{j=1}a_{i,j} \mathbf{f}_i
  *  \f]
  */
 template <int dim>
 void ConservationLaw<dim>::solve_runge_kutta()
 {
-   // get RK parameters a, b, and c (Butcher tableau)
-   int Ns = 0;
-   switch (conservation_law_parameters.runge_kutta_method)
-   {
-      case ConservationLawParameters<dim>::erk1:
-         Ns = 1;
-         break;
-      case ConservationLawParameters<dim>::erk2:
-         Ns = 2;
-         break;
-      case ConservationLawParameters<dim>::erk3:
-         Ns = 3;
-         break;
-      case ConservationLawParameters<dim>::erk4:
-         Ns = 4;
-         break;
-      default:
-         Assert(false,ExcNotImplemented());
-         break;
-   }
-   std::vector<Vector<double> > rk_a(Ns);
-   for (int i = 0; i < Ns; ++i)
-      rk_a[i].reinit(Ns);
-   std::vector<double> rk_b(Ns);
-   std::vector<double> rk_c(Ns);
-   // for now, assume there is only one ERK method for each number of stages
-   switch (conservation_law_parameters.runge_kutta_method)
-   {
-      case ConservationLawParameters<dim>::erk1:
-         rk_b[0] = 1;
-         rk_c[0] = 0;
-         break;
-      case ConservationLawParameters<dim>::erk2:
-         rk_a[1][0] = 0.5;
-         rk_b[0] = 0;
-         rk_b[1] = 1;
-         rk_c[0] = 0;
-         rk_c[1] = 0.5;
-         break;
-      case ConservationLawParameters<dim>::erk3:
-         rk_a[1][0] = 1.0;
-         rk_a[2][0] = 0.25;
-         rk_a[2][1] = 0.25;
-         rk_b[0] = 1./6;
-         rk_b[1] = 1./6;
-         rk_b[2] = 4./6;
-         rk_c[0] = 0;
-         rk_c[1] = 1.0;
-         rk_c[2] = 0.5;
-         break;
-      case ConservationLawParameters<dim>::erk4:
-         rk_a[1][0] = 0.5;
-         rk_a[2][0] = 0;
-         rk_a[2][1] = 0.5;
-         rk_a[3][0] = 0;
-         rk_a[3][1] = 0;
-         rk_a[3][2] = 1;
-         rk_b[0] = 1./6;
-         rk_b[1] = 1./3;
-         rk_b[2] = 1./3;
-         rk_b[3] = 1./6;
-         rk_c[0] = 0;
-         rk_c[1] = 0.5;
-         rk_c[2] = 0.5;
-         rk_c[3] = 1;
-         break;
-      default:
-         Assert(false,ExcNotImplemented());
-         break;
-   }
-
-   // allocate memory for each stage
-   std::vector<Vector<double> > rk_f(Ns);
-   for (int i = 0; i < Ns; ++i)
-      rk_f[i].reinit(dof_handler.n_dofs());
-
    old_time = 0.0;
    unsigned int n = 1; // time step index
    unsigned int next_time_step_output = conservation_law_parameters.output_period;
@@ -669,33 +700,47 @@ void ConservationLaw<dim>::solve_runge_kutta()
       update_viscosities(dt);
 
       // solve here
-      /** First, compute each \f$\mathbf{M}^{-1}\mathbf{k}_i\f$: */
-      for (int i = 0; i < Ns; ++i)
+      /** First, compute each \f$\mathbf{f}_i\f$: */
+      for (int i = 0; i < rk.s; ++i)
       {
          // compute stage time
-         current_time = old_time + rk_c[i]*dt;
+         current_time = old_time + rk.c[i]*dt;
 
-         /** compute intermediate solution: \f$\mathbf{y}_n + \sum\limits^{i-1}_{j=1}a_{i,j} \mathbf{M}^{-1} \mathbf{k}_j\f$ */
+         /** compute intermediate solution \f$\mathbf{Y}_i\f$: */
          system_rhs = 0.0;
          mass_matrix.vmult(system_rhs, old_solution);
-         for (int j = 0; j < i-1; ++j)
-            system_rhs.add(dt * rk_a[i][j] , rk_f[j]);
+         for (int j = 0; j < i; ++j)
+            system_rhs.add(dt * rk.a[i][j] , rk.f[j]);
+         mass_matrix_solve(current_solution);
+         // ordinarily, Dirichlet BC need not be reapplied, but in this case, the Dirichlet BC can be time-dependent
+         apply_Dirichlet_BC(current_time);
+
+         // residual from solution of previous step is reused in first stage (unless this is the first time step)
+         if ((n == 1)||(i != 0))
+            compute_ss_residual(rk.f[i]);
+      }
+      /** Now we compute the solution using the computed \f$\mathbf{f}_i\f$:
+       *  \f[
+       *    \mathbf{M}\mathbf{y}_{n+1}=\mathbf{M}\mathbf{y}_n + h\sum\limits^s_{i=1}b_i \mathbf{f}_i
+       *  \f]
+       */    
+      if (rk.solution_computed_in_last_stage)
+      {
+         // end of step residual can be used as beginning of step residual for next step
+         rk.f[0] = rk.f[rk.s-1];
+      }
+      else
+      {
+         system_rhs = 0.0;
+         mass_matrix.vmult(system_rhs, old_solution);
+         for (int i = 0; i < rk.s; ++i)
+            system_rhs.add(dt * rk.b[i], rk.f[i]);
          mass_matrix_solve(current_solution);
          apply_Dirichlet_BC(current_time);
 
-         compute_ss_residual(rk_f[i]);
+         // end of step residual can be used as beginning of step residual for next step
+         compute_ss_residual(rk.f[0]);
       }
-      /** Now we compute the solution using the computed \f$\mathbf{k}_i\f$:
-       *  \f[
-       *    \mathbf{y}_{n+1}=\mathbf{y}_n + \sum\limits^s_{i=1}b_i \mathbf{M}^{-1} \mathbf{k}_i
-       *  \f]
-       */    
-      system_rhs = 0.0;
-      mass_matrix.vmult(system_rhs, old_solution);
-      for (int i = 0; i < Ns; ++i)
-         system_rhs.add(dt * rk_b[i], rk_f[i]);
-      mass_matrix_solve(current_solution);
-      apply_Dirichlet_BC(current_time);
    
       // increment time
       old_time += dt;
@@ -743,7 +788,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
 template <int dim>
 double ConservationLaw<dim>::compute_dt_from_cfl_condition()
 {
-   return conservation_law_parameters.cfl * dx_min / max_flux_speed;
+   return conservation_law_parameters.cfl * minimum_cell_diameter / max_flux_speed;
 }
 
 /** \fn double ConservationLaw<dim>::compute_cfl_number(const double &dt) const
@@ -762,7 +807,7 @@ double ConservationLaw<dim>::compute_dt_from_cfl_condition()
 template <int dim>
 double ConservationLaw<dim>::compute_cfl_number(const double &dt) const
 {
-   return dt * max_flux_speed / dx_min;
+   return dt * max_flux_speed / minimum_cell_diameter;
 }
 
 /** \fn ConservationLaw<dim>::update_flux_speeds()
@@ -863,8 +908,7 @@ void ConservationLaw<dim>::compute_ss_residual(Vector<double> &f)
    } // end cell loop
 }
 
-/** \fn void ConservationLaw<dim>::mass_matrix_solve(const Vector<double> &b,
- *                                                         Vector<double> &x)
+/** \fn void ConservationLaw<dim>::mass_matrix_solve(Vector<double> &x)
  *  \brief Inverts the mass matrix implicitly.
  *
  *  This function computes the product \f$M^{-1}b\f$ of the inverse of the
@@ -910,6 +954,18 @@ void ConservationLaw<dim>::linear_solve (const typename ConservationLawParameter
       case ConservationLawParameters<dim>::gmres:
       {
          Assert(false,ExcNotImplemented());
+         break;
+      }
+      case ConservationLawParameters<dim>::cg:
+      {
+         SolverControl solver_control (conservation_law_parameters.max_linear_iterations,
+                                       conservation_law_parameters.linear_atol);
+         SolverCG<> solver(solver_control);
+         
+         PreconditionSSOR<> preconditioner;
+         preconditioner.initialize(A,1.2); // the second parameter is a relaxation parameter between 1 and 2
+
+         solver.solve(A,x,b,preconditioner);
          break;
       }
       default:
@@ -1003,8 +1059,11 @@ void ConservationLaw<dim>::update_first_order_viscosities()
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
    for (; cell != endc; ++cell)
+   {
+      double aux = std::abs(c_max * cell_diameter[cell] * max_flux_speed_cell[cell]);
       for (unsigned int q = 0; q < n_q_points_cell; ++q)
-         first_order_viscosity_cell_q[cell](q) = std::abs(c_max * dx[cell] * max_flux_speed_cell[cell]);
+         first_order_viscosity_cell_q[cell](q) = aux;
+   }
 }
 
 /** \fn void ConservationLaw<dim>::update_entropy_viscosities(const double &dt)
@@ -1029,18 +1088,18 @@ void ConservationLaw<dim>::update_entropy_viscosities(const double &dt)
       for (; cell != endc; ++cell)
          for (unsigned int q = 0; q < n_q_points_cell; ++q)
          {
-            entropy_viscosity_with_jumps_cell_q[cell](q) = c_s * std::pow(dx[cell],2)
+            entropy_viscosity_with_jumps_cell_q[cell](q) = c_s * std::pow(cell_diameter[cell],2)
                * (max_entropy_residual_cell[cell] + max_jumps_cell[cell])
                / max_entropy_deviation;
             // compute entropy viscosity without jumps as well for plotting
-            entropy_viscosity_cell_q[cell](q) = c_s * std::pow(dx[cell],2)
+            entropy_viscosity_cell_q[cell](q) = c_s * std::pow(cell_diameter[cell],2)
                * max_entropy_residual_cell[cell]
                / max_entropy_deviation;
          }
    } else {
       for (; cell != endc; ++cell)
          for (unsigned int q = 0; q < n_q_points_cell; ++q)
-            entropy_viscosity_cell_q[cell](q) = c_s * std::pow(dx[cell],2)
+            entropy_viscosity_cell_q[cell](q) = c_s * std::pow(cell_diameter[cell],2)
                * max_entropy_residual_cell[cell]
                / max_entropy_deviation;
    }
@@ -1054,16 +1113,15 @@ void ConservationLaw<dim>::update_entropy_residuals(const double &dt)
 {
    FEValues<dim> fe_values (fe, cell_quadrature, update_values | update_gradients | update_JxW_values);
 
-   std::vector<double> current_solution_local(n_q_points_cell);
-   std::vector<double> old_solution_local    (n_q_points_cell);
-   std::vector<Tensor<1,dim> > current_gradient_local(n_q_points_cell);
-   std::vector<Tensor<1,dim> > old_gradient_local    (n_q_points_cell);
-   std::vector<Tensor<1,dim> > current_flux_derivative(n_q_points_cell);
-   std::vector<Tensor<1,dim> > old_flux_derivative    (n_q_points_cell);
+   std::vector<double>         current_solution_local     (n_q_points_cell);
+   std::vector<Tensor<1,dim> > current_gradient_local     (n_q_points_cell);
+   std::vector<Tensor<1,dim> > current_flux_derivative    (n_q_points_cell);
+   Vector<double>              current_entropy_derivative (n_q_points_cell);
 
-   std::vector<double> old_entropy    (n_q_points_cell);
-   std::vector<double> current_entropy_derivative(n_q_points_cell);
-   std::vector<double> old_entropy_derivative    (n_q_points_cell);
+   std::vector<double>         old_solution_local     (n_q_points_cell);
+   std::vector<Tensor<1,dim> > old_gradient_local     (n_q_points_cell);
+   std::vector<Tensor<1,dim> > old_flux_derivative    (n_q_points_cell);
+   Vector<double>              old_entropy            (n_q_points_cell);
 
    // domain-averaged entropy
    double entropy_average = 0.0;
@@ -1073,23 +1131,24 @@ void ConservationLaw<dim>::update_entropy_residuals(const double &dt)
    for (; cell != endc; ++cell)
    {
       fe_values.reinit(cell);
-      fe_values.get_function_values(current_solution, current_solution_local);
-      fe_values.get_function_values(old_solution,     old_solution_local);
-      fe_values.get_function_gradients(current_solution, current_gradient_local);
-      fe_values.get_function_gradients(old_solution,     old_gradient_local);
+      fe_values.get_function_values(    current_solution, current_solution_local);
+      fe_values.get_function_values(    old_solution,     old_solution_local);
+      fe_values.get_function_gradients( current_solution, current_gradient_local);
+      fe_values.get_function_gradients( old_solution,     old_gradient_local);
+      // compute entropy of current and old solutions
+      compute_entropy            (current_solution, fe_values, entropy_cell_q[cell]);
+      compute_entropy_derivative (current_solution, fe_values, current_entropy_derivative);
+
+      compute_entropy            (old_solution,     fe_values, old_entropy);
 
       for (unsigned int q = 0; q < n_q_points_cell; ++q)
       {
-         entropy_cell_q[cell](q) = entropy(current_solution_local[q]);
-         old_entropy[q]     = entropy(old_solution_local[q]);
-         current_entropy_derivative[q] = entropy_derivative(current_solution_local[q]);
-         old_entropy_derivative[q]     = entropy_derivative(old_solution_local[q]);
          current_flux_derivative[q] = flux_derivative(current_solution_local[q]);
          old_flux_derivative[q]     = flux_derivative(old_solution_local[q]);
 
          // compute entropy residual
          entropy_residual_cell_q[cell](q) = std::abs( (current_solution_local[q] - old_solution_local[q]) / dt
-            + current_entropy_derivative[q] * current_flux_derivative[q] * current_gradient_local[q] );
+            + current_entropy_derivative(q) * current_flux_derivative[q] * current_gradient_local[q] );
 
          // add entropy to volume-weighted sum for use in computation of entropy average
          entropy_average += entropy_cell_q[cell](q) * fe_values.JxW(q);

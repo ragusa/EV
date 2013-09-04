@@ -213,7 +213,7 @@ void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
 
                // compute first-order viscosity
                double cell_diameter = cell->diameter();
-               double viscosity_value = 0.5 * burgers_parameters.first_order_viscosity_coef * cell_diameter * max_velocity;
+               double viscosity_value = burgers_parameters.first_order_viscosity_coef * cell_diameter * max_velocity;
                for (unsigned int q = 0; q < this->n_q_points_face; ++q)
                   viscosity_face(q) = viscosity_value;
                
@@ -255,24 +255,36 @@ Tensor<1,dim> Burgers<dim>::flux_derivative(const double u)
    return dfdu;
 }
 
-/** \fn double Burgers<dim>::entropy(const double u) const
+/** \fn double Burgers<dim>::compute_entropy()
  *  \brief Computes entropy at a point.
  *  \param u solution at a point
  *  \return entropy at a point
  */
 template <int dim>
-double Burgers<dim>::entropy(const double u) const
+void Burgers<dim>::compute_entropy(const Vector<double> &solution,
+                                   FEValues<dim> &fe_values,
+                                   Vector<double> &entropy) const
 {
-   return 0.5*std::pow(u,2);
+   std::vector<double> velocity(this->n_q_points_cell);
+   fe_values.get_function_values(solution, velocity);
+
+   for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+      entropy(q) = 0.5*std::pow(velocity[q],2);
 }
 
 /** \fn double Burgers<dim>::entropy_derivative(const double u) const
- *  \brief Computes derivative of entropy at a point.
+ *  \brief Computes derivative of entropy with respect to
  *  \param u solution at a point
  *  \return derivative of entropy at a point
  */
 template <int dim>
-double Burgers<dim>::entropy_derivative(const double u) const
+void Burgers<dim>::compute_entropy_derivative(const Vector<double> &solution,
+                                              FEValues<dim> &fe_values,
+                                              Vector<double> &entropy_derivative) const
 {
-   return u;
+   std::vector<double> velocity(this->n_q_points_cell);
+   fe_values.get_function_values(solution, velocity);
+
+   for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+      entropy_derivative(q) = velocity[q];
 }

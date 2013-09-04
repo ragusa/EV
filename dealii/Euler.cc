@@ -112,29 +112,42 @@ void Euler<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
    fe_values.reinit(cell);
 
    // get current solution values and gradients
-   std::vector<Tensor<1, this->n_components> > solution(this->n_q_points_cell);
-   std::vector<Tensor<1, this->n_components> > flux    (this->n_q_points_cell);
-   fe_values[velocity].get_function_values   (this->current_solution,solution_values);
+   std::vector<double>         density (this->n_q_points_cell);
+   std::vector<Tensor<1,dim> > momentum(this->n_q_points_cell);
+   std::vector<double>         energy  (this->n_q_points_cell);
+   std::vector<Tensor<1,dim> > velocity(this->n_q_points_cell);
+   std::vector<double>         pressure(this->n_q_points_cell);
+   fe_values[density].get_function_values (this->current_solution, density);
+   fe_values[momentum].get_function_values(this->current_solution, momentum);
+   fe_values[energy].get_function_values  (this->current_solution, energy);
 
-   // compute derivative of flux
-   std::vector<Tensor<1, dim> > dfdu(this->n_q_points_cell);
+   // compute velocity and pressure
    // loop over quadrature points
    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-      dfdu[q] = flux_derivative(solution_values[q]);
+   {
+      Assert(density[q] > 1e-30,ExcDivideByZero());
+      velocity[q] = momentum[q] / density[q];
+      pressure[q] = compute_pressure(momentum[q],energy[q]);
+   }
    
+   // create identity tensor
+   Tensor<dim,dim> identity_tensor(); // all entries are initialized to zero
+   for (int d = 0; d < dim; ++d) identity_tensor[d][d] = 1.0;
+
    // loop over test functions
    for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
       // loop over quadrature points
       for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
          cell_residual(i) -= (
-                                fe_values[velocity].value(i,q)
-                                *dfdu[q]
-                                *solution_gradients[q]
-/*
-                             +  fe_values[velocity].gradient(i,q)
-                                *this->viscosity_cell_q[cell](q)
-                                *solution_gradients[q]
-*/
+                                fe_values[density].gradient(i,q)
+                                *(momentum[q]
+                                  -density_viscosity[q]*density_gradient[q])
+                             +  fe_values[momentum].gradient(i,q)
+                                *((velocity[q]*momentum[q]
+                                   +pressure[q]*identity_tensor)
+                                  -viscosity[q]*velocity_symmetric_gradient[q])
+                             +  fe_values[energy].gradient(i,q)
+                                *velocity[q]*(energy[q] + pressure[q])
                              ) * fe_values.JxW(q);
 }
 
@@ -211,12 +224,24 @@ void Euler<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
  *  \param
  *  \return
  */
+/*
 template <int dim>
 Tensor<this->n_components,dim> Euler<dim>::flux()
 {
    Tensor<this->n_components,dim> f;
 
    return f;
+}
+*/
+
+/** \fn double Euler<dim>::compute_pressure(const Tensor<1,dim> &momentum,
+ *                                          const double        &energy) const
+ *  \brief Computes the pressure at a quadrature point.
+ */
+double Euler<dim>::compute_pressure(const Tensor<1,dim> &momentum,
+                                    const double        &energy) const
+{
+   return (euler_parameters.gamma - 1.0)*(energy - 0.5*std::pow(momentum.norm(),2));
 }
 
 /** \fn Tensor<1,dim> Euler<dim>::flux_derivative(const double u)
@@ -242,9 +267,10 @@ Tensor<1,dim> Euler<dim>::flux_derivative(const double u)
  *  \return entropy at a point
  */
 template <int dim>
-double Euler<dim>::entropy(const double u) const
+double Euler<dim>::entropy() const
 {
-   return 0.5*std::pow(u,2);
+   return density/(euler_parameters.gamma)
+          * std::log(pressure/std::pow(density,euler_parameters.gamma));
 }
 
 /** \fn double Euler<dim>::entropy_derivative(const double u) const
