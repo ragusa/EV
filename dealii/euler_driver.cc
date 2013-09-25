@@ -38,7 +38,7 @@ int main(int argc, char ** argv) {
       euler_parameters.get_euler_parameters(parameter_handler);
 
       // run problem
-      Euler<dimension> euler_problem(parameter_handler);
+      Euler<dimension> euler_problem(euler_parameters);
       euler_problem.run();
 
    } catch (std::exception &exc) {

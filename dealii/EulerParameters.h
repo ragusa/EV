@@ -24,7 +24,7 @@ class EulerParameters : public ConservationLawParameters<dim>
     static void declare_euler_parameters (ParameterHandler &parameter_handler);
            void get_euler_parameters     (ParameterHandler &parameter_handler);
 
-    static const int n_euler_components = 1;
+    static const int n_euler_components = dim+2;
 
     unsigned int problem_id;
 };

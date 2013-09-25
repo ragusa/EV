@@ -421,6 +421,8 @@ void ConservationLaw<dim>::assemble_mass_matrix ()
 {
    mass_matrix = 0.0;
 
+// The below code creates a singular mass matrix for vector-valued problems
+/*
    FEValues<dim> fe_values (fe, cell_quadrature, update_values | update_JxW_values);
 
    std::vector<unsigned int> local_dof_indices (dofs_per_cell);
@@ -448,11 +450,18 @@ void ConservationLaw<dim>::assemble_mass_matrix ()
       // add to global mass matrix with contraints
       constraints.distribute_local_to_global (local_mass, local_dof_indices, mass_matrix);
    }
+*/
+   Function<dim> *dummy_function = 0;
+   MatrixTools::create_mass_matrix( dof_handler,
+                                    cell_quadrature,
+                                    mass_matrix,
+                                    dummy_function,
+                                    constraints);
 
    // output mass matrix
    if (conservation_law_parameters.output_mass_matrix)
    {
-      std::ofstream mass_matrix_out ("mass_matrix.txt");
+      std::ofstream mass_matrix_out ("output/mass_matrix.txt");
       mass_matrix.print_formatted(mass_matrix_out, 10, true, 0, "0", 1);
       mass_matrix_out.close();
    }
@@ -496,53 +505,6 @@ void ConservationLaw<dim>::apply_Dirichlet_BC(const double &time)
    // apply boundary values to the solution
    for (std::map<unsigned int, double>::const_iterator it = boundary_values.begin(); it != boundary_values.end(); ++it)
       current_solution(it->first) = (it->second);
-}
-
-/** \fn void ConservationLaw<dim>::output_solution() const
- *  \brief Outputs the solution to .vtk.
- *
- *  The user supplies an input parameter that determines
- *  how often this function is called in the transient.
- *  A static variable for the output file number is incremented
- *  the function is called.
- */
-template <int dim>
-void ConservationLaw<dim>::output_solution () const
-{
-   if (in_final_cycle)
-   {
-      DataOut<dim> data_out;
-      data_out.attach_dof_handler (dof_handler);
-   
-      data_out.add_data_vector (current_solution,
-                                component_names,
-                                DataOut<dim>::type_dof_data,
-                                component_interpretations);
-   
-      data_out.add_data_vector (current_solution, "current_solution");
-   
-      data_out.build_patches ();
-   
-      static unsigned int output_file_number = 0;
-      if (dim == 1)
-      {
-         std::string filename = "output/solution-" +
-                                Utilities::int_to_string (output_file_number, 3) +
-                                ".gpl";
-         std::ofstream output (filename.c_str());
-         data_out.write_gnuplot (output);
-      }
-      else
-      {
-         std::string filename = "output/solution-" +
-                                Utilities::int_to_string (output_file_number, 3) +
-                                ".vtk";
-         std::ofstream output (filename.c_str());
-         data_out.write_vtk (output);
-      }
-   
-      ++output_file_number;
-   }
 }
 
 /** \fn void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > &map,
@@ -699,6 +661,11 @@ void ConservationLaw<dim>::solve_runge_kutta()
 
       update_viscosities(dt);
 
+      // update old_solution to current_solution for next time step;
+      // this is not done at the end of the previous time step because
+      // of the time derivative term in update_viscosities() above
+      old_solution = current_solution;
+
       // solve here
       /** First, compute each \f$\mathbf{f}_i\f$: */
       for (int i = 0; i < rk.s; ++i)
@@ -762,8 +729,6 @@ void ConservationLaw<dim>::solve_runge_kutta()
          if (!(final_time_not_reached))
             output_solution();
 
-      // update old_solution to current_solution for next time step
-      old_solution = current_solution;
       check_nan();
 
       // compute error for adaptive mesh refinement
@@ -1147,7 +1112,8 @@ void ConservationLaw<dim>::update_entropy_residuals(const double &dt)
          old_flux_derivative[q]     = flux_derivative(old_solution_local[q]);
 
          // compute entropy residual
-         entropy_residual_cell_q[cell](q) = std::abs( (current_solution_local[q] - old_solution_local[q]) / dt
+         double dsdt = (entropy_cell_q[cell](q) - old_entropy(q)) / dt;
+         entropy_residual_cell_q[cell](q) = std::abs( dsdt
             + current_entropy_derivative(q) * current_flux_derivative[q] * current_gradient_local[q] );
 
          // add entropy to volume-weighted sum for use in computation of entropy average
@@ -1224,16 +1190,6 @@ void ConservationLaw<dim>::update_jumps()
 
    } // end cell loop
 }
-
-/*
-template <int dim>
-void ConservationLaw<dim>::compute_refinement_indicators (Vector<double> &indicator) const
-{}
-
-template <int dim>
-void ConservationLaw<dim>::refine_grid (const Vector<double> &indicator)
-{}
-*/
 
 /** \fn void ConservationLaw<dim>::check_nan()
  *  \brief Checks that there are no NaNs in the solution vector

@@ -4,6 +4,8 @@
 #ifndef Euler_h
 #define Euler_h
 
+#include <deal.II/base/symmetric_tensor.h>
+
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_accessor.h>
 
@@ -36,9 +38,9 @@ class Euler : public ConservationLaw<dim>
     // number of components and position of components in solution vector
     static const unsigned int n_euler_components = dim+2;
 
-    const FEValuesExtractors::Scalar density;
-    const FEValuesExtractors::Vector velocity;
-    const FEValuesExtractors::Scalar energy;
+    const FEValuesExtractors::Scalar density_extractor;
+    const FEValuesExtractors::Vector momentum_extractor;
+    const FEValuesExtractors::Scalar energy_extractor;
 
     // vector of names of each component
     std::vector<std::string> get_component_names();
@@ -48,6 +50,7 @@ class Euler : public ConservationLaw<dim>
        get_component_interpretations();
 
     void define_problem();
+    void output_solution() const;
 
     void compute_cell_ss_residual(FEValues<dim> &fe_values,
                                   const typename DoFHandler<dim>::active_cell_iterator &cell,
@@ -56,8 +59,15 @@ class Euler : public ConservationLaw<dim>
                                   const typename DoFHandler<dim>::active_cell_iterator &cell,
                                   Vector<double> &cell_residual);
     Tensor<1,dim> flux_derivative(const double u);
-    double entropy           (const double u) const;
-    double entropy_derivative(const double u) const;
+    void compute_entropy (const Vector<double> &solution,
+                          FEValues<dim>        &fe_values,
+                          Vector<double>       &entropy) const;
+    void compute_entropy_derivative (const Vector<double> &solution,
+                                     FEValues<dim>        &fe_values,
+                                     Vector<double>       &entropy_derivative) const;
+    double compute_pressure(const Tensor<1,dim> &momentum, const double &energy) const;
+
+    double gamma; // gas constant
 };
 
 #include "Euler.cc"

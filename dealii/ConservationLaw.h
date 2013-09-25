@@ -106,7 +106,7 @@ class ConservationLaw
                                              FEValues<dim>        &fe_values,
                                              Vector<double>       &entropy_derivative) const = 0;
 
-    void output_solution () const;
+    virtual void output_solution() const = 0;
     void output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > &map,
                     const std::string &output_filename_base);
     void output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, double> &map,

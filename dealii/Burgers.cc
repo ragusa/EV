@@ -255,15 +255,18 @@ Tensor<1,dim> Burgers<dim>::flux_derivative(const double u)
    return dfdu;
 }
 
-/** \fn double Burgers<dim>::compute_entropy()
- *  \brief Computes entropy at a point.
- *  \param u solution at a point
- *  \return entropy at a point
+/** \fn void Burgers<dim>::compute_entropy(const Vector<double> &solution,
+ *                                         FEValues<dim> &fe_values,
+ *                                         Vector<double> &entropy) const
+ *  \brief Computes entropy at each quadrature point in cell
+ *  \param solution solution
+ *  \param fe_values FEValues object
+ *  \param entropy entropy values at each quadrature point in cell
  */
 template <int dim>
 void Burgers<dim>::compute_entropy(const Vector<double> &solution,
-                                   FEValues<dim> &fe_values,
-                                   Vector<double> &entropy) const
+                                   FEValues<dim>        &fe_values,
+                                   Vector<double>       &entropy) const
 {
    std::vector<double> velocity(this->n_q_points_cell);
    fe_values.get_function_values(solution, velocity);
@@ -272,19 +275,64 @@ void Burgers<dim>::compute_entropy(const Vector<double> &solution,
       entropy(q) = 0.5*std::pow(velocity[q],2);
 }
 
-/** \fn double Burgers<dim>::entropy_derivative(const double u) const
- *  \brief Computes derivative of entropy with respect to
- *  \param u solution at a point
- *  \return derivative of entropy at a point
+/** \fn void Burgers<dim>::compute_entropy_derivative(const Vector<double> &solution,
+ *                                                    FEValues<dim> &fe_values,
+ *                                                    Vector<double> &entropy_derivative) const
+ *  \brief Computes entropy derivative at each quadrature point in cell
+ *  \param solution solution
+ *  \param fe_values FEValues object
+ *  \param entropy_derivative entropy derivative values at each quadrature point in cell
  */
 template <int dim>
 void Burgers<dim>::compute_entropy_derivative(const Vector<double> &solution,
-                                              FEValues<dim> &fe_values,
-                                              Vector<double> &entropy_derivative) const
+                                              FEValues<dim>        &fe_values,
+                                              Vector<double>       &entropy_derivative) const
 {
    std::vector<double> velocity(this->n_q_points_cell);
    fe_values.get_function_values(solution, velocity);
 
    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
       entropy_derivative(q) = velocity[q];
+}
+
+/** \fn void Burgers<dim>::output_solution() const
+ *  \brief Outputs the solution to .vtk.
+ */
+template <int dim>
+void Burgers<dim>::output_solution () const
+{
+   if (this->in_final_cycle)
+   {
+      DataOut<dim> data_out;
+      data_out.attach_dof_handler (this->dof_handler);
+   
+      data_out.add_data_vector (this->current_solution,
+                                this->component_names,
+                                DataOut<dim>::type_dof_data,
+                                this->component_interpretations);
+   
+      data_out.add_data_vector (this->current_solution, "current_solution");
+   
+      data_out.build_patches ();
+   
+      static unsigned int output_file_number = 0;
+      if (dim == 1)
+      {
+         std::string filename = "output/solution-" +
+                                Utilities::int_to_string (output_file_number, 3) +
+                                ".gpl";
+         std::ofstream output (filename.c_str());
+         data_out.write_gnuplot (output);
+      }
+      else
+      {
+         std::string filename = "output/solution-" +
+                                Utilities::int_to_string (output_file_number, 3) +
+                                ".vtk";
+         std::ofstream output (filename.c_str());
+         data_out.write_vtk (output);
+      }
+   
+      ++output_file_number;
+   }
 }

@@ -52,6 +52,7 @@ class Burgers : public ConservationLaw<dim>
        get_component_interpretations();
 
     void define_problem();
+    void output_solution() const;
 
     void compute_cell_ss_residual(FEValues<dim> &fe_values,
                                   const typename DoFHandler<dim>::active_cell_iterator &cell,
