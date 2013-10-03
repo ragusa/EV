@@ -62,12 +62,15 @@ class Burgers : public ConservationLaw<dim>
                                   Vector<double> &cell_residual);
     Tensor<1,dim> flux_derivative(const double u);
 
-    void compute_entropy            (const Vector<double> &solution,
-                                     FEValues<dim>        &fe_values,
-                                     Vector<double>       &entropy) const;
-    void compute_entropy_derivative (const Vector<double> &solution,
-                                     FEValues<dim>        &fe_values,
-                                     Vector<double>       &entropy_derivative) const;
+    void compute_entropy                 (const Vector<double> &solution,
+                                          FEValues<dim>        &fe_values,
+                                          Vector<double>       &entropy) const;
+    void compute_entropy_face            (const Vector<double> &solution,
+                                          FEFaceValues<dim>    &fe_values_face,
+                                          Vector<double>       &entropy) const;
+    void compute_divergence_entropy_flux (const Vector<double> &solution,
+                                          FEValues<dim>        &fe_values,
+                                          Vector<double>       &divergence_entropy_flux) const;
 };
 
 #include "Burgers.cc"

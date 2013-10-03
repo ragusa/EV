@@ -11,7 +11,7 @@ subsection problem
 end
 
 subsection refinement
-   set initial refinement level = 4
+   set initial refinement level = 5
    set refinement cycles = 1
    set refinement fraction = 0.3
    set coarsening fraction = 0.03
@@ -21,7 +21,7 @@ subsection time
    # options are <constant_dt|cfl_condition>
    set time step size method = constant_dt
    set final time = 0.25 
-   set time step size = 0.001
+   set time step size = 0.0001
    set cfl = 0.25
 end
 
@@ -31,6 +31,7 @@ subsection artificial viscosity
    set constant viscosity value = 0.02
    set first order viscosity coefficient = 0.5
    set entropy viscosity coefficient = 1.0
+   set jump coefficient = 1.0
    set add jumps = true
 end
 

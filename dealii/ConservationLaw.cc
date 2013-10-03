@@ -258,9 +258,10 @@ void ConservationLaw<dim>::initialize_runge_kutta()
    // test to see if last row of A matrix is the same as the b vector;
    // this implies the last stage solution is the new solution and thus
    // the final linear combination is not required.
+   rk.solution_computed_in_last_stage = true;
    for (int i = 0; i < rk.s; ++i)
-      if (std::abs(rk.a[rk.s-1][i]-rk.b[i]) < 1.0e-30)
-         rk.solution_computed_in_last_stage;
+      if (std::abs(rk.a[rk.s-1][i]-rk.b[i]) > 1.0e-30)
+         rk.solution_computed_in_last_stage = false;
 }
 
 /** \fn void ConservationLaw<dim>::compute_error_for_refinement()
@@ -1042,6 +1043,7 @@ void ConservationLaw<dim>::update_entropy_viscosities(const double &dt)
 
    // compute entropy viscosity
    double c_s = conservation_law_parameters.entropy_viscosity_coef;
+   double c_j = conservation_law_parameters.jump_coef;
 
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
@@ -1053,19 +1055,19 @@ void ConservationLaw<dim>::update_entropy_viscosities(const double &dt)
       for (; cell != endc; ++cell)
          for (unsigned int q = 0; q < n_q_points_cell; ++q)
          {
-            entropy_viscosity_with_jumps_cell_q[cell](q) = c_s * std::pow(cell_diameter[cell],2)
-               * (max_entropy_residual_cell[cell] + max_jumps_cell[cell])
+            entropy_viscosity_with_jumps_cell_q[cell](q) = std::pow(cell_diameter[cell],2)
+               * (c_s * max_entropy_residual_cell[cell] + c_j * max_jumps_cell[cell])
                / max_entropy_deviation;
             // compute entropy viscosity without jumps as well for plotting
-            entropy_viscosity_cell_q[cell](q) = c_s * std::pow(cell_diameter[cell],2)
-               * max_entropy_residual_cell[cell]
+            entropy_viscosity_cell_q[cell](q) = std::pow(cell_diameter[cell],2)
+               * c_s * max_entropy_residual_cell[cell]
                / max_entropy_deviation;
          }
    } else {
       for (; cell != endc; ++cell)
          for (unsigned int q = 0; q < n_q_points_cell; ++q)
-            entropy_viscosity_cell_q[cell](q) = c_s * std::pow(cell_diameter[cell],2)
-               * max_entropy_residual_cell[cell]
+            entropy_viscosity_cell_q[cell](q) = std::pow(cell_diameter[cell],2)
+               * c_s * max_entropy_residual_cell[cell]
                / max_entropy_deviation;
    }
 }
@@ -1078,10 +1080,10 @@ void ConservationLaw<dim>::update_entropy_residuals(const double &dt)
 {
    FEValues<dim> fe_values (fe, cell_quadrature, update_values | update_gradients | update_JxW_values);
 
-   std::vector<double>         current_solution_local     (n_q_points_cell);
-   std::vector<Tensor<1,dim> > current_gradient_local     (n_q_points_cell);
-   std::vector<Tensor<1,dim> > current_flux_derivative    (n_q_points_cell);
-   Vector<double>              current_entropy_derivative (n_q_points_cell);
+   std::vector<double>         current_solution_local  (n_q_points_cell);
+   std::vector<Tensor<1,dim> > current_gradient_local  (n_q_points_cell);
+   std::vector<Tensor<1,dim> > current_flux_derivative (n_q_points_cell);
+   Vector<double>              divergence_entropy_flux (n_q_points_cell);
 
    std::vector<double>         old_solution_local     (n_q_points_cell);
    std::vector<Tensor<1,dim> > old_gradient_local     (n_q_points_cell);
@@ -1101,8 +1103,8 @@ void ConservationLaw<dim>::update_entropy_residuals(const double &dt)
       fe_values.get_function_gradients( current_solution, current_gradient_local);
       fe_values.get_function_gradients( old_solution,     old_gradient_local);
       // compute entropy of current and old solutions
-      compute_entropy            (current_solution, fe_values, entropy_cell_q[cell]);
-      compute_entropy_derivative (current_solution, fe_values, current_entropy_derivative);
+      compute_entropy                 (current_solution, fe_values, entropy_cell_q[cell]);
+      compute_divergence_entropy_flux (current_solution, fe_values, divergence_entropy_flux);
 
       compute_entropy            (old_solution,     fe_values, old_entropy);
 
@@ -1113,8 +1115,7 @@ void ConservationLaw<dim>::update_entropy_residuals(const double &dt)
 
          // compute entropy residual
          double dsdt = (entropy_cell_q[cell](q) - old_entropy(q)) / dt;
-         entropy_residual_cell_q[cell](q) = std::abs( dsdt
-            + current_entropy_derivative(q) * current_flux_derivative[q] * current_gradient_local[q] );
+         entropy_residual_cell_q[cell](q) = std::abs( dsdt + divergence_entropy_flux(q) );
 
          // add entropy to volume-weighted sum for use in computation of entropy average
          entropy_average += entropy_cell_q[cell](q) * fe_values.JxW(q);
@@ -1146,6 +1147,7 @@ void ConservationLaw<dim>::update_jumps()
    std::vector<Tensor<1,dim> > gradients_face         (n_q_points_face);
    std::vector<Tensor<1,dim> > gradients_face_neighbor(n_q_points_face);
    std::vector<Point<dim> >    normal_vectors         (n_q_points_face);
+   Vector<double> entropy(n_q_points_face);
 
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
@@ -1167,6 +1169,9 @@ void ConservationLaw<dim>::update_jumps()
             fe_values_face.reinit(         cell,    iface);
             fe_values_face_neighbor.reinit(neighbor,ineighbor);
 
+            // compute entropy at each quadrature point on face
+            compute_entropy_face(current_solution,fe_values_face,entropy);
+
             // get gradients on adjacent faces of current cell and neighboring cell
             fe_values_face.get_function_gradients(         current_solution, gradients_face);
             fe_values_face_neighbor.get_function_gradients(current_solution, gradients_face_neighbor);
@@ -1179,7 +1184,7 @@ void ConservationLaw<dim>::update_jumps()
             {
                // compute difference in gradients across face
                gradients_face[q] -= gradients_face_neighbor[q];
-               double jump_on_face = std::abs(gradients_face[q] * normal_vectors[q]);
+               double jump_on_face = std::abs((gradients_face[q] * normal_vectors[q])*entropy[q]);
                max_jump_on_face = std::max(max_jump_on_face, jump_on_face);
             }
          } // end if (at_boundary())

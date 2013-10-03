@@ -99,12 +99,15 @@ class ConservationLaw
     void update_entropy_viscosities(const double &dt);
     void update_entropy_residuals(const double &dt);
     void update_jumps();
-    virtual void compute_entropy            (const Vector<double> &solution,
-                                             FEValues<dim>        &fe_values,
-                                             Vector<double>       &entropy) const = 0;
-    virtual void compute_entropy_derivative (const Vector<double> &solution,
-                                             FEValues<dim>        &fe_values,
-                                             Vector<double>       &entropy_derivative) const = 0;
+    virtual void compute_entropy                 (const Vector<double> &solution,
+                                                  FEValues<dim>        &fe_values,
+                                                  Vector<double>       &entropy) const = 0;
+    virtual void compute_entropy_face            (const Vector<double> &solution,
+                                                  FEFaceValues<dim>    &fe_values_face,
+                                                  Vector<double>       &entropy) const = 0;
+    virtual void compute_divergence_entropy_flux (const Vector<double> &solution,
+                                                  FEValues<dim>        &fe_values,
+                                                  Vector<double>       &entropy_derivative) const = 0;
 
     virtual void output_solution() const = 0;
     void output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > &map,

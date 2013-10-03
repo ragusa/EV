@@ -272,27 +272,60 @@ void Burgers<dim>::compute_entropy(const Vector<double> &solution,
    fe_values.get_function_values(solution, velocity);
 
    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-      entropy(q) = 0.5*std::pow(velocity[q],2);
+      entropy(q) = 0.5*velocity[q]*velocity[q];
 }
 
-/** \fn void Burgers<dim>::compute_entropy_derivative(const Vector<double> &solution,
- *                                                    FEValues<dim> &fe_values,
- *                                                    Vector<double> &entropy_derivative) const
- *  \brief Computes entropy derivative at each quadrature point in cell
+/** \fn void Burgers<dim>::compute_entropy_face(const Vector<double> &solution,
+ *                                              FEValues<dim> &fe_values_face,
+ *                                              Vector<double> &entropy) const
+ *  \brief Computes entropy at each quadrature point on face
  *  \param solution solution
- *  \param fe_values FEValues object
- *  \param entropy_derivative entropy derivative values at each quadrature point in cell
+ *  \param fe_values_face FEFaceValues object
+ *  \param entropy entropy values at each quadrature point on face
  */
 template <int dim>
-void Burgers<dim>::compute_entropy_derivative(const Vector<double> &solution,
-                                              FEValues<dim>        &fe_values,
-                                              Vector<double>       &entropy_derivative) const
+void Burgers<dim>::compute_entropy_face(const Vector<double> &solution,
+                                        FEFaceValues<dim>    &fe_values_face,
+                                        Vector<double>       &entropy) const
 {
-   std::vector<double> velocity(this->n_q_points_cell);
-   fe_values.get_function_values(solution, velocity);
+   std::vector<double> velocity(this->n_q_points_face);
+   fe_values_face.get_function_values(solution, velocity);
+
+   for (unsigned int q = 0; q < this->n_q_points_face; ++q)
+      entropy(q) = 0.5*velocity[q]*velocity[q];
+}
+
+/** \fn void Burgers<dim>::compute_divergence_entropy_flux (const Vector<double> &solution,
+ *                                                          FEValues<dim> &fe_values,
+ *                                                          Vector<double> &entropy_derivative) const
+ *  \brief Computes divergence of entropy flux at each quadrature point in cell
+ *  \param solution solution
+ *  \param fe_values FEValues object
+ *  \param divergence_entropy_flux divergence of entropy flux at each quadrature point in cell
+ */
+template <int dim>
+void Burgers<dim>::compute_divergence_entropy_flux (const Vector<double> &solution,
+                                                    FEValues<dim>        &fe_values,
+                                                    Vector<double>       &divergence_entropy_flux) const
+{
+   std::vector<double>         velocity         (this->n_q_points_cell);
+   std::vector<Tensor<1,dim> > velocity_gradient(this->n_q_points_cell);
+
+   fe_values.get_function_values   (solution, velocity);
+   fe_values.get_function_gradients(solution, velocity_gradient);
+
+   // constant field v = (1,1,1) (3-D)
+   Tensor<1,dim> v;
+   for (unsigned int d = 0; d < dim; ++d)
+      v[d] = 1.0;
 
    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-      entropy_derivative(q) = velocity[q];
+   {
+      // compute dot product of constant field v with gradient of u
+      double v_dot_velocity_gradient = v * velocity_gradient[q];
+
+      divergence_entropy_flux(q) = velocity[q]*velocity[q]*v_dot_velocity_gradient;
+   }
 }
 
 /** \fn void Burgers<dim>::output_solution() const
