@@ -102,6 +102,43 @@ void Euler<dim>::define_problem()
          gamma = 1.4;
          break;
       }
+      case 1: // 1-D Leblanc tube problem
+      {
+         Assert(dim==1,ExcImpossibleInDim(dim));
+         double domain_start = 0;
+         double domain_width = 1.0;
+         this->domain_volume = std::pow(domain_width,dim);
+         GridGenerator::hyper_cube(this->triangulation, domain_start, domain_start + domain_width);
+         // only 1 type of BC: zero Dirichlet
+         this->n_boundaries = 1;
+         // set all boundary indicators to zero
+         typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin(),
+                                                    endc = this->triangulation.end();
+         for (; cell != endc; ++cell)
+            for (unsigned int face = 0; face < this->faces_per_cell; ++face)
+               if (cell->face(face)->at_boundary())
+                  cell->face(face)->set_boundary_indicator(0);
+
+         this->boundary_types.resize(this->n_boundaries);
+         this->boundary_types[0].resize(this->n_components);
+         this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet; // density has Dirichlet BC
+         this->boundary_types[0][1] = ConservationLaw<dim>::dirichlet; // x-momentum has Dirichlet BC
+         this->boundary_types[0][2] = ConservationLaw<dim>::dirichlet; // energy has Dirichlet BC
+         this->dirichlet_function_strings.resize(this->n_components);
+         this->dirichlet_function_strings[0] = "if(x<0.5,1.0,0.001)";   // BC for density
+         this->dirichlet_function_strings[1] = "0";                     // BC for x-momentum
+         this->dirichlet_function_strings[2] = "if(x<0.5,0.1,1.0e-10)"; // BC for energy
+         this->use_exact_solution_as_BC = false;
+         // initial conditions
+         this->initial_conditions_strings[0] = "if(x<0.5,1.0,0.001)";   // IC for density
+         this->initial_conditions_strings[1] = "0";                     // IC for x-momentum
+         this->initial_conditions_strings[2] = "if(x<0.5,0.1,1.0e-10)"; // IC for energy
+         // exact solution
+         this->has_exact_solution = false;
+         // physical constants
+         gamma = 5.0/3.0;
+         break;
+      }
       default:
          Assert(false,ExcNotImplemented());
    }
@@ -123,23 +160,32 @@ void Euler<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
    std::vector<double>         density          (this->n_q_points_cell);
    std::vector<Tensor<1,dim> > density_gradient (this->n_q_points_cell);
    std::vector<Tensor<1,dim> > momentum         (this->n_q_points_cell);
-   //std::vector<Tensor<dim,dim> > momentum_symmetric_gradient(this->n_q_points_cell);
-   std::vector<double>         energy  (this->n_q_points_cell);
-   std::vector<Tensor<1,dim> > velocity(this->n_q_points_cell);
-   std::vector<double>         pressure(this->n_q_points_cell);
+   std::vector<Tensor<2,dim> > momentum_gradient(this->n_q_points_cell);
+   std::vector<SymmetricTensor<2,dim> > momentum_symmetric_gradient(this->n_q_points_cell);
+   std::vector<double>         energy           (this->n_q_points_cell);
+   std::vector<Tensor<1,dim> > energy_gradient  (this->n_q_points_cell);
+   std::vector<double>         internal_energy  (this->n_q_points_cell);
+   std::vector<double>         temperature      (this->n_q_points_cell);
+   std::vector<Tensor<1,dim> > velocity         (this->n_q_points_cell);
+   std::vector<double>         pressure         (this->n_q_points_cell);
    fe_values[density_extractor].get_function_values    (this->current_solution, density);
    fe_values[density_extractor].get_function_gradients (this->current_solution, density_gradient);
    fe_values[momentum_extractor].get_function_values   (this->current_solution, momentum);
-   //fe_values[momentum_extractor].get_function_symmetric_gradients (this->current_solution, momentum_symmetric_gradient);
+   fe_values[momentum_extractor].get_function_gradients(this->current_solution, momentum_gradient);
+   fe_values[momentum_extractor].get_function_symmetric_gradients (this->current_solution, momentum_symmetric_gradient);
    fe_values[energy_extractor].get_function_values     (this->current_solution, energy);
+   fe_values[energy_extractor].get_function_gradients  (this->current_solution, energy_gradient);
 
-   // compute velocity and pressure
+   // compute velocity and thermodynamic properties
+   compute_velocity(velocity, density, momentum);
+   compute_internal_energy(internal_energy, density, momentum, energy);
+   compute_temperature(temperature, internal_energy);
+   compute_pressure(pressure, density, temperature);
+
    // loop over quadrature points
    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
    {
       Assert(density[q] > 1e-30,ExcDivideByZero());
-      velocity[q] = momentum[q] / density[q];
-      pressure[q] = compute_pressure(momentum[q],energy[q]);
    }
 
    // create identity tensor
@@ -147,7 +193,9 @@ void Euler<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
 
    // allocate memory for intermediate tensors
    Tensor<2,dim> velocity_times_momentum;
-   Tensor<2,dim> velocity_times_momentum_plus_pressure;
+   Tensor<2,dim> density_gradient_times_velocity;
+   Tensor<2,dim> density_viscous_flux_times_velocity;
+   Tensor<2,dim> momentum_times_density_gradient;
 
    // loop over test functions
    for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
@@ -155,25 +203,53 @@ void Euler<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
       for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
       {
          // compute density term
-         double density_term = fe_values[density_extractor].gradient(i,q) * momentum[q];
+         Tensor<1,dim> density_flux = momentum[q];
 
          // compute momentum term
          outer_product(velocity_times_momentum, velocity[q], momentum[q]);
-         velocity_times_momentum_plus_pressure = velocity_times_momentum + pressure[q]*identity_tensor;
-         double momentum_term = double_contract(velocity_times_momentum_plus_pressure, fe_values[momentum_extractor].gradient(i,q));
+         Tensor<2,dim> momentum_flux = velocity_times_momentum + pressure[q]*identity_tensor;
 
          // compute energy term
-         double energy_term = fe_values[energy_extractor].gradient(i,q) * velocity[q]*(energy[q] + pressure[q]);
+         Tensor<1,dim> energy_flux = velocity[q]*(energy[q] + pressure[q]);
+
+         // compute symmetric gradient of velocity (only able to query symmetric gradient of momentum)
+         outer_product(density_gradient_times_velocity, density_gradient[q], velocity[q]);
+         Tensor<2,dim> velocity_symmetric_gradient = (momentum_symmetric_gradient[q]
+                          - 0.5*density_gradient_times_velocity
+                          - 0.5*transpose(density_gradient_times_velocity)) / density[q];
+
+         // compute viscous fluxes
+         double nu = this->viscosity_cell_q[cell](q);
+         Tensor<1,dim> density_viscous_flux = nu*density_gradient[q];
+
+         outer_product(density_viscous_flux_times_velocity, density_viscous_flux, velocity[q]);
+         Tensor<2,dim> momentum_viscous_flux = nu*density[q]*velocity_symmetric_gradient
+                          + density_viscous_flux_times_velocity;
+
+         double kappa = this->viscosity_cell_q[cell](q);
+         double sp = -pressure[q]/(temperature[q]*density[q]*density[q]);
+         double se = 1.0/temperature[q];
+         outer_product(momentum_times_density_gradient, momentum[q], density_gradient[q]);
+         Tensor<1,dim> internal_energy_gradient = (energy_gradient[q]*density[q]
+                          - energy[q]*density_gradient[q]
+                          - velocity[q] * (momentum_gradient[q]*density[q]
+                             - momentum_times_density_gradient)) / (density[q]*density[q]);
+         Tensor<1,dim> l_flux = (kappa - nu)*density[q]*sp/se*density_gradient[q]
+                          + nu    * internal_energy[q] * density_gradient[q]
+                          + kappa * density[q]         * internal_energy_gradient;
+         Tensor<1,dim> h_flux = l_flux - 0.5*velocity[q]*velocity[q]*density_viscous_flux;
+         Tensor<1,dim> energy_viscous_flux = h_flux + momentum_viscous_flux * velocity[q];
 
          // sum up terms into cell residual
          cell_residual(i) -= ((
-                                density_term
-                                  //-density_viscosity[q]*density_gradient[q]
+                                fe_values[density_extractor].gradient(i,q) *
+                                 (density_flux - density_viscous_flux)
                              +  
-                                momentum_term
-                                  //-viscosity[q]*velocity_symmetric_gradient[q]
+                                double_contract(fe_values[momentum_extractor].gradient(i,q),
+                                 (momentum_flux - momentum_viscous_flux))
                              +
-                                energy_term
+                                fe_values[energy_extractor].gradient(i,q) *
+                                 (energy_flux - energy_viscous_flux)
 
                              ) * fe_values.JxW(q));
       }
@@ -247,39 +323,133 @@ void Euler<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
 */
 }
 
-/** \fn double Euler<dim>::compute_pressure(const Tensor<1,dim> &momentum,
- *                                          const double        &energy) const
- *  \brief Computes the pressure at a quadrature point.
+/** \fn void Euler<dim>::compute_velocity(      std::vector<Tensor<1,dim> > &velocity,
+ *                                        const std::vector<double>         &density,
+ *                                        const std::vector<Tensor<1,dim> > &momentum) const
+ *  \brief Computes velocity at each quadrature point in cell.
  */
 template <int dim>
-double Euler<dim>::compute_pressure(const Tensor<1,dim> &momentum,
-                                    const double        &energy) const
+void Euler<dim>::compute_velocity(      std::vector<Tensor<1,dim> > &velocity,
+                                  const std::vector<double>         &density,
+                                  const std::vector<Tensor<1,dim> > &momentum) const
 {
-   return (gamma - 1.0)*(energy - 0.5*std::pow(momentum.norm(),2));
+   for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+      velocity[q] = momentum[q] / density[q];
 }
 
-/** \fn Tensor<1,dim> Euler<dim>::flux_derivative(const double u)
- *  \brief Computes the derivative of the flux function with respect to
- *         the solution vector.
- *  \param u solution at a point
- *  \return derivative of the flux with respect to u
+/** \fn void Euler<dim>::compute_internal_energy(      std::vector<double>         &internal_energy,
+ *                                               const std::vector<double>         &density,
+ *                                               const std::vector<Tensor<1,dim> > &momentum,
+ *                                               const std::vector<double>         &energy) const
+ *  \brief Computes internal energy at each quadrature point in cell.
  */
 template <int dim>
-Tensor<1,dim> Euler<dim>::flux_derivative(const double u)
+void Euler<dim>::compute_internal_energy(      std::vector<double>         &internal_energy,
+                                         const std::vector<double>         &density,
+                                         const std::vector<Tensor<1,dim> > &momentum,
+                                         const std::vector<double>         &energy) const
 {
-   Tensor<1,dim> dfdu;
-   Assert(false,ExcNotImplemented());
-   
-/*
-   for (unsigned int d = 0; d < dim; ++d)
-      dfdu[d] = u;
-*/
-   return dfdu;
+   for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+      internal_energy[q] = (energy[q] - 0.5*momentum[q]*momentum[q]/density[q]) / density[q];
 }
 
-/** \fn void Burgers<dim>::compute_entropy(const Vector<double> &solution,
- *                                         FEValues<dim> &fe_values,
- *                                         Vector<double> &entropy) const
+/** \fn void Euler<dim>::compute_temperature(      std::vector<double> &temperature,
+ *                                           const std::vector<double> &internal_energy) const
+ *  \brief Computes temperature at each quadrature point in cell.
+ */
+template <int dim>
+void Euler<dim>::compute_temperature(      std::vector<double> &temperature,
+                                     const std::vector<double> &internal_energy) const
+{
+   for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+      temperature[q] = (gamma - 1.0)*internal_energy[q];
+}
+
+/** \fn void Euler<dim>::compute_pressure(      std::vector<double> &pressure,
+ *                                        const std::vector<double> &density,
+ *                                        const std::vector<double> &temperature) const
+ *  \brief Computes pressure at each quadrature point in cell.
+ */
+template <int dim>
+void Euler<dim>::compute_pressure(      std::vector<double> &pressure,
+                                  const std::vector<double> &density,
+                                  const std::vector<double> &temperature) const
+{
+   for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+      pressure[q] = density[q]*temperature[q];
+}
+
+/** \fn void Euler<dim>::compute_speed_of_sound(      std::vector<double> &speed_of_sound,
+ *                                              const std::vector<double> &density,
+ *                                              const std::vector<double> &pressure) const
+ *  \brief Computes speed of sound at each quadrature point in cell.
+ */
+template <int dim>
+void Euler<dim>::compute_speed_of_sound(      std::vector<double> &speed_of_sound,
+                                        const std::vector<double> &density,
+                                        const std::vector<double> &pressure) const
+{
+   for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+      speed_of_sound[q] = std::sqrt(gamma*pressure[q]/density[q]);
+}
+
+/** \fn void Euler<dim>::update_flux_speeds()
+ *  \brief Computes the flux speed at each quadrature point in domain and
+ *     finds the max in each cell and the max in the entire domain.
+ */
+template <int dim>
+void Euler<dim>::update_flux_speeds()
+{
+   // This has only been implemented for 1-D: how do I compute eigenvalues for multi-D?
+   Assert(dim == 1,ExcNotImplemented());
+
+   FEValues<dim> fe_values(this->fe, this->cell_quadrature, update_values);
+   std::vector<double>         density  (this->n_q_points_cell);
+   std::vector<Tensor<1,dim> > momentum (this->n_q_points_cell);
+   std::vector<double>         energy   (this->n_q_points_cell);
+   std::vector<Tensor<1,dim> > velocity (this->n_q_points_cell);
+   std::vector<double>         speed_of_sound (this->n_q_points_cell);
+   std::vector<double>         pressure (this->n_q_points_cell);
+   std::vector<double>         temperature (this->n_q_points_cell);
+   std::vector<double>         internal_energy (this->n_q_points_cell);
+
+   // reset max flux speed
+   this->max_flux_speed = 0.0;
+
+   // loop over cells to compute first order viscosity at each quadrature point
+   typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler.begin_active(),
+                                                  endc = this->dof_handler.end();
+   for (; cell != endc; ++cell)
+   {
+      fe_values.reinit(cell);
+      fe_values[density_extractor].get_function_values (this->current_solution, density);
+      fe_values[momentum_extractor].get_function_values(this->current_solution, momentum);
+      fe_values[energy_extractor].get_function_values(this->current_solution, energy);
+      // compute velocity
+      compute_velocity(velocity, density, momentum);
+      // compute speed of sound
+      compute_internal_energy(internal_energy, density, momentum, energy);
+      compute_temperature(temperature, internal_energy);
+      compute_pressure(pressure, density, temperature);
+      compute_speed_of_sound(speed_of_sound, density, pressure);
+
+      double max_speed_of_sound = 0.0; // max speed of sound on cell
+      double max_velocity = 0.0;       // max velocity on cell
+      for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+      {
+         max_speed_of_sound = std::max( max_speed_of_sound, speed_of_sound[q] );
+         max_velocity       = std::max( max_velocity,       velocity[q].norm() );
+      }
+
+      // get max flux speed
+      this->max_flux_speed_cell[cell] = max_speed_of_sound + max_velocity;
+      this->max_flux_speed = std::max(this->max_flux_speed, this->max_flux_speed_cell[cell]);
+   }
+}
+
+/** \fn void Euler<dim>::compute_entropy(const Vector<double> &solution,
+ *                                       FEValues<dim> &fe_values,
+ *                                       Vector<double> &entropy) const
  *  \brief Computes entropy at each quadrature point in cell
  *  \param solution solution
  *  \param fe_values FEValues object
@@ -291,39 +461,38 @@ void Euler<dim>::compute_entropy(const Vector<double> &solution,
                                  Vector<double>       &entropy) const
 {
 Assert(false,ExcNotImplemented());
-/*
-   std::vector<double> velocity(this->n_q_points_cell);
-   fe_values.get_function_values(solution, velocity);
-
-   for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-      entropy(q) = 0.5*std::pow(velocity[q],2);
-
-   return density/(euler_parameters.gamma)
-          * std::log(pressure/std::pow(density,euler_parameters.gamma));
-*/
 }
 
-/** \fn void Burgers<dim>::compute_entropy_derivative(const Vector<double> &solution,
- *                                                    FEValues<dim> &fe_values,
- *                                                    Vector<double> &entropy_derivative) const
- *  \brief Computes entropy derivative at each quadrature point in cell
+/** \fn void Euler<dim>::compute_entropy_face(const Vector<double> &solution,
+ *                                            FEFaceValues<dim> &fe_values_face,
+ *                                            Vector<double> &entropy) const
+ *  \brief Computes entropy at each quadrature point on face
  *  \param solution solution
- *  \param fe_values FEValues object
- *  \param entropy_derivative entropy derivative values at each quadrature point in cell
+ *  \param fe_values_face FEFaceValues object
+ *  \param entropy entropy values at each quadrature point on face
  */
 template <int dim>
-void Euler<dim>::compute_entropy_derivative(const Vector<double> &solution,
-                                            FEValues<dim>        &fe_values,
-                                            Vector<double>       &entropy_derivative) const
+void Euler<dim>::compute_entropy_face(const Vector<double> &solution,
+                                      FEFaceValues<dim>    &fe_values_face,
+                                      Vector<double>       &entropy) const
 {
 Assert(false,ExcNotImplemented());
-/*
-   std::vector<double> velocity(this->n_q_points_cell);
-   fe_values[momentum].get_function_values(solution, momentum);
+}
 
-   for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-      entropy_derivative(q) = velocity[q];
-*/
+/** \fn void Euler<dim>::compute_divergence_entropy_flux (const Vector<double> &solution,
+ *                                                        FEValues<dim> &fe_values,
+ *                                                        Vector<double> &divergence) const
+ *  \brief Computes divergence of entropy flux at each quadrature point in cell
+ *  \param solution solution
+ *  \param fe_values FEValues object
+ *  \param divergence divergence of entropy flux at each quadrature point in cell
+ */
+template <int dim>
+void Euler<dim>::compute_divergence_entropy_flux (const Vector<double> &solution,
+                                                  FEValues<dim>        &fe_values,
+                                                  Vector<double>       &divergence) const
+{
+Assert(false,ExcNotImplemented());
 }
 
 /** \fn void Euler<dim>::output_solution() const

@@ -1,0 +1,10 @@
+#!/bin/csh
+cd output
+
+if ( -f burgers.pdf ) then
+   echo "Removing burgers.pdf..."
+   rm burgers.pdf
+endif
+gnuplot burgers.gp
+
+cd ..

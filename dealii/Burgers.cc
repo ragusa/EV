@@ -10,7 +10,7 @@ template <int dim>
 Burgers<dim>::Burgers(const BurgersParameters<dim> &params):
    ConservationLaw<dim>(params),
    burgers_parameters(params),
-   velocity(0)
+   velocity_extractor(0)
 {} 
 
 /** \fn std::vector<std::string> Burgers<dim>::get_component_names()
@@ -149,24 +149,25 @@ void Burgers<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
    // get current solution values and gradients
    std::vector<double>          solution_values   (this->n_q_points_cell);
    std::vector<Tensor<1, dim> > solution_gradients(this->n_q_points_cell);
-   fe_values[velocity].get_function_values   (this->current_solution,solution_values);
-   fe_values[velocity].get_function_gradients(this->current_solution,solution_gradients);
+   fe_values[velocity_extractor].get_function_values   (this->current_solution,solution_values);
+   fe_values[velocity_extractor].get_function_gradients(this->current_solution,solution_gradients);
 
    // compute derivative of flux
    std::vector<Tensor<1, dim> > dfdu(this->n_q_points_cell);
    // loop over quadrature points
    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-      dfdu[q] = flux_derivative(solution_values[q]);
+      for (int d = 0; d < dim; ++d)
+         dfdu[q][d] = solution_values[q];
    
    // loop over test functions
    for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
       // loop over quadrature points
       for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
          cell_residual(i) -= (
-                                fe_values[velocity].value(i,q)
+                                fe_values[velocity_extractor].value(i,q)
                                 *dfdu[q]
                                 *solution_gradients[q]
-                             +  fe_values[velocity].gradient(i,q)
+                             +  fe_values[velocity_extractor].gradient(i,q)
                                 *this->viscosity_cell_q[cell](q)
                                 *solution_gradients[q]
                              ) * fe_values.JxW(q);
@@ -190,7 +191,7 @@ void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
          fe_face_values.reinit(cell, face);
 
          std::vector<Tensor<1, dim> > solution_gradients_face(this->n_q_points_face);
-         fe_face_values[velocity].get_function_gradients   (this->current_solution,solution_gradients_face);
+         fe_face_values[velocity_extractor].get_function_gradients   (this->current_solution,solution_gradients_face);
 
          // compute viscosity
          Vector<double> viscosity_face(this->n_q_points_face);
@@ -229,7 +230,7 @@ void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
          for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
             // loop over quadrature points
             for (unsigned int q = 0; q < this->n_q_points_face; ++q)
-               cell_residual(i) += fe_face_values[velocity].value(i,q)
+               cell_residual(i) += fe_face_values[velocity_extractor].value(i,q)
                                    *viscosity_face(q)
                                    *solution_gradients_face[q]
                                    *fe_face_values.normal_vector(q)
@@ -238,21 +239,40 @@ void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
    }
 }
 
-/** \fn Tensor<1,dim> Burgers<dim>::flux_derivative(const double u)
- *  \brief Computes the derivative of the flux function with respect to
- *         the solution vector.
- *  \param u solution at a point
- *  \return derivative of the flux with respect to u
+/** \fn void Burgers<dim>::update_flux_speeds()
+ *  \brief Computes the flux speed at each quadrature point in domain and
+ *     finds the max in each cell and the max in the entire domain.
  */
 template <int dim>
-Tensor<1,dim> Burgers<dim>::flux_derivative(const double u)
+void Burgers<dim>::update_flux_speeds()
 {
+   FEValues<dim> fe_values(this->fe, this->cell_quadrature, update_values);
    Tensor<1,dim> dfdu;
-   
-   for (unsigned int d = 0; d < dim; ++d)
-      dfdu[d] = u;
-   
-   return dfdu;
+   std::vector<double> velocity(this->n_q_points_cell);
+
+   // reset max flux speed
+   this->max_flux_speed = 0.0;
+
+   // loop over cells to compute first order viscosity at each quadrature point
+   typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler.begin_active(),
+                                                  endc = this->dof_handler.end();
+   for (; cell != endc; ++cell)
+   {
+      fe_values.reinit(cell);
+      fe_values[velocity_extractor].get_function_values(this->current_solution, velocity);
+
+      this->max_flux_speed_cell[cell] = 0.0;
+      for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+      {
+         for (unsigned int d = 0; d < dim; ++d)
+            dfdu[d] = velocity[q];
+         this->max_flux_speed_cell[cell] = std::max( this->max_flux_speed_cell[cell],
+            dfdu.norm() );
+      }
+
+      // get max flux speed
+      this->max_flux_speed = std::max(this->max_flux_speed, this->max_flux_speed_cell[cell]);
+   }
 }
 
 /** \fn void Burgers<dim>::compute_entropy(const Vector<double> &solution,
@@ -269,7 +289,7 @@ void Burgers<dim>::compute_entropy(const Vector<double> &solution,
                                    Vector<double>       &entropy) const
 {
    std::vector<double> velocity(this->n_q_points_cell);
-   fe_values.get_function_values(solution, velocity);
+   fe_values[velocity_extractor].get_function_values(solution, velocity);
 
    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
       entropy(q) = 0.5*velocity[q]*velocity[q];
@@ -289,7 +309,7 @@ void Burgers<dim>::compute_entropy_face(const Vector<double> &solution,
                                         Vector<double>       &entropy) const
 {
    std::vector<double> velocity(this->n_q_points_face);
-   fe_values_face.get_function_values(solution, velocity);
+   fe_values_face[velocity_extractor].get_function_values(solution, velocity);
 
    for (unsigned int q = 0; q < this->n_q_points_face; ++q)
       entropy(q) = 0.5*velocity[q]*velocity[q];
@@ -311,8 +331,8 @@ void Burgers<dim>::compute_divergence_entropy_flux (const Vector<double> &soluti
    std::vector<double>         velocity         (this->n_q_points_cell);
    std::vector<Tensor<1,dim> > velocity_gradient(this->n_q_points_cell);
 
-   fe_values.get_function_values   (solution, velocity);
-   fe_values.get_function_gradients(solution, velocity_gradient);
+   fe_values[velocity_extractor].get_function_values   (solution, velocity);
+   fe_values[velocity_extractor].get_function_gradients(solution, velocity_gradient);
 
    // constant field v = (1,1,1) (3-D)
    Tensor<1,dim> v;

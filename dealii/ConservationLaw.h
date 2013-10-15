@@ -73,7 +73,7 @@ class ConservationLaw
     void assemble_mass_matrix();
     void solve_runge_kutta();
 
-    void update_flux_speeds();
+    virtual void update_flux_speeds() = 0;
     double compute_dt_from_cfl_condition();
     double compute_cfl_number(const double &dt) const;
 
@@ -93,7 +93,6 @@ class ConservationLaw
     virtual void compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                                           const typename DoFHandler<dim>::active_cell_iterator &cell,
                                           Vector<double> &cell_residual) = 0;
-    virtual Tensor<1,dim> flux_derivative(const double u) = 0;
     void update_viscosities(const double &dt);
     void update_first_order_viscosities();
     void update_entropy_viscosities(const double &dt);
@@ -107,7 +106,7 @@ class ConservationLaw
                                                   Vector<double>       &entropy) const = 0;
     virtual void compute_divergence_entropy_flux (const Vector<double> &solution,
                                                   FEValues<dim>        &fe_values,
-                                                  Vector<double>       &entropy_derivative) const = 0;
+                                                  Vector<double>       &divergence) const = 0;
 
     virtual void output_solution() const = 0;
     void output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > &map,
@@ -215,7 +214,6 @@ class ConservationLaw
 
     // maps
     std::map<typename DoFHandler<dim>::active_cell_iterator, double>          cell_diameter;
-    std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > flux_speed_cell_q;
     std::map<typename DoFHandler<dim>::active_cell_iterator, double>          max_flux_speed_cell;
     std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > viscosity_cell_q;
     std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > first_order_viscosity_cell_q;

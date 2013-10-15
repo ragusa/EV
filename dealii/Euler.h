@@ -58,14 +58,31 @@ class Euler : public ConservationLaw<dim>
     void compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                                   const typename DoFHandler<dim>::active_cell_iterator &cell,
                                   Vector<double> &cell_residual);
-    Tensor<1,dim> flux_derivative(const double u);
+    void update_flux_speeds();
     void compute_entropy (const Vector<double> &solution,
                           FEValues<dim>        &fe_values,
                           Vector<double>       &entropy) const;
-    void compute_entropy_derivative (const Vector<double> &solution,
-                                     FEValues<dim>        &fe_values,
-                                     Vector<double>       &entropy_derivative) const;
-    double compute_pressure(const Tensor<1,dim> &momentum, const double &energy) const;
+    void compute_entropy_face (const Vector<double> &solution,
+                               FEFaceValues<dim>    &fe_values,
+                               Vector<double>       &entropy) const;
+    void compute_divergence_entropy_flux (const Vector<double> &solution,
+                                          FEValues<dim>        &fe_values,
+                                          Vector<double>       &divergence) const;
+    void compute_velocity(      std::vector<Tensor<1,dim> > &velocity,
+                          const std::vector<double>         &density,
+                          const std::vector<Tensor<1,dim> > &momentum) const;
+    void compute_internal_energy(      std::vector<double>         &internal_energy,
+                                 const std::vector<double>         &density,
+                                 const std::vector<Tensor<1,dim> > &momentum,
+                                 const std::vector<double>         &energy) const;
+    void compute_temperature(      std::vector<double> &temperature,
+                             const std::vector<double> &internal_energy) const;
+    void compute_pressure(      std::vector<double> &pressure,
+                          const std::vector<double> &density,
+                          const std::vector<double> &temperature) const;
+    void compute_speed_of_sound(      std::vector<double> &speed_of_sound,
+                                const std::vector<double> &density,
+                                const std::vector<double> &pressure) const;
 
     double gamma; // gas constant
 };

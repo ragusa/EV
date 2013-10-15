@@ -310,7 +310,6 @@ void ConservationLaw<dim>::setup_system ()
 {
    // clear maps
    cell_diameter.clear();
-   flux_speed_cell_q.clear();
    max_flux_speed_cell.clear();
    viscosity_cell_q.clear();
    first_order_viscosity_cell_q.clear();
@@ -385,7 +384,6 @@ void ConservationLaw<dim>::setup_system ()
                                                   endc = dof_handler.end();
    for (; cell != endc; ++cell)
    {
-      flux_speed_cell_q[cell]            = Vector<double>(n_q_points_cell);
       viscosity_cell_q[cell]             = Vector<double>(n_q_points_cell);
       first_order_viscosity_cell_q[cell] = Vector<double>(n_q_points_cell);
       entropy_viscosity_cell_q[cell]     = Vector<double>(n_q_points_cell);
@@ -776,39 +774,6 @@ double ConservationLaw<dim>::compute_cfl_number(const double &dt) const
    return dt * max_flux_speed / minimum_cell_diameter;
 }
 
-/** \fn ConservationLaw<dim>::update_flux_speeds()
- *  \brief Updates the map of flux speeds and recomputes max flux speed.
- */
-template <int dim>
-void ConservationLaw<dim>::update_flux_speeds()
-{
-   FEValues<dim> fe_values(fe, cell_quadrature, update_values);
-   Tensor<1,dim> dfdu;
-   std::vector<double> local_solution(n_q_points_cell);
-
-   // reset max flux speed
-   max_flux_speed = 0.0;
-
-   // loop over cells to compute first order viscosity at each quadrature point
-   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
-                                                  endc = dof_handler.end();
-   for (; cell != endc; ++cell)
-   {
-      fe_values.reinit(cell);
-      fe_values.get_function_values(current_solution, local_solution);
-
-      for (unsigned int q = 0; q < n_q_points_cell; ++q)
-      {
-         dfdu = flux_derivative(local_solution[q]);
-         flux_speed_cell_q[cell](q) = dfdu.norm();
-      }
-
-      // get max flux speed
-      max_flux_speed_cell[cell] = *std::max_element(flux_speed_cell_q[cell].begin(), flux_speed_cell_q[cell].end());
-      max_flux_speed = std::max(max_flux_speed, max_flux_speed_cell[cell]);
-   }
-}
-
 /** \fn ConservationLaw<dim>::compute_ss_residual(Vector<double> &f)
  *  \brief Computes the steady-state residual for Burgers' equation.
  *
@@ -952,9 +917,6 @@ void ConservationLaw<dim>::linear_solve (const typename ConservationLawParameter
 template <int dim>
 void ConservationLaw<dim>::update_viscosities(const double &dt)
 {
-   // update flux speeds
-   update_flux_speeds();
-
    switch (conservation_law_parameters.viscosity_type)
    {
       // no viscosity
@@ -1082,12 +1044,10 @@ void ConservationLaw<dim>::update_entropy_residuals(const double &dt)
 
    std::vector<double>         current_solution_local  (n_q_points_cell);
    std::vector<Tensor<1,dim> > current_gradient_local  (n_q_points_cell);
-   std::vector<Tensor<1,dim> > current_flux_derivative (n_q_points_cell);
    Vector<double>              divergence_entropy_flux (n_q_points_cell);
 
    std::vector<double>         old_solution_local     (n_q_points_cell);
    std::vector<Tensor<1,dim> > old_gradient_local     (n_q_points_cell);
-   std::vector<Tensor<1,dim> > old_flux_derivative    (n_q_points_cell);
    Vector<double>              old_entropy            (n_q_points_cell);
 
    // domain-averaged entropy
@@ -1110,9 +1070,6 @@ void ConservationLaw<dim>::update_entropy_residuals(const double &dt)
 
       for (unsigned int q = 0; q < n_q_points_cell; ++q)
       {
-         current_flux_derivative[q] = flux_derivative(current_solution_local[q]);
-         old_flux_derivative[q]     = flux_derivative(old_solution_local[q]);
-
          // compute entropy residual
          double dsdt = (entropy_cell_q[cell](q) - old_entropy(q)) / dt;
          entropy_residual_cell_q[cell](q) = std::abs( dsdt + divergence_entropy_flux(q) );

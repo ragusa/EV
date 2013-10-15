@@ -42,7 +42,7 @@ class Burgers : public ConservationLaw<dim>
     // number of components and position of components in solution vector
     static const unsigned int n_burgers_components = 1;
 
-    const FEValuesExtractors::Scalar velocity;
+    const FEValuesExtractors::Scalar velocity_extractor;
 
     // vector of names of each component
     std::vector<std::string> get_component_names();
@@ -60,7 +60,7 @@ class Burgers : public ConservationLaw<dim>
     void compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                                   const typename DoFHandler<dim>::active_cell_iterator &cell,
                                   Vector<double> &cell_residual);
-    Tensor<1,dim> flux_derivative(const double u);
+    void update_flux_speeds();
 
     void compute_entropy                 (const Vector<double> &solution,
                                           FEValues<dim>        &fe_values,

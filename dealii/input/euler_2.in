@@ -3,15 +3,15 @@ subsection finite element
 end
 
 subsection quadrature
-   set number of quadrature points = 5
+   set number of quadrature points = 4
 end
 
 subsection problem
-   set problem id = 0
+   set problem id = 1
 end
 
 subsection refinement
-   set initial refinement level = 6
+   set initial refinement level = 4
    set refinement cycles = 1
    set refinement fraction = 0.3
    set coarsening fraction = 0.03
@@ -22,7 +22,7 @@ subsection time
    set time step size method = cfl_condition
    set final time = 0.10 
    set time step size = 0.0001
-   set cfl = 0.25
+   set cfl = 0.10
 end
 
 subsection artificial viscosity
