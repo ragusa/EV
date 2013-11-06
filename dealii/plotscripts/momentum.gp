@@ -1,6 +1,6 @@
-input_file = "energy-001.csv"
-output_file = "energy.pdf"
-y_label = "Energy"
+input_file = "../output/momentum-001.csv"
+output_file = "../output/momentum.pdf"
+y_label = "Momentum"
 
 set datafile separator ","
 
