@@ -1,9 +1,6 @@
 /* Author: Joshua Hansel
  * MATH 676 project, adapted from examples/step-9/step-9.cc
- * Description: solves the 1-d multi-group neutron transport equation:
- */
-/** 
- * Solves the 1-d multigroup neutron transport equation
+ * Description: solves the 1-d multi-group neutron transport equation
  */
 
 /* preprocessor variable for number of dimensions:
@@ -60,7 +57,7 @@ namespace Hansel {
 
 using namespace dealii;
 
-const unsigned int dimension = 1; // number of spatial dimensions
+const unsigned int dimension = DIMENSION; // number of spatial dimensions
 
 /**
  * \class TransportProblem
@@ -1092,7 +1089,8 @@ void TransportProblem<dim>::run() {
    if (parameters.exact_solution_id != 0) output_filename_ss << "_" << parameters.exact_solution_id;
    output_filename_ss << output_extension;
    std::string output_filename = output_filename_ss.str();
-   std::ofstream output(output_filename);
+   char *output_filename_char = (char*)output_filename.c_str();
+   std::ofstream output(output_filename_char);
 
    // if 1-d, write solution for gnuplot; otherwise, vtk
    if (dim == 1) data_out.write_gnuplot(output);
