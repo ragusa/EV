@@ -159,18 +159,61 @@ void Burgers<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
       for (int d = 0; d < dim; ++d)
          dfdu[q][d] = solution_values[q];
    
+   // NEW VISCOSITY DEFINITION:
+   // ===========================================
+   /*
+   double nu_K = 0.0; // artificial viscosity in cell
+   double numerator;  // numerator of artificial viscosity
+   // compute cell volume
+   double cell_volume = 0.0;
+   for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+      cell_volume += fe_values.JxW(q);
+   // compute local bilinear form for artificial viscosity
+   double b_K = 1.0/(this->dofs_per_cell - 1.0)*cell_volume; // local bilinear form for i != j
+   
    // loop over test functions
    for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+      // loop over interpolation functions
+      for (unsigned int j = 0; j < this->dofs_per_cell; ++j)
+         if (j != i)
+         {
+            numerator = 0.0;
+            // loop over quadrature points
+            for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+            {
+               numerator += dfdu[q]*fe_values[velocity_extractor].gradient(i,q)*
+                  fe_values[velocity_extractor].value(j,q)*fe_values.JxW(q);
+            }
+            nu_K = std::max(nu_K, std::abs(numerator)/(-1.0*b_K));
+         }
+   std::vector<unsigned int> local_dof_indices(this->dofs_per_cell);
+*/
+   // ===========================================
+
+   // loop over test functions
+   for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+   {
+   // ===========================================
+   /*
+      // compute local bilinear form b_K(u, phi_i) for artificial viscosity
+      double b_local = 0.0;
+      for (unsigned int j = 0; j < this->dofs_per_cell; ++j)
+         if (j != i)
+            b_local += this->current_solution(local_dof_indices[j])*b_K;
+      cell_residual(i) -= nu_K * b_local;
+*/
+   // ===========================================
       // loop over quadrature points
       for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-         cell_residual(i) -= (
-                                fe_values[velocity_extractor].value(i,q)
+         cell_residual(i) += (
+                               -fe_values[velocity_extractor].value(i,q)
                                 *dfdu[q]
                                 *solution_gradients[q]
-                             +  fe_values[velocity_extractor].gradient(i,q)
+                               -fe_values[velocity_extractor].gradient(i,q)
                                 *this->viscosity_cell_q[cell](q)
                                 *solution_gradients[q]
                              ) * fe_values.JxW(q);
+   }
 }
 
 /** \fn void Burgers<dim>::compute_face_ss_residual()
@@ -203,7 +246,7 @@ void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                   viscosity_face(q) = burgers_parameters.constant_viscosity_value;
                break;
             }
-            case BurgersParameters<dim>::first_order:
+            case BurgersParameters<dim>::first_order_1:
             {
                // get max velocity on cell
                std::vector<double> local_solution(this->n_q_points_face);
@@ -237,6 +280,61 @@ void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                                    *fe_face_values.JxW(q);
       }
    }
+}
+
+/** \fn void Burgers<dim>::compute_ss_Jacobian()
+ *  \brief Computes the steady-state Jacobian matrix and stores in system_matrix.
+ */
+template <int dim>
+void Burgers<dim>::compute_ss_Jacobian()
+{
+   // reset steady-state Jacobian to zero
+   this->system_matrix = 0.0;
+
+   // local DoF indices
+   std::vector<unsigned int> local_dof_indices(this->dofs_per_cell);
+
+   // velocity at each quadrature point in cell
+   std::vector<double> velocity (this->n_q_points_cell);
+
+   // cell matrix
+   FullMatrix<double> cell_matrix(this->dofs_per_cell,this->dofs_per_cell);
+
+   // FE values
+   FEValues<dim> fe_values(this->fe,this->cell_quadrature,
+      update_values | update_gradients | update_JxW_values);
+
+   // ones vector
+   Tensor<1,dim> ones_vector;
+   for (unsigned int d = 0; d < dim; ++d)
+      ones_vector[d] = 1.0;
+ 
+   typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler.begin_active(),
+                                                  endc = this->dof_handler.end();
+   for (; cell!=endc; ++cell)
+   {
+      // reset cell matrix to zero
+      cell_matrix = 0;
+
+      cell->get_dof_indices(local_dof_indices);
+
+      fe_values.reinit(cell);
+      // get velocity values at each quadrature point in cell
+      fe_values[velocity_extractor].get_function_values (this->current_solution, velocity);
+
+      for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+         for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+         {
+            for (unsigned int j = 0; j < this->dofs_per_cell; ++j)
+            {
+               cell_matrix(i,j) += fe_values[velocity_extractor].gradient(i,q) * ones_vector
+                  * velocity[q] * fe_values[velocity_extractor].value(j,q) * fe_values.JxW(q);
+            }
+         }
+      // add to global matrix
+      this->constraints.distribute_local_to_global(cell_matrix, local_dof_indices, this->system_matrix);
+   }
+
 }
 
 /** \fn void Burgers<dim>::update_flux_speeds()

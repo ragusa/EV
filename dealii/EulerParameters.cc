@@ -31,6 +31,17 @@ void EulerParameters<dim>::declare_euler_parameters(
                                       "ID for description of the problem");
    }
    parameter_handler.leave_subsection();
+
+   // numerical parameters
+   parameter_handler.enter_subsection("numerics");
+   {
+      parameter_handler.declare_entry("prandtl",
+                                      "0.0",
+                                      Patterns::Double(),
+                                      "Prandtl number; used in relating viscosities nu and kappa");
+   }
+   parameter_handler.leave_subsection();
+
 }
 
 /**
@@ -51,6 +62,13 @@ void EulerParameters<dim>::get_euler_parameters(
    parameter_handler.enter_subsection("problem");
    {
       problem_id = parameter_handler.get_integer("problem id");
+   }
+   parameter_handler.leave_subsection();
+
+   // numerical parameters
+   parameter_handler.enter_subsection("numerics");
+   {
+      prandtl = parameter_handler.get_double("prandtl");
    }
    parameter_handler.leave_subsection();
 }

@@ -93,8 +93,12 @@ class ConservationLaw
     virtual void compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                                           const typename DoFHandler<dim>::active_cell_iterator &cell,
                                           Vector<double> &cell_residual) = 0;
+    void compute_tr_residual(unsigned int i, double dt);
+    virtual void compute_ss_Jacobian() = 0;
+    //void compute_tr_Jacobian();
     void update_viscosities(const double &dt);
-    void update_first_order_viscosities();
+    void update_first_order_viscosities_1();
+    void update_first_order_viscosities_2();
     void update_entropy_viscosities(const double &dt);
     void update_entropy_residuals(const double &dt);
     void update_jumps();
@@ -157,6 +161,8 @@ class ConservationLaw
     Vector<double>       current_solution;
     /** solution of previous time step */
     Vector<double>       old_solution;
+    /** solution step in Newton loop; vector for temporary storage */
+    Vector<double>       solution_step;
     /** current time */
     double current_time;
     /** old time (beginning of each time step) */
@@ -164,10 +170,12 @@ class ConservationLaw
     /** system right-hand side */
     Vector<double>       system_rhs;
 
-    /* sparsity pattern for the mass matrix */
+    /* sparsity pattern */
     SparsityPattern      sparsity_pattern;
     /* mass matrix */
     SparseMatrix<double> mass_matrix;
+    /* system matrix; Jacobian matrix */
+    SparseMatrix<double> system_matrix;
 
     /** number of boundaries */
     unsigned int n_boundaries;
@@ -238,6 +246,7 @@ class ConservationLaw
        std::vector<double>          c;
 
        bool solution_computed_in_last_stage;
+       bool is_explicit;
 
        std::vector<Vector<double> > f;
     };

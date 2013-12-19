@@ -10,6 +10,10 @@ subsection problem
    set problem id = 1
 end
 
+subsection numerics
+   set prandtl = 0.125
+end
+
 subsection refinement
    set initial refinement level = 4
    set refinement cycles = 1
@@ -38,7 +42,7 @@ end
 subsection temporal integration
    # options are <runge_kutta>
    set temporal integrator = runge_kutta
-   # options are <erk1|erk2|erk3|erk4>
+   # options are <erk1|erk2|erk3|erk4|sdirk22>
    set runge kutta method = erk3
 end
 

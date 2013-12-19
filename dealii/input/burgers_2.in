@@ -38,7 +38,7 @@ end
 subsection temporal integration
    # options are <runge_kutta>
    set temporal integrator = runge_kutta
-   # options are <erk1|erk2|erk3|erk4>
+   # options are <erk1|erk2|erk3|erk4|sdirk22>
    set runge kutta method = erk1
 end
 

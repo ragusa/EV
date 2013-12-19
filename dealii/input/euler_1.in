@@ -10,6 +10,10 @@ subsection problem
    set problem id = 0
 end
 
+subsection numerics
+   set prandtl = 0.125
+end
+
 subsection refinement
    set initial refinement level = 6
    set refinement cycles = 1
@@ -19,18 +23,18 @@ end
 
 subsection time
    # options are <constant_dt|cfl_condition>
-   set time step size method = cfl_condition
+   set time step size method = constant_dt
    set final time = 0.10 
    set time step size = 0.0001
    set cfl = 0.10
 end
 
 subsection artificial viscosity
-   # options are <none|constant|first_order|entropy>
-   set viscosity type = constant
+   # options are <none|constant|first_order_1|first_order_2|entropy>
+   set viscosity type = entropy
    set constant viscosity value = 0.005
-   set first order viscosity coefficient = 10.0
-   set entropy viscosity coefficient = 1.0
+   set first order viscosity coefficient = 0.1
+   set entropy viscosity coefficient = 5.0
    set jump coefficient = 1.0
    set add jumps = true
 end
@@ -38,7 +42,7 @@ end
 subsection temporal integration
    # options are <runge_kutta>
    set temporal integrator = runge_kutta
-   # options are <erk1|erk2|erk3|erk4>
+   # options are <erk1|erk2|erk3|erk4|sdirk22>
    set runge kutta method = erk1
 end
 

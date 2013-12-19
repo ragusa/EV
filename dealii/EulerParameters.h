@@ -27,6 +27,8 @@ class EulerParameters : public ConservationLawParameters<dim>
     static const int n_euler_components = dim+2;
 
     unsigned int problem_id;
+
+    double prandtl; // Prandtl number, used in relation of viscosities nu and kappa
 };
 
 #include "EulerParameters.cc"

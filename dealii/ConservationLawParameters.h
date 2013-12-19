@@ -17,7 +17,7 @@ class ConservationLawParameters
 {
   public:
 
-    int n_components;
+    unsigned int n_components;
 
     unsigned int initial_refinement_level;
     unsigned int n_cycle;
@@ -36,7 +36,7 @@ class ConservationLawParameters
   
     enum TemporalIntegrator { runge_kutta };
     TemporalIntegrator temporal_integrator;
-    enum RungeKuttaMethod {erk1, erk2, erk3, erk4};
+    enum RungeKuttaMethod {erk1, erk2, erk3, erk4, sdirk22};
     RungeKuttaMethod runge_kutta_method;
 
     enum NonlinearSolverType { newton };
@@ -52,20 +52,20 @@ class ConservationLawParameters
       
     double linear_atol;
     double linear_rtol;
-    int max_linear_iterations;
+    unsigned int max_linear_iterations;
     
     double nonlinear_atol;
     double nonlinear_rtol;
-    int max_nonlinear_iterations;
+    unsigned int max_nonlinear_iterations;
     double damping;
 
     static void declare_conservation_law_parameters (ParameterHandler &prm);
     void get_conservation_law_parameters (ParameterHandler &prm);
 
-    int degree;
+    unsigned int degree;
     unsigned int n_quadrature_points;
 
-    enum ViscosityType { none, constant, first_order, entropy }; 
+    enum ViscosityType { none, constant, first_order_1, first_order_2, entropy }; 
     ViscosityType viscosity_type;
     double constant_viscosity_value;
     double first_order_viscosity_coef;

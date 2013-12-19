@@ -26,8 +26,8 @@ subsection time
 end
 
 subsection artificial viscosity
-   # options are <none|constant|first_order|entropy>
-   set viscosity type = entropy
+   # options are <none|constant|first_order_1|first_order_2|entropy>
+   set viscosity type = first_order_1
    set constant viscosity value = 0.02
    set first order viscosity coefficient = 0.5
    set entropy viscosity coefficient = 2.0
@@ -38,17 +38,17 @@ end
 subsection temporal integration
    # options are <runge_kutta>
    set temporal integrator = runge_kutta
-   # options are <erk1|erk2|erk3|erk4>
-   set runge kutta method = erk1
+   # options are <erk1|erk2|erk3|erk4|sdirk22>
+   set runge kutta method = sdirk22
 end
 
 # this section is not yet applicable
 subsection nonlinear solver
    set nonlinear verbosity = verbose
    set nonlinear method = newton
-   set nonlinear absolute tolerance = 1e-8
-   set nonlinear relative tolerance = 1e-8
-   set max nonlinear iterations = 100
+   set nonlinear absolute tolerance = 1e-6
+   set nonlinear relative tolerance = 1e-6
+   set max nonlinear iterations = 15
    set damping = 0.9
 end
 

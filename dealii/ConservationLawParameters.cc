@@ -81,7 +81,7 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters (Parame
                          "Choices are <runge_kutta>.");
        prm.declare_entry("runge kutta method",
                          "erk1",
-                         Patterns::Selection("erk1|erk2|erk3|erk4"),
+                         Patterns::Selection("erk1|erk2|erk3|erk4|sdirk22"),
                          "Runge-Kutta method to use.");
    }
    prm.leave_subsection();
@@ -258,6 +258,8 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
           runge_kutta_method = erk3;
        else if (rk_choice == "erk4")
           runge_kutta_method = erk4;
+       else if (rk_choice == "sdirk22")
+          runge_kutta_method = sdirk22;
        else
           Assert(false,ExcNotImplemented());
    }
@@ -311,8 +313,10 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
          viscosity_type = none;
       else if (viscosity_choice == "constant")
          viscosity_type = constant;
-      else if (viscosity_choice == "first_order")
-         viscosity_type = first_order;
+      else if (viscosity_choice == "first_order_1")
+         viscosity_type = first_order_1;
+      else if (viscosity_choice == "first_order_2")
+         viscosity_type = first_order_2;
       else if (viscosity_choice == "entropy")
          viscosity_type = entropy;
       else
