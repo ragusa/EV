@@ -4,7 +4,7 @@
 using namespace dealii;
 
 /** \fn BurgersParameters<dim>::BurgersParameters()
- *  \brief Constructor for the BurgersParameters class.
+ *  \brief Constructor for the BurgersParameters class
  */
 template<int dim>
 BurgersParameters<dim>::BurgersParameters()
@@ -35,7 +35,7 @@ void BurgersParameters<dim>::declare_burgers_parameters(
 
 /**
  * \fn    BurgersParameters<dim>::get_burgers_parameters(ParameterHandler &parameter_handler)
- * \brief get input parameters from parameter handler
+ * \brief gets input parameters from parameter handler
  * \param parameter_handler parameter handler for the Burgers class
  */
 template<int dim>

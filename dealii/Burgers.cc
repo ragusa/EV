@@ -4,7 +4,7 @@
 
 /** \fn Burgers<dim>::Burgers(const BurgersParameters<dim> &params)
  *  \brief Constructor for the Burgers class.
- *  \param params Burgers' equation parameters
+ *  \param params Burgers equation parameters
  */
 template <int dim>
 Burgers<dim>::Burgers(const BurgersParameters<dim> &params):
@@ -28,9 +28,9 @@ std::vector<std::string> Burgers<dim>::get_component_names ()
  *      Burgers<dim>::get_component_interpretations()
  *  \brief Returns the interpretations for each component.
  *
- *  This function returns the interpretation of each component,
- *  i.e., whether each component is a scalar or a component of
- *  a vector.
+ *     This function returns the interpretation of each component,
+ *     i.e., whether each component is a scalar or a component of
+ *     a vector.
  *  \return data component interpretations
  */
 template <int dim>
@@ -137,6 +137,9 @@ void Burgers<dim>::define_problem()
 /** \fn void Burgers<dim>::compute_cell_ss_residual()
  *  \brief Computes the contribution of the steady-state residual
  *         from the current cell.
+ *  \param fe_values FEValues object.
+ *  \param cell current cell.
+ *  \param cell_residual residual contribution for the current cell, to be aggregated into the global residual.
  */
 template <int dim>
 void Burgers<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
@@ -219,6 +222,9 @@ void Burgers<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
 /** \fn void Burgers<dim>::compute_face_ss_residual()
  *  \brief Computes the contribution of the steady-state residual
  *         from the faces of the current cell.
+ *  \param fe_face_values FEFaceValues object.
+ *  \param cell current cell.
+ *  \param cell_residual residual contribution for the current cell, to be aggregated into the global residual.
  */
 template <int dim>
 void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
