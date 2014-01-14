@@ -72,7 +72,7 @@ void ConservationLaw<dim>::run()
       // output initial solution
       output_solution();
    
-      // begin time stepping loop
+      // solve transient with selected time integrator
       switch (conservation_law_parameters.temporal_integrator)
       {
          case ConservationLawParameters<dim>::runge_kutta: // explicit Runge-Kutta
@@ -80,6 +80,7 @@ void ConservationLaw<dim>::run()
              break;
          default:
              Assert(false,ExcNotImplemented());
+             break;
       }
    }
 
@@ -102,6 +103,7 @@ void ConservationLaw<dim>::run()
          break;
       default:
          Assert(false,ExcNotImplemented());
+         break;
    }
 }
 
@@ -256,7 +258,6 @@ void ConservationLaw<dim>::initialize_runge_kutta()
          rk.is_explicit = true;
          break;
       case ConservationLawParameters<dim>::sdirk22:
-         //gamma = (3.0 + std::sqrt(3.0))/6.0;
          gamma = 1.0 - 1.0/std::sqrt(2.0);
          sigma = 1.0 - gamma;
          rk.a[0][0] = gamma;
@@ -306,7 +307,7 @@ void ConservationLaw<dim>::compute_error_for_refinement()
 }
 
 /** \fn void ConservationLaw<dim>::refine_mesh()
- *  \brief Adaptively refines mesh based on a previously computed error per cell.
+ *  \brief Adaptively refines mesh based on estimated error per cell.
  */
 template <int dim>
 void ConservationLaw<dim>::refine_mesh()
@@ -446,7 +447,7 @@ void ConservationLaw<dim>::assemble_mass_matrix ()
 {
    mass_matrix = 0.0;
 
-// The below code creates a singular mass matrix for vector-valued problems
+// The commented-out code below creates a singular mass matrix for vector-valued problems
 /*
    FEValues<dim> fe_values (fe, cell_quadrature, update_values | update_JxW_values);
 
