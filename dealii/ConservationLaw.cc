@@ -37,7 +37,7 @@ ConservationLaw<dim>::ConservationLaw(const ConservationLawParameters<dim> &para
 template <int dim>
 void ConservationLaw<dim>::run()
 {
-   // initialize system
+   // initialize system; this is done once and not repeated for each refinement cycle
    initialize_system();
 
    // loop over adaptive refinement cycles
@@ -75,14 +75,14 @@ void ConservationLaw<dim>::run()
       // solve transient with selected time integrator
       switch (conservation_law_parameters.temporal_integrator)
       {
-         case ConservationLawParameters<dim>::runge_kutta: // explicit Runge-Kutta
+         case ConservationLawParameters<dim>::runge_kutta: // Runge-Kutta
              solve_runge_kutta();
              break;
          default:
              Assert(false,ExcNotImplemented());
              break;
       }
-   }
+   } // end of adaptive refinement loop; only output remains.
 
    // output final viscosities if non-constant viscosity used
    switch (conservation_law_parameters.viscosity_type)
@@ -117,7 +117,7 @@ void ConservationLaw<dim>::initialize_system()
    component_names           = get_component_names();
    component_interpretations = get_component_interpretations();
 
-   // make grid and refine
+   // define problem parameters and make initial triangulation
    define_problem();
    triangulation.refine_global(conservation_law_parameters.initial_refinement_level);
 
@@ -131,7 +131,7 @@ void ConservationLaw<dim>::initialize_system()
          else
             need_to_compute_face_residual = true;
 
-   // create constants for parsed functions
+   // create constants used for parsed functions
    std::map<std::string,double> constants;
    constants["pi"] = numbers::PI;
 
@@ -323,9 +323,9 @@ void ConservationLaw<dim>::refine_mesh()
 /** \fn void ConservationLaw<dim>::setup_system()
  *  \brief Sets up the system before solving.
  *
- *  This function is to be applied after each refinement. It
- *  allocates memory, sets up constraints, makes the sparsity pattern,
- *  and reinitializes the system matrix with the sparsity pattern.
+ *     This function is to be applied after each refinement. It
+ *     allocates memory, sets up constraints, makes the sparsity pattern,
+ *     and reinitializes the system matrix with the sparsity pattern.
  */
 template <int dim>
 void ConservationLaw<dim>::setup_system ()
@@ -389,6 +389,7 @@ void ConservationLaw<dim>::setup_system ()
    // reinitialize matrices with sparsity pattern
    mass_matrix  .reinit(sparsity_pattern);
    system_matrix.reinit(sparsity_pattern);
+
    // assemble mass matrix
    assemble_mass_matrix();
 
@@ -497,8 +498,10 @@ void ConservationLaw<dim>::assemble_mass_matrix ()
 /** \fn void ConservationLaw<dim>apply_Dirichlet_BC(const double &time)
  *  \brief Applies Dirichlet boundary conditions
  *
- *  This function applies Dirichlet boundary conditions
- *  using the interpolate_boundary_values() tool.
+ *     This function applies Dirichlet boundary conditions
+ *     using the interpolate_boundary_values() tool.
+ *  \param time current time; Dirichlet BC may be time-dependent such as for
+ *     the 2-D Burgers test problem.
  */
 template <int dim>
 void ConservationLaw<dim>::apply_Dirichlet_BC(const double &time)
@@ -538,8 +541,10 @@ void ConservationLaw<dim>::apply_Dirichlet_BC(const double &time)
 }
 
 /** \fn void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > &map,
-                                              const std::string &output_filename_base)
- *  \brief Outputs a mapped quantity at all quadrature points
+ *                                            const std::string &output_filename_base)
+ *  \brief Outputs a mapped quantity at all quadrature points.
+ *  \param map map between cell iterator and vector of values at quadrature points within cell.
+ *  \param output_filename_base string which forms the base (without extension) of the output file.
  */
 template <int dim>
 void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > &map,
@@ -586,8 +591,10 @@ void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_
 }
 
 /** \fn void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, double> &map,
-                                              const std::string &output_filename_base)
- *  \brief Outputs a mapped quantity at all quadrature points
+ *                                            const std::string &output_filename_base)
+ *  \brief Outputs a mapped quantity at all cells, not all quadrature points within cells
+ *  \param map map between cell iterator and vector of values at quadrature points within cell.
+ *  \param output_filename_base string which forms the base (without extension) of the output file.
  */
 template <int dim>
 void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, double> &map,
@@ -634,21 +641,21 @@ void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_
 }
 
 /** \fn ConservationLaw<dim>::solve_runge_kutta()
- *  \brief Solves the transient using Runge-Kutta.
+ *  \brief Solves transient using a Runge-Kutta scheme.
  *
- *  This function contains the transient loop and solves the
- *  transient using explicit Runge-Kutta:
- *  \f[
- *    \mathbf{M} \mathbf{y}_{n+1} = \mathbf{M} \mathbf{y}_n + h\sum\limits^s_{i=1}b_i \mathbf{f}_i
- *  \f]
- *  where
- *  \f[
- *    \mathbf{f}_i = \mathbf{f}(t_n + c_i h, \mathbf{Y}_i)
- *  \f]
- *  and \f$\mathbf{Y}_i\f$ is computed from the linear solve
- *  \f[
- *    \mathbf{M} \mathbf{Y}_i = \mathbf{M} \mathbf{y}_n + h\sum\limits^{i-1}_{j=1}a_{i,j} \mathbf{f}_i
- *  \f]
+ *     This function contains the transient loop and solves the
+ *     transient using explicit Runge-Kutta:
+ *     \f[
+ *       \mathbf{M} \mathbf{y}_{n+1} = \mathbf{M} \mathbf{y}_n + h\sum\limits^s_{i=1}b_i \mathbf{f}_i
+ *     \f]
+ *     where
+ *     \f[
+ *       \mathbf{f}_i = \mathbf{f}(t_n + c_i h, \mathbf{Y}_i)
+ *     \f]
+ *     and \f$\mathbf{Y}_i\f$ is computed from the linear solve
+ *     \f[
+ *       \mathbf{M} \mathbf{Y}_i = \mathbf{M} \mathbf{y}_n + h\sum\limits^{i-1}_{j=1}a_{i,j} \mathbf{f}_i
+ *     \f]
  */
 template <int dim>
 void ConservationLaw<dim>::solve_runge_kutta()
@@ -719,6 +726,11 @@ void ConservationLaw<dim>::solve_runge_kutta()
             current_solution = old_solution;
             // compute initial negative of transient residual: -F(y)
             compute_tr_residual(i,dt);
+            // compute initial norm of transient residual - used in convergence tolerance
+            double residual_norm = system_rhs.l2_norm();
+            // compute nonlinear tolerance based on provided ATOL and RTOL
+            double nonlinear_tolerance = conservation_law_parameters.nonlinear_atol +
+               conservation_law_parameters.nonlinear_rtol * residual_norm;
             // initialize convergence flag
             bool converged = false;
             // begin Newton loop
@@ -739,10 +751,10 @@ void ConservationLaw<dim>::solve_runge_kutta()
                // compute negative of transient residual: -F(y)
                compute_tr_residual(i,dt);
                // compute norm of transient residual
-               double residual_norm = system_rhs.l2_norm();
+               residual_norm = system_rhs.l2_norm();
                std::cout << "         nonlinear iteration " << iteration << ": residual norm = " << residual_norm << std::endl;
                // check convergence
-               if (residual_norm < conservation_law_parameters.nonlinear_atol)
+               if (residual_norm < tolerance)
                {
                   // set convergence flag
                   converged = true;

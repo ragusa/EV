@@ -48,11 +48,11 @@ using namespace dealii;
  *
  *  This class solves a conservation law of the form:
  *  \f[
- *    \frac{\partial\vec{u}}{\partial t} 
- *    + \nabla \cdot F(\vec{u}) = \vec{g}(\vec{u}),
+ *    \frac{\partial\mathbf{u}}{\partial t} 
+ *    + \nabla \cdot \mathbf{F}(\mathbf{u}) = \mathbf{0},
  *  \f]
- *  where \f$\vec{u}\f$ is the vector of conservation variables, \f$F(\vec{u})\f$
- *  is the flux tensor, and \f$\vec{g}(\vec{u})\f$ is the forcing term.
+ *  where \f$\vec{u}\f$ is the vector of conservation variables and \f$F(\vec{u})\f$
+ *  is the flux tensor.
  */
 template <int dim>
 class ConservationLaw
@@ -93,9 +93,11 @@ class ConservationLaw
     virtual void compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                                           const typename DoFHandler<dim>::active_cell_iterator &cell,
                                           Vector<double> &cell_residual) = 0;
+
     void compute_tr_residual(unsigned int i, double dt);
     virtual void compute_ss_Jacobian() = 0;
-    //void compute_tr_Jacobian();
+
+    // viscosity functions
     void update_viscosities(const double &dt);
     void update_first_order_viscosities_1();
     void update_first_order_viscosities_2();
@@ -112,6 +114,7 @@ class ConservationLaw
                                                   FEValues<dim>        &fe_values,
                                                   Vector<double>       &divergence) const = 0;
 
+    // output functions
     virtual void output_solution() const = 0;
     void output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > &map,
                     const std::string &output_filename_base);
