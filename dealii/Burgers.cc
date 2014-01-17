@@ -86,10 +86,15 @@ void Burgers<dim>::define_problem()
       case 1: // Guermond 2-d test problem
       {
          Assert(dim==2,ExcImpossibleInDim(dim));
-         double domain_start = 0;
-         double domain_width = 1.0;
-         this->domain_volume = std::pow(domain_width,dim);
-         GridGenerator::hyper_cube(this->triangulation, domain_start, domain_start + domain_width);
+         //double domain_start = 0;
+         //double domain_width = 1.0;
+         //this->domain_volume = std::pow(domain_width,dim);
+         //GridGenerator::hyper_cube(this->triangulation, domain_start, domain_start + domain_width);
+         this->domain_volume = 1.0; // domain is the unit hypercube, so domain volume is 1^dim
+         GridIn<dim> input_grid;
+         input_grid.attach_triangulation(this->triangulation);
+         std::ifstream input_file("mesh/unit_square.msh");
+         input_grid.read_msh(input_file);
          // only 1 type of BC: Dirichlet with exact solution
          this->n_boundaries = 1;
          // set all boundary indicators to zero

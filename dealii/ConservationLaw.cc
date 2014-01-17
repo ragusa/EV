@@ -754,7 +754,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
                residual_norm = system_rhs.l2_norm();
                std::cout << "         nonlinear iteration " << iteration << ": residual norm = " << residual_norm << std::endl;
                // check convergence
-               if (residual_norm < tolerance)
+               if (residual_norm < nonlinear_tolerance)
                {
                   // set convergence flag
                   converged = true;
