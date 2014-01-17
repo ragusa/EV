@@ -95,7 +95,7 @@ class ConservationLaw
                                           Vector<double> &cell_residual) = 0;
 
     void compute_tr_residual(unsigned int i, double dt);
-    virtual void compute_ss_Jacobian() = 0;
+    virtual void compute_ss_jacobian() = 0;
 
     // viscosity functions
     void update_viscosities(const double &dt);

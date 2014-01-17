@@ -323,6 +323,119 @@ void Euler<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
 */
 }
 
+template <int dim>
+void Euler<dim>::compute_ss_jacobian()
+{
+	// only been coded in 1-D
+	Assert(dim==1,ExcNotImplemented());
+
+	// get current solution values and gradients
+	std::vector<double>         density          (this->n_q_points_cell);
+	std::vector<Tensor<1,dim> > density_gradient (this->n_q_points_cell);
+	std::vector<Tensor<1,dim> > momentum         (this->n_q_points_cell);
+	std::vector<Tensor<2,dim> > momentum_gradient(this->n_q_points_cell);
+	std::vector<SymmetricTensor<2,dim> > momentum_symmetric_gradient(this->n_q_points_cell);
+	std::vector<double>         momentum_divergence (this->n_q_points_cell);
+	std::vector<double>         energy           (this->n_q_points_cell);
+	std::vector<Tensor<1,dim> > energy_gradient  (this->n_q_points_cell);
+	std::vector<double>         internal_energy  (this->n_q_points_cell);
+	std::vector<double>         temperature      (this->n_q_points_cell);
+	std::vector<Tensor<1,dim> > velocity         (this->n_q_points_cell);
+	std::vector<double>         pressure         (this->n_q_points_cell);
+
+	// derivatives of Euler flux functions
+	std::vector<Tensor<1,dim> > dfdu_rho_rho (this->n_q_points_cell);
+	std::vector<Tensor<1,dim> > dfdu_rho_mx  (this->n_q_points_cell);
+	std::vector<Tensor<1,dim> > dfdu_rho_E   (this->n_q_points_cell);
+	std::vector<Tensor<1,dim> > dfdu_mx_rho  (this->n_q_points_cell);
+	std::vector<Tensor<1,dim> > dfdu_mx_mx   (this->n_q_points_cell);
+	std::vector<Tensor<1,dim> > dfdu_mx_E    (this->n_q_points_cell);
+	std::vector<Tensor<1,dim> > dfdu_E_rho   (this->n_q_points_cell);
+	std::vector<Tensor<1,dim> > dfdu_E_mx    (this->n_q_points_cell);
+	std::vector<Tensor<1,dim> > dfdu_E_E     (this->n_q_points_cell);
+
+	// other
+	Tensor<1,dim> unit_vector_x; unit_vector_x[0] = 1.0;
+
+
+
+	// local DoF indices
+	std::vector<unsigned int> local_dof_indices(this->dofs_per_cell);
+
+	// cell matrix
+	FullMatrix<double> cell_matrix(this->dofs_per_cell,this->dofs_per_cell);
+
+	// FE values
+	FEValues<dim> fe_values(this->fe,this->cell_quadrature,
+			update_values | update_gradients | update_JxW_values);
+
+	// ones vector
+	Tensor<1,dim> ones_vector;
+	for (unsigned int d = 0; d < dim; ++d)
+		ones_vector[d] = 1.0;
+
+	// reset steady-state Jacobian to zero
+	this->system_matrix = 0.0;
+	// loop over cells
+	typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler.begin_active(),
+			endc = this->dof_handler.end();
+	for (; cell!=endc; ++cell)
+	{
+		fe_values.reinit(cell);
+
+		fe_values[density_extractor] .get_function_values   (this->current_solution, density);
+		fe_values[density_extractor] .get_function_gradients(this->current_solution, density_gradient);
+		fe_values[momentum_extractor].get_function_values   (this->current_solution, momentum);
+		fe_values[momentum_extractor].get_function_gradients(this->current_solution, momentum_gradient);
+		fe_values[momentum_extractor].get_function_symmetric_gradients (this->current_solution, momentum_symmetric_gradient);
+		fe_values[momentum_extractor].get_function_divergences(this->current_solution, momentum_divergence);
+		fe_values[energy_extractor]  .get_function_values     (this->current_solution, energy);
+		fe_values[energy_extractor]  .get_function_gradients  (this->current_solution, energy_gradient);
+        dfdu_rho_rho = 0.0;
+        dfdu_rho_mx  = unit_vector_x;
+        dfdu_rho_E   = 0.0;
+        dfdu_mx_rho  = 0.0;//
+
+		// reset cell matrix to zero
+		cell_matrix = 0;
+		// loop over quadrature points in cell
+		for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+			for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+			{
+				for (unsigned int j = 0; j < this->dofs_per_cell; ++j)
+				{
+					cell_matrix(i,j) += (
+							fe_values[density_extractor].gradient(i,q) * dfdu_rho_rho(q) *
+							fe_values[density_extractor].value(j,q)
+							+ fe_values[density_extractor].gradient(i,q) * dfdu_rho_mx(q) *
+							fe_values[momentum_extractor].value(j,q)
+							+ fe_values[density_extractor].gradient(i,q) * dfdu_rho_E(q) *
+							fe_values[energy_extractor].value(j,q)
+
+							+ fe_values[momentum_extractor].gradient(i,q) * dfdu_mx_rho(q) *
+							fe_values[density_extractor].value(j,q)
+							+ fe_values[momentum_extractor].gradient(i,q) * dfdu_mx_mx(q) *
+							fe_values[momentum_extractor].value(j,q)
+							+ fe_values[momentum_extractor].gradient(i,q) * dfdu_mx_E(q) *
+							fe_values[energy_extractor].value(j,q)
+
+							+ fe_values[energy_extractor].gradient(i,q) * dfdu_E_rho(q) *
+							fe_values[density_extractor].value(j,q)
+							+ fe_values[energy_extractor].gradient(i,q) * dfdu_E_mx(q) *
+							fe_values[momentum_extractor].value(j,q)
+							+ fe_values[energy_extractor].gradient(i,q) * dfdu_E_E(q) *
+							fe_values[energy_extractor].value(j,q)
+
+							) * fe_values.JxW(q);
+				}
+			}
+		// get dof indices
+		cell->get_dof_indices(local_dof_indices);
+		// aggregate cell matrix into global matrix
+		this->constraints.distribute_local_to_global(cell_matrix, local_dof_indices, this->system_matrix);
+	}
+}
+
 /** \fn void Euler<dim>::compute_velocity(      std::vector<Tensor<1,dim> > &velocity,
  *                                        const std::vector<double>         &density,
  *                                        const std::vector<Tensor<1,dim> > &momentum) const

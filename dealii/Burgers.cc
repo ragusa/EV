@@ -136,6 +136,7 @@ void Burgers<dim>::define_problem()
       }
       default:
          Assert(false,ExcNotImplemented());
+         break;
    }
 }
 
@@ -297,7 +298,7 @@ void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
  *  \brief Computes the steady-state Jacobian matrix and stores in system_matrix.
  */
 template <int dim>
-void Burgers<dim>::compute_ss_Jacobian()
+void Burgers<dim>::compute_ss_jacobian()
 {
    // reset steady-state Jacobian to zero
    this->system_matrix = 0.0;

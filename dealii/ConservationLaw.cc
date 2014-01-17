@@ -737,7 +737,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
             for (unsigned int iteration = 0; iteration < conservation_law_parameters.max_nonlinear_iterations; ++iteration)
             {
                // compute steady-state Jacobian and store in system_matrix
-               compute_ss_Jacobian();
+               compute_ss_jacobian();
                // compute transient Jacobian and store in system_matrix
                system_matrix *= rk.a[i][i]*dt;
                system_matrix.add(-1.0,mass_matrix);
