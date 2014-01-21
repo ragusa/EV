@@ -78,8 +78,12 @@ class Euler : public ConservationLaw<dim>
     void compute_temperature(      std::vector<double> &temperature,
                              const std::vector<double> &internal_energy) const;
     void compute_pressure(      std::vector<double> &pressure,
+                                std::vector<double> &dpdrho,
+                                std::vector<double> &dpdmx,
+                                std::vector<double> &dpdE,
                           const std::vector<double> &density,
-                          const std::vector<double> &temperature) const;
+                          const std::vector<Tensor<1,dim> > &momentum,
+                          const std::vector<double> &energy) const;
     void compute_speed_of_sound(      std::vector<double> &speed_of_sound,
                                 const std::vector<double> &density,
                                 const std::vector<double> &pressure) const;
