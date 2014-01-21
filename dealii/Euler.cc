@@ -412,11 +412,11 @@ void Euler<dim>::compute_ss_jacobian()
 							+ fe_values[density_extractor].gradient(i,q) * dfdu_rho_E(q) *
 							fe_values[energy_extractor].value(j,q)
 
-							+ fe_values[momentum_extractor].gradient(i,q) * dfdu_mx_rho(q) *
+							+ fe_values[momentum_extractor].shape_grad_gradient(i,q,0) * dfdu_mx_rho(q) *
 							fe_values[density_extractor].value(j,q)
-							+ fe_values[momentum_extractor].gradient(i,q) * dfdu_mx_mx(q) *
+							+ fe_values[momentum_extractor].shape_grad_gradient(i,q,0) * dfdu_mx_mx(q) *
 							fe_values[momentum_extractor].value(j,q)
-							+ fe_values[momentum_extractor].gradient(i,q) * dfdu_mx_E(q) *
+							+ fe_values[momentum_extractor].shape_grad_gradient(i,q,0) * dfdu_mx_E(q) *
 							fe_values[energy_extractor].value(j,q)
 
 							+ fe_values[energy_extractor].gradient(i,q) * dfdu_E_rho(q) *
