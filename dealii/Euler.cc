@@ -183,10 +183,10 @@ void Euler<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
    fe_values[energy_extractor].get_function_gradients  (this->current_solution, energy_gradient);
 
    // compute velocity and thermodynamic properties
-   compute_velocity(velocity, density, momentum);
-   compute_internal_energy(internal_energy, density, momentum, energy);
-   compute_temperature(temperature, internal_energy);
-   compute_pressure(pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
+   compute_velocity             (velocity, density, momentum);
+   compute_internal_energy_cell (internal_energy, density, momentum, energy);
+   compute_temperature_cell     (temperature, internal_energy);
+   compute_pressure_cell        (pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
 
    // loop over quadrature points
    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
@@ -351,20 +351,18 @@ void Euler<dim>::compute_ss_jacobian()
    std::vector<double>         dpdE             (this->n_q_points_cell);
 
    // derivatives of Euler flux functions
-   Tensor<1,dim> dfdu_rho_rho (this->n_q_points_cell);
-   Tensor<1,dim> dfdu_rho_mx  (this->n_q_points_cell);
-   Tensor<1,dim> dfdu_rho_E   (this->n_q_points_cell);
-   Tensor<1,dim> dfdu_mx_rho  (this->n_q_points_cell);
-   Tensor<1,dim> dfdu_mx_mx   (this->n_q_points_cell);
-   Tensor<1,dim> dfdu_mx_E    (this->n_q_points_cell);
-   Tensor<1,dim> dfdu_E_rho   (this->n_q_points_cell);
-   Tensor<1,dim> dfdu_E_mx    (this->n_q_points_cell);
-   Tensor<1,dim> dfdu_E_E     (this->n_q_points_cell);
+   Tensor<1,dim> dfdu_rho_rho;
+   Tensor<1,dim> dfdu_rho_mx;
+   Tensor<1,dim> dfdu_rho_E;
+   Tensor<1,dim> dfdu_mx_rho;
+   Tensor<1,dim> dfdu_mx_mx;
+   Tensor<1,dim> dfdu_mx_E;
+   Tensor<1,dim> dfdu_E_rho;
+   Tensor<1,dim> dfdu_E_mx;
+   Tensor<1,dim> dfdu_E_E;
 
    // other
    Tensor<1,dim> unit_vector_x; unit_vector_x[0] = 1.0;
-
-
 
    // local DoF indices
    std::vector<unsigned int> local_dof_indices(this->dofs_per_cell);
@@ -398,7 +396,7 @@ void Euler<dim>::compute_ss_jacobian()
       fe_values[momentum_extractor].get_function_divergences(this->current_solution, momentum_divergence);
       fe_values[energy_extractor]  .get_function_values     (this->current_solution, energy);
       fe_values[energy_extractor]  .get_function_gradients  (this->current_solution, energy_gradient);
-      compute_pressure(pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
+      compute_pressure_cell (pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
       dfdu_rho_rho = 0.0;
       dfdu_rho_mx  = unit_vector_x;
       dfdu_rho_E   = 0.0;
@@ -414,11 +412,11 @@ void Euler<dim>::compute_ss_jacobian()
          double E = energy[q];
          double p = pressure[q];
 
-         dfdu_mx_mx = 2.0*mx/rho + dpdmx[q];
-         dfdu_mx_E  = dpdE[q];
-         dfdu_E_rho = -mx/std::pow(rho,2)*(E+p) + mx/rho*dpdrho[q];
-         dfdu_E_mx  = (E+p)/rho + mx/rho*dpdmx[q];
-         dfdu_E_E   = dpdE[q];
+         dfdu_mx_mx[0] = 2.0*mx/rho + dpdmx[q];
+         dfdu_mx_E[0]  = dpdE[q];
+         dfdu_E_rho[0] = -mx/std::pow(rho,2)*(E+p) + mx/rho*dpdrho[q];
+         dfdu_E_mx[0]  = (E+p)/rho + mx/rho*dpdmx[q];
+         dfdu_E_E[0]   = dpdE[q];
 
          for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
          {
@@ -429,23 +427,28 @@ void Euler<dim>::compute_ss_jacobian()
                   fe_values[density_extractor].gradient(i,q) * dfdu_rho_rho *
                   fe_values[density_extractor].value(j,q)
                   + fe_values[density_extractor].gradient(i,q) * dfdu_rho_mx *
-                  fe_values[momentum_extractor].value(j,q)
+                  //fe_values[momentum_extractor].value(j,q)
+                  fe_values.shape_value_component(j,q,1)
                   + fe_values[density_extractor].gradient(i,q) * dfdu_rho_E *
                   fe_values[energy_extractor].value(j,q)
 
                   // conservation of x-momentum
-                  + fe_values[momentum_extractor].shape_grad_gradient(i,q,0) * dfdu_mx_rho *
+                  //+ fe_values[momentum_extractor].shape_grad_component(i,q,0) * dfdu_mx_rho *
+                  + fe_values.shape_grad_component(i,q,1) * dfdu_mx_rho *
                   fe_values[density_extractor].value(j,q)
-                  + fe_values[momentum_extractor].shape_grad_gradient(i,q,0) * dfdu_mx_mx *
-                  fe_values[momentum_extractor].value(j,q)
-                  + fe_values[momentum_extractor].shape_grad_gradient(i,q,0) * dfdu_mx_E *
+                  //+ fe_values[momentum_extractor].shape_grad_component(i,q,0) * dfdu_mx_mx *
+                  + fe_values.shape_grad_component(i,q,1) * dfdu_mx_mx *
+                  fe_values.shape_value_component(j,q,1)
+                  //+ fe_values[momentum_extractor].shape_grad_component(i,q,0) * dfdu_mx_E *
+                  + fe_values.shape_grad_component(i,q,1) * dfdu_mx_E *
                   fe_values[energy_extractor].value(j,q)
 
                   // conservation of energy
                   + fe_values[energy_extractor].gradient(i,q) * dfdu_E_rho *
                   fe_values[density_extractor].value(j,q)
                   + fe_values[energy_extractor].gradient(i,q) * dfdu_E_mx *
-                  fe_values[momentum_extractor].value(j,q)
+                  //fe_values[momentum_extractor].value(j,q)
+                  fe_values.shape_value_component(j,q,1)
                   + fe_values[energy_extractor].gradient(i,q) * dfdu_E_E *
                   fe_values[energy_extractor].value(j,q)
 
@@ -474,40 +477,68 @@ void Euler<dim>::compute_velocity(      std::vector<Tensor<1,dim> > &velocity,
       velocity[q] = momentum[q] / density[q];
    }
 
-/** \fn void Euler<dim>::compute_internal_energy(      std::vector<double>         &internal_energy,
- *                                               const std::vector<double>         &density,
- *                                               const std::vector<Tensor<1,dim> > &momentum,
- *                                               const std::vector<double>         &energy) const
+/** \fn void Euler<dim>::compute_internal_energy_cell(      std::vector<double>         &internal_energy,
+ *                                                    const std::vector<double>         &density,
+ *                                                    const std::vector<Tensor<1,dim> > &momentum,
+ *                                                    const std::vector<double>         &energy) const
  *  \brief Computes internal energy at each quadrature point in cell.
  */
 template <int dim>
-void Euler<dim>::compute_internal_energy(      std::vector<double>         &internal_energy,
-   const std::vector<double>         &density,
-   const std::vector<Tensor<1,dim> > &momentum,
-   const std::vector<double>         &energy) const
-   {
+void Euler<dim>::compute_internal_energy_cell(      std::vector<double>         &internal_energy,
+                                              const std::vector<double>         &density,
+                                              const std::vector<Tensor<1,dim> > &momentum,
+                                              const std::vector<double>         &energy) const
+{
    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
       internal_energy[q] = (energy[q] - 0.5*momentum[q]*momentum[q]/density[q]) / density[q];
-   }
+}
 
-/** \fn void Euler<dim>::compute_temperature(      std::vector<double> &temperature,
- *                                           const std::vector<double> &internal_energy) const
+/** \fn void Euler<dim>::compute_internal_energy_face(      std::vector<double>         &internal_energy,
+ *                                                    const std::vector<double>         &density,
+ *                                                    const std::vector<Tensor<1,dim> > &momentum,
+ *                                                    const std::vector<double>         &energy) const
+ *  \brief Computes internal energy at each quadrature point in face.
+ */
+template <int dim>
+void Euler<dim>::compute_internal_energy_face(      std::vector<double>         &internal_energy,
+                                              const std::vector<double>         &density,
+                                              const std::vector<Tensor<1,dim> > &momentum,
+                                              const std::vector<double>         &energy) const
+{
+   for (unsigned int q = 0; q < this->n_q_points_face; ++q)
+      internal_energy[q] = (energy[q] - 0.5*momentum[q]*momentum[q]/density[q]) / density[q];
+}
+
+/** \fn void Euler<dim>::compute_temperature_cell(      std::vector<double> &temperature,
+ *                                                const std::vector<double> &internal_energy) const
  *  \brief Computes temperature at each quadrature point in cell.
  */
 template <int dim>
-void Euler<dim>::compute_temperature(      std::vector<double> &temperature,
-   const std::vector<double> &internal_energy) const
-   {
+void Euler<dim>::compute_temperature_cell(      std::vector<double> &temperature,
+                                          const std::vector<double> &internal_energy) const
+{
    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
       temperature[q] = (gamma - 1.0)*internal_energy[q];
-   }
+}
 
-/** \fn void Euler<dim>::compute_pressure(      std::vector<double> &pressure,
- *                                        std::vector<double> &dpdrho,
- *                                        std::vector<double> &dpdmx,
- *                                        std::vector<double> &dpdE,
- *                                        const std::vector<double> &density,
- *                                        const std::vector<double> &temperature) const
+/** \fn void Euler<dim>::compute_temperature_face(      std::vector<double> &temperature,
+ *                                                const std::vector<double> &internal_energy) const
+ *  \brief Computes temperature at each quadrature point in face.
+ */
+template <int dim>
+void Euler<dim>::compute_temperature_face(      std::vector<double> &temperature,
+                                          const std::vector<double> &internal_energy) const
+{
+   for (unsigned int q = 0; q < this->n_q_points_face; ++q)
+      temperature[q] = (gamma - 1.0)*internal_energy[q];
+}
+
+/** \fn void Euler<dim>::compute_pressure_cell(      std::vector<double> &pressure,
+ *                                             std::vector<double> &dpdrho,
+ *                                             std::vector<double> &dpdmx,
+ *                                             std::vector<double> &dpdE,
+ *                                             const std::vector<double> &density,
+ *                                             const std::vector<double> &temperature) const
  *  \brief Computes pressure and pressure derivatives at each quadrature point in cell.
  *  \param[out] pressure pressure
  *  \param[out] dpdrho derivative of pressure with respect to density
@@ -518,22 +549,55 @@ void Euler<dim>::compute_temperature(      std::vector<double> &temperature,
  *  \param[in] energy energy
  */
 template <int dim>
-void Euler<dim>::compute_pressure(      std::vector<double> &pressure,
-   std::vector<double> &dpdrho,
-   std::vector<double> &dpdmx,
-   std::vector<double> &dpdE,
-   const std::vector<double> &density,
-   const std::vector<Tensor<1, dim> > &momentum,
-   const std::vector<double> &energy) const
-   {
+void Euler<dim>::compute_pressure_cell(      std::vector<double> &pressure,
+                                             std::vector<double> &dpdrho,
+                                             std::vector<double> &dpdmx,
+                                             std::vector<double> &dpdE,
+                                       const std::vector<double> &density,
+                                       const std::vector<Tensor<1, dim> > &momentum,
+                                       const std::vector<double> &energy) const
+{
    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
    {
-      pressure[q] = density[q]*temperature[q];
+      pressure[q] = (gamma-1.0) * (energy[q] - 0.5*momentum[q]*momentum[q]);
       dpdrho[q] = 0.0;
       dpdmx[q] = (1.0 - gamma)*momentum[q][0];
       dpdE[q] = gamma - 1.0;
    }
+}
+
+/** \fn void Euler<dim>::compute_pressure_face(      std::vector<double> &pressure,
+ *                                             std::vector<double> &dpdrho,
+ *                                             std::vector<double> &dpdmx,
+ *                                             std::vector<double> &dpdE,
+ *                                             const std::vector<double> &density,
+ *                                             const std::vector<double> &temperature) const
+ *  \brief Computes pressure and pressure derivatives at each quadrature point in face.
+ *  \param[out] pressure pressure
+ *  \param[out] dpdrho derivative of pressure with respect to density
+ *  \param[out] dpdmx derivative of pressure with respect to x-momentum
+ *  \param[out] dpdE derivative of pressure with respect to energy
+ *  \param[in] density density
+ *  \param[in] momentum momentum
+ *  \param[in] energy energy
+ */
+template <int dim>
+void Euler<dim>::compute_pressure_face(      std::vector<double> &pressure,
+                                             std::vector<double> &dpdrho,
+                                             std::vector<double> &dpdmx,
+                                             std::vector<double> &dpdE,
+                                       const std::vector<double> &density,
+                                       const std::vector<Tensor<1, dim> > &momentum,
+                                       const std::vector<double> &energy) const
+{
+   for (unsigned int q = 0; q < this->n_q_points_face; ++q)
+   {
+      pressure[q] = (gamma-1.0) * (energy[q] - 0.5*momentum[q]*momentum[q]);
+      dpdrho[q] = 0.0;
+      dpdmx[q] = (1.0 - gamma)*momentum[q][0];
+      dpdE[q] = gamma - 1.0;
    }
+}
 
 /** \fn void Euler<dim>::compute_speed_of_sound(      std::vector<double> &speed_of_sound,
  *                                              const std::vector<double> &density,
@@ -587,10 +651,10 @@ void Euler<dim>::update_flux_speeds()
       // compute velocity
       compute_velocity(velocity, density, momentum);
       // compute speed of sound
-      compute_internal_energy(internal_energy, density, momentum, energy);
-      compute_temperature(temperature, internal_energy);
-      compute_pressure(pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
-      compute_speed_of_sound(speed_of_sound, density, pressure);
+      compute_internal_energy_cell (internal_energy, density, momentum, energy);
+      compute_temperature_cell     (temperature, internal_energy);
+      compute_pressure_cell        (pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
+      compute_speed_of_sound       (speed_of_sound, density, pressure);
 
       double max_speed_of_sound = 0.0; // max speed of sound on cell
       double max_velocity = 0.0;       // max velocity on cell
@@ -620,21 +684,21 @@ void Euler<dim>::compute_entropy(const Vector<double> &solution,
    Vector<double>       &entropy) const
    {
    std::vector<double>         density  (this->n_q_points_cell);
-   std::vector<Tensor<1,dim> > momentum  (this->n_q_points_cell);
-   std::vector<double>         energy  (this->n_q_points_cell);
-   std::vector<double> pressure  (this->n_q_points_cell);
-   std::vector<double> dpdrho    (this->n_q_points_cell);
-   std::vector<double> dpdmx     (this->n_q_points_cell);
-   std::vector<double> dpdE      (this->n_q_points_cell);
-   std::vector<double> temperature  (this->n_q_points_cell);
-   std::vector<double> internal_energy  (this->n_q_points_cell);
+   std::vector<Tensor<1,dim> > momentum (this->n_q_points_cell);
+   std::vector<double>         energy   (this->n_q_points_cell);
+   std::vector<double>         pressure (this->n_q_points_cell);
+   std::vector<double>         dpdrho   (this->n_q_points_cell);
+   std::vector<double>         dpdmx    (this->n_q_points_cell);
+   std::vector<double>         dpdE     (this->n_q_points_cell);
+   std::vector<double>         temperature     (this->n_q_points_cell);
+   std::vector<double>         internal_energy (this->n_q_points_cell);
 
    fe_values[density_extractor].get_function_values  (this->current_solution, density);
    fe_values[momentum_extractor].get_function_values (this->current_solution, momentum);
    fe_values[energy_extractor].get_function_values   (this->current_solution, energy);
-   compute_internal_energy(internal_energy, density, momentum, energy);
-   compute_temperature(temperature, internal_energy);
-   compute_pressure(pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
+   compute_internal_energy_cell (internal_energy, density, momentum, energy);
+   compute_temperature_cell     (temperature, internal_energy);
+   compute_pressure_cell        (pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
 
    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
       entropy[q] = density[q]/(gamma - 1.0)*std::log(pressure[q]/std::pow(density[q],gamma));
@@ -653,7 +717,25 @@ void Euler<dim>::compute_entropy_face(const Vector<double> &solution,
    FEFaceValues<dim>    &fe_values_face,
    Vector<double>       &entropy) const
    {
-   Assert(false,ExcNotImplemented());
+   std::vector<double>         density  (this->n_q_points_face);
+   std::vector<Tensor<1,dim> > momentum (this->n_q_points_face);
+   std::vector<double>         energy   (this->n_q_points_face);
+   std::vector<double> pressure         (this->n_q_points_face);
+   std::vector<double> dpdrho           (this->n_q_points_face);
+   std::vector<double> dpdmx            (this->n_q_points_face);
+   std::vector<double> dpdE             (this->n_q_points_face);
+   std::vector<double> temperature      (this->n_q_points_face);
+   std::vector<double> internal_energy  (this->n_q_points_face);
+
+   fe_values_face[density_extractor].get_function_values  (this->current_solution, density);
+   fe_values_face[momentum_extractor].get_function_values (this->current_solution, momentum);
+   fe_values_face[energy_extractor].get_function_values   (this->current_solution, energy);
+   compute_internal_energy_face (internal_energy, density, momentum, energy);
+   compute_temperature_face     (temperature, internal_energy);
+   compute_pressure_face        (pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
+
+   for (unsigned int q = 0; q < this->n_q_points_face; ++q)
+      entropy[q] = density[q]/(gamma - 1.0)*std::log(pressure[q]/std::pow(density[q],gamma));
    }
 
 /** \fn void Euler<dim>::compute_divergence_entropy_flux (const Vector<double> &solution,
@@ -669,7 +751,33 @@ void Euler<dim>::compute_divergence_entropy_flux (const Vector<double> &solution
    FEValues<dim>        &fe_values,
    Vector<double>       &divergence) const
    {
-   Assert(false,ExcNotImplemented());
+   std::vector<double>         density  (this->n_q_points_cell);
+   std::vector<Tensor<1,dim> > momentum (this->n_q_points_cell);
+   std::vector<double>         energy   (this->n_q_points_cell);
+   std::vector<double>         pressure (this->n_q_points_cell);
+   std::vector<double>         dpdrho   (this->n_q_points_cell);
+   std::vector<double>         dpdmx    (this->n_q_points_cell);
+   std::vector<double>         dpdE     (this->n_q_points_cell);
+   std::vector<Tensor<1,dim> > density_gradient    (this->n_q_points_cell);
+   std::vector<Tensor<2,dim> > momentum_gradient   (this->n_q_points_cell);
+   std::vector<Tensor<1,dim> > energy_gradient     (this->n_q_points_cell);
+   std::vector<double>         momentum_divergence (this->n_q_points_cell);
+   Tensor<1, dim> pressure_gradient;
+
+   fe_values[density_extractor].get_function_values       (this->current_solution, density);
+   fe_values[momentum_extractor].get_function_values      (this->current_solution, momentum);
+   fe_values[energy_extractor].get_function_values        (this->current_solution, energy);
+   fe_values[density_extractor].get_function_gradients    (this->current_solution, density_gradient);
+   fe_values[momentum_extractor].get_function_gradients   (this->current_solution, momentum_gradient);
+   fe_values[energy_extractor].get_function_gradients     (this->current_solution, energy_gradient);
+   fe_values[momentum_extractor].get_function_divergences (this->current_solution, momentum_divergence);
+   compute_pressure_cell (pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
+
+   for (unsigned int q = 0; q < this->n_q_points_cell; ++q) {
+      pressure_gradient = (gamma - 1.0) * energy_gradient[q] - momentum[q] * momentum_gradient[q];
+      divergence[q] = momentum_divergence[q] * std::log(pressure[q]/std::pow(density[q],gamma))
+         + momentum[q] * (pressure_gradient / pressure[q] - gamma/density[q]*density_gradient[q]);
+   }
    }
 
 /** \fn void Euler<dim>::output_solution() const

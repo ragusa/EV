@@ -61,7 +61,7 @@ class Burgers : public ConservationLaw<dim>
     void compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                                   const typename DoFHandler<dim>::active_cell_iterator &cell,
                                   Vector<double> &cell_residual);
-    void compute_ss_Jacobian();
+    void compute_ss_jacobian();
     void update_flux_speeds();
 
     void compute_entropy                 (const Vector<double> &solution,

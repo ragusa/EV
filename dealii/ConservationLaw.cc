@@ -1159,14 +1159,8 @@ template <int dim>
 void ConservationLaw<dim>::update_entropy_residuals(const double &dt)
 {
    FEValues<dim> fe_values (fe, cell_quadrature, update_values | update_gradients | update_JxW_values);
-
-   std::vector<double>         current_solution_local  (n_q_points_cell);
-   std::vector<Tensor<1,dim> > current_gradient_local  (n_q_points_cell);
-   Vector<double>              divergence_entropy_flux (n_q_points_cell);
-
-   std::vector<double>         old_solution_local     (n_q_points_cell);
-   std::vector<Tensor<1,dim> > old_gradient_local     (n_q_points_cell);
-   Vector<double>              old_entropy            (n_q_points_cell);
+   Vector<double> old_entropy             (n_q_points_cell);
+   Vector<double> divergence_entropy_flux (n_q_points_cell);
 
    // domain-averaged entropy
    double entropy_average = 0.0;
@@ -1176,15 +1170,10 @@ void ConservationLaw<dim>::update_entropy_residuals(const double &dt)
    for (; cell != endc; ++cell)
    {
       fe_values.reinit(cell);
-      fe_values.get_function_values(    current_solution, current_solution_local);
-      fe_values.get_function_values(    old_solution,     old_solution_local);
-      fe_values.get_function_gradients( current_solution, current_gradient_local);
-      fe_values.get_function_gradients( old_solution,     old_gradient_local);
       // compute entropy of current and old solutions
-      compute_entropy                 (current_solution, fe_values, entropy_cell_q[cell]);
+      compute_entropy (current_solution, fe_values, entropy_cell_q[cell]);
+      compute_entropy (old_solution,     fe_values, old_entropy);
       compute_divergence_entropy_flux (current_solution, fe_values, divergence_entropy_flux);
-
-      compute_entropy            (old_solution,     fe_values, old_entropy);
 
       for (unsigned int q = 0; q < n_q_points_cell; ++q)
       {
@@ -1270,24 +1259,6 @@ void ConservationLaw<dim>::update_jumps()
 
    } // end cell loop
 }
-
-/** \fn void ConservationLaw<dim>::compute_tr_Jacobian()
- *  \brief Computes the transient Jacobian to be used in
- *         the Newton loop for implicit time integration
- *         methods
- */
-/*
-template <int dim>
-void ConservationLaw<dim>::compute_tr_Jacobian()
-{
-   // when this function is run, the variable system_matrix
-   // should contain the steady state Jacobian. The transient
-   // Jacobian, which includes the steady-state Jacobian, is
-   // to be stored in system_matrix in place of the steady-
-   // state Jacobian.
-   system_matrix = -mass_matrix + rk.a[][]*dt*system_matrix;
-}
-*/
 
 /** \fn void ConservationLaw<dim>::compute_tr_residual()
  *  \brief Computes the negative of the transient residual and stores in

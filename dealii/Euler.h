@@ -58,6 +58,7 @@ class Euler : public ConservationLaw<dim>
     void compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                                   const typename DoFHandler<dim>::active_cell_iterator &cell,
                                   Vector<double> &cell_residual);
+    void compute_ss_jacobian();
     void update_flux_speeds();
     void compute_entropy (const Vector<double> &solution,
                           FEValues<dim>        &fe_values,
@@ -71,19 +72,32 @@ class Euler : public ConservationLaw<dim>
     void compute_velocity(      std::vector<Tensor<1,dim> > &velocity,
                           const std::vector<double>         &density,
                           const std::vector<Tensor<1,dim> > &momentum) const;
-    void compute_internal_energy(      std::vector<double>         &internal_energy,
-                                 const std::vector<double>         &density,
-                                 const std::vector<Tensor<1,dim> > &momentum,
-                                 const std::vector<double>         &energy) const;
-    void compute_temperature(      std::vector<double> &temperature,
-                             const std::vector<double> &internal_energy) const;
-    void compute_pressure(      std::vector<double> &pressure,
-                                std::vector<double> &dpdrho,
-                                std::vector<double> &dpdmx,
-                                std::vector<double> &dpdE,
-                          const std::vector<double> &density,
-                          const std::vector<Tensor<1,dim> > &momentum,
-                          const std::vector<double> &energy) const;
+    void compute_internal_energy_cell(      std::vector<double>         &internal_energy,
+                                      const std::vector<double>         &density,
+                                      const std::vector<Tensor<1,dim> > &momentum,
+                                      const std::vector<double>         &energy) const;
+    void compute_internal_energy_face(      std::vector<double>         &internal_energy,
+                                      const std::vector<double>         &density,
+                                      const std::vector<Tensor<1,dim> > &momentum,
+                                      const std::vector<double>         &energy) const;
+    void compute_temperature_cell(      std::vector<double> &temperature,
+                                  const std::vector<double> &internal_energy) const;
+    void compute_temperature_face(      std::vector<double> &temperature,
+                                  const std::vector<double> &internal_energy) const;
+    void compute_pressure_cell(      std::vector<double> &pressure,
+                                     std::vector<double> &dpdrho,
+                                     std::vector<double> &dpdmx,
+                                     std::vector<double> &dpdE,
+                               const std::vector<double> &density,
+                               const std::vector<Tensor<1,dim> > &momentum,
+                               const std::vector<double> &energy) const;
+    void compute_pressure_face(      std::vector<double> &pressure,
+                                     std::vector<double> &dpdrho,
+                                     std::vector<double> &dpdmx,
+                                     std::vector<double> &dpdE,
+                               const std::vector<double> &density,
+                               const std::vector<Tensor<1,dim> > &momentum,
+                               const std::vector<double> &energy) const;
     void compute_speed_of_sound(      std::vector<double> &speed_of_sound,
                                 const std::vector<double> &density,
                                 const std::vector<double> &pressure) const;
