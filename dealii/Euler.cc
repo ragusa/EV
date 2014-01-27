@@ -139,6 +139,65 @@ void Euler<dim>::define_problem()
          gamma = 5.0/3.0;
          break;
       }
+      case 2: // 2-D Noh Problem
+      {
+         Assert(dim==2,ExcImpossibleInDim(dim));
+         this->domain_volume = 1.0; // domain is the unit hypercube, so domain volume is 1^dim
+         GridIn<dim> input_grid;
+         input_grid.attach_triangulation(this->triangulation);
+         std::ifstream input_file("mesh/unit_square.msh");
+         input_grid.read_msh(input_file);
+         // four boundaries: each side of unit square
+         this->n_boundaries = 4;
+         // set boundary indicators
+         typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin(),
+            endc = this->triangulation.end();
+         for (; cell != endc; ++cell)
+            for (unsigned int face = 0; face < this->faces_per_cell; ++face)
+               if (cell->face(face)->at_boundary()) {
+                  Point<dim> face_center = cell->face(face)->center();
+                  if (face_center(1) < small_number) {            // bottom boundary
+                     cell->face(face)->set_boundary_indicator(0);
+                  } else if (face_center(0) > 1.0-small_number) { // right boundary
+                     cell->face(face)->set_boundary_indicator(1);
+                  } else if (face_center(1) > 1.0-small_number) { // upper boundary
+                     cell->face(face)->set_boundary_indicator(2);
+                  } else if (face_center(0) < small_number) {     // left boundary
+                     cell->face(face)->set_boundary_indicator(3);
+                  } else {
+                     // all faces should have satisfied one of the conditions
+                     Assert(false,ExcInternalError());
+                  }
+               }
+         // set boundary conditions type for each boundary and component
+         this->boundary_types.resize(this->n_boundaries);
+         for (unsigned int boundary = 0; boundary < this->n_boundaries; ++boundary) {
+            this->boundary_types[boundary].resize(this->n_components);
+            for (unsigned int component = 0; component < this->n_components; ++component) {
+               this->boundary_types[boundary][component] = ConservationLaw<dim>::dirichlet;
+            }
+         }
+         this->dirichlet_function_strings.resize(this->n_components);
+         this->dirichlet_function_strings[0] = "if(x<0.5,1.0,0.001)";   // BC for density
+         this->dirichlet_function_strings[1] = "0";                     // BC for x-momentum
+         this->dirichlet_function_strings[2] = "if(x<0.5,0.1,1.0e-10)"; // BC for energy
+         this->use_exact_solution_as_BC = false;
+         // initial conditions
+         this->initial_conditions_strings[0] = "1";                     // IC for density
+         this->initial_conditions_strings[1] = "-x/sqrt(x^2+y^2)";      // IC for x-momentum
+         this->initial_conditions_strings[2] = "-y/sqrt(x^2+y^2)";      // IC for x-momentum
+         this->initial_conditions_strings[3] = "1e-9/(5.0/3.0-1)+0.5";  // IC for energy
+         // exact solution
+         this->has_exact_solution = true;
+         this->exact_solution_strings[0] = "if(sqrt(x^2+y^2)<t/3.0,16,1)"; // density
+         this->exact_solution_strings[1] = "if(sqrt(x^2+y^2)<t/3.0,0,-x/sqrt(x^2+y^2))"; // mx
+         this->exact_solution_strings[2] = "if(sqrt(x^2+y^2)<t/3.0,0,-y/sqrt(x^2+y^2))"; // my
+         this->exact_solution_strings[3] = "if(sqrt(x^2+y^2)<t/3.0,16.0/3.0/(5.0/3.0-1),";
+         this->exact_solution_strings[3] += "1e-9/(5.0/3.0-1)+0.5)"; // energy
+         // physical constants
+         gamma = 5.0/3.0;
+         break;
+      }
       default:
          Assert(false,ExcNotImplemented());
          break;
