@@ -20,8 +20,6 @@ ConservationLaw<dim>::ConservationLaw(const ConservationLawParameters<dim> &para
    face_quadrature(n_q_points_per_dim),
    n_q_points_cell(cell_quadrature.size()),
    n_q_points_face(face_quadrature.size()),
-   dirichlet_function_strings(params.n_components),
-   dirichlet_function        (params.n_components),
    initial_conditions_strings (params.n_components),
    initial_conditions_function(params.n_components),
    exact_solution_strings (params.n_components),
@@ -137,10 +135,11 @@ void ConservationLaw<dim>::initialize_system()
 
    // initialize Dirichlet boundary functions if needed
    if (at_least_one_dirichlet_BC && !(use_exact_solution_as_BC))
-      dirichlet_function.initialize(FunctionParser<dim>::default_variable_names(),
-                                    dirichlet_function_strings,
-                                    constants,
-                                    true);
+      for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
+         dirichlet_function[boundary].initialize(FunctionParser<dim>::default_variable_names(),
+                                       dirichlet_function_strings[boundary],
+                                       constants,
+                                       true);
 
    // initialize exact solution function if there is one
    if (has_exact_solution)
@@ -371,10 +370,10 @@ void ConservationLaw<dim>::setup_system ()
                                                          constraints,
                                                          component_mask);
             } else {
-               dirichlet_function.set_time(0.0);
+               dirichlet_function[boundary].set_time(0.0);
                VectorTools::interpolate_boundary_values (dof_handler,
                                                          boundary,
-                                                         dirichlet_function,
+                                                         dirichlet_function[boundary],
                                                          constraints,
                                                          component_mask);
             }
@@ -527,10 +526,10 @@ void ConservationLaw<dim>::apply_Dirichlet_BC(const double &time)
                                                          boundary_values,
                                                          component_mask);
             } else {
-               dirichlet_function.set_time(time);
+               dirichlet_function[boundary].set_time(time);
                VectorTools::interpolate_boundary_values (dof_handler,
                                                          boundary,
-                                                         dirichlet_function,
+                                                         dirichlet_function[boundary],
                                                          boundary_values,
                                                          component_mask);
             }

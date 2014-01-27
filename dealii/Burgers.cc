@@ -74,8 +74,9 @@ void Burgers<dim>::define_problem()
          this->boundary_types.resize(this->n_boundaries);
          this->boundary_types[0].resize(this->n_components);
          this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
-         this->dirichlet_function_strings.resize(this->n_components);
-         this->dirichlet_function_strings[0] = "0";
+         this->dirichlet_function_strings.resize(this->n_boundaries);
+         this->dirichlet_function_strings[0].resize(this->n_components);
+         this->dirichlet_function_strings[0][0] = "0";
          this->use_exact_solution_as_BC = false;
          // initial conditions
          this->initial_conditions_strings[0] = "sin(2*pi*x)";

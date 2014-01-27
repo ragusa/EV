@@ -187,9 +187,9 @@ class ConservationLaw
     /** vector of types of boundary condition for each boundary indicator and component */
     std::vector<std::vector<BoundaryType> > boundary_types;
     /** vector of Dirichlet BC function strings, which will be parsed */
-    std::vector<std::string>  dirichlet_function_strings;
+    std::vector<std::vector<std::string> >  dirichlet_function_strings;
     /** vector of Dirichlet BC functions created from parsed strings */
-    FunctionParser<dim>       dirichlet_function;
+    std::vector<FunctionParser<dim> >       dirichlet_function;
     /** option to use exact solution function as Dirichlet BC */
     bool use_exact_solution_as_BC;
     /** option to skip computing the face residual if Dirichlet BCs used at

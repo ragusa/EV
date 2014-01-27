@@ -87,6 +87,8 @@ void Euler<dim>::define_problem()
          this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet; // density has Dirichlet BC
          this->boundary_types[0][1] = ConservationLaw<dim>::dirichlet; // x-momentum has Dirichlet BC
          this->boundary_types[0][2] = ConservationLaw<dim>::dirichlet; // energy has Dirichlet BC
+         this->dirichlet_function_strings.resize(this->n_boundaries);
+         for (unsigned int boundary = 0; boundary < this->n_boundaries; ++boundary) {
          this->dirichlet_function_strings.resize(this->n_components);
          this->dirichlet_function_strings[0] = "if(x<0.5,1.0,0.125)"; // BC for density
          this->dirichlet_function_strings[1] = "0";                   // BC for x-momentum
