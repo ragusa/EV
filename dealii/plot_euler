@@ -1,22 +1,25 @@
-#!/bin/csh
+#!/bin/bash
 cd output
 
-if ( -f density.pdf ) then
+if [ -f density.pdf ]
+then
    echo "Removing density.pdf..."
    rm density.pdf
-endif
+fi
 gnuplot ../plotscripts/density.gp
 
-if ( -f momentum.pdf ) then
+if [ -f momentum.pdf ]
+then
    echo "Removing momentum.pdf..."
    rm momentum.pdf
-endif
+fi
 gnuplot ../plotscripts/momentum.gp
 
-if ( -f energy.pdf ) then
+if [ -f energy.pdf ]
+then
    echo "Removing energy.pdf..."
    rm energy.pdf
-endif
+fi
 gnuplot ../plotscripts/energy.gp
 
 cd ..
