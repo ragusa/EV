@@ -189,7 +189,7 @@ class ConservationLaw
     /** vector of Dirichlet BC function strings, which will be parsed */
     std::vector<std::vector<std::string> >  dirichlet_function_strings;
     /** vector of Dirichlet BC functions created from parsed strings */
-    std::vector<FunctionParser<dim> >       dirichlet_function;
+    std::vector<FunctionParser<dim>*>       dirichlet_function;
     /** option to use exact solution function as Dirichlet BC */
     bool use_exact_solution_as_BC;
     /** option to skip computing the face residual if Dirichlet BCs used at

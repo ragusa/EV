@@ -89,10 +89,11 @@ void Euler<dim>::define_problem()
          this->boundary_types[0][2] = ConservationLaw<dim>::dirichlet; // energy has Dirichlet BC
          this->dirichlet_function_strings.resize(this->n_boundaries);
          for (unsigned int boundary = 0; boundary < this->n_boundaries; ++boundary) {
-         this->dirichlet_function_strings.resize(this->n_components);
-         this->dirichlet_function_strings[0] = "if(x<0.5,1.0,0.125)"; // BC for density
-         this->dirichlet_function_strings[1] = "0";                   // BC for x-momentum
-         this->dirichlet_function_strings[2] = "if(x<0.5,2.5,0.25)";  // BC for energy
+            this->dirichlet_function_strings[boundary].resize(this->n_components);
+            this->dirichlet_function_strings[boundary][0] = "if(x<0.5,1.0,0.125)"; // BC for density
+            this->dirichlet_function_strings[boundary][1] = "0";                   // BC for x-momentum
+            this->dirichlet_function_strings[boundary][2] = "if(x<0.5,2.5,0.25)";  // BC for energy
+         }
          this->use_exact_solution_as_BC = false;
          // initial conditions
          this->initial_conditions_strings[0] = "if(x<0.5,1.0,0.125)"; // IC for density
@@ -103,7 +104,7 @@ void Euler<dim>::define_problem()
          // physical constants
          gamma = 1.4;
          break;
-      }
+      }/*
       case 1: // 1-D Leblanc tube problem
       {
          Assert(dim==1,ExcImpossibleInDim(dim));
@@ -126,10 +127,13 @@ void Euler<dim>::define_problem()
          this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet; // density has Dirichlet BC
          this->boundary_types[0][1] = ConservationLaw<dim>::dirichlet; // x-momentum has Dirichlet BC
          this->boundary_types[0][2] = ConservationLaw<dim>::dirichlet; // energy has Dirichlet BC
-         this->dirichlet_function_strings.resize(this->n_components);
-         this->dirichlet_function_strings[0] = "if(x<0.5,1.0,0.001)";   // BC for density
-         this->dirichlet_function_strings[1] = "0";                     // BC for x-momentum
-         this->dirichlet_function_strings[2] = "if(x<0.5,0.1,1.0e-10)"; // BC for energy
+         this->dirichlet_function_strings.resize(this->n_boundaries);
+         for (unsigned int boundary = 0; boundary < this->n_boundaries; ++boundary) {
+            this->dirichlet_function_strings.resize(this->n_components);
+            this->dirichlet_function_strings[boundary][0] = "if(x<0.5,1.0,0.001)";   // BC for density
+            this->dirichlet_function_strings[boundary][1] = "0";                     // BC for x-momentum
+            this->dirichlet_function_strings[boundary][2] = "if(x<0.5,0.1,1.0e-10)"; // BC for energy
+         }
          this->use_exact_solution_as_BC = false;
          // initial conditions
          this->initial_conditions_strings[0] = "if(x<0.5,1.0,0.001)";   // IC for density
@@ -199,10 +203,12 @@ void Euler<dim>::define_problem()
          // physical constants
          gamma = 5.0/3.0;
          break;
-      }
+      }*/
       default:
+      {
          Assert(false,ExcNotImplemented());
          break;
+      }
    }
 }
 
