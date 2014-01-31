@@ -246,8 +246,10 @@ void Euler<dim>::define_problem()
          break;
       }
       default:
+      {
          Assert(false,ExcNotImplemented());
          break;
+      }
    }
 }
 
