@@ -82,17 +82,20 @@ void Euler<dim>::define_problem()
                if (cell->face(face)->at_boundary())
                   cell->face(face)->set_boundary_indicator(0);
 
+         // set boundary conditions type for each boundary and component
          this->boundary_types.resize(this->n_boundaries);
          this->boundary_types[0].resize(this->n_components);
          this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet; // density has Dirichlet BC
          this->boundary_types[0][1] = ConservationLaw<dim>::dirichlet; // x-momentum has Dirichlet BC
          this->boundary_types[0][2] = ConservationLaw<dim>::dirichlet; // energy has Dirichlet BC
+         // set function strings to be parsed for dirichlet boundary condition functions
          this->dirichlet_function_strings.resize(this->n_boundaries);
          for (unsigned int boundary = 0; boundary < this->n_boundaries; ++boundary) {
-         this->dirichlet_function_strings.resize(this->n_components);
-         this->dirichlet_function_strings[0] = "if(x<0.5,1.0,0.125)"; // BC for density
-         this->dirichlet_function_strings[1] = "0";                   // BC for x-momentum
-         this->dirichlet_function_strings[2] = "if(x<0.5,2.5,0.25)";  // BC for energy
+            this->dirichlet_function_strings[boundary].resize(this->n_components);
+            this->dirichlet_function_strings[boundary][0] = "if(x<0.5,1.0,0.125)"; // BC for density
+            this->dirichlet_function_strings[boundary][1] = "0";                   // BC for x-momentum
+            this->dirichlet_function_strings[boundary][2] = "if(x<0.5,2.5,0.25)";  // BC for energy
+         }
          this->use_exact_solution_as_BC = false;
          // initial conditions
          this->initial_conditions_strings[0] = "if(x<0.5,1.0,0.125)"; // IC for density
@@ -121,15 +124,20 @@ void Euler<dim>::define_problem()
                if (cell->face(face)->at_boundary())
                   cell->face(face)->set_boundary_indicator(0);
 
+         // set boundary conditions type for each boundary and component
          this->boundary_types.resize(this->n_boundaries);
          this->boundary_types[0].resize(this->n_components);
          this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet; // density has Dirichlet BC
          this->boundary_types[0][1] = ConservationLaw<dim>::dirichlet; // x-momentum has Dirichlet BC
          this->boundary_types[0][2] = ConservationLaw<dim>::dirichlet; // energy has Dirichlet BC
-         this->dirichlet_function_strings.resize(this->n_components);
-         this->dirichlet_function_strings[0] = "if(x<0.5,1.0,0.001)";   // BC for density
-         this->dirichlet_function_strings[1] = "0";                     // BC for x-momentum
-         this->dirichlet_function_strings[2] = "if(x<0.5,0.1,1.0e-10)"; // BC for energy
+         // set function strings to be parsed for dirichlet boundary condition functions
+         this->dirichlet_function_strings.resize(this->n_boundaries);
+         for (unsigned int boundary = 0; boundary < this->n_boundaries; ++boundary) {
+            this->dirichlet_function_strings[boundary].resize(this->n_components);
+            this->dirichlet_function_strings[boundary][0] = "if(x<0.5,1.0,0.001)";   // BC for density
+            this->dirichlet_function_strings[boundary][1] = "0";                     // BC for x-momentum
+            this->dirichlet_function_strings[boundary][2] = "if(x<0.5,0.1,1.0e-10)"; // BC for energy
+         }
          this->use_exact_solution_as_BC = false;
          // initial conditions
          this->initial_conditions_strings[0] = "if(x<0.5,1.0,0.001)";   // IC for density
@@ -173,16 +181,53 @@ void Euler<dim>::define_problem()
                }
          // set boundary conditions type for each boundary and component
          this->boundary_types.resize(this->n_boundaries);
+         this->dirichlet_function_strings.resize(this->n_boundaries);
          for (unsigned int boundary = 0; boundary < this->n_boundaries; ++boundary) {
-            this->boundary_types[boundary].resize(this->n_components);
-            for (unsigned int component = 0; component < this->n_components; ++component) {
-               this->boundary_types[boundary][component] = ConservationLaw<dim>::dirichlet;
+            this->boundary_types[boundary]            .resize(this->n_components);
+            this->dirichlet_function_strings[boundary].resize(this->n_components);
+            switch (boundary)
+            {
+               case 0: // y = 0 boundary
+               {
+                  // all are reflective (zero Neumann)
+                  for (unsigned int component = 0; component < this->n_components; ++component)
+                     boundary_types[boundary][component] = ConservationLaw<dim>::neumann;
+               }
+               case 1: // x = 1 boundary
+               {
+                  // all are Dirichlet
+                  for (unsigned int component = 0; component < this->n_components; ++component)
+                     boundary_types[boundary][component] = ConservationLaw<dim>::dirichlet;
+                  this->dirichlet_function_strings[boundary][0] = "if(sqrt(x^2+y^2)<t/3.0,16,1)"; // density
+                  this->dirichlet_function_strings[boundary][1] = "if(sqrt(x^2+y^2)<t/3.0,0,-x/sqrt(x^2+y^2))"; // mx
+                  this->dirichlet_function_strings[boundary][2] = "if(sqrt(x^2+y^2)<t/3.0,0,-y/sqrt(x^2+y^2))"; // my
+                  this->dirichlet_function_strings[boundary][3] = "if(sqrt(x^2+y^2)<t/3.0,16.0/3.0/(5.0/3.0-1),";
+                  this->dirichlet_function_strings[boundary][3] += "1e-9/(5.0/3.0-1)+0.5)"; // energy
+               }
+               case 2: // y = 1 boundary
+               {
+                  // all are Dirichlet
+                  for (unsigned int component = 0; component < this->n_components; ++component)
+                     boundary_types[boundary][component] = ConservationLaw<dim>::dirichlet;
+                  this->dirichlet_function_strings[boundary][0] = "if(sqrt(x^2+y^2)<t/3.0,16,1)"; // density
+                  this->dirichlet_function_strings[boundary][1] = "if(sqrt(x^2+y^2)<t/3.0,0,-x/sqrt(x^2+y^2))"; // mx
+                  this->dirichlet_function_strings[boundary][2] = "if(sqrt(x^2+y^2)<t/3.0,0,-y/sqrt(x^2+y^2))"; // my
+                  this->dirichlet_function_strings[boundary][3] = "if(sqrt(x^2+y^2)<t/3.0,16.0/3.0/(5.0/3.0-1),";
+                  this->dirichlet_function_strings[boundary][3] += "1e-9/(5.0/3.0-1)+0.5)"; // energy
+               }
+               case 3: // x = 0 boundary
+               {
+                  // all are reflective (zero Neumann)
+                  for (unsigned int component = 0; component < this->n_components; ++component)
+                     boundary_types[boundary][component] = ConservationLaw<dim>::neumann;
+               }
+               default:
+               {
+                  Assert(false,ExcInternalError());
+                  break;
+               }
             }
          }
-         this->dirichlet_function_strings.resize(this->n_components);
-         this->dirichlet_function_strings[0] = "if(x<0.5,1.0,0.001)";   // BC for density
-         this->dirichlet_function_strings[1] = "0";                     // BC for x-momentum
-         this->dirichlet_function_strings[2] = "if(x<0.5,0.1,1.0e-10)"; // BC for energy
          this->use_exact_solution_as_BC = false;
          // initial conditions
          this->initial_conditions_strings[0] = "1";                     // IC for density
