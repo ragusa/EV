@@ -185,6 +185,10 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters (Parame
                         "true",
                         Patterns::Bool(),
                         "option to output the viscosity to a file");
+      prm.declare_entry("output exact solution",
+                        "true",
+                        Patterns::Bool(),
+                        "option to output the exact solution if it exists");
    }
    prm.leave_subsection();
 }
@@ -336,6 +340,7 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
       output_period = prm.get_integer("output period");
       output_mass_matrix = prm.get_bool("output mass matrix");
       output_viscosity = prm.get_bool("output viscosity");
+      output_exact_solution = prm.get_bool("output exact solution");
    }
    prm.leave_subsection();
 }

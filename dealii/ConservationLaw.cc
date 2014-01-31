@@ -26,6 +26,23 @@ ConservationLaw<dim>::ConservationLaw(const ConservationLawParameters<dim> &para
    exact_solution_function(params.n_components)
 {}
 
+/** \fn ConservationLaw<dim>::~ConservationLaw()
+ *  \brief Destructor for ConservationLaw class.
+ */
+template <int dim>
+ConservationLaw<dim>::~ConservationLaw()
+{
+   // release dynamically allocated memory for FunctionParser objects
+   // for some reason, this release of memory causes a segmentation fault;
+   // for the meantime it will be commented out, even though this will cause
+   // a small memory leak
+   /*
+   for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
+      delete dirichlet_function[boundary];
+   */
+
+}
+
 /** \fn void ConservationLaw<dim>::run()
  *  \brief Runs the entire program.
  *
@@ -68,7 +85,8 @@ void ConservationLaw<dim>::run()
       // set old solution to the current solution
       old_solution = current_solution;
       // output initial solution
-      output_solution();
+      if (in_final_cycle)
+         output_solution();
    
       // solve transient with selected time integrator
       switch (conservation_law_parameters.temporal_integrator)
@@ -81,10 +99,6 @@ void ConservationLaw<dim>::run()
              break;
       }
    } // end of adaptive refinement loop; only output remains.
-
-   // release dynamically allocated memory
-   for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
-      delete dirichlet_function[boundary];
 
    // output final viscosities if non-constant viscosity used
    switch (conservation_law_parameters.viscosity_type)
@@ -143,6 +157,7 @@ void ConservationLaw<dim>::initialize_system()
       dirichlet_function.resize(n_boundaries);
       for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
       {
+         //dirichlet_function[boundary] = std::unique_ptr<FunctionParser<dim> >(new FunctionParser<dim>(n_components));
          dirichlet_function[boundary] = new FunctionParser<dim>(n_components);
          dirichlet_function[boundary]->initialize(FunctionParser<dim>::default_variable_names(),
                                                     dirichlet_function_strings[boundary],
@@ -818,13 +833,18 @@ void ConservationLaw<dim>::solve_runge_kutta()
       {
          if (n >= next_time_step_output)
          {
-            output_solution ();
+            if (in_final_cycle)
+               // output solution
+               output_solution();
+            // determine when next output will occur
             next_time_step_output += conservation_law_parameters.output_period;
          }
       }
       else
-         if (!(final_time_not_reached))
-            output_solution();
+         if (!(final_time_not_reached)) // if final time has been reached
+            if (in_final_cycle)
+               // output solution
+               output_solution();
 
       check_nan();
 

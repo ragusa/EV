@@ -33,6 +33,7 @@ class ConservationLawParameters
     unsigned int output_period;
     bool output_mass_matrix;
     bool output_viscosity;
+    bool output_exact_solution;
   
     enum TemporalIntegrator { runge_kutta };
     TemporalIntegrator temporal_integrator;

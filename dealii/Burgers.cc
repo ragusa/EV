@@ -465,38 +465,33 @@ void Burgers<dim>::compute_divergence_entropy_flux (const Vector<double> &soluti
 template <int dim>
 void Burgers<dim>::output_solution () const
 {
-   if (this->in_final_cycle)
+   DataOut<dim> data_out;
+   data_out.attach_dof_handler (this->dof_handler);
+
+   data_out.add_data_vector (this->current_solution,
+                             this->component_names,
+                             DataOut<dim>::type_dof_data,
+                             this->component_interpretations);
+
+   data_out.build_patches ();
+
+   static unsigned int output_file_number = 0;
+   if (dim == 1)
    {
-      DataOut<dim> data_out;
-      data_out.attach_dof_handler (this->dof_handler);
-   
-      data_out.add_data_vector (this->current_solution,
-                                this->component_names,
-                                DataOut<dim>::type_dof_data,
-                                this->component_interpretations);
-   
-      data_out.add_data_vector (this->current_solution, "current_solution");
-   
-      data_out.build_patches ();
-   
-      static unsigned int output_file_number = 0;
-      if (dim == 1)
-      {
-         std::string filename = "output/solution-" +
-                                Utilities::int_to_string (output_file_number, 3) +
-                                ".gpl";
-         std::ofstream output (filename.c_str());
-         data_out.write_gnuplot (output);
-      }
-      else
-      {
-         std::string filename = "output/solution-" +
-                                Utilities::int_to_string (output_file_number, 3) +
-                                ".vtk";
-         std::ofstream output (filename.c_str());
-         data_out.write_vtk (output);
-      }
-   
-      ++output_file_number;
+      std::string filename = "output/solution-" +
+                             Utilities::int_to_string (output_file_number, 3) +
+                             ".gpl";
+      std::ofstream output (filename.c_str());
+      data_out.write_gnuplot (output);
    }
+   else
+   {
+      std::string filename = "output/solution-" +
+                             Utilities::int_to_string (output_file_number, 3) +
+                             ".vtk";
+      std::ofstream output (filename.c_str());
+      data_out.write_vtk (output);
+   }
+
+   ++output_file_number;
 }

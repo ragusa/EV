@@ -894,101 +894,96 @@ void Euler<dim>::compute_divergence_entropy_flux (const Vector<double> &solution
 template <int dim>
 void Euler<dim>::output_solution () const
 {
-   if (this->in_final_cycle)
+   DataOut<dim> data_out;
+   data_out.attach_dof_handler (this->dof_handler);
+
+   data_out.add_data_vector (this->current_solution,
+      this->component_names,
+      DataOut<dim>::type_dof_data,
+      this->component_interpretations);
+
+   data_out.build_patches ();
+
+   // number used in output file name for different times
+   static unsigned int output_file_number = 0;
+
+   if (dim == 1)
    {
-      DataOut<dim> data_out;
-      data_out.attach_dof_handler (this->dof_handler);
+      std::string filename = "output/solution-" +
+         Utilities::int_to_string (output_file_number, 3) +
+         ".gpl";
+      std::ofstream output (filename.c_str());
 
-      data_out.add_data_vector (this->current_solution,
-         this->component_names,
-         DataOut<dim>::type_dof_data,
-         this->component_interpretations);
+      unsigned int n_cells = this->triangulation.n_active_cells();
+      unsigned int total_n_q_points = n_cells * this->n_q_points_cell;
 
-      data_out.add_data_vector (this->current_solution, "current_solution");
+      // profiles for each solution variable
+      std::vector<std::pair<double,double> > density_profile  (total_n_q_points);
+      std::vector<std::pair<double,double> > momentum_profile (total_n_q_points);
+      std::vector<std::pair<double,double> > energy_profile   (total_n_q_points);
 
-      data_out.build_patches ();
+      // solution variables at each quadrature point in cell
+      std::vector<double>         density  (this->n_q_points_cell);
+      std::vector<Tensor<1,dim> > momentum (this->n_q_points_cell);
+      std::vector<double>         energy   (this->n_q_points_cell);
 
-      // number used in output file name for different times
-      static unsigned int output_file_number = 0;
-
-      if (dim == 1)
+      // loop over cells
+      FEValues<dim> fe_values (this->fe, this->cell_quadrature, update_values | update_quadrature_points);
+      unsigned int i = 0;
+      typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler.begin_active(),
+         endc = this->dof_handler.end();
+      for (; cell != endc; ++cell)
       {
-         std::string filename = "output/solution-" +
-            Utilities::int_to_string (output_file_number, 3) +
-            ".gpl";
-         std::ofstream output (filename.c_str());
+         fe_values.reinit(cell);
+         fe_values[density_extractor].get_function_values  (this->current_solution, density);
+         fe_values[momentum_extractor].get_function_values (this->current_solution, momentum);
+         fe_values[energy_extractor].get_function_values   (this->current_solution, energy);
 
-         unsigned int n_cells = this->triangulation.n_active_cells();
-         unsigned int total_n_q_points = n_cells * this->n_q_points_cell;
-
-         // profiles for each solution variable
-         std::vector<std::pair<double,double> > density_profile  (total_n_q_points);
-         std::vector<std::pair<double,double> > momentum_profile (total_n_q_points);
-         std::vector<std::pair<double,double> > energy_profile   (total_n_q_points);
-
-         // solution variables at each quadrature point in cell
-         std::vector<double>         density  (this->n_q_points_cell);
-         std::vector<Tensor<1,dim> > momentum (this->n_q_points_cell);
-         std::vector<double>         energy   (this->n_q_points_cell);
-
-         // loop over cells
-         FEValues<dim> fe_values (this->fe, this->cell_quadrature, update_values | update_quadrature_points);
-         unsigned int i = 0;
-         typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler.begin_active(),
-            endc = this->dof_handler.end();
-         for (; cell != endc; ++cell)
+         for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
          {
-            fe_values.reinit(cell);
-            fe_values[density_extractor].get_function_values  (this->current_solution, density);
-            fe_values[momentum_extractor].get_function_values (this->current_solution, momentum);
-            fe_values[energy_extractor].get_function_values   (this->current_solution, energy);
-
-            for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-            {
-               // pair the solution with its x-value
-               const Point<dim> q_point = fe_values.quadrature_point(q);
-               density_profile[i]  = std::make_pair(q_point(0), density[q]);
-               momentum_profile[i] = std::make_pair(q_point(0), momentum[q][0]);
-               energy_profile[i]   = std::make_pair(q_point(0), energy[q]);
-               ++i;
-            }
+            // pair the solution with its x-value
+            const Point<dim> q_point = fe_values.quadrature_point(q);
+            density_profile[i]  = std::make_pair(q_point(0), density[q]);
+            momentum_profile[i] = std::make_pair(q_point(0), momentum[q][0]);
+            energy_profile[i]   = std::make_pair(q_point(0), energy[q]);
+            ++i;
          }
-
-         // sort data by quadrature point
-         std::sort(density_profile.begin(),  density_profile.end());
-         std::sort(momentum_profile.begin(), momentum_profile.end());
-         std::sort(energy_profile.begin(),   energy_profile.end());
-
-         // output vector to file
-         std::ofstream density_output;
-         std::ofstream momentum_output;
-         std::ofstream energy_output;
-         std::string density_file  = "output/density-"  + Utilities::int_to_string (output_file_number, 3) + ".csv";
-         std::string momentum_file = "output/momentum-" + Utilities::int_to_string (output_file_number, 3) + ".csv";
-         std::string energy_file   = "output/energy-"   + Utilities::int_to_string (output_file_number, 3) + ".csv";
-         density_output.open  (density_file.c_str(),  std::ios::out);
-         momentum_output.open (momentum_file.c_str(), std::ios::out);
-         energy_output.open   (energy_file.c_str(),   std::ios::out);
-         for (i = 0; i < total_n_q_points; ++i)
-         {
-            density_output  << density_profile[i].first  << "," << density_profile[i].second  << std::endl;
-            momentum_output << momentum_profile[i].first << "," << momentum_profile[i].second << std::endl;
-            energy_output   << energy_profile[i].first   << "," << energy_profile[i].second   << std::endl;
-         }
-         density_output.close();
-         momentum_output.close();
-         energy_output.close();
-
-      }
-      else
-      {
-         std::string filename = "output/solution-" +
-            Utilities::int_to_string (output_file_number, 3) +
-            ".vtk";
-         std::ofstream output (filename.c_str());
-         data_out.write_vtk (output);
       }
 
-      ++output_file_number;
+      // sort data by quadrature point
+      std::sort(density_profile.begin(),  density_profile.end());
+      std::sort(momentum_profile.begin(), momentum_profile.end());
+      std::sort(energy_profile.begin(),   energy_profile.end());
+
+      // output vector to file
+      std::ofstream density_output;
+      std::ofstream momentum_output;
+      std::ofstream energy_output;
+      std::string density_file  = "output/density-"  + Utilities::int_to_string (output_file_number, 3) + ".csv";
+      std::string momentum_file = "output/momentum-" + Utilities::int_to_string (output_file_number, 3) + ".csv";
+      std::string energy_file   = "output/energy-"   + Utilities::int_to_string (output_file_number, 3) + ".csv";
+      density_output.open  (density_file.c_str(),  std::ios::out);
+      momentum_output.open (momentum_file.c_str(), std::ios::out);
+      energy_output.open   (energy_file.c_str(),   std::ios::out);
+      for (i = 0; i < total_n_q_points; ++i)
+      {
+         density_output  << density_profile[i].first  << "," << density_profile[i].second  << std::endl;
+         momentum_output << momentum_profile[i].first << "," << momentum_profile[i].second << std::endl;
+         energy_output   << energy_profile[i].first   << "," << energy_profile[i].second   << std::endl;
+      }
+      density_output.close();
+      momentum_output.close();
+      energy_output.close();
+
    }
+   else
+   {
+      std::string filename = "output/solution-" +
+         Utilities::int_to_string (output_file_number, 3) +
+         ".vtk";
+      std::ofstream output (filename.c_str());
+      data_out.write_vtk (output);
+   }
+
+   ++output_file_number;
 }

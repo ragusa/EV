@@ -60,6 +60,7 @@ class ConservationLaw
   public:
 
     ConservationLaw (const ConservationLawParameters<dim> &params);
+    ~ConservationLaw();
     void run();
 
   protected:
@@ -183,7 +184,7 @@ class ConservationLaw
     /** number of boundaries */
     unsigned int n_boundaries;
     /** enumeration for types of boundary conditions */
-    enum BoundaryType {dirichlet};
+    enum BoundaryType {dirichlet,neumann};
     /** vector of types of boundary condition for each boundary indicator and component */
     std::vector<std::vector<BoundaryType> > boundary_types;
     /** vector of Dirichlet BC function strings, which will be parsed */
