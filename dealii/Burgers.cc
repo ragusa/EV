@@ -141,88 +141,115 @@ void Burgers<dim>::define_problem()
    }
 }
 
-/** \fn void Burgers<dim>::compute_cell_ss_residual()
- *  \brief Computes the contribution of the steady-state residual
- *         from the current cell.
- *  \param fe_values FEValues object.
- *  \param cell current cell.
- *  \param cell_residual residual contribution for the current cell, to be aggregated into the global residual.
+/** \fn Burgers<dim>::compute_ss_residual(Vector<double> &f)
+ *  \brief Computes the steady-state residual.
+ *
+ *  This function computes the steady-state residual \f$\mathbf{f_{ss}}\f$ for the conservation law
+ *  \f[
+ *    \frac{\partial\mathbf{u}}{\partial t} 
+ *    + \nabla \cdot \mathbf{f}(\mathbf{u}) = \mathbf{g}(\mathbf{u}),
+ *  \f]
+ *  which for component \f$i\f$ is
+ *  \f[
+ *    \mathbf{f_{ss}} = (\mathbf{\psi}, -\nabla \cdot \mathbf{f}(\mathbf{u}) + \mathbf{g}(\mathbf{u}))_\Omega.
+ *  \f]
+ *  For vicous Burgers' equation, this is the following:
+ *  \f[
+ *    \mathbf{f_{ss}} = -(\mathbf{\psi},u u_x)_\Omega + (\mathbf{\psi},\nu u_{xx})_\Omega .
+ *  \f]
+ *  After integration by parts, this is
+ *  \f[
+ *    \mathbf{f_{ss}} = -(\mathbf{\psi},u u_x)_\Omega - (\mathbf{{\psi}_x},\nu u_{x})_\Omega 
+ *    + (\mathbf{\psi},\nu u_{x})_{\partial\Omega}.
+ *  \f]
+ *  \param f steady-state residual
  */
 template <int dim>
-void Burgers<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
-                                            const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                            Vector<double> &cell_residual)
+void Burgers<dim>::compute_ss_residual(Vector<double> &f)
 {
-   // reinitialize fe values for cell
-   fe_values.reinit(cell);
+   // reset vector
+   f = 0.0;
 
-   // get current solution values and gradients
+   FEValues<dim> fe_values(this->fe, this->cell_quadrature, update_values | update_gradients | update_JxW_values);
+
+   Vector<double> cell_residual(this->dofs_per_cell);
+   std::vector<unsigned int> local_dof_indices (this->dofs_per_cell);
    std::vector<double>          solution_values   (this->n_q_points_cell);
    std::vector<Tensor<1, dim> > solution_gradients(this->n_q_points_cell);
-   fe_values[velocity_extractor].get_function_values   (this->current_solution,solution_values);
-   fe_values[velocity_extractor].get_function_gradients(this->current_solution,solution_gradients);
+   std::vector<Tensor<1, dim> > dfdu              (this->n_q_points_cell);
 
-   // compute derivative of flux
-   std::vector<Tensor<1, dim> > dfdu(this->n_q_points_cell);
-   // loop over quadrature points
-   for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-      for (int d = 0; d < dim; ++d)
-         dfdu[q][d] = solution_values[q];
-   
-   // NEW VISCOSITY DEFINITION:
-   // ===========================================
-   /*
-   double nu_K = 0.0; // artificial viscosity in cell
-   double numerator;  // numerator of artificial viscosity
-   // compute cell volume
-   double cell_volume = 0.0;
-   for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-      cell_volume += fe_values.JxW(q);
-   // compute local bilinear form for artificial viscosity
-   double b_K = 1.0/(this->dofs_per_cell - 1.0)*cell_volume; // local bilinear form for i != j
-   
-   // loop over test functions
-   for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
-      // loop over interpolation functions
-      for (unsigned int j = 0; j < this->dofs_per_cell; ++j)
-         if (j != i)
-         {
-            numerator = 0.0;
-            // loop over quadrature points
-            for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-            {
-               numerator += dfdu[q]*fe_values[velocity_extractor].gradient(i,q)*
-                  fe_values[velocity_extractor].value(j,q)*fe_values.JxW(q);
-            }
-            nu_K = std::max(nu_K, std::abs(numerator)/(-1.0*b_K));
-         }
-   std::vector<unsigned int> local_dof_indices(this->dofs_per_cell);
-*/
-   // ===========================================
-
-   // loop over test functions
-   for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+   //============================================================================
+   // inviscid terms
+   //============================================================================
+   // loop over cells
+   typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler.begin_active(),
+                                                  endc = this->dof_handler.end();
+   for (; cell!=endc; ++cell)
    {
-   // ===========================================
-   /*
-      // compute local bilinear form b_K(u, phi_i) for artificial viscosity
-      double b_local = 0.0;
-      for (unsigned int j = 0; j < this->dofs_per_cell; ++j)
-         if (j != i)
-            b_local += this->current_solution(local_dof_indices[j])*b_K;
-      cell_residual(i) -= nu_K * b_local;
-*/
-   // ===========================================
+      // reset cell residual
+      cell_residual = 0;
+
+      // reinitialize fe values for cell
+      fe_values.reinit(cell);
+   
+      // get current solution values and gradients
+      fe_values[velocity_extractor].get_function_values   (this->current_solution,solution_values);
+      fe_values[velocity_extractor].get_function_gradients(this->current_solution,solution_gradients);
+      
       // loop over quadrature points
-      for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-         cell_residual(i) += (
-                               -fe_values[velocity_extractor].value(i,q)
-                                *dfdu[q]
-                                *solution_gradients[q]
-                               -fe_values[velocity_extractor].gradient(i,q)
-                                *this->viscosity_cell_q[cell](q)
-                                *solution_gradients[q]
-                             ) * fe_values.JxW(q);
+      for (unsigned int q = 0; q < this->n_q_points_cell; ++q) {
+         // compute derivative of flux
+         for (int d = 0; d < dim; ++d)
+            dfdu[q][d] = solution_values[q];
+         // loop over test functions
+         for (unsigned int i = 0; i < this->dofs_per_cell; ++i) {
+            cell_residual(i) +=   -fe_values[velocity_extractor].value(i,q)
+                                   *dfdu[q]
+                                   *solution_gradients[q]
+                                   * fe_values.JxW(q);
+         }
+      }
+
+      // aggregate local residual into global residual
+      cell->get_dof_indices(local_dof_indices);
+      this->constraints.distribute_local_to_global(cell_residual, local_dof_indices, f);
+   } // end cell loop
+
+   //============================================================================
+   // viscous terms
+   //============================================================================
+   // if using maximum-principle preserving artificial viscosity, add its bilinear form
+   // else use the usual viscous flux contribution
+   if (this->conservation_law_parameters.viscosity_type == ConservationLawParameters<dim>::first_order_2) {
+      this->add_maximum_principle_viscosity_bilinear_form(f);
+   } else {
+      // loop over cells
+      for (cell = this->dof_handler.begin_active(); cell!=endc; ++cell)
+      {
+         // reset cell residual
+         cell_residual = 0;
+   
+         // reinitialize fe values for cell
+         fe_values.reinit(cell);
+      
+         // get current solution gradients
+         fe_values[velocity_extractor].get_function_gradients(this->current_solution,solution_gradients);
+         
+         // loop over quadrature points
+         for (unsigned int q = 0; q < this->n_q_points_cell; ++q) {
+            // loop over test functions
+            for (unsigned int i = 0; i < this->dofs_per_cell; ++i) {
+               cell_residual(i) +=   -fe_values[velocity_extractor].gradient(i,q)
+                                      *this->viscosity_cell_q[cell](q)
+                                      *solution_gradients[q]
+                                      * fe_values.JxW(q);
+            }
+         }
+
+         // aggregate local residual into global residual
+         cell->get_dof_indices(local_dof_indices);
+         this->constraints.distribute_local_to_global(cell_residual, local_dof_indices, f);
+      } // end cell loop
    }
 }
 
@@ -233,6 +260,7 @@ void Burgers<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
  *  \param cell current cell.
  *  \param cell_residual residual contribution for the current cell, to be aggregated into the global residual.
  */
+/*
 template <int dim>
 void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                                             const typename DoFHandler<dim>::active_cell_iterator &cell,
@@ -294,6 +322,7 @@ void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
       }
    }
 }
+*/
 
 /** \fn void Burgers<dim>::compute_ss_Jacobian()
  *  \brief Computes the steady-state Jacobian matrix and stores in system_matrix.
@@ -459,14 +488,15 @@ void Burgers<dim>::compute_divergence_entropy_flux (const Vector<double> &soluti
    }
 }
 
-/** \fn void Burgers<dim>::output_solution() const
+/** \fn void Burgers<dim>::output_solution(double time) const
  *  \brief Outputs the solution to .vtk.
+ *  \param time the current time; used in exact solution function
  */
 template <int dim>
-void Burgers<dim>::output_solution () const
+void Burgers<dim>::output_solution (double time)
 {
    DataOut<dim> data_out;
-   data_out.attach_dof_handler (this->dof_handler);
+   data_out.attach_dof_handler       (this->dof_handler);
 
    data_out.add_data_vector (this->current_solution,
                              this->component_names,
@@ -478,19 +508,54 @@ void Burgers<dim>::output_solution () const
    static unsigned int output_file_number = 0;
    if (dim == 1)
    {
-      std::string filename = "output/solution-" +
+      std::string filename = "output/burgers-" +
                              Utilities::int_to_string (output_file_number, 3) +
                              ".gpl";
-      std::ofstream output (filename.c_str());
-      data_out.write_gnuplot (output);
+      std::ofstream output(filename.c_str());
+      data_out.write_gnuplot(output);
    }
    else
    {
-      std::string filename = "output/solution-" +
+      std::string filename = "output/burgers-" +
                              Utilities::int_to_string (output_file_number, 3) +
                              ".vtk";
-      std::ofstream output (filename.c_str());
-      data_out.write_vtk (output);
+      std::ofstream output(filename.c_str());
+      data_out.write_vtk(output);
+   }
+
+   // output exact solution if requested
+   if (this->conservation_law_parameters.output_exact_solution and
+      this->has_exact_solution)
+   {
+      // set time in exact solution function
+      this->exact_solution_function.set_time(time);
+      // compute exact solution
+      VectorTools::interpolate(this->dof_handler,this->exact_solution_function,this->exact_solution);
+
+      DataOut<dim> data_out_exact;
+      data_out_exact.attach_dof_handler (this->dof_handler);
+      data_out_exact.add_data_vector (this->exact_solution,
+                                      this->component_names,
+                                      DataOut<dim>::type_dof_data,
+                                      this->component_interpretations);
+      data_out_exact.build_patches ();
+
+      if (dim == 1)
+      {
+         std::string filename_exact = "output/burgers_exact-" +
+                                      Utilities::int_to_string (output_file_number, 3) +
+                                      ".gpl";
+         std::ofstream output_exact(filename_exact.c_str());
+         data_out_exact.write_gnuplot(output_exact);
+      }
+      else
+      {
+         std::string filename_exact = "output/burgers_exact-" +
+                                      Utilities::int_to_string (output_file_number, 3) +
+                                      ".vtk";
+         std::ofstream output_exact(filename_exact.c_str());
+         data_out_exact.write_vtk(output_exact);
+      }
    }
 
    ++output_file_number;

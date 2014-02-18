@@ -11,7 +11,7 @@ subsection problem
 end
 
 subsection refinement
-   set initial refinement level = 5
+   set initial refinement level = 6
    set refinement cycles = 1
    set refinement fraction = 0.5
    set coarsening fraction = 0.01
@@ -19,15 +19,15 @@ end
 
 subsection time
    # options are <constant_dt|cfl_condition>
-   set time step size method = cfl_condition
-   set final time = 0.25
+   set time step size method = constant_dt
+   set final time = 0.1 # 0.001
    set time step size = 0.001
-   set cfl = 0.5
+   set cfl = 0.1
 end
 
 subsection artificial viscosity
    # options are <none|constant|first_order_1|first_order_2|entropy>
-   set viscosity type = first_order_1
+   set viscosity type = first_order_2
    set constant viscosity value = 0.02
    set first order viscosity coefficient = 0.5
    set entropy viscosity coefficient = 2.0
@@ -39,7 +39,7 @@ subsection temporal integration
    # options are <runge_kutta>
    set temporal integrator = runge_kutta
    # options are <erk1|erk2|erk3|erk4|sdirk22>
-   set runge kutta method = sdirk22
+   set runge kutta method = erk1
 end
 
 # this section is not yet applicable
@@ -63,6 +63,6 @@ end
 
 subsection output
    set output period = 0
-   set output mass matrix = false
+   set output mass matrix = true
    set output viscosity = false
 end

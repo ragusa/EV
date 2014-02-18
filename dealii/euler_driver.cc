@@ -28,7 +28,7 @@ int main(int argc, char ** argv) {
       }
 
       // spatial dimensions
-      const int dimension = 1;
+      const int dimension = 2;
 
       // declare input parameters and read them from input file into parameter handler
       ParameterHandler parameter_handler;

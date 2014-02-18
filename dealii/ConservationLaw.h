@@ -11,6 +11,7 @@
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/function_parser.h>
+#include <deal.II/base/convergence_table.h>
 
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/sparse_matrix.h>
@@ -73,6 +74,7 @@ class ConservationLaw
     void update_cell_sizes();
     void assemble_mass_matrix();
     void solve_runge_kutta();
+    void compute_error(const unsigned int cycle);
 
     virtual void update_flux_speeds() = 0;
     double compute_dt_from_cfl_condition();
@@ -86,22 +88,17 @@ class ConservationLaw
 
     void apply_Dirichlet_BC(const double &time);
 
-    // steady state residual functions
-    void compute_ss_residual (Vector<double> &solution);
-    virtual void compute_cell_ss_residual(FEValues<dim> &fe_values,
-                                          const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                          Vector<double> &cell_residual) = 0;
-    virtual void compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
-                                          const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                          Vector<double> &cell_residual) = 0;
-
-    void compute_tr_residual(unsigned int i, double dt);
+    virtual void compute_ss_residual (Vector<double> &solution) = 0;
     virtual void compute_ss_jacobian() = 0;
+    void compute_tr_residual(unsigned int i, double dt);
 
     // viscosity functions
     void update_viscosities(const double &dt);
     void update_first_order_viscosities_1();
     void update_first_order_viscosities_2();
+    void compute_viscous_bilinear_forms();
+    void compute_viscous_fluxes();
+    void add_maximum_principle_viscosity_bilinear_form(Vector<double> &solution);
     void update_entropy_viscosities(const double &dt);
     void update_entropy_residuals(const double &dt);
     void update_jumps();
@@ -116,7 +113,7 @@ class ConservationLaw
                                                   Vector<double>       &divergence) const = 0;
 
     // output functions
-    virtual void output_solution() const = 0;
+    virtual void output_solution(double time) = 0;
     void output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > &map,
                     const std::string &output_filename_base);
     void output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, double> &map,
@@ -165,6 +162,8 @@ class ConservationLaw
     Vector<double>       current_solution;
     /** solution of previous time step */
     Vector<double>       old_solution;
+    /** exact solutuion of current time step */
+    Vector<double>       exact_solution;
     /** solution step in Newton loop; vector for temporary storage */
     Vector<double>       solution_step;
     /** current time */
@@ -174,12 +173,23 @@ class ConservationLaw
     /** system right-hand side */
     Vector<double>       system_rhs;
 
-    /* sparsity pattern */
-    SparsityPattern      sparsity_pattern;
+    /* constrained sparsity pattern */
+    SparsityPattern      constrained_sparsity_pattern;
+    /* unconstrained sparsity pattern */
+    SparsityPattern      unconstrained_sparsity_pattern;
     /* mass matrix */
     SparseMatrix<double> mass_matrix;
     /* system matrix; Jacobian matrix */
     SparseMatrix<double> system_matrix;
+    /** Matrix for the viscous bilinear forms, to be used in computing viscosity.
+        Each element of this matrix, \f$B_{i,j}\f$ is the following:
+        \f[
+           B_{i,j} = \sum_{K\subset S_{i,j}}b_K(\varphi_i,\varphi_j)
+        \f]
+    */
+    SparseMatrix<double> viscous_bilinear_forms;
+
+    SparseMatrix<double> viscous_fluxes;
 
     /** number of boundaries */
     unsigned int n_boundaries;
@@ -208,6 +218,8 @@ class ConservationLaw
     std::vector<std::string> exact_solution_strings;
     /** exact solution functions */
     FunctionParser<dim>      exact_solution_function;
+    /** convergence table for errors computed in each refinement cycle **/
+    ConvergenceTable convergence_table;
 
     /** vector of component names */
     std::vector<std::string> component_names;

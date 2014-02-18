@@ -160,22 +160,25 @@ void Euler<dim>::define_problem()
          // four boundaries: each side of unit square
          this->n_boundaries = 4;
          // set boundary indicators
+         double small_number = 1.0e-15;
          typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin(),
             endc = this->triangulation.end();
          for (; cell != endc; ++cell)
             for (unsigned int face = 0; face < this->faces_per_cell; ++face)
                if (cell->face(face)->at_boundary()) {
                   Point<dim> face_center = cell->face(face)->center();
-                  if (face_center(1) < small_number) {            // bottom boundary
+                  if (face_center(1) < small_number) {            // y = 0 boundary
                      cell->face(face)->set_boundary_indicator(0);
-                  } else if (face_center(0) > 1.0-small_number) { // right boundary
+                  } else if (face_center(0) > 1.0-small_number) { // x = 1 boundary
                      cell->face(face)->set_boundary_indicator(1);
-                  } else if (face_center(1) > 1.0-small_number) { // upper boundary
+                  } else if (face_center(1) > 1.0-small_number) { // y = 1 boundary
                      cell->face(face)->set_boundary_indicator(2);
-                  } else if (face_center(0) < small_number) {     // left boundary
+                  } else if (face_center(0) < small_number) {     // x = 0 boundary
                      cell->face(face)->set_boundary_indicator(3);
                   } else {
                      // all faces should have satisfied one of the conditions
+                     std::cout << "x = " << face_center(0) << std::endl;
+                     std::cout << "y = " << face_center(1) << std::endl;
                      Assert(false,ExcInternalError());
                   }
                }
@@ -191,38 +194,43 @@ void Euler<dim>::define_problem()
                {
                   // all are reflective (zero Neumann)
                   for (unsigned int component = 0; component < this->n_components; ++component)
-                     boundary_types[boundary][component] = ConservationLaw<dim>::neumann;
+                     this->boundary_types[boundary][component] = ConservationLaw<dim>::neumann;
+                  break;
                }
                case 1: // x = 1 boundary
                {
                   // all are Dirichlet
                   for (unsigned int component = 0; component < this->n_components; ++component)
-                     boundary_types[boundary][component] = ConservationLaw<dim>::dirichlet;
+                     this->boundary_types[boundary][component] = ConservationLaw<dim>::dirichlet;
                   this->dirichlet_function_strings[boundary][0] = "if(sqrt(x^2+y^2)<t/3.0,16,1)"; // density
                   this->dirichlet_function_strings[boundary][1] = "if(sqrt(x^2+y^2)<t/3.0,0,-x/sqrt(x^2+y^2))"; // mx
                   this->dirichlet_function_strings[boundary][2] = "if(sqrt(x^2+y^2)<t/3.0,0,-y/sqrt(x^2+y^2))"; // my
                   this->dirichlet_function_strings[boundary][3] = "if(sqrt(x^2+y^2)<t/3.0,16.0/3.0/(5.0/3.0-1),";
                   this->dirichlet_function_strings[boundary][3] += "1e-9/(5.0/3.0-1)+0.5)"; // energy
+                  break;
                }
                case 2: // y = 1 boundary
                {
                   // all are Dirichlet
                   for (unsigned int component = 0; component < this->n_components; ++component)
-                     boundary_types[boundary][component] = ConservationLaw<dim>::dirichlet;
+                     this->boundary_types[boundary][component] = ConservationLaw<dim>::dirichlet;
                   this->dirichlet_function_strings[boundary][0] = "if(sqrt(x^2+y^2)<t/3.0,16,1)"; // density
                   this->dirichlet_function_strings[boundary][1] = "if(sqrt(x^2+y^2)<t/3.0,0,-x/sqrt(x^2+y^2))"; // mx
                   this->dirichlet_function_strings[boundary][2] = "if(sqrt(x^2+y^2)<t/3.0,0,-y/sqrt(x^2+y^2))"; // my
                   this->dirichlet_function_strings[boundary][3] = "if(sqrt(x^2+y^2)<t/3.0,16.0/3.0/(5.0/3.0-1),";
                   this->dirichlet_function_strings[boundary][3] += "1e-9/(5.0/3.0-1)+0.5)"; // energy
+                  break;
                }
                case 3: // x = 0 boundary
                {
                   // all are reflective (zero Neumann)
                   for (unsigned int component = 0; component < this->n_components; ++component)
-                     boundary_types[boundary][component] = ConservationLaw<dim>::neumann;
+                     this->boundary_types[boundary][component] = ConservationLaw<dim>::neumann;
+                  break;
                }
                default:
                {
+                  std::cout << "boundary indicator is " << boundary << std::endl;
                   Assert(false,ExcInternalError());
                   break;
                }
@@ -888,11 +896,12 @@ void Euler<dim>::compute_divergence_entropy_flux (const Vector<double> &solution
    }
    }
 
-/** \fn void Euler<dim>::output_solution() const
+/** \fn void Euler<dim>::output_solution(double time) const
  *  \brief Outputs the solution to .gpl if 1-D and otherwise to .vtk.
+ *  \param time current time; used in exact solution function
  */
 template <int dim>
-void Euler<dim>::output_solution () const
+void Euler<dim>::output_solution (double time)
 {
    DataOut<dim> data_out;
    data_out.attach_dof_handler (this->dof_handler);
@@ -983,6 +992,37 @@ void Euler<dim>::output_solution () const
          ".vtk";
       std::ofstream output (filename.c_str());
       data_out.write_vtk (output);
+   }
+   
+   // output exact solution if requested
+   if (this->conservation_law_parameters.output_exact_solution and
+      this->has_exact_solution)
+   {
+      // set time in exact solution function
+      this->exact_solution_function.set_time(time);
+      // compute exact solution
+      VectorTools::interpolate(this->dof_handler,this->exact_solution_function,this->exact_solution);
+
+      DataOut<dim> data_out_exact;
+      data_out_exact.attach_dof_handler (this->dof_handler);
+      data_out_exact.add_data_vector (this->exact_solution,
+                                      this->component_names,
+                                      DataOut<dim>::type_dof_data,
+                                      this->component_interpretations);
+      data_out_exact.build_patches ();
+
+      if (dim == 1)
+      {
+         Assert(false,ExcNotImplemented());
+      }
+      else
+      {
+         std::string filename_exact = "output/euler_exact-" +
+                                      Utilities::int_to_string (output_file_number, 3) +
+                                      ".vtk";
+         std::ofstream output_exact(filename_exact.c_str());
+         data_out_exact.write_vtk(output_exact);
+      }
    }
 
    ++output_file_number;

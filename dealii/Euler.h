@@ -11,6 +11,7 @@
 
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
+#include <deal.II/grid/grid_in.h>
 
 #include <deal.II/numerics/data_component_interpretation.h>
 
@@ -50,7 +51,7 @@ class Euler : public ConservationLaw<dim>
        get_component_interpretations();
 
     void define_problem();
-    void output_solution() const;
+    void output_solution(double time);
 
     void compute_cell_ss_residual(FEValues<dim> &fe_values,
                                   const typename DoFHandler<dim>::active_cell_iterator &cell,

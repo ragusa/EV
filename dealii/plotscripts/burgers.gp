@@ -1,4 +1,4 @@
-input_file = "../output/solution-001.gpl"
+input_file = "../output/burgers-001.gpl"
 output_file = "../output/burgers.pdf"
 y_label = "Velocity"
 

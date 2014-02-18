@@ -86,7 +86,7 @@ void ConservationLaw<dim>::run()
       old_solution = current_solution;
       // output initial solution
       if (in_final_cycle)
-         output_solution();
+         output_solution(0.0);
    
       // solve transient with selected time integrator
       switch (conservation_law_parameters.temporal_integrator)
@@ -98,6 +98,15 @@ void ConservationLaw<dim>::run()
              Assert(false,ExcNotImplemented());
              break;
       }
+
+      // compute error for cycle
+      if (has_exact_solution) {
+         // set time of exact solution function to be final time
+         exact_solution_function.set_time(conservation_law_parameters.final_time);
+         // compute error
+         compute_error(cycle);
+      }
+
    } // end of adaptive refinement loop; only output remains.
 
    // output final viscosities if non-constant viscosity used
@@ -108,6 +117,9 @@ void ConservationLaw<dim>::run()
       case ConservationLawParameters<dim>::constant:
          break;
       case ConservationLawParameters<dim>::first_order_1:
+         output_map(first_order_viscosity_cell_q, "first_order_viscosity");
+         break;
+      case ConservationLawParameters<dim>::first_order_2:
          output_map(first_order_viscosity_cell_q, "first_order_viscosity");
          break;
       case ConservationLawParameters<dim>::entropy:
@@ -121,6 +133,17 @@ void ConservationLaw<dim>::run()
          Assert(false,ExcNotImplemented());
          break;
    }
+
+   // output convergence table
+   if (has_exact_solution) {
+      // set display format for columns of convergence table
+      convergence_table.set_precision("L2", 3);
+      convergence_table.set_scientific("L2", true);
+      // write convergence table to console
+      std::cout << std::endl;
+      convergence_table.write_text(std::cout);
+   }
+
 }
 
 /** \fn void ConservationLaw<dim>::initialize_system()
@@ -405,14 +428,25 @@ void ConservationLaw<dim>::setup_system ()
          }
    constraints.close();
 
-   // create sparsity pattern and compress
-   CompressedSparsityPattern compressed_sparsity_pattern (dof_handler.n_dofs() );
-   DoFTools::make_sparsity_pattern (dof_handler, compressed_sparsity_pattern, constraints, false);
-   sparsity_pattern.copy_from(compressed_sparsity_pattern);
+   // create sparsity patterns
+   CompressedSparsityPattern compressed_constrained_sparsity_pattern   (dof_handler.n_dofs() );
+   CompressedSparsityPattern compressed_unconstrained_sparsity_pattern (dof_handler.n_dofs() );
+   DoFTools::make_sparsity_pattern (dof_handler, compressed_constrained_sparsity_pattern,   constraints, false);
+   DoFTools::make_sparsity_pattern (dof_handler, compressed_unconstrained_sparsity_pattern);
+   constrained_sparsity_pattern  .copy_from(compressed_constrained_sparsity_pattern);
+   unconstrained_sparsity_pattern.copy_from(compressed_unconstrained_sparsity_pattern);
 
    // reinitialize matrices with sparsity pattern
-   mass_matrix  .reinit(sparsity_pattern);
-   system_matrix.reinit(sparsity_pattern);
+   mass_matrix  .reinit(constrained_sparsity_pattern);
+   system_matrix.reinit(constrained_sparsity_pattern);
+
+   // if using maximum-principle preserving definition of first-order viscosity,
+   // then compute bilinear forms and viscous fluxes
+   if (conservation_law_parameters.viscosity_type == ConservationLawParameters<dim>::first_order_2) {
+      viscous_bilinear_forms.reinit(unconstrained_sparsity_pattern);
+      compute_viscous_bilinear_forms();
+      viscous_fluxes.reinit(unconstrained_sparsity_pattern);
+   }
 
    // assemble mass matrix
    assemble_mass_matrix();
@@ -420,6 +454,7 @@ void ConservationLaw<dim>::setup_system ()
    // resize vectors
    old_solution             .reinit(dof_handler.n_dofs());
    current_solution         .reinit(dof_handler.n_dofs());
+   exact_solution           .reinit(dof_handler.n_dofs());
    solution_step            .reinit(dof_handler.n_dofs());
    system_rhs               .reinit(dof_handler.n_dofs());
    estimated_error_per_cell .reinit(triangulation.n_active_cells());
@@ -722,6 +757,10 @@ void ConservationLaw<dim>::solve_runge_kutta()
 
       update_viscosities(dt);
 
+
+typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                               endc = dof_handler.end();
+for (; cell != endc; ++cell)
       // update old_solution to current_solution for next time step;
       // this is not done at the end of the previous time step because
       // of the time derivative term in update_viscosities() above
@@ -795,8 +834,9 @@ void ConservationLaw<dim>::solve_runge_kutta()
          }
 
          // residual from solution of previous step is reused in first stage (unless this is the first time step)
-         if ((n == 1)||(i != 0))
+         if ((n == 1)||(i != 0)) {
             compute_ss_residual(rk.f[i]);
+         }
       }
       /** Now we compute the solution using the computed \f$\mathbf{f}_i\f$:
        *  \f[
@@ -823,6 +863,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
    
       // increment time
       old_time += dt;
+      current_time = old_time; // used in exact solution function in output_solution
       n++;
    
       // output solution of this time step if user has specified;
@@ -835,7 +876,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
          {
             if (in_final_cycle)
                // output solution
-               output_solution();
+               output_solution(current_time);
             // determine when next output will occur
             next_time_step_output += conservation_law_parameters.output_period;
          }
@@ -844,7 +885,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
          if (!(final_time_not_reached)) // if final time has been reached
             if (in_final_cycle)
                // output solution
-               output_solution();
+               output_solution(current_time);
 
       check_nan();
 
@@ -892,39 +933,13 @@ double ConservationLaw<dim>::compute_cfl_number(const double &dt) const
    return dt * max_flux_speed / minimum_cell_diameter;
 }
 
-/** \fn ConservationLaw<dim>::compute_ss_residual(Vector<double> &f)
- *  \brief Computes the steady-state residual for Burgers' equation.
- *
- *  This function computes the steady-state residual \f$\mathbf{f_{ss}}\f$ for the conservation law
- *  \f[
- *    \frac{\partial\mathbf{u}}{\partial t} 
- *    + \nabla \cdot \mathbf{f}(\mathbf{u}) = \mathbf{g}(\mathbf{u}),
- *  \f]
- *  which for component \f$i\f$ is
- *  \f[
- *    \mathbf{f_{ss}} = (\mathbf{\psi}, -\nabla \cdot \mathbf{f}(\mathbf{u}) + \mathbf{g}(\mathbf{u}))_\Omega.
- *  \f]
- *  For vicous Burgers' equation, this is the following:
- *  \f[
- *    \mathbf{f_{ss}} = -(\mathbf{\psi},u u_x)_\Omega + (\mathbf{\psi},\nu u_{xx})_\Omega .
- *  \f]
- *  After integration by parts, this is
- *  \f[
- *    \mathbf{f_{ss}} = -(\mathbf{\psi},u u_x)_\Omega - (\mathbf{{\psi}_x},\nu u_{x})_\Omega 
- *    + (\mathbf{\psi},\nu u_{x})_{\partial\Omega}.
- *  \f]
- *  \param f steady-state residual
+/** \fn ConservationLaw<dim>::add_maximum_principle_viscosity_bilinear_form(Vector<double> &f)
+ *  \brief Adds the viscous bilinear form for maximum-principle preserving viscosity
  */
 template <int dim>
-void ConservationLaw<dim>::compute_ss_residual(Vector<double> &f)
+void ConservationLaw<dim>::add_maximum_principle_viscosity_bilinear_form(Vector<double> &f)
 {
-   // reset vector
-   f = 0.0;
-
-   FEValues<dim>     fe_values      (fe, cell_quadrature,
-                            update_values | update_gradients | update_JxW_values);
-   FEFaceValues<dim> fe_face_values (fe, face_quadrature,
-                            update_values | update_gradients | update_JxW_values | update_normal_vectors);
+   FEValues<dim> fe_values(fe, cell_quadrature, update_values | update_gradients | update_JxW_values);
 
    // allocate memory needed for cell residual and aggregation into global residual
    Vector<double> cell_residual(dofs_per_cell);
@@ -938,18 +953,24 @@ void ConservationLaw<dim>::compute_ss_residual(Vector<double> &f)
       // reset cell residual
       cell_residual = 0;
 
-      // compute cell contribution to cell residual
-      compute_cell_ss_residual(fe_values,
-                               cell,
-                               cell_residual);
+      // add viscous bilinear form
+      double cell_volume = cell->measure();
+      for (unsigned int i = 0; i < dofs_per_cell; ++i) {
+         // compute b_K(u,\varphi_i)
+         double b_i = 0.0;
+         for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+            double b_K; // local viscous bilinear form
+            if (j == i)
+               b_K = cell_volume;
+            else
+               b_K = -1.0/(dofs_per_cell-1.0)*cell_volume;
 
-      // compute face contribution to face residual
-      /*
-      if (need_to_compute_face_residual)
-         compute_face_ss_residual(fe_face_values,
-                                  cell,
-                                  cell_residual);
-*/
+            b_i += current_solution(local_dof_indices[j])*b_K;
+         }
+         // add viscous term for dof i; note 0 is used for quadrature point because the
+         // viscosity is the same for all quadrature points
+         cell_residual(i) += viscosity_cell_q[cell](0)*b_i;
+      }
 
       // aggregate local residual into global residual
       cell->get_dof_indices(local_dof_indices);
@@ -1121,24 +1142,129 @@ void ConservationLaw<dim>::update_first_order_viscosities_1()
 }
 
 /** \fn void ConservationLaw<dim>::update_first_order_viscosities_2()
- *  \brief Computes first order viscosity at each quadrature point in each cell.
- *         This first order viscosity is of the type not using a tuning parameter.
+ *  \brief Computes the maximum-principle preserving first order viscosity at each
+ *         quadrature point in each cell.
  */
 template <int dim>
 void ConservationLaw<dim>::update_first_order_viscosities_2()
 {
-Assert(false,ExcNotImplemented());
+   // compute viscous fluxes
+   compute_viscous_fluxes();
+
+   // local dof indices
+   std::vector<unsigned int> local_dof_indices (dofs_per_cell);
+
    // loop over cells to compute first order viscosity at each quadrature point
-   /*
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
-   for (; cell != endc; ++cell)
-   {
-      double aux = std::abs(c_max * cell_diameter[cell] * max_flux_speed_cell[cell]);
-      for (unsigned int q = 0; q < n_q_points_cell; ++q)
-         first_order_viscosity_cell_q[cell](q) = aux;
+   for (; cell != endc; ++cell) {
+      // get local dof indices
+      cell->get_dof_indices(local_dof_indices);
+
+      for (unsigned int q = 0; q < n_q_points_cell; ++q) {
+         first_order_viscosity_cell_q[cell](q) = 0.0;
+         for (unsigned int i = 0; i < dofs_per_cell; ++i) {
+            for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+               if (i != j) {
+                  first_order_viscosity_cell_q[cell](q) = std::max(first_order_viscosity_cell_q[cell](q),
+                     std::abs(viscous_fluxes(local_dof_indices[i],local_dof_indices[j]))/
+                     (-viscous_bilinear_forms(local_dof_indices[i],local_dof_indices[j])));
+               }
+            }
+         }
+      }
    }
-*/
+}
+
+/** \fn void ConservationLaw<dim>::compute_viscous_fluxes()
+ *  \brief Computes viscous fluxes, to be used in the computation of
+ *         maximum-principle preserving first order viscosity.
+ *
+ *         Each element of the resulting matrix, \f$V_{i,j}\f$ is computed as
+ *         follows:
+ *         \f[
+ *            V_{i,j} = \int_{S_{ij}}(\mathbf{f}'(u)\cdot\nabla\varphi_j)\varphi_i d\mathbf{x}
+ *         \f]
+ */
+template <int dim>
+void ConservationLaw<dim>::compute_viscous_fluxes()
+{
+   viscous_fluxes = 0; // zero out matrix
+
+   // local dof indices
+   std::vector<unsigned int> local_dof_indices (dofs_per_cell);
+
+   FEValues<dim> fe_values (fe, cell_quadrature, update_values | update_gradients | update_JxW_values);
+   std::vector<double> solution_values(n_q_points_cell);
+   std::vector<Tensor<1,dim> > dfdu (n_q_points_cell);
+
+   // loop over cells
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                                  endc = dof_handler.end();
+   for (; cell != endc; ++cell) {
+      fe_values.reinit(cell);
+      fe_values.get_function_values(current_solution, solution_values);
+
+      // get local dof indices
+      cell->get_dof_indices(local_dof_indices);
+
+      // add local viscous fluxes to global matrix
+      for (unsigned int q = 0; q < n_q_points_cell; ++q) {
+         for (int d = 0; d < dim; ++d)
+            dfdu[q][d] = solution_values[q];
+         for (unsigned int i = 0; i < dofs_per_cell; ++i) {
+            for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+               viscous_fluxes.add(local_dof_indices[i],
+                                  local_dof_indices[j],
+                                  dfdu[q]*fe_values.shape_grad(j,q)*fe_values.shape_value(i,q)*fe_values.JxW(q));
+            }
+         }
+      }
+   }
+}
+
+/** \fn void ConservationLaw<dim>::compute_viscous_bilinear_forms()
+ *  \brief Computes viscous bilinear forms, to be used in the computation of
+ *         maximum-principle preserving first order viscosity.
+ *
+ *         Each element of the resulting matrix, \f$B_{i,j}\f$ is computed as
+ *         follows:
+ *         \f[
+ *            B_{i,j} = \sum_{K\subset S_{i,j}}b_K(\varphi_i,\varphi_j)
+ *         \f]
+ */
+template <int dim>
+void ConservationLaw<dim>::compute_viscous_bilinear_forms()
+{
+   viscous_bilinear_forms = 0; // zero out matrix
+   // local dof indices
+   std::vector<unsigned int> local_dof_indices (dofs_per_cell);
+
+   // loop over cells
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                                  endc = dof_handler.end();
+   for (; cell != endc; ++cell) {
+      // get local dof indices
+      cell->get_dof_indices(local_dof_indices);
+
+      // query cell volume
+      double cell_volume = cell->measure();
+
+      // add local bilinear forms to global matrix
+      for (unsigned int i = 0; i < dofs_per_cell; ++i) {
+         for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+            double b_cell = 0.0;
+            if (j == i) {
+               b_cell = cell_volume;
+            } else {
+               b_cell = -1.0/(dofs_per_cell-1.0)*cell_volume;
+            }
+            viscous_bilinear_forms.add(local_dof_indices[i],
+                                       local_dof_indices[j],
+                                       b_cell);
+         }
+      }
+   }
 }
 
 /** \fn void ConservationLaw<dim>::update_entropy_viscosities(const double &dt)
@@ -1289,7 +1415,7 @@ void ConservationLaw<dim>::update_jumps()
    } // end cell loop
 }
 
-/** \fn void ConservationLaw<dim>::compute_tr_residual()
+/** \fn void ConservationLaw<dim>::compute_tr_residual(unsigned int i, double dt)
  *  \brief Computes the negative of the transient residual and stores in
  *         system_rhs
  *  \param i current stage of Runge-Kutta step
@@ -1310,6 +1436,32 @@ void ConservationLaw<dim>::compute_tr_residual(unsigned int i, double dt)
    for (unsigned int j = 0; j < i; ++j)
       system_rhs.add(-rk.a[i][j]*dt, rk.f[j]);
    
+}
+
+/** \fn void ConservationLaw<dim>::compute_error(const unsigned int cycle)
+ *  \brief Computes the error if exact solution is known
+ *  \param cycle mesh refinement cycle
+ */
+template <int dim>
+void ConservationLaw<dim>::compute_error(const unsigned int cycle)
+{
+   // L2 norm of error on each cell
+   Vector<double> difference_per_cell (triangulation.n_active_cells());
+   // compute L2 norm of error on each cell
+   VectorTools::integrate_difference (dof_handler,
+                                      current_solution,
+                                      exact_solution_function,
+                                      difference_per_cell,
+                                      cell_quadrature,
+                                      VectorTools::L2_norm);
+   // compute the global L2 norm
+   double L2_error = difference_per_cell.l2_norm();
+
+   // add errors to convergence table
+   convergence_table.add_value("cycle", cycle);
+   convergence_table.add_value("cells", triangulation.n_active_cells());
+   convergence_table.add_value("dofs", dof_handler.n_dofs());
+   convergence_table.add_value("L2", L2_error);
 }
 
 /** \fn void ConservationLaw<dim>::check_nan()
