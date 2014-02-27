@@ -109,8 +109,8 @@ class TransportProblem {
       void evaluate_error(const unsigned int cycle);
       void compute_viscous_bilinear_forms();
       void compute_max_principle_viscosity();
-      void check_assembly_max_principle();
-      void check_solution_max_principle();
+      void check_solution_nonnegative();
+      void check_local_discrete_max_principle();
 
       const Parameters &parameters; // input parameters
       unsigned int degree;
@@ -1204,9 +1204,8 @@ void TransportProblem<dim>::run() {
       } else {
          // system is linear and requires just one solve
          assemble_system();
-         //check_assembly_max_principle();
          solve();
-         check_solution_max_principle();
+         check_solution_nonnegative();
       }
 
       // evaluate errors
@@ -1315,8 +1314,6 @@ void TransportProblem<dim>::run() {
  */
 template<int dim>
 void TransportProblem<dim>::evaluate_error(const unsigned int cycle) {
-   Assert(dim == 1, ExcNotImplemented());
-
    // error per cell
    Vector<double> difference_per_cell (triangulation.n_active_cells());
 
@@ -1376,47 +1373,79 @@ void TransportProblem<dim>::evaluate_error(const unsigned int cycle) {
    convergence_table.add_value("L2 error", L2_error);
 }
 
+/**
+ * \fn    TransportProblem<dim>::check_solution_nonnegative()
+ * \brief check that the solution is non-negative at all nodes.
+ */
 template<int dim>
-void TransportProblem<dim>::check_assembly_max_principle()
+void TransportProblem<dim>::check_solution_nonnegative()
 {
-   // check value of maximum principle preserving viscosity
-   for (unsigned int i = 0; i < triangulation.n_active_cells(); ++i)
-      std::cout << "nu[" << i << "] = " << max_principle_viscosity(i) << std::endl;
+   // loop over all degrees of freedom
+   bool solution_is_negative = false;
+   const unsigned int n_dofs = dof_handler.n_dofs();
+   for (unsigned int i = 0; i < n_dofs; ++i)
+      if (present_solution(i) < 0)
+         solution_is_negative = true;
 
-   // check system matrix
-   std::ofstream matrix_out("output/matrix.txt");
-   system_matrix.print_formatted(matrix_out,2,true,0,"0",1);
-   matrix_out.close();
-
-   // check denominators of viscosity
-   std::ofstream denom_out("output/denom.txt");
-   viscous_bilinear_forms.print_formatted(denom_out,2,true,0,"0",1);
-   denom_out.close();
-
-   // check numerators of viscosity
-   std::ofstream num_out("output/num.txt");
-   max_principle_viscosity_numerators.print_formatted(num_out,2,true,0,"0",1);
-   num_out.close();
+   // report if solution was negative anywhere or not
+   if (solution_is_negative)
+      std::cout << "Solution is negative!" << std::endl;
+   else
+      std::cout << "Solution is not negative at any node." << std::endl;
 }
 
-// check that solution at a node is bounded by its neighbors
+/**
+ * \fn    TransportProblem<dim>::check_local_discrete_max_principle()
+ * \brief check that the local discrete max principle is satisfied.
+ */
 template<int dim>
-void TransportProblem<dim>::check_solution_max_principle()
+void TransportProblem<dim>::check_local_discrete_max_principle()
 {
-   // local dof indices
-   std::vector<unsigned int> local_dof_indices (dofs_per_cell);
+   const unsigned int n_cells = triangulation.n_active_cells();
+   Vector<double> max_values(n_cells, -1.0e15); // max of neighbors for each dof
+   Vector<double> min_values(n_cells,  1.0e15); // min of neighbors for each dof
 
-   // loop over cells to compute first order viscosity at each quadrature point
+   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
+
+   // loop over cells
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
-   unsigned int i_cell = 0;
-   for (; cell != endc; ++cell, ++i_cell) {
+   for (; cell != endc; ++cell) {
       // get local dof indices
       cell->get_dof_indices(local_dof_indices);
-      for (unsigned int i = 0; i < dofs_per_cell; ++i)
-      {
+
+      // find min and max values on cell
+      double max_cell = -1.0e15; // initialized to arbitrary small value
+      double min_cell =  1.0e15; // initialized to arbitrary large value
+      for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+         double value_j = old_solution(local_dof_indices[j]);
+         max_cell = std::max(max_cell, value_j);
+         min_cell = std::min(min_cell, value_j);
+      }
+
+      // update the max and min values of neighborhood of each dof
+      for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+         unsigned int i = local_dof_indices[j]; // global index
+         max_values(i) = std::max(max_values(i), max_cell);
+         min_values(i) = std::min(min_values(i), min_cell);
       }
    }
+
+   // check that each dof value is bounded by its neighbors
+   bool local_max_principle_satisfied = true;
+   for (unsigned int i = 0; i < dof_handler.n_dofs(); ++i) {
+      double value_i = present_solution(local_dof_indices[i]);
+      if (value_i < min_values(i))
+         local_max_principle_satisfied = false;
+      if (value_i > max_values(i))
+         local_max_principle_satisfied = false;
+   }
+   
+   // report if local discrete maximum principle was satisfied or not
+   if (local_max_principle_satisfied)
+      std::cout << "The local discrete maximum principle was satisfied at all degrees of freedom." << std::endl;
+   else
+      std::cout << "The local discrete maximum principle was NOT satisfied at all degrees of freedom." << std::endl;
 }
 
 }
