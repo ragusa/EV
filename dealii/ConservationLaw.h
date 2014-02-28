@@ -94,8 +94,8 @@ class ConservationLaw
 
     // viscosity functions
     void update_viscosities(const double &dt);
-    void update_first_order_viscosities_1();
-    void update_first_order_viscosities_2();
+    void update_old_first_order_viscosity();
+    void update_max_principle_viscosity();
     void compute_viscous_bilinear_forms();
     void compute_viscous_fluxes();
     void add_maximum_principle_viscosity_bilinear_form(Vector<double> &solution);
@@ -119,6 +119,7 @@ class ConservationLaw
     void output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, double> &map,
                     const std::string &output_filename_base);
 
+    // error checking functions
     void check_nan();
 
     virtual std::vector<std::string> get_component_names() = 0;

@@ -66,7 +66,7 @@ class ConservationLawParameters
     unsigned int degree;
     unsigned int n_quadrature_points;
 
-    enum ViscosityType { none, constant, first_order_1, first_order_2, entropy }; 
+    enum ViscosityType { none, constant, old_first_order, max_principle, entropy }; 
     ViscosityType viscosity_type;
     double constant_viscosity_value;
     double first_order_viscosity_coef;

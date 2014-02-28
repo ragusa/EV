@@ -116,10 +116,10 @@ void ConservationLaw<dim>::run()
          break;
       case ConservationLawParameters<dim>::constant:
          break;
-      case ConservationLawParameters<dim>::first_order_1:
+      case ConservationLawParameters<dim>::old_first_order:
          output_map(first_order_viscosity_cell_q, "first_order_viscosity");
          break;
-      case ConservationLawParameters<dim>::first_order_2:
+      case ConservationLawParameters<dim>::max_principle:
          output_map(first_order_viscosity_cell_q, "first_order_viscosity");
          break;
       case ConservationLawParameters<dim>::entropy:
@@ -442,7 +442,7 @@ void ConservationLaw<dim>::setup_system ()
 
    // if using maximum-principle preserving definition of first-order viscosity,
    // then compute bilinear forms and viscous fluxes
-   if (conservation_law_parameters.viscosity_type == ConservationLawParameters<dim>::first_order_2) {
+   if (conservation_law_parameters.viscosity_type == ConservationLawParameters<dim>::max_principle) {
       viscous_bilinear_forms.reinit(unconstrained_sparsity_pattern);
       compute_viscous_bilinear_forms();
       viscous_fluxes.reinit(unconstrained_sparsity_pattern);
@@ -1079,24 +1079,24 @@ void ConservationLaw<dim>::update_viscosities(const double &dt)
             viscosity_cell_q[cell] = const_visc;
          break;
       }
-      // first order viscosity 1
-      case ConservationLawParameters<dim>::first_order_1:
+      // old first order viscosity
+      case ConservationLawParameters<dim>::old_first_order:
       {
-         update_first_order_viscosities_1();
+         update_old_first_order_viscosity();
          viscosity_cell_q = first_order_viscosity_cell_q;
          break;
       }
       // first order viscosity 2
-      case ConservationLawParameters<dim>::first_order_2:
+      case ConservationLawParameters<dim>::max_principle:
       {
-         update_first_order_viscosities_2();
+         update_max_principle_viscosity();
          viscosity_cell_q = first_order_viscosity_cell_q;
          break;
       }
       // entropy viscosity
       case ConservationLawParameters<dim>::entropy:
       {
-         update_first_order_viscosities_1();
+         update_old_first_order_viscosity();
          update_entropy_viscosities(dt);
 
          typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
@@ -1121,12 +1121,12 @@ void ConservationLaw<dim>::update_viscosities(const double &dt)
    }
 }
 
-/** \fn void ConservationLaw<dim>::update_first_order_viscosities_1()
+/** \fn void ConservationLaw<dim>::update_old_first_order_viscosity()
  *  \brief Computes first order viscosity at each quadrature point in each cell.
  *         This first order viscosity is of the type using a tuning parameter.
  */
 template <int dim>
-void ConservationLaw<dim>::update_first_order_viscosities_1()
+void ConservationLaw<dim>::update_old_first_order_viscosity()
 {
    double c_max = conservation_law_parameters.first_order_viscosity_coef;
 
@@ -1141,12 +1141,12 @@ void ConservationLaw<dim>::update_first_order_viscosities_1()
    }
 }
 
-/** \fn void ConservationLaw<dim>::update_first_order_viscosities_2()
+/** \fn void ConservationLaw<dim>::update_max_principle_viscosity()
  *  \brief Computes the maximum-principle preserving first order viscosity at each
  *         quadrature point in each cell.
  */
 template <int dim>
-void ConservationLaw<dim>::update_first_order_viscosities_2()
+void ConservationLaw<dim>::update_max_principle_viscosity()
 {
    // compute viscous fluxes
    compute_viscous_fluxes();

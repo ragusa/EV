@@ -16,5 +16,5 @@ set Max viscosity coefficient = 6.0e-1
 set Entropy viscosity coefficient = 1.0e1
 set Maximum number of nonlinear iterations = 10
 set Relative difference tolerance = 1.0e-3
-set Exact solution ID = 2
+set Exact solution ID = 0
 set Output mesh = false

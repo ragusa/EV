@@ -317,10 +317,10 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
          viscosity_type = none;
       else if (viscosity_choice == "constant")
          viscosity_type = constant;
-      else if (viscosity_choice == "first_order_1")
-         viscosity_type = first_order_1;
-      else if (viscosity_choice == "first_order_2")
-         viscosity_type = first_order_2;
+      else if (viscosity_choice == "old_first_order")
+         viscosity_type = old_first_order;
+      else if (viscosity_choice == "max_principle")
+         viscosity_type = max_principle;
       else if (viscosity_choice == "entropy")
          viscosity_type = entropy;
       else

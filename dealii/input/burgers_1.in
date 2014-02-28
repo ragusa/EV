@@ -6,8 +6,13 @@ subsection quadrature
    set number of quadrature points = 3
 end
 
+# Problem IDs:
+# 0: 1-D sinusoidal IC problem
+# 1: 1-D shock Riemann problem
+# 2: 1-D rarefaction Riemann problem
+# 3: 2-D problem
 subsection problem
-   set problem id = 0
+   set problem id = 2
 end
 
 subsection refinement
@@ -19,15 +24,15 @@ end
 
 subsection time
    # options are <constant_dt|cfl_condition>
-   set time step size method = constant_dt
-   set final time = 0.1 # 0.001
+   set time step size method = cfl_condition
+   set final time = 0.5
    set time step size = 0.001
-   set cfl = 0.1
+   set cfl = 0.25
 end
 
 subsection artificial viscosity
-   # options are <none|constant|first_order_1|first_order_2|entropy>
-   set viscosity type = first_order_2
+   # options are <none|constant|old_first_order|max_principle|entropy>
+   set viscosity type = max_principle
    set constant viscosity value = 0.02
    set first order viscosity coefficient = 0.5
    set entropy viscosity coefficient = 2.0
@@ -39,10 +44,9 @@ subsection temporal integration
    # options are <runge_kutta>
    set temporal integrator = runge_kutta
    # options are <erk1|erk2|erk3|erk4|sdirk22>
-   set runge kutta method = erk1
+   set runge kutta method = erk2
 end
 
-# this section is not yet applicable
 subsection nonlinear solver
    set nonlinear verbosity = verbose
    set nonlinear method = newton
@@ -63,6 +67,6 @@ end
 
 subsection output
    set output period = 0
-   set output mass matrix = true
+   set output mass matrix = false
    set output viscosity = false
 end
