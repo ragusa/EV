@@ -757,10 +757,6 @@ void ConservationLaw<dim>::solve_runge_kutta()
 
       update_viscosities(dt);
 
-
-typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
-                                               endc = dof_handler.end();
-for (; cell != endc; ++cell)
       // update old_solution to current_solution for next time step;
       // this is not done at the end of the previous time step because
       // of the time derivative term in update_viscosities() above
@@ -1086,7 +1082,7 @@ void ConservationLaw<dim>::update_viscosities(const double &dt)
          viscosity_cell_q = first_order_viscosity_cell_q;
          break;
       }
-      // first order viscosity 2
+      // max principle viscosity
       case ConservationLawParameters<dim>::max_principle:
       {
          update_max_principle_viscosity();
@@ -1287,23 +1283,25 @@ void ConservationLaw<dim>::update_entropy_viscosities(const double &dt)
       // update jumps
       update_jumps();
 
-      for (; cell != endc; ++cell)
+      for (; cell != endc; ++cell) {
+         double aux = std::pow(cell_diameter[cell],2) / max_entropy_deviation;
+         double entropy_without_jumps_cell = aux * c_s * max_entropy_residual_cell[cell];
+         double entropy_with_jumps_cell = entropy_without_jumps_cell + aux * c_j * max_jumps_cell[cell];
+
          for (unsigned int q = 0; q < n_q_points_cell; ++q)
          {
-            entropy_viscosity_with_jumps_cell_q[cell](q) = std::pow(cell_diameter[cell],2)
-               * (c_s * max_entropy_residual_cell[cell] + c_j * max_jumps_cell[cell])
-               / max_entropy_deviation;
-            // compute entropy viscosity without jumps as well for plotting
-            entropy_viscosity_cell_q[cell](q) = std::pow(cell_diameter[cell],2)
-               * c_s * max_entropy_residual_cell[cell]
-               / max_entropy_deviation;
+            entropy_viscosity_with_jumps_cell_q[cell](q) = entropy_with_jumps_cell;
+            entropy_viscosity_cell_q[cell](q) = entropy_without_jumps_cell;
          }
+      }
    } else {
-      for (; cell != endc; ++cell)
+      for (; cell != endc; ++cell) {
+         double aux = std::pow(cell_diameter[cell],2) / max_entropy_deviation;
+         double entropy_without_jumps_cell = aux * c_s * max_entropy_residual_cell[cell];
+
          for (unsigned int q = 0; q < n_q_points_cell; ++q)
-            entropy_viscosity_cell_q[cell](q) = std::pow(cell_diameter[cell],2)
-               * c_s * max_entropy_residual_cell[cell]
-               / max_entropy_deviation;
+            entropy_viscosity_cell_q[cell](q) = entropy_without_jumps_cell;
+      }
    }
 }
 
