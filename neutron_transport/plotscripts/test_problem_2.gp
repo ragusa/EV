@@ -3,8 +3,6 @@ set output '| ps2pdf - test_problem_2.pdf'
 set ylabel "Angular Flux"
 set xlabel "x"
 set key top right
-#set style line 1 linetype 1 linecolor 2
-#set style line 1 linetype 0 linecolor 0
 set yrange [-0.1:1.1]
 plot "analytic_solution_test_problem_2.dat" using 1:2 title "Analytic Solution" with lines,\
 "solution_none_2.gpl" using 1:2 title "No Viscosity Solution" with lines,\
