@@ -2,8 +2,7 @@
  *  \brief Provides function definitions for the ConservationLaw class.
  */
 
-/** \fn ConservationLaw<dim>::ConservationLaw(const ConservationLawParameters<dim> &params)
- *  \brief Constructor for ConservationLaw class.
+/** \brief Constructor for ConservationLaw class.
  *  \param params conservation law parameters
  */
 template <int dim>
@@ -26,8 +25,7 @@ ConservationLaw<dim>::ConservationLaw(const ConservationLawParameters<dim> &para
    exact_solution_function(params.n_components)
 {}
 
-/** \fn ConservationLaw<dim>::~ConservationLaw()
- *  \brief Destructor for ConservationLaw class.
+/** \brief Destructor for ConservationLaw class.
  */
 template <int dim>
 ConservationLaw<dim>::~ConservationLaw()
@@ -43,11 +41,10 @@ ConservationLaw<dim>::~ConservationLaw()
 
 }
 
-/** \fn void ConservationLaw<dim>::run()
- *  \brief Runs the entire program.
+/** \brief Runs the entire program.
  *
- *  This function is the uppermost level function that
- *  calls all other functions.
+ *         This function is the uppermost level function that
+ *         calls all other functions.
  */
 template <int dim>
 void ConservationLaw<dim>::run()
@@ -77,7 +74,7 @@ void ConservationLaw<dim>::run()
 
       // setup system; to be applied after each refinement
       setup_system();
-   
+
       // interpolate the initial conditions to the grid
       VectorTools::interpolate(dof_handler,initial_conditions_function,current_solution);
       // apply Dirichlet BC to initial solution or guess
@@ -146,8 +143,7 @@ void ConservationLaw<dim>::run()
 
 }
 
-/** \fn void ConservationLaw<dim>::initialize_system()
- *  \brief Initially sets up system. Called only once.
+/** \brief Initially sets up system. Called only once.
  */
 template <int dim>
 void ConservationLaw<dim>::initialize_system()
@@ -221,8 +217,7 @@ void ConservationLaw<dim>::initialize_system()
 
 }
 
-/** \fn void ConservationLaw<dim>::initialize_runge_kutta()
- *  \brief Assigns Butcher tableau constants.
+/** \brief Assigns Butcher tableau constants.
  */
 template <int dim>
 void ConservationLaw<dim>::initialize_runge_kutta()
@@ -333,8 +328,7 @@ void ConservationLaw<dim>::initialize_runge_kutta()
          rk.solution_computed_in_last_stage = false;
 }
 
-/** \fn void ConservationLaw<dim>::compute_error_for_refinement()
- *  \brief Computes error for adaptive mesh refinement for a time
+/** \brief Computes error for adaptive mesh refinement for a time
  *         step and adds it to an error sum for all time steps.
  */
 template <int dim>
@@ -353,8 +347,7 @@ void ConservationLaw<dim>::compute_error_for_refinement()
    estimated_error_per_cell += estimated_error_per_cell_time_step;
 }
 
-/** \fn void ConservationLaw<dim>::refine_mesh()
- *  \brief Adaptively refines mesh based on estimated error per cell.
+/** \brief Adaptively refines mesh based on estimated error per cell.
  */
 template <int dim>
 void ConservationLaw<dim>::refine_mesh()
@@ -367,12 +360,11 @@ void ConservationLaw<dim>::refine_mesh()
    triangulation.execute_coarsening_and_refinement();
 }
 
-/** \fn void ConservationLaw<dim>::setup_system()
- *  \brief Sets up the system before solving.
+/** \brief Sets up the system before solving.
  *
- *     This function is to be applied after each refinement. It
- *     allocates memory, sets up constraints, makes the sparsity pattern,
- *     and reinitializes the system matrix with the sparsity pattern.
+ *         This function is to be applied after each refinement. It
+ *         allocates memory, sets up constraints, makes the sparsity pattern,
+ *         and reinitializes the system matrix with the sparsity pattern.
  */
 template <int dim>
 void ConservationLaw<dim>::setup_system ()
@@ -479,8 +471,7 @@ void ConservationLaw<dim>::setup_system ()
    }
 }
 
-/** \fn void ConservationLaw<dim>::update_cell_sizes()
- *  \brief Updates the cell sizes map and minimum cell size.
+/** \brief Updates the cell sizes map and minimum cell size.
  */
 template <int dim>
 void ConservationLaw<dim>::update_cell_sizes()
@@ -499,11 +490,10 @@ void ConservationLaw<dim>::update_cell_sizes()
    }
 }
 
-/** \fn void ConservationLaw<dim>::assemble_mass_matrix()
- *  \brief Assembles the mass matrix and applies constraints.
+/** \brief Assembles the mass matrix and applies constraints.
  */
 template <int dim>
-void ConservationLaw<dim>::assemble_mass_matrix ()
+void ConservationLaw<dim>::assemble_mass_matrix()
 {
    mass_matrix = 0.0;
 
@@ -554,13 +544,12 @@ void ConservationLaw<dim>::assemble_mass_matrix ()
    }
 }
 
-/** \fn void ConservationLaw<dim>apply_Dirichlet_BC(const double &time)
- *  \brief Applies Dirichlet boundary conditions
+/** \brief Applies Dirichlet boundary conditions
  *
- *     This function applies Dirichlet boundary conditions
- *     using the interpolate_boundary_values() tool.
- *  \param time current time; Dirichlet BC may be time-dependent such as for
- *     the 2-D Burgers test problem.
+ *         This function applies Dirichlet boundary conditions
+ *         using the interpolate_boundary_values() tool.
+ *  \param [in] time current time; Dirichlet BC may be time-dependent such as for
+ *              the 2-D Burgers test problem.
  */
 template <int dim>
 void ConservationLaw<dim>::apply_Dirichlet_BC(const double &time)
@@ -599,9 +588,7 @@ void ConservationLaw<dim>::apply_Dirichlet_BC(const double &time)
       current_solution(it->first) = (it->second);
 }
 
-/** \fn void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > &map,
- *                                            const std::string &output_filename_base)
- *  \brief Outputs a mapped quantity at all quadrature points.
+/** \brief Outputs a mapped quantity at all quadrature points.
  *  \param map map between cell iterator and vector of values at quadrature points within cell.
  *  \param output_filename_base string which forms the base (without extension) of the output file.
  */
@@ -649,9 +636,7 @@ void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_
    }
 }
 
-/** \fn void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, double> &map,
- *                                            const std::string &output_filename_base)
- *  \brief Outputs a mapped quantity at all cells, not all quadrature points within cells
+/** \brief Outputs a mapped quantity at all cells, not all quadrature points within cells
  *  \param map map between cell iterator and vector of values at quadrature points within cell.
  *  \param output_filename_base string which forms the base (without extension) of the output file.
  */
@@ -699,22 +684,21 @@ void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_
    }
 }
 
-/** \fn ConservationLaw<dim>::solve_runge_kutta()
- *  \brief Solves transient using a Runge-Kutta scheme.
+/** \brief Solves transient using a Runge-Kutta scheme.
  *
- *     This function contains the transient loop and solves the
- *     transient using explicit Runge-Kutta:
- *     \f[
- *       \mathbf{M} \mathbf{y}_{n+1} = \mathbf{M} \mathbf{y}_n + h\sum\limits^s_{i=1}b_i \mathbf{f}_i
- *     \f]
- *     where
- *     \f[
- *       \mathbf{f}_i = \mathbf{f}(t_n + c_i h, \mathbf{Y}_i)
- *     \f]
- *     and \f$\mathbf{Y}_i\f$ is computed from the linear solve
- *     \f[
- *       \mathbf{M} \mathbf{Y}_i = \mathbf{M} \mathbf{y}_n + h\sum\limits^{i-1}_{j=1}a_{i,j} \mathbf{f}_i
- *     \f]
+ *         This function contains the transient loop and solves the
+ *         transient using explicit Runge-Kutta:
+ *         \f[
+ *           \mathbf{M} \mathbf{y}_{n+1} = \mathbf{M} \mathbf{y}_n + h\sum\limits^s_{i=1}b_i \mathbf{f}_i
+ *         \f]
+ *         where
+ *         \f[
+ *           \mathbf{f}_i = \mathbf{f}(t_n + c_i h, \mathbf{Y}_i)
+ *         \f]
+ *         and \f$\mathbf{Y}_i\f$ is computed from the linear solve
+ *         \f[
+ *           \mathbf{M} \mathbf{Y}_i = \mathbf{M} \mathbf{y}_n + h\sum\limits^{i-1}_{j=1}a_{i,j} \mathbf{f}_i
+ *         \f]
  */
 template <int dim>
 void ConservationLaw<dim>::solve_runge_kutta()
@@ -891,18 +875,17 @@ void ConservationLaw<dim>::solve_runge_kutta()
    }// end of time loop
 }
 
-/** \fn double ConservationLaw<dim>::compute_dt_from_cfl_condition()
- *  \brief Computes time step size using the CFL condition
+/** \brief Computes time step size using the CFL condition
  *
- *  The CFL condition for stability is the following:
- *  \f[
- *    \nu = \left|\frac{\lambda_{max}\Delta t}{\Delta x_{min}}\right|\le 1,
- *  \f]
- *  where \f$\lambda_{max}\f$ is the maximum speed in the domain,
- *  \f$\Delta t\f$ is the time step size, and \f$\Delta x_{min}\f$
- *  is the minimum mesh size in the domain. The user supplies the
- *  CFL number (which must be less than 1), and the time step
- *  size is calculated from the CFL definition above.
+ *         The CFL condition for stability is the following:
+ *         \f[
+ *           \nu = \left|\frac{\lambda_{max}\Delta t}{\Delta x_{min}}\right|\le 1,
+ *         \f]
+ *         where \f$\lambda_{max}\f$ is the maximum speed in the domain,
+ *         \f$\Delta t\f$ is the time step size, and \f$\Delta x_{min}\f$
+ *         is the minimum mesh size in the domain. The user supplies the
+ *         CFL number (which must be less than 1), and the time step
+ *         size is calculated from the CFL definition above.
  */
 template <int dim>
 double ConservationLaw<dim>::compute_dt_from_cfl_condition()
@@ -910,16 +893,15 @@ double ConservationLaw<dim>::compute_dt_from_cfl_condition()
    return conservation_law_parameters.cfl * minimum_cell_diameter / max_flux_speed;
 }
 
-/** \fn double ConservationLaw<dim>::compute_cfl_number(const double &dt) const
- *  \brief Computes the CFL number.
+/** \brief Computes the CFL number.
  *
- *  The CFL number is the following:
- *  \f[
- *    \nu = \left|\frac{\lambda_{max}\Delta t}{\Delta x_{min}}\right|,
- *  \f]
- *  where \f$\lambda_{max}\f$ is the maximum speed in the domain,
- *  \f$\Delta t\f$ is the time step size, and \f$\Delta x_{min}\f$
- *  is the minimum mesh size in the domain.
+ *         The CFL number is the following:
+ *         \f[
+ *           \nu = \left|\frac{\lambda_{max}\Delta t}{\Delta x_{min}}\right|,
+ *         \f]
+ *         where \f$\lambda_{max}\f$ is the maximum speed in the domain,
+ *         \f$\Delta t\f$ is the time step size, and \f$\Delta x_{min}\f$
+ *         is the minimum mesh size in the domain.
  *  \param dt time step size
  *  \return CFL number
  */
@@ -929,8 +911,7 @@ double ConservationLaw<dim>::compute_cfl_number(const double &dt) const
    return dt * max_flux_speed / minimum_cell_diameter;
 }
 
-/** \fn ConservationLaw<dim>::add_maximum_principle_viscosity_bilinear_form(Vector<double> &f)
- *  \brief Adds the viscous bilinear form for maximum-principle preserving viscosity
+/** \brief Adds the viscous bilinear form for maximum-principle preserving viscosity
  */
 template <int dim>
 void ConservationLaw<dim>::add_maximum_principle_viscosity_bilinear_form(Vector<double> &f)
@@ -974,13 +955,11 @@ void ConservationLaw<dim>::add_maximum_principle_viscosity_bilinear_form(Vector<
    } // end cell loop
 }
 
-/** \fn void ConservationLaw<dim>::mass_matrix_solve(Vector<double> &x)
- *  \brief Inverts the mass matrix implicitly.
+/** \brief Inverts the mass matrix implicitly.
  *
- *  This function computes the product \f$M^{-1}b\f$ of the inverse of the
- *  mass matrix and a vector by solving the linear system \f$M x = b\f$.
- *  The method of inverting the mass matrix is determined by user input.
- *  \param b vector to which the inverse mass matrix is applied
+ *         This function computes the product \f$M^{-1}b\f$ of the inverse of the
+ *         mass matrix and a vector by solving the linear system \f$M x = b\f$.
+ *         The method of inverting the mass matrix is determined by user input.
  *  \param x the product \f$M^{-1}b\f$
  */
 template <int dim>
@@ -992,11 +971,7 @@ void ConservationLaw<dim>::mass_matrix_solve(Vector<double> &x)
                 x);
 }
 
-/** \fn void ConservationLaw<dim>::linear_solve(const typename ConservationLawParameters<dim>::LinearSolverType &linear_solver,
- *                                              const SparseMatrix<double> &A,
- *                                              const Vector<double>       &b,
- *                                                    Vector<double>       &x)
- *  \brief Solves the linear system \f$A x = b\f$.
+/** \brief Solves the linear system \f$A x = b\f$.
  *  \param linear_solver linear solution technique to be used to solve the system
  *  \param A the system matrix
  *  \param b the right-hand side vector
@@ -1046,8 +1021,7 @@ void ConservationLaw<dim>::linear_solve (const typename ConservationLawParameter
    constraints.distribute(x);
 }
 
-/** \fn void ConservationLaw<dim>::update_viscosities(const double &dt)
- *  \brief Updates viscosity at each quadrature point in each cell.
+/** \brief Updates viscosity at each quadrature point in each cell.
  */
 template <int dim>
 void ConservationLaw<dim>::update_viscosities(const double &dt)
@@ -1117,8 +1091,7 @@ void ConservationLaw<dim>::update_viscosities(const double &dt)
    }
 }
 
-/** \fn void ConservationLaw<dim>::update_old_first_order_viscosity()
- *  \brief Computes first order viscosity at each quadrature point in each cell.
+/** \brief Computes first order viscosity at each quadrature point in each cell.
  *         This first order viscosity is of the type using a tuning parameter.
  */
 template <int dim>
@@ -1137,8 +1110,7 @@ void ConservationLaw<dim>::update_old_first_order_viscosity()
    }
 }
 
-/** \fn void ConservationLaw<dim>::update_max_principle_viscosity()
- *  \brief Computes the maximum-principle preserving first order viscosity at each
+/** \brief Computes the maximum-principle preserving first order viscosity at each
  *         quadrature point in each cell.
  */
 template <int dim>
@@ -1172,8 +1144,7 @@ void ConservationLaw<dim>::update_max_principle_viscosity()
    }
 }
 
-/** \fn void ConservationLaw<dim>::compute_viscous_fluxes()
- *  \brief Computes viscous fluxes, to be used in the computation of
+/** \brief Computes viscous fluxes, to be used in the computation of
  *         maximum-principle preserving first order viscosity.
  *
  *         Each element of the resulting matrix, \f$V_{i,j}\f$ is computed as
@@ -1219,8 +1190,7 @@ void ConservationLaw<dim>::compute_viscous_fluxes()
    }
 }
 
-/** \fn void ConservationLaw<dim>::compute_viscous_bilinear_forms()
- *  \brief Computes viscous bilinear forms, to be used in the computation of
+/** \brief Computes viscous bilinear forms, to be used in the computation of
  *         maximum-principle preserving first order viscosity.
  *
  *         Each element of the resulting matrix, \f$B_{i,j}\f$ is computed as
@@ -1263,8 +1233,7 @@ void ConservationLaw<dim>::compute_viscous_bilinear_forms()
    }
 }
 
-/** \fn void ConservationLaw<dim>::update_entropy_viscosities(const double &dt)
- *  \brief Computes entropy viscosity at each quadrature point in each cell.
+/** \brief Computes entropy viscosity at each quadrature point in each cell.
  */
 template <int dim>
 void ConservationLaw<dim>::update_entropy_viscosities(const double &dt)
@@ -1305,8 +1274,7 @@ void ConservationLaw<dim>::update_entropy_viscosities(const double &dt)
    }
 }
 
-/** \fn void ConservationLaw<dim>::update_entropy_residuals(const double &dt)
- *  \brief Updates the entropy residuals at each quadrature point in each cell.
+/** \brief Updates the entropy residuals at each quadrature point in each cell.
  */
 template <int dim>
 void ConservationLaw<dim>::update_entropy_residuals(const double &dt)
@@ -1352,8 +1320,7 @@ void ConservationLaw<dim>::update_entropy_residuals(const double &dt)
                                           std::abs(entropy_cell_q[cell](q) - entropy_average));
 }
 
-/** \fn void ConservationLaw<dim>::update_jumps()
- *  \brief Update the jumps.
+/** \brief Update the jumps.
  */
 template <int dim>
 void ConservationLaw<dim>::update_jumps()
@@ -1413,8 +1380,7 @@ void ConservationLaw<dim>::update_jumps()
    } // end cell loop
 }
 
-/** \fn void ConservationLaw<dim>::compute_tr_residual(unsigned int i, double dt)
- *  \brief Computes the negative of the transient residual and stores in
+/** \brief Computes the negative of the transient residual and stores in
  *         system_rhs
  *  \param i current stage of Runge-Kutta step
  *  \param dt current time step size
@@ -1436,8 +1402,7 @@ void ConservationLaw<dim>::compute_tr_residual(unsigned int i, double dt)
    
 }
 
-/** \fn void ConservationLaw<dim>::compute_error(const unsigned int cycle)
- *  \brief Computes the error if exact solution is known
+/** \brief Computes the error if exact solution is known
  *  \param cycle mesh refinement cycle
  */
 template <int dim>
@@ -1462,11 +1427,10 @@ void ConservationLaw<dim>::compute_error(const unsigned int cycle)
    convergence_table.add_value("L2", L2_error);
 }
 
-/** \fn void ConservationLaw<dim>::check_nan()
- *  \brief Checks that there are no NaNs in the solution vector
- *
- *  The NaN check is performed by comparing a value to itself
- *  since an equality comparison with NaN always returns false.
+/** \brief Checks that there are no NaNs in the solution vector
+ * 
+ *         The NaN check is performed by comparing a value to itself
+ *         since an equality comparison with NaN always returns false.
  */
 template <int dim>
 void ConservationLaw<dim>::check_nan()
@@ -1474,4 +1438,36 @@ void ConservationLaw<dim>::check_nan()
    unsigned int n = dof_handler.n_dofs();
    for (unsigned int i = 0; i < n; ++i)
       Assert(current_solution(i) == current_solution(i), ExcNumberNotFinite());
+}
+
+/** \brief Gets the values and indices of nonzero elements in a sparse matrix.
+ *  \param [in] matrix sparse matrix whose row will be retrieved
+ *  \param [in] i index of row to be retrieved
+ *  \param [out] row_values vector of values of nonzero entries of row i
+ *  \param [out] row_indices vector of indices of nonzero entries of row i
+ *  \param [out] n_col number of nonzero entries of row i
+ */
+template <int dim>
+void ConservationLaw<dim>::get_matrix_row(const SparseMatrix<double> &matrix,
+                                          const unsigned int         &i,
+                                                std::vector<double>  &row_values,
+                                                std::vector<unsigned int> &row_indices,
+                                                unsigned int &n_col
+                                         )
+{
+    // get first and one-past-last iterator for row
+    SparseMatrix<double>::const_iterator matrix_iterator     = matrix.begin(i);
+    SparseMatrix<double>::const_iterator matrix_iterator_end = matrix.end(i);
+
+    // compute number of entries in row and then allocate memory
+    n_col = matrix_iterator_end - matrix_iterator;
+    row_values .reserve(n_col);
+    row_indices.reserve(n_col);
+
+    // loop over columns in row
+    for(; matrix_iterator != matrix_iterator_end; ++matrix_iterator)
+    {
+      row_values .push_back(matrix_iterator->value());
+      row_indices.push_back(matrix_iterator->column());
+    }
 }

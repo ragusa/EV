@@ -2,8 +2,7 @@
  *  \brief Provides the function definitions for the Euler class.
  */
 
-/** \fn Euler<dim>::Euler(const EulerParameters<dim> &params)
- *  \brief Constructor for the Euler class.
+/** \brief Constructor for the Euler class.
  *  \param params Euler equation parameters
  */
 template <int dim>
@@ -15,8 +14,7 @@ momentum_extractor(1),
 energy_extractor(1+dim)
 {} 
 
-/** \fn std::vector<std::string> Euler<dim>::get_component_names()
- *  \brief Returns the names of each component.
+/** \brief Returns the names of each component.
  *  \return vector of names of each component
  */
 template <int dim>
@@ -31,9 +29,7 @@ std::vector<std::string> Euler<dim>::get_component_names ()
    return names;
 }
 
-/** \fn std::vector<DataComponentInterpretation::DataComponentInterpretation>
- *      Euler<dim>::get_component_interpretations()
- *  \brief Returns the interpretations for each component.
+/** \brief Returns the interpretations for each component.
  *
  *  This function returns the interpretation of each component,
  *  i.e., whether each component is a scalar or a component of
@@ -55,8 +51,7 @@ Euler<dim>::get_component_interpretations ()
    return component_interpretations;
 } 
 
-/** \fn void Euler<dim>::define_problem()
- *  \brief Create the domain, compute volume, define initial
+/** \brief Create the domain, compute volume, define initial
  *         conditions, and define boundary conditions and exact
  *         solution if it exists.
  */
@@ -261,14 +256,16 @@ void Euler<dim>::define_problem()
    }
 }
 
-/** \fn void Euler<dim>::compute_cell_ss_residual()
- *  \brief Computes the contribution of the steady-state residual
+/** \brief Computes the contribution of the steady-state residual
  *         from the current cell.
+ *  \param [in] fe_values FEValues object
+ *  \param [in] cell cell iterator for current cell
+ *  \param [out] cell_residual cell contribution to global right hand side
  */
 template <int dim>
 void Euler<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
-   const typename DoFHandler<dim>::active_cell_iterator &cell,
-   Vector<double> &cell_residual)
+                                          const typename DoFHandler<dim>::active_cell_iterator &cell,
+                                          Vector<double> &cell_residual)
    {
    // reinitialize fe values for cell
    fe_values.reinit(cell);
@@ -375,15 +372,17 @@ void Euler<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
    }
    }
 
-/** \fn void Euler<dim>::compute_face_ss_residual()
- *  \brief Computes the contribution of the steady-state residual
+/** \brief Computes the contribution of the steady-state residual
  *         from the faces of the current cell.
+ *  \param [in] fe_face_values FEFaceValues object
+ *  \param [in] cell cell iterator for current cell
+ *  \param [out] cell_residual cell contribution to global right hand side
  */
 template <int dim>
 void Euler<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
-   const typename DoFHandler<dim>::active_cell_iterator &cell,
-   Vector<double> &cell_residual)
-   {
+                                          const typename DoFHandler<dim>::active_cell_iterator &cell,
+                                          Vector<double> &cell_residual)
+{
    /*
    // loop over faces
    for (unsigned int face = 0; face < this->faces_per_cell; ++face)
@@ -441,8 +440,11 @@ void Euler<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
       }
    }
     */
-   }
+}
 
+/** \brief computes the steady-state Jacobian, which is used if an implicit
+ *         time integration scheme is to be used.
+ */
 template <int dim>
 void Euler<dim>::compute_ss_jacobian()
 {
@@ -579,10 +581,7 @@ void Euler<dim>::compute_ss_jacobian()
    }
 }
 
-/** \fn void Euler<dim>::compute_velocity(      std::vector<Tensor<1,dim> > &velocity,
- *                                        const std::vector<double>         &density,
- *                                        const std::vector<Tensor<1,dim> > &momentum) const
- *  \brief Computes velocity at each quadrature point in cell.
+/** \brief Computes velocity at each quadrature point in cell.
  */
 template <int dim>
 void Euler<dim>::compute_velocity(      std::vector<Tensor<1,dim> > &velocity,
@@ -593,11 +592,7 @@ void Euler<dim>::compute_velocity(      std::vector<Tensor<1,dim> > &velocity,
       velocity[q] = momentum[q] / density[q];
    }
 
-/** \fn void Euler<dim>::compute_internal_energy_cell(      std::vector<double>         &internal_energy,
- *                                                    const std::vector<double>         &density,
- *                                                    const std::vector<Tensor<1,dim> > &momentum,
- *                                                    const std::vector<double>         &energy) const
- *  \brief Computes internal energy at each quadrature point in cell.
+/** \brief Computes internal energy at each quadrature point in cell.
  */
 template <int dim>
 void Euler<dim>::compute_internal_energy_cell(      std::vector<double>         &internal_energy,
@@ -609,11 +604,7 @@ void Euler<dim>::compute_internal_energy_cell(      std::vector<double>         
       internal_energy[q] = (energy[q] - 0.5*momentum[q]*momentum[q]/density[q]) / density[q];
 }
 
-/** \fn void Euler<dim>::compute_internal_energy_face(      std::vector<double>         &internal_energy,
- *                                                    const std::vector<double>         &density,
- *                                                    const std::vector<Tensor<1,dim> > &momentum,
- *                                                    const std::vector<double>         &energy) const
- *  \brief Computes internal energy at each quadrature point in face.
+/** \brief Computes internal energy at each quadrature point in face.
  */
 template <int dim>
 void Euler<dim>::compute_internal_energy_face(      std::vector<double>         &internal_energy,
@@ -625,9 +616,7 @@ void Euler<dim>::compute_internal_energy_face(      std::vector<double>         
       internal_energy[q] = (energy[q] - 0.5*momentum[q]*momentum[q]/density[q]) / density[q];
 }
 
-/** \fn void Euler<dim>::compute_temperature_cell(      std::vector<double> &temperature,
- *                                                const std::vector<double> &internal_energy) const
- *  \brief Computes temperature at each quadrature point in cell.
+/** \brief Computes temperature at each quadrature point in cell.
  */
 template <int dim>
 void Euler<dim>::compute_temperature_cell(      std::vector<double> &temperature,
@@ -637,9 +626,7 @@ void Euler<dim>::compute_temperature_cell(      std::vector<double> &temperature
       temperature[q] = (gamma - 1.0)*internal_energy[q];
 }
 
-/** \fn void Euler<dim>::compute_temperature_face(      std::vector<double> &temperature,
- *                                                const std::vector<double> &internal_energy) const
- *  \brief Computes temperature at each quadrature point in face.
+/** \brief Computes temperature at each quadrature point in face.
  */
 template <int dim>
 void Euler<dim>::compute_temperature_face(      std::vector<double> &temperature,
@@ -649,13 +636,7 @@ void Euler<dim>::compute_temperature_face(      std::vector<double> &temperature
       temperature[q] = (gamma - 1.0)*internal_energy[q];
 }
 
-/** \fn void Euler<dim>::compute_pressure_cell(      std::vector<double> &pressure,
- *                                             std::vector<double> &dpdrho,
- *                                             std::vector<double> &dpdmx,
- *                                             std::vector<double> &dpdE,
- *                                             const std::vector<double> &density,
- *                                             const std::vector<double> &temperature) const
- *  \brief Computes pressure and pressure derivatives at each quadrature point in cell.
+/** \brief Computes pressure and pressure derivatives at each quadrature point in cell.
  *  \param[out] pressure pressure
  *  \param[out] dpdrho derivative of pressure with respect to density
  *  \param[out] dpdmx derivative of pressure with respect to x-momentum
@@ -682,13 +663,7 @@ void Euler<dim>::compute_pressure_cell(      std::vector<double> &pressure,
    }
 }
 
-/** \fn void Euler<dim>::compute_pressure_face(      std::vector<double> &pressure,
- *                                             std::vector<double> &dpdrho,
- *                                             std::vector<double> &dpdmx,
- *                                             std::vector<double> &dpdE,
- *                                             const std::vector<double> &density,
- *                                             const std::vector<double> &temperature) const
- *  \brief Computes pressure and pressure derivatives at each quadrature point in face.
+/** \brief Computes pressure and pressure derivatives at each quadrature point in face.
  *  \param[out] pressure pressure
  *  \param[out] dpdrho derivative of pressure with respect to density
  *  \param[out] dpdmx derivative of pressure with respect to x-momentum
@@ -715,10 +690,7 @@ void Euler<dim>::compute_pressure_face(      std::vector<double> &pressure,
    }
 }
 
-/** \fn void Euler<dim>::compute_speed_of_sound(      std::vector<double> &speed_of_sound,
- *                                              const std::vector<double> &density,
- *                                              const std::vector<double> &pressure) const
- *  \brief Computes speed of sound at each quadrature point in cell.
+/** \brief Computes speed of sound at each quadrature point in cell.
  */
 template <int dim>
 void Euler<dim>::compute_speed_of_sound(      std::vector<double> &speed_of_sound,
@@ -729,9 +701,8 @@ void Euler<dim>::compute_speed_of_sound(      std::vector<double> &speed_of_soun
       speed_of_sound[q] = std::sqrt(gamma*pressure[q]/density[q]);
    }
 
-/** \fn void Euler<dim>::update_flux_speeds()
- *  \brief Computes the flux speed at each quadrature point in domain and
- *     finds the max in each cell and the max in the entire domain.
+/** \brief Computes the flux speed at each quadrature point in domain and
+ *         finds the max in each cell and the max in the entire domain.
  */
 template <int dim>
 void Euler<dim>::update_flux_speeds()
@@ -786,10 +757,7 @@ void Euler<dim>::update_flux_speeds()
    }
 }
 
-/** \fn void Euler<dim>::compute_entropy(const Vector<double> &solution,
- *                                       FEValues<dim> &fe_values,
- *                                       Vector<double> &entropy) const
- *  \brief Computes entropy at each quadrature point in cell
+/** \brief Computes entropy at each quadrature point in cell
  *  \param solution solution
  *  \param fe_values FEValues object
  *  \param entropy entropy values at each quadrature point in cell
@@ -820,10 +788,7 @@ void Euler<dim>::compute_entropy(const Vector<double> &solution,
       entropy[q] = density[q]/(gamma - 1.0)*std::log(pressure[q]/std::pow(density[q],gamma));
    }
 
-/** \fn void Euler<dim>::compute_entropy_face(const Vector<double> &solution,
- *                                            FEFaceValues<dim> &fe_values_face,
- *                                            Vector<double> &entropy) const
- *  \brief Computes entropy at each quadrature point on face
+/** \brief Computes entropy at each quadrature point on face
  *  \param solution solution
  *  \param fe_values_face FEFaceValues object
  *  \param entropy entropy values at each quadrature point on face
@@ -854,19 +819,16 @@ void Euler<dim>::compute_entropy_face(const Vector<double> &solution,
       entropy[q] = density[q]/(gamma - 1.0)*std::log(pressure[q]/std::pow(density[q],gamma));
    }
 
-/** \fn void Euler<dim>::compute_divergence_entropy_flux (const Vector<double> &solution,
- *                                                        FEValues<dim> &fe_values,
- *                                                        Vector<double> &divergence) const
- *  \brief Computes divergence of entropy flux at each quadrature point in cell
+/**  brief Computes divergence of entropy flux at each quadrature point in cell
  *  \param solution solution
  *  \param fe_values FEValues object
  *  \param divergence divergence of entropy flux at each quadrature point in cell
  */
 template <int dim>
 void Euler<dim>::compute_divergence_entropy_flux (const Vector<double> &solution,
-   FEValues<dim>        &fe_values,
-   Vector<double>       &divergence) const
-   {
+                                                  FEValues<dim>        &fe_values,
+                                                  Vector<double>       &divergence) const
+{
    std::vector<double>         density  (this->n_q_points_cell);
    std::vector<Tensor<1,dim> > momentum (this->n_q_points_cell);
    std::vector<double>         energy   (this->n_q_points_cell);
@@ -894,10 +856,9 @@ void Euler<dim>::compute_divergence_entropy_flux (const Vector<double> &solution
       divergence[q] = momentum_divergence[q] * std::log(pressure[q]/std::pow(density[q],gamma))
          + momentum[q] * (pressure_gradient / pressure[q] - gamma/density[q]*density_gradient[q]);
    }
-   }
+}
 
-/** \fn void Euler<dim>::output_solution(double time) const
- *  \brief Outputs the solution to .gpl if 1-D and otherwise to .vtk.
+/** \brief Outputs the solution to .gpl if 1-D and otherwise to .vtk.
  *  \param time current time; used in exact solution function
  */
 template <int dim>

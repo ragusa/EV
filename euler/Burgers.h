@@ -25,11 +25,11 @@
 /** \class Burgers
  *  \brief Provides the necessary functions for Burgers' equation.
  *
- *  This class extends the ConservationLaw class to viscous
- *  Burgers' equation:
- *  \f[
- *    u_t + u u_x = \nu u_{xx}
- *  \f]
+ *         This class extends the ConservationLaw class to viscous
+ *         Burgers' equation:
+ *         \f[
+ *           u_t + u u_x = \nu u_{xx}
+ *         \f]
  */
 template <int dim>
 class Burgers : public ConservationLaw<dim>
@@ -56,6 +56,9 @@ class Burgers : public ConservationLaw<dim>
     void output_solution(double time);
 
     void compute_ss_residual(Vector<double> &solution);
+    void compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
+                                  const typename DoFHandler<dim>::active_cell_iterator &cell,
+                                  Vector<double> &cell_residual);
     void compute_ss_jacobian();
     void update_flux_speeds();
 

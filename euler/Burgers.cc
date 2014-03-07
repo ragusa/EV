@@ -2,8 +2,7 @@
  *  \brief Provides the function definitions for the Burgers class.
  */
 
-/** \fn Burgers<dim>::Burgers(const BurgersParameters<dim> &params)
- *  \brief Constructor for the Burgers class.
+/** \brief Constructor for the Burgers class.
  *  \param params Burgers equation parameters
  */
 template <int dim>
@@ -13,8 +12,7 @@ Burgers<dim>::Burgers(const BurgersParameters<dim> &params):
    velocity_extractor(0)
 {} 
 
-/** \fn std::vector<std::string> Burgers<dim>::get_component_names()
- *  \brief Returns the names of each component.
+/** \brief Returns the names of each component.
  *  \return vector of names of each component
  */
 template <int dim>
@@ -24,13 +22,11 @@ std::vector<std::string> Burgers<dim>::get_component_names ()
    return names;
 }
 
-/** \fn std::vector<DataComponentInterpretation::DataComponentInterpretation>
- *      Burgers<dim>::get_component_interpretations()
- *  \brief Returns the interpretations for each component.
+/** \brief Returns the interpretations for each component.
  *
- *     This function returns the interpretation of each component,
- *     i.e., whether each component is a scalar or a component of
- *     a vector.
+ *         This function returns the interpretation of each component,
+ *         i.e., whether each component is a scalar or a component of
+ *         a vector.
  *  \return data component interpretations
  */
 template <int dim>
@@ -44,8 +40,7 @@ std::vector<DataComponentInterpretation::DataComponentInterpretation>
    return data_component_interpretation;
 } 
 
-/** \fn void Burgers<dim>::define_problem()
- *  \brief Create the domain, compute volume, define initial
+/** \brief Create the domain, compute volume, define initial
  *         conditions, and define boundary conditions and exact
  *         solution if it exists.
  */
@@ -199,27 +194,26 @@ void Burgers<dim>::define_problem()
    }
 }
 
-/** \fn Burgers<dim>::compute_ss_residual(Vector<double> &f)
- *  \brief Computes the steady-state residual.
+/** \brief Computes the steady-state residual.
  *
- *  This function computes the steady-state residual \f$\mathbf{f_{ss}}\f$ for the conservation law
- *  \f[
- *    \frac{\partial\mathbf{u}}{\partial t} 
- *    + \nabla \cdot \mathbf{f}(\mathbf{u}) = \mathbf{g}(\mathbf{u}),
- *  \f]
- *  which for component \f$i\f$ is
- *  \f[
- *    \mathbf{f_{ss}} = (\mathbf{\psi}, -\nabla \cdot \mathbf{f}(\mathbf{u}) + \mathbf{g}(\mathbf{u}))_\Omega.
- *  \f]
- *  For vicous Burgers' equation, this is the following:
- *  \f[
- *    \mathbf{f_{ss}} = -(\mathbf{\psi},u u_x)_\Omega + (\mathbf{\psi},\nu u_{xx})_\Omega .
- *  \f]
- *  After integration by parts, this is
- *  \f[
- *    \mathbf{f_{ss}} = -(\mathbf{\psi},u u_x)_\Omega - (\mathbf{{\psi}_x},\nu u_{x})_\Omega 
- *    + (\mathbf{\psi},\nu u_{x})_{\partial\Omega}.
- *  \f]
+ *         This function computes the steady-state residual \f$\mathbf{f_{ss}}\f$ for the conservation law
+ *         \f[
+ *           \frac{\partial\mathbf{u}}{\partial t} 
+ *           + \nabla \cdot \mathbf{f}(\mathbf{u}) = \mathbf{g}(\mathbf{u}),
+ *         \f]
+ *         which for component \f$i\f$ is
+ *         \f[
+ *           \mathbf{f_{ss}} = (\mathbf{\psi}, -\nabla \cdot \mathbf{f}(\mathbf{u}) + \mathbf{g}(\mathbf{u}))_\Omega.
+ *         \f]
+ *         For vicous Burgers' equation, this is the following:
+ *         \f[
+ *           \mathbf{f_{ss}} = -(\mathbf{\psi},u u_x)_\Omega + (\mathbf{\psi},\nu u_{xx})_\Omega .
+ *         \f]
+ *         After integration by parts, this is
+ *         \f[
+ *           \mathbf{f_{ss}} = -(\mathbf{\psi},u u_x)_\Omega - (\mathbf{{\psi}_x},\nu u_{x})_\Omega 
+ *           + (\mathbf{\psi},\nu u_{x})_{\partial\Omega}.
+ *         \f]
  *  \param f steady-state residual
  */
 template <int dim>
@@ -311,19 +305,18 @@ void Burgers<dim>::compute_ss_residual(Vector<double> &f)
    }
 }
 
-/** \fn void Burgers<dim>::compute_face_ss_residual()
- *  \brief Computes the contribution of the steady-state residual
+/** \brief Computes the contribution of the steady-state residual
  *         from the faces of the current cell.
  *  \param fe_face_values FEFaceValues object.
  *  \param cell current cell.
  *  \param cell_residual residual contribution for the current cell, to be aggregated into the global residual.
  */
-/*
 template <int dim>
 void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                                             const typename DoFHandler<dim>::active_cell_iterator &cell,
                                             Vector<double> &cell_residual)
 {
+/*
    // loop over faces
    for (unsigned int face = 0; face < this->faces_per_cell; ++face)
    {
@@ -379,11 +372,10 @@ void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                                    *fe_face_values.JxW(q);
       }
    }
-}
 */
+}
 
-/** \fn void Burgers<dim>::compute_ss_Jacobian()
- *  \brief Computes the steady-state Jacobian matrix and stores in system_matrix.
+/** \brief Computes the steady-state Jacobian matrix and stores in system_matrix.
  */
 template <int dim>
 void Burgers<dim>::compute_ss_jacobian()
@@ -437,9 +429,8 @@ void Burgers<dim>::compute_ss_jacobian()
 
 }
 
-/** \fn void Burgers<dim>::update_flux_speeds()
- *  \brief Computes the flux speed at each quadrature point in domain and
- *     finds the max in each cell and the max in the entire domain.
+/** \brief Computes the flux speed at each quadrature point in domain and
+ *         finds the max in each cell and the max in the entire domain.
  */
 template <int dim>
 void Burgers<dim>::update_flux_speeds()
@@ -473,10 +464,7 @@ void Burgers<dim>::update_flux_speeds()
    }
 }
 
-/** \fn void Burgers<dim>::compute_entropy(const Vector<double> &solution,
- *                                         FEValues<dim> &fe_values,
- *                                         Vector<double> &entropy) const
- *  \brief Computes entropy at each quadrature point in cell
+/** \brief Computes entropy at each quadrature point in cell
  *  \param solution solution
  *  \param fe_values FEValues object
  *  \param entropy entropy values at each quadrature point in cell
@@ -493,13 +481,10 @@ void Burgers<dim>::compute_entropy(const Vector<double> &solution,
       entropy(q) = 0.5*velocity[q]*velocity[q];
 }
 
-/** \fn void Burgers<dim>::compute_entropy_face(const Vector<double> &solution,
- *                                              FEValues<dim> &fe_values_face,
- *                                              Vector<double> &entropy) const
- *  \brief Computes entropy at each quadrature point on face
- *  \param solution solution
- *  \param fe_values_face FEFaceValues object
- *  \param entropy entropy values at each quadrature point on face
+/** \brief Computes entropy at each quadrature point on face
+ *  \param [in] solution solution
+ *  \param [in] fe_values_face FEFaceValues object
+ *  \param [out] entropy entropy values at each quadrature point on face
  */
 template <int dim>
 void Burgers<dim>::compute_entropy_face(const Vector<double> &solution,
@@ -513,10 +498,7 @@ void Burgers<dim>::compute_entropy_face(const Vector<double> &solution,
       entropy(q) = 0.5*velocity[q]*velocity[q];
 }
 
-/** \fn void Burgers<dim>::compute_divergence_entropy_flux (const Vector<double> &solution,
- *                                                          FEValues<dim> &fe_values,
- *                                                          Vector<double> &entropy_derivative) const
- *  \brief Computes divergence of entropy flux at each quadrature point in cell
+/** \brief Computes divergence of entropy flux at each quadrature point in cell
  *  \param solution solution
  *  \param fe_values FEValues object
  *  \param divergence_entropy_flux divergence of entropy flux at each quadrature point in cell
@@ -546,9 +528,8 @@ void Burgers<dim>::compute_divergence_entropy_flux (const Vector<double> &soluti
    }
 }
 
-/** \fn void Burgers<dim>::output_solution(double time) const
- *  \brief Outputs the solution to .vtk.
- *  \param time the current time; used in exact solution function
+/** \brief Outputs the solution to .vtk.
+ *  \param [in] time the current time; used in exact solution function
  */
 template <int dim>
 void Burgers<dim>::output_solution (double time)

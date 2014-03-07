@@ -122,6 +122,14 @@ class ConservationLaw
     // error checking functions
     void check_nan();
 
+    // utility functions
+    void get_matrix_row(const SparseMatrix<double> &matrix,
+                        const unsigned int         &i,
+                              std::vector<double>  &row_values,
+                              std::vector<unsigned int> &row_indices,
+                              unsigned int         &n_col
+                       );
+
     virtual std::vector<std::string> get_component_names() = 0;
     virtual std::vector<DataComponentInterpretation::DataComponentInterpretation>
        get_component_interpretations() = 0;
