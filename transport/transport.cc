@@ -1,5 +1,4 @@
 /* Author: Joshua Hansel
- * MATH 676 project, adapted from examples/step-9/step-9.cc
  * Description: solves the 1-d multi-group neutron transport equation
  */
 
@@ -53,20 +52,21 @@
 #include <cstdlib>   // for exit()
 #include <algorithm> // for min()
 
+#include "ExactSolution1.h"
+
 namespace Hansel {
 
 using namespace dealii;
 
 const unsigned int dimension = DIMENSION; // number of spatial dimensions
 
-/**
- * \class TransportProblem
- * \brief for defining a transport problem
+/** \brief Class for defining a transport problem
  */
 template<int dim>
 class TransportProblem {
    public:
-      // parameters class for defining input parameters
+      /** \brief parameters class for defining input parameters
+       */
       class Parameters {
          public:
             Parameters();
@@ -104,6 +104,7 @@ class TransportProblem {
       void assemble_system();
       void run_single();
       void solve();
+      void output_results(const unsigned int &cycle);
       void refine_grid();
       void output_grid(const unsigned int cycle) const;
       void evaluate_error(const unsigned int cycle);
@@ -154,39 +155,7 @@ class TransportProblem {
 
 };
 
-/**
- * \class ExactSolution1
- * \brief defines the exact solution for test problem 1
- */
-template <int dim>
-class ExactSolution1 : public Function<dim> {
-   public:
-      ExactSolution1 () : Function<dim>() {}
-
-      virtual double value (const Point<dim>   &p,
-                            const unsigned int component = 0) const;
-};
-
-/**
- * \fn    ExactSolution<1>::value
- * \brief computes the exact solution for test problem 1 for a given x-point
- */
-template <>
-double ExactSolution1<1>::value (const Point<1>  &p,
-                                 const unsigned int) const
-{
-  const double sigma  = 1.0;
-  const double source = 1.0 / (4.0 * numbers::PI);
-
-  double return_value;
-  return_value = source*(1.0 - std::exp(-sigma*(p[0]+1.0)));
-
-  return return_value;
-}
-
-/**
- * \class ExactSolution2
- * \brief defines the exact solution for test problem 2
+/** \brief defines the exact solution for test problem 2
  */
 template <int dim>
 class ExactSolution2 : public Function<dim> {
@@ -197,9 +166,7 @@ class ExactSolution2 : public Function<dim> {
                             const unsigned int component = 0) const;
 };
 
-/**
- * \fn    ExactSolution2<1>::value
- * \brief computes the exact solution for test problem 2 for a given x-point
+/** \brief computes the exact solution for test problem 2 for a given x-point
  */
 template <>
 double ExactSolution2<1>::value (const Point<1>  &p,
@@ -215,9 +182,7 @@ double ExactSolution2<1>::value (const Point<1>  &p,
   return return_value;
 }
 
-/**
- * \class ExactSolution4
- * \brief defines the exact solution for test problem 4
+/** \brief defines the exact solution for test problem 4
  */
 template <int dim>
 class ExactSolution4 : public Function<dim> {
@@ -228,9 +193,7 @@ class ExactSolution4 : public Function<dim> {
                             const unsigned int component = 0) const;
 };
 
-/**
- * \fn    ExactSolution4<1>::value
- * \brief computes the exact solution for test problem 4 for a given x-point
+/** \brief computes the exact solution for test problem 4 for a given x-point
  */
 template <>
 double ExactSolution4<1>::value (const Point<1>  &p,
@@ -240,9 +203,7 @@ double ExactSolution4<1>::value (const Point<1>  &p,
   return return_value;
 }
 
-/**
- * \class TotalSource
- * \brief defines the total source function
+/** \brief defines the total source function
  */
 template<int dim>
 class TotalSource: public Function<dim> {
@@ -263,9 +224,7 @@ class TotalSource: public Function<dim> {
       const typename TransportProblem<dim>::Parameters &parameters;
 };
 
-/**
- * \fn    TotalSource<dim>::value
- * \brief computes the total source at a given point in space
+/** \brief computes the total source at a given point in space
  */
 template<int dim>
 double TotalSource<dim>::value(const unsigned int group,
@@ -308,9 +267,7 @@ double TotalSource<dim>::value(const unsigned int group,
    return return_value;
 }
 
-/**
- * \fn    TotalSource<dim>::value_list
- * \brief computes the total source at a number of points in space
+/** \brief computes the total source at a number of points in space
  */
 template<int dim>
 void TotalSource<dim>::value_list(const unsigned int group,
@@ -323,9 +280,7 @@ void TotalSource<dim>::value_list(const unsigned int group,
       values[i] = value(group, direction, points[i]);
 }
 
-/**
- * \class TotalCrossSection
- * \brief defines the total cross section function
+/** \brief defines the total cross section function
  */
 template<int dim>
 class TotalCrossSection: public Function<dim> {
@@ -346,9 +301,7 @@ class TotalCrossSection: public Function<dim> {
       const typename TransportProblem<dim>::Parameters parameters;
 };
 
-/**
- * \fn    TotalCrossSection<dim>::value
- * \brief computes the total cross section at a given point in space
+/** \brief computes the total cross section at a given point in space
  */
 template<int dim>
 double TotalCrossSection<dim>::value(const unsigned int group,
@@ -392,9 +345,7 @@ double TotalCrossSection<dim>::value(const unsigned int group,
    return return_value;
 }
 
-/**
- * \fn    TotalCrossSection<dim>::value_list
- * \brief computes the total cross section at a number of points in space
+/** \brief computes the total cross section at a number of points in space
  */
 template<int dim>
 void TotalCrossSection<dim>::value_list(const unsigned int group,
@@ -407,9 +358,7 @@ void TotalCrossSection<dim>::value_list(const unsigned int group,
       values[i] = TotalCrossSection<dim>::value(group, direction, points[i]);
 }
 
-/**
- * \fn    TransportProblem<dim>::TransportProblem
- * \brief constructor for TransportProblem class
+/** \brief constructor for TransportProblem class
  */
 template<int dim>
 TransportProblem<dim>::TransportProblem(const Parameters &parameters) :
@@ -431,18 +380,14 @@ TransportProblem<dim>::TransportProblem(const Parameters &parameters) :
    compute_directions();
 }
 
-/**
- * \fn    TransportProblem<dim>::~TransportProblem
- * \brief destructor for TransportProblem class
+/** \brief destructor for TransportProblem class
  */
 template<int dim>
 TransportProblem<dim>::~TransportProblem() {
    dof_handler.clear();
 }
 
-/**
- * \fn    TransportProblem<dim>::Parameters::Parameters
- * \brief constructor for the TransportProblem<dim>::Parameters class
+/** \brief constructor for the TransportProblem<dim>::Parameters class
  */
 template<int dim>
 TransportProblem<dim>::Parameters::Parameters() :
@@ -456,9 +401,7 @@ TransportProblem<dim>::Parameters::Parameters() :
             {
 }
 
-/**
- * \fn    TransportProblem<dim>::Parameters::declare_parameters
- * \brief defines all of the input parameters
+/** \brief defines all of the input parameters
  */
 template<int dim>
 void TransportProblem<dim>::Parameters::declare_parameters(
@@ -506,9 +449,7 @@ void TransportProblem<dim>::Parameters::declare_parameters(
          "Option to output meshes as .eps files");
 }
 
-/**
- * \fn    TransportProblem<dim>::Parameters::get_parameters
- * \brief get the input parameters
+/** \brief get the input parameters
  */
 template<int dim>
 void TransportProblem<dim>::Parameters::get_parameters(ParameterHandler &prm) {
@@ -536,9 +477,7 @@ void TransportProblem<dim>::Parameters::get_parameters(ParameterHandler &prm) {
    output_meshes = prm.get_bool("Output mesh");
 }
 
-/**
- * \fn    TransportProblem<dim>::compute_directions
- * \brief creates the transport directions
+/** \brief creates the transport directions
  */
 template<int dim>
 void TransportProblem<dim>::compute_directions() {
@@ -566,9 +505,7 @@ void TransportProblem<dim>::compute_directions() {
    }
 }
 
-/**
- * \fn    TransportProblem<dim>::setup_system
- * \brief set up the problem before assembly of the linear system
+/** \brief set up the problem before assembly of the linear system
  */
 template<int dim>
 void TransportProblem<dim>::setup_system()
@@ -612,8 +549,7 @@ void TransportProblem<dim>::setup_system()
    system_rhs      .reinit(dof_handler.n_dofs());
 }
 
-/** \fn void TransportProblem<dim>::compute_viscous_bilinear_forms()
- *  \brief Computes viscous bilinear forms, to be used in the computation of
+/** \brief Computes viscous bilinear forms, to be used in the computation of
  *         maximum-principle preserving first order viscosity.
  *
  *         Each element of the resulting matrix, \f$B_{i,j}\f$ is computed as
@@ -660,9 +596,7 @@ void TransportProblem<dim>::compute_viscous_bilinear_forms()
    }
 }
 
-/**
- * \fn    TransportProblem<dim>::assemble_system
- * \brief assemble the system matrix and right hand side
+/** \brief assemble the system matrix and right hand side
  */
 template<int dim>
 void TransportProblem<dim>::assemble_system() {
@@ -1024,8 +958,7 @@ void TransportProblem<dim>::assemble_system() {
 
 } // end assembly
 
-/** \fn void TransportProblem<dim>::compute_max_principle_viscosity()
- *  \brief Computes the maximum-principle preserving first order viscosity for each cell.
+/** \brief Computes the maximum-principle preserving first order viscosity for each cell.
  */
 template <int dim>
 void TransportProblem<dim>::compute_max_principle_viscosity()
@@ -1056,9 +989,7 @@ void TransportProblem<dim>::compute_max_principle_viscosity()
    }
 }
 
-/**
- * \fn    TransportProblem<dim>::solve
- * \brief solve the linear system
+/** \brief solve the linear system
  */
 template<int dim>
 void TransportProblem<dim>::solve() {
@@ -1102,9 +1033,7 @@ void TransportProblem<dim>::solve() {
    constraints.distribute(present_solution);
 }
 
-/**
- * \fn    TransportProblem<dim>::refine_grid
- * \brief refine the grid
+/** \brief refine the grid
  */
 template<int dim>
 void TransportProblem<dim>::refine_grid() {
@@ -1123,9 +1052,7 @@ void TransportProblem<dim>::refine_grid() {
       triangulation.refine_global(1);
 }
 
-/**
- * \fn    TransportProblem<dim>::output_grid
- * \brief output the grid of the given cycle
+/** \brief output the grid of the given cycle
  */
 template<int dim>
 void TransportProblem<dim>::output_grid(const unsigned int cycle) const {
@@ -1142,9 +1069,7 @@ void TransportProblem<dim>::output_grid(const unsigned int cycle) const {
    grid_out.write_eps(triangulation, output);
 }
 
-/**
- * \fn    TransportProblem<dim>::run
- * \brief run the problem
+/** \brief run the problem
  */
 template<int dim>
 void TransportProblem<dim>::run() {
@@ -1208,20 +1133,30 @@ void TransportProblem<dim>::run() {
          check_solution_nonnegative();
       }
 
-      // evaluate errors
+      // evaluate errors for use in adaptive mesh refinement
       if (parameters.exact_solution_id != 0) evaluate_error(cycle);
 
-      // output grid
-      if (parameters.output_meshes) {
-         if (dim > 1)
-            output_grid(cycle);
-      }
+      // output grid, solution, and viscosity and print convergence results
+      output_results(cycle);
+   }
+}
+
+/** \brief Output grid, solution, and viscosity to output file and print
+ *         convergence table.
+ */
+template<int dim>
+void TransportProblem<dim>::output_results(const unsigned int &cycle)
+{
+
+   // output grid
+   //------------
+   if (parameters.output_meshes) {
+      if (dim > 1)
+         output_grid(cycle);
    }
 
-   // output and post-processing
-   //============================================================================
-
    // create the name string for each flux variable
+   //----------------------------------------------
    std::vector<std::string> variable_names;
    // loop over neutron energy groups
    for (unsigned int g = 0; g < n_energy_groups; ++g) {
@@ -1234,13 +1169,16 @@ void TransportProblem<dim>::run() {
          variable_names.push_back(variable_name);
       }
    }
+
    // create output data object
+   //--------------------------
    DataOut<dim> data_out;
    data_out.attach_dof_handler(dof_handler);
    data_out.add_data_vector(present_solution, variable_names);
    data_out.build_patches(degree + 1);
 
    // create output filename
+   //-----------------------
    std::string output_extension;
    if (dim == 1) output_extension = ".gpl";
    else          output_extension = ".vtk";
@@ -1271,11 +1209,13 @@ void TransportProblem<dim>::run() {
    char *output_filename_char = (char*)output_filename.c_str();
    std::ofstream output(output_filename_char);
 
-   // if 1-d, write solution for gnuplot; otherwise, vtk
+   // write solution output file
+   //---------------------------
    if (dim == 1) data_out.write_gnuplot(output);
    else          data_out.write_vtk(output);
 
-   // write viscosity plot files
+   // write viscosity output file
+   //----------------------------
    if (parameters.viscosity_type != 0) {
       DataOut<dim> visc_out;
       visc_out.attach_dof_handler(dof_handler);
@@ -1298,6 +1238,7 @@ void TransportProblem<dim>::run() {
    }
 
    // print convergence table
+   //------------------------
    if (parameters.exact_solution_id != 0) {
       convergence_table.set_precision("cell size", 3);
       convergence_table.set_scientific("cell size", true);
@@ -1308,9 +1249,7 @@ void TransportProblem<dim>::run() {
    }
 }
 
-/**
- * \fn    TransportProblem<dim>::evaluate_error
- * \brief evaluate error between numerical and exact solution
+/** \brief evaluate error between numerical and exact solution
  */
 template<int dim>
 void TransportProblem<dim>::evaluate_error(const unsigned int cycle) {
@@ -1373,9 +1312,7 @@ void TransportProblem<dim>::evaluate_error(const unsigned int cycle) {
    convergence_table.add_value("L2 error", L2_error);
 }
 
-/**
- * \fn    TransportProblem<dim>::check_solution_nonnegative()
- * \brief check that the solution is non-negative at all nodes.
+/** \brief check that the solution is non-negative at all nodes.
  */
 template<int dim>
 void TransportProblem<dim>::check_solution_nonnegative()
@@ -1394,9 +1331,7 @@ void TransportProblem<dim>::check_solution_nonnegative()
       std::cout << "Solution is not negative at any node." << std::endl;
 }
 
-/**
- * \fn    TransportProblem<dim>::check_local_discrete_max_principle()
- * \brief check that the local discrete max principle is satisfied.
+/** \brief check that the local discrete max principle is satisfied.
  */
 template<int dim>
 void TransportProblem<dim>::check_local_discrete_max_principle()
@@ -1450,9 +1385,7 @@ void TransportProblem<dim>::check_local_discrete_max_principle()
 
 }
 
-/**
- * \fn    main
- * \brief reads input file and then runs problem
+/** \brief reads input file and then runs problem
  */
 int main(int argc, char ** argv) {
    try {
