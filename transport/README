@@ -1,0 +1,20 @@
+README for transport
+====================
+Main source file: transport.cc
+To compile program:
+1. run cmake, for example "cmake -DCMAKE_INSTALL_PREFIX=~/bin/deal.II ."
+2. run make
+
+To run program:
+$ transport <#>
+where <#> is a number corresponding to a coded test problem, 1-4
+
+Input files are located in /input and are named according to the
+test problem: test_problem_#.in
+
+Output files are stored in /output.
+
+Some gnuplot scripts are available in /plotscripts. One just needs to
+run, for example:
+$ gnuplot test_problem_1.gp
+which produces a .pdf file in the /plotscripts directory

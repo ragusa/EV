@@ -53,6 +53,11 @@
 #include <algorithm> // for min()
 
 #include "ExactSolution1.h"
+#include "ExactSolution2.h"
+#include "ExactSolution4.h"
+#include "TotalSource.h"
+#include "TotalCrossSection.h"
+#include "TransportParameters.h"
 
 namespace Hansel {
 
@@ -65,36 +70,7 @@ const unsigned int dimension = DIMENSION; // number of spatial dimensions
 template<int dim>
 class TransportProblem {
    public:
-      /** \brief parameters class for defining input parameters
-       */
-      class Parameters {
-         public:
-            Parameters();
-            static void declare_parameters(ParameterHandler &prm);
-            void get_parameters(ParameterHandler &prm);
-            unsigned int degree; // polynomial degree of finite elements
-            unsigned int n_energy_groups; // number of energy groups
-            unsigned int n_directions; // number of discrete ordinates
-            bool use_adaptive_mesh_refinement; // option to use adaptive mesh refinement
-            unsigned int n_refinement_cycles; // number of refinement cycles
-            unsigned int initial_refinement_level; // initial level of refinement
-            unsigned int solver_option; // solver option
-            unsigned int preconditioner_option; // preconditioner option
-            unsigned int source_option; // source option
-            double source_value; // maximum source value
-            unsigned int total_cross_section_option; // total cross section option
-            double total_cross_section_value; // maximum total cross section value
-            double incoming_flux; // value for incoming flux
-            unsigned int viscosity_type; // option for viscosity type
-            double max_viscosity_coefficient; // value of maximum viscosity coefficient
-            double entropy_viscosity_coefficient; // value of entropy viscosity coefficient
-            unsigned int max_nonlinear_iterations; // maximum number of nonlinear iterations
-            double relative_difference_tolerance; // relative difference tolerance for nonlinear convergence
-            unsigned int exact_solution_id; // ID of exact solution to use when evaluating error
-            bool output_meshes; // option to output meshes as .eps files
-      };
-
-      TransportProblem(const Parameters &parameters);
+      TransportProblem(const TransportParameters &parameters);
       ~TransportProblem();
       void run();
 
@@ -113,7 +89,7 @@ class TransportProblem {
       void check_solution_nonnegative();
       void check_local_discrete_max_principle();
 
-      const Parameters &parameters; // input parameters
+      const TransportParameters &parameters; // input parameters
       unsigned int degree;
       unsigned int n_energy_groups;
       unsigned int n_directions;
@@ -152,216 +128,12 @@ class TransportProblem {
       unsigned int nonlinear_iteration;
 
       ConvergenceTable convergence_table;
-
 };
-
-/** \brief defines the exact solution for test problem 2
- */
-template <int dim>
-class ExactSolution2 : public Function<dim> {
-   public:
-      ExactSolution2 () : Function<dim>() {}
-
-      virtual double value (const Point<dim>   &p,
-                            const unsigned int component = 0) const;
-};
-
-/** \brief computes the exact solution for test problem 2 for a given x-point
- */
-template <>
-double ExactSolution2<1>::value (const Point<1>  &p,
-                                 const unsigned int) const
-{
-  const double sigma = 100.0;
-  const double incoming = 1.0;
-
-  double return_value;
-  if (p[0] < 0.0) return_value = incoming;
-  else            return_value = incoming * std::exp(-sigma*p[0]);
-
-  return return_value;
-}
-
-/** \brief defines the exact solution for test problem 4
- */
-template <int dim>
-class ExactSolution4 : public Function<dim> {
-   public:
-      ExactSolution4 () : Function<dim>() {}
-
-      virtual double value (const Point<dim>   &p,
-                            const unsigned int component = 0) const;
-};
-
-/** \brief computes the exact solution for test problem 4 for a given x-point
- */
-template <>
-double ExactSolution4<1>::value (const Point<1>  &p,
-                                 const unsigned int) const
-{
-  double return_value = p[0] * std::sin(p[0]) * std::exp(-p[0]);
-  return return_value;
-}
-
-/** \brief defines the total source function
- */
-template<int dim>
-class TotalSource: public Function<dim> {
-   public:
-      TotalSource(const typename TransportProblem<dim>::Parameters &parameters) :
-            Function<dim>(),
-            parameters(parameters) {
-      }
-
-      double value(const unsigned int group,
-            const unsigned int direction, const Point<dim> &p) const;
-
-      void value_list(const unsigned int group,
-            const unsigned int direction,
-            const std::vector<Point<dim> > &points,
-            std::vector<double> &values) const;
-   private:
-      const typename TransportProblem<dim>::Parameters &parameters;
-};
-
-/** \brief computes the total source at a given point in space
- */
-template<int dim>
-double TotalSource<dim>::value(const unsigned int group,
-      const unsigned int direction, const Point<dim> &p) const {
-   Assert(group < 2, ExcNotImplemented());
-   double return_value = 0.0;
-   switch (parameters.source_option) {
-      case 1: {
-         if (group == 0)
-            return_value = parameters.source_value / (4.0 * numbers::PI); // isotropic source term
-         else
-            return_value = 0.0 / (4.0 * numbers::PI); // isotropic source term
-         break;
-      } case 2: {
-         if (group == 0) {
-            bool in_nonzero_region = true;
-            for (unsigned int i = 0; i < dimension; ++i)
-               if (p[i] < 0.0) {
-                  in_nonzero_region = false;
-                  break;
-               }
-            if (in_nonzero_region)
-               return_value = parameters.source_value;
-         } else
-            return_value = 0.0;
-         break;
-      } case 3: {
-         /* manufactured solution source
-          * solution is: x*sin(x)*exp(-x) and sigma = 1
-          */
-         return_value = std::sin(p[0]) * std::exp(-p[0])
-                         + p[0] * std::cos(p[0]) * std::exp(-p[0]);
-         break;
-      }
-      default: {
-         Assert(false,ExcNotImplemented());
-         break;
-      }
-   }
-   return return_value;
-}
-
-/** \brief computes the total source at a number of points in space
- */
-template<int dim>
-void TotalSource<dim>::value_list(const unsigned int group,
-      const unsigned int direction, const std::vector<Point<dim> > &points,
-      std::vector<double> &values) const {
-   Assert(values.size() == points.size(),
-         ExcDimensionMismatch (values.size(), points.size()));
-
-   for (unsigned int i = 0; i < points.size(); ++i)
-      values[i] = value(group, direction, points[i]);
-}
-
-/** \brief defines the total cross section function
- */
-template<int dim>
-class TotalCrossSection: public Function<dim> {
-   public:
-      TotalCrossSection(const typename TransportProblem<dim>::Parameters &parameters) :
-            Function<dim>(),
-            parameters(parameters) {
-      }
-
-      double value(const unsigned int group,
-            const unsigned int direction, const Point<dim> &p) const;
-
-      void value_list(const unsigned int group,
-            const unsigned int direction,
-            const std::vector<Point<dim> > &points,
-            std::vector<double> &values) const;
-   private:
-      const typename TransportProblem<dim>::Parameters parameters;
-};
-
-/** \brief computes the total cross section at a given point in space
- */
-template<int dim>
-double TotalCrossSection<dim>::value(const unsigned int group,
-      const unsigned int direction, const Point<dim> &p) const {
-   Assert(group < 2, ExcNotImplemented());
-   double return_value = 0.0;
-   switch (parameters.total_cross_section_option) {
-      case 1: {
-         if (group == 0)
-            return_value = parameters.total_cross_section_value;
-         else if (group == 1)
-            return_value = 0.0;
-         else {
-            Assert(false,ExcNotImplemented());
-         }
-         break;
-      }
-      case 2: {
-         if (group == 0) {
-            bool in_nonzero_region = true;
-            for (unsigned int i = 0; i < dimension; ++i)
-               if (p[i] < 0.0) {
-                  in_nonzero_region = false;
-                  break;
-               }
-            if (in_nonzero_region)
-               return_value = parameters.total_cross_section_value;
-         } else if (group == 1)
-            return_value = 0.0;
-         else {
-            Assert(false,ExcNotImplemented());
-         }
-         break;
-      }
-      default: {
-         Assert(false,ExcNotImplemented());
-         break;
-      }
-   }
-
-   return return_value;
-}
-
-/** \brief computes the total cross section at a number of points in space
- */
-template<int dim>
-void TotalCrossSection<dim>::value_list(const unsigned int group,
-      const unsigned int direction, const std::vector<Point<dim> > &points,
-      std::vector<double> &values) const {
-   Assert(values.size() == points.size(),
-         ExcDimensionMismatch (values.size(), points.size()));
-
-   for (unsigned int i = 0; i < points.size(); ++i)
-      values[i] = TotalCrossSection<dim>::value(group, direction, points[i]);
-}
 
 /** \brief constructor for TransportProblem class
  */
 template<int dim>
-TransportProblem<dim>::TransportProblem(const Parameters &parameters) :
+TransportProblem<dim>::TransportProblem(const TransportParameters &parameters) :
       parameters(parameters),
       degree(parameters.degree),
       n_energy_groups(parameters.n_energy_groups),
@@ -385,96 +157,6 @@ TransportProblem<dim>::TransportProblem(const Parameters &parameters) :
 template<int dim>
 TransportProblem<dim>::~TransportProblem() {
    dof_handler.clear();
-}
-
-/** \brief constructor for the TransportProblem<dim>::Parameters class
- */
-template<int dim>
-TransportProblem<dim>::Parameters::Parameters() :
-      degree(1), n_energy_groups(1), n_directions(1), use_adaptive_mesh_refinement(
-            false), n_refinement_cycles(5), initial_refinement_level(2), solver_option(
-            1), preconditioner_option(1), source_option(1), source_value(0.0e0), total_cross_section_option(
-            1), total_cross_section_value(1.0e0), incoming_flux(1.0e0), viscosity_type(0),
-            max_viscosity_coefficient(5.0e-1), entropy_viscosity_coefficient(1.0e-1),
-            max_nonlinear_iterations(10), relative_difference_tolerance(1.0e-6),
-            exact_solution_id(0), output_meshes(false)
-            {
-}
-
-/** \brief defines all of the input parameters
- */
-template<int dim>
-void TransportProblem<dim>::Parameters::declare_parameters(
-      ParameterHandler &prm) {
-   prm.declare_entry("Finite element degree", "1", Patterns::Integer(),
-         "Polynomial degree of finite elements");
-   prm.declare_entry("Number of energy groups", "1", Patterns::Integer(),
-         "Number of neutron energy groups");
-   prm.declare_entry("Number of directions", "1", Patterns::Integer(),
-         "Number of transport directions");
-   prm.declare_entry("Use adaptive mesh refinement", "false",
-         Patterns::Bool(),
-         "Option to use adaptive mesh refinement instead of uniform");
-   prm.declare_entry("Number of refinement cycles", "5", Patterns::Integer(),
-         "Number of mesh refinement cycles");
-   prm.declare_entry("Initial refinement level", "2", Patterns::Integer(),
-         "Number of refinements for first mesh refinement cycle");
-   prm.declare_entry("Solver option", "1", Patterns::Integer(),
-         "Option for linear solver");
-   prm.declare_entry("Preconditioner option", "1", Patterns::Integer(),
-         "Option for preconditioner for linear solver");
-   prm.declare_entry("Source option", "1", Patterns::Integer(),
-         "Option for source definition");
-   prm.declare_entry("Source value", "0.0e0", Patterns::Double(),
-         "Value of extraneous source term");
-   prm.declare_entry("Total cross section option", "1", Patterns::Integer(),
-         "Option for total cross section definition");
-   prm.declare_entry("Total cross section value", "1.0e0", Patterns::Double(),
-         "Value of total cross section");
-   prm.declare_entry("Incoming flux", "1.0e0", Patterns::Double(),
-         "Value for flux on incoming boundary");
-   prm.declare_entry("Viscosity type", "0", Patterns::Integer(),
-         "Option for viscosity type: none, first-order, or entropy");
-   prm.declare_entry("Max viscosity coefficient", "5.0e-1", Patterns::Double(),
-         "Coefficient for the first-order viscosity");
-   prm.declare_entry("Entropy viscosity coefficient", "1.0e-1", Patterns::Double(),
-         "Coefficient for the entropy viscosity");
-   prm.declare_entry("Maximum number of nonlinear iterations", "10", Patterns::Integer(),
-         "Maximum number of nonlinear iterations to use when using entropy viscosity");
-   prm.declare_entry("Relative difference tolerance", "1.0e-6", Patterns::Double(),
-         "Relative difference tolerance for nonlinear convergence");
-   prm.declare_entry("Exact solution ID", "0", Patterns::Integer(),
-         "ID of exact solution to use when evaluating error");
-   prm.declare_entry("Output mesh", "false", Patterns::Bool(),
-         "Option to output meshes as .eps files");
-}
-
-/** \brief get the input parameters
- */
-template<int dim>
-void TransportProblem<dim>::Parameters::get_parameters(ParameterHandler &prm) {
-   degree = prm.get_integer("Finite element degree");
-   n_energy_groups = prm.get_integer("Number of energy groups");
-   n_directions = prm.get_integer("Number of directions");
-   use_adaptive_mesh_refinement = prm.get_bool("Use adaptive mesh refinement");
-   n_refinement_cycles = prm.get_integer("Number of refinement cycles");
-   initial_refinement_level = prm.get_integer("Initial refinement level");
-   solver_option = prm.get_integer("Solver option");
-   preconditioner_option = prm.get_integer("Preconditioner option");
-   source_option = prm.get_integer("Source option");
-   source_value = prm.get_double("Source value");
-   total_cross_section_option = prm.get_integer("Total cross section option");
-   total_cross_section_value = prm.get_double("Total cross section value");
-   incoming_flux = prm.get_double("Incoming flux");
-   viscosity_type = prm.get_integer("Viscosity type");
-   max_viscosity_coefficient = prm.get_double(
-         "Max viscosity coefficient");
-   entropy_viscosity_coefficient = prm.get_double(
-         "Entropy viscosity coefficient");
-   max_nonlinear_iterations = prm.get_integer("Maximum number of nonlinear iterations");
-   relative_difference_tolerance = prm.get_double("Relative difference tolerance");
-   exact_solution_id = prm.get_integer("Exact solution ID");
-   output_meshes = prm.get_bool("Output mesh");
 }
 
 /** \brief creates the transport directions
@@ -1406,7 +1088,7 @@ int main(int argc, char ** argv) {
 
       // get input parameters
       dealii::ParameterHandler parameter_handler;
-      Hansel::TransportProblem<Hansel::dimension>::Parameters parameters;
+      TransportParameters parameters;
       parameters.declare_parameters(parameter_handler);
       parameter_handler.read_input(input_filename);
       parameters.get_parameters(parameter_handler);
