@@ -1,31 +1,22 @@
 /** \brief computes the total source at a given point in space
  */
 template<int dim>
-double TotalSource<dim>::value(const unsigned int group,
-                               const unsigned int direction,
-                               const Point<dim> &p) const
+double TotalSource<dim>::value(const Point<dim> &p) const
 {
-   Assert(group < 2, ExcNotImplemented());
    double return_value = 0.0;
    switch (parameters.source_option) {
       case 1: {
-         if (group == 0)
-            return_value = parameters.source_value / (4.0 * numbers::PI); // isotropic source term
-         else
-            return_value = 0.0 / (4.0 * numbers::PI); // isotropic source term
+         return_value = parameters.source_value / (4.0 * numbers::PI); // isotropic source term
          break;
       } case 2: {
-         if (group == 0) {
-            bool in_nonzero_region = true;
-            for (unsigned int i = 0; i < dim; ++i)
-               if (p[i] < 0.0) {
-                  in_nonzero_region = false;
-                  break;
-               }
-            if (in_nonzero_region)
-               return_value = parameters.source_value;
-         } else
-            return_value = 0.0;
+         bool in_nonzero_region = true;
+         for (unsigned int i = 0; i < dim; ++i)
+            if (p[i] < 0.0) {
+               in_nonzero_region = false;
+               break;
+            }
+         if (in_nonzero_region)
+            return_value = parameters.source_value;
          break;
       } case 3: {
          /* manufactured solution source
@@ -46,14 +37,12 @@ double TotalSource<dim>::value(const unsigned int group,
 /** \brief computes the total source at a number of points in space
  */
 template<int dim>
-void TotalSource<dim>::value_list(const unsigned int group,
-                                  const unsigned int direction,
-                                  const std::vector<Point<dim> > &points,
+void TotalSource<dim>::value_list(const std::vector<Point<dim> > &points,
                                   std::vector<double> &values) const
 {
    Assert(values.size() == points.size(),
          ExcDimensionMismatch (values.size(), points.size()));
 
    for (unsigned int i = 0; i < points.size(); ++i)
-      values[i] = value(group, direction, points[i]);
+      values[i] = value(points[i]);
 }

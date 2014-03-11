@@ -41,9 +41,9 @@
 
 #include <fstream>
 #include <iostream>
-#include <sstream>   // for stringstreams - creating file names
-#include <cstdlib>   // for exit()
-#include <algorithm> // for min()
+#include <sstream>
+#include <cstdlib>
+#include <algorithm>
 
 #include "ExactSolution1.h"
 #include "ExactSolution2.h"
@@ -64,7 +64,6 @@ class TransportProblem {
       void run();
 
    private:
-      void compute_directions();
       void setup_system();
       void assemble_system();
       void run_single();
@@ -81,11 +80,6 @@ class TransportProblem {
 
       const TransportParameters &parameters; // input parameters
       unsigned int degree;
-      unsigned int n_energy_groups;
-      unsigned int n_directions;
-
-      unsigned int n_variables; // total number of solution variables
-      std::vector<Point<dim> > transport_directions; // direction vectors in Cartesian coordinates
 
       Triangulation<dim> triangulation;
       DoFHandler<dim> dof_handler;
@@ -117,6 +111,8 @@ class TransportProblem {
       unsigned int nonlinear_iteration;
 
       ConvergenceTable convergence_table;
+
+      Tensor<1,dim> transport_direction;
 };
 
 #include "TransportProblem.cc"

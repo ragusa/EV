@@ -1,8 +1,14 @@
-/** \brief solves the 1-d multi-group neutron transport equation
+/** \brief solves the radiative transfer equation:
+           \f[
+              \frac{\partial\psi}{\partial t} 
+              + \mathbf{\omega}\cdot\nabla\psi
+              + \sigma_t \psi
+              = S
+           \f]
  */
 
-#include <sstream>   // for stringstreams - creating file names
-#include <cstdlib>   // for exit()
+#include <sstream>
+#include <cstdlib>
 #include <deal.II/base/parameter_handler.h>
 #include "TransportParameters.h"
 #include "TransportProblem.h"

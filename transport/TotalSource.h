@@ -17,13 +17,9 @@ class TotalSource: public Function<dim>
          parameters(parameters)
       {}
 
-      double value(const unsigned int group,
-                   const unsigned int direction,
-                   const Point<dim> &p) const;
+      double value(const Point<dim> &p) const;
 
-      void value_list(const unsigned int group,
-                      const unsigned int direction,
-                      const std::vector<Point<dim> > &points,
+      void value_list(const std::vector<Point<dim> > &points,
                       std::vector<double> &values) const;
    private:
       const TransportParameters &parameters;

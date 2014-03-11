@@ -4,20 +4,16 @@ template<int dim>
 TransportProblem<dim>::TransportProblem(const TransportParameters &parameters) :
       parameters(parameters),
       degree(parameters.degree),
-      n_energy_groups(parameters.n_energy_groups),
-      n_directions(parameters.n_directions),
-      n_variables(n_energy_groups * n_directions),
       dof_handler(triangulation),
-      fe(FE_Q<dim>(degree), n_variables),
+      fe(FE_Q<dim>(degree), 1),
       dofs_per_cell(fe.dofs_per_cell),
       cell_quadrature_formula(degree+1),
       face_quadrature_formula(degree+1),
       n_q_points_cell(cell_quadrature_formula.size()),
       n_q_points_face(face_quadrature_formula.size()),
-      nonlinear_iteration(0)
+      nonlinear_iteration(0),
+      transport_direction(0.0)
 {
-   // compute the direction unit vectors
-   compute_directions();
 }
 
 /** \brief destructor for TransportProblem class
@@ -25,34 +21,6 @@ TransportProblem<dim>::TransportProblem(const TransportParameters &parameters) :
 template<int dim>
 TransportProblem<dim>::~TransportProblem() {
    dof_handler.clear();
-}
-
-/** \brief creates the transport directions
- */
-template<int dim>
-void TransportProblem<dim>::compute_directions() {
-   Assert(dim < 3, ExcNotImplemented());
-   // radians between each transport direction
-   double angle_interval = 2 * numbers::PI / n_directions;
-   // first angle is always 0 radians
-   double angle_radians = 0.0;
-   for (unsigned int k = 0; k < n_directions; ++k) {
-      // unit vector of direction in Cartesian coordinates - restricted
-      //  to 2 dimensions
-      Point<dim> direction(true);
-      if (dim == 1)
-         direction(0) = std::cos(angle_radians);
-      else if (dim == 2) {
-         direction(0) = std::cos(angle_radians);
-         direction(1) = std::sin(angle_radians);
-      } else
-         Assert(false,ExcNotImplemented());
-
-      // put direction unit vector in vector of all directions
-      transport_directions.push_back(direction);
-      // increment angle
-      angle_radians += angle_interval;
-   }
 }
 
 /** \brief set up the problem before assembly of the linear system
@@ -179,11 +147,8 @@ void TransportProblem<dim>::assemble_system()
    //  quadrature point on cell
    std::vector<double> total_source_values(n_q_points_cell);
 
-   // create extractors
-   Table<2, FEValuesExtractors::Scalar*> fluxes(n_energy_groups, n_directions);
-   for (unsigned int g = 0; g < n_energy_groups; ++g)
-      for (unsigned int d = 0; d < n_directions; ++d)
-         fluxes(g, d) = new FEValuesExtractors::Scalar(g * n_directions + d);
+   // create extractor
+   FEValuesExtractors::Scalar flux(0);
 
    // cell iterator
    typename DoFHandler<dim>::active_cell_iterator cell =
@@ -199,219 +164,212 @@ void TransportProblem<dim>::assemble_system()
          domain_volume += fe_values.JxW(q);
    }
 
-   // loop over energy groups
-   for (unsigned int g = 0; g < n_energy_groups; ++g) {
-      // loop over transport directions
-      for (unsigned int d = 0; d < n_directions; ++d) {
-         // get domain-averaged entropy if using entropy viscosity for this iteration
-         // ---------------------------------------------------------------------
-         double domain_averaged_entropy;
-         double max_entropy_deviation_domain = 0.0;
-         if ((parameters.viscosity_type == 2)&&(nonlinear_iteration != 0)) {
-            // compute domain-averaged entropy
-            double domain_integral_entropy = 0.0;
-            // loop over cells
-            for (cell = dof_handler.begin_active(); cell != endc; ++cell) {
-               // reinitialize FE values
-               fe_values.reinit(cell);
-               // loop over quadrature points
-               for (unsigned int q = 0; q < n_q_points_cell; ++q) {
-                  // get angular flux at quadrature point
-                  double angular_flux = 0.0;
-                  for (unsigned int j = 0; j < dofs_per_cell; ++j) {
-                     angular_flux += fe_values[*(fluxes(g, d))].value(j, q);
-                  }
-                  // compute entropy at quadrature point
-                  double entropy = 1.0/2.0 * angular_flux * angular_flux;
-                  // add contribution of quadrature point to entropy integral
-                  domain_integral_entropy += entropy * fe_values.JxW(q);
-               }
+   // get domain-averaged entropy if using entropy viscosity for this iteration
+   // ---------------------------------------------------------------------
+   double domain_averaged_entropy;
+   double max_entropy_deviation_domain = 0.0;
+   if ((parameters.viscosity_type == 2)&&(nonlinear_iteration != 0)) {
+      // compute domain-averaged entropy
+      double domain_integral_entropy = 0.0;
+      // loop over cells
+      for (cell = dof_handler.begin_active(); cell != endc; ++cell) {
+         // reinitialize FE values
+         fe_values.reinit(cell);
+         // loop over quadrature points
+         for (unsigned int q = 0; q < n_q_points_cell; ++q) {
+            // get angular flux at quadrature point
+            double angular_flux = 0.0;
+            for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+               angular_flux += fe_values[flux].value(j, q);
             }
-            // domain-averaged entropy
-            domain_averaged_entropy = domain_integral_entropy / domain_volume;
+            // compute entropy at quadrature point
+            double entropy = 1.0/2.0 * angular_flux * angular_flux;
+            // add contribution of quadrature point to entropy integral
+            domain_integral_entropy += entropy * fe_values.JxW(q);
+         }
+      }
+      // domain-averaged entropy
+      domain_averaged_entropy = domain_integral_entropy / domain_volume;
 
-            // find max deviation of entropy from domain entropy average
-            // loop over cells
-            for (cell = dof_handler.begin_active(); cell != endc; ++cell) {
-               // reinitialize FE values
-               fe_values.reinit(cell);
+      // find max deviation of entropy from domain entropy average
+      // loop over cells
+      for (cell = dof_handler.begin_active(); cell != endc; ++cell) {
+         // reinitialize FE values
+         fe_values.reinit(cell);
+         // get old values and gradients
+         std::vector<double> old_values(n_q_points_cell);
+         fe_values[flux].get_function_values(old_solution,old_values);
+         // loop over quadrature points
+         for (unsigned int q = 0; q < n_q_points_cell; ++q) {
+            // get angular flux at quadrature point
+            double angular_flux = 0.0;
+            for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+               angular_flux += old_values[q];
+            }
+            // compute entropy at quadrature point
+            double entropy = 1.0/2.0 * angular_flux * angular_flux;
+            // add contribution of quadrature point to entropy integral
+            max_entropy_deviation_domain = std::max(max_entropy_deviation_domain,
+                  std::abs(entropy-domain_averaged_entropy));
+         }
+      }
+   }
+
+   // loop over cells
+   unsigned int i_cell = 0;
+   for (cell = dof_handler.begin_active(); cell != endc; ++cell, ++i_cell) {
+      // initialize local matrix and rhs to zero
+      inviscid_cell_matrix = 0;
+      cell_matrix = 0;
+      cell_rhs = 0;
+
+      // get local dof indices
+      cell->get_dof_indices(local_dof_indices);
+
+      // reinitialize FE values
+      fe_values.reinit(cell);
+
+      // get total cross section for all quadrature points
+      total_cross_section.value_list(fe_values.get_quadrature_points(),
+                                     total_cross_section_values);
+      // get total source for all quadrature points
+      total_source.value_list(fe_values.get_quadrature_points(),
+                              total_source_values);
+
+      // compute viscosity
+      // ------------------------------------------------------------------
+      double viscosity;
+      double h = cell->diameter();
+      double max_viscosity_cell = parameters.max_viscosity_coefficient * h;
+      max_viscosity(i_cell) = max_viscosity_cell;
+      switch (parameters.viscosity_type) {
+         case 0: {
+            break;
+         } case 1: {
+            viscosity = max_viscosity_cell;
+            break;
+         } case 2: {
+            if (nonlinear_iteration != 0) {
                // get old values and gradients
                std::vector<double> old_values(n_q_points_cell);
-               fe_values[*(fluxes(g, d))].get_function_values(old_solution,old_values);
-               // loop over quadrature points
+               std::vector<Tensor<1,dim> > old_gradients(n_q_points_cell);
+               fe_values[flux].get_function_values(old_solution,old_values);
+               fe_values[flux].get_function_gradients(old_solution,old_gradients);
+
+               // compute entropy values at each quadrature point on cell
+               std::vector<double> entropy_values(n_q_points_cell,0.0);
+               for (unsigned int q = 0; q < n_q_points_cell; ++q)
+                  entropy_values[q] = 1.0/2.0 * old_values[q] * old_values[q];
+               // compute entropy residual values at each quadrature point on cell
+               std::vector<double> entropy_residual_values(n_q_points_cell,0.0);
+               for (unsigned int q = 0; q < n_q_points_cell; ++q)
+                  entropy_residual_values[q] = std::abs(transport_direction *
+                        old_values[q] * old_gradients[q]
+                                                        + total_cross_section_values[q] * entropy_values[q]);
+               // compute entropy deviation values at each quadrature point on cell
+               std::vector<double> entropy_deviation_values(n_q_points_cell,0.0);
+               for (unsigned int q = 0; q < n_q_points_cell; ++q)
+                  entropy_deviation_values[q] = std::abs(entropy_values[q] - domain_averaged_entropy);
+               // determine cell maximum entropy residual and entropy deviation
+               double max_entropy_residual = 0.0;
                for (unsigned int q = 0; q < n_q_points_cell; ++q) {
-                  // get angular flux at quadrature point
-                  double angular_flux = 0.0;
-                  for (unsigned int j = 0; j < dofs_per_cell; ++j) {
-                     angular_flux += old_values[q];
-                  }
-                  // compute entropy at quadrature point
-                  double entropy = 1.0/2.0 * angular_flux * angular_flux;
-                  // add contribution of quadrature point to entropy integral
-                  max_entropy_deviation_domain = std::max(max_entropy_deviation_domain,
-                        std::abs(entropy-domain_averaged_entropy));
+                  max_entropy_residual = std::max(max_entropy_residual,entropy_residual_values[q]);
                }
-            }
+
+               // compute entropy viscosity
+               double entropy_viscosity_cell = parameters.entropy_viscosity_coefficient *
+                     h * h * max_entropy_residual / max_entropy_deviation_domain;
+               entropy_viscosity(i_cell) = entropy_viscosity_cell;
+
+               // determine viscosity: minimum of first-order viscosity and entropy viscosity
+               viscosity = std::min(max_viscosity_cell, entropy_viscosity_cell);
+            } else
+               viscosity = max_viscosity_cell;
+
+            break;
+         } case 3: {
+            // maximum-principle preserving viscosity does not add Laplacian term;
+            // to avoid unnecessary branching in assembly loop, just add Laplacian
+            // term with zero viscosity, so just keep viscosity with its initialization
+            // of zero
+            viscosity = 0.0;
+            break;
+         } default: {
+            Assert(false,ExcNotImplemented());
+            break;
          }
+      }
+      // compute cell contributions to global system
+      // ------------------------------------------------------------------
+      for (unsigned int q = 0; q < n_q_points_cell; ++q) {
+         for (unsigned int i = 0; i < dofs_per_cell; ++i) {
+            for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+               // store integrals of divergence and total interaction term
+               // so that they may be used in computation of max-principle
+               // preserving viscosity
+               inviscid_cell_matrix(i,j) += (
+                  // divergence term
+                  fe_values[flux].value(i, q)
+                     * transport_direction
+                     * fe_values[flux].gradient(j, q) +
+                  // total interaction term
+                  fe_values[flux].value(i, q)
+                     * total_cross_section_values[q]
+                     * fe_values[flux].value(j, q)
+                  ) * fe_values.JxW(q);
 
-         // loop over cells
-         unsigned int i_cell = 0;
-         for (cell = dof_handler.begin_active(); cell != endc; ++cell, ++i_cell) {
-            // initialize local matrix and rhs to zero
-            inviscid_cell_matrix = 0;
-            cell_matrix = 0;
-            cell_rhs = 0;
+               // add to matrix
+               cell_matrix(i, j) +=
+                  // viscosity term
+                  viscosity
+                     * fe_values[flux].gradient(i, q)
+                     * fe_values[flux].gradient(j, q)
+                     * fe_values.JxW(q);
+            } // end j
 
-            // get local dof indices
-            cell->get_dof_indices(local_dof_indices);
+            cell_rhs(i) +=
+               // total source term
+               fe_values[flux].value(i, q)
+                  * total_source_values[q] * fe_values.JxW(q);
+         } // end i
+      } // end q
 
-            // reinitialize FE values
-            fe_values.reinit(cell);
+      // add face terms; these arise due to integration by parts of viscosity term
+      // ------------------------------------------------------------------
+      for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell; ++face)
+      {
+         if (cell->face(face)->at_boundary()) {
+            fe_face_values.reinit(cell, face);
 
-            // get total cross section for all quadrature points
-            total_cross_section.value_list(g, d,
-                  fe_values.get_quadrature_points(),
-                  total_cross_section_values);
-            // get total source for all quadrature points
-            total_source.value_list(g, d, fe_values.get_quadrature_points(),
-                  total_source_values);
+            for (unsigned int q = 0; q < n_q_points_face; ++q)
+               for (unsigned int i = 0; i < dofs_per_cell; ++i)
+                  for (unsigned int j = 0; j < dofs_per_cell; ++j)
+                     cell_matrix(i, j) -= (viscosity
+                           * fe_face_values.shape_value(i, q)
+                           * fe_face_values.normal_vector(q)
+                           * fe_face_values.shape_grad(j, q)
+                           * fe_face_values.JxW(q));
+         }
+      } 
 
-            // compute viscosity
-            // ------------------------------------------------------------------
-            double viscosity;
-            double h = cell->diameter();
-            double max_viscosity_cell = parameters.max_viscosity_coefficient * h;
-            max_viscosity(i_cell) = max_viscosity_cell;
-            switch (parameters.viscosity_type) {
-               case 0: {
-                  break;
-               } case 1: {
-                  viscosity = max_viscosity_cell;
-                  break;
-               } case 2: {
-                  if (nonlinear_iteration != 0) {
-                     // get old values and gradients
-                     std::vector<double> old_values(n_q_points_cell);
-                     std::vector<Tensor<1,dim> > old_gradients(n_q_points_cell);
-                     fe_values[*(fluxes(g, d))].get_function_values(old_solution,old_values);
-                     fe_values[*(fluxes(g, d))].get_function_gradients(old_solution,old_gradients);
+      // add inviscid terms to cell matrix
+      cell_matrix.add(1.0, inviscid_cell_matrix);
 
-                     // compute entropy values at each quadrature point on cell
-                     std::vector<double> entropy_values(n_q_points_cell,0.0);
-                     for (unsigned int q = 0; q < n_q_points_cell; ++q)
-                        entropy_values[q] = 1.0/2.0 * old_values[q] * old_values[q];
-                     // compute entropy residual values at each quadrature point on cell
-                     std::vector<double> entropy_residual_values(n_q_points_cell,0.0);
-                     for (unsigned int q = 0; q < n_q_points_cell; ++q)
-                        entropy_residual_values[q] = std::abs(transport_directions[d] *
-                              old_values[q] * old_gradients[q]
-                                                              + total_cross_section_values[q] * entropy_values[q]);
-                     // compute entropy deviation values at each quadrature point on cell
-                     std::vector<double> entropy_deviation_values(n_q_points_cell,0.0);
-                     for (unsigned int q = 0; q < n_q_points_cell; ++q)
-                        entropy_deviation_values[q] = std::abs(entropy_values[q] - domain_averaged_entropy);
-                     // determine cell maximum entropy residual and entropy deviation
-                     double max_entropy_residual = 0.0;
-                     for (unsigned int q = 0; q < n_q_points_cell; ++q) {
-                        max_entropy_residual = std::max(max_entropy_residual,entropy_residual_values[q]);
-                     }
+      // aggregate local matrix and rhs to global matrix and rhs
+      constraints.distribute_local_to_global(cell_matrix,
+                                             cell_rhs,
+                                             local_dof_indices,
+                                             system_matrix,
+                                             system_rhs);
 
-                     // compute entropy viscosity
-                     double entropy_viscosity_cell = parameters.entropy_viscosity_coefficient *
-                           h * h * max_entropy_residual / max_entropy_deviation_domain;
-                     entropy_viscosity(i_cell) = entropy_viscosity_cell;
-
-                     // determine viscosity: minimum of first-order viscosity and entropy viscosity
-                     viscosity = std::min(max_viscosity_cell, entropy_viscosity_cell);
-                  } else
-                     viscosity = max_viscosity_cell;
-
-                  break;
-               } case 3: {
-                  // maximum-principle preserving viscosity does not add Laplacian term;
-                  // to avoid unnecessary branching in assembly loop, just add Laplacian
-                  // term with zero viscosity, so just keep viscosity with its initialization
-                  // of zero
-                  viscosity = 0.0;
-                  break;
-               } default: {
-                  Assert(false,ExcNotImplemented());
-                  break;
-               }
-            }
-            // compute cell contributions to global system
-            // ------------------------------------------------------------------
-            for (unsigned int q = 0; q < n_q_points_cell; ++q) {
-               for (unsigned int i = 0; i < dofs_per_cell; ++i) {
-                  for (unsigned int j = 0; j < dofs_per_cell; ++j) {
-                     // store integrals of divergence and total interaction term
-                     // so that they may be used in computation of max-principle
-                     // preserving viscosity
-                     inviscid_cell_matrix(i,j) += (
-                        // divergence term
-                        fe_values[*(fluxes(g, d))].value(i, q)
-                           * transport_directions[d]
-                           * fe_values[*(fluxes(g, d))].gradient(j, q) +
-                        // total interaction term
-                        fe_values[*(fluxes(g, d))].value(i, q)
-                           * total_cross_section_values[q]
-                           * fe_values[*(fluxes(g, d))].value(j, q)
-                        ) * fe_values.JxW(q);
-
-                     // add to matrix
-                     cell_matrix(i, j) +=
-                        // viscosity term
-                        viscosity
-                           * fe_values[*(fluxes(g, d))].gradient(i, q)
-                           * fe_values[*(fluxes(g, d))].gradient(j, q)
-                           * fe_values.JxW(q);
-                  } // end j
-
-                  cell_rhs(i) +=
-                     // total source term
-                     fe_values[*(fluxes(g, d))].value(i, q)
-                        * total_source_values[q] * fe_values.JxW(q);
-               } // end i
-            } // end q
-
-            // add face terms; these arise due to integration by parts of viscosity term
-            // ------------------------------------------------------------------
-            for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell; ++face)
-            {
-               if (cell->face(face)->at_boundary()) {
-                  fe_face_values.reinit(cell, face);
-
-                  for (unsigned int q = 0; q < n_q_points_face; ++q)
-                     for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                        for (unsigned int j = 0; j < dofs_per_cell; ++j)
-                           cell_matrix(i, j) -= (viscosity
-                                 * fe_face_values.shape_value(i, q)
-                                 * fe_face_values.normal_vector(q)
-                                 * fe_face_values.shape_grad(j, q)
-                                 * fe_face_values.JxW(q));
-               }
-            } 
-
-            // add inviscid terms to cell matrix
-            cell_matrix.add(1.0, inviscid_cell_matrix);
-
-            // aggregate local matrix and rhs to global matrix and rhs
-            constraints.distribute_local_to_global(cell_matrix,
-                                                   cell_rhs,
-                                                   local_dof_indices,
-                                                   system_matrix,
-                                                   system_rhs);
-
-            // aggregate local inviscid matrix global matrix
-            for (unsigned int i = 0; i < dofs_per_cell; ++i)
-               for (unsigned int j = 0; j < dofs_per_cell; ++j)
-                  max_principle_viscosity_numerators.add(local_dof_indices[i],
-                                                         local_dof_indices[j],
-                                                         inviscid_cell_matrix(i,j));
-                  
-         } // end cell
-      } // end d
-   } // end g
+      // aggregate local inviscid matrix global matrix
+      for (unsigned int i = 0; i < dofs_per_cell; ++i)
+         for (unsigned int j = 0; j < dofs_per_cell; ++j)
+            max_principle_viscosity_numerators.add(local_dof_indices[i],
+                                                   local_dof_indices[j],
+                                                   inviscid_cell_matrix(i,j));
+            
+   } // end cell
 
    // add viscous bilinear form for maximum-principle preserving viscosity
    // ---------------------------------------------------------------------------
@@ -419,93 +377,75 @@ void TransportProblem<dim>::assemble_system()
       // compute maximum-principle preserving viscosity
       compute_max_principle_viscosity();
 
-      for (unsigned int g = 0; g < n_energy_groups; ++g) {
-         for (unsigned int d = 0; d < n_directions; ++d) {
-            unsigned int i_cell = 0;
-            for (cell = dof_handler.begin_active(); cell != endc; ++cell, ++i_cell) {
-               // reset cell matrix to zero
-               cell_matrix = 0;
+      unsigned int i_cell = 0;
+      for (cell = dof_handler.begin_active(); cell != endc; ++cell, ++i_cell) {
+         // reset cell matrix to zero
+         cell_matrix = 0;
 
-               // compute cell volume
-               double cell_volume = cell->measure();
-               // compute cell contribution to global system matrix
-               for (unsigned int i = 0; i < dofs_per_cell; ++i) {
-                  for (unsigned int j = 0; j < dofs_per_cell; ++j) {
-                     double viscous_bilinear_form;
-                     if (j == i)
-                        viscous_bilinear_form = cell_volume;
-                     else
-                        viscous_bilinear_form = -1.0/(dofs_per_cell - 1.0)*cell_volume;
+         // compute cell volume
+         double cell_volume = cell->measure();
+         // compute cell contribution to global system matrix
+         for (unsigned int i = 0; i < dofs_per_cell; ++i) {
+            for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+               double viscous_bilinear_form;
+               if (j == i)
+                  viscous_bilinear_form = cell_volume;
+               else
+                  viscous_bilinear_form = -1.0/(dofs_per_cell - 1.0)*cell_volume;
  
-                     cell_matrix(i,j) += max_principle_viscosity(i_cell) * viscous_bilinear_form;
-                  }
-               }
-
-               // aggregate local matrix and rhs to global matrix and rhs
-               cell->get_dof_indices(local_dof_indices);
-               constraints.distribute_local_to_global(cell_matrix,
-                                                      local_dof_indices,
-                                                      system_matrix);
-
+               cell_matrix(i,j) += max_principle_viscosity(i_cell) * viscous_bilinear_form;
             }
          }
+
+         // aggregate local matrix and rhs to global matrix and rhs
+         cell->get_dof_indices(local_dof_indices);
+         constraints.distribute_local_to_global(cell_matrix,
+                                                local_dof_indices,
+                                                system_matrix);
+
       }
    }
 
    // apply boundary conditions
    // ---------------------------------------------------------------------------
-   // loop over transport directions
-   for (unsigned int d = 0; d < n_directions; ++d) {
-      // reset boundary indicators to zero
-      for (cell = dof_handler.begin_active(); cell != endc; ++cell)
-         for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell;
-               ++face)
-            if (cell->face(face)->at_boundary())
-               cell->face(face)->set_boundary_indicator(0);
+   // reset boundary indicators to zero
+   for (cell = dof_handler.begin_active(); cell != endc; ++cell)
+      for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell;
+            ++face)
+         if (cell->face(face)->at_boundary())
+            cell->face(face)->set_boundary_indicator(0);
 
-      // loop over cells
-      for (cell = dof_handler.begin_active(); cell != endc; ++cell) {
-         // loop over faces of cell
-         for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell;
-               ++face) {
-            // if face is at boundary
-            if (cell->face(face)->at_boundary()) {
-               // reinitialize FE face values
-               fe_face_values.reinit(cell, face);
-               // determine if the transport flux is incoming through this face;
-               //  it isn't necessary to loop over all face quadrature points because
-               //  the transport direction and normal vector are the same at each
-               //  quadrature point; therefore, quadrature point 0 is arbitrarily chosen
-               double small = -1.0e-12;
-               if (fe_face_values.normal_vector(0) * transport_directions[d] < small) {
-                  // mark boundary as incoming flux boundary: indicator 1
-                  cell->face(face)->set_boundary_indicator(1);
-               }
+   // loop over cells
+   for (cell = dof_handler.begin_active(); cell != endc; ++cell) {
+      // loop over faces of cell
+      for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell;
+            ++face) {
+         // if face is at boundary
+         if (cell->face(face)->at_boundary()) {
+            // reinitialize FE face values
+            fe_face_values.reinit(cell, face);
+            // determine if the transport flux is incoming through this face;
+            //  it isn't necessary to loop over all face quadrature points because
+            //  the transport direction and normal vector are the same at each
+            //  quadrature point; therefore, quadrature point 0 is arbitrarily chosen
+            double small = -1.0e-12;
+            if (fe_face_values.normal_vector(0) * transport_direction < small) {
+               // mark boundary as incoming flux boundary: indicator 1
+               cell->face(face)->set_boundary_indicator(1);
             }
          }
       }
-      // create component masks for current transport direction
-      std::vector<bool> component_mask(n_variables, false);
-      // loop over energy groups
-      for (unsigned int g = 0; g < n_energy_groups; ++g)
-         component_mask[g * n_directions + d] = true;
-      // apply Dirichlet boundary condition
-      std::map<unsigned int, double> boundary_values;
-      VectorTools::interpolate_boundary_values(dof_handler,
-                                               1,
-                                               ConstantFunction<dim>(parameters.incoming_flux, n_variables),
-                                               boundary_values,
-                                               component_mask);
-      MatrixTools::apply_boundary_values(boundary_values,
-                                         system_matrix,
-                                         present_solution,
-                                         system_rhs);
-   } // end transport directions
-
-   // deallocate extractors
-   for (unsigned int g = 0; g < n_energy_groups; ++g)
-      for (unsigned int d = 0; d < n_directions; ++d)
-         delete fluxes(g, d);
+   }
+   // apply Dirichlet boundary condition
+   std::map<unsigned int, double> boundary_values;
+   VectorTools::interpolate_boundary_values(dof_handler,
+                                            1,
+                                            ConstantFunction<dim>(parameters.incoming_flux, 1),
+                                            boundary_values);
+   MatrixTools::apply_boundary_values(boundary_values,
+                                      system_matrix,
+                                      present_solution,
+                                      system_rhs);
 
 } // end assembly
 
@@ -620,7 +560,11 @@ void TransportProblem<dim>::output_grid() const
 /** \brief run the problem
  */
 template<int dim>
-void TransportProblem<dim>::run() {
+void TransportProblem<dim>::run()
+{
+   // decide that transport direction is the unit x vector
+   transport_direction[0] = 1.0;
+
    // loop over refinement cycles
    for (unsigned int cycle = 0; cycle < parameters.n_refinement_cycles; ++cycle)
    {
@@ -733,26 +677,11 @@ void TransportProblem<dim>::output_results()
          output_grid();
    }
 
-   // create the name string for each flux variable
-   //----------------------------------------------
-   std::vector<std::string> variable_names;
-   // loop over neutron energy groups
-   for (unsigned int g = 0; g < n_energy_groups; ++g) {
-      // loop over transport directions
-      for (unsigned int k = 0; k < n_directions; ++k) {
-         // variable name includes energy group and transport direction index
-         std::stringstream variable_stringstream;
-         variable_stringstream << "flux_group" << g << "_direction" << k;
-         std::string variable_name = variable_stringstream.str();
-         variable_names.push_back(variable_name);
-      }
-   }
-
    // create output data object
    //--------------------------
    DataOut<dim> data_out;
    data_out.attach_dof_handler(dof_handler);
-   data_out.add_data_vector(present_solution, variable_names);
+   data_out.add_data_vector(present_solution, "flux");
    data_out.build_patches(degree + 1);
 
    // create output filename
