@@ -33,6 +33,9 @@ class TransportParameters {
     double relative_difference_tolerance; // relative difference tolerance for nonlinear convergence
     unsigned int exact_solution_id; // ID of exact solution to use when evaluating error
     bool output_meshes; // option to output meshes as .eps files
+    bool is_steady_state; // is the problem steady-state?
+    double end_time; // end time if transient problem is run
+    double time_step_size; // time step size if transient problem is run
 };
 
 #include "TransportParameters.cc"

@@ -18,3 +18,6 @@ set Maximum number of nonlinear iterations = 10
 set Relative difference tolerance = 1.0e-6
 set Exact solution ID = 1
 set Output mesh = false
+set Is steady state = true
+set End time = 1.0
+set Time step size = 0.001

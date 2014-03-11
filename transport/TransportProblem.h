@@ -1,0 +1,123 @@
+#ifndef TransportProblem_cc
+#define TransportProblem_cc
+
+#include <deal.II/base/convergence_table.h>
+#include <deal.II/base/quadrature_lib.h>
+#include <deal.II/base/function.h>
+#include <deal.II/base/logstream.h>
+#include <deal.II/base/parsed_function.h>
+#include <deal.II/base/tensor_function.h>
+#include <deal.II/base/table.h>
+
+#include <deal.II/lac/vector.h>
+#include <deal.II/lac/full_matrix.h>
+#include <deal.II/lac/sparse_matrix.h>
+#include <deal.II/lac/solver_bicgstab.h>
+#include <deal.II/lac/sparse_direct.h>
+#include <deal.II/lac/precondition.h>
+#include <deal.II/lac/constraint_matrix.h>
+
+#include <deal.II/grid/tria.h>
+#include <deal.II/grid/grid_generator.h>
+#include <deal.II/grid/grid_refinement.h>
+#include <deal.II/grid/tria_accessor.h>
+#include <deal.II/grid/tria_iterator.h>
+#include <deal.II/grid/tria_boundary_lib.h>
+#include <deal.II/grid/grid_out.h>
+
+#include <deal.II/dofs/dof_handler.h>
+#include <deal.II/dofs/dof_accessor.h>
+#include <deal.II/dofs/dof_tools.h>
+
+#include <deal.II/fe/fe_values.h>
+#include <deal.II/fe/fe_system.h>
+#include <deal.II/fe/fe_q.h>
+#include <deal.II/fe/mapping_q.h>
+
+#include <deal.II/numerics/vector_tools.h>
+#include <deal.II/numerics/matrix_tools.h>
+#include <deal.II/numerics/data_out.h>
+#include <deal.II/numerics/error_estimator.h>
+
+#include <fstream>
+#include <iostream>
+#include <sstream>   // for stringstreams - creating file names
+#include <cstdlib>   // for exit()
+#include <algorithm> // for min()
+
+#include "ExactSolution1.h"
+#include "ExactSolution2.h"
+#include "ExactSolution4.h"
+#include "TotalSource.h"
+#include "TotalCrossSection.h"
+#include "TransportParameters.h"
+
+using namespace dealii;
+
+/** \brief Class for defining a transport problem
+ */
+template<int dim>
+class TransportProblem {
+   public:
+      TransportProblem(const TransportParameters &parameters);
+      ~TransportProblem();
+      void run();
+
+   private:
+      void compute_directions();
+      void setup_system();
+      void assemble_system();
+      void run_single();
+      void solve_step();
+      void solve_linear_system();
+      void refine_grid();
+      void output_results();
+      void output_grid() const;
+      void evaluate_error(const unsigned int cycle);
+      void compute_viscous_bilinear_forms();
+      void compute_max_principle_viscosity();
+      void check_solution_nonnegative() const;
+      void check_local_discrete_max_principle() const;
+
+      const TransportParameters &parameters; // input parameters
+      unsigned int degree;
+      unsigned int n_energy_groups;
+      unsigned int n_directions;
+
+      unsigned int n_variables; // total number of solution variables
+      std::vector<Point<dim> > transport_directions; // direction vectors in Cartesian coordinates
+
+      Triangulation<dim> triangulation;
+      DoFHandler<dim> dof_handler;
+      FESystem<dim> fe;
+      const unsigned int dofs_per_cell;
+
+      QGauss<dim>   cell_quadrature_formula;
+      QGauss<dim-1> face_quadrature_formula;
+      const unsigned int n_q_points_cell;
+      const unsigned int n_q_points_face;
+
+      ConstraintMatrix constraints;
+
+      SparsityPattern constrained_sparsity_pattern;
+      SparseMatrix<double> system_matrix;
+
+      Vector<double> old_solution;
+      Vector<double> present_solution;
+      Vector<double> system_rhs;
+
+      Vector<double> max_viscosity;
+      Vector<double> entropy_viscosity;
+      Vector<double> max_principle_viscosity;
+
+      SparsityPattern unconstrained_sparsity_pattern;
+      SparseMatrix<double> max_principle_viscosity_numerators;
+      SparseMatrix<double> viscous_bilinear_forms;
+
+      unsigned int nonlinear_iteration;
+
+      ConvergenceTable convergence_table;
+};
+
+#include "TransportProblem.cc"
+#endif

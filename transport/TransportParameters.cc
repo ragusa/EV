@@ -1,6 +1,5 @@
 /** \brief constructor
  */
-//template<int dim>
 TransportParameters::TransportParameters() :
       degree(1),
       n_energy_groups(1),
@@ -21,13 +20,15 @@ TransportParameters::TransportParameters() :
       max_nonlinear_iterations(10),
       relative_difference_tolerance(1.0e-6),
       exact_solution_id(0),
-      output_meshes(false)
+      output_meshes(false),
+      is_steady_state(true),
+      end_time(1.0),
+      time_step_size(0.001)
 {
 }
 
 /** \brief defines all of the input parameters
  */
-//template<int dim>
 void TransportParameters::declare_parameters(ParameterHandler &prm)
 {
    prm.declare_entry("Finite element degree", "1", Patterns::Integer(),
@@ -71,11 +72,16 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
          "ID of exact solution to use when evaluating error");
    prm.declare_entry("Output mesh", "false", Patterns::Bool(),
          "Option to output meshes as .eps files");
+   prm.declare_entry("Is steady state", "true", Patterns::Bool(),
+         "Boolean flag for steady-state vs. transient");
+   prm.declare_entry("End time", "1.0", Patterns::Double(),
+         "End time if transient problem is run");
+   prm.declare_entry("Time step size", "0.01", Patterns::Double(),
+         "Time step size if transient problem is run");
 }
 
 /** \brief get the input parameters
  */
-//template<int dim>
 void TransportParameters::get_parameters(ParameterHandler &prm) {
    degree = prm.get_integer("Finite element degree");
    n_energy_groups = prm.get_integer("Number of energy groups");
@@ -91,12 +97,13 @@ void TransportParameters::get_parameters(ParameterHandler &prm) {
    total_cross_section_value = prm.get_double("Total cross section value");
    incoming_flux = prm.get_double("Incoming flux");
    viscosity_type = prm.get_integer("Viscosity type");
-   max_viscosity_coefficient = prm.get_double(
-         "Max viscosity coefficient");
-   entropy_viscosity_coefficient = prm.get_double(
-         "Entropy viscosity coefficient");
+   max_viscosity_coefficient = prm.get_double("Max viscosity coefficient");
+   entropy_viscosity_coefficient = prm.get_double("Entropy viscosity coefficient");
    max_nonlinear_iterations = prm.get_integer("Maximum number of nonlinear iterations");
    relative_difference_tolerance = prm.get_double("Relative difference tolerance");
    exact_solution_id = prm.get_integer("Exact solution ID");
    output_meshes = prm.get_bool("Output mesh");
+   is_steady_state = prm.get_bool("Is steady state");
+   end_time = prm.get_double("End time");
+   time_step_size = prm.get_double("Time step size");
 }
