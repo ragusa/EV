@@ -5,7 +5,8 @@
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/logstream.h>
-#include <deal.II/base/parsed_function.h>
+//#include <deal.II/base/parsed_function.h>
+#include <deal.II/base/function_parser.h>
 #include <deal.II/base/tensor_function.h>
 #include <deal.II/base/table.h>
 
@@ -45,13 +46,9 @@
 #include <cstdlib>
 #include <algorithm>
 
-#include "ExactSolution1.h"
-#include "ExactSolution2.h"
-#include "ExactSolution4.h"
 #include "TotalSource.h"
 #include "TotalCrossSection.h"
 #include "TransportParameters.h"
-#include "InitialValues.h"
 
 using namespace dealii;
 
@@ -65,6 +62,8 @@ class TransportProblem {
       void run();
 
    private:
+      void initialize_system();
+      void process_problem_ID();
       void setup_system();
       void set_boundary_indicators();
       void assemble_mass_matrix();
@@ -118,6 +117,20 @@ class TransportProblem {
 
       Tensor<1,dim> transport_direction;
       const unsigned int incoming_boundary;
+
+      FunctionParser<dim> initial_conditions;
+      std::string initial_conditions_string;
+      FunctionParser<dim> exact_solution;
+      std::string exact_solution_string;
+
+      bool is_linear;
+      bool has_exact_solution;
+
+      unsigned int source_option;
+      double source_value;
+      unsigned int cross_section_option;
+      double cross_section_value;
+      double incoming_flux_value;
 };
 
 #include "TransportProblem.cc"

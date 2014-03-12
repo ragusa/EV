@@ -1,23 +1,31 @@
-set Finite element degree = 1
-set Number of energy groups = 1
-set Number of directions = 1
-set Use adaptive mesh refinement = false
-set Number of refinement cycles = 5
-set Initial refinement level = 2
-set Solver option = 1
-set Preconditioner option = 1
-set Source option = 1
-set Source value = 1.0e0
-set Total cross section option = 1
-set Total cross section value = 1.0e0
-set Incoming flux = 0.0e0
-set Viscosity type = 1
-set Max viscosity coefficient = 0.5e0
-set Entropy viscosity coefficient = 1.0e-1
-set Maximum number of nonlinear iterations = 10
-set Relative difference tolerance = 1.0e-6
-set Exact solution ID = 1
-set Output mesh = false
+# problem options
+set Problem ID = 1
+
+# transient options
 set Is steady state = false
 set End time = 1.0
 set Time step size = 0.001
+
+# artificial viscosity options
+set Viscosity option = 1
+set Max viscosity coefficient = 0.5e0
+set Entropy viscosity coefficient = 1.0e-1
+
+# mesh refinement options
+set Use adaptive mesh refinement = false
+set Number of refinement cycles = 5
+set Initial refinement level = 2
+
+# finite element options
+set Finite element degree = 1
+
+# linear solver options
+set Solver option = 1
+set Preconditioner option = 1
+
+# nonlinear solver options
+set Maximum number of nonlinear iterations = 10
+set Relative difference tolerance = 1.0e-6
+
+# output options
+set Output mesh = false

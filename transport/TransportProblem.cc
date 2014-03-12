@@ -13,7 +13,14 @@ TransportProblem<dim>::TransportProblem(const TransportParameters &parameters) :
       n_q_points_face(face_quadrature_formula.size()),
       nonlinear_iteration(0),
       transport_direction(0.0),
-      incoming_boundary(1)
+      incoming_boundary(1),
+      is_linear(false),
+      has_exact_solution(false),
+      source_option(1),
+      source_value(0.0),
+      cross_section_option(1),
+      cross_section_value(0.0),
+      incoming_flux_value(0.0)
 {
 }
 
@@ -24,6 +31,114 @@ TransportProblem<dim>::~TransportProblem() {
    dof_handler.clear();
 }
 
+/** \brief initialize system
+ */
+template<int dim>
+void TransportProblem<dim>::initialize_system()
+{
+   // process problem ID
+   process_problem_ID();
+
+   // determine if problem is linear or not; this will depend on which viscosity is used
+   if (parameters.viscosity_option == 2) // entropy viscosity
+      is_linear = false;
+   else
+      is_linear = true;
+
+   // decide that transport direction is the unit x vector
+   transport_direction[0] = 1.0;
+
+   // determine function variables based on dimension;
+   // this is to be used in initialization of function parser objects
+   std::string variables;
+   if (dim == 1)
+      variables = "x";
+   else if (dim == 2)
+      variables = "x,y";
+   else if (dim == 3)
+      variables = "x,y,z";
+   else
+      Assert(false,ExcInvalidState());
+
+   // add time variable if not steady state
+   if (!parameters.is_steady_state)
+      variables += ",t";
+
+   // create constants used for parsed functions
+   std::map<std::string,double> function_parser_constants;
+   function_parser_constants["pi"] = numbers::PI;
+
+   // initialize exact solution function
+   if (has_exact_solution)
+   {
+      exact_solution.initialize(variables,
+                                exact_solution_string,
+                                function_parser_constants,
+                                true);
+   }
+
+   // initialize initial conditions function
+   if (!parameters.is_steady_state)
+   {
+      initial_conditions.initialize(variables,
+                                    initial_conditions_string,
+                                    function_parser_constants,
+                                    true);
+   }
+}
+
+/** \brief process problem ID
+ */
+template<int dim>
+void TransportProblem<dim>::process_problem_ID()
+{
+   switch (parameters.problem_id)
+   {
+      case 1: {
+         cross_section_option = 1;
+         cross_section_value = 1.0e0;
+         source_option = 1;
+         source_value = 1.0e0;
+         incoming_flux_value = 0.0e0;
+         has_exact_solution = true;
+         Assert(dim < 3,ExcNotImplemented());
+         exact_solution_string = "(1.0 - exp(-(x+1.0)))/(4.0*pi)";
+         initial_conditions_string = exact_solution_string; // this creates pseudotransient
+         break;
+      } case 2: {
+         cross_section_option = 2;
+         cross_section_value = 1.0e2;
+         source_option = 1;
+         source_value = 0.0e0;
+         incoming_flux_value = 1.0e0;
+         has_exact_solution = true;
+         Assert(false,ExcNotImplemented());
+         break;
+      } case 3: {
+         cross_section_option = 1;
+         cross_section_value = 1.0e2;
+         source_option = 2;
+         source_value = 1.0e2;
+         incoming_flux_value = 1.0e0;
+         has_exact_solution = true;
+         Assert(false,ExcNotImplemented());
+         break;
+      } case 4: {
+         cross_section_option = 1;
+         cross_section_value = 1.0e0;
+         source_option = 3;
+         source_value = 1.0e0;
+         incoming_flux_value = 2.28735528717884;
+         has_exact_solution = true;
+         Assert(false,ExcNotImplemented());
+         break;
+      } default: {
+         Assert(false,ExcNotImplemented());
+         break;
+      }
+   }
+}
+
 /** \brief set up the problem before assembly of the linear system
  */
 template<int dim>
@@ -31,8 +146,6 @@ void TransportProblem<dim>::setup_system()
 {
    dof_handler.distribute_dofs(fe);
 
-   // decide that transport direction is the unit x vector
-   transport_direction[0] = 1.0;
    // set boundary indicators to distinguish incoming boundary
    set_boundary_indicators();
 
@@ -42,7 +155,7 @@ void TransportProblem<dim>::setup_system()
    DoFTools::make_hanging_node_constraints(dof_handler, constraints);
    VectorTools::interpolate_boundary_values(dof_handler,
                                             incoming_boundary,
-                                            ConstantFunction<dim>(parameters.incoming_flux, 1),
+                                            ConstantFunction<dim>(incoming_flux_value, 1),
                                             constraints);
    constraints.close();
 
@@ -135,8 +248,8 @@ void TransportProblem<dim>::assemble_system()
 {
    max_principle_viscosity_numerators = 0;
 
-   const TotalCrossSection<dim> total_cross_section(parameters);
-   const TotalSource<dim>       total_source       (parameters);
+   const TotalCrossSection<dim> total_cross_section(cross_section_option,cross_section_value);
+   const TotalSource<dim>       total_source       (source_option,source_value);
 
    // FE values, for assembly terms
    FEValues<dim> fe_values(fe, cell_quadrature_formula,
@@ -182,7 +295,7 @@ void TransportProblem<dim>::assemble_system()
    // ---------------------------------------------------------------------
    double domain_averaged_entropy;
    double max_entropy_deviation_domain = 0.0;
-   if ((parameters.viscosity_type == 2)&&(nonlinear_iteration != 0)) {
+   if ((parameters.viscosity_option == 2)&&(nonlinear_iteration != 0)) {
       // compute domain-averaged entropy
       double domain_integral_entropy = 0.0;
       // loop over cells
@@ -256,7 +369,7 @@ void TransportProblem<dim>::assemble_system()
       double h = cell->diameter();
       double max_viscosity_cell = parameters.max_viscosity_coefficient * h;
       max_viscosity(i_cell) = max_viscosity_cell;
-      switch (parameters.viscosity_type) {
+      switch (parameters.viscosity_option) {
          case 0: {
             break;
          } case 1: {
@@ -387,7 +500,7 @@ void TransportProblem<dim>::assemble_system()
 
    // add viscous bilinear form for maximum-principle preserving viscosity
    // ---------------------------------------------------------------------------
-   if (parameters.viscosity_type == 3) {
+   if (parameters.viscosity_option == 3) {
       // compute maximum-principle preserving viscosity
       compute_max_principle_viscosity();
 
@@ -617,10 +730,12 @@ void TransportProblem<dim>::run()
          // solve for steady-state solution
          solve_step();
       } else {
+         // have not yet added the capability for nonlinear transients
+         Assert(is_linear,ExcNotImplemented());
+
          // interpolate initial conditions
-         InitialValues<dim> initial_conditions_function;
          VectorTools::interpolate(dof_handler,
-                                  initial_conditions_function,
+                                  initial_conditions,
                                   new_solution);
          // distribute hanging node and Dirichlet constraints to intial solution
          constraints.distribute(new_solution);
@@ -650,11 +765,14 @@ void TransportProblem<dim>::run()
             system_matrix.vmult(ss_rhs, old_solution);   // A*u
             system_rhs.add(-dt, ss_rhs);                 // M*u - dt*A*u
             solve_linear_system(mass_matrix, system_rhs);
+
+            // check that local discrete maximum principle is satisfied
+            check_local_discrete_max_principle();
          }
       }
 
       // evaluate errors for use in adaptive mesh refinement
-      if (parameters.exact_solution_id != 0) evaluate_error(cycle);
+      if (has_exact_solution) evaluate_error(cycle);
    }
 
    // output grid, solution, and viscosity and print convergence results
@@ -669,7 +787,11 @@ void TransportProblem<dim>::solve_step()
    // solve system. if using entropy viscosity, begin nonlinear iteration, else
    // just solve linear system
    nonlinear_iteration = 0;
-   if (parameters.viscosity_type == 2) {
+   if (is_linear) {
+      // system is linear and requires just one solve
+      assemble_system();
+      solve_linear_system(system_matrix, system_rhs);
+   } else {
       bool converged = false; // converged nonlinear iteration
       for (unsigned int iter = 0; iter < parameters.max_nonlinear_iterations; ++iter) {
          std::cout << "   Nonlinear iteration " << iter;
@@ -698,10 +820,6 @@ void TransportProblem<dim>::solve_step()
          std::cout << "The solution did not converge in " << parameters.max_nonlinear_iterations << " iterations";
          std::cout << std::endl;
       }
-   } else {
-      // system is linear and requires just one solve
-      assemble_system();
-      solve_linear_system(system_matrix, system_rhs);
    }
    // check that solution is non-negative
    check_solution_nonnegative();
@@ -733,7 +851,7 @@ void TransportProblem<dim>::output_results()
    if (dim == 1) output_extension = ".gpl";
    else          output_extension = ".vtk";
    std::string viscosity_string;
-   switch (parameters.viscosity_type) {
+   switch (parameters.viscosity_option) {
       case 0: {
          viscosity_string = "none";
          break;
@@ -753,7 +871,7 @@ void TransportProblem<dim>::output_results()
    }
    std::stringstream output_filename_ss;
    output_filename_ss << "output/solution_" << viscosity_string;
-   if (parameters.exact_solution_id != 0) output_filename_ss << "_" << parameters.exact_solution_id;
+   output_filename_ss << "_" << parameters.problem_id;
    output_filename_ss << output_extension;
    std::string output_filename = output_filename_ss.str();
    char *output_filename_char = (char*)output_filename.c_str();
@@ -766,15 +884,15 @@ void TransportProblem<dim>::output_results()
 
    // write viscosity output file
    //----------------------------
-   if (parameters.viscosity_type != 0) {
+   if (parameters.viscosity_option != 0) {
       DataOut<dim> visc_out;
       visc_out.attach_dof_handler(dof_handler);
       // add viscosity data vector(s)
-      if ((parameters.viscosity_type == 1)||(parameters.viscosity_type == 2))
+      if ((parameters.viscosity_option == 1)||(parameters.viscosity_option == 2))
          visc_out.add_data_vector(max_viscosity,"Max_Viscosity",DataOut<dim>::type_cell_data);
-      if (parameters.viscosity_type == 2)
+      if (parameters.viscosity_option == 2)
          visc_out.add_data_vector(entropy_viscosity,"Entropy_Viscosity",DataOut<dim>::type_cell_data);
-      if (parameters.viscosity_type == 3)
+      if (parameters.viscosity_option == 3)
          visc_out.add_data_vector(max_principle_viscosity,"Max_Principle_Viscosity",DataOut<dim>::type_cell_data);
       // build patches and write to file
       visc_out.build_patches(degree + 1);
@@ -789,7 +907,7 @@ void TransportProblem<dim>::output_results()
 
    // print convergence table
    //------------------------
-   if (parameters.exact_solution_id != 0) {
+   if (has_exact_solution) {
       convergence_table.set_precision("cell size", 3);
       convergence_table.set_scientific("cell size", true);
       convergence_table.set_precision("L2 error", 3);
@@ -805,53 +923,25 @@ void TransportProblem<dim>::output_results()
 template<int dim>
 void TransportProblem<dim>::evaluate_error(const unsigned int cycle)
 {
+   // assert that this function is only being called when an exact solution is available
+   Assert(has_exact_solution,ExcInvalidState());
+
    // error per cell
    Vector<double> difference_per_cell (triangulation.n_active_cells());
 
    // compute error with analytic solution
-   switch (parameters.exact_solution_id) {
-      case 1: { // Test problem 1
-         ExactSolution1<dim> exact_solution;
-
-         VectorTools::integrate_difference (MappingQ<dim>(1),
-	                                    dof_handler,
-	                                    new_solution,
-	                                    exact_solution,
-	                                    difference_per_cell,
-	                                    QGauss<dim>(degree+1),
-	                                    VectorTools::L2_norm);
-         break;
-      } case 2: { // Test problem 2
-         ExactSolution2<dim> exact_solution;
-
-         VectorTools::integrate_difference (MappingQ<dim>(1),
-                                            dof_handler,
-                                            new_solution,
-                                            exact_solution,
-                                            difference_per_cell,
-                                            QGauss<dim>(degree+1),
-                                            VectorTools::L2_norm);
-         break;
-      } case 4: { // Test problem 4
-         ExactSolution4<dim> exact_solution;
-
-         VectorTools::integrate_difference (MappingQ<dim>(1),
-                                            dof_handler,
-                                            new_solution,
-                                            exact_solution,
-                                            difference_per_cell,
-                                            QGauss<dim>(degree+1),
-                                            VectorTools::L2_norm);
-         break;
-      } default: {
-         Assert(false, ExcNotImplemented())
-         break;
-      }
-   }
+   VectorTools::integrate_difference(MappingQ<dim>(1),
+                                     dof_handler,
+                                     new_solution,
+                                     exact_solution,
+                                     difference_per_cell,
+                                     QGauss<dim>(degree+1),
+                                     VectorTools::L2_norm);
 
    // compute L2 error of vector of cell errors
    const double L2_error = difference_per_cell.l2_norm();
 
+   // compute average cell length
    const unsigned int n_active_cells = triangulation.n_active_cells();
    const unsigned int n_dofs = dof_handler.n_dofs();
    const double avg_cell_length = std::pow(2.0,dim) / std::pow(n_active_cells,1.0/dim);
@@ -889,8 +979,10 @@ template<int dim>
 void TransportProblem<dim>::check_local_discrete_max_principle() const
 {
    const unsigned int n_cells = triangulation.n_active_cells();
-   Vector<double> max_values(n_cells, -1.0e15); // max of neighbors for each dof
-   Vector<double> min_values(n_cells,  1.0e15); // min of neighbors for each dof
+   Vector<double> max_values(n_cells); // max of neighbors for each dof
+   Vector<double> min_values(n_cells); // min of neighbors for each dof
+   max_values = -1.0e15;
+   max_values =  1.0e15;
 
    std::vector<unsigned int> local_dof_indices(dofs_per_cell);
 
@@ -902,8 +994,8 @@ void TransportProblem<dim>::check_local_discrete_max_principle() const
       cell->get_dof_indices(local_dof_indices);
 
       // find min and max values on cell
-      double max_cell = -1.0e15; // initialized to arbitrary small value
-      double min_cell =  1.0e15; // initialized to arbitrary large value
+      double max_cell = old_solution(local_dof_indices[0]); // initialized to arbitrary value on cell
+      double min_cell = old_solution(local_dof_indices[0]); // initialized to arbitrary value on cell
       for (unsigned int j = 0; j < dofs_per_cell; ++j) {
          double value_j = old_solution(local_dof_indices[j]);
          max_cell = std::max(max_cell, value_j);
