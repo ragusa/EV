@@ -51,6 +51,7 @@
 #include "TotalSource.h"
 #include "TotalCrossSection.h"
 #include "TransportParameters.h"
+#include "InitialValues.h"
 
 using namespace dealii;
 
@@ -65,10 +66,12 @@ class TransportProblem {
 
    private:
       void setup_system();
+      void set_boundary_indicators();
+      void assemble_mass_matrix();
       void assemble_system();
-      void run_single();
       void solve_step();
-      void solve_linear_system();
+      void solve_linear_system(const SparseMatrix<double> &A,
+                               const Vector<double> &b);
       void refine_grid();
       void output_results();
       void output_grid() const;
@@ -95,24 +98,26 @@ class TransportProblem {
 
       SparsityPattern constrained_sparsity_pattern;
       SparseMatrix<double> system_matrix;
+      SparseMatrix<double> mass_matrix;
+      SparsityPattern unconstrained_sparsity_pattern;
+      SparseMatrix<double> max_principle_viscosity_numerators;
+      SparseMatrix<double> viscous_bilinear_forms;
 
       Vector<double> old_solution;
-      Vector<double> present_solution;
+      Vector<double> new_solution;
       Vector<double> system_rhs;
+      Vector<double> ss_rhs;
 
       Vector<double> max_viscosity;
       Vector<double> entropy_viscosity;
       Vector<double> max_principle_viscosity;
-
-      SparsityPattern unconstrained_sparsity_pattern;
-      SparseMatrix<double> max_principle_viscosity_numerators;
-      SparseMatrix<double> viscous_bilinear_forms;
 
       unsigned int nonlinear_iteration;
 
       ConvergenceTable convergence_table;
 
       Tensor<1,dim> transport_direction;
+      const unsigned int incoming_boundary;
 };
 
 #include "TransportProblem.cc"

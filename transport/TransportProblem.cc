@@ -12,7 +12,8 @@ TransportProblem<dim>::TransportProblem(const TransportParameters &parameters) :
       n_q_points_cell(cell_quadrature_formula.size()),
       n_q_points_face(face_quadrature_formula.size()),
       nonlinear_iteration(0),
-      transport_direction(0.0)
+      transport_direction(0.0),
+      incoming_boundary(1)
 {
 }
 
@@ -30,41 +31,54 @@ void TransportProblem<dim>::setup_system()
 {
    dof_handler.distribute_dofs(fe);
 
-   // reinitialize viscosity vectors
-   max_viscosity          .reinit(triangulation.n_active_cells());
-   entropy_viscosity      .reinit(triangulation.n_active_cells());
-   max_principle_viscosity.reinit(triangulation.n_active_cells());
+   // decide that transport direction is the unit x vector
+   transport_direction[0] = 1.0;
+   // set boundary indicators to distinguish incoming boundary
+   set_boundary_indicators();
 
-   // clear constraint matrix and make hanging node constraints for new mesh
+   // clear constraint matrix and make hanging node constraints and
+   // Dirichlet BC constraints for new mesh
    constraints.clear();
    DoFTools::make_hanging_node_constraints(dof_handler, constraints);
+   VectorTools::interpolate_boundary_values(dof_handler,
+                                            incoming_boundary,
+                                            ConstantFunction<dim>(parameters.incoming_flux, 1),
+                                            constraints);
    constraints.close();
 
-   // reinitialize sparsity pattern of system matrix
+   // reinitialize system matrix and mass matrix
    CompressedSparsityPattern compressed_constrained_sparsity_pattern(dof_handler.n_dofs());
    DoFTools::make_sparsity_pattern(dof_handler,
-                                               compressed_constrained_sparsity_pattern,
-                                               constraints,
-                                               false);
+                                   compressed_constrained_sparsity_pattern,
+                                   constraints,
+                                   false);
    constrained_sparsity_pattern.copy_from(compressed_constrained_sparsity_pattern);
+   system_matrix.reinit(constrained_sparsity_pattern);
+   mass_matrix  .reinit(constrained_sparsity_pattern);
+   // assemble mass matrix
+   Function<dim> *dummy_function = 0;
+   MatrixTools::create_mass_matrix(dof_handler,
+                                   cell_quadrature_formula,
+                                   mass_matrix,
+                                   dummy_function,
+                                   constraints);
 
-   // allocate matrices to be used with maximum-principle preserving viscosity
-   // reinitialize sparsity pattern of auxiliary matrices
+   // reinitialize auxiliary matrices
    CompressedSparsityPattern compressed_unconstrained_sparsity_pattern(dof_handler.n_dofs());
    DoFTools::make_sparsity_pattern(dof_handler, compressed_unconstrained_sparsity_pattern);
    unconstrained_sparsity_pattern.copy_from(compressed_unconstrained_sparsity_pattern);
-
-   // reinitialize auxiliary matrices with sparsity pattern
    viscous_bilinear_forms            .reinit(unconstrained_sparsity_pattern);
    max_principle_viscosity_numerators.reinit(unconstrained_sparsity_pattern);
-
    // compute viscous bilinear forms
    compute_viscous_bilinear_forms();
 
    // reinitialize solution vector, system matrix, and rhs
-   system_matrix   .reinit(constrained_sparsity_pattern);
-   present_solution.reinit(dof_handler.n_dofs());
-   system_rhs      .reinit(dof_handler.n_dofs());
+   new_solution .reinit(dof_handler.n_dofs());
+   system_rhs   .reinit(dof_handler.n_dofs());
+   ss_rhs       .reinit(dof_handler.n_dofs());
+   max_viscosity          .reinit(triangulation.n_active_cells());
+   entropy_viscosity      .reinit(triangulation.n_active_cells());
+   max_principle_viscosity.reinit(triangulation.n_active_cells());
 }
 
 /** \brief Computes viscous bilinear forms, to be used in the computation of
@@ -122,7 +136,7 @@ void TransportProblem<dim>::assemble_system()
    max_principle_viscosity_numerators = 0;
 
    const TotalCrossSection<dim> total_cross_section(parameters);
-   const TotalSource<dim> total_source(parameters);
+   const TotalSource<dim>       total_source       (parameters);
 
    // FE values, for assembly terms
    FEValues<dim> fe_values(fe, cell_quadrature_formula,
@@ -151,8 +165,8 @@ void TransportProblem<dim>::assemble_system()
    FEValuesExtractors::Scalar flux(0);
 
    // cell iterator
-   typename DoFHandler<dim>::active_cell_iterator cell =
-         dof_handler.begin_active(), endc = dof_handler.end();
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                                  endc = dof_handler.end();
 
    // compute domain volume for denominator of domain-averaged entropy
    double domain_volume = 0.0;
@@ -408,18 +422,44 @@ void TransportProblem<dim>::assemble_system()
 
    // apply boundary conditions
    // ---------------------------------------------------------------------------
+   // apply Dirichlet boundary condition
+/*
+   std::map<unsigned int, double> boundary_values;
+   VectorTools::interpolate_boundary_values(dof_handler,
+                                            incoming_boundary,
+                                            ConstantFunction<dim>(parameters.incoming_flux, 1),
+                                            boundary_values);
+   MatrixTools::apply_boundary_values(boundary_values,
+                                      system_matrix,
+                                      new_solution,
+                                      system_rhs);
+*/
+
+} // end assembly
+
+/** \brief Sets the boundary indicators for each boundary face.
+ *
+ *         The Dirichlet BC is applied only to the incoming boundary, so the transport
+ *         direction is compared against the normal vector of the face.
+ */
+template <int dim>
+void TransportProblem<dim>::set_boundary_indicators()
+{
+   // cell iterator
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                                  endc = dof_handler.end();
    // reset boundary indicators to zero
    for (cell = dof_handler.begin_active(); cell != endc; ++cell)
-      for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell;
-            ++face)
+      for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell; ++face)
          if (cell->face(face)->at_boundary())
             cell->face(face)->set_boundary_indicator(0);
 
+   // FE face values
+   FEFaceValues<dim> fe_face_values(fe, face_quadrature_formula, update_normal_vectors);
    // loop over cells
    for (cell = dof_handler.begin_active(); cell != endc; ++cell) {
       // loop over faces of cell
-      for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell;
-            ++face) {
+      for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell; ++face) {
          // if face is at boundary
          if (cell->face(face)->at_boundary()) {
             // reinitialize FE face values
@@ -431,23 +471,12 @@ void TransportProblem<dim>::assemble_system()
             double small = -1.0e-12;
             if (fe_face_values.normal_vector(0) * transport_direction < small) {
                // mark boundary as incoming flux boundary: indicator 1
-               cell->face(face)->set_boundary_indicator(1);
+               cell->face(face)->set_boundary_indicator(incoming_boundary);
             }
          }
       }
    }
-   // apply Dirichlet boundary condition
-   std::map<unsigned int, double> boundary_values;
-   VectorTools::interpolate_boundary_values(dof_handler,
-                                            1,
-                                            ConstantFunction<dim>(parameters.incoming_flux, 1),
-                                            boundary_values);
-   MatrixTools::apply_boundary_values(boundary_values,
-                                      system_matrix,
-                                      present_solution,
-                                      system_rhs);
-
-} // end assembly
+}
 
 /** \brief Computes the maximum-principle preserving first order viscosity for each cell.
  */
@@ -469,12 +498,12 @@ void TransportProblem<dim>::compute_max_principle_viscosity()
          max_principle_viscosity(i_cell) = 0.0;
          for (unsigned int i = 0; i < dofs_per_cell; ++i) {
             for (unsigned int j = 0; j < dofs_per_cell; ++j) {
-               if (i != j) {
+                if (i != j) {
                   max_principle_viscosity(i_cell) = std::max(max_principle_viscosity(i_cell),
                      std::abs(max_principle_viscosity_numerators(local_dof_indices[i],local_dof_indices[j]))/
                      (-viscous_bilinear_forms(local_dof_indices[i],local_dof_indices[j])));
                }
-            }
+            } 
          }
       }
    }
@@ -483,12 +512,14 @@ void TransportProblem<dim>::compute_max_principle_viscosity()
 /** \brief solve the linear system
  */
 template<int dim>
-void TransportProblem<dim>::solve_linear_system() {
+void TransportProblem<dim>::solve_linear_system(const SparseMatrix<double> &A,
+                                                const Vector<double>       &b)
+{
    switch (parameters.solver_option) {
       case 1: {
          SparseDirectUMFPACK A_direct;
-         A_direct.initialize(system_matrix);
-         A_direct.vmult(present_solution, system_rhs);
+         A_direct.initialize(A);
+         A_direct.vmult(new_solution, b);
          break;
       }
       case 2: {
@@ -497,14 +528,14 @@ void TransportProblem<dim>::solve_linear_system() {
 
          switch (parameters.preconditioner_option) {
             case 1: {
-               solver.solve(system_matrix, present_solution, system_rhs,
+               solver.solve(A, new_solution, b,
                      PreconditionIdentity());
                break;
             }
             case 2: {
                PreconditionJacobi<> preconditioner;
-               preconditioner.initialize(system_matrix, 1.0);
-               solver.solve(system_matrix, present_solution, system_rhs,
+               preconditioner.initialize(A, 1.0);
+               solver.solve(A, new_solution, b,
                      preconditioner);
                break;
             }
@@ -521,7 +552,7 @@ void TransportProblem<dim>::solve_linear_system() {
       }
    }
 
-   constraints.distribute(present_solution);
+   constraints.distribute(new_solution);
 }
 
 /** \brief refine the grid
@@ -532,7 +563,7 @@ void TransportProblem<dim>::refine_grid() {
       Vector<float> estimated_error_per_cell(triangulation.n_active_cells());
 
       KellyErrorEstimator<dim>::estimate(dof_handler, QGauss<dim - 1>(3),
-            typename FunctionMap<dim>::type(), present_solution,
+            typename FunctionMap<dim>::type(), new_solution,
             estimated_error_per_cell);
 
       GridRefinement::refine_and_coarsen_fixed_number(triangulation,
@@ -562,9 +593,6 @@ void TransportProblem<dim>::output_grid() const
 template<int dim>
 void TransportProblem<dim>::run()
 {
-   // decide that transport direction is the unit x vector
-   transport_direction[0] = 1.0;
-
    // loop over refinement cycles
    for (unsigned int cycle = 0; cycle < parameters.n_refinement_cycles; ++cycle)
    {
@@ -589,6 +617,17 @@ void TransportProblem<dim>::run()
          // solve for steady-state solution
          solve_step();
       } else {
+         // interpolate initial conditions
+         InitialValues<dim> initial_conditions_function;
+         VectorTools::interpolate(dof_handler,
+                                  initial_conditions_function,
+                                  new_solution);
+         // distribute hanging node and Dirichlet constraints to intial solution
+         constraints.distribute(new_solution);
+
+         // set old solution to the current solution
+         old_solution = new_solution;
+         
          // time loop
          double t = 0.0;
          const double t_end = parameters.end_time;
@@ -606,7 +645,11 @@ void TransportProblem<dim>::run()
             in_transient = t < t_end - machine_precision;
 
             // solve for current time solution
-            solve_step();
+            system_rhs = 0.0;
+            mass_matrix.vmult(system_rhs, old_solution); // M*u
+            system_matrix.vmult(ss_rhs, old_solution);   // A*u
+            system_rhs.add(-dt, ss_rhs);                 // M*u - dt*A*u
+            solve_linear_system(mass_matrix, system_rhs);
          }
       }
 
@@ -632,12 +675,12 @@ void TransportProblem<dim>::solve_step()
          std::cout << "   Nonlinear iteration " << iter;
          if (iter == 0) std::cout << std::endl;
          assemble_system();
-         solve_linear_system();
+         solve_linear_system(system_matrix, system_rhs);
          // if not the first iteration, evaluate the convergence criteria
          if (nonlinear_iteration != 0) {
             // evaluate the difference between the current and previous solution iterate
             double old_norm = old_solution.l2_norm();
-            old_solution -= present_solution;
+            old_solution -= new_solution;
             double difference_norm = old_solution.l2_norm();
             double relative_difference = difference_norm / old_norm;
             std::cout << ": Error: " << relative_difference << std::endl;
@@ -647,7 +690,7 @@ void TransportProblem<dim>::solve_step()
             }
          }
          // update the old solution and iteration number
-         old_solution = present_solution;
+         old_solution = new_solution;
          nonlinear_iteration++;
       }
       // report if the solution did not converge
@@ -658,7 +701,7 @@ void TransportProblem<dim>::solve_step()
    } else {
       // system is linear and requires just one solve
       assemble_system();
-      solve_linear_system();
+      solve_linear_system(system_matrix, system_rhs);
    }
    // check that solution is non-negative
    check_solution_nonnegative();
@@ -681,7 +724,7 @@ void TransportProblem<dim>::output_results()
    //--------------------------
    DataOut<dim> data_out;
    data_out.attach_dof_handler(dof_handler);
-   data_out.add_data_vector(present_solution, "flux");
+   data_out.add_data_vector(new_solution, "flux");
    data_out.build_patches(degree + 1);
 
    // create output filename
@@ -772,7 +815,7 @@ void TransportProblem<dim>::evaluate_error(const unsigned int cycle)
 
          VectorTools::integrate_difference (MappingQ<dim>(1),
 	                                    dof_handler,
-	                                    present_solution,
+	                                    new_solution,
 	                                    exact_solution,
 	                                    difference_per_cell,
 	                                    QGauss<dim>(degree+1),
@@ -783,7 +826,7 @@ void TransportProblem<dim>::evaluate_error(const unsigned int cycle)
 
          VectorTools::integrate_difference (MappingQ<dim>(1),
                                             dof_handler,
-                                            present_solution,
+                                            new_solution,
                                             exact_solution,
                                             difference_per_cell,
                                             QGauss<dim>(degree+1),
@@ -794,7 +837,7 @@ void TransportProblem<dim>::evaluate_error(const unsigned int cycle)
 
          VectorTools::integrate_difference (MappingQ<dim>(1),
                                             dof_handler,
-                                            present_solution,
+                                            new_solution,
                                             exact_solution,
                                             difference_per_cell,
                                             QGauss<dim>(degree+1),
@@ -830,7 +873,7 @@ void TransportProblem<dim>::check_solution_nonnegative() const
    bool solution_is_negative = false;
    const unsigned int n_dofs = dof_handler.n_dofs();
    for (unsigned int i = 0; i < n_dofs; ++i)
-      if (present_solution(i) < 0)
+      if (new_solution(i) < 0)
          solution_is_negative = true;
 
    // report if solution was negative anywhere or not
@@ -878,7 +921,7 @@ void TransportProblem<dim>::check_local_discrete_max_principle() const
    // check that each dof value is bounded by its neighbors
    bool local_max_principle_satisfied = true;
    for (unsigned int i = 0; i < dof_handler.n_dofs(); ++i) {
-      double value_i = present_solution(local_dof_indices[i]);
+      double value_i = new_solution(local_dof_indices[i]);
       if (value_i < min_values(i))
          local_max_principle_satisfied = false;
       if (value_i > max_values(i))
