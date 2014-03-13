@@ -112,7 +112,13 @@ void TransportProblem<dim>::process_problem_ID()
          source_value = 0.0e0;
          incoming_flux_value = 1.0e0;
          has_exact_solution = true;
-         Assert(false,ExcNotImplemented());
+         if (dim == 1)
+            exact_solution_string = "if(x < 0.0, 1.0, exp(-100.0*x))";
+         else if (dim == 2)
+            exact_solution_string = "if(y < 0, 1.0, if(x < 0.0, 1.0, exp(-100.0*x)))";
+         else
+            Assert(dim < 3,ExcNotImplemented());
+         initial_conditions_string = exact_solution_string; // this creates pseudotransient
          break;
       } case 3: {
          cross_section_option = 1;
@@ -706,6 +712,9 @@ void TransportProblem<dim>::output_grid() const
 template<int dim>
 void TransportProblem<dim>::run()
 {
+   // initialize problem
+   initialize_system();
+
    // loop over refinement cycles
    for (unsigned int cycle = 0; cycle < parameters.n_refinement_cycles; ++cycle)
    {
@@ -749,6 +758,7 @@ void TransportProblem<dim>::run()
          const double dt_const = parameters.time_step_size;
          const double machine_precision = 1.0e-15;
          bool in_transient = true;
+         bool max_principle_satisfied = true;
          while (in_transient)
          {
             // determine time step size
@@ -766,9 +776,14 @@ void TransportProblem<dim>::run()
             system_rhs.add(-dt, ss_rhs);                 // M*u - dt*A*u
             solve_linear_system(mass_matrix, system_rhs);
 
-            // check that local discrete maximum principle is satisfied
-            check_local_discrete_max_principle();
+            // check that local discrete maximum principle is satisfied at all time steps
+            max_principle_satisfied = max_principle_satisfied and check_local_discrete_max_principle();
          }
+         // report if local discrete maximum principle is satisfied at all time steps
+         if (max_principle_satisfied)
+            std::cout << "Local discrete maximum principle was satisfied at all time steps" << std::endl;
+         else
+            std::cout << "Local discrete maximum principle was NOT satisfied at all time steps" << std::endl;
       }
 
       // evaluate errors for use in adaptive mesh refinement
@@ -976,11 +991,11 @@ void TransportProblem<dim>::check_solution_nonnegative() const
 /** \brief check that the local discrete max principle is satisfied.
  */
 template<int dim>
-void TransportProblem<dim>::check_local_discrete_max_principle() const
+bool TransportProblem<dim>::check_local_discrete_max_principle() const
 {
-   const unsigned int n_cells = triangulation.n_active_cells();
-   Vector<double> max_values(n_cells); // max of neighbors for each dof
-   Vector<double> min_values(n_cells); // min of neighbors for each dof
+   const unsigned int n_dofs = dof_handler.n_dofs();
+   Vector<double> max_values(n_dofs); // max of neighbors for each dof
+   Vector<double> min_values(n_dofs); // min of neighbors for each dof
    max_values = -1.0e15;
    max_values =  1.0e15;
 
@@ -1012,18 +1027,14 @@ void TransportProblem<dim>::check_local_discrete_max_principle() const
 
    // check that each dof value is bounded by its neighbors
    bool local_max_principle_satisfied = true;
-   for (unsigned int i = 0; i < dof_handler.n_dofs(); ++i) {
-      double value_i = new_solution(local_dof_indices[i]);
+   for (unsigned int i = 0; i < n_dofs; ++i) {
+      double value_i = new_solution(i);
       if (value_i < min_values(i))
          local_max_principle_satisfied = false;
       if (value_i > max_values(i))
          local_max_principle_satisfied = false;
    }
    
-   // report if local discrete maximum principle was satisfied or not
-   if (local_max_principle_satisfied)
-      std::cout << "The local discrete maximum principle was satisfied at all degrees of freedom." << std::endl;
-   else
-      std::cout << "The local discrete maximum principle was NOT satisfied at all degrees of freedom." << std::endl;
+   return local_max_principle_satisfied;
 }
 

@@ -1,10 +1,10 @@
 # problem options
-set Problem ID = 1
+set Problem ID = 2
 
 # transient options
 set Is steady state = false
 set End time = 1.0
-set Time step size = 0.001
+set Time step size = 0.01
 
 # artificial viscosity options
 set Viscosity option = 1

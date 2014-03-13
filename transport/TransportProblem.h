@@ -78,7 +78,7 @@ class TransportProblem {
       void compute_viscous_bilinear_forms();
       void compute_max_principle_viscosity();
       void check_solution_nonnegative() const;
-      void check_local_discrete_max_principle() const;
+      bool check_local_discrete_max_principle() const;
 
       const TransportParameters &parameters; // input parameters
       unsigned int degree;

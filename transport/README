@@ -6,15 +6,13 @@ To compile program:
 2. run make
 
 To run program:
-$ transport <#>
-where <#> is a number corresponding to a coded test problem, 1-4
+$ ./transport
 
-Input files are located in /input and are named according to the
-test problem: test_problem_#.in
+Input file: ./input
 
-Output files are stored in /output.
+Output files are stored in ./output.
 
-Some gnuplot scripts are available in /plotscripts. One just needs to
+Some gnuplot scripts are available in ./plotscripts. One just needs to
 run, for example:
 $ gnuplot test_problem_1.gp
 which produces a .pdf file in the /plotscripts directory

@@ -23,24 +23,11 @@ int main(int argc, char ** argv) {
    try {
       dealii::deallog.depth_console(0);
 
-      // input filename
-      std::string input_filename;
-      if (argc < 2) {
-         std::cout << "Need to provide an argument to specify the input file.\n"
-            << "The argument '#' specifies the input file 'test_problem_#.in'"
-            << std::endl;
-         std::exit(1);
-      } else {
-         std::stringstream input_filename_ss;
-         input_filename_ss << "input/test_problem_" << argv[1] << ".in";
-         input_filename = input_filename_ss.str();
-      }
-
       // get input parameters
       dealii::ParameterHandler parameter_handler;
       TransportParameters parameters;
       parameters.declare_parameters(parameter_handler);
-      parameter_handler.read_input(input_filename);
+      parameter_handler.read_input("input");
       parameters.get_parameters(parameter_handler);
 
       // run problem
