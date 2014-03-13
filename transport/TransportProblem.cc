@@ -159,10 +159,12 @@ void TransportProblem<dim>::setup_system()
    // Dirichlet BC constraints for new mesh
    constraints.clear();
    DoFTools::make_hanging_node_constraints(dof_handler, constraints);
+/*
    VectorTools::interpolate_boundary_values(dof_handler,
                                             incoming_boundary,
                                             ConstantFunction<dim>(incoming_flux_value, 1),
                                             constraints);
+*/
    constraints.close();
 
    // reinitialize system matrix and mass matrix
@@ -581,7 +583,6 @@ void TransportProblem<dim>::assemble_system()
    // apply boundary conditions
    // ---------------------------------------------------------------------------
    // apply Dirichlet boundary condition
-/*
    std::map<unsigned int, double> boundary_values;
    VectorTools::interpolate_boundary_values(dof_handler,
                                             incoming_boundary,
@@ -591,7 +592,6 @@ void TransportProblem<dim>::assemble_system()
                                       system_matrix,
                                       new_solution,
                                       system_rhs);
-*/
 
 } // end assembly
 
