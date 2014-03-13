@@ -88,8 +88,8 @@ class TransportProblem {
       FESystem<dim> fe;
       const unsigned int dofs_per_cell;
 
-      QGauss<dim>   cell_quadrature_formula;
-      QGauss<dim-1> face_quadrature_formula;
+      QGauss<dim>   cell_quadrature;
+      QGauss<dim-1> face_quadrature;
       const unsigned int n_q_points_cell;
       const unsigned int n_q_points_face;
 
@@ -107,7 +107,7 @@ class TransportProblem {
       Vector<double> system_rhs;
       Vector<double> ss_rhs;
 
-      Vector<double> max_viscosity;
+      Vector<double> old_first_order_viscosity;
       Vector<double> entropy_viscosity;
       Vector<double> max_principle_viscosity;
 

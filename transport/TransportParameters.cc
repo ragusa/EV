@@ -9,14 +9,15 @@ TransportParameters::TransportParameters() :
       solver_option(1),
       preconditioner_option(1),
       viscosity_option(0),
-      max_viscosity_coefficient(5.0e-1),
+      old_first_order_viscosity_coefficient(5.0e-1),
       entropy_viscosity_coefficient(1.0e-1),
       max_nonlinear_iterations(10),
       relative_difference_tolerance(1.0e-6),
       output_meshes(false),
       is_steady_state(true),
       end_time(1.0),
-      time_step_size(0.001)
+      time_step_size(0.001),
+      lump_mass_matrix(false)
 {
 }
 
@@ -41,7 +42,7 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
          "Option for preconditioner for linear solver");
    prm.declare_entry("Viscosity option", "0", Patterns::Integer(),
          "Option for viscosity definition: none, first-order, or entropy");
-   prm.declare_entry("Max viscosity coefficient", "5.0e-1", Patterns::Double(),
+   prm.declare_entry("Old first order viscosity coefficient", "5.0e-1", Patterns::Double(),
          "Coefficient for the first-order viscosity");
    prm.declare_entry("Entropy viscosity coefficient", "1.0e-1", Patterns::Double(),
          "Coefficient for the entropy viscosity");
@@ -57,6 +58,8 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
          "End time if transient problem is run");
    prm.declare_entry("Time step size", "0.01", Patterns::Double(),
          "Time step size if transient problem is run");
+   prm.declare_entry("Lump mass matrix", "false", Patterns::Bool(),
+         "Option to lump the mass matrix");
 }
 
 /** \brief get the input parameters
@@ -70,7 +73,7 @@ void TransportParameters::get_parameters(ParameterHandler &prm) {
    solver_option = prm.get_integer("Solver option");
    preconditioner_option = prm.get_integer("Preconditioner option");
    viscosity_option = prm.get_integer("Viscosity option");
-   max_viscosity_coefficient = prm.get_double("Max viscosity coefficient");
+   old_first_order_viscosity_coefficient = prm.get_double("Old first order viscosity coefficient");
    entropy_viscosity_coefficient = prm.get_double("Entropy viscosity coefficient");
    max_nonlinear_iterations = prm.get_integer("Maximum number of nonlinear iterations");
    relative_difference_tolerance = prm.get_double("Relative difference tolerance");
@@ -78,4 +81,5 @@ void TransportParameters::get_parameters(ParameterHandler &prm) {
    is_steady_state = prm.get_bool("Is steady state");
    end_time = prm.get_double("End time");
    time_step_size = prm.get_double("Time step size");
+   lump_mass_matrix = prm.get_bool("Lump mass matrix");
 }

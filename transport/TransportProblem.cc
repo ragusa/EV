@@ -7,10 +7,10 @@ TransportProblem<dim>::TransportProblem(const TransportParameters &parameters) :
       dof_handler(triangulation),
       fe(FE_Q<dim>(degree), 1),
       dofs_per_cell(fe.dofs_per_cell),
-      cell_quadrature_formula(degree+1),
-      face_quadrature_formula(degree+1),
-      n_q_points_cell(cell_quadrature_formula.size()),
-      n_q_points_face(face_quadrature_formula.size()),
+      cell_quadrature(degree+1),
+      face_quadrature(degree+1),
+      n_q_points_cell(cell_quadrature.size()),
+      n_q_points_face(face_quadrature.size()),
       nonlinear_iteration(0),
       transport_direction(0.0),
       incoming_boundary(1),
@@ -175,12 +175,7 @@ void TransportProblem<dim>::setup_system()
    system_matrix.reinit(constrained_sparsity_pattern);
    mass_matrix  .reinit(constrained_sparsity_pattern);
    // assemble mass matrix
-   Function<dim> *dummy_function = 0;
-   MatrixTools::create_mass_matrix(dof_handler,
-                                   cell_quadrature_formula,
-                                   mass_matrix,
-                                   dummy_function,
-                                   constraints);
+   assemble_mass_matrix();
 
    // reinitialize auxiliary matrices
    CompressedSparsityPattern compressed_unconstrained_sparsity_pattern(dof_handler.n_dofs());
@@ -195,9 +190,53 @@ void TransportProblem<dim>::setup_system()
    new_solution .reinit(dof_handler.n_dofs());
    system_rhs   .reinit(dof_handler.n_dofs());
    ss_rhs       .reinit(dof_handler.n_dofs());
-   max_viscosity          .reinit(triangulation.n_active_cells());
+   old_first_order_viscosity          .reinit(triangulation.n_active_cells());
    entropy_viscosity      .reinit(triangulation.n_active_cells());
    max_principle_viscosity.reinit(triangulation.n_active_cells());
+}
+
+/** \brief Assembles the mass matrix, either consistent or lumped.
+ */
+template <int dim>
+void TransportProblem<dim>::assemble_mass_matrix()
+{
+   if (parameters.lump_mass_matrix) // assemble lumped mass matrix
+   {
+      FEValues<dim> fe_values (fe, cell_quadrature, update_values | update_JxW_values);
+   
+      std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
+      FullMatrix<double> local_mass (dofs_per_cell, dofs_per_cell);
+   
+      typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                                     endc = dof_handler.end();
+      for (; cell != endc; ++cell)
+      {
+         fe_values.reinit(cell);
+         cell->get_dof_indices(local_dof_indices);
+   
+         local_mass = 0.0;
+   
+         // compute local contribution
+         for (unsigned int q = 0; q < n_q_points_cell; ++q)
+            for (unsigned int i = 0; i < dofs_per_cell; ++i)
+               for (unsigned int j = 0; j < dofs_per_cell; ++j)
+               {
+                  local_mass(i,i) +=  fe_values.shape_value(i,q)
+                                     *fe_values.shape_value(j,q)
+                                     *fe_values.JxW(q);
+               }
+   
+         // add to global mass matrix with contraints
+         constraints.distribute_local_to_global (local_mass, local_dof_indices, mass_matrix);
+      }
+   } else { // assemble consistent mass matrix
+      Function<dim> *dummy_function = 0;
+      MatrixTools::create_mass_matrix(dof_handler,
+                                      cell_quadrature,
+                                      mass_matrix,
+                                      dummy_function,
+                                      constraints);
+   }
 }
 
 /** \brief Computes viscous bilinear forms, to be used in the computation of
@@ -258,12 +297,12 @@ void TransportProblem<dim>::assemble_system()
    const TotalSource<dim>       total_source       (source_option,source_value);
 
    // FE values, for assembly terms
-   FEValues<dim> fe_values(fe, cell_quadrature_formula,
+   FEValues<dim> fe_values(fe, cell_quadrature,
          update_values | update_gradients | update_quadrature_points
                | update_JxW_values);
 
    // FE face values, for boundary conditions
-   FEFaceValues<dim> fe_face_values(fe, face_quadrature_formula,
+   FEFaceValues<dim> fe_face_values(fe, face_quadrature,
          update_values | update_quadrature_points | update_JxW_values
                | update_normal_vectors | update_gradients);
 
@@ -301,7 +340,7 @@ void TransportProblem<dim>::assemble_system()
    // ---------------------------------------------------------------------
    double domain_averaged_entropy;
    double max_entropy_deviation_domain = 0.0;
-   if ((parameters.viscosity_option == 2)&&(nonlinear_iteration != 0)) {
+   if ((parameters.viscosity_option == 2) and (nonlinear_iteration != 0)) {
       // compute domain-averaged entropy
       double domain_integral_entropy = 0.0;
       // loop over cells
@@ -373,15 +412,15 @@ void TransportProblem<dim>::assemble_system()
       // ------------------------------------------------------------------
       double viscosity;
       double h = cell->diameter();
-      double max_viscosity_cell = parameters.max_viscosity_coefficient * h;
-      max_viscosity(i_cell) = max_viscosity_cell;
+      double old_first_order_viscosity_cell = parameters.old_first_order_viscosity_coefficient * h;
+      old_first_order_viscosity(i_cell) = old_first_order_viscosity_cell;
       switch (parameters.viscosity_option) {
-         case 0: {
+         case 0: { // no viscosity
             break;
          } case 1: {
-            viscosity = max_viscosity_cell;
+            viscosity = old_first_order_viscosity_cell; // old first order viscosity
             break;
-         } case 2: {
+         } case 2: { // old entropy viscosity
             if (nonlinear_iteration != 0) {
                // get old values and gradients
                std::vector<double> old_values(n_q_points_cell);
@@ -415,9 +454,9 @@ void TransportProblem<dim>::assemble_system()
                entropy_viscosity(i_cell) = entropy_viscosity_cell;
 
                // determine viscosity: minimum of first-order viscosity and entropy viscosity
-               viscosity = std::min(max_viscosity_cell, entropy_viscosity_cell);
+               viscosity = std::min(old_first_order_viscosity_cell, entropy_viscosity_cell);
             } else
-               viscosity = max_viscosity_cell;
+               viscosity = old_first_order_viscosity_cell;
 
             break;
          } case 3: {
@@ -574,7 +613,7 @@ void TransportProblem<dim>::set_boundary_indicators()
             cell->face(face)->set_boundary_indicator(0);
 
    // FE face values
-   FEFaceValues<dim> fe_face_values(fe, face_quadrature_formula, update_normal_vectors);
+   FEFaceValues<dim> fe_face_values(fe, face_quadrature, update_normal_vectors);
    // loop over cells
    for (cell = dof_handler.begin_active(); cell != endc; ++cell) {
       // loop over faces of cell
@@ -871,13 +910,13 @@ void TransportProblem<dim>::output_results()
          viscosity_string = "none";
          break;
       } case 1: {
-         viscosity_string = "first_order";
+         viscosity_string = "old_first_order";
          break;
       } case 2: {
          viscosity_string = "entropy";
          break;
       } case 3: {
-         viscosity_string = "max_principle";
+         viscosity_string = "first_order";
          break;
       } default: {
          Assert(false, ExcNotImplemented());
@@ -904,11 +943,11 @@ void TransportProblem<dim>::output_results()
       visc_out.attach_dof_handler(dof_handler);
       // add viscosity data vector(s)
       if ((parameters.viscosity_option == 1)||(parameters.viscosity_option == 2))
-         visc_out.add_data_vector(max_viscosity,"Max_Viscosity",DataOut<dim>::type_cell_data);
+         visc_out.add_data_vector(old_first_order_viscosity,"Old_First_Order_Viscosity",DataOut<dim>::type_cell_data);
       if (parameters.viscosity_option == 2)
          visc_out.add_data_vector(entropy_viscosity,"Entropy_Viscosity",DataOut<dim>::type_cell_data);
       if (parameters.viscosity_option == 3)
-         visc_out.add_data_vector(max_principle_viscosity,"Max_Principle_Viscosity",DataOut<dim>::type_cell_data);
+         visc_out.add_data_vector(max_principle_viscosity,"First_Order_Viscosity",DataOut<dim>::type_cell_data);
       // build patches and write to file
       visc_out.build_patches(degree + 1);
       if (dim == 1) {

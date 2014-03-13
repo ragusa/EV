@@ -7,8 +7,12 @@ set End time = 1.0
 set Time step size = 0.01
 
 # artificial viscosity options
-set Viscosity option = 1
-set Max viscosity coefficient = 0.5e0
+# 0: no artificial viscosity
+# 1: old first order viscosity with tuning parameter
+# 2: old entropy viscosity
+# 3: first order viscosity (maximum-principle preserving)
+set Viscosity option = 3
+set Old first order viscosity coefficient = 0.5e0
 set Entropy viscosity coefficient = 1.0e-1
 
 # mesh refinement options
@@ -18,6 +22,7 @@ set Initial refinement level = 2
 
 # finite element options
 set Finite element degree = 1
+set Lump mass matrix = true
 
 # linear solver options
 set Solver option = 1
@@ -29,3 +34,4 @@ set Relative difference tolerance = 1.0e-6
 
 # output options
 set Output mesh = false
+set Output exact solution = true

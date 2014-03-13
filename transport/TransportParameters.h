@@ -21,7 +21,7 @@ class TransportParameters {
     unsigned int solver_option; // solver option
     unsigned int preconditioner_option; // preconditioner option
     unsigned int viscosity_option; // option for viscosity definition used
-    double max_viscosity_coefficient; // value of maximum viscosity coefficient
+    double old_first_order_viscosity_coefficient; // value of old first order viscosity coefficient
     double entropy_viscosity_coefficient; // value of entropy viscosity coefficient
     unsigned int max_nonlinear_iterations; // maximum number of nonlinear iterations
     double relative_difference_tolerance; // relative difference tolerance for nonlinear convergence
@@ -29,6 +29,7 @@ class TransportParameters {
     bool is_steady_state; // is the problem steady-state?
     double end_time; // end time if transient problem is run
     double time_step_size; // time step size if transient problem is run
+    bool lump_mass_matrix; // option to lump the mass matrix
 };
 
 #include "TransportParameters.cc"
