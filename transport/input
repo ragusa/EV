@@ -2,7 +2,7 @@
 set Problem ID = 2
 
 # transient options
-set Is steady state = false
+set Is steady state = true
 set End time = 1.0
 set Time step size = 0.01
 
@@ -17,7 +17,7 @@ set Entropy viscosity coefficient = 1.0e-1
 
 # mesh refinement options
 set Use adaptive mesh refinement = false
-set Number of refinement cycles = 5
+set Number of refinement cycles = 4
 set Initial refinement level = 2
 
 # finite element options
@@ -34,4 +34,4 @@ set Relative difference tolerance = 1.0e-6
 
 # output options
 set Output mesh = false
-set Output exact solution = true
+set Output exact solution = false

@@ -17,7 +17,8 @@ TransportParameters::TransportParameters() :
       is_steady_state(true),
       end_time(1.0),
       time_step_size(0.001),
-      lump_mass_matrix(false)
+      lump_mass_matrix(false),
+      output_exact_solution(false)
 {
 }
 
@@ -60,6 +61,8 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
          "Time step size if transient problem is run");
    prm.declare_entry("Lump mass matrix", "false", Patterns::Bool(),
          "Option to lump the mass matrix");
+   prm.declare_entry("Output exact solution", "false", Patterns::Bool(),
+         "Option to output exact solution");
 }
 
 /** \brief get the input parameters
@@ -82,4 +85,5 @@ void TransportParameters::get_parameters(ParameterHandler &prm) {
    end_time = prm.get_double("End time");
    time_step_size = prm.get_double("Time step size");
    lump_mass_matrix = prm.get_bool("Lump mass matrix");
+   output_exact_solution = prm.get_bool("Output exact solution");
 }

@@ -30,6 +30,7 @@ class TransportParameters {
     double end_time; // end time if transient problem is run
     double time_step_size; // time step size if transient problem is run
     bool lump_mass_matrix; // option to lump the mass matrix
+    bool output_exact_solution; // option to output exact solution
 };
 
 #include "TransportParameters.cc"

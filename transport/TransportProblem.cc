@@ -190,9 +190,9 @@ void TransportProblem<dim>::setup_system()
    new_solution .reinit(dof_handler.n_dofs());
    system_rhs   .reinit(dof_handler.n_dofs());
    ss_rhs       .reinit(dof_handler.n_dofs());
-   old_first_order_viscosity          .reinit(triangulation.n_active_cells());
-   entropy_viscosity      .reinit(triangulation.n_active_cells());
-   max_principle_viscosity.reinit(triangulation.n_active_cells());
+   old_first_order_viscosity.reinit(triangulation.n_active_cells());
+   entropy_viscosity        .reinit(triangulation.n_active_cells());
+   max_principle_viscosity  .reinit(triangulation.n_active_cells());
 }
 
 /** \brief Assembles the mass matrix, either consistent or lumped.
@@ -585,7 +585,7 @@ void TransportProblem<dim>::assemble_system()
    std::map<unsigned int, double> boundary_values;
    VectorTools::interpolate_boundary_values(dof_handler,
                                             incoming_boundary,
-                                            ConstantFunction<dim>(parameters.incoming_flux, 1),
+                                            ConstantFunction<dim>(incoming_flux_value, 1),
                                             boundary_values);
    MatrixTools::apply_boundary_values(boundary_values,
                                       system_matrix,
@@ -935,6 +935,47 @@ void TransportProblem<dim>::output_results()
    //---------------------------
    if (dim == 1) data_out.write_gnuplot(output);
    else          data_out.write_vtk(output);
+
+   // write exact solution output file
+   //---------------------------------
+   if (parameters.output_exact_solution and has_exact_solution)
+   {
+      // create fine mesh on which to interpolate exact solution function
+      Triangulation<dim> fine_triangulation;
+      fine_triangulation.copy_triangulation(triangulation);
+      unsigned int current_refinement_level = parameters.initial_refinement_level
+         + parameters.n_refinement_cycles - 1;
+      // define "fine" triangulation to be of refinement level 10, so refine
+      // if refinement level is below this
+      if (current_refinement_level < 10) fine_triangulation.refine_global(10-current_refinement_level);
+      // create dof handler for fine mesh
+      DoFHandler<dim> fine_dof_handler(fine_triangulation);
+      fine_dof_handler.distribute_dofs(fe);
+      // interpolate exact solution
+      Vector<double> exact_solution_values(fine_dof_handler.n_dofs());
+      VectorTools::interpolate(fine_dof_handler,
+                               exact_solution,
+                               exact_solution_values);
+
+      // create DataOut object for exact solution
+      DataOut<dim> exact_data_out;
+      exact_data_out.attach_dof_handler(fine_dof_handler);
+      exact_data_out.add_data_vector(exact_solution_values, "flux");
+      exact_data_out.build_patches(degree + 1);
+
+      // create output filename for exact solution
+      std::stringstream exact_solution_filename_ss;
+      exact_solution_filename_ss << "output/exact_solution_" << parameters.problem_id
+         << output_extension;
+      std::string exact_solution_filename = exact_solution_filename_ss.str();
+      char *exact_solution_filename_char = (char*)exact_solution_filename.c_str();
+
+      // create output filestream for exact solution
+      std::ofstream exact_output(exact_solution_filename_char);
+      // write file
+      if (dim == 1) exact_data_out.write_gnuplot(exact_output);
+      else          exact_data_out.write_vtk(exact_output);
+   }
 
    // write viscosity output file
    //----------------------------

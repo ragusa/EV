@@ -1,13 +1,13 @@
 # note: this script requires Gnuplot version 4.6 or higher
 
 # list of possible input files to plot and their corresponding titles
-file_list = "analytic_solution_test_problem_1.dat\
+file_list = "exact_solution_1.gpl\
              solution_none_1.gpl\
              solution_old_first_order_1.gpl\
              solution_old_entropy_1.gpl\
              solution_first_order_1.gpl\
              solution_entropy_1.gpl"
-title_list = "Analytic\
+title_list = "Exact\
               No-Viscosity\
               Old-First-Order\
               Old-Entropy\
