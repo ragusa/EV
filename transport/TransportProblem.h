@@ -131,6 +131,8 @@ class TransportProblem {
       unsigned int cross_section_option;
       double cross_section_value;
       double incoming_flux_value;
+
+      double domain_volume;
 };
 
 #include "TransportProblem.cc"

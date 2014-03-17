@@ -20,7 +20,8 @@ TransportProblem<dim>::TransportProblem(const TransportParameters &parameters) :
       source_value(0.0),
       cross_section_option(1),
       cross_section_value(0.0),
-      incoming_flux_value(0.0)
+      incoming_flux_value(0.0),
+      domain_volume(0.0)
 {
 }
 
@@ -310,7 +311,7 @@ void TransportProblem<dim>::assemble_system()
 
    FullMatrix<double> inviscid_cell_matrix(dofs_per_cell, dofs_per_cell);
    FullMatrix<double>          cell_matrix(dofs_per_cell, dofs_per_cell);
-   Vector<double> cell_rhs(dofs_per_cell);
+   Vector<double>              cell_rhs   (dofs_per_cell);
 
    std::vector<unsigned int> local_dof_indices(dofs_per_cell);
 
@@ -327,16 +328,6 @@ void TransportProblem<dim>::assemble_system()
    // cell iterator
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
-
-   // compute domain volume for denominator of domain-averaged entropy
-   double domain_volume = 0.0;
-   for (cell = dof_handler.begin_active(); cell != endc; ++cell) {
-      // reinitialize FE values
-      fe_values.reinit(cell);
-      // loop over quadrature points
-      for (unsigned int q = 0; q < n_q_points_cell; ++q)
-         domain_volume += fe_values.JxW(q);
-   }
 
    // get domain-averaged entropy if using entropy viscosity for this iteration
    // ---------------------------------------------------------------------
@@ -411,68 +402,8 @@ void TransportProblem<dim>::assemble_system()
                               total_source_values);
 
       // compute viscosity
-      // ------------------------------------------------------------------
-      double viscosity;
-      double h = cell->diameter();
-      double old_first_order_viscosity_cell = parameters.old_first_order_viscosity_coefficient * h;
-      old_first_order_viscosity(i_cell) = old_first_order_viscosity_cell;
-      switch (parameters.viscosity_option) {
-         case 0: { // no viscosity
-            break;
-         } case 1: {
-            viscosity = old_first_order_viscosity_cell; // old first order viscosity
-            break;
-         } case 2: { // old entropy viscosity
-            if (nonlinear_iteration != 0) {
-               // get old values and gradients
-               std::vector<double> old_values(n_q_points_cell);
-               std::vector<Tensor<1,dim> > old_gradients(n_q_points_cell);
-               fe_values[flux].get_function_values(old_solution,old_values);
-               fe_values[flux].get_function_gradients(old_solution,old_gradients);
+      double viscosity = compute_viscosity();
 
-               // compute entropy values at each quadrature point on cell
-               std::vector<double> entropy_values(n_q_points_cell,0.0);
-               for (unsigned int q = 0; q < n_q_points_cell; ++q)
-                  entropy_values[q] = 1.0/2.0 * old_values[q] * old_values[q];
-               // compute entropy residual values at each quadrature point on cell
-               std::vector<double> entropy_residual_values(n_q_points_cell,0.0);
-               for (unsigned int q = 0; q < n_q_points_cell; ++q)
-                  entropy_residual_values[q] = std::abs(transport_direction *
-                        old_values[q] * old_gradients[q]
-                                                        + total_cross_section_values[q] * entropy_values[q]);
-               // compute entropy deviation values at each quadrature point on cell
-               std::vector<double> entropy_deviation_values(n_q_points_cell,0.0);
-               for (unsigned int q = 0; q < n_q_points_cell; ++q)
-                  entropy_deviation_values[q] = std::abs(entropy_values[q] - domain_averaged_entropy);
-               // determine cell maximum entropy residual and entropy deviation
-               double max_entropy_residual = 0.0;
-               for (unsigned int q = 0; q < n_q_points_cell; ++q) {
-                  max_entropy_residual = std::max(max_entropy_residual,entropy_residual_values[q]);
-               }
-
-               // compute entropy viscosity
-               double entropy_viscosity_cell = parameters.entropy_viscosity_coefficient *
-                     h * h * max_entropy_residual / max_entropy_deviation_domain;
-               entropy_viscosity(i_cell) = entropy_viscosity_cell;
-
-               // determine viscosity: minimum of first-order viscosity and entropy viscosity
-               viscosity = std::min(old_first_order_viscosity_cell, entropy_viscosity_cell);
-            } else
-               viscosity = old_first_order_viscosity_cell;
-
-            break;
-         } case 3: {
-            // maximum-principle preserving viscosity does not add Laplacian term;
-            // to avoid unnecessary branching in assembly loop, just add Laplacian
-            // term with zero viscosity, so just keep viscosity with its initialization
-            // of zero
-            viscosity = 0.0;
-            break;
-         } default: {
-            Assert(false,ExcNotImplemented());
-            break;
-         }
-      }
       // compute cell contributions to global system
       // ------------------------------------------------------------------
       for (unsigned int q = 0; q < n_q_points_cell; ++q) {
@@ -594,6 +525,76 @@ void TransportProblem<dim>::assemble_system()
                                       system_rhs);
 
 } // end assembly
+
+template <int dim>
+void TransportProblem<dim>::compute_viscosity(cell,i_cell,fe_values,total_cross_section_values)
+{
+   // compute viscosity
+   // ------------------------------------------------------------------
+   double viscosity;
+   double h = cell->diameter();
+   double old_first_order_viscosity_cell = parameters.old_first_order_viscosity_coefficient * h;
+   old_first_order_viscosity(i_cell) = old_first_order_viscosity_cell;
+   switch (parameters.viscosity_option) {
+      case 0: { // no viscosity
+         break;
+      } case 1: {
+         viscosity = old_first_order_viscosity_cell; // old first order viscosity
+         break;
+      } case 2: { // old entropy viscosity
+         if (nonlinear_iteration != 0) {
+            // get old values and gradients
+            std::vector<double> old_values(n_q_points_cell);
+            std::vector<Tensor<1,dim> > old_gradients(n_q_points_cell);
+            fe_values[flux].get_function_values(old_solution,old_values);
+            fe_values[flux].get_function_gradients(old_solution,old_gradients);
+
+            // compute entropy values at each quadrature point on cell
+            std::vector<double> entropy_values(n_q_points_cell,0.0);
+            for (unsigned int q = 0; q < n_q_points_cell; ++q)
+               entropy_values[q] = 1.0/2.0 * old_values[q] * old_values[q];
+            // compute entropy residual values at each quadrature point on cell
+            std::vector<double> entropy_residual_values(n_q_points_cell,0.0);
+            for (unsigned int q = 0; q < n_q_points_cell; ++q)
+               entropy_residual_values[q] = std::abs(transport_direction *
+                     old_values[q] * old_gradients[q]
+                                                     + total_cross_section_values[q] * entropy_values[q]);
+            // compute entropy deviation values at each quadrature point on cell
+            std::vector<double> entropy_deviation_values(n_q_points_cell,0.0);
+            for (unsigned int q = 0; q < n_q_points_cell; ++q)
+               entropy_deviation_values[q] = std::abs(entropy_values[q] - domain_averaged_entropy);
+            // determine cell maximum entropy residual and entropy deviation
+            double max_entropy_residual = 0.0;
+            for (unsigned int q = 0; q < n_q_points_cell; ++q) {
+               max_entropy_residual = std::max(max_entropy_residual,entropy_residual_values[q]);
+            }
+
+            // compute entropy viscosity
+            double entropy_viscosity_cell = parameters.entropy_viscosity_coefficient *
+                  h * h * max_entropy_residual / max_entropy_deviation_domain;
+            entropy_viscosity(i_cell) = entropy_viscosity_cell;
+
+            // determine viscosity: minimum of first-order viscosity and entropy viscosity
+            viscosity = std::min(old_first_order_viscosity_cell, entropy_viscosity_cell);
+         } else
+            viscosity = old_first_order_viscosity_cell;
+
+         break;
+      } case 3: {
+         // maximum-principle preserving viscosity does not add Laplacian term;
+         // to avoid unnecessary branching in assembly loop, just add Laplacian
+         // term with zero viscosity, so just keep viscosity with its initialization
+         // of zero
+         viscosity = 0.0;
+         break;
+      } default: {
+         Assert(false,ExcNotImplemented());
+         break;
+      }
+   }
+
+   return viscosity;
+}
 
 /** \brief Sets the boundary indicators for each boundary face.
  *
@@ -759,7 +760,9 @@ void TransportProblem<dim>::run()
    {
       // generate mesh if in first cycle, else refine
       if (cycle == 0) {
+         // domain is the dim-dimensional hypercube (-1,1)^dim
          GridGenerator::hyper_cube(triangulation, -1, 1);
+         domain_volume = std::pow(2.0,dim);
          triangulation.refine_global(parameters.initial_refinement_level);
       } else {
          refine_grid();
