@@ -6,6 +6,7 @@ TransportProblem<dim>::TransportProblem(const TransportParameters &parameters) :
       degree(parameters.degree),
       dof_handler(triangulation),
       fe(FE_Q<dim>(degree), 1),
+      flux(0),
       dofs_per_cell(fe.dofs_per_cell),
       cell_quadrature(degree+1),
       face_quadrature(degree+1),
@@ -322,64 +323,14 @@ void TransportProblem<dim>::assemble_system()
    //  quadrature point on cell
    std::vector<double> total_source_values(n_q_points_cell);
 
-   // create extractor
-   FEValuesExtractors::Scalar flux(0);
+   // get domain-averaged entropy if using entropy viscosity for this iteration
+   max_entropy_deviation_domain = 0.0;
+   if ((parameters.viscosity_option == 2) and (nonlinear_iteration != 0))
+      compute_entropy_domain_average();
 
    // cell iterator
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
-
-   // get domain-averaged entropy if using entropy viscosity for this iteration
-   // ---------------------------------------------------------------------
-   double domain_averaged_entropy;
-   double max_entropy_deviation_domain = 0.0;
-   if ((parameters.viscosity_option == 2) and (nonlinear_iteration != 0)) {
-      // compute domain-averaged entropy
-      double domain_integral_entropy = 0.0;
-      // loop over cells
-      for (cell = dof_handler.begin_active(); cell != endc; ++cell) {
-         // reinitialize FE values
-         fe_values.reinit(cell);
-         // loop over quadrature points
-         for (unsigned int q = 0; q < n_q_points_cell; ++q) {
-            // get angular flux at quadrature point
-            double angular_flux = 0.0;
-            for (unsigned int j = 0; j < dofs_per_cell; ++j) {
-               angular_flux += fe_values[flux].value(j, q);
-            }
-            // compute entropy at quadrature point
-            double entropy = 1.0/2.0 * angular_flux * angular_flux;
-            // add contribution of quadrature point to entropy integral
-            domain_integral_entropy += entropy * fe_values.JxW(q);
-         }
-      }
-      // domain-averaged entropy
-      domain_averaged_entropy = domain_integral_entropy / domain_volume;
-
-      // find max deviation of entropy from domain entropy average
-      // loop over cells
-      for (cell = dof_handler.begin_active(); cell != endc; ++cell) {
-         // reinitialize FE values
-         fe_values.reinit(cell);
-         // get old values and gradients
-         std::vector<double> old_values(n_q_points_cell);
-         fe_values[flux].get_function_values(old_solution,old_values);
-         // loop over quadrature points
-         for (unsigned int q = 0; q < n_q_points_cell; ++q) {
-            // get angular flux at quadrature point
-            double angular_flux = 0.0;
-            for (unsigned int j = 0; j < dofs_per_cell; ++j) {
-               angular_flux += old_values[q];
-            }
-            // compute entropy at quadrature point
-            double entropy = 1.0/2.0 * angular_flux * angular_flux;
-            // add contribution of quadrature point to entropy integral
-            max_entropy_deviation_domain = std::max(max_entropy_deviation_domain,
-                  std::abs(entropy-domain_averaged_entropy));
-         }
-      }
-   }
-
    // loop over cells
    unsigned int i_cell = 0;
    for (cell = dof_handler.begin_active(); cell != endc; ++cell, ++i_cell) {
@@ -387,9 +338,6 @@ void TransportProblem<dim>::assemble_system()
       inviscid_cell_matrix = 0;
       cell_matrix = 0;
       cell_rhs = 0;
-
-      // get local dof indices
-      cell->get_dof_indices(local_dof_indices);
 
       // reinitialize FE values
       fe_values.reinit(cell);
@@ -402,10 +350,13 @@ void TransportProblem<dim>::assemble_system()
                               total_source_values);
 
       // compute viscosity
-      double viscosity = compute_viscosity();
+      double viscosity = compute_viscosity(cell, i_cell, fe_values, total_cross_section_values);
 
       // compute cell contributions to global system
       // ------------------------------------------------------------------
+      // get local dof indices
+      cell->get_dof_indices(local_dof_indices);
+
       for (unsigned int q = 0; q < n_q_points_cell; ++q) {
          for (unsigned int i = 0; i < dofs_per_cell; ++i) {
             for (unsigned int j = 0; j < dofs_per_cell; ++j) {
@@ -439,7 +390,8 @@ void TransportProblem<dim>::assemble_system()
          } // end i
       } // end q
 
-      // add face terms; these arise due to integration by parts of viscosity term
+      // compute face contributions to global system;
+      //  these arise due to integration by parts of viscosity term
       // ------------------------------------------------------------------
       for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell; ++face)
       {
@@ -467,7 +419,7 @@ void TransportProblem<dim>::assemble_system()
                                              system_matrix,
                                              system_rhs);
 
-      // aggregate local inviscid matrix global matrix
+      // aggregate local inviscid matrix into global matrix
       for (unsigned int i = 0; i < dofs_per_cell; ++i)
          for (unsigned int j = 0; j < dofs_per_cell; ++j)
             max_principle_viscosity_numerators.add(local_dof_indices[i],
@@ -478,38 +430,9 @@ void TransportProblem<dim>::assemble_system()
 
    // add viscous bilinear form for maximum-principle preserving viscosity
    // ---------------------------------------------------------------------------
-   if (parameters.viscosity_option == 3) {
-      // compute maximum-principle preserving viscosity
-      compute_max_principle_viscosity();
+   if (parameters.viscosity_option == 3)
+      add_max_principle_viscous_bilinear_form();
 
-      unsigned int i_cell = 0;
-      for (cell = dof_handler.begin_active(); cell != endc; ++cell, ++i_cell) {
-         // reset cell matrix to zero
-         cell_matrix = 0;
-
-         // compute cell volume
-         double cell_volume = cell->measure();
-         // compute cell contribution to global system matrix
-         for (unsigned int i = 0; i < dofs_per_cell; ++i) {
-            for (unsigned int j = 0; j < dofs_per_cell; ++j) {
-               double viscous_bilinear_form;
-               if (j == i)
-                  viscous_bilinear_form = cell_volume;
-               else
-                  viscous_bilinear_form = -1.0/(dofs_per_cell - 1.0)*cell_volume;
- 
-               cell_matrix(i,j) += max_principle_viscosity(i_cell) * viscous_bilinear_form;
-            }
-         }
-
-         // aggregate local matrix and rhs to global matrix and rhs
-         cell->get_dof_indices(local_dof_indices);
-         constraints.distribute_local_to_global(cell_matrix,
-                                                local_dof_indices,
-                                                system_matrix);
-
-      }
-   }
 
    // apply boundary conditions
    // ---------------------------------------------------------------------------
@@ -526,27 +449,84 @@ void TransportProblem<dim>::assemble_system()
 
 } // end assembly
 
+/** \brief computes the domain-averaged entropy and the max entropy
+ *         deviation in the domain
+ */
 template <int dim>
-void TransportProblem<dim>::compute_viscosity(cell,i_cell,fe_values,total_cross_section_values)
+void TransportProblem<dim>::compute_entropy_domain_average()
 {
-   // compute viscosity
-   // ------------------------------------------------------------------
+   FEValues<dim> fe_values(fe, cell_quadrature, update_values | update_JxW_values);
+
+   // compute domain-averaged entropy
+   //--------------------------------
+   double domain_integral_entropy = 0.0;
+
+   // loop over cells
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                                  endc = dof_handler.end();
+   for (cell = dof_handler.begin_active(); cell != endc; ++cell) {
+      // reinitialize FE values
+      fe_values.reinit(cell);
+      // get solution values
+      std::vector<double> new_solution_values(n_q_points_cell);
+      fe_values[flux].get_function_values(new_solution,new_solution_values);
+      // loop over quadrature points
+      for (unsigned int q = 0; q < n_q_points_cell; ++q) {
+         // compute entropy at quadrature point
+         double entropy = 0.5 * new_solution_values[q] * new_solution_values[q];
+         // add contribution of quadrature point to entropy integral
+         domain_integral_entropy += entropy * fe_values.JxW(q);
+      }
+   }
+   // domain-averaged entropy
+   domain_averaged_entropy = domain_integral_entropy / domain_volume;
+
+   // compute max deviation of entropy from domain-averaged entropy
+   //--------------------------------------------------------------
+   // loop over cells
+   for (cell = dof_handler.begin_active(); cell != endc; ++cell) {
+      // reinitialize FE values
+      fe_values.reinit(cell);
+      // get old values and gradients
+      std::vector<double> old_solution_values(n_q_points_cell);
+      fe_values[flux].get_function_values(old_solution,old_solution_values);
+      // loop over quadrature points
+      for (unsigned int q = 0; q < n_q_points_cell; ++q) {
+         // compute entropy at quadrature point
+         double entropy = 0.5 * old_solution_values[q] * old_solution_values[q];
+         // add contribution of quadrature point to entropy integral
+         max_entropy_deviation_domain = std::max(max_entropy_deviation_domain,
+               std::abs(entropy - domain_averaged_entropy));
+      }
+   }
+}
+
+/** \brief computes the viscosity in a cell
+ */
+template <int dim>
+double TransportProblem<dim>::compute_viscosity(const typename DoFHandler<dim>::active_cell_iterator &cell,
+                                                const unsigned int        &i_cell,
+                                                const FEValues<dim>       &fe_values,
+                                                const std::vector<double> &total_cross_section_values)
+{
    double viscosity;
+   // cell size
    double h = cell->diameter();
+   // compute old definition of first-order viscosity
    double old_first_order_viscosity_cell = parameters.old_first_order_viscosity_coefficient * h;
    old_first_order_viscosity(i_cell) = old_first_order_viscosity_cell;
    switch (parameters.viscosity_option) {
       case 0: { // no viscosity
          break;
-      } case 1: {
-         viscosity = old_first_order_viscosity_cell; // old first order viscosity
+      } case 1: { // old definition of first-order viscosity
+         viscosity = old_first_order_viscosity_cell;
          break;
-      } case 2: { // old entropy viscosity
+      } case 2: { // old definition of entropy viscosity
          if (nonlinear_iteration != 0) {
-            // get old values and gradients
-            std::vector<double> old_values(n_q_points_cell);
+            // get previous iteration values and gradients
+            std::vector<double>         old_values   (n_q_points_cell);
             std::vector<Tensor<1,dim> > old_gradients(n_q_points_cell);
-            fe_values[flux].get_function_values(old_solution,old_values);
+            fe_values[flux].get_function_values   (old_solution,old_values);
             fe_values[flux].get_function_gradients(old_solution,old_gradients);
 
             // compute entropy values at each quadrature point on cell
@@ -556,9 +536,9 @@ void TransportProblem<dim>::compute_viscosity(cell,i_cell,fe_values,total_cross_
             // compute entropy residual values at each quadrature point on cell
             std::vector<double> entropy_residual_values(n_q_points_cell,0.0);
             for (unsigned int q = 0; q < n_q_points_cell; ++q)
-               entropy_residual_values[q] = std::abs(transport_direction *
-                     old_values[q] * old_gradients[q]
-                                                     + total_cross_section_values[q] * entropy_values[q]);
+               entropy_residual_values[q] = std::abs(
+                  transport_direction * old_values[q] * old_gradients[q]
+                  + total_cross_section_values[q] * entropy_values[q]);
             // compute entropy deviation values at each quadrature point on cell
             std::vector<double> entropy_deviation_values(n_q_points_cell,0.0);
             for (unsigned int q = 0; q < n_q_points_cell; ++q)
@@ -580,20 +560,61 @@ void TransportProblem<dim>::compute_viscosity(cell,i_cell,fe_values,total_cross_
             viscosity = old_first_order_viscosity_cell;
 
          break;
-      } case 3: {
+      } case 3: { // maximum-principle preserving first-order viscosity
          // maximum-principle preserving viscosity does not add Laplacian term;
          // to avoid unnecessary branching in assembly loop, just add Laplacian
          // term with zero viscosity, so just keep viscosity with its initialization
          // of zero
          viscosity = 0.0;
          break;
-      } default: {
+      } default: { // invalid viscosity option
          Assert(false,ExcNotImplemented());
          break;
       }
    }
 
    return viscosity;
+}
+
+/** \brief adds the viscous bilinear form for the maximum-principle preserving viscosity
+ */
+template <int dim>
+void TransportProblem<dim>::add_max_principle_viscous_bilinear_form()
+{
+   // compute maximum-principle preserving viscosity
+   compute_max_principle_viscosity();
+
+   unsigned int i_cell = 0;
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                                  endc = dof_handler.end();
+   for (; cell != endc; ++cell, ++i_cell) {
+      // reset cell matrix to zero
+      FullMatrix<double> cell_matrix(dofs_per_cell, dofs_per_cell);
+      cell_matrix = 0;
+
+      // compute cell volume
+      double cell_volume = cell->measure();
+      // compute cell contribution to global system matrix
+      for (unsigned int i = 0; i < dofs_per_cell; ++i) {
+         for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+            double viscous_bilinear_form;
+            if (j == i)
+               viscous_bilinear_form = cell_volume;
+            else
+               viscous_bilinear_form = -1.0/(dofs_per_cell - 1.0)*cell_volume;
+ 
+            cell_matrix(i,j) += max_principle_viscosity(i_cell) * viscous_bilinear_form;
+         }
+      }
+
+      // aggregate local matrix and rhs to global matrix and rhs
+      std::vector<unsigned int> local_dof_indices(dofs_per_cell);
+      cell->get_dof_indices(local_dof_indices);
+      constraints.distribute_local_to_global(cell_matrix,
+                                             local_dof_indices,
+                                             system_matrix);
+
+   }
 }
 
 /** \brief Sets the boundary indicators for each boundary face.

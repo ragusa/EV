@@ -2,7 +2,7 @@
 set Problem ID = 2
 
 # transient options
-set Is steady state = true
+set Is steady state = false
 set End time = 1.0
 set Time step size = 0.01
 

@@ -5,7 +5,6 @@
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/logstream.h>
-//#include <deal.II/base/parsed_function.h>
 #include <deal.II/base/function_parser.h>
 #include <deal.II/base/tensor_function.h>
 #include <deal.II/base/table.h>
@@ -76,9 +75,15 @@ class TransportProblem {
       void output_grid() const;
       void evaluate_error(const unsigned int cycle);
       void compute_viscous_bilinear_forms();
+      void add_max_principle_viscous_bilinear_form();
       void compute_max_principle_viscosity();
       void check_solution_nonnegative() const;
       bool check_local_discrete_max_principle() const;
+      double compute_viscosity(const typename DoFHandler<dim>::active_cell_iterator &cell,
+                               const unsigned int  &i_cell,
+                               const FEValues<dim> &fe_values,
+                               const std::vector<double> &total_cross_section);
+      void compute_entropy_domain_average();
 
       const TransportParameters &parameters; // input parameters
       unsigned int degree;
@@ -86,6 +91,7 @@ class TransportProblem {
       Triangulation<dim> triangulation;
       DoFHandler<dim> dof_handler;
       FESystem<dim> fe;
+      FEValuesExtractors::Scalar flux;
       const unsigned int dofs_per_cell;
 
       QGauss<dim>   cell_quadrature;
@@ -133,6 +139,8 @@ class TransportProblem {
       double incoming_flux_value;
 
       double domain_volume;
+      double domain_averaged_entropy;
+      double max_entropy_deviation_domain;
 };
 
 #include "TransportProblem.cc"
