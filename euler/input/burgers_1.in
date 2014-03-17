@@ -1,5 +1,6 @@
 subsection finite element
    set degree = 1
+   set lump mass matrix = false
 end
 
 subsection quadrature

@@ -73,6 +73,7 @@ class ConservationLaw
     void refine_mesh();
     void update_cell_sizes();
     void assemble_mass_matrix();
+    void lump_mass_matrix(SparseMatrix<double> &mass_matrix);
     void solve_runge_kutta();
     void compute_error(const unsigned int cycle);
 
@@ -119,8 +120,9 @@ class ConservationLaw
     void output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, double> &map,
                     const std::string &output_filename_base);
 
-    // error checking functions
+    // checking functions
     void check_nan();
+    bool check_local_discrete_max_principle() const;
 
     // utility functions
     void get_matrix_row(const SparseMatrix<double> &matrix,
@@ -168,7 +170,7 @@ class ConservationLaw
     const unsigned int   n_q_points_face;
 
     /** solution of current time step */
-    Vector<double>       current_solution;
+    Vector<double>       new_solution;
     /** solution of previous time step */
     Vector<double>       old_solution;
     /** exact solutuion of current time step */

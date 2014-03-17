@@ -64,6 +64,7 @@ class ConservationLawParameters
     void get_conservation_law_parameters (ParameterHandler &prm);
 
     unsigned int degree;
+    bool lump_mass_matrix;
     unsigned int n_quadrature_points;
 
     enum ViscosityType { none, constant, old_first_order, max_principle, entropy }; 

@@ -15,6 +15,10 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters (Parame
                         "1",
                         Patterns::Integer(),
                         "polynomial degree of finite elements");
+      prm.declare_entry("lump mass matrix",
+                        "false",
+                        Patterns::Bool(),
+                        "option to lump the mass matrix");
    }
    prm.leave_subsection();
 
@@ -207,6 +211,7 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
    prm.enter_subsection("finite element");
    {
       degree = prm.get_integer("degree");
+      lump_mass_matrix = prm.get_bool("lump mass matrix");
    }
    prm.leave_subsection();
 

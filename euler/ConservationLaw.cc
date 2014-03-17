@@ -76,11 +76,11 @@ void ConservationLaw<dim>::run()
       setup_system();
 
       // interpolate the initial conditions to the grid
-      VectorTools::interpolate(dof_handler,initial_conditions_function,current_solution);
+      VectorTools::interpolate(dof_handler,initial_conditions_function,new_solution);
       // apply Dirichlet BC to initial solution or guess
       apply_Dirichlet_BC(0.0);
       // set old solution to the current solution
-      old_solution = current_solution;
+      old_solution = new_solution;
       // output initial solution
       if (in_final_cycle)
          output_solution(0.0);
@@ -341,7 +341,7 @@ void ConservationLaw<dim>::compute_error_for_refinement()
                                        // for now, assume no Neumann boundary conditions,
                                        //  so the following argument may be empty
                                        typename FunctionMap<dim>::type(),
-                                       current_solution,
+                                       new_solution,
                                        estimated_error_per_cell_time_step);
 
    estimated_error_per_cell += estimated_error_per_cell_time_step;
@@ -445,7 +445,7 @@ void ConservationLaw<dim>::setup_system ()
 
    // resize vectors
    old_solution             .reinit(dof_handler.n_dofs());
-   current_solution         .reinit(dof_handler.n_dofs());
+   new_solution         .reinit(dof_handler.n_dofs());
    exact_solution           .reinit(dof_handler.n_dofs());
    solution_step            .reinit(dof_handler.n_dofs());
    system_rhs               .reinit(dof_handler.n_dofs());
@@ -495,45 +495,17 @@ void ConservationLaw<dim>::update_cell_sizes()
 template <int dim>
 void ConservationLaw<dim>::assemble_mass_matrix()
 {
-   mass_matrix = 0.0;
-
-// The commented-out code below creates a singular mass matrix for vector-valued problems
-/*
-   FEValues<dim> fe_values (fe, cell_quadrature, update_values | update_JxW_values);
-
-   std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
-   FullMatrix<double> local_mass (dofs_per_cell, dofs_per_cell);
-
-   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
-                                                  endc = dof_handler.end();
-   for (; cell != endc; ++cell)
-   {
-      fe_values.reinit(cell);
-      cell->get_dof_indices(local_dof_indices);
-
-      local_mass = 0.0;
-
-      // compute local contribution
-      for (unsigned int q = 0; q < n_q_points_cell; ++q)
-         for (unsigned int i = 0; i < dofs_per_cell; ++i)
-            for (unsigned int j = 0; j < dofs_per_cell; ++j)
-            {
-               local_mass(i,j) +=  fe_values.shape_value(i,q)
-                                  *fe_values.shape_value(j,q)
-                                  *fe_values.JxW(q);
-            }
-
-      // add to global mass matrix with contraints
-      constraints.distribute_local_to_global (local_mass, local_dof_indices, mass_matrix);
-   }
-*/
-   // use the mass matrix creator function provided by deal.ii
+   // use deal.II's matrix creator to create consistent mass matrix
    Function<dim> *dummy_function = 0;
-   MatrixTools::create_mass_matrix( dof_handler,
-                                    cell_quadrature,
-                                    mass_matrix,
-                                    dummy_function,
-                                    constraints);
+   MatrixTools::create_mass_matrix(dof_handler,
+                                   cell_quadrature,
+                                   mass_matrix,
+                                   dummy_function,
+                                   constraints);
+
+   // if the mass matrix is chosen to be lumped, then lump it
+   if (conservation_law_parameters.lump_mass_matrix)
+      lump_mass_matrix(mass_matrix);
 
    // output mass matrix
    if (conservation_law_parameters.output_mass_matrix)
@@ -541,6 +513,40 @@ void ConservationLaw<dim>::assemble_mass_matrix()
       std::ofstream mass_matrix_out ("output/mass_matrix.txt");
       mass_matrix.print_formatted(mass_matrix_out, 10, true, 0, "0", 1);
       mass_matrix_out.close();
+   }
+}
+
+/** \brief Lump the mass matrix. This is performed algebraically by looping
+ *         over the rows and adding the off-diagonal values to the diagonal.
+ *  \param [in] mass_matrix the already-computed consistent mass matrix
+ */
+template <int dim>
+void ConservationLaw<dim>::lump_mass_matrix(SparseMatrix<double> &mass_matrix)
+{
+   const unsigned int n_dofs = dof_handler.n_dofs();
+
+   for (unsigned int i = 0; i < n_dofs; ++i)
+   {
+      std::vector<double>       row_values;
+      std::vector<unsigned int> row_indices;
+      unsigned int n_col;
+
+      // get matrix values in a row
+      get_matrix_row(mass_matrix,
+                     i,
+                     row_values,
+                     row_indices,
+                     n_col);
+
+      // compute sum of all values in row and zero out row
+      double row_sum = 0.0; // sum of all values in row
+      for (unsigned int j = 0; j < n_col; ++j)
+      {
+         row_sum += mass_matrix(i,j);
+         mass_matrix.set(i,j,0.0);
+      }
+      // add row sum to diagonal
+      mass_matrix.set(i,i,row_sum);
    }
 }
 
@@ -585,7 +591,7 @@ void ConservationLaw<dim>::apply_Dirichlet_BC(const double &time)
          }
    // apply boundary values to the solution
    for (std::map<unsigned int, double>::const_iterator it = boundary_values.begin(); it != boundary_values.end(); ++it)
-      current_solution(it->first) = (it->second);
+      new_solution(it->first) = (it->second);
 }
 
 /** \brief Outputs a mapped quantity at all quadrature points.
@@ -741,10 +747,10 @@ void ConservationLaw<dim>::solve_runge_kutta()
 
       update_viscosities(dt);
 
-      // update old_solution to current_solution for next time step;
+      // update old_solution to new_solution for next time step;
       // this is not done at the end of the previous time step because
       // of the time derivative term in update_viscosities() above
-      old_solution = current_solution;
+      old_solution = new_solution;
 
       // solve here
       /** First, compute each \f$\mathbf{f}_i\f$: */
@@ -761,12 +767,12 @@ void ConservationLaw<dim>::solve_runge_kutta()
             mass_matrix.vmult(system_rhs, old_solution);
             for (int j = 0; j < i; ++j)
                system_rhs.add(dt * rk.a[i][j] , rk.f[j]);
-            mass_matrix_solve(current_solution);
+            mass_matrix_solve(new_solution);
             // ordinarily, Dirichlet BC need not be reapplied, but in this case, the Dirichlet BC can be time-dependent
             apply_Dirichlet_BC(current_time);
          } else {
             // Newton solve
-            current_solution = old_solution;
+            new_solution = old_solution;
             // compute initial negative of transient residual: -F(y)
             compute_tr_residual(i,dt);
             // compute initial norm of transient residual - used in convergence tolerance
@@ -788,7 +794,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
                // Solve for Newton step
                linear_solve(conservation_law_parameters.linear_solver,system_matrix,system_rhs,solution_step);
                // update solution
-               current_solution += solution_step;
+               new_solution += solution_step;
                // ordinarily, Dirichlet BC need not be reapplied, but in this case, the Dirichlet BC can be time-dependent
                apply_Dirichlet_BC(current_time);
                // compute negative of transient residual: -F(y)
@@ -834,7 +840,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
          mass_matrix.vmult(system_rhs, old_solution);
          for (int i = 0; i < rk.s; ++i)
             system_rhs.add(dt * rk.b[i], rk.f[i]);
-         mass_matrix_solve(current_solution);
+         mass_matrix_solve(new_solution);
          apply_Dirichlet_BC(current_time);
 
          // end of step residual can be used as beginning of step residual for next step
@@ -867,6 +873,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
                // output solution
                output_solution(current_time);
 
+      check_local_discrete_max_principle();
       check_nan();
 
       // compute error for adaptive mesh refinement
@@ -942,7 +949,7 @@ void ConservationLaw<dim>::add_maximum_principle_viscosity_bilinear_form(Vector<
             else
                b_K = -1.0/(dofs_per_cell-1.0)*cell_volume;
 
-            b_i += current_solution(local_dof_indices[j])*b_K;
+            b_i += new_solution(local_dof_indices[j])*b_K;
          }
          // add viscous term for dof i; note 0 is used for quadrature point because the
          // viscosity is the same for all quadrature points
@@ -1170,7 +1177,7 @@ void ConservationLaw<dim>::compute_viscous_fluxes()
                                                   endc = dof_handler.end();
    for (; cell != endc; ++cell) {
       fe_values.reinit(cell);
-      fe_values.get_function_values(current_solution, solution_values);
+      fe_values.get_function_values(new_solution, solution_values);
 
       // get local dof indices
       cell->get_dof_indices(local_dof_indices);
@@ -1292,9 +1299,9 @@ void ConservationLaw<dim>::update_entropy_residuals(const double &dt)
    {
       fe_values.reinit(cell);
       // compute entropy of current and old solutions
-      compute_entropy (current_solution, fe_values, entropy_cell_q[cell]);
+      compute_entropy (new_solution, fe_values, entropy_cell_q[cell]);
       compute_entropy (old_solution,     fe_values, old_entropy);
-      compute_divergence_entropy_flux (current_solution, fe_values, divergence_entropy_flux);
+      compute_divergence_entropy_flux (new_solution, fe_values, divergence_entropy_flux);
 
       for (unsigned int q = 0; q < n_q_points_cell; ++q)
       {
@@ -1354,11 +1361,11 @@ void ConservationLaw<dim>::update_jumps()
             fe_values_face_neighbor.reinit(neighbor,ineighbor);
 
             // compute entropy at each quadrature point on face
-            compute_entropy_face(current_solution,fe_values_face,entropy);
+            compute_entropy_face(new_solution,fe_values_face,entropy);
 
             // get gradients on adjacent faces of current cell and neighboring cell
-            fe_values_face.get_function_gradients(         current_solution, gradients_face);
-            fe_values_face_neighbor.get_function_gradients(current_solution, gradients_face_neighbor);
+            fe_values_face.get_function_gradients(         new_solution, gradients_face);
+            fe_values_face_neighbor.get_function_gradients(new_solution, gradients_face_neighbor);
 
             // get normal vectors
             normal_vectors = fe_values_face.get_normal_vectors();
@@ -1392,7 +1399,7 @@ void ConservationLaw<dim>::compute_tr_residual(unsigned int i, double dt)
    // M*(y_current - y_old) - sum{a_ij*dt*f_j}_j=1..i
 
    // use solution_step to temporarily hold the quantity (y_current - y_old)
-   solution_step = current_solution;
+   solution_step = new_solution;
    solution_step.add(-1.0,old_solution);
    // store M*(y_current - y_old) in system_rhs
    mass_matrix.vmult(system_rhs,solution_step);
@@ -1412,7 +1419,7 @@ void ConservationLaw<dim>::compute_error(const unsigned int cycle)
    Vector<double> difference_per_cell (triangulation.n_active_cells());
    // compute L2 norm of error on each cell
    VectorTools::integrate_difference (dof_handler,
-                                      current_solution,
+                                      new_solution,
                                       exact_solution_function,
                                       difference_per_cell,
                                       cell_quadrature,
@@ -1437,7 +1444,7 @@ void ConservationLaw<dim>::check_nan()
 {
    unsigned int n = dof_handler.n_dofs();
    for (unsigned int i = 0; i < n; ++i)
-      Assert(current_solution(i) == current_solution(i), ExcNumberNotFinite());
+      Assert(new_solution(i) == new_solution(i), ExcNumberNotFinite());
 }
 
 /** \brief Gets the values and indices of nonzero elements in a sparse matrix.
@@ -1470,4 +1477,55 @@ void ConservationLaw<dim>::get_matrix_row(const SparseMatrix<double> &matrix,
       row_values .push_back(matrix_iterator->value());
       row_indices.push_back(matrix_iterator->column());
     }
+}
+
+/** \brief check that the local discrete max principle is satisfied.
+ *  \return boolean of if local discrete max principle is satisfied
+ */
+template <int dim>
+bool ConservationLaw<dim>::check_local_discrete_max_principle() const
+{
+   const unsigned int n_dofs = dof_handler.n_dofs();
+   Vector<double> max_values(n_dofs); // max of neighbors for each dof
+   Vector<double> min_values(n_dofs); // min of neighbors for each dof
+   max_values = -1.0e15;
+   max_values =  1.0e15;
+
+   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
+
+   // loop over cells
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                                  endc = dof_handler.end();
+   for (; cell != endc; ++cell) {
+      // get local dof indices
+      cell->get_dof_indices(local_dof_indices);
+
+      // find min and max values on cell
+      double max_cell = old_solution(local_dof_indices[0]); // initialized to arbitrary value on cell
+      double min_cell = old_solution(local_dof_indices[0]); // initialized to arbitrary value on cell
+      for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+         double value_j = old_solution(local_dof_indices[j]);
+         max_cell = std::max(max_cell, value_j);
+         min_cell = std::min(min_cell, value_j);
+      }
+
+      // update the max and min values of neighborhood of each dof
+      for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+         unsigned int i = local_dof_indices[j]; // global index
+         max_values(i) = std::max(max_values(i), max_cell);
+         min_values(i) = std::min(min_values(i), min_cell);
+      }
+   }
+
+   // check that each dof value is bounded by its neighbors
+   bool local_max_principle_satisfied = true;
+   for (unsigned int i = 0; i < n_dofs; ++i) {
+      double value_i = new_solution(i);
+      if (value_i < min_values(i))
+         local_max_principle_satisfied = false;
+      if (value_i > max_values(i))
+         local_max_principle_satisfied = false;
+   }
+   
+   return local_max_principle_satisfied;
 }
