@@ -157,6 +157,10 @@ class TransportProblem {
       double domain_volume;
       double domain_averaged_entropy;
       double max_entropy_deviation_domain;
+
+      // CFL condition functions and data
+      void check_CFL_condition(const double &dt) const;
+      double minimum_cell_diameter;
 };
 
 #include "TransportProblem.cc"

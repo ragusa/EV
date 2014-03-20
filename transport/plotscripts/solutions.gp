@@ -1,12 +1,13 @@
 # note: this script requires Gnuplot version 4.6 or higher
+# usage: gnuplot -e 'problem_ID=<problem ID>' solutions.gp
 
 # list of possible input files to plot and their corresponding titles
-file_list = "exact_solution_1.gpl\
-             solution_none_1.gpl\
-             solution_old_first_order_1.gpl\
-             solution_old_entropy_1.gpl\
-             solution_low_order_1.gpl\
-             solution_high_order_1.gpl"
+file_list = "exact_solution\
+             solution_none\
+             solution_old_first_order\
+             solution_old_entropy\
+             solution_low_order\
+             solution_high_order"
 title_list = "Exact\
               No-Viscosity\
               Old-First-Order\
@@ -22,7 +23,7 @@ is_missing(x)=int(is_missing_aux(x)+0)
 existing_file_list  = ""
 existing_title_list = ""
 do for [i=1:words(file_list)] {
-   myfile = word(file_list,i)
+   myfile = word(file_list,i)."_".problem_ID.".gpl"
    mytitle = word(title_list,i)
    if (!is_missing(myfile)) {
       existing_file_list = existing_file_list." ".myfile
@@ -31,7 +32,8 @@ do for [i=1:words(file_list)] {
 }
 
 set terminal postscript enhanced color
-set output '| ps2pdf - test_problem_1.pdf'
+output_file = "solutions_".problem_ID.".pdf"
+set output '| ps2pdf - '.output_file
 set ylabel "Angular Flux"
 set xlabel "x"
 set key bottom right

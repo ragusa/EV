@@ -144,6 +144,19 @@ void TransportProblem<dim>::process_problem_ID()
          has_exact_solution = true;
          Assert(false,ExcNotImplemented());
          break;
+      } case 5: { // linear advection problem with step IC
+         cross_section_option = 1;
+         cross_section_value = 0.0;
+         source_option = 1;
+         source_value = 0.0;
+         incoming_flux_value = 1.0e0;
+         has_exact_solution = true;
+         if (parameters.is_steady_state)
+            exact_solution_string = "1.0";
+         else
+            exact_solution_string = "if((x-t)<0,1.0,0.0)";
+         initial_conditions_string = "if(x<0,1.0,0.0)";
+         break;
       } default: {
          Assert(false,ExcNotImplemented());
          break;
@@ -161,6 +174,15 @@ void TransportProblem<dim>::setup_system()
 
    // set boundary indicators to distinguish incoming boundary
    set_boundary_indicators();
+
+   // compute minimum cell diameter for CFL condition
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                                  endc = dof_handler.end();
+   // reset minimum cell diameter to an arbitrary cell diameter such as the first one
+   minimum_cell_diameter = cell->diameter();
+   // loop over cells to determine minimum cell diameter
+   for (; cell != endc; ++cell)
+      minimum_cell_diameter = std::min(minimum_cell_diameter, cell->diameter());
 
    // clear constraint matrix and make hanging node constraints
    constraints.clear();
@@ -850,17 +872,25 @@ void TransportProblem<dim>::run()
             // determine time step size
             double dt = parameters.time_step_size;
             if (t + dt_const > t_end) dt = t_end - t; // correct dt if new t would overshoot t_end 
+            // check CFL condition
+            check_CFL_condition(dt);
             // increment time
             t += dt;
             // determine if end of transient has been reached (within machine precision)
             in_transient = t < t_end - machine_precision;
 
+            // update old solution to previous step's new solution
+            old_solution = new_solution;
+
             // solve for current time solution
             system_rhs = 0.0;
-            lumped_mass_matrix.vmult(system_rhs, old_solution); // M*u
+//            lumped_mass_matrix.vmult(system_rhs, old_solution); // M*u
+            consistent_mass_matrix.vmult(system_rhs, old_solution); // M*u
+            assemble_system();
             system_matrix.vmult(ss_rhs, old_solution);   // A*u
             system_rhs.add(-dt, ss_rhs);                 // M*u - dt*A*u
-            solve_linear_system(lumped_mass_matrix, system_rhs);
+//            solve_linear_system(lumped_mass_matrix, system_rhs);
+            solve_linear_system(consistent_mass_matrix, system_rhs);
             apply_Dirichlet_BC();
 
             if (parameters.viscosity_option == 4) // high-order max-principle preserving viscosity
@@ -1011,6 +1041,7 @@ void TransportProblem<dim>::output_results()
       fine_dof_handler.distribute_dofs(fe);
       // interpolate exact solution
       Vector<double> exact_solution_values(fine_dof_handler.n_dofs());
+      exact_solution.set_time(parameters.end_time);
       VectorTools::interpolate(fine_dof_handler,
                                exact_solution,
                                exact_solution_values);
@@ -1202,3 +1233,14 @@ template <int dim>
 void TransportProblem<dim>::compute_high_order_solution()
 {
 }
+
+/** \brief Checks that the CFL condition is satisfied.
+ */
+template <int dim>
+void TransportProblem<dim>::check_CFL_condition(const double &dt) const
+{
+   double speed = 1.0; // for now, speed is hard-coded to be 1
+   double CFL = speed*dt/minimum_cell_diameter;
+   Assert(CFL < 1.0,ExcMessage("CFL number must be less than one."));
+}
+
