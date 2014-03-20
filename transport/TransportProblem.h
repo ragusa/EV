@@ -61,12 +61,14 @@ class TransportProblem {
       void run();
 
    private:
+      // main functions
       void initialize_system();
       void process_problem_ID();
       void setup_system();
       void set_boundary_indicators();
-      void assemble_mass_matrix();
+      void assemble_mass_matrices();
       void assemble_system();
+      void apply_Dirichlet_BC();
       void solve_step();
       void solve_linear_system(const SparseMatrix<double> &A,
                                const Vector<double> &b);
@@ -74,39 +76,51 @@ class TransportProblem {
       void output_results();
       void output_grid() const;
       void evaluate_error(const unsigned int cycle);
-      void compute_viscous_bilinear_forms();
-      void add_max_principle_viscous_bilinear_form();
-      void compute_max_principle_viscosity();
       void check_solution_nonnegative() const;
       bool check_local_discrete_max_principle() const;
       double compute_viscosity(const typename DoFHandler<dim>::active_cell_iterator &cell,
                                const unsigned int  &i_cell,
                                const FEValues<dim> &fe_values,
                                const std::vector<double> &total_cross_section);
-      void compute_entropy_domain_average();
+
+      // low-order max-principle viscosity functions and data
+      void compute_viscous_bilinear_forms();
+      void add_max_principle_viscous_bilinear_form();
+      void compute_max_principle_viscosity();
+      SparsityPattern unconstrained_sparsity_pattern;
+      SparseMatrix<double> max_principle_viscosity_numerators;
+      SparseMatrix<double> viscous_bilinear_forms;
+
+      // high-order max-principle viscosity functions and data
+      void assemble_high_order_quantities();
+      void compute_limiting_coefficients();
+      void compute_high_order_solution();
+      SparseMatrix<double> auxiliary_mass_matrix;         // B matrix
+      SparseMatrix<double> high_order_coefficient_matrix; // A matrix
+      SparseMatrix<double> limiting_coefficient_matrix;   // L matrix
+      Vector<double> high_order_viscosity;
 
       const TransportParameters &parameters; // input parameters
-      unsigned int degree;
 
+      // mesh and dof data
       Triangulation<dim> triangulation;
       DoFHandler<dim> dof_handler;
-      FESystem<dim> fe;
-      FEValuesExtractors::Scalar flux;
+      const unsigned int degree;
+      const FESystem<dim> fe;
+      const FEValuesExtractors::Scalar flux;
       const unsigned int dofs_per_cell;
 
-      QGauss<dim>   cell_quadrature;
-      QGauss<dim-1> face_quadrature;
+      // quadrature data
+      const QGauss<dim>   cell_quadrature;
+      const QGauss<dim-1> face_quadrature;
       const unsigned int n_q_points_cell;
       const unsigned int n_q_points_face;
 
       ConstraintMatrix constraints;
-
       SparsityPattern constrained_sparsity_pattern;
       SparseMatrix<double> system_matrix;
-      SparseMatrix<double> mass_matrix;
-      SparsityPattern unconstrained_sparsity_pattern;
-      SparseMatrix<double> max_principle_viscosity_numerators;
-      SparseMatrix<double> viscous_bilinear_forms;
+      SparseMatrix<double> consistent_mass_matrix;
+      SparseMatrix<double> lumped_mass_matrix;
 
       Vector<double> old_solution;
       Vector<double> new_solution;
@@ -115,7 +129,7 @@ class TransportProblem {
 
       Vector<double> old_first_order_viscosity;
       Vector<double> entropy_viscosity;
-      Vector<double> max_principle_viscosity;
+      Vector<double> low_order_viscosity;
 
       unsigned int nonlinear_iteration;
 
@@ -138,6 +152,8 @@ class TransportProblem {
       double cross_section_value;
       double incoming_flux_value;
 
+      // entropy viscosity functions and data
+      void compute_entropy_domain_average();
       double domain_volume;
       double domain_averaged_entropy;
       double max_entropy_deviation_domain;

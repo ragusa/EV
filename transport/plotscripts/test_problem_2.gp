@@ -5,14 +5,14 @@ file_list = "exact_solution_2.gpl\
              solution_none_2.gpl\
              solution_old_first_order_2.gpl\
              solution_old_entropy_2.gpl\
-             solution_first_order_2.gpl\
-             solution_entropy_2.gpl"
+             solution_low_order_2.gpl\
+             solution_high_order_2.gpl"
 title_list = "Exact\
               No-Viscosity\
               Old-First-Order\
               Old-Entropy\
-              First-Order\
-              Entropy"
+              Low-Order\
+              High-Order"
 
 # define is_missing(x) function for determining if an input file exists
 is_missing_aux(x)=system("ismissing.sh ".x)

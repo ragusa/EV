@@ -3,8 +3,8 @@
 template<int dim>
 TransportProblem<dim>::TransportProblem(const TransportParameters &parameters) :
       parameters(parameters),
-      degree(parameters.degree),
       dof_handler(triangulation),
+      degree(parameters.degree),
       fe(FE_Q<dim>(degree), 1),
       flux(0),
       dofs_per_cell(fe.dofs_per_cell),
@@ -113,14 +113,18 @@ void TransportProblem<dim>::process_problem_ID()
          source_option = 1;
          source_value = 0.0e0;
          incoming_flux_value = 1.0e0;
+         has_exact_solution = false;
+         initial_conditions_string = "0";
+/*
          has_exact_solution = true;
          if (dim == 1)
             exact_solution_string = "if(x < 0.0, 1.0, exp(-100.0*x))";
          else if (dim == 2)
             exact_solution_string = "if(y < 0, 1.0, if(x < 0.0, 1.0, exp(-100.0*x)))";
          else
-            Assert(dim < 3,ExcNotImplemented());
+            Assert(false,ExcNotImplemented());
          initial_conditions_string = exact_solution_string; // this creates pseudotransient
+*/
          break;
       } case 3: {
          cross_section_option = 1;
@@ -152,34 +156,34 @@ void TransportProblem<dim>::process_problem_ID()
 template<int dim>
 void TransportProblem<dim>::setup_system()
 {
+   // distribute dofs
    dof_handler.distribute_dofs(fe);
 
    // set boundary indicators to distinguish incoming boundary
    set_boundary_indicators();
 
-   // clear constraint matrix and make hanging node constraints and
-   // Dirichlet BC constraints for new mesh
+   // clear constraint matrix and make hanging node constraints
    constraints.clear();
    DoFTools::make_hanging_node_constraints(dof_handler, constraints);
-/*
-   VectorTools::interpolate_boundary_values(dof_handler,
-                                            incoming_boundary,
-                                            ConstantFunction<dim>(incoming_flux_value, 1),
-                                            constraints);
-*/
    constraints.close();
 
-   // reinitialize system matrix and mass matrix
+   // create sparsity pattern for system matrix and mass matrices
    CompressedSparsityPattern compressed_constrained_sparsity_pattern(dof_handler.n_dofs());
    DoFTools::make_sparsity_pattern(dof_handler,
                                    compressed_constrained_sparsity_pattern,
                                    constraints,
                                    false);
    constrained_sparsity_pattern.copy_from(compressed_constrained_sparsity_pattern);
-   system_matrix.reinit(constrained_sparsity_pattern);
-   mass_matrix  .reinit(constrained_sparsity_pattern);
-   // assemble mass matrix
-   assemble_mass_matrix();
+
+   // reinitialize system matrix and mass matrices
+   system_matrix         .reinit(constrained_sparsity_pattern);
+   consistent_mass_matrix.reinit(constrained_sparsity_pattern);
+   lumped_mass_matrix    .reinit(constrained_sparsity_pattern);
+   if (parameters.viscosity_option == 4) // high-order max principle viscosity
+      auxiliary_mass_matrix.reinit(constrained_sparsity_pattern);
+
+   // assemble mass matrices
+   assemble_mass_matrices();
 
    // reinitialize auxiliary matrices
    CompressedSparsityPattern compressed_unconstrained_sparsity_pattern(dof_handler.n_dofs());
@@ -191,60 +195,71 @@ void TransportProblem<dim>::setup_system()
    compute_viscous_bilinear_forms();
 
    // reinitialize solution vector, system matrix, and rhs
-   new_solution .reinit(dof_handler.n_dofs());
-   system_rhs   .reinit(dof_handler.n_dofs());
-   ss_rhs       .reinit(dof_handler.n_dofs());
+   old_solution.reinit(dof_handler.n_dofs());
+   new_solution.reinit(dof_handler.n_dofs());
+   system_rhs  .reinit(dof_handler.n_dofs());
+   ss_rhs      .reinit(dof_handler.n_dofs());
+
+   // reinitialize viscosities
    old_first_order_viscosity.reinit(triangulation.n_active_cells());
    entropy_viscosity        .reinit(triangulation.n_active_cells());
-   max_principle_viscosity  .reinit(triangulation.n_active_cells());
+   low_order_viscosity      .reinit(triangulation.n_active_cells());
+   high_order_viscosity     .reinit(triangulation.n_active_cells());
 }
 
 /** \brief Assembles the mass matrix, either consistent or lumped.
  */
 template <int dim>
-void TransportProblem<dim>::assemble_mass_matrix()
+void TransportProblem<dim>::assemble_mass_matrices()
 {
-   if (parameters.lump_mass_matrix) // assemble lumped mass matrix
+   // assemble lumped mass matrix
+   //----------------------------
+   FEValues<dim> fe_values (fe, cell_quadrature, update_values | update_JxW_values);
+
+   std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
+   FullMatrix<double> local_mass (dofs_per_cell, dofs_per_cell);
+
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                                  endc = dof_handler.end();
+   for (; cell != endc; ++cell)
    {
-      FEValues<dim> fe_values (fe, cell_quadrature, update_values | update_JxW_values);
-   
-      std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
-      FullMatrix<double> local_mass (dofs_per_cell, dofs_per_cell);
-   
-      typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
-                                                     endc = dof_handler.end();
-      for (; cell != endc; ++cell)
-      {
-         fe_values.reinit(cell);
-         cell->get_dof_indices(local_dof_indices);
-   
-         local_mass = 0.0;
-   
-         // compute local contribution
-         for (unsigned int q = 0; q < n_q_points_cell; ++q)
-            for (unsigned int i = 0; i < dofs_per_cell; ++i)
-               for (unsigned int j = 0; j < dofs_per_cell; ++j)
-               {
-                  local_mass(i,i) +=  fe_values.shape_value(i,q)
-                                     *fe_values.shape_value(j,q)
-                                     *fe_values.JxW(q);
-               }
-   
-         // add to global mass matrix with contraints
-         constraints.distribute_local_to_global (local_mass, local_dof_indices, mass_matrix);
-      }
-   } else { // assemble consistent mass matrix
-      Function<dim> *dummy_function = 0;
-      MatrixTools::create_mass_matrix(dof_handler,
-                                      cell_quadrature,
-                                      mass_matrix,
-                                      dummy_function,
-                                      constraints);
+      fe_values.reinit(cell);
+      cell->get_dof_indices(local_dof_indices);
+
+      local_mass = 0.0;
+
+      // compute local contribution
+      for (unsigned int q = 0; q < n_q_points_cell; ++q)
+         for (unsigned int i = 0; i < dofs_per_cell; ++i)
+            for (unsigned int j = 0; j < dofs_per_cell; ++j)
+            {
+               local_mass(i,i) +=  fe_values.shape_value(i,q)
+                                  *fe_values.shape_value(j,q)
+                                  *fe_values.JxW(q);
+            }
+
+      // add to global mass matrix with contraints
+      constraints.distribute_local_to_global (local_mass, local_dof_indices, lumped_mass_matrix);
+   }
+
+   // assemble consistent mass matrix
+   //----------------------------
+   Function<dim> *dummy_function = 0;
+   MatrixTools::create_mass_matrix(dof_handler,
+                                   cell_quadrature,
+                                   consistent_mass_matrix,
+                                   dummy_function,
+                                   constraints);
+
+   // if using high-order max-principle viscosity, then assemble B-matrix
+   //----------------------------
+   if (parameters.viscosity_option == 4) // high-order max-principle viscosity
+   {
    }
 }
 
 /** \brief Computes viscous bilinear forms, to be used in the computation of
- *         maximum-principle preserving first order viscosity.
+ *         maximum-principle preserving low order viscosity.
  *
  *         Each element of the resulting matrix, \f$B_{i,j}\f$ is computed as
  *         follows:
@@ -436,6 +451,15 @@ void TransportProblem<dim>::assemble_system()
 
    // apply boundary conditions
    // ---------------------------------------------------------------------------
+   apply_Dirichlet_BC();
+
+} // end assembly
+
+/** \brief Applies Dirichlet boundary conditions.
+ */
+template <int dim>
+void TransportProblem<dim>::apply_Dirichlet_BC()
+{
    // apply Dirichlet boundary condition
    std::map<unsigned int, double> boundary_values;
    VectorTools::interpolate_boundary_values(dof_handler,
@@ -446,8 +470,7 @@ void TransportProblem<dim>::assemble_system()
                                       system_matrix,
                                       new_solution,
                                       system_rhs);
-
-} // end assembly
+}
 
 /** \brief computes the domain-averaged entropy and the max entropy
  *         deviation in the domain
@@ -560,7 +583,7 @@ double TransportProblem<dim>::compute_viscosity(const typename DoFHandler<dim>::
             viscosity = old_first_order_viscosity_cell;
 
          break;
-      } case 3: { // maximum-principle preserving first-order viscosity
+      } case 3: { // maximum-principle preserving low-order viscosity
          // maximum-principle preserving viscosity does not add Laplacian term;
          // to avoid unnecessary branching in assembly loop, just add Laplacian
          // term with zero viscosity, so just keep viscosity with its initialization
@@ -603,7 +626,7 @@ void TransportProblem<dim>::add_max_principle_viscous_bilinear_form()
             else
                viscous_bilinear_form = -1.0/(dofs_per_cell - 1.0)*cell_volume;
  
-            cell_matrix(i,j) += max_principle_viscosity(i_cell) * viscous_bilinear_form;
+            cell_matrix(i,j) += low_order_viscosity(i_cell) * viscous_bilinear_form;
          }
       }
 
@@ -658,7 +681,7 @@ void TransportProblem<dim>::set_boundary_indicators()
    }
 }
 
-/** \brief Computes the maximum-principle preserving first order viscosity for each cell.
+/** \brief Computes the maximum-principle preserving low-order viscosity for each cell.
  */
 template <int dim>
 void TransportProblem<dim>::compute_max_principle_viscosity()
@@ -666,7 +689,7 @@ void TransportProblem<dim>::compute_max_principle_viscosity()
    // local dof indices
    std::vector<unsigned int> local_dof_indices (dofs_per_cell);
 
-   // loop over cells to compute first order viscosity at each quadrature point
+   // loop over cells to compute low-order viscosity at each quadrature point
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
    unsigned int i_cell = 0;
@@ -675,11 +698,11 @@ void TransportProblem<dim>::compute_max_principle_viscosity()
       cell->get_dof_indices(local_dof_indices);
 
       for (unsigned int q = 0; q < n_q_points_cell; ++q) {
-         max_principle_viscosity(i_cell) = 0.0;
+         low_order_viscosity(i_cell) = 0.0;
          for (unsigned int i = 0; i < dofs_per_cell; ++i) {
             for (unsigned int j = 0; j < dofs_per_cell; ++j) {
                 if (i != j) {
-                  max_principle_viscosity(i_cell) = std::max(max_principle_viscosity(i_cell),
+                  low_order_viscosity(i_cell) = std::max(low_order_viscosity(i_cell),
                      std::abs(max_principle_viscosity_numerators(local_dof_indices[i],local_dof_indices[j]))/
                      (-viscous_bilinear_forms(local_dof_indices[i],local_dof_indices[j])));
                }
@@ -834,10 +857,21 @@ void TransportProblem<dim>::run()
 
             // solve for current time solution
             system_rhs = 0.0;
-            mass_matrix.vmult(system_rhs, old_solution); // M*u
+            lumped_mass_matrix.vmult(system_rhs, old_solution); // M*u
             system_matrix.vmult(ss_rhs, old_solution);   // A*u
             system_rhs.add(-dt, ss_rhs);                 // M*u - dt*A*u
-            solve_linear_system(mass_matrix, system_rhs);
+            solve_linear_system(lumped_mass_matrix, system_rhs);
+            apply_Dirichlet_BC();
+
+            if (parameters.viscosity_option == 4) // high-order max-principle preserving viscosity
+            {
+               // compute high-order viscosity, high-order rhs, and A-matrix
+               assemble_high_order_quantities();
+               // compute the limiting coefficient matrix L
+               compute_limiting_coefficients();
+               // compute the high-order solution using the low-order solution and L
+               compute_high_order_solution();
+            }
 
             // check that local discrete maximum principle is satisfied at all time steps
             max_principle_satisfied = max_principle_satisfied and check_local_discrete_max_principle();
@@ -940,7 +974,7 @@ void TransportProblem<dim>::output_results()
          viscosity_string = "entropy";
          break;
       } case 3: {
-         viscosity_string = "first_order";
+         viscosity_string = "low_order";
          break;
       } default: {
          Assert(false, ExcNotImplemented());
@@ -1012,7 +1046,7 @@ void TransportProblem<dim>::output_results()
       if (parameters.viscosity_option == 2)
          visc_out.add_data_vector(entropy_viscosity,"Entropy_Viscosity",DataOut<dim>::type_cell_data);
       if (parameters.viscosity_option == 3)
-         visc_out.add_data_vector(max_principle_viscosity,"First_Order_Viscosity",DataOut<dim>::type_cell_data);
+         visc_out.add_data_vector(low_order_viscosity,"Low_Order_Viscosity",DataOut<dim>::type_cell_data);
       // build patches and write to file
       visc_out.build_patches(degree + 1);
       if (dim == 1) {
@@ -1142,3 +1176,29 @@ bool TransportProblem<dim>::check_local_discrete_max_principle() const
    return local_max_principle_satisfied;
 }
 
+/** \brief Computes high-order max-principle viscosity on each cell,
+ *         the high-order right hand side vector \f$G\f$, and the high-order
+ *         coefficient matrix \f$\mathcal{A}\f$.
+ */
+template <int dim>
+void TransportProblem<dim>::assemble_high_order_quantities()
+{
+}
+
+/** \brief Computes the limiting coefficient matrix \f$\mathcal{L}\f$,
+ *         used for computing the high-order solution from the low-order
+ *         solution.
+ */
+template <int dim>
+void TransportProblem<dim>::compute_limiting_coefficients()
+{
+}
+
+/** \brief Computes the high-order maximum-principle preserving solution
+ *         using the low-order solution and the limiting coefficient
+ *         matrix \f$\mathcal{L}\f$.
+ */
+template <int dim>
+void TransportProblem<dim>::compute_high_order_solution()
+{
+}
