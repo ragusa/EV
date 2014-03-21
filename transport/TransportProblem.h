@@ -76,8 +76,6 @@ class TransportProblem {
       void output_results();
       void output_grid() const;
       void evaluate_error(const unsigned int cycle);
-      void check_solution_nonnegative() const;
-      bool check_local_discrete_max_principle() const;
       double compute_viscosity(const typename DoFHandler<dim>::active_cell_iterator &cell,
                                const unsigned int  &i_cell,
                                const FEValues<dim> &fe_values,
@@ -95,12 +93,19 @@ class TransportProblem {
       void assemble_high_order_quantities();
       void compute_limiting_coefficients();
       void compute_high_order_solution();
+      void get_matrix_row(const SparseMatrix<double>      &matrix,
+                          const unsigned int              &i,
+                                std::vector<double>       &row_values,
+                                std::vector<unsigned int> &row_indices,
+                                unsigned int              &n_col
+                         );
       SparseMatrix<double> auxiliary_mass_matrix;         // B matrix
       SparseMatrix<double> high_order_coefficient_matrix; // A matrix
       SparseMatrix<double> limiting_coefficient_matrix;   // L matrix
       Vector<double> high_order_viscosity;
 
-      const TransportParameters &parameters; // input parameters
+      // input parameters
+      const TransportParameters &parameters;
 
       // mesh and dof data
       Triangulation<dim> triangulation;
@@ -116,18 +121,19 @@ class TransportProblem {
       const unsigned int n_q_points_cell;
       const unsigned int n_q_points_face;
 
+      // sparse matrices, sparsity patterns, and constraints
       ConstraintMatrix constraints;
       SparsityPattern constrained_sparsity_pattern;
       SparseMatrix<double> system_matrix;
       SparseMatrix<double> consistent_mass_matrix;
       SparseMatrix<double> lumped_mass_matrix;
 
+      // vectors for solutions and right hand sides
       Vector<double> old_solution;
       Vector<double> new_solution;
       Vector<double> system_rhs;
       Vector<double> ss_rhs;
 
-      Vector<double> old_first_order_viscosity;
       Vector<double> entropy_viscosity;
       Vector<double> low_order_viscosity;
 
@@ -135,22 +141,20 @@ class TransportProblem {
 
       ConvergenceTable convergence_table;
 
+      // physics data
       Tensor<1,dim> transport_direction;
       const unsigned int incoming_boundary;
-
       FunctionParser<dim> initial_conditions;
       std::string initial_conditions_string;
+      bool has_exact_solution;
       FunctionParser<dim> exact_solution;
       std::string exact_solution_string;
-
-      bool is_linear;
-      bool has_exact_solution;
-
       unsigned int source_option;
       double source_value;
       unsigned int cross_section_option;
       double cross_section_value;
       double incoming_flux_value;
+      bool is_linear;
 
       // entropy viscosity functions and data
       void compute_entropy_domain_average();
@@ -161,6 +165,10 @@ class TransportProblem {
       // CFL condition functions and data
       void check_CFL_condition(const double &dt) const;
       double minimum_cell_diameter;
+   
+      // checks
+      void check_solution_nonnegative() const;
+      bool check_local_discrete_max_principle() const;
 };
 
 #include "TransportProblem.cc"

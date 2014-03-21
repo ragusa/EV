@@ -15,13 +15,13 @@ TransportProblem<dim>::TransportProblem(const TransportParameters &parameters) :
       nonlinear_iteration(0),
       transport_direction(0.0),
       incoming_boundary(1),
-      is_linear(false),
       has_exact_solution(false),
       source_option(1),
       source_value(0.0),
       cross_section_option(1),
       cross_section_value(0.0),
       incoming_flux_value(0.0),
+      is_linear(false),
       domain_volume(0.0)
 {
 }
@@ -223,7 +223,6 @@ void TransportProblem<dim>::setup_system()
    ss_rhs      .reinit(dof_handler.n_dofs());
 
    // reinitialize viscosities
-   old_first_order_viscosity.reinit(triangulation.n_active_cells());
    entropy_viscosity        .reinit(triangulation.n_active_cells());
    low_order_viscosity      .reinit(triangulation.n_active_cells());
    high_order_viscosity     .reinit(triangulation.n_active_cells());
@@ -277,6 +276,21 @@ void TransportProblem<dim>::assemble_mass_matrices()
    //----------------------------
    if (parameters.viscosity_option == 4) // high-order max-principle viscosity
    {
+      auxiliary_mass_matrix = lumped_mass_matrix;
+      auxiliary_mass_matrix.add(-1.0, consistent_mass_matrix);
+
+      // at this point, B contains (M^L - M^C). Need to apply (M^L)^-1 to right.
+      // This happens to be Bij = (M^L - M^C)ij / (M^L)jj, and this will
+      // be achieved by iterating over the entries of B to divide by (M^L)jj
+      SparseMatrix<double>::iterator matrix_iterator     = auxiliary_mass_matrix.begin();
+      SparseMatrix<double>::iterator matrix_iterator_end = auxiliary_mass_matrix.end();
+      for (; matrix_iterator != matrix_iterator_end; ++matrix_iterator)
+      {
+         unsigned int i = matrix_iterator->row();
+         unsigned int j = matrix_iterator->column();
+         double Bij = matrix_iterator->value() / lumped_mass_matrix(j,j);
+         auxiliary_mass_matrix.set(i,j,Bij);
+      }
    }
 }
 
@@ -559,15 +573,20 @@ double TransportProblem<dim>::compute_viscosity(const typename DoFHandler<dim>::
    double h = cell->diameter();
    // compute old definition of first-order viscosity
    double old_first_order_viscosity_cell = parameters.old_first_order_viscosity_coefficient * h;
-   old_first_order_viscosity(i_cell) = old_first_order_viscosity_cell;
    switch (parameters.viscosity_option) {
       case 0: { // no viscosity
          break;
       } case 1: { // old definition of first-order viscosity
-         viscosity = old_first_order_viscosity_cell;
+         viscosity                   = old_first_order_viscosity_cell;
+         low_order_viscosity(i_cell) = viscosity;
          break;
-      } case 2: { // old definition of entropy viscosity
-         if (nonlinear_iteration != 0) {
+      } case 2: { // old definition of high-order viscosity
+         low_order_viscosity(i_cell) = old_first_order_viscosity_cell;
+
+         if (nonlinear_iteration == 0) {
+            // in first nonlinear iteration, choose entropy viscosity to be low-order viscosity
+            viscosity = old_first_order_viscosity_cell;
+         } else {
             // get previous iteration values and gradients
             std::vector<double>         old_values   (n_q_points_cell);
             std::vector<Tensor<1,dim> > old_gradients(n_q_points_cell);
@@ -599,10 +618,10 @@ double TransportProblem<dim>::compute_viscosity(const typename DoFHandler<dim>::
                   h * h * max_entropy_residual / max_entropy_deviation_domain;
             entropy_viscosity(i_cell) = entropy_viscosity_cell;
 
-            // determine viscosity: minimum of first-order viscosity and entropy viscosity
+            // determine high-order viscosity: minimum of low-order viscosity and entropy viscosity
             viscosity = std::min(old_first_order_viscosity_cell, entropy_viscosity_cell);
-         } else
-            viscosity = old_first_order_viscosity_cell;
+            high_order_viscosity(i_cell) = viscosity;
+         }
 
          break;
       } case 3: { // maximum-principle preserving low-order viscosity
@@ -1072,12 +1091,29 @@ void TransportProblem<dim>::output_results()
       DataOut<dim> visc_out;
       visc_out.attach_dof_handler(dof_handler);
       // add viscosity data vector(s)
-      if ((parameters.viscosity_option == 1)||(parameters.viscosity_option == 2))
-         visc_out.add_data_vector(old_first_order_viscosity,"Old_First_Order_Viscosity",DataOut<dim>::type_cell_data);
-      if (parameters.viscosity_option == 2)
-         visc_out.add_data_vector(entropy_viscosity,"Entropy_Viscosity",DataOut<dim>::type_cell_data);
-      if (parameters.viscosity_option == 3)
-         visc_out.add_data_vector(low_order_viscosity,"Low_Order_Viscosity",DataOut<dim>::type_cell_data);
+      switch (parameters.viscosity_option)
+      {
+         case 1: {
+            visc_out.add_data_vector(low_order_viscosity,"Old_First_Order_Viscosity",DataOut<dim>::type_cell_data);
+            break;
+         } case 2: {
+            visc_out.add_data_vector(low_order_viscosity, "Old_First_Order_Viscosity",DataOut<dim>::type_cell_data);
+            visc_out.add_data_vector(entropy_viscosity,   "Entropy_Viscosity",        DataOut<dim>::type_cell_data);
+            visc_out.add_data_vector(high_order_viscosity,"High_Order_Viscosity",     DataOut<dim>::type_cell_data);
+            break;
+         } case 3: {
+            visc_out.add_data_vector(low_order_viscosity,"Low_Order_Viscosity",DataOut<dim>::type_cell_data);
+            break;
+         } case 4: {
+            visc_out.add_data_vector(low_order_viscosity, "Low_Order_Viscosity", DataOut<dim>::type_cell_data);
+            visc_out.add_data_vector(entropy_viscosity,   "Entropy_Viscosity",   DataOut<dim>::type_cell_data);
+            visc_out.add_data_vector(high_order_viscosity,"High_Order_Viscosity",DataOut<dim>::type_cell_data);
+            break;
+         } default: {
+            Assert(false, ExcNotImplemented());
+            break;
+         }
+      }
       // build patches and write to file
       visc_out.build_patches(degree + 1);
       if (dim == 1) {
@@ -1214,6 +1250,14 @@ bool TransportProblem<dim>::check_local_discrete_max_principle() const
 template <int dim>
 void TransportProblem<dim>::assemble_high_order_quantities()
 {
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                                  endc = dof_handler.end();
+   for (; cell != endc; ++cell)
+   {
+      // compute high-order max-principle viscosity in cell
+      // compute cell contribution to high-order right hand side vector G
+      // compute cell contribution to high-order coefficient matrix A
+   }
 }
 
 /** \brief Computes the limiting coefficient matrix \f$\mathcal{L}\f$,
@@ -1232,9 +1276,32 @@ void TransportProblem<dim>::compute_limiting_coefficients()
 template <int dim>
 void TransportProblem<dim>::compute_high_order_solution()
 {
+   // get total number of dofs
+   unsigned int n_dofs = dof_handler.n_dofs();
+   for (unsigned int i = 0; i < n_dofs; ++i)
+   {
+      // get values and indices of nonzero entries in row i of coefficient matrix A
+      std::vector<double>       row_values;
+      std::vector<unsigned int> row_indices;
+      unsigned int              n_col;
+      get_matrix_row(high_order_coefficient_matrix,
+                     i,
+                     row_values,
+                     row_indices,
+                     n_col);
+
+      // perform flux correction for dof i
+      for (unsigned int k = 0; k < n_col; ++k) {
+         unsigned int j = row_indices[k];
+         new_solution(i) += limiting_coefficient_matrix(i,j)
+                            * high_order_coefficient_matrix(i,j)
+                            / lumped_mass_matrix(i,i);
+      }
+   }
 }
 
 /** \brief Checks that the CFL condition is satisfied.
+    \param [in] dt time step size for current time step
  */
 template <int dim>
 void TransportProblem<dim>::check_CFL_condition(const double &dt) const
@@ -1244,3 +1311,34 @@ void TransportProblem<dim>::check_CFL_condition(const double &dt) const
    Assert(CFL < 1.0,ExcMessage("CFL number must be less than one."));
 }
 
+/** \brief Gets the values and indices of nonzero elements in a row of a sparse matrix.
+ *  \param [in] matrix sparse matrix whose row will be retrieved
+ *  \param [in] i index of row to be retrieved
+ *  \param [out] row_values vector of values of nonzero entries of row i
+ *  \param [out] row_indices vector of indices of nonzero entries of row i
+ *  \param [out] n_col number of nonzero entries of row i
+ */
+template <int dim>
+void TransportProblem<dim>::get_matrix_row(const SparseMatrix<double>      &matrix,
+                                           const unsigned int              &i,
+                                                 std::vector<double>       &row_values,
+                                                 std::vector<unsigned int> &row_indices,
+                                                 unsigned int              &n_col
+                                          )
+{
+    // get first and one-past-last iterator for row
+    SparseMatrix<double>::const_iterator matrix_iterator     = matrix.begin(i);
+    SparseMatrix<double>::const_iterator matrix_iterator_end = matrix.end(i);
+
+    // compute number of entries in row and then allocate memory
+    n_col = matrix_iterator_end - matrix_iterator;
+    row_values .reserve(n_col);
+    row_indices.reserve(n_col);
+
+    // loop over columns in row
+    for(; matrix_iterator != matrix_iterator_end; ++matrix_iterator)
+    {
+      row_values .push_back(matrix_iterator->value());
+      row_indices.push_back(matrix_iterator->column());
+    }
+}
