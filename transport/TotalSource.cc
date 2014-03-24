@@ -6,7 +6,7 @@ double TotalSource<dim>::value(const Point<dim> &p) const
    double return_value = 0.0;
    switch (source_option) {
       case 1: {
-         return_value = source_value / (4.0 * numbers::PI); // isotropic source term
+         return_value = source_value; // isotropic source term
          break;
       } case 2: {
          bool in_nonzero_region = true;

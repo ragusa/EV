@@ -66,8 +66,11 @@ void TransportProblem<dim>::initialize_system()
    if (!parameters.is_steady_state)
       variables += ",t";
 
-   // create constants used for parsed functions
+   // create function parser constants
    std::map<std::string,double> function_parser_constants;
+   function_parser_constants["sigma"] = cross_section_value;
+   function_parser_constants["source"] = source_value;
+   function_parser_constants["incoming"] = incoming_flux_value;
    function_parser_constants["pi"] = numbers::PI;
 
    // initialize exact solution function
@@ -96,35 +99,31 @@ void TransportProblem<dim>::process_problem_ID()
 {
    switch (parameters.problem_id)
    {
-      case 1: {
+      case 1: { // incoming flux, constant cross section, constant source
          cross_section_option = 1;
-         cross_section_value = 1.0e0;
+         cross_section_value = 0.3;
          source_option = 1;
-         source_value = 1.0e0;
-         incoming_flux_value = 0.0e0;
+         source_value = 1.2;
+         incoming_flux_value = 3.0;
          has_exact_solution = true;
          Assert(dim < 3,ExcNotImplemented());
-         exact_solution_string = "(1.0 - exp(-(x+1.0)))/(4.0*pi)";
+         exact_solution_string = "source/sigma + (incoming - source/sigma)*exp(-sigma*(x+1))";
          initial_conditions_string = exact_solution_string; // this creates pseudotransient
          break;
-      } case 2: {
+      } case 2: { // high cross section in half (1-D) or quarter (2-D) of domain, no source, incoming flux
          cross_section_option = 2;
          cross_section_value = 1.0e2;
          source_option = 1;
          source_value = 0.0e0;
          incoming_flux_value = 1.0e0;
-         has_exact_solution = false;
          initial_conditions_string = "0";
-/*
          has_exact_solution = true;
          if (dim == 1)
-            exact_solution_string = "if(x < 0.0, 1.0, exp(-100.0*x))";
+            exact_solution_string = "if(x-t<-1, if(x<0, incoming, exp(-sigma*x)), 0)";
          else if (dim == 2)
-            exact_solution_string = "if(y < 0, 1.0, if(x < 0.0, 1.0, exp(-100.0*x)))";
+            exact_solution_string = "if(x-t<-1, if(y<0, incoming, if(x<0.0, incoming, exp(-sigma*x))), 0)";
          else
             Assert(false,ExcNotImplemented());
-         initial_conditions_string = exact_solution_string; // this creates pseudotransient
-*/
          break;
       } case 3: {
          cross_section_option = 1;
@@ -154,8 +153,8 @@ void TransportProblem<dim>::process_problem_ID()
          if (parameters.is_steady_state)
             exact_solution_string = "1.0";
          else
-            exact_solution_string = "if((x-t)<0,1.0,0.0)";
-         initial_conditions_string = "if(x<0,1.0,0.0)";
+            exact_solution_string = "if((x-t)<0,incoming,0)";
+         initial_conditions_string = "if(x<0,incoming,0)";
          break;
       } default: {
          Assert(false,ExcNotImplemented());
@@ -917,12 +916,14 @@ void TransportProblem<dim>::run()
             system_rhs = 0;
             system_rhs.add(dt, ss_rhs);
             // now that ss_rhs has been taken into system_rhs, use ss_rhs as tmp vector
-            consistent_mass_matrix.vmult(ss_rhs, old_solution); // ss_rhs now contains M*u
+//            consistent_mass_matrix.vmult(ss_rhs, old_solution); // ss_rhs now contains M*u
+            lumped_mass_matrix.vmult(ss_rhs, old_solution); // ss_rhs now contains M*u
             system_rhs.add(1.0, ss_rhs);
             system_matrix.vmult(ss_rhs, old_solution); // ss_rhs now contains A*u
             system_rhs.add(-dt, ss_rhs);
             // solve the linear system
-            solve_linear_system(consistent_mass_matrix, system_rhs);
+//            solve_linear_system(consistent_mass_matrix, system_rhs);
+            solve_linear_system(lumped_mass_matrix, system_rhs);
             // enforce the Dirichlet BC after solution has been formed
             apply_Dirichlet_BC();
 
@@ -965,7 +966,7 @@ void TransportProblem<dim>::solve_step()
    if (is_linear) {
       // system is linear and requires just one solve
       assemble_system();
-      solve_linear_system(system_matrix, system_rhs);
+      solve_linear_system(system_matrix, ss_rhs);
    } else {
       bool converged = false; // converged nonlinear iteration
       for (unsigned int iter = 0; iter < parameters.max_nonlinear_iterations; ++iter) {
