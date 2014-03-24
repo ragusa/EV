@@ -74,6 +74,10 @@ class TransportProblem {
                                const Vector<double> &b);
       void refine_grid();
       void output_results();
+      void output_solution(const Vector<double>  &solution,
+                           const DoFHandler<dim> &dof_handler,
+                           const std::string     &prefix_string,
+                           const bool            &append_viscosity) const;
       void output_grid() const;
       void evaluate_error(const unsigned int cycle);
       double compute_viscosity(const typename DoFHandler<dim>::active_cell_iterator &cell,

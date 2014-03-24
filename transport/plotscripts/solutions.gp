@@ -2,13 +2,15 @@
 # usage: gnuplot -e 'problem_ID=<problem ID>' solutions.gp
 
 # list of possible input files to plot and their corresponding titles
-file_list = "exact_solution\
+file_list = "initial_solution\
+             exact_solution\
              solution_none\
              solution_old_first_order\
              solution_old_entropy\
              solution_low_order\
              solution_high_order"
-title_list = "Exact\
+title_list = "Initial\
+              Exact\
               No-Viscosity\
               Old-First-Order\
               Old-Entropy\

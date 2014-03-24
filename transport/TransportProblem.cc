@@ -346,6 +346,8 @@ void TransportProblem<dim>::compute_viscous_bilinear_forms()
 template<int dim>
 void TransportProblem<dim>::assemble_system()
 {
+   system_matrix = 0;
+   ss_rhs = 0;
    max_principle_viscosity_numerators = 0;
 
    const TotalCrossSection<dim> total_cross_section(cross_section_option,cross_section_value);
@@ -468,7 +470,7 @@ void TransportProblem<dim>::assemble_system()
                                              cell_rhs,
                                              local_dof_indices,
                                              system_matrix,
-                                             system_rhs);
+                                             ss_rhs);
 
       // aggregate local inviscid matrix into global matrix
       for (unsigned int i = 0; i < dofs_per_cell; ++i)
@@ -505,7 +507,7 @@ void TransportProblem<dim>::apply_Dirichlet_BC()
    MatrixTools::apply_boundary_values(boundary_values,
                                       system_matrix,
                                       new_solution,
-                                      system_rhs);
+                                      ss_rhs);
 }
 
 /** \brief computes the domain-averaged entropy and the max entropy
@@ -876,6 +878,14 @@ void TransportProblem<dim>::run()
          // distribute hanging node and Dirichlet constraints to intial solution
          constraints.distribute(new_solution);
 
+         // if last cycle, output initial conditions if user requested
+         if ((cycle == parameters.n_refinement_cycles-1) and
+            (parameters.output_initial_solution))
+            output_solution(new_solution,
+                            dof_handler,
+                            "initial_",
+                            false);
+
          // set old solution to the current solution
          old_solution = new_solution;
          
@@ -902,19 +912,19 @@ void TransportProblem<dim>::run()
             old_solution = new_solution;
 
             // solve for current time solution
-            system_rhs = 0.0;
-            lumped_mass_matrix.vmult(system_rhs, old_solution); // M*u
-//            consistent_mass_matrix.vmult(system_rhs, old_solution); // M*u
+            // compute system matrix (A) and steady-state right hand side (ss_rhs)
             assemble_system();
-            system_matrix.vmult(ss_rhs, old_solution);   // A*u
-            system_rhs.add(-dt, ss_rhs);                 // M*u - dt*A*u
-// for implicit euler
-//system_matrix *= dt;
-//system_matrix.add(1.0, lumped_mass_matrix);
-//solve_linear_system(system_matrix, system_rhs);
-            solve_linear_system(lumped_mass_matrix, system_rhs);
-//            solve_linear_system(consistent_mass_matrix, system_rhs);
-//            apply_Dirichlet_BC();
+            system_rhs = 0;
+            system_rhs.add(dt, ss_rhs);
+            // now that ss_rhs has been taken into system_rhs, use ss_rhs as tmp vector
+            consistent_mass_matrix.vmult(ss_rhs, old_solution); // ss_rhs now contains M*u
+            system_rhs.add(1.0, ss_rhs);
+            system_matrix.vmult(ss_rhs, old_solution); // ss_rhs now contains A*u
+            system_rhs.add(-dt, ss_rhs);
+            // solve the linear system
+            solve_linear_system(consistent_mass_matrix, system_rhs);
+            // enforce the Dirichlet BC after solution has been formed
+            apply_Dirichlet_BC();
 
             if (parameters.viscosity_option == 4) // high-order max-principle preserving viscosity
             {
@@ -998,11 +1008,15 @@ void TransportProblem<dim>::output_results()
 {
    // output grid
    //------------
-   if (parameters.output_meshes) {
-      if (dim > 1)
-         output_grid();
-   }
+   if ((parameters.output_meshes) and (dim > 1))
+      output_grid();
 
+   // output solution
+   output_solution(new_solution,
+                   dof_handler,
+                   "",
+                   true);
+/*
    // create output data object
    //--------------------------
    DataOut<dim> data_out;
@@ -1046,6 +1060,7 @@ void TransportProblem<dim>::output_results()
    //---------------------------
    if (dim == 1) data_out.write_gnuplot(output);
    else          data_out.write_vtk(output);
+*/
 
    // write exact solution output file
    //---------------------------------
@@ -1069,24 +1084,11 @@ void TransportProblem<dim>::output_results()
                                exact_solution,
                                exact_solution_values);
 
-      // create DataOut object for exact solution
-      DataOut<dim> exact_data_out;
-      exact_data_out.attach_dof_handler(fine_dof_handler);
-      exact_data_out.add_data_vector(exact_solution_values, "flux");
-      exact_data_out.build_patches(degree + 1);
-
-      // create output filename for exact solution
-      std::stringstream exact_solution_filename_ss;
-      exact_solution_filename_ss << "output/exact_solution_" << parameters.problem_id
-         << output_extension;
-      std::string exact_solution_filename = exact_solution_filename_ss.str();
-      char *exact_solution_filename_char = (char*)exact_solution_filename.c_str();
-
-      // create output filestream for exact solution
-      std::ofstream exact_output(exact_solution_filename_char);
-      // write file
-      if (dim == 1) exact_data_out.write_gnuplot(exact_output);
-      else          exact_data_out.write_vtk(exact_output);
+      // output exact solution to file
+      output_solution(exact_solution_values,
+                      fine_dof_handler,
+                      "exact_",
+                      false);
    }
 
    // write viscosity output file
@@ -1140,6 +1142,68 @@ void TransportProblem<dim>::output_results()
       std::cout << std::endl;
       convergence_table.write_text(std::cout);
    }
+}
+
+/** \brief Outputs a solution to a file.
+ *  \param [in] solution a vector of solution values.
+ *  \param [in] dof_handler the dof handler associated with the solution values.
+ *  \param [in] prefix_string string to be prefixed into the output filename.
+ *  \param [in] append_viscosity the option to include a string for viscosity type in output filename
+ */
+template<int dim>
+void TransportProblem<dim>::output_solution(const Vector<double>  &solution,
+                                            const DoFHandler<dim> &dof_handler,
+                                            const std::string     &prefix_string,
+                                            const bool            &append_viscosity) const
+{
+   // create DataOut object for solution
+   DataOut<dim> data_out;
+   data_out.attach_dof_handler(dof_handler);
+   data_out.add_data_vector(solution, "flux");
+   data_out.build_patches(degree + 1);
+
+   // create string for viscosity type if it is to be included in output filename
+   std::string viscosity_string;
+   if (append_viscosity)
+   {
+      switch (parameters.viscosity_option) {
+         case 0: {
+            viscosity_string = "_none";
+            break;
+         } case 1: {
+            viscosity_string = "_old_first_order";
+            break;
+         } case 2: {
+            viscosity_string = "_entropy";
+            break;
+         } case 3: {
+            viscosity_string = "_low_order";
+            break;
+         } default: {
+            Assert(false, ExcNotImplemented());
+            break;
+         }
+      }
+   } else {
+      viscosity_string = "";
+   }
+
+   // create output filename for exact solution
+   std::string filename_extension;
+   if (dim == 1) filename_extension = ".gpl";
+   else          filename_extension = ".vtk";
+
+   std::stringstream filename_ss;
+   filename_ss << "output/" << prefix_string << "solution" << viscosity_string
+      << "_" << parameters.problem_id << filename_extension;
+   std::string filename = filename_ss.str();
+   char *filename_char = (char*)filename.c_str();
+
+   // create output filestream for exact solution
+   std::ofstream output_filestream(filename_char);
+   // write file
+   if (dim == 1) data_out.write_gnuplot(output_filestream);
+   else          data_out.write_vtk    (output_filestream);
 }
 
 /** \brief evaluate error between numerical and exact solution

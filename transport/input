@@ -3,7 +3,7 @@ set Problem ID = 5
 
 # transient options
 set Is steady state = false
-set End time = 0.02
+set End time = 0.1
 set Time step size = 0.01
 
 # artificial viscosity options
@@ -36,3 +36,4 @@ set Relative difference tolerance = 1.0e-6
 # output options
 set Output mesh = false
 set Output exact solution = true
+set Output initial solution = false 

@@ -18,7 +18,8 @@ TransportParameters::TransportParameters() :
       end_time(1.0),
       time_step_size(0.001),
       lump_mass_matrix(false),
-      output_exact_solution(false)
+      output_exact_solution(false),
+      output_initial_solution(false)
 {
 }
 
@@ -63,6 +64,8 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
          "Option to lump the mass matrix");
    prm.declare_entry("Output exact solution", "false", Patterns::Bool(),
          "Option to output exact solution");
+   prm.declare_entry("Output initial solution", "false", Patterns::Bool(),
+         "Option to output initial solution");
 }
 
 /** \brief get the input parameters
@@ -86,4 +89,5 @@ void TransportParameters::get_parameters(ParameterHandler &prm) {
    time_step_size = prm.get_double("Time step size");
    lump_mass_matrix = prm.get_bool("Lump mass matrix");
    output_exact_solution = prm.get_bool("Output exact solution");
+   output_initial_solution = prm.get_bool("Output initial solution");
 }
