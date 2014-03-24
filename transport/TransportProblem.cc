@@ -903,14 +903,18 @@ void TransportProblem<dim>::run()
 
             // solve for current time solution
             system_rhs = 0.0;
-//            lumped_mass_matrix.vmult(system_rhs, old_solution); // M*u
-            consistent_mass_matrix.vmult(system_rhs, old_solution); // M*u
+            lumped_mass_matrix.vmult(system_rhs, old_solution); // M*u
+//            consistent_mass_matrix.vmult(system_rhs, old_solution); // M*u
             assemble_system();
             system_matrix.vmult(ss_rhs, old_solution);   // A*u
             system_rhs.add(-dt, ss_rhs);                 // M*u - dt*A*u
-//            solve_linear_system(lumped_mass_matrix, system_rhs);
-            solve_linear_system(consistent_mass_matrix, system_rhs);
-            apply_Dirichlet_BC();
+// for implicit euler
+//system_matrix *= dt;
+//system_matrix.add(1.0, lumped_mass_matrix);
+//solve_linear_system(system_matrix, system_rhs);
+            solve_linear_system(lumped_mass_matrix, system_rhs);
+//            solve_linear_system(consistent_mass_matrix, system_rhs);
+//            apply_Dirichlet_BC();
 
             if (parameters.viscosity_option == 4) // high-order max-principle preserving viscosity
             {
