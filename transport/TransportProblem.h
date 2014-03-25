@@ -87,8 +87,8 @@ class TransportProblem {
 
       // low-order max-principle viscosity functions and data
       void compute_viscous_bilinear_forms();
-      void add_max_principle_viscous_bilinear_form();
       void compute_max_principle_viscosity();
+      void add_max_principle_viscous_bilinear_form();
       SparsityPattern unconstrained_sparsity_pattern;
       SparseMatrix<double> max_principle_viscosity_numerators;
       SparseMatrix<double> viscous_bilinear_forms;
@@ -106,7 +106,6 @@ class TransportProblem {
       SparseMatrix<double> auxiliary_mass_matrix;         // B matrix
       SparseMatrix<double> high_order_coefficient_matrix; // A matrix
       SparseMatrix<double> limiting_coefficient_matrix;   // L matrix
-      Vector<double> high_order_viscosity;
 
       // input parameters
       const TransportParameters &parameters;
@@ -138,8 +137,10 @@ class TransportProblem {
       Vector<double> system_rhs;
       Vector<double> ss_rhs;
 
+      // viscosity vectors
       Vector<double> entropy_viscosity;
       Vector<double> low_order_viscosity;
+      Vector<double> high_order_viscosity;
 
       unsigned int nonlinear_iteration;
 
@@ -161,6 +162,10 @@ class TransportProblem {
       bool is_linear;
 
       // entropy viscosity functions and data
+      void compute_entropy_viscosity(const typename DoFHandler<dim>::active_cell_iterator &cell,
+                                     const unsigned int  &i_cell,
+                                     const FEValues<dim> &fe_values,
+                                     const std::vector<double> &total_cross_section);
       void compute_entropy_domain_average();
       double domain_volume;
       double domain_averaged_entropy;
