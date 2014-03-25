@@ -198,10 +198,15 @@ void TransportProblem<dim>::setup_system()
 
    // reinitialize system matrix and mass matrices
    system_matrix         .reinit(constrained_sparsity_pattern);
+   inviscid_system_matrix.reinit(constrained_sparsity_pattern);
    consistent_mass_matrix.reinit(constrained_sparsity_pattern);
    lumped_mass_matrix    .reinit(constrained_sparsity_pattern);
    if (parameters.viscosity_option == 4) // high-order max principle viscosity
-      auxiliary_mass_matrix.reinit(constrained_sparsity_pattern);
+   {
+      auxiliary_mass_matrix        .reinit(constrained_sparsity_pattern);
+      high_order_coefficient_matrix.reinit(constrained_sparsity_pattern);
+   }
+      
 
    // assemble mass matrices
    assemble_mass_matrices();
@@ -220,6 +225,8 @@ void TransportProblem<dim>::setup_system()
    new_solution.reinit(dof_handler.n_dofs());
    system_rhs  .reinit(dof_handler.n_dofs());
    ss_rhs      .reinit(dof_handler.n_dofs());
+   R_plus      .reinit(dof_handler.n_dofs());
+   R_minus     .reinit(dof_handler.n_dofs());
 
    // reinitialize viscosities
    entropy_viscosity        .reinit(triangulation.n_active_cells());
@@ -275,7 +282,7 @@ void TransportProblem<dim>::assemble_mass_matrices()
    //----------------------------
    if (parameters.viscosity_option == 4) // high-order max-principle viscosity
    {
-      auxiliary_mass_matrix = lumped_mass_matrix;
+      auxiliary_mass_matrix.copy_from(lumped_mass_matrix);
       auxiliary_mass_matrix.add(-1.0, consistent_mass_matrix);
 
       // at this point, B contains (M^L - M^C). Need to apply (M^L)^-1 to right.
@@ -340,12 +347,16 @@ void TransportProblem<dim>::compute_viscous_bilinear_forms()
    }
 }
 
-/** \brief assemble the system matrix and right hand side
+/** \brief Assemble the inviscid system matrix and steady-state right hand side.
+ * 
+ *         The "inviscid system matrix" will contain inviscid terms and Laplacian
+ *         viscous terms if there are any (old, non-maximum-principle-preserving
+ *         defininitions of viscosity).
  */
 template<int dim>
 void TransportProblem<dim>::assemble_system()
 {
-   system_matrix = 0;
+   inviscid_system_matrix = 0;
    ss_rhs = 0;
    max_principle_viscosity_numerators = 0;
 
@@ -470,7 +481,7 @@ void TransportProblem<dim>::assemble_system()
       constraints.distribute_local_to_global(cell_matrix,
                                              cell_rhs,
                                              local_dof_indices,
-                                             system_matrix,
+                                             inviscid_system_matrix,
                                              ss_rhs);
 
       // aggregate local inviscid matrix into global matrix
@@ -653,6 +664,8 @@ void TransportProblem<dim>::compute_entropy_viscosity(const typename DoFHandler<
       max_entropy_residual = std::max(max_entropy_residual,entropy_residual_values[q]);
    }
 
+   // get cell size
+   double h = cell->diameter();
    // compute entropy viscosity
    entropy_viscosity(i_cell) = parameters.entropy_viscosity_coefficient *
          h * h * max_entropy_residual / max_entropy_deviation_domain;
@@ -662,11 +675,8 @@ void TransportProblem<dim>::compute_entropy_viscosity(const typename DoFHandler<
 /** \brief adds the viscous bilinear form for the maximum-principle preserving viscosity
  */
 template <int dim>
-void TransportProblem<dim>::add_max_principle_viscous_bilinear_form(const Vector<double> &viscosity)
+void TransportProblem<dim>::add_viscous_matrix(const Vector<double> &viscosity)
 {
-   // compute maximum-principle preserving viscosity
-   compute_max_principle_viscosity();
-
    unsigned int i_cell = 0;
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
@@ -886,7 +896,7 @@ void TransportProblem<dim>::run()
       // if problem is steady-state, then just do one solve; else loop over time
       if (parameters.is_steady_state) {
          // solve for steady-state solution
-         solve_step();
+         solve_steady_state();
       } else {
          // have not yet added the capability for nonlinear transients
          Assert(is_linear,ExcNotImplemented());
@@ -928,41 +938,52 @@ void TransportProblem<dim>::run()
             // determine if end of transient has been reached (within machine precision)
             in_transient = t < t_end - machine_precision;
 
-            // update old solution to previous step's new solution
-            old_solution = new_solution;
-
-            // solve for current time solution
-            // compute system matrix (A) and steady-state right hand side (ss_rhs)
+            // compute inviscid system matrix and steady-state right hand side (ss_rhs)
+            // This inviscid system matrix will contain inviscid terms and Laplacian viscous terms if there are any.
+            // Max-principle viscosity terms will be added in a separate step afterward.
             assemble_system();
+            // add inviscid component to total system matrix (A)
+            system_matrix.copy_from(inviscid_system_matrix);
             // add viscous bilinear form for maximum-principle preserving viscosity
             bool using_max_principle_viscosity = (parameters.viscosity_option == 3) or (parameters.viscosity_option == 4);
             if (using_max_principle_viscosity) {
+               // compute max-principle-preserving viscosity (both low-order and high-order)
                compute_max_principle_viscosity();
-               add_max_principle_viscous_bilinear_form(low_order_viscosity);
+               // add viscous component to total system matrix (A)
+               add_viscous_matrix(low_order_viscosity);
             }
-            // enforce Dirichlet BC
+            // enforce Dirichlet BC on total system matrix
             apply_Dirichlet_BC();
+
+            // update old solution to previous step's new solution
+            // Note that this is done here because the old old_solution is needed in the
+            // computation of the entropy viscosity time derivative term, which occurs in
+            // assemble_system(), so the following update to old_solution needs to come
+            // sometime after assemble_system() but before old_solution is used in the
+            // assembly of the transient residual.
+            old_solution = new_solution;
 
             // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
             system_rhs = 0;
-            system_rhs.add(dt, ss_rhs); //...................... now, system_rhs = dt*(ss_rhs)
-            Vector<double> tmp_vector;
+            system_rhs.add(dt, ss_rhs); //................. now, system_rhs = dt*(ss_rhs)
+            unsigned int n_dofs = dof_handler.n_dofs();
+            Vector<double> tmp_vector(n_dofs);
             lumped_mass_matrix.vmult(tmp_vector, old_solution);
-            system_rhs.add(1.0, tmp_vector); //................. now, system_rhs = M*u_old + dt*(ss_rhs)
+            system_rhs.add(1.0, tmp_vector); //............ now, system_rhs = M*u_old + dt*(ss_rhs)
             system_matrix.vmult(tmp_vector, old_solution);
-            system_rhs.add(-dt, ss_rhs); //..................... now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old), so it is complete
-            // solve the linear system
+            system_rhs.add(-dt, tmp_vector); //............ now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old), so it is complete
+            // solve the linear system M*u_new = system_rhs
             solve_linear_system(lumped_mass_matrix, system_rhs);
             // enforce the Dirichlet BC after solution has been formed
             apply_Dirichlet_BC();
 
             if (parameters.viscosity_option == 4) // high-order max-principle preserving viscosity
             {
-               // store G in system_rhs
-               system_rhs = 0;
-               // compute high-order viscosity, and A-matrix
-               assemble_high_order_quantities();
-               // compute the limiting coefficient matrix L
+               // compute high-order right hand side (G) and store in system_rhs
+               compute_high_order_rhs();
+               // compute high-order coefficient matrix (A)
+               assemble_high_order_coefficient_matrix(dt);
+               // compute the limiting coefficient matrix (L)
                compute_limiting_coefficients();
                // compute the high-order solution using the low-order solution and L
                compute_high_order_solution();
@@ -989,14 +1010,29 @@ void TransportProblem<dim>::run()
 /** \brief 
  */
 template<int dim>
-void TransportProblem<dim>::solve_step()
+void TransportProblem<dim>::solve_steady_state()
 {
+   Assert(parameters.viscosity_option != 4,ExcNotImplemented());
    // solve system. if using entropy viscosity, begin nonlinear iteration, else
    // just solve linear system
    nonlinear_iteration = 0;
    if (is_linear) {
-      // system is linear and requires just one solve
+      // compute inviscid system matrix and steady-state right hand side (ss_rhs)
+      // This inviscid system matrix will contain inviscid terms and Laplacian viscous terms if there are any.
       assemble_system();
+      // add inviscid component to total system matrix (A)
+      system_matrix.copy_from(inviscid_system_matrix);
+      // add viscous bilinear form for maximum-principle preserving viscosity
+      bool using_max_principle_viscosity = (parameters.viscosity_option == 3) or (parameters.viscosity_option == 4);
+      if (using_max_principle_viscosity) {
+         // compute max-principle-preserving viscosity (both low-order and high-order)
+         compute_max_principle_viscosity();
+         // add viscous component to total system matrix (A)
+         add_viscous_matrix(low_order_viscosity);
+      }
+      // enforce Dirichlet BC on total system matrix
+      apply_Dirichlet_BC();
+      // solve the linear system: system_matrix*new_solution = ss_rhs
       solve_linear_system(system_matrix, ss_rhs);
    } else {
       bool converged = false; // converged nonlinear iteration
@@ -1049,51 +1085,6 @@ void TransportProblem<dim>::output_results()
                    dof_handler,
                    "",
                    true);
-/*
-   // create output data object
-   //--------------------------
-   DataOut<dim> data_out;
-   data_out.attach_dof_handler(dof_handler);
-   data_out.add_data_vector(new_solution, "flux");
-   data_out.build_patches(degree + 1);
-
-   // create output filename
-   //-----------------------
-   std::string output_extension;
-   if (dim == 1) output_extension = ".gpl";
-   else          output_extension = ".vtk";
-   std::string viscosity_string;
-   switch (parameters.viscosity_option) {
-      case 0: {
-         viscosity_string = "none";
-         break;
-      } case 1: {
-         viscosity_string = "old_first_order";
-         break;
-      } case 2: {
-         viscosity_string = "entropy";
-         break;
-      } case 3: {
-         viscosity_string = "low_order";
-         break;
-      } default: {
-         Assert(false, ExcNotImplemented());
-         break;
-      }
-   }
-   std::stringstream output_filename_ss;
-   output_filename_ss << "output/solution_" << viscosity_string;
-   output_filename_ss << "_" << parameters.problem_id;
-   output_filename_ss << output_extension;
-   std::string output_filename = output_filename_ss.str();
-   char *output_filename_char = (char*)output_filename.c_str();
-   std::ofstream output(output_filename_char);
-
-   // write solution output file
-   //---------------------------
-   if (dim == 1) data_out.write_gnuplot(output);
-   else          data_out.write_vtk(output);
-*/
 
    // write exact solution output file
    //---------------------------------
@@ -1211,6 +1202,9 @@ void TransportProblem<dim>::output_solution(const Vector<double>  &solution,
             break;
          } case 3: {
             viscosity_string = "_low_order";
+            break;
+         } case 4: {
+            viscosity_string = "_high_order";
             break;
          } default: {
             Assert(false, ExcNotImplemented());
@@ -1344,30 +1338,165 @@ bool TransportProblem<dim>::check_local_discrete_max_principle() const
    return local_max_principle_satisfied;
 }
 
-/** \brief Computes high-order max-principle viscosity on each cell,
- *         the high-order right hand side vector \f$G\f$, and the high-order
- *         coefficient matrix \f$\mathcal{A}\f$.
+/** \brief Computes the high-order right hand side vector (G) and
+ *         stores in system_matrix.
  */
 template <int dim>
-void TransportProblem<dim>::assemble_high_order_quantities()
+void TransportProblem<dim>::compute_high_order_rhs()
 {
+   // Form total system matrix, first adding the inviscid component
+   system_matrix.copy_from(inviscid_system_matrix);
+   // add viscous component to total system matrix (A)
+   // Note that high_order_viscosity has already been computed in compute_max_principle_viscosity(),
+   // which was called for the assembly of the low-order system.
+   add_viscous_matrix(high_order_viscosity);
+
+   // G is to be stored in system_rhs and is computed as G = ss_rhs - system_matrix*old_solution
+   system_rhs = ss_rhs;
+   // now use ss_rhs as tmp vector to hold system_matrix*old_solution
+   system_matrix.vmult(ss_rhs, old_solution);
+   // complete computation of G
+   system_rhs.add(-1.0, ss_rhs);
+}
+
+/** \brief Assembles the high-order coefficient matrix \f$\mathcal{A}\f$.
+ *  \param [in] dt current time step size
+ */
+template <int dim>
+void TransportProblem<dim>::assemble_high_order_coefficient_matrix(const double &dt)
+{
+   // reset A to zero
+   high_order_coefficient_matrix = 0;
+
+   // add A1 matrix to A by looping over cells
+   //--------------------------------------------------------
+   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
-   for (; cell != endc; ++cell)
+   for (unsigned int i_cell = 0; cell != endc; ++cell, ++i_cell)
    {
-      // compute high-order max-principle viscosity in cell
-      // compute cell contribution to high-order right hand side vector G
-      // compute cell contribution to high-order coefficient matrix A
+      // get global dof indices for local dofs
+      cell->get_dof_indices(local_dof_indices);
+
+      // get low-order and high-order viscosities for cell
+      double nu_L = low_order_viscosity (i_cell);
+      double nu_H = high_order_viscosity(i_cell);
+      // compute cell volume, needed for viscous bilinear form bK(phi_j,phi_i)
+      double cell_volume = cell->measure();
+
+      for (unsigned int ii = 0; ii < dofs_per_cell; ++ii)
+      {
+         // get global index for local dof i
+         unsigned int i = local_dof_indices[ii];
+         
+         for (unsigned int jj = 0; jj < dofs_per_cell; ++jj)
+         {
+            // get global index for local dof j
+            unsigned int j = local_dof_indices[jj];
+
+            // compute viscous bilinear form bK(phi_j,phi_i)
+            double bK;
+            if (ii == jj)
+               bK = cell_volume;
+            else
+               bK = cell_volume / (1.0 - dofs_per_cell);
+
+            // compute cell contribution to A1(i,j)
+            double A1_ij = dt*(nu_L - nu_H)*(old_solution(j) - old_solution(i))*bK;
+            // add it to A(i,j)
+            high_order_coefficient_matrix.add(i,j,A1_ij);
+         }
+      }
+   }
+   
+   // add A2 matrix to A by looping over all degrees of freedom
+   //----------------------------------------------------------
+   unsigned int n_dofs = dof_handler.n_dofs();
+   for (unsigned int i = 0; i < n_dofs; ++i)
+   {
+      // Note that the high-order right hand side (G) is stored in system_rhs,
+      // and auxiliary_mass_matrix is the "B" matrix
+
+      // get nonzero entries in row i of B
+      std::vector<double>       row_values;
+      std::vector<unsigned int> row_indices;
+      unsigned int              n_col;
+      get_matrix_row(auxiliary_mass_matrix,
+                     i,
+                     row_values,
+                     row_indices,
+                     n_col);
+
+      // loop over nonzero entries in row i of B
+      for (unsigned int k = 0; k < n_col; ++k)
+      {
+         // get the column index of nonzero entry k
+         unsigned int j = row_indices[k];
+
+         // add A2(i,j) to A(i,j)
+         high_order_coefficient_matrix.add(i,j,dt*(auxiliary_mass_matrix(i,j)*system_rhs(j)
+                                                  -auxiliary_mass_matrix(j,i)*system_rhs(i)));
+      }
    }
 }
 
-/** \brief Computes the limiting coefficient matrix \f$\mathcal{L}\f$,
+/** \brief Computes the limiting coefficient vectors \f$R^+\f$ and \f$R^-\f$,
  *         used for computing the high-order solution from the low-order
  *         solution.
  */
 template <int dim>
 void TransportProblem<dim>::compute_limiting_coefficients()
 {
+   // small number around machine precision, used for floating point comparisons
+   const double small_number = 1.0e-15;
+
+   unsigned int n_dofs = dof_handler.n_dofs();
+   for (unsigned int i = 0; i < n_dofs; ++i)
+   {
+      // get nonzero entries in row i of high-order coefficient matrix A
+      std::vector<double>       row_values;
+      std::vector<unsigned int> row_indices;
+      unsigned int              n_col;
+      get_matrix_row(high_order_coefficient_matrix,
+                     i,
+                     row_values,
+                     row_indices,
+                     n_col);
+
+      double P_plus  = 0.0;
+      double P_minus = 0.0;
+      // compute P_plus, P_minus, U_max, and U_min
+      // initialize U_max and U_min to arbitrary U in set for max() and min() functions
+      double U_max = old_solution(row_indices[0]);
+      double U_min = old_solution(row_indices[0]);
+      for (unsigned int k = 0; k < n_col; ++k)
+      {
+         // get index of nonzero entry k
+         unsigned int j = row_indices[k];
+         // get value of nonzero entry k
+         double Aij = row_values[k];
+
+         P_plus  += std::max(0.0,Aij);
+         P_minus += std::min(0.0,Aij);
+         U_max = std::max(U_max, old_solution(j));
+         U_min = std::min(U_min, old_solution(j));
+      }
+      // compute Q_plus and Q_minus
+      double Q_plus  = lumped_mass_matrix(i,i)*(U_max - new_solution(i));
+      double Q_minus = lumped_mass_matrix(i,i)*(U_min - new_solution(i));
+
+      // compute R_plus(i)
+      if (std::abs(P_plus) > small_number)
+         R_plus(i) = std::min(1.0, Q_plus/P_plus);
+      else
+         R_plus(i) = 1.0;
+
+      // compute R_minus(i)
+      if (std::abs(P_minus) > small_number)
+         R_minus(i) = std::min(1.0, Q_minus/P_minus);
+      else
+         R_minus(i) = 1.0;
+   }
 }
 
 /** \brief Computes the high-order maximum-principle preserving solution
@@ -1392,12 +1521,19 @@ void TransportProblem<dim>::compute_high_order_solution()
                      n_col);
 
       // perform flux correction for dof i
+      // Note that flux_correction_sum is sum_{j in I(S_i)} of Lij*Aij.
+      double flux_correction_sum = 0.0;
       for (unsigned int k = 0; k < n_col; ++k) {
          unsigned int j = row_indices[k];
-         new_solution(i) += limiting_coefficient_matrix(i,j)
-                            * high_order_coefficient_matrix(i,j)
-                            / lumped_mass_matrix(i,i);
+         double Aij     = row_values[k];
+         if (Aij >= 0.0)
+            flux_correction_sum += std::min(R_plus(i),R_minus(j))*Aij;
+         else
+            flux_correction_sum += std::min(R_minus(i),R_plus(j))*Aij;
       }
+
+      // compute high-order solution for dof i
+      new_solution(i) = new_solution(i) + flux_correction_sum / lumped_mass_matrix(i,i);
    }
 }
 

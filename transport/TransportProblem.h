@@ -69,7 +69,7 @@ class TransportProblem {
       void assemble_mass_matrices();
       void assemble_system();
       void apply_Dirichlet_BC();
-      void solve_step();
+      void solve_steady_state();
       void solve_linear_system(const SparseMatrix<double> &A,
                                const Vector<double> &b);
       void refine_grid();
@@ -88,13 +88,14 @@ class TransportProblem {
       // low-order max-principle viscosity functions and data
       void compute_viscous_bilinear_forms();
       void compute_max_principle_viscosity();
-      void add_max_principle_viscous_bilinear_form();
+      void add_viscous_matrix(const Vector<double> &viscosity);
       SparsityPattern unconstrained_sparsity_pattern;
       SparseMatrix<double> max_principle_viscosity_numerators;
       SparseMatrix<double> viscous_bilinear_forms;
 
       // high-order max-principle viscosity functions and data
-      void assemble_high_order_quantities();
+      void compute_high_order_rhs();
+      void assemble_high_order_coefficient_matrix(const double &dt);
       void compute_limiting_coefficients();
       void compute_high_order_solution();
       void get_matrix_row(const SparseMatrix<double>      &matrix,
@@ -103,9 +104,8 @@ class TransportProblem {
                                 std::vector<unsigned int> &row_indices,
                                 unsigned int              &n_col
                          );
-      SparseMatrix<double> auxiliary_mass_matrix;         // B matrix
-      SparseMatrix<double> high_order_coefficient_matrix; // A matrix
-      SparseMatrix<double> limiting_coefficient_matrix;   // L matrix
+      Vector<double> R_plus;
+      Vector<double> R_minus;
 
       // input parameters
       const TransportParameters &parameters;
@@ -128,8 +128,11 @@ class TransportProblem {
       ConstraintMatrix constraints;
       SparsityPattern constrained_sparsity_pattern;
       SparseMatrix<double> system_matrix;
+      SparseMatrix<double> inviscid_system_matrix;
       SparseMatrix<double> consistent_mass_matrix;
       SparseMatrix<double> lumped_mass_matrix;
+      SparseMatrix<double> auxiliary_mass_matrix;
+      SparseMatrix<double> high_order_coefficient_matrix;
 
       // vectors for solutions and right hand sides
       Vector<double> old_solution;
