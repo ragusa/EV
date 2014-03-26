@@ -8,6 +8,7 @@ TransportProblem<dim>::TransportProblem(const TransportParameters &parameters) :
       fe(FE_Q<dim>(degree), 1),
       flux(0),
       dofs_per_cell(fe.dofs_per_cell),
+      faces_per_cell(GeometryInfo<dim>::faces_per_cell),
       cell_quadrature(degree+1),
       face_quadrature(degree+1),
       n_q_points_cell(cell_quadrature.size()),
@@ -354,7 +355,7 @@ void TransportProblem<dim>::compute_viscous_bilinear_forms()
  *         defininitions of viscosity).
  */
 template<int dim>
-void TransportProblem<dim>::assemble_system()
+void TransportProblem<dim>::assemble_system(const double &dt)
 {
    inviscid_system_matrix = 0;
    ss_rhs = 0;
@@ -415,7 +416,7 @@ void TransportProblem<dim>::assemble_system()
                               total_source_values);
 
       // compute viscosity
-      double viscosity = compute_viscosity(cell, i_cell, fe_values, total_cross_section_values);
+      double viscosity = compute_viscosity(cell, i_cell, fe_values, total_cross_section_values, dt);
 
       // compute cell contributions to global system
       // ------------------------------------------------------------------
@@ -571,7 +572,8 @@ template <int dim>
 double TransportProblem<dim>::compute_viscosity(const typename DoFHandler<dim>::active_cell_iterator &cell,
                                                 const unsigned int        &i_cell,
                                                 const FEValues<dim>       &fe_values,
-                                                const std::vector<double> &total_cross_section_values)
+                                                const std::vector<double> &total_cross_section_values,
+                                                const double              &dt)
 {
    double viscosity;
    // cell size
@@ -595,7 +597,8 @@ double TransportProblem<dim>::compute_viscosity(const typename DoFHandler<dim>::
             compute_entropy_viscosity(cell,
                                       i_cell,
                                       fe_values,
-                                      total_cross_section_values);
+                                      total_cross_section_values,
+                                      dt);
 
             // determine high-order viscosity: minimum of low-order viscosity and entropy viscosity
             viscosity = std::min(old_first_order_viscosity_cell, entropy_viscosity(i_cell));
@@ -614,7 +617,8 @@ double TransportProblem<dim>::compute_viscosity(const typename DoFHandler<dim>::
          compute_entropy_viscosity(cell,
                                    i_cell,
                                    fe_values,
-                                   total_cross_section_values);
+                                   total_cross_section_values,
+                                   dt);
 
          // maximum-principle preserving viscosity does not add Laplacian term;
          // to avoid unnecessary branching in assembly loop, just add Laplacian
@@ -636,41 +640,103 @@ template <int dim>
 void TransportProblem<dim>::compute_entropy_viscosity(const typename DoFHandler<dim>::active_cell_iterator &cell,
                                                       const unsigned int        &i_cell,
                                                       const FEValues<dim>       &fe_values,
-                                                      const std::vector<double> &total_cross_section_values)
+                                                      const std::vector<double> &total_cross_section_values,
+                                                      const double              &dt)
 {
-   // get previous iteration values and gradients
+   // get previous time step (n) values and gradients
+   std::vector<double>         new_values   (n_q_points_cell);
+   std::vector<Tensor<1,dim> > new_gradients(n_q_points_cell);
+   fe_values[flux].get_function_values   (new_solution, new_values);
+   fe_values[flux].get_function_gradients(new_solution, new_gradients);
+   // get previous previous time step (n-1) values
    std::vector<double>         old_values   (n_q_points_cell);
-   std::vector<Tensor<1,dim> > old_gradients(n_q_points_cell);
-   fe_values[flux].get_function_values   (old_solution,old_values);
-   fe_values[flux].get_function_gradients(old_solution,old_gradients);
+   fe_values[flux].get_function_values   (old_solution, old_values);
 
-   // compute entropy values at each quadrature point on cell
-   std::vector<double> entropy_values(n_q_points_cell,0.0);
-   for (unsigned int q = 0; q < n_q_points_cell; ++q)
-      entropy_values[q] = 0.5 * old_values[q] * old_values[q];
+   // compute max entropy residual in cell
+   //----------------------------------------------------------------------------
+   // compute entropy values at each quadrature point on cell. The entropy definition s = 0.5*u^2 is used.
+   std::vector<double> new_entropy_values(n_q_points_cell,0.0);
+   std::vector<double> old_entropy_values(n_q_points_cell,0.0);
+   for (unsigned int q = 0; q < n_q_points_cell; ++q) {
+      new_entropy_values[q] = 0.5 * new_values[q] * new_values[q];
+      old_entropy_values[q] = 0.5 * old_values[q] * old_values[q];
+   }
    // compute entropy residual values at each quadrature point on cell
    std::vector<double> entropy_residual_values(n_q_points_cell,0.0);
    for (unsigned int q = 0; q < n_q_points_cell; ++q)
-      entropy_residual_values[q] = std::abs(
-         transport_direction * old_values[q] * old_gradients[q]
-         + total_cross_section_values[q] * entropy_values[q]);
-   // compute entropy deviation values at each quadrature point on cell
-   std::vector<double> entropy_deviation_values(n_q_points_cell,0.0);
-   for (unsigned int q = 0; q < n_q_points_cell; ++q)
-      entropy_deviation_values[q] = std::abs(entropy_values[q] - domain_averaged_entropy);
-   // determine cell maximum entropy residual and entropy deviation
+      entropy_residual_values[q] = (new_entropy_values[q] - old_entropy_values[q])/dt
+         + transport_direction * new_values[q] * new_gradients[q]
+         + total_cross_section_values[q] * new_entropy_values[q];
+   // determine maximum entropy residual in cell
    double max_entropy_residual = 0.0;
    for (unsigned int q = 0; q < n_q_points_cell; ++q) {
-      max_entropy_residual = std::max(max_entropy_residual,entropy_residual_values[q]);
+      max_entropy_residual  = std::max(max_entropy_residual,  std::abs(entropy_residual_values[q]));
    }
 
-   // get cell size
-   double h = cell->diameter();
-   // compute entropy viscosity
-   entropy_viscosity(i_cell) = parameters.entropy_viscosity_coefficient *
-         h * h * max_entropy_residual / max_entropy_deviation_domain;
-}
+   // compute max jump in cell
+   //----------------------------------------------------------------------------
+   FEFaceValues<dim> fe_values_face         (fe, face_quadrature,
+      update_values | update_gradients | update_JxW_values | update_normal_vectors);
+   FEFaceValues<dim> fe_values_face_neighbor(fe, face_quadrature,
+      update_values | update_gradients | update_JxW_values | update_normal_vectors);
 
+   std::vector<double>         values_face            (n_q_points_face);
+   std::vector<Tensor<1,dim> > gradients_face         (n_q_points_face);
+   std::vector<Tensor<1,dim> > gradients_face_neighbor(n_q_points_face);
+   std::vector<Point<dim> >    normal_vectors         (n_q_points_face);
+   Vector<double> entropy_face(n_q_points_face);
+
+   double max_jump_in_cell = 0.0;
+   double max_jump_on_face = 0.0;
+   for (unsigned int iface = 0; iface < faces_per_cell; ++iface)
+   {
+      typename DoFHandler<dim>::face_iterator face = cell->face(iface);
+      if (face->at_boundary() == false)
+      {
+         Assert(cell->neighbor(iface).state() == IteratorState::valid, ExcInternalError());
+         typename DoFHandler<dim>::cell_iterator neighbor = cell->neighbor(iface);
+         const unsigned int ineighbor = cell->neighbor_of_neighbor(iface);
+         Assert(ineighbor < faces_per_cell, ExcInternalError());
+
+         fe_values_face.reinit(         cell,    iface);
+         fe_values_face_neighbor.reinit(neighbor,ineighbor);
+
+         // get values on face
+         fe_values_face.get_function_values(new_solution, values_face);
+
+         // compute entropy at each quadrature point on face
+         for (unsigned int q = 0; q < n_q_points_face; ++q)
+            entropy_face[q] = 0.5 * values_face[q] * values_face[q];
+
+         // get gradients on adjacent faces of current cell and neighboring cell
+         fe_values_face.get_function_gradients(         new_solution, gradients_face);
+         fe_values_face_neighbor.get_function_gradients(new_solution, gradients_face_neighbor);
+
+         // get normal vectors
+         normal_vectors = fe_values_face.get_normal_vectors();
+
+         max_jump_on_face = 0.0;
+         for (unsigned int q = 0; q < n_q_points_face; ++q)
+         {
+            // compute difference in gradients across face
+            gradients_face[q] -= gradients_face_neighbor[q];
+            double jump_on_face = std::abs((gradients_face[q] * normal_vectors[q])*entropy_face[q]);
+            max_jump_on_face = std::max(max_jump_on_face, jump_on_face);
+         }
+      } // end if (at_boundary())
+      max_jump_in_cell = std::max(max_jump_in_cell, max_jump_on_face);
+   } // end face loop
+
+   // compute entropy viscosity in cell
+   //----------------------------------------------------------------------------
+   // get cell size
+   //double h = cell->diameter();
+   // compute entropy viscosity
+   //entropy_viscosity(i_cell) = parameters.entropy_viscosity_coefficient *
+   //      h * h * max_entropy_residual / max_entropy_deviation_domain;
+   entropy_viscosity(i_cell) = (parameters.entropy_viscosity_coefficient * max_entropy_residual
+      + parameters.jump_coefficient * max_jump_in_cell) / max_entropy_deviation_domain;
+}
 
 /** \brief adds the viscous bilinear form for the maximum-principle preserving viscosity
  */
@@ -926,6 +992,7 @@ void TransportProblem<dim>::run()
          const double machine_precision = 1.0e-15;
          bool in_transient = true;
          bool max_principle_satisfied = true;
+         double old_dt = parameters.time_step_size; // time step size of previous time step, needed for entropy viscosity
          while (in_transient)
          {
             // determine time step size
@@ -941,7 +1008,7 @@ void TransportProblem<dim>::run()
             // compute inviscid system matrix and steady-state right hand side (ss_rhs)
             // This inviscid system matrix will contain inviscid terms and Laplacian viscous terms if there are any.
             // Max-principle viscosity terms will be added in a separate step afterward.
-            assemble_system();
+            assemble_system(old_dt);
             // add inviscid component to total system matrix (A)
             system_matrix.copy_from(inviscid_system_matrix);
             // add viscous bilinear form for maximum-principle preserving viscosity
@@ -991,6 +1058,9 @@ void TransportProblem<dim>::run()
 
             // check that local discrete maximum principle is satisfied at all time steps
             max_principle_satisfied = max_principle_satisfied and check_local_discrete_max_principle();
+
+            // update old time step size
+            old_dt = dt;
          }
          // report if local discrete maximum principle is satisfied at all time steps
          if (max_principle_satisfied)
@@ -1019,7 +1089,7 @@ void TransportProblem<dim>::solve_steady_state()
    if (is_linear) {
       // compute inviscid system matrix and steady-state right hand side (ss_rhs)
       // This inviscid system matrix will contain inviscid terms and Laplacian viscous terms if there are any.
-      assemble_system();
+      assemble_system(1.0e15);
       // add inviscid component to total system matrix (A)
       system_matrix.copy_from(inviscid_system_matrix);
       // add viscous bilinear form for maximum-principle preserving viscosity
@@ -1039,7 +1109,7 @@ void TransportProblem<dim>::solve_steady_state()
       for (unsigned int iter = 0; iter < parameters.max_nonlinear_iterations; ++iter) {
          std::cout << "   Nonlinear iteration " << iter;
          if (iter == 0) std::cout << std::endl;
-         assemble_system();
+         assemble_system(1.0e15);
          solve_linear_system(system_matrix, system_rhs);
          // if not the first iteration, evaluate the convergence criteria
          if (nonlinear_iteration != 0) {

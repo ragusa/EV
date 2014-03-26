@@ -1332,8 +1332,10 @@ void ConservationLaw<dim>::update_entropy_residuals(const double &dt)
 template <int dim>
 void ConservationLaw<dim>::update_jumps()
 {
-   FEFaceValues<dim> fe_values_face         (fe, face_quadrature, update_values | update_gradients | update_JxW_values | update_normal_vectors);
-   FEFaceValues<dim> fe_values_face_neighbor(fe, face_quadrature, update_values | update_gradients | update_JxW_values | update_normal_vectors);
+   FEFaceValues<dim> fe_values_face         (fe, face_quadrature,
+      update_values | update_gradients | update_JxW_values | update_normal_vectors);
+   FEFaceValues<dim> fe_values_face_neighbor(fe, face_quadrature,
+      update_values | update_gradients | update_JxW_values | update_normal_vectors);
 
    std::vector<Tensor<1,dim> > gradients_face         (n_q_points_face);
    std::vector<Tensor<1,dim> > gradients_face_neighbor(n_q_points_face);

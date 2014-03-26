@@ -10,7 +10,8 @@ TransportParameters::TransportParameters() :
       preconditioner_option(1),
       viscosity_option(0),
       old_first_order_viscosity_coefficient(5.0e-1),
-      entropy_viscosity_coefficient(1.0e-1),
+      entropy_viscosity_coefficient(1.0),
+      jump_coefficient(1.0),
       max_nonlinear_iterations(10),
       relative_difference_tolerance(1.0e-6),
       output_meshes(false),
@@ -46,8 +47,10 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
          "Option for viscosity definition: none, first-order, or entropy");
    prm.declare_entry("Old first order viscosity coefficient", "5.0e-1", Patterns::Double(),
          "Coefficient for the first-order viscosity");
-   prm.declare_entry("Entropy viscosity coefficient", "1.0e-1", Patterns::Double(),
+   prm.declare_entry("Entropy viscosity coefficient", "1.0", Patterns::Double(),
          "Coefficient for the entropy viscosity");
+   prm.declare_entry("Jump coefficient", "1.0", Patterns::Double(),
+         "Coefficient for jumps used with entropy viscosity");
    prm.declare_entry("Maximum number of nonlinear iterations", "10", Patterns::Integer(),
          "Maximum number of nonlinear iterations to use when using entropy viscosity");
    prm.declare_entry("Relative difference tolerance", "1.0e-6", Patterns::Double(),
@@ -81,6 +84,7 @@ void TransportParameters::get_parameters(ParameterHandler &prm) {
    viscosity_option = prm.get_integer("Viscosity option");
    old_first_order_viscosity_coefficient = prm.get_double("Old first order viscosity coefficient");
    entropy_viscosity_coefficient = prm.get_double("Entropy viscosity coefficient");
+   jump_coefficient = prm.get_double("Jump coefficient");
    max_nonlinear_iterations = prm.get_integer("Maximum number of nonlinear iterations");
    relative_difference_tolerance = prm.get_double("Relative difference tolerance");
    output_meshes = prm.get_bool("Output mesh");

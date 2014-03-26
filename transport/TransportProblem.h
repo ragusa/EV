@@ -67,7 +67,7 @@ class TransportProblem {
       void setup_system();
       void set_boundary_indicators();
       void assemble_mass_matrices();
-      void assemble_system();
+      void assemble_system(const double &dt);
       void apply_Dirichlet_BC();
       void solve_steady_state();
       void solve_linear_system(const SparseMatrix<double> &A,
@@ -83,7 +83,8 @@ class TransportProblem {
       double compute_viscosity(const typename DoFHandler<dim>::active_cell_iterator &cell,
                                const unsigned int  &i_cell,
                                const FEValues<dim> &fe_values,
-                               const std::vector<double> &total_cross_section);
+                               const std::vector<double> &total_cross_section,
+                               const double &dt);
 
       // low-order max-principle viscosity functions and data
       void compute_viscous_bilinear_forms();
@@ -117,6 +118,7 @@ class TransportProblem {
       const FESystem<dim> fe;
       const FEValuesExtractors::Scalar flux;
       const unsigned int dofs_per_cell;
+      const unsigned int faces_per_cell;
 
       // quadrature data
       const QGauss<dim>   cell_quadrature;
@@ -168,7 +170,8 @@ class TransportProblem {
       void compute_entropy_viscosity(const typename DoFHandler<dim>::active_cell_iterator &cell,
                                      const unsigned int  &i_cell,
                                      const FEValues<dim> &fe_values,
-                                     const std::vector<double> &total_cross_section);
+                                     const std::vector<double> &total_cross_section,
+                                     const double &dt);
       void compute_entropy_domain_average();
       double domain_volume;
       double domain_averaged_entropy;
