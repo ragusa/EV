@@ -390,7 +390,7 @@ void TransportProblem<dim>::assemble_system()
    max_entropy_deviation_domain = 0.0;
    bool need_to_compute_entropy_viscosity = (parameters.viscosity_option == 2) or
                                             (parameters.viscosity_option == 4);
-   if (need_to_compute_entropy_viscosity and (nonlinear_iteration != 0))
+   if (need_to_compute_entropy_viscosity)
       compute_entropy_domain_average();
 
    // cell iterator
@@ -772,7 +772,7 @@ void TransportProblem<dim>::compute_max_principle_viscosity()
       for (unsigned int i = 0; i < dofs_per_cell; ++i) {
          for (unsigned int j = 0; j < dofs_per_cell; ++j) {
             if (i != j) {
-               low_order_viscosity(i_cell) = std::max(low_order_viscosity(i_cell),
+               low_order_viscosity_cell = std::max(low_order_viscosity(i_cell),
                   std::abs(max_principle_viscosity_numerators(local_dof_indices[i],local_dof_indices[j]))/
                   (-viscous_bilinear_forms(local_dof_indices[i],local_dof_indices[j])));
             }
