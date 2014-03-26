@@ -838,7 +838,7 @@ void TransportProblem<dim>::compute_max_principle_viscosity()
       for (unsigned int i = 0; i < dofs_per_cell; ++i) {
          for (unsigned int j = 0; j < dofs_per_cell; ++j) {
             if (i != j) {
-               low_order_viscosity_cell = std::max(low_order_viscosity(i_cell),
+               low_order_viscosity_cell = std::max(low_order_viscosity_cell,
                   std::abs(max_principle_viscosity_numerators(local_dof_indices[i],local_dof_indices[j]))/
                   (-viscous_bilinear_forms(local_dof_indices[i],local_dof_indices[j])));
             }
@@ -1214,15 +1214,28 @@ void TransportProblem<dim>::output_results()
             break;
          }
       }
+
+      // determine output file extension
+      std::string filename_extension;
+      if (dim ==  1)
+         filename_extension = ".gpl";
+      else
+         filename_extension = ".vtk";
+
+      // create output filename
+      std::stringstream viscosity_filename_ss;
+      viscosity_filename_ss << "output/viscosity_" << parameters.problem_id << filename_extension;
+      std::string viscosity_filename = viscosity_filename_ss.str();
+      char *viscosity_filename_char = (char*)viscosity_filename.c_str();
+
+      // create output filestream for exact solution
+      std::ofstream viscosity_outstream(viscosity_filename_char);
       // build patches and write to file
       visc_out.build_patches(degree + 1);
-      if (dim == 1) {
-         std::ofstream visc_out_stream("output/viscosity.gpl");
-         visc_out.write_gnuplot(visc_out_stream);
-      } else {
-         std::ofstream visc_out_stream("output/viscosity.vtk");
-         visc_out.write_vtk(visc_out_stream);
-      }
+      if (dim == 1)
+         visc_out.write_gnuplot(viscosity_outstream);
+      else
+         visc_out.write_vtk(viscosity_outstream);
    }
 
    // print convergence table
