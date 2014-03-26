@@ -1194,12 +1194,12 @@ void TransportProblem<dim>::output_results()
       switch (parameters.viscosity_option)
       {
          case 1: {
-            visc_out.add_data_vector(low_order_viscosity,"Old_First_Order_Viscosity",DataOut<dim>::type_cell_data);
+            visc_out.add_data_vector(low_order_viscosity,"Old_Low_Order_Viscosity",DataOut<dim>::type_cell_data);
             break;
          } case 2: {
-            visc_out.add_data_vector(low_order_viscosity, "Old_First_Order_Viscosity",DataOut<dim>::type_cell_data);
+            visc_out.add_data_vector(low_order_viscosity, "Old_Low_Order_Viscosity",DataOut<dim>::type_cell_data);
             visc_out.add_data_vector(entropy_viscosity,   "Entropy_Viscosity",        DataOut<dim>::type_cell_data);
-            visc_out.add_data_vector(high_order_viscosity,"High_Order_Viscosity",     DataOut<dim>::type_cell_data);
+            visc_out.add_data_vector(high_order_viscosity,"Old_High_Order_Viscosity",     DataOut<dim>::type_cell_data);
             break;
          } case 3: {
             visc_out.add_data_vector(low_order_viscosity,"Low_Order_Viscosity",DataOut<dim>::type_cell_data);
