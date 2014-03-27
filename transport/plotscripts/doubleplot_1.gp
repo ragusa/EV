@@ -6,9 +6,9 @@ set key bottom right
 set bmargin 0
 set format x ""
 set format y "%6g"
-plot "exact_solution_1.gpl" using 1:2 title "Exact" with lines,\
-     "solution_low_order_1.gpl" using 1:2 title "Low-Order" with linesp,\
-     "solution_high_order_1.gpl" using 1:2 title "High-Order" with linesp
+plot "../output/exact_solution_1.gpl" using 1:2 title "Exact" with lines,\
+     "../output/solution_low_order_1.gpl" using 1:2 title "Low-Order" with linesp,\
+     "../output/solution_high_order_1.gpl" using 1:2 title "High-Order" with linesp
 set title ""
 set ylabel "Viscosity"
 set xlabel "x"
@@ -20,6 +20,6 @@ set format y "%6g"
 set yrange [0:60]
 set ytics 0,10,50
 set key top right
-plot "viscosity_1.gpl" using 1:2 title "Low-Order" with linesp,\
-     "viscosity_1.gpl" using 1:3 title "Entropy"   with linesp
+plot "../output/viscosity_1.gpl" using 1:2 title "Low-Order" with linesp,\
+     "../output/viscosity_1.gpl" using 1:3 title "Entropy"   with linesp
 unset multiplot

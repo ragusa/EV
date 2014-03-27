@@ -84,6 +84,7 @@ class TransportProblem {
                                const unsigned int  &i_cell,
                                const FEValues<dim> &fe_values,
                                const std::vector<double> &total_cross_section,
+                               const std::vector<double> &total_source,
                                const double &dt);
 
       // low-order max-principle viscosity functions and data
@@ -171,6 +172,7 @@ class TransportProblem {
                                      const unsigned int  &i_cell,
                                      const FEValues<dim> &fe_values,
                                      const std::vector<double> &total_cross_section,
+                                     const std::vector<double> &total_source,
                                      const double &dt);
       void compute_entropy_domain_average();
       double domain_volume;

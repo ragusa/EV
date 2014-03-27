@@ -416,7 +416,7 @@ void TransportProblem<dim>::assemble_system(const double &dt)
                               total_source_values);
 
       // compute viscosity
-      double viscosity = compute_viscosity(cell, i_cell, fe_values, total_cross_section_values, dt);
+      double viscosity = compute_viscosity(cell, i_cell, fe_values, total_cross_section_values, total_source_values, dt);
 
       // compute cell contributions to global system
       // ------------------------------------------------------------------
@@ -573,6 +573,7 @@ double TransportProblem<dim>::compute_viscosity(const typename DoFHandler<dim>::
                                                 const unsigned int        &i_cell,
                                                 const FEValues<dim>       &fe_values,
                                                 const std::vector<double> &total_cross_section_values,
+                                                const std::vector<double> &total_source_values,
                                                 const double              &dt)
 {
    double viscosity;
@@ -598,6 +599,7 @@ double TransportProblem<dim>::compute_viscosity(const typename DoFHandler<dim>::
                                       i_cell,
                                       fe_values,
                                       total_cross_section_values,
+                                      total_source_values,
                                       dt);
 
             // determine high-order viscosity: minimum of low-order viscosity and entropy viscosity
@@ -618,6 +620,7 @@ double TransportProblem<dim>::compute_viscosity(const typename DoFHandler<dim>::
                                    i_cell,
                                    fe_values,
                                    total_cross_section_values,
+                                   total_source_values,
                                    dt);
 
          // maximum-principle preserving viscosity does not add Laplacian term;
@@ -641,6 +644,7 @@ void TransportProblem<dim>::compute_entropy_viscosity(const typename DoFHandler<
                                                       const unsigned int        &i_cell,
                                                       const FEValues<dim>       &fe_values,
                                                       const std::vector<double> &total_cross_section_values,
+                                                      const std::vector<double> &total_source_values,
                                                       const double              &dt)
 {
    // get previous time step (n) values and gradients
@@ -664,9 +668,15 @@ void TransportProblem<dim>::compute_entropy_viscosity(const typename DoFHandler<
    // compute entropy residual values at each quadrature point on cell
    std::vector<double> entropy_residual_values(n_q_points_cell,0.0);
    for (unsigned int q = 0; q < n_q_points_cell; ++q)
+/*
       entropy_residual_values[q] = (new_entropy_values[q] - old_entropy_values[q])/dt
          + transport_direction * new_values[q] * new_gradients[q]
          + total_cross_section_values[q] * new_entropy_values[q];
+*/
+      entropy_residual_values[q] = (new_entropy_values[q] - old_entropy_values[q])/dt
+         + transport_direction * new_values[q] * new_gradients[q]
+         + total_cross_section_values[q] * new_values[q] * new_values[q]
+         - total_source_values[q] * new_values[q];
    // determine maximum entropy residual in cell
    double max_entropy_residual = 0.0;
    for (unsigned int q = 0; q < n_q_points_cell; ++q) {
@@ -681,6 +691,7 @@ void TransportProblem<dim>::compute_entropy_viscosity(const typename DoFHandler<
       update_values | update_gradients | update_JxW_values | update_normal_vectors);
 
    std::vector<double>         values_face            (n_q_points_face);
+   std::vector<double>         values_face_neighbor   (n_q_points_face);
    std::vector<Tensor<1,dim> > gradients_face         (n_q_points_face);
    std::vector<Tensor<1,dim> > gradients_face_neighbor(n_q_points_face);
    std::vector<Point<dim> >    normal_vectors         (n_q_points_face);
@@ -718,9 +729,14 @@ void TransportProblem<dim>::compute_entropy_viscosity(const typename DoFHandler<
          max_jump_on_face = 0.0;
          for (unsigned int q = 0; q < n_q_points_face; ++q)
          {
+            double jump_dEdn = (gradients_face[q]*values_face[q]
+               - gradients_face_neighbor[q]*values_face_neighbor[q]) * normal_vectors[q];
+            double jump_on_face = std::abs(transport_direction * normal_vectors[q] * jump_dEdn);
+/*
             // compute difference in gradients across face
             gradients_face[q] -= gradients_face_neighbor[q];
             double jump_on_face = std::abs((gradients_face[q] * normal_vectors[q])*entropy_face[q]);
+*/
             max_jump_on_face = std::max(max_jump_on_face, jump_on_face);
          }
       } // end if (at_boundary())
