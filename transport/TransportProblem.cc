@@ -591,22 +591,16 @@ double TransportProblem<dim>::compute_viscosity(const typename DoFHandler<dim>::
       } case 2: { // old definition of high-order viscosity
          low_order_viscosity(i_cell) = old_first_order_viscosity_cell;
 
-         if (nonlinear_iteration == 0) {
-            // in first nonlinear iteration, choose entropy viscosity to be low-order viscosity
-            viscosity = old_first_order_viscosity_cell;
-         } else {
-            compute_entropy_viscosity(cell,
-                                      i_cell,
-                                      fe_values,
-                                      total_cross_section_values,
-                                      total_source_values,
-                                      dt);
+         compute_entropy_viscosity(cell,
+                                   i_cell,
+                                   fe_values,
+                                   total_cross_section_values,
+                                   total_source_values,
+                                   dt);
 
-            // determine high-order viscosity: minimum of low-order viscosity and entropy viscosity
-            viscosity = std::min(old_first_order_viscosity_cell, entropy_viscosity(i_cell));
-            high_order_viscosity(i_cell) = viscosity;
-         }
-
+         // determine high-order viscosity: minimum of low-order viscosity and entropy viscosity
+         viscosity = std::min(old_first_order_viscosity_cell, entropy_viscosity(i_cell));
+         high_order_viscosity(i_cell) = viscosity;
          break;
       } case 3: { // maximum-principle preserving low-order viscosity
          // maximum-principle preserving viscosity does not add Laplacian term;
@@ -732,11 +726,6 @@ void TransportProblem<dim>::compute_entropy_viscosity(const typename DoFHandler<
             double jump_dEdn = (gradients_face[q]*values_face[q]
                - gradients_face_neighbor[q]*values_face_neighbor[q]) * normal_vectors[q];
             double jump_on_face = std::abs(transport_direction * normal_vectors[q] * jump_dEdn);
-/*
-            // compute difference in gradients across face
-            gradients_face[q] -= gradients_face_neighbor[q];
-            double jump_on_face = std::abs((gradients_face[q] * normal_vectors[q])*entropy_face[q]);
-*/
             max_jump_on_face = std::max(max_jump_on_face, jump_on_face);
          }
       } // end if (at_boundary())
@@ -745,11 +734,6 @@ void TransportProblem<dim>::compute_entropy_viscosity(const typename DoFHandler<
 
    // compute entropy viscosity in cell
    //----------------------------------------------------------------------------
-   // get cell size
-   //double h = cell->diameter();
-   // compute entropy viscosity
-   //entropy_viscosity(i_cell) = parameters.entropy_viscosity_coefficient *
-   //      h * h * max_entropy_residual / max_entropy_deviation_domain;
    entropy_viscosity(i_cell) = (parameters.entropy_viscosity_coefficient * max_entropy_residual
       + parameters.jump_coefficient * max_jump_in_cell) / max_entropy_deviation_domain;
 }
@@ -776,7 +760,7 @@ void TransportProblem<dim>::add_viscous_matrix(const Vector<double> &viscosity)
             if (j == i)
                viscous_bilinear_form = cell_volume;
             else
-               viscous_bilinear_form = -1.0/(dofs_per_cell - 1.0)*cell_volume;
+               viscous_bilinear_form = cell_volume/(1.0 - dofs_per_cell);
  
             cell_matrix(i,j) += viscosity(i_cell) * viscous_bilinear_form;
          }
@@ -1070,6 +1054,8 @@ void TransportProblem<dim>::run()
                compute_limiting_coefficients();
                // compute the high-order solution using the low-order solution and L
                compute_high_order_solution();
+               // enforce the Dirichlet BC after solution has been formed
+               apply_Dirichlet_BC();
             }
 
             // check that local discrete maximum principle is satisfied at all time steps

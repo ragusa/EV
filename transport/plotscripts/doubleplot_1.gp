@@ -17,8 +17,8 @@ set bmargin
 set tmargin 0
 set format x "%g"
 set format y "%6g"
-set yrange [0:60]
-set ytics 0,10,50
+#set yrange [0:60]
+#set ytics 0,10,50
 set key top right
 plot "../output/viscosity_1.gpl" using 1:2 title "Low-Order" with linesp,\
      "../output/viscosity_1.gpl" using 1:3 title "Entropy"   with linesp
