@@ -115,6 +115,7 @@ class TransportProblem {
       // mesh and dof data
       Triangulation<dim> triangulation;
       DoFHandler<dim> dof_handler;
+      unsigned int n_dofs;
       const unsigned int degree;
       const FESystem<dim> fe;
       const FEValuesExtractors::Scalar flux;
@@ -185,7 +186,12 @@ class TransportProblem {
    
       // checks
       void check_solution_nonnegative() const;
-      bool check_local_discrete_max_principle() const;
+      bool check_local_discrete_max_principle(const unsigned int &n) const;
+      void compute_max_principle_quantities(const double &dt);
+      Vector<double> min_values;
+      Vector<double> max_values;
+      Vector<double> interaction_integral;
+      Vector<double> source_integral;
 };
 
 #include "TransportProblem.cc"

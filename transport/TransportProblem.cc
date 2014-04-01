@@ -171,6 +171,8 @@ void TransportProblem<dim>::setup_system()
 {
    // distribute dofs
    dof_handler.distribute_dofs(fe);
+   // get number of dofs
+   n_dofs = dof_handler.n_dofs();
 
    // set boundary indicators to distinguish incoming boundary
    set_boundary_indicators();
@@ -190,7 +192,7 @@ void TransportProblem<dim>::setup_system()
    constraints.close();
 
    // create sparsity pattern for system matrix and mass matrices
-   CompressedSparsityPattern compressed_constrained_sparsity_pattern(dof_handler.n_dofs());
+   CompressedSparsityPattern compressed_constrained_sparsity_pattern(n_dofs);
    DoFTools::make_sparsity_pattern(dof_handler,
                                    compressed_constrained_sparsity_pattern,
                                    constraints,
@@ -213,7 +215,7 @@ void TransportProblem<dim>::setup_system()
    assemble_mass_matrices();
 
    // reinitialize auxiliary matrices
-   CompressedSparsityPattern compressed_unconstrained_sparsity_pattern(dof_handler.n_dofs());
+   CompressedSparsityPattern compressed_unconstrained_sparsity_pattern(n_dofs);
    DoFTools::make_sparsity_pattern(dof_handler, compressed_unconstrained_sparsity_pattern);
    unconstrained_sparsity_pattern.copy_from(compressed_unconstrained_sparsity_pattern);
    viscous_bilinear_forms            .reinit(unconstrained_sparsity_pattern);
@@ -222,12 +224,18 @@ void TransportProblem<dim>::setup_system()
    compute_viscous_bilinear_forms();
 
    // reinitialize solution vector, system matrix, and rhs
-   old_solution.reinit(dof_handler.n_dofs());
-   new_solution.reinit(dof_handler.n_dofs());
-   system_rhs  .reinit(dof_handler.n_dofs());
-   ss_rhs      .reinit(dof_handler.n_dofs());
-   R_plus      .reinit(dof_handler.n_dofs());
-   R_minus     .reinit(dof_handler.n_dofs());
+   old_solution.reinit(n_dofs);
+   new_solution.reinit(n_dofs);
+   system_rhs  .reinit(n_dofs);
+   ss_rhs      .reinit(n_dofs);
+   R_plus      .reinit(n_dofs);
+   R_minus     .reinit(n_dofs);
+
+   // reinitialize max principle quantities
+   min_values  .reinit(n_dofs);
+   max_values  .reinit(n_dofs);
+   interaction_integral.reinit(n_dofs);
+   source_integral     .reinit(n_dofs);
 
    // reinitialize viscosities
    entropy_viscosity        .reinit(triangulation.n_active_cells());
@@ -380,11 +388,9 @@ void TransportProblem<dim>::assemble_system(const double &dt)
 
    std::vector<unsigned int> local_dof_indices(dofs_per_cell);
 
-   // total cross section values for an energy group and direction at each
-   //  quadrature point on cell
+   // total cross section values at each quadrature point on cell
    std::vector<double> total_cross_section_values(n_q_points_cell);
-   // total source values for an energy group and direction at each
-   //  quadrature point on cell
+   // total source values at each quadrature point on cell
    std::vector<double> total_source_values(n_q_points_cell);
 
    // get domain-averaged entropy if using entropy viscosity for this iteration
@@ -957,7 +963,7 @@ void TransportProblem<dim>::run()
       // print information
       std::cout << std::endl << "Cycle " << cycle << ':' << std::endl;
       std::cout << "   Number of active cells:       " << triangulation.n_active_cells() << std::endl;
-      std::cout << "   Number of degrees of freedom: " << dof_handler.n_dofs()           << std::endl;
+      std::cout << "   Number of degrees of freedom: " << n_dofs           << std::endl;
 
       // if problem is steady-state, then just do one solve; else loop over time
       if (parameters.is_steady_state) {
@@ -993,6 +999,8 @@ void TransportProblem<dim>::run()
          bool in_transient = true;
          bool max_principle_satisfied = true;
          double old_dt = parameters.time_step_size; // time step size of previous time step, needed for entropy viscosity
+         Vector<double> tmp_vector(n_dofs);
+         unsigned int n = 1; // time step index
          while (in_transient)
          {
             // determine time step size
@@ -1033,8 +1041,6 @@ void TransportProblem<dim>::run()
             // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
             system_rhs = 0;
             system_rhs.add(dt, ss_rhs); //................. now, system_rhs = dt*(ss_rhs)
-            unsigned int n_dofs = dof_handler.n_dofs();
-            Vector<double> tmp_vector(n_dofs);
             lumped_mass_matrix.vmult(tmp_vector, old_solution);
             system_rhs.add(1.0, tmp_vector); //............ now, system_rhs = M*u_old + dt*(ss_rhs)
             system_matrix.vmult(tmp_vector, old_solution);
@@ -1043,6 +1049,9 @@ void TransportProblem<dim>::run()
             solve_linear_system(lumped_mass_matrix, system_rhs);
             // enforce the Dirichlet BC after solution has been formed
             apply_Dirichlet_BC();
+
+            // compute max principle min and max values
+            compute_max_principle_quantities(dt);
 
             if (parameters.viscosity_option == 4) // high-order max-principle preserving viscosity
             {
@@ -1059,10 +1068,13 @@ void TransportProblem<dim>::run()
             }
 
             // check that local discrete maximum principle is satisfied at all time steps
-            max_principle_satisfied = max_principle_satisfied and check_local_discrete_max_principle();
+            max_principle_satisfied = max_principle_satisfied and check_local_discrete_max_principle(n);
 
             // update old time step size
             old_dt = dt;
+
+            // increment time step index
+            n++;
          }
          // report if local discrete maximum principle is satisfied at all time steps
          if (max_principle_satisfied)
@@ -1343,7 +1355,6 @@ void TransportProblem<dim>::evaluate_error(const unsigned int cycle)
 
    // compute average cell length
    const unsigned int n_active_cells = triangulation.n_active_cells();
-   const unsigned int n_dofs = dof_handler.n_dofs();
    const double avg_cell_length = std::pow(2.0,dim) / std::pow(n_active_cells,1.0/dim);
 
    // add error values to convergence table
@@ -1361,7 +1372,6 @@ void TransportProblem<dim>::check_solution_nonnegative() const
 {
    // loop over all degrees of freedom
    bool solution_is_negative = false;
-   const unsigned int n_dofs = dof_handler.n_dofs();
    for (unsigned int i = 0; i < n_dofs; ++i)
       if (new_solution(i) < 0)
          solution_is_negative = true;
@@ -1376,22 +1386,88 @@ void TransportProblem<dim>::check_solution_nonnegative() const
 /** \brief check that the local discrete max principle is satisfied.
  */
 template<int dim>
-bool TransportProblem<dim>::check_local_discrete_max_principle() const
+bool TransportProblem<dim>::check_local_discrete_max_principle(const unsigned int &n) const
 {
-   const unsigned int n_dofs = dof_handler.n_dofs();
-   Vector<double> max_values(n_dofs); // max of neighbors for each dof
-   Vector<double> min_values(n_dofs); // min of neighbors for each dof
-   max_values = -1.0e15;
-   max_values =  1.0e15;
+   // check that each dof value is bounded by its neighbors
+   bool local_max_principle_satisfied = true;
+   for (unsigned int i = 0; i < n_dofs; ++i) {
+      double value_i = new_solution(i);
+      if (value_i < min_values(i)) {
+         local_max_principle_satisfied = false;
+         std::cout << "Max principle violated at time step " << n
+            << " with dof " << i << ": "
+            << value_i << " < " << min_values(i) << std::endl;
+      }
+      if (value_i > max_values(i)) {
+         local_max_principle_satisfied = false;
+         std::cout << "Max principle violated at time step " << n
+            << " with dof " << i << ": "
+            << value_i << " > " << max_values(i) << std::endl;
+      }
+   }
+   
+   return local_max_principle_satisfied;
+}
+
+/** \brief Computes min and max quantities for max principle
+ */
+template <int dim>
+void TransportProblem<dim>::compute_max_principle_quantities(const double &dt)
+{
+   interaction_integral = 0;
+   source_integral = 0;
+
+   // initialize min and max values
+   for (unsigned int i = 0; i < n_dofs; ++i)
+   {
+      max_values(i) = old_solution(i);
+      min_values(i) = old_solution(i);
+   }
 
    std::vector<unsigned int> local_dof_indices(dofs_per_cell);
+
+   const TotalCrossSection<dim> total_cross_section(cross_section_option,cross_section_value);
+   const TotalSource<dim>       total_source       (source_option,source_value);
+   std::vector<double> total_cross_section_values(n_q_points_cell);
+   std::vector<double> total_source_values       (n_q_points_cell);
+   Vector<double> cell_reaction_term(dofs_per_cell);
+   Vector<double> cell_source_term  (dofs_per_cell);
+
+   // FE values, for assembly terms
+   FEValues<dim> fe_values(fe, cell_quadrature,
+      update_values | update_quadrature_points | update_JxW_values);
 
    // loop over cells
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
    for (; cell != endc; ++cell) {
+      // initialize local matrix and rhs to zero
+      cell_reaction_term = 0;
+      cell_source_term   = 0;
+
+      // reinitialize FE values
+      fe_values.reinit(cell);
+
+      // get total cross section for all quadrature points
+      total_cross_section.value_list(fe_values.get_quadrature_points(),
+                                     total_cross_section_values);
+      // get total source for all quadrature points
+      total_source.value_list(fe_values.get_quadrature_points(),
+                              total_source_values);
+
       // get local dof indices
       cell->get_dof_indices(local_dof_indices);
+
+      for (unsigned int i = 0; i < dofs_per_cell; ++i)
+      {
+         for (unsigned int q = 0; q < n_q_points_cell; ++q)
+         {
+            cell_reaction_term(i) += fe_values[flux].value(i, q) * total_cross_section_values[q] * fe_values.JxW(q);
+            cell_source_term(i) += fe_values[flux].value(i, q) * total_source_values[q] * fe_values.JxW(q);
+         }
+         interaction_integral(local_dof_indices[i]) += cell_reaction_term(i);
+         source_integral(local_dof_indices[i])      += cell_source_term(i);
+      }
 
       // find min and max values on cell
       double max_cell = old_solution(local_dof_indices[0]); // initialized to arbitrary value on cell
@@ -1410,17 +1486,14 @@ bool TransportProblem<dim>::check_local_discrete_max_principle() const
       }
    }
 
-   // check that each dof value is bounded by its neighbors
-   bool local_max_principle_satisfied = true;
-   for (unsigned int i = 0; i < n_dofs; ++i) {
-      double value_i = new_solution(i);
-      if (value_i < min_values(i))
-         local_max_principle_satisfied = false;
-      if (value_i > max_values(i))
-         local_max_principle_satisfied = false;
+   // compute the upper and lower bounds for the maximum principle
+   for (unsigned int i = 0; i < n_dofs; ++i)
+   {
+      max_values(i) = max_values(i)*(1.0 - dt/lumped_mass_matrix(i,i)*interaction_integral(i))
+         + dt/lumped_mass_matrix(i,i)*source_integral(i);
+      min_values(i) = min_values(i)*(1.0 - dt/lumped_mass_matrix(i,i)*interaction_integral(i))
+         + dt/lumped_mass_matrix(i,i)*source_integral(i);
    }
-   
-   return local_max_principle_satisfied;
 }
 
 /** \brief Computes the high-order right hand side vector (G) and
@@ -1496,7 +1569,6 @@ void TransportProblem<dim>::assemble_high_order_coefficient_matrix(const double 
    
    // add A2 matrix to A by looping over all degrees of freedom
    //----------------------------------------------------------
-   unsigned int n_dofs = dof_handler.n_dofs();
    for (unsigned int i = 0; i < n_dofs; ++i)
    {
       // Note that the high-order right hand side (G) is stored in system_rhs,
@@ -1535,7 +1607,6 @@ void TransportProblem<dim>::compute_limiting_coefficients()
    // small number around machine precision, used for floating point comparisons
    const double small_number = 1.0e-15;
 
-   unsigned int n_dofs = dof_handler.n_dofs();
    for (unsigned int i = 0; i < n_dofs; ++i)
    {
       // get nonzero entries in row i of high-order coefficient matrix A
@@ -1567,8 +1638,10 @@ void TransportProblem<dim>::compute_limiting_coefficients()
          U_min = std::min(U_min, old_solution(j));
       }
       // compute Q_plus and Q_minus
-      double Q_plus  = lumped_mass_matrix(i,i)*(U_max - new_solution(i));
-      double Q_minus = lumped_mass_matrix(i,i)*(U_min - new_solution(i));
+//      double Q_plus  = lumped_mass_matrix(i,i)*(U_max - new_solution(i));
+//      double Q_minus = lumped_mass_matrix(i,i)*(U_min - new_solution(i));
+      double Q_plus  = lumped_mass_matrix(i,i)*(max_values(i) - new_solution(i));
+      double Q_minus = lumped_mass_matrix(i,i)*(min_values(i) - new_solution(i));
 
       // compute R_plus(i)
       if (std::abs(P_plus) > small_number)
@@ -1591,8 +1664,6 @@ void TransportProblem<dim>::compute_limiting_coefficients()
 template <int dim>
 void TransportProblem<dim>::compute_high_order_solution()
 {
-   // get total number of dofs
-   unsigned int n_dofs = dof_handler.n_dofs();
    for (unsigned int i = 0; i < n_dofs; ++i)
    {
       // get values and indices of nonzero entries in row i of coefficient matrix A

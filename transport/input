@@ -1,9 +1,9 @@
 # problem options
-set Problem ID = 1
+set Problem ID = 2
 
 # transient options
 set Is steady state = false
-set End time = 0.5
+set End time = 0.95
 set Time step size = 0.01
 
 # artificial viscosity options
@@ -12,7 +12,7 @@ set Time step size = 0.01
 # 2: old entropy viscosity
 # 3: first order viscosity (maximum-principle preserving)
 # 4: high order viscosity (maximum-principle preserving with limiter)
-set Viscosity option = 4
+set Viscosity option = 3
 set Old first order viscosity coefficient = 0.5e0
 set Entropy viscosity coefficient = 1.0
 set Jump coefficient = 1.0
