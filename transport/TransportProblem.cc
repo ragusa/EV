@@ -176,6 +176,8 @@ void TransportProblem<dim>::setup_system()
 
    // set boundary indicators to distinguish incoming boundary
    set_boundary_indicators();
+   // determine Dirichlet nodes
+   get_dirichlet_nodes();
 
    // compute minimum cell diameter for CFL condition
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
@@ -503,10 +505,15 @@ void TransportProblem<dim>::assemble_system(const double &dt)
 
 } // end assembly
 
-/** \brief Applies Dirichlet boundary conditions.
+/** \brief Applies Dirichlet boundary conditions to a linear system A*x=b.
+ *  \param [in,out] A linear system matrix
+ *  \param [in,out] x linear system solution vector
+ *  \param [in,out] b linear system rhs vector
  */
 template <int dim>
-void TransportProblem<dim>::apply_Dirichlet_BC()
+void TransportProblem<dim>::apply_Dirichlet_BC(SparseMatrix<double> &A,
+                                               Vector<double>       &x,
+                                               Vector<double>       &b)
 {
    // apply Dirichlet boundary condition
    std::map<unsigned int, double> boundary_values;
@@ -515,9 +522,9 @@ void TransportProblem<dim>::apply_Dirichlet_BC()
                                             ConstantFunction<dim>(incoming_flux_value, 1),
                                             boundary_values);
    MatrixTools::apply_boundary_values(boundary_values,
-                                      system_matrix,
-                                      new_solution,
-                                      ss_rhs);
+                                      A,
+                                      x,
+                                      b);
 }
 
 /** \brief computes the domain-averaged entropy and the max entropy
@@ -1006,10 +1013,13 @@ void TransportProblem<dim>::run()
             // determine time step size
             double dt = parameters.time_step_size;
             if (t + dt_const > t_end) dt = t_end - t; // correct dt if new t would overshoot t_end 
-            // check CFL condition
-            check_CFL_condition(dt);
+            // enforce CFL condition and get CFL number
+            double CFL;
+            enforce_CFL_condition(dt,CFL);
             // increment time
+            std::cout << "time step " << n << ": t = " << t << "->";
             t += dt;
+            std::cout << t << ", CFL = " << CFL << std::endl;
             // determine if end of transient has been reached (within machine precision)
             in_transient = t < t_end - machine_precision;
 
@@ -1027,8 +1037,6 @@ void TransportProblem<dim>::run()
                // add viscous component to total system matrix (A)
                add_viscous_matrix(low_order_viscosity);
             }
-            // enforce Dirichlet BC on total system matrix
-            apply_Dirichlet_BC();
 
             // update old solution to previous step's new solution
             // Note that this is done here because the old old_solution is needed in the
@@ -1045,10 +1053,12 @@ void TransportProblem<dim>::run()
             system_rhs.add(1.0, tmp_vector); //............ now, system_rhs = M*u_old + dt*(ss_rhs)
             system_matrix.vmult(tmp_vector, old_solution);
             system_rhs.add(-dt, tmp_vector); //............ now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old), so it is complete
+            // enforce the Dirichlet BC after solution has been formed
+            apply_Dirichlet_BC(lumped_mass_matrix, new_solution, system_rhs);
             // solve the linear system M*u_new = system_rhs
             solve_linear_system(lumped_mass_matrix, system_rhs);
-            // enforce the Dirichlet BC after solution has been formed
-            apply_Dirichlet_BC();
+            // distribute constraints
+            constraints.distribute(new_solution);
 
             // compute max principle min and max values
             compute_max_principle_quantities(dt);
@@ -1063,12 +1073,13 @@ void TransportProblem<dim>::run()
                compute_limiting_coefficients();
                // compute the high-order solution using the low-order solution and L
                compute_high_order_solution();
-               // enforce the Dirichlet BC after solution has been formed
-               apply_Dirichlet_BC();
+               // distribute constraints
+               constraints.distribute(new_solution);
             }
 
             // check that local discrete maximum principle is satisfied at all time steps
-            max_principle_satisfied = max_principle_satisfied and check_local_discrete_max_principle(n);
+            bool max_principle_satisfied_this_time_step = check_local_discrete_max_principle(n);
+            max_principle_satisfied = max_principle_satisfied and max_principle_satisfied_this_time_step;
 
             // update old time step size
             old_dt = dt;
@@ -1115,16 +1126,23 @@ void TransportProblem<dim>::solve_steady_state()
          add_viscous_matrix(low_order_viscosity);
       }
       // enforce Dirichlet BC on total system matrix
-      apply_Dirichlet_BC();
+      apply_Dirichlet_BC(system_matrix, new_solution, ss_rhs);
       // solve the linear system: system_matrix*new_solution = ss_rhs
       solve_linear_system(system_matrix, ss_rhs);
+      // distribute constraints
+      constraints.distribute(new_solution);
    } else {
       bool converged = false; // converged nonlinear iteration
       for (unsigned int iter = 0; iter < parameters.max_nonlinear_iterations; ++iter) {
          std::cout << "   Nonlinear iteration " << iter;
          if (iter == 0) std::cout << std::endl;
          assemble_system(1.0e15);
+         // enforce Dirichlet BC on total system matrix
+         apply_Dirichlet_BC(system_matrix, new_solution, system_rhs);
+         // solve linear system
          solve_linear_system(system_matrix, system_rhs);
+         // distribute constraints
+         constraints.distribute(new_solution);
          // if not the first iteration, evaluate the convergence criteria
          if (nonlinear_iteration != 0) {
             // evaluate the difference between the current and previous solution iterate
@@ -1391,18 +1409,22 @@ bool TransportProblem<dim>::check_local_discrete_max_principle(const unsigned in
    // check that each dof value is bounded by its neighbors
    bool local_max_principle_satisfied = true;
    for (unsigned int i = 0; i < n_dofs; ++i) {
-      double value_i = new_solution(i);
-      if (value_i < min_values(i)) {
-         local_max_principle_satisfied = false;
-         std::cout << "Max principle violated at time step " << n
-            << " with dof " << i << ": "
-            << value_i << " < " << min_values(i) << std::endl;
-      }
-      if (value_i > max_values(i)) {
-         local_max_principle_satisfied = false;
-         std::cout << "Max principle violated at time step " << n
-            << " with dof " << i << ": "
-            << value_i << " > " << max_values(i) << std::endl;
+      // check if dof is a Dirichlet node or not - if it is, don't check max principle
+      if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) == dirichlet_nodes.end())
+      {
+         double value_i = new_solution(i);
+         if (value_i < min_values(i)) {
+            local_max_principle_satisfied = false;
+            std::cout << "Max principle violated at time step " << n
+               << " with dof " << i << ": "
+               << value_i << " < " << min_values(i) << std::endl;
+         }
+         if (value_i > max_values(i)) {
+            local_max_principle_satisfied = false;
+            std::cout << "Max principle violated at time step " << n
+               << " with dof " << i << ": "
+               << value_i << " > " << max_values(i) << std::endl;
+         }
       }
    }
    
@@ -1693,15 +1715,20 @@ void TransportProblem<dim>::compute_high_order_solution()
    }
 }
 
-/** \brief Checks that the CFL condition is satisfied.
-    \param [in] dt time step size for current time step
+/** \brief Checks that the CFL condition is satisfied; If not, adjusts time step size.
+    \param [in,out] dt time step size for current time step
+    \param [out] CFL CFL number
  */
 template <int dim>
-void TransportProblem<dim>::check_CFL_condition(const double &dt) const
+void TransportProblem<dim>::enforce_CFL_condition(double &dt, double &CFL) const
 {
    double speed = 1.0; // for now, speed is hard-coded to be 1
-   double CFL = speed*dt/minimum_cell_diameter;
-   Assert(CFL < 1.0,ExcMessage("CFL number must be less than one."));
+   CFL = speed*dt/minimum_cell_diameter;
+   if (CFL > parameters.CFL_limit)
+   {
+      CFL = parameters.CFL_limit;
+      dt = CFL * minimum_cell_diameter / speed;
+   }
 }
 
 /** \brief Gets the values and indices of nonzero elements in a row of a sparse matrix.
@@ -1734,4 +1761,22 @@ void TransportProblem<dim>::get_matrix_row(const SparseMatrix<double>      &matr
       row_values .push_back(matrix_iterator->value());
       row_indices.push_back(matrix_iterator->column());
     }
+}
+
+/** \brief Gets a list of dofs subject to Dirichlet boundary conditions.
+ *         This is necessary because max principle checks are not applied to these nodes.
+ */
+template <int dim>
+void TransportProblem<dim>::get_dirichlet_nodes()
+{
+   // get map of Dirichlet dof indices to Dirichlet values
+   std::map<unsigned int, double> boundary_values;
+   VectorTools::interpolate_boundary_values(dof_handler,
+                                            incoming_boundary,
+                                            ConstantFunction<dim>(incoming_flux_value, 1),
+                                            boundary_values);
+   // extract dof indices from map
+   dirichlet_nodes.clear();
+   for (std::map<unsigned int, double>::iterator it = boundary_values.begin(); it != boundary_values.end(); ++it)
+      dirichlet_nodes.push_back(it->first);
 }

@@ -68,7 +68,9 @@ class TransportProblem {
       void set_boundary_indicators();
       void assemble_mass_matrices();
       void assemble_system(const double &dt);
-      void apply_Dirichlet_BC();
+      void apply_Dirichlet_BC(SparseMatrix<double> &A,
+                              Vector<double>       &x,
+                              Vector<double>       &b);
       void solve_steady_state();
       void solve_linear_system(const SparseMatrix<double> &A,
                                const Vector<double> &b);
@@ -181,7 +183,7 @@ class TransportProblem {
       double max_entropy_deviation_domain;
 
       // CFL condition functions and data
-      void check_CFL_condition(const double &dt) const;
+      void enforce_CFL_condition(double &dt, double &CFL) const;
       double minimum_cell_diameter;
    
       // checks
@@ -192,6 +194,10 @@ class TransportProblem {
       Vector<double> max_values;
       Vector<double> interaction_integral;
       Vector<double> source_integral;
+
+      // boundary nodes
+      void get_dirichlet_nodes();
+      std::vector<unsigned int> dirichlet_nodes;
 };
 
 #include "TransportProblem.cc"

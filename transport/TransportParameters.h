@@ -33,6 +33,7 @@ class TransportParameters {
     bool lump_mass_matrix; // option to lump the mass matrix
     bool output_exact_solution; // option to output exact solution
     bool output_initial_solution; // option to output initial solution
+    double CFL_limit; // upper bound for the CFL number
 };
 
 #include "TransportParameters.cc"

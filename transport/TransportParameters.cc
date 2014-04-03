@@ -20,7 +20,8 @@ TransportParameters::TransportParameters() :
       time_step_size(0.001),
       lump_mass_matrix(false),
       output_exact_solution(false),
-      output_initial_solution(false)
+      output_initial_solution(false),
+      CFL_limit(0.5)
 {
 }
 
@@ -69,6 +70,8 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
          "Option to output exact solution");
    prm.declare_entry("Output initial solution", "false", Patterns::Bool(),
          "Option to output initial solution");
+   prm.declare_entry("CFL limit", "0.5", Patterns::Double(),
+         "Upper bound for the CFL number");
 }
 
 /** \brief get the input parameters
@@ -94,4 +97,5 @@ void TransportParameters::get_parameters(ParameterHandler &prm) {
    lump_mass_matrix = prm.get_bool("Lump mass matrix");
    output_exact_solution = prm.get_bool("Output exact solution");
    output_initial_solution = prm.get_bool("Output initial solution");
+   CFL_limit = prm.get_double("CFL limit");
 }

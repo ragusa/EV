@@ -1,10 +1,11 @@
 # problem options
-set Problem ID = 2
+set Problem ID = 1
 
 # transient options
 set Is steady state = false
-set End time = 0.95
+set End time = 0.05
 set Time step size = 0.01
+set CFL limit = 0.8
 
 # artificial viscosity options
 # 0: no artificial viscosity
