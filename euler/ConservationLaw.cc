@@ -1,7 +1,3 @@
-/** \file ConservationLaw.cc
- *  \brief Provides function definitions for the ConservationLaw class.
- */
-
 /** \brief Constructor for ConservationLaw class.
  *  \param params conservation law parameters
  */
@@ -23,7 +19,8 @@ ConservationLaw<dim>::ConservationLaw(const ConservationLawParameters<dim> &para
    initial_conditions_function(params.n_components),
    exact_solution_strings (params.n_components),
    exact_solution_function(params.n_components)
-{}
+{
+}
 
 /** \brief Destructor for ConservationLaw class.
  */
@@ -55,9 +52,6 @@ void ConservationLaw<dim>::run()
    // loop over adaptive refinement cycles
    for (unsigned int cycle = 0; cycle < conservation_law_parameters.n_cycle; ++cycle)
    {
-      std::cout << std::endl;
-      std::cout << "Cycle " << cycle+1 << " of " << conservation_law_parameters.n_cycle << ":" << std::endl;;
-
       // if in final cycle, set flag to output solution
       if (cycle == conservation_law_parameters.n_cycle-1)
          in_final_cycle = true;
@@ -68,17 +62,22 @@ void ConservationLaw<dim>::run()
       if (cycle > 0)
          refine_mesh();
 
+      // setup system; to be applied after each refinement
+      setup_system();
+
+      std::cout << std::endl;
+      std::cout << "Cycle " << cycle+1 << " of " << conservation_law_parameters.n_cycle << ":" << std::endl;;
       std::cout << "Number of active cells: ";
       std::cout << triangulation.n_active_cells();
       std::cout << std::endl;
-
-      // setup system; to be applied after each refinement
-      setup_system();
 
       // interpolate the initial conditions to the grid
       VectorTools::interpolate(dof_handler,initial_conditions_function,new_solution);
       // apply Dirichlet BC to initial solution or guess
       apply_Dirichlet_BC(0.0);
+      // distribute hanging node contraints to initial solution
+      constraints.distribute(new_solution);
+
       // set old solution to the current solution
       old_solution = new_solution;
       // output initial solution
@@ -176,7 +175,6 @@ void ConservationLaw<dim>::initialize_system()
       dirichlet_function.resize(n_boundaries);
       for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
       {
-         //dirichlet_function[boundary] = std::unique_ptr<FunctionParser<dim> >(new FunctionParser<dim>(n_components));
          dirichlet_function[boundary] = new FunctionParser<dim>(n_components);
          dirichlet_function[boundary]->initialize(FunctionParser<dim>::default_variable_names(),
                                                     dirichlet_function_strings[boundary],
@@ -381,20 +379,21 @@ void ConservationLaw<dim>::setup_system ()
    max_entropy_residual_cell           .clear();
    max_jumps_cell                      .clear();
 
-   // update cell sizes and minimum cell size
-   update_cell_sizes();
-
    // clear and distribute dofs
    dof_handler.clear();
    dof_handler.distribute_dofs(fe);
+   // get number of dofs
+   n_dofs = dof_handler.n_dofs();
+   std::cout << "Number of degrees of freedom: " << n_dofs << std::endl;
 
-   std::cout << "Number of degrees of freedom: ";
-   std::cout << dof_handler.n_dofs();
-   std::cout << std::endl;
+   // update cell sizes and minimum cell size
+   update_cell_sizes();
 
    // make constraints
    constraints.clear();
+   // hanging node constraints
    DoFTools::make_hanging_node_constraints (dof_handler, constraints);
+   // Dirichlet contraints (for t = 0)
    for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
       for (unsigned int component = 0; component < n_components; ++component)
          if (boundary_types[boundary][component] == dirichlet)
@@ -421,8 +420,8 @@ void ConservationLaw<dim>::setup_system ()
    constraints.close();
 
    // create sparsity patterns
-   CompressedSparsityPattern compressed_constrained_sparsity_pattern   (dof_handler.n_dofs() );
-   CompressedSparsityPattern compressed_unconstrained_sparsity_pattern (dof_handler.n_dofs() );
+   CompressedSparsityPattern compressed_constrained_sparsity_pattern   (n_dofs );
+   CompressedSparsityPattern compressed_unconstrained_sparsity_pattern (n_dofs );
    DoFTools::make_sparsity_pattern (dof_handler, compressed_constrained_sparsity_pattern,   constraints, false);
    DoFTools::make_sparsity_pattern (dof_handler, compressed_unconstrained_sparsity_pattern);
    constrained_sparsity_pattern  .copy_from(compressed_constrained_sparsity_pattern);
@@ -444,18 +443,18 @@ void ConservationLaw<dim>::setup_system ()
    assemble_mass_matrix();
 
    // resize vectors
-   old_solution             .reinit(dof_handler.n_dofs());
-   new_solution         .reinit(dof_handler.n_dofs());
-   exact_solution           .reinit(dof_handler.n_dofs());
-   solution_step            .reinit(dof_handler.n_dofs());
-   system_rhs               .reinit(dof_handler.n_dofs());
+   old_solution             .reinit(n_dofs);
+   new_solution             .reinit(n_dofs);
+   exact_solution           .reinit(n_dofs);
+   solution_step            .reinit(n_dofs);
+   system_rhs               .reinit(n_dofs);
    estimated_error_per_cell .reinit(triangulation.n_active_cells());
    
    // allocate memory for steady-state residual evaluations if Runge-Kutta is used
    if (conservation_law_parameters.temporal_integrator ==
       ConservationLawParameters<dim>::runge_kutta)
       for (int i = 0; i < rk.s; ++i)
-         rk.f[i].reinit(dof_handler.n_dofs());
+         rk.f[i].reinit(n_dofs);
 
    // allocate memory for viscosity maps
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
@@ -523,8 +522,6 @@ void ConservationLaw<dim>::assemble_mass_matrix()
 template <int dim>
 void ConservationLaw<dim>::lump_mass_matrix(SparseMatrix<double> &mass_matrix)
 {
-   const unsigned int n_dofs = dof_handler.n_dofs();
-
    for (unsigned int i = 0; i < n_dofs; ++i)
    {
       std::vector<double>       row_values;
@@ -1432,7 +1429,7 @@ void ConservationLaw<dim>::compute_error(const unsigned int cycle)
    // add errors to convergence table
    convergence_table.add_value("cycle", cycle);
    convergence_table.add_value("cells", triangulation.n_active_cells());
-   convergence_table.add_value("dofs", dof_handler.n_dofs());
+   convergence_table.add_value("dofs", n_dofs);
    convergence_table.add_value("L2", L2_error);
 }
 
@@ -1444,7 +1441,7 @@ void ConservationLaw<dim>::compute_error(const unsigned int cycle)
 template <int dim>
 void ConservationLaw<dim>::check_nan()
 {
-   unsigned int n = dof_handler.n_dofs();
+   unsigned int n = n_dofs;
    for (unsigned int i = 0; i < n; ++i)
       Assert(new_solution(i) == new_solution(i), ExcNumberNotFinite());
 }
@@ -1487,7 +1484,6 @@ void ConservationLaw<dim>::get_matrix_row(const SparseMatrix<double> &matrix,
 template <int dim>
 bool ConservationLaw<dim>::check_local_discrete_max_principle() const
 {
-   const unsigned int n_dofs = dof_handler.n_dofs();
    Vector<double> max_values(n_dofs); // max of neighbors for each dof
    Vector<double> min_values(n_dofs); // min of neighbors for each dof
    max_values = -1.0e15;

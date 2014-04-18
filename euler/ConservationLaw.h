@@ -153,6 +153,8 @@ class ConservationLaw
     const unsigned int   dofs_per_cell;
     /** faces per cell */
     const unsigned int   faces_per_cell;
+    /** number of DoFs in global system */
+    unsigned int         n_dofs;
     /** DoF handler */
     DoFHandler<dim>      dof_handler;
     /** constraint matrix */

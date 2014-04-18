@@ -1,6 +1,3 @@
-/** \file burgers_driver.cc
- *  \brief Solves Burger's equation.
- */
 #include <iostream>
 
 #include <deal.II/base/logstream.h>

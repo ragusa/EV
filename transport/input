@@ -1,9 +1,9 @@
 # problem options
-set Problem ID = 1
+set Problem ID = 5
 
 # transient options
 set Is steady state = false
-set End time = 0.05
+set End time = 0.50
 set Time step size = 0.01
 set CFL limit = 0.8
 
