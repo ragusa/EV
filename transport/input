@@ -1,5 +1,5 @@
 # problem options
-set Problem ID = 5
+set Problem ID = 1
 
 # transient options
 set Is steady state = false
@@ -21,11 +21,10 @@ set Jump coefficient = 1.0
 # mesh refinement options
 set Use adaptive mesh refinement = false
 set Number of refinement cycles = 1
-set Initial refinement level = 7
+set Initial refinement level = 9
 
 # finite element options
 set Finite element degree = 1
-set Lump mass matrix = true
 
 # linear solver options
 set Solver option = 1

@@ -1,6 +1,5 @@
 subsection finite element
    set degree = 1
-   set lump mass matrix = false
 end
 
 subsection quadrature
@@ -45,7 +44,7 @@ subsection temporal integration
    # options are <runge_kutta>
    set temporal integrator = runge_kutta
    # options are <erk1|erk2|erk3|erk4|sdirk22>
-   set runge kutta method = erk2
+   set runge kutta method = erk1
 end
 
 subsection nonlinear solver

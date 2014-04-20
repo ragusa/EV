@@ -73,7 +73,6 @@ class ConservationLaw
     void refine_mesh();
     void update_cell_sizes();
     void assemble_mass_matrix();
-    void lump_mass_matrix(SparseMatrix<double> &mass_matrix);
     void solve_runge_kutta();
     void compute_error(const unsigned int cycle);
 
@@ -81,9 +80,7 @@ class ConservationLaw
     double compute_dt_from_cfl_condition();
     double compute_cfl_number(const double &dt) const;
 
-    void mass_matrix_solve (Vector<double> &x);
-    void linear_solve (const typename ConservationLawParameters<dim>::LinearSolverType     &linear_solver,
-                       const SparseMatrix<double> &A,
+    void linear_solve (const SparseMatrix<double> &A,
                        const Vector<double>       &b,
                              Vector<double>       &x);
 
@@ -122,7 +119,10 @@ class ConservationLaw
 
     // checking functions
     void check_nan();
-    bool check_local_discrete_max_principle() const;
+    bool check_local_discrete_max_principle(const unsigned int &n) const;
+    void compute_max_principle_quantities();
+    Vector<double> min_values;
+    Vector<double> max_values;
 
     // utility functions
     void get_matrix_row(const SparseMatrix<double> &matrix,
@@ -190,8 +190,10 @@ class ConservationLaw
     SparsityPattern      constrained_sparsity_pattern;
     /* unconstrained sparsity pattern */
     SparsityPattern      unconstrained_sparsity_pattern;
-    /* mass matrix */
-    SparseMatrix<double> mass_matrix;
+    /* consistent mass matrix */
+    SparseMatrix<double> consistent_mass_matrix;
+    /* lumped mass matrix */
+    SparseMatrix<double> lumped_mass_matrix;
     /* system matrix; Jacobian matrix */
     SparseMatrix<double> system_matrix;
     /** Matrix for the viscous bilinear forms, to be used in computing viscosity.
@@ -280,6 +282,10 @@ class ConservationLaw
        std::vector<Vector<double> > f;
     };
     RungeKuttaParameters rk;
+
+    // boundary nodes
+    void get_dirichlet_nodes();
+    std::vector<unsigned int> dirichlet_nodes;
 };
 
 #include "ConservationLaw.cc"

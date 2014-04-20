@@ -1021,7 +1021,7 @@ void TransportProblem<dim>::run()
             t += dt;
             std::cout << t << ", CFL = " << CFL << std::endl;
             // determine if end of transient has been reached (within machine precision)
-            in_transient = t < t_end - machine_precision;
+            in_transient = t < (t_end - machine_precision);
 
             // compute inviscid system matrix and steady-state right hand side (ss_rhs)
             // This inviscid system matrix will contain inviscid terms and Laplacian viscous terms if there are any.
@@ -1436,8 +1436,10 @@ bool TransportProblem<dim>::check_local_discrete_max_principle(const unsigned in
 template <int dim>
 void TransportProblem<dim>::compute_max_principle_quantities(const double &dt)
 {
+/*
    interaction_integral = 0;
    source_integral = 0;
+*/
 
    // initialize min and max values
    for (unsigned int i = 0; i < n_dofs; ++i)
@@ -1448,6 +1450,7 @@ void TransportProblem<dim>::compute_max_principle_quantities(const double &dt)
 
    std::vector<unsigned int> local_dof_indices(dofs_per_cell);
 
+/*
    const TotalCrossSection<dim> total_cross_section(cross_section_option,cross_section_value);
    const TotalSource<dim>       total_source       (source_option,source_value);
    std::vector<double> total_cross_section_values(n_q_points_cell);
@@ -1458,11 +1461,13 @@ void TransportProblem<dim>::compute_max_principle_quantities(const double &dt)
    // FE values, for assembly terms
    FEValues<dim> fe_values(fe, cell_quadrature,
       update_values | update_quadrature_points | update_JxW_values);
+*/
 
    // loop over cells
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
    for (; cell != endc; ++cell) {
+/*
       // initialize local matrix and rhs to zero
       cell_reaction_term = 0;
       cell_source_term   = 0;
@@ -1476,10 +1481,12 @@ void TransportProblem<dim>::compute_max_principle_quantities(const double &dt)
       // get total source for all quadrature points
       total_source.value_list(fe_values.get_quadrature_points(),
                               total_source_values);
+*/
 
       // get local dof indices
       cell->get_dof_indices(local_dof_indices);
 
+/*
       for (unsigned int i = 0; i < dofs_per_cell; ++i)
       {
          for (unsigned int q = 0; q < n_q_points_cell; ++q)
@@ -1490,6 +1497,7 @@ void TransportProblem<dim>::compute_max_principle_quantities(const double &dt)
          interaction_integral(local_dof_indices[i]) += cell_reaction_term(i);
          source_integral(local_dof_indices[i])      += cell_source_term(i);
       }
+*/
 
       // find min and max values on cell
       double max_cell = old_solution(local_dof_indices[0]); // initialized to arbitrary value on cell
@@ -1511,10 +1519,32 @@ void TransportProblem<dim>::compute_max_principle_quantities(const double &dt)
    // compute the upper and lower bounds for the maximum principle
    for (unsigned int i = 0; i < n_dofs; ++i)
    {
+      // compute sum of A_ij over row i
+      // get nonzero entries of row i of A
+      std::vector<double>       row_values;
+      std::vector<unsigned int> row_indices;
+      unsigned int              n_col;
+      get_matrix_row(system_matrix,
+                     i,
+                     row_values,
+                     row_indices,
+                     n_col);
+      // add nonzero entries to get the row sum
+      double row_sum = 0.0;
+      for (unsigned int k = 0; k < n_col; ++k)
+         row_sum += row_values[k];
+      
+      // compute the max and min values for the maximum principle
+      max_values(i) = max_values(i)*(1.0 - dt/lumped_mass_matrix(i,i)*row_sum)
+         + dt/lumped_mass_matrix(i,i)*ss_rhs(i);
+      min_values(i) = min_values(i)*(1.0 - dt/lumped_mass_matrix(i,i)*row_sum)
+         + dt/lumped_mass_matrix(i,i)*ss_rhs(i);
+/*
       max_values(i) = max_values(i)*(1.0 - dt/lumped_mass_matrix(i,i)*interaction_integral(i))
          + dt/lumped_mass_matrix(i,i)*source_integral(i);
       min_values(i) = min_values(i)*(1.0 - dt/lumped_mass_matrix(i,i)*interaction_integral(i))
          + dt/lumped_mass_matrix(i,i)*source_integral(i);
+*/
    }
 }
 

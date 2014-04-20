@@ -386,6 +386,9 @@ void ConservationLaw<dim>::setup_system ()
    n_dofs = dof_handler.n_dofs();
    std::cout << "Number of degrees of freedom: " << n_dofs << std::endl;
 
+   // determine Dirichlet nodes
+   get_dirichlet_nodes();
+
    // update cell sizes and minimum cell size
    update_cell_sizes();
 
@@ -428,8 +431,9 @@ void ConservationLaw<dim>::setup_system ()
    unconstrained_sparsity_pattern.copy_from(compressed_unconstrained_sparsity_pattern);
 
    // reinitialize matrices with sparsity pattern
-   mass_matrix  .reinit(constrained_sparsity_pattern);
-   system_matrix.reinit(constrained_sparsity_pattern);
+   consistent_mass_matrix.reinit(constrained_sparsity_pattern);
+   lumped_mass_matrix    .reinit(constrained_sparsity_pattern);
+   system_matrix         .reinit(constrained_sparsity_pattern);
 
    // if using maximum-principle preserving definition of first-order viscosity,
    // then compute bilinear forms and viscous fluxes
@@ -448,6 +452,8 @@ void ConservationLaw<dim>::setup_system ()
    exact_solution           .reinit(n_dofs);
    solution_step            .reinit(n_dofs);
    system_rhs               .reinit(n_dofs);
+   max_values               .reinit(n_dofs);
+   min_values               .reinit(n_dofs);
    estimated_error_per_cell .reinit(triangulation.n_active_cells());
    
    // allocate memory for steady-state residual evaluations if Runge-Kutta is used
@@ -494,56 +500,57 @@ void ConservationLaw<dim>::update_cell_sizes()
 template <int dim>
 void ConservationLaw<dim>::assemble_mass_matrix()
 {
-   // use deal.II's matrix creator to create consistent mass matrix
+   // assemble lumped mass matrix
+   //----------------------------
+   FEValues<dim> fe_values (fe, cell_quadrature, update_values | update_JxW_values);
+
+   std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
+   FullMatrix<double> local_mass (dofs_per_cell, dofs_per_cell);
+
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                                  endc = dof_handler.end();
+   for (; cell != endc; ++cell)
+   {
+      fe_values.reinit(cell);
+      cell->get_dof_indices(local_dof_indices);
+
+      local_mass = 0.0;
+
+      // compute local contribution
+      for (unsigned int q = 0; q < n_q_points_cell; ++q)
+         for (unsigned int i = 0; i < dofs_per_cell; ++i)
+            for (unsigned int j = 0; j < dofs_per_cell; ++j)
+            {
+               local_mass(i,i) +=  fe_values.shape_value(i,q)
+                                  *fe_values.shape_value(j,q)
+                                  *fe_values.JxW(q);
+            }
+
+      // add to global mass matrix with contraints
+      constraints.distribute_local_to_global (local_mass, local_dof_indices, lumped_mass_matrix);
+   }
+
+   // assemble consistent mass matrix
+   //----------------------------
    Function<dim> *dummy_function = 0;
    MatrixTools::create_mass_matrix(dof_handler,
                                    cell_quadrature,
-                                   mass_matrix,
+                                   consistent_mass_matrix,
                                    dummy_function,
                                    constraints);
-
-   // if the mass matrix is chosen to be lumped, then lump it
-   if (conservation_law_parameters.lump_mass_matrix)
-      lump_mass_matrix(mass_matrix);
 
    // output mass matrix
    if (conservation_law_parameters.output_mass_matrix)
    {
-      std::ofstream mass_matrix_out ("output/mass_matrix.txt");
-      mass_matrix.print_formatted(mass_matrix_out, 10, true, 0, "0", 1);
-      mass_matrix_out.close();
-   }
-}
+      // output lumped mass matrix
+      std::ofstream lumped_mass_matrix_out ("output/lumped_mass_matrix.txt");
+      lumped_mass_matrix.print_formatted(lumped_mass_matrix_out, 10, true, 0, "0", 1);
+      lumped_mass_matrix_out.close();
 
-/** \brief Lump the mass matrix. This is performed algebraically by looping
- *         over the rows and adding the off-diagonal values to the diagonal.
- *  \param [in] mass_matrix the already-computed consistent mass matrix
- */
-template <int dim>
-void ConservationLaw<dim>::lump_mass_matrix(SparseMatrix<double> &mass_matrix)
-{
-   for (unsigned int i = 0; i < n_dofs; ++i)
-   {
-      std::vector<double>       row_values;
-      std::vector<unsigned int> row_indices;
-      unsigned int n_col;
-
-      // get matrix values in a row
-      get_matrix_row(mass_matrix,
-                     i,
-                     row_values,
-                     row_indices,
-                     n_col);
-
-      // compute sum of all values in row and zero out row
-      double row_sum = 0.0; // sum of all values in row
-      for (unsigned int j = 0; j < n_col; ++j)
-      {
-         row_sum += mass_matrix(i,j);
-         mass_matrix.set(i,j,0.0);
-      }
-      // add row sum to diagonal
-      mass_matrix.set(i,i,row_sum);
+      // output consistent mass matrix
+      std::ofstream consistent_mass_matrix_out ("output/consistent_mass_matrix.txt");
+      consistent_mass_matrix.print_formatted(consistent_mass_matrix_out, 10, true, 0, "0", 1);
+      consistent_mass_matrix_out.close();
    }
 }
 
@@ -710,8 +717,9 @@ void ConservationLaw<dim>::solve_runge_kutta()
    unsigned int n = 1; // time step index
    unsigned int next_time_step_output = conservation_law_parameters.output_period;
    double t_end = conservation_law_parameters.final_time;
-   bool final_time_not_reached = true;
-   while (final_time_not_reached)
+   bool in_transient = true;
+   bool max_principle_satisfied = true;
+   while (in_transient)
    {
       // update max speed for use in CFL computation
       update_flux_speeds();
@@ -734,7 +742,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
       if ((old_time+dt) >= t_end)
       {
          dt = t_end - old_time;
-         final_time_not_reached = false;
+         in_transient = false;
       }
       // compute CFL number
       double cfl = compute_cfl_number(dt);
@@ -761,13 +769,17 @@ void ConservationLaw<dim>::solve_runge_kutta()
          if (rk.is_explicit)
          {
             system_rhs = 0.0;
-            mass_matrix.vmult(system_rhs, old_solution);
+            lumped_mass_matrix.vmult(system_rhs, old_solution);
             for (int j = 0; j < i; ++j)
                system_rhs.add(dt * rk.a[i][j] , rk.f[j]);
-            mass_matrix_solve(new_solution);
+            linear_solve(lumped_mass_matrix, system_rhs, new_solution);
             // ordinarily, Dirichlet BC need not be reapplied, but in this case, the Dirichlet BC can be time-dependent
             apply_Dirichlet_BC(current_time);
+            // distribute hanging node constraints
+            constraints.distribute(new_solution);
          } else {
+            Assert(false,ExcNotImplemented());
+/*
             // Newton solve
             new_solution = old_solution;
             // compute initial negative of transient residual: -F(y)
@@ -786,10 +798,10 @@ void ConservationLaw<dim>::solve_runge_kutta()
                compute_ss_jacobian();
                // compute transient Jacobian and store in system_matrix
                system_matrix *= rk.a[i][i]*dt;
-               system_matrix.add(-1.0,mass_matrix);
+               system_matrix.add(-1.0,lumped_mass_matrix);
                //compute_tr_Jacobian();
                // Solve for Newton step
-               linear_solve(conservation_law_parameters.linear_solver,system_matrix,system_rhs,solution_step);
+               linear_solve(system_matrix, system_rhs, solution_step);
                // update solution
                new_solution += solution_step;
                // ordinarily, Dirichlet BC need not be reapplied, but in this case, the Dirichlet BC can be time-dependent
@@ -814,6 +826,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
                   << " Program terminated." << std::endl;
                std::exit(1);
             }
+*/
          }
 
          // residual from solution of previous step is reused in first stage (unless this is the first time step)
@@ -821,11 +834,17 @@ void ConservationLaw<dim>::solve_runge_kutta()
             compute_ss_residual(rk.f[i]);
          }
       }
+
+
       /** Now we compute the solution using the computed \f$\mathbf{f}_i\f$:
        *  \f[
        *    \mathbf{M}\mathbf{y}_{n+1}=\mathbf{M}\mathbf{y}_n + h\sum\limits^s_{i=1}b_i \mathbf{f}_i
        *  \f]
        */    
+      // if the next time step solution was already computed in the last stage, then
+      // there is no need to perform the linear combination of f's. Plus, since f[0]
+      // is always computed from the previous time step solution, re-use the end f
+      // as f[0] for the next time step
       if (rk.solution_computed_in_last_stage)
       {
          // end of step residual can be used as beginning of step residual for next step
@@ -833,16 +852,23 @@ void ConservationLaw<dim>::solve_runge_kutta()
       }
       else
       {
+         // solve M*y_new = F, where F = M*y_old + dt*sum(b[i]*f[i]);
          system_rhs = 0.0;
-         mass_matrix.vmult(system_rhs, old_solution);
+         lumped_mass_matrix.vmult(system_rhs, old_solution);
          for (int i = 0; i < rk.s; ++i)
             system_rhs.add(dt * rk.b[i], rk.f[i]);
-         mass_matrix_solve(new_solution);
+         linear_solve(lumped_mass_matrix, system_rhs, new_solution);
+         // apply Dirichlet constraints
          apply_Dirichlet_BC(current_time);
+         // distribute hanging node constraints
+         constraints.distribute(new_solution);
 
          // end of step residual can be used as beginning of step residual for next step
          compute_ss_residual(rk.f[0]);
       }
+
+      // compute max principle min and max values
+      compute_max_principle_quantities();
    
       // increment time
       old_time += dt;
@@ -865,18 +891,28 @@ void ConservationLaw<dim>::solve_runge_kutta()
          }
       }
       else
-         if (!(final_time_not_reached)) // if final time has been reached
+         if (!(in_transient)) // if final time has been reached
             if (in_final_cycle)
                // output solution
                output_solution(current_time);
 
-      check_local_discrete_max_principle();
+      // check that there are no NaNs in solution
       check_nan();
+
+      // check that local discrete maximum principle is satisfied at all time steps
+      bool max_principle_satisfied_this_time_step = check_local_discrete_max_principle(n);
+      max_principle_satisfied = max_principle_satisfied and max_principle_satisfied_this_time_step;
 
       // compute error for adaptive mesh refinement
       compute_error_for_refinement();
 
    }// end of time loop
+
+   if (max_principle_satisfied)
+      std::cout << "Local discrete maximum principle was satisfied at all time steps" << std::endl;
+   else
+      std::cout << "Local discrete maximum principle was NOT satisfied at all time steps" << std::endl;
+
 }
 
 /** \brief Computes time step size using the CFL condition
@@ -959,35 +995,17 @@ void ConservationLaw<dim>::add_maximum_principle_viscosity_bilinear_form(Vector<
    } // end cell loop
 }
 
-/** \brief Inverts the mass matrix implicitly.
- *
- *         This function computes the product \f$M^{-1}b\f$ of the inverse of the
- *         mass matrix and a vector by solving the linear system \f$M x = b\f$.
- *         The method of inverting the mass matrix is determined by user input.
- *  \param x the product \f$M^{-1}b\f$
- */
-template <int dim>
-void ConservationLaw<dim>::mass_matrix_solve(Vector<double> &x)
-{
-   linear_solve(conservation_law_parameters.mass_matrix_linear_solver,
-                mass_matrix,
-                system_rhs,
-                x);
-}
-
 /** \brief Solves the linear system \f$A x = b\f$.
- *  \param linear_solver linear solution technique to be used to solve the system
  *  \param A the system matrix
  *  \param b the right-hand side vector
  *  \param x the solution vector
  */
 template <int dim>
-void ConservationLaw<dim>::linear_solve (const typename ConservationLawParameters<dim>::LinearSolverType &linear_solver,
-                                         const SparseMatrix<double> &A,
+void ConservationLaw<dim>::linear_solve (const SparseMatrix<double> &A,
                                          const Vector<double>       &b,
                                                Vector<double>       &x)
 {
-   switch (linear_solver)
+   switch (conservation_law_parameters.linear_solver)
    {
       case ConservationLawParameters<dim>::direct:
       {
@@ -1401,7 +1419,7 @@ void ConservationLaw<dim>::compute_tr_residual(unsigned int i, double dt)
    solution_step = new_solution;
    solution_step.add(-1.0,old_solution);
    // store M*(y_current - y_old) in system_rhs
-   mass_matrix.vmult(system_rhs,solution_step);
+   lumped_mass_matrix.vmult(system_rhs,solution_step);
    // subtract sum{a_ij*dt*f_j}_j=1..i
    for (unsigned int j = 0; j < i; ++j)
       system_rhs.add(-rk.a[i][j]*dt, rk.f[j]);
@@ -1479,15 +1497,47 @@ void ConservationLaw<dim>::get_matrix_row(const SparseMatrix<double> &matrix,
 }
 
 /** \brief check that the local discrete max principle is satisfied.
- *  \return boolean of if local discrete max principle is satisfied
+ *  \param [in] n time step index, used for reporting violations
+ */
+template<int dim>
+bool ConservationLaw<dim>::check_local_discrete_max_principle(const unsigned int &n) const
+{
+   // check that each dof value is bounded by its neighbors
+   bool local_max_principle_satisfied = true;
+   for (unsigned int i = 0; i < n_dofs; ++i) {
+      // check if dof is a Dirichlet node or not - if it is, don't check max principle
+      if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) == dirichlet_nodes.end())
+      {
+         double value_i = new_solution(i);
+         if (value_i < min_values(i)) {
+            local_max_principle_satisfied = false;
+            std::cout << "Max principle violated at time step " << n
+               << " with dof " << i << ": "
+               << value_i << " < " << min_values(i) << std::endl;
+         }
+         if (value_i > max_values(i)) {
+            local_max_principle_satisfied = false;
+            std::cout << "Max principle violated at time step " << n
+               << " with dof " << i << ": "
+               << value_i << " > " << max_values(i) << std::endl;
+         }
+      }
+   }
+   
+   return local_max_principle_satisfied;
+}
+
+/** \brief Computes min and max quantities for max principle
  */
 template <int dim>
-bool ConservationLaw<dim>::check_local_discrete_max_principle() const
+void ConservationLaw<dim>::compute_max_principle_quantities()
 {
-   Vector<double> max_values(n_dofs); // max of neighbors for each dof
-   Vector<double> min_values(n_dofs); // min of neighbors for each dof
-   max_values = -1.0e15;
-   max_values =  1.0e15;
+   // initialize min and max values
+   for (unsigned int i = 0; i < n_dofs; ++i)
+   {
+      max_values(i) = old_solution(i);
+      min_values(i) = old_solution(i);
+   }
 
    std::vector<unsigned int> local_dof_indices(dofs_per_cell);
 
@@ -1495,9 +1545,6 @@ bool ConservationLaw<dim>::check_local_discrete_max_principle() const
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
    for (; cell != endc; ++cell) {
-      // get local dof indices
-      cell->get_dof_indices(local_dof_indices);
-
       // find min and max values on cell
       double max_cell = old_solution(local_dof_indices[0]); // initialized to arbitrary value on cell
       double min_cell = old_solution(local_dof_indices[0]); // initialized to arbitrary value on cell
@@ -1514,16 +1561,39 @@ bool ConservationLaw<dim>::check_local_discrete_max_principle() const
          min_values(i) = std::min(min_values(i), min_cell);
       }
    }
+}
 
-   // check that each dof value is bounded by its neighbors
-   bool local_max_principle_satisfied = true;
-   for (unsigned int i = 0; i < n_dofs; ++i) {
-      double value_i = new_solution(i);
-      if (value_i < min_values(i))
-         local_max_principle_satisfied = false;
-      if (value_i > max_values(i))
-         local_max_principle_satisfied = false;
-   }
-   
-   return local_max_principle_satisfied;
+/** \brief Gets a list of dofs subject to Dirichlet boundary conditions.
+ *         This is necessary because max principle checks are not applied to these nodes.
+ */
+template <int dim>
+void ConservationLaw<dim>::get_dirichlet_nodes()
+{
+   // get map of Dirichlet dof indices to Dirichlet values
+   std::map<unsigned int, double> boundary_values;
+
+   // clear Dirichlet nodes vector
+   dirichlet_nodes.clear();
+
+   // loop over boundary IDs
+   for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
+      // loop over components
+      for (unsigned int component = 0; component < n_components; ++component)
+         if (boundary_types[boundary][component] == dirichlet)
+         {
+            // create mask to prevent function from being applied to other components
+            std::vector<bool> component_mask(n_components, false);
+            component_mask[component] = true;
+
+            // get boundary values map using interpolate_boundary_values function
+            VectorTools::interpolate_boundary_values (dof_handler,
+                                                      boundary,
+                                                      ZeroFunction<dim>(),
+                                                      boundary_values,
+                                                      component_mask);
+
+            // extract dof indices from map
+            for (std::map<unsigned int, double>::iterator it = boundary_values.begin(); it != boundary_values.end(); ++it)
+               dirichlet_nodes.push_back(it->first);
+         }
 }
