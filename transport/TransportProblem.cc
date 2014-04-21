@@ -1406,6 +1406,12 @@ void TransportProblem<dim>::check_solution_nonnegative() const
 template<int dim>
 bool TransportProblem<dim>::check_local_discrete_max_principle(const unsigned int &n) const
 {
+   // machine precision for floating point comparisons
+   const double machine_tolerance = 1.0e-15;
+
+   // now set new precision
+   std::cout.precision(15);
+
    // check that each dof value is bounded by its neighbors
    bool local_max_principle_satisfied = true;
    for (unsigned int i = 0; i < n_dofs; ++i) {
@@ -1413,20 +1419,23 @@ bool TransportProblem<dim>::check_local_discrete_max_principle(const unsigned in
       if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) == dirichlet_nodes.end())
       {
          double value_i = new_solution(i);
-         if (value_i < min_values(i)) {
+         if (value_i < min_values(i) - machine_tolerance) {
             local_max_principle_satisfied = false;
             std::cout << "Max principle violated at time step " << n
-               << " with dof " << i << ": "
+               << " with dof " << i << ": " << std::scientific
                << value_i << " < " << min_values(i) << std::endl;
          }
-         if (value_i > max_values(i)) {
+         if (value_i > max_values(i) + machine_tolerance) {
             local_max_principle_satisfied = false;
             std::cout << "Max principle violated at time step " << n
-               << " with dof " << i << ": "
+               << " with dof " << i << ": " << std::scientific
                << value_i << " > " << max_values(i) << std::endl;
          }
       }
    }
+
+   // restore default precision and format
+   std::cout.unsetf(std::ios_base::floatfield);
    
    return local_max_principle_satisfied;
 }
