@@ -8,14 +8,18 @@ file_list = "initial_solution\
              solution_old_first_order\
              solution_old_entropy\
              solution_low_order\
-             solution_high_order"
+             solution_high_order\
+             min_values\
+             max_values"
 title_list = "Initial\
               Exact\
               No-Viscosity\
               Old-First-Order\
               Old-Entropy\
               Low-Order\
-              High-Order"
+              High-Order\
+              Min\
+              Max"
 
 # define is_missing(x) function for determining if an input file exists
 is_missing_aux(x)=system("ismissing.sh ".x)

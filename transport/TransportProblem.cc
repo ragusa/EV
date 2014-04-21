@@ -992,7 +992,7 @@ void TransportProblem<dim>::run()
             (parameters.output_initial_solution))
             output_solution(new_solution,
                             dof_handler,
-                            "initial_",
+                            "initial_solution",
                             false);
 
          // set old solution to the current solution
@@ -1185,7 +1185,7 @@ void TransportProblem<dim>::output_results()
    // output solution
    output_solution(new_solution,
                    dof_handler,
-                   "",
+                   "solution",
                    true);
 
    // write exact solution output file
@@ -1213,7 +1213,7 @@ void TransportProblem<dim>::output_results()
       // output exact solution to file
       output_solution(exact_solution_values,
                       fine_dof_handler,
-                      "exact_",
+                      "exact_solution",
                       false);
    }
 
@@ -1270,6 +1270,13 @@ void TransportProblem<dim>::output_results()
          visc_out.write_vtk(viscosity_outstream);
    }
 
+   // output min and max values for maximum principle check
+   if ((parameters.viscosity_option == 3) or (parameters.viscosity_option == 4))
+   {
+      output_solution(min_values,dof_handler,"min_values",false);
+      output_solution(max_values,dof_handler,"max_values",false);
+   }
+
    // print convergence table
    //------------------------
    if (has_exact_solution) {
@@ -1286,13 +1293,13 @@ void TransportProblem<dim>::output_results()
 /** \brief Outputs a solution to a file.
  *  \param [in] solution a vector of solution values.
  *  \param [in] dof_handler the dof handler associated with the solution values.
- *  \param [in] prefix_string string to be prefixed into the output filename.
+ *  \param [in] output_string string for the output filename.
  *  \param [in] append_viscosity the option to include a string for viscosity type in output filename
  */
 template<int dim>
 void TransportProblem<dim>::output_solution(const Vector<double>  &solution,
                                             const DoFHandler<dim> &dof_handler,
-                                            const std::string     &prefix_string,
+                                            const std::string     &output_string,
                                             const bool            &append_viscosity) const
 {
    // create DataOut object for solution
@@ -1336,7 +1343,7 @@ void TransportProblem<dim>::output_solution(const Vector<double>  &solution,
    else          filename_extension = ".vtk";
 
    std::stringstream filename_ss;
-   filename_ss << "output/" << prefix_string << "solution" << viscosity_string
+   filename_ss << "output/" << output_string << viscosity_string
       << "_" << parameters.problem_id << filename_extension;
    std::string filename = filename_ss.str();
    char *filename_char = (char*)filename.c_str();
