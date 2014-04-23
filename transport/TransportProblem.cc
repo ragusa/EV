@@ -1061,7 +1061,7 @@ void TransportProblem<dim>::run()
             constraints.distribute(new_solution);
 
             // compute max principle min and max values
-            compute_max_principle_quantities(dt);
+            compute_max_principle_bounds(dt);
 
             if (parameters.viscosity_option == 4) // high-order max-principle preserving viscosity
             {
@@ -1077,6 +1077,7 @@ void TransportProblem<dim>::run()
                constraints.distribute(new_solution);
             }
 
+            debug_max_principle(dt);
             // check that local discrete maximum principle is satisfied at all time steps
             bool max_principle_satisfied_this_time_step = check_local_discrete_max_principle(n);
             max_principle_satisfied = max_principle_satisfied and max_principle_satisfied_this_time_step;
@@ -1107,68 +1108,35 @@ void TransportProblem<dim>::run()
 template<int dim>
 void TransportProblem<dim>::solve_steady_state()
 {
-   Assert(parameters.viscosity_option != 4,ExcNotImplemented());
-   // solve system. if using entropy viscosity, begin nonlinear iteration, else
-   // just solve linear system
-   nonlinear_iteration = 0;
-   if (is_linear) {
-      // compute inviscid system matrix and steady-state right hand side (ss_rhs)
-      // This inviscid system matrix will contain inviscid terms and Laplacian viscous terms if there are any.
-      assemble_system(1.0e15);
-      // add inviscid component to total system matrix (A)
-      system_matrix.copy_from(inviscid_system_matrix);
-      // add viscous bilinear form for maximum-principle preserving viscosity
-      bool using_max_principle_viscosity = (parameters.viscosity_option == 3) or (parameters.viscosity_option == 4);
-      if (using_max_principle_viscosity) {
-         // compute max-principle-preserving viscosity (both low-order and high-order)
-         compute_max_principle_viscosity();
-         // add viscous component to total system matrix (A)
-         add_viscous_matrix(low_order_viscosity);
-      }
-      // enforce Dirichlet BC on total system matrix
-      apply_Dirichlet_BC(system_matrix, new_solution, ss_rhs);
-      // solve the linear system: system_matrix*new_solution = ss_rhs
-      solve_linear_system(system_matrix, ss_rhs);
-      // distribute constraints
-      constraints.distribute(new_solution);
-   } else {
-      bool converged = false; // converged nonlinear iteration
-      for (unsigned int iter = 0; iter < parameters.max_nonlinear_iterations; ++iter) {
-         std::cout << "   Nonlinear iteration " << iter;
-         if (iter == 0) std::cout << std::endl;
-         assemble_system(1.0e15);
-         // enforce Dirichlet BC on total system matrix
-         apply_Dirichlet_BC(system_matrix, new_solution, system_rhs);
-         // solve linear system
-         solve_linear_system(system_matrix, system_rhs);
-         // distribute constraints
-         constraints.distribute(new_solution);
-         // if not the first iteration, evaluate the convergence criteria
-         if (nonlinear_iteration != 0) {
-            // evaluate the difference between the current and previous solution iterate
-            double old_norm = old_solution.l2_norm();
-            old_solution -= new_solution;
-            double difference_norm = old_solution.l2_norm();
-            double relative_difference = difference_norm / old_norm;
-            std::cout << ": Error: " << relative_difference << std::endl;
-            if (relative_difference < parameters.relative_difference_tolerance) {
-               converged = true;
-               break;
-            }
-         }
-         // update the old solution and iteration number
-         old_solution = new_solution;
-         nonlinear_iteration++;
-      }
-      // report if the solution did not converge
-      if (!converged) {
-         std::cout << "The solution did not converge in " << parameters.max_nonlinear_iterations << " iterations";
-         std::cout << std::endl;
-      }
+   // compute inviscid system matrix and steady-state right hand side (ss_rhs)
+   // This inviscid system matrix will contain inviscid terms and Laplacian viscous terms if there are any.
+   assemble_system(1.0e15);
+   // add inviscid component to total system matrix (A)
+   system_matrix.copy_from(inviscid_system_matrix);
+   // add viscous bilinear form for maximum-principle preserving viscosity
+   bool using_max_principle_viscosity = (parameters.viscosity_option == 3) or (parameters.viscosity_option == 4);
+   if (using_max_principle_viscosity) {
+      // compute max-principle-preserving viscosity (both low-order and high-order)
+      compute_max_principle_viscosity();
+      // add viscous component to total system matrix (A)
+      add_viscous_matrix(low_order_viscosity);
    }
+   // enforce Dirichlet BC on total system matrix
+   apply_Dirichlet_BC(system_matrix, new_solution, ss_rhs);
+   // solve the linear system: system_matrix*new_solution = ss_rhs
+   solve_linear_system(system_matrix, ss_rhs);
+   // distribute constraints
+   constraints.distribute(new_solution);
 
-   // check that solution is non-negative
-   check_solution_nonnegative();
+   // compute bounds for maximum principle check
+   compute_steady_state_max_principle_bounds();
+   // check that solution satisfies maximum principle
+   bool satisfied_max_principle = check_local_discrete_max_principle(0);
+   // report if max principle was satisfied or not
+   if (satisfied_max_principle)
+      std::cout << "The local discrete maximum principle was satisfied." << std::endl;
+   else
+      std::cout << "The local discrete maximum principle was NOT satisfied." << std::endl;
 }
 
 /** \brief Output grid, solution, and viscosity to output file and print
@@ -1447,16 +1415,64 @@ bool TransportProblem<dim>::check_local_discrete_max_principle(const unsigned in
    return local_max_principle_satisfied;
 }
 
+/** \brief Debugging function used for determining why the maximum
+ *         principle is failing; examines the conditions that are
+ *         required to be met for the principle to be satisfied.
+ */
+template <int dim>
+void TransportProblem<dim>::debug_max_principle(const double &dt)
+{
+   for (unsigned int i = 0; i < n_dofs; ++i)
+   {
+      // get nonzero entries of row i of A
+      std::vector<double>       row_values;
+      std::vector<unsigned int> row_indices;
+      unsigned int              n_col;
+      get_matrix_row(system_matrix,
+                     i,
+                     row_values,
+                     row_indices,
+                     n_col);
+
+      // check that system matrix diagonal elements are non-negative
+      if (system_matrix(i,i) < 0.0)
+         std::cout << "diagonal element " << i << " is negative" << std::endl;
+      
+      // loop over nonzero entries in row i to compute off-diagonal sum
+      // for diagonal dominance check and also check that each off-diagonal
+      // element is non-positive
+      double off_diagonal_sum = 0.0;
+      for (unsigned int k = 0; k < n_col; ++k)
+      {
+         unsigned int j = row_indices[k];
+         double Aij = row_values[k];
+
+         if (j != i)
+         {
+            // add to off-diagonal sum
+            off_diagonal_sum += std::abs(Aij);
+            // check that system matrix off-diagonal elements are non-positive
+            if (Aij > 0.0)
+               std::cout << "off-diagonal element (" << i << "," << j << ") is positive" << std::endl;
+         }
+      }
+
+      // check that system matrix is diagonally dominant
+      if (system_matrix(i,i) < off_diagonal_sum)
+         std::cout << "row " << i << " is not diagonally dominant" << std::endl;
+        
+      // check that CFL condition is satisfied
+      double cfl = dt/lumped_mass_matrix(i,i)*system_matrix(i,i);
+      if (cfl > 1.0)
+         std::cout << "row " << i << " does not satisfy CFL condition" << std::endl;
+   }
+}
+
 /** \brief Computes min and max quantities for max principle
  */
 template <int dim>
-void TransportProblem<dim>::compute_max_principle_quantities(const double &dt)
+void TransportProblem<dim>::compute_max_principle_bounds(const double &dt)
 {
-/*
-   interaction_integral = 0;
-   source_integral = 0;
-*/
-
    // initialize min and max values
    for (unsigned int i = 0; i < n_dofs; ++i)
    {
@@ -1466,54 +1482,12 @@ void TransportProblem<dim>::compute_max_principle_quantities(const double &dt)
 
    std::vector<unsigned int> local_dof_indices(dofs_per_cell);
 
-/*
-   const TotalCrossSection<dim> total_cross_section(cross_section_option,cross_section_value);
-   const TotalSource<dim>       total_source       (source_option,source_value);
-   std::vector<double> total_cross_section_values(n_q_points_cell);
-   std::vector<double> total_source_values       (n_q_points_cell);
-   Vector<double> cell_reaction_term(dofs_per_cell);
-   Vector<double> cell_source_term  (dofs_per_cell);
-
-   // FE values, for assembly terms
-   FEValues<dim> fe_values(fe, cell_quadrature,
-      update_values | update_quadrature_points | update_JxW_values);
-*/
-
    // loop over cells
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
    for (; cell != endc; ++cell) {
-/*
-      // initialize local matrix and rhs to zero
-      cell_reaction_term = 0;
-      cell_source_term   = 0;
-
-      // reinitialize FE values
-      fe_values.reinit(cell);
-
-      // get total cross section for all quadrature points
-      total_cross_section.value_list(fe_values.get_quadrature_points(),
-                                     total_cross_section_values);
-      // get total source for all quadrature points
-      total_source.value_list(fe_values.get_quadrature_points(),
-                              total_source_values);
-*/
-
       // get local dof indices
       cell->get_dof_indices(local_dof_indices);
-
-/*
-      for (unsigned int i = 0; i < dofs_per_cell; ++i)
-      {
-         for (unsigned int q = 0; q < n_q_points_cell; ++q)
-         {
-            cell_reaction_term(i) += fe_values[flux].value(i, q) * total_cross_section_values[q] * fe_values.JxW(q);
-            cell_source_term(i) += fe_values[flux].value(i, q) * total_source_values[q] * fe_values.JxW(q);
-         }
-         interaction_integral(local_dof_indices[i]) += cell_reaction_term(i);
-         source_integral(local_dof_indices[i])      += cell_source_term(i);
-      }
-*/
 
       // find min and max values on cell
       double max_cell = old_solution(local_dof_indices[0]); // initialized to arbitrary value on cell
@@ -1555,12 +1529,70 @@ void TransportProblem<dim>::compute_max_principle_quantities(const double &dt)
          + dt/lumped_mass_matrix(i,i)*ss_rhs(i);
       min_values(i) = min_values(i)*(1.0 - dt/lumped_mass_matrix(i,i)*row_sum)
          + dt/lumped_mass_matrix(i,i)*ss_rhs(i);
-/*
-      max_values(i) = max_values(i)*(1.0 - dt/lumped_mass_matrix(i,i)*interaction_integral(i))
-         + dt/lumped_mass_matrix(i,i)*source_integral(i);
-      min_values(i) = min_values(i)*(1.0 - dt/lumped_mass_matrix(i,i)*interaction_integral(i))
-         + dt/lumped_mass_matrix(i,i)*source_integral(i);
-*/
+   }
+}
+
+/** \brief Computes min and max quantities for steady-state max principle
+ */
+template <int dim>
+void TransportProblem<dim>::compute_steady_state_max_principle_bounds()
+{
+   // initialize min and max values
+   for (unsigned int i = 0; i < n_dofs; ++i)
+   {
+      max_values(i) = new_solution(i);
+      min_values(i) = new_solution(i);
+   }
+
+   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
+
+   // loop over cells
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                                  endc = dof_handler.end();
+   for (; cell != endc; ++cell) {
+      // get local dof indices
+      cell->get_dof_indices(local_dof_indices);
+
+      // find min and max values on cell
+      double max_cell = new_solution(local_dof_indices[0]); // initialized to arbitrary value on cell
+      double min_cell = new_solution(local_dof_indices[0]); // initialized to arbitrary value on cell
+      for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+         double value_j = new_solution(local_dof_indices[j]);
+         max_cell = std::max(max_cell, value_j);
+         min_cell = std::min(min_cell, value_j);
+      }
+
+      // update the max and min values of neighborhood of each dof
+      for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+         unsigned int i = local_dof_indices[j]; // global index
+         max_values(i) = std::max(max_values(i), max_cell);
+         min_values(i) = std::min(min_values(i), min_cell);
+      }
+   }
+
+   // compute the upper and lower bounds for the maximum principle
+   for (unsigned int i = 0; i < n_dofs; ++i)
+   {
+      // compute sum of A_ij over row i
+      // get nonzero entries of row i of A
+      std::vector<double>       row_values;
+      std::vector<unsigned int> row_indices;
+      unsigned int              n_col;
+      get_matrix_row(system_matrix,
+                     i,
+                     row_values,
+                     row_indices,
+                     n_col);
+      // add nonzero entries to get the row sum
+      double row_sum = 0.0;
+      for (unsigned int k = 0; k < n_col; ++k)
+         row_sum += row_values[k];
+      
+      // compute the max and min values for the maximum principle
+      max_values(i) = max_values(i)*(1.0 - row_sum/system_matrix(i,i))
+         + ss_rhs(i)/system_matrix(i,i);
+      min_values(i) = min_values(i)*(1.0 - row_sum/system_matrix(i,i))
+         + ss_rhs(i)/system_matrix(i,i);
    }
 }
 

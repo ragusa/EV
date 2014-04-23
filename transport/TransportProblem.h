@@ -189,7 +189,9 @@ class TransportProblem {
       // checks
       void check_solution_nonnegative() const;
       bool check_local_discrete_max_principle(const unsigned int &n) const;
-      void compute_max_principle_quantities(const double &dt);
+      void debug_max_principle(const double &dt);
+      void compute_max_principle_bounds(const double &dt);
+      void compute_steady_state_max_principle_bounds();
       Vector<double> min_values;
       Vector<double> max_values;
       Vector<double> interaction_integral;
