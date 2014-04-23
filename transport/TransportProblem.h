@@ -187,9 +187,8 @@ class TransportProblem {
       double minimum_cell_diameter;
    
       // checks
-      void check_solution_nonnegative() const;
-      bool check_local_discrete_max_principle(const unsigned int &n) const;
-      void debug_max_principle(const double &dt);
+      bool check_max_principle(const unsigned int &n, const double &dt);
+      void debug_max_principle(const unsigned int &i, const double &dt);
       void compute_max_principle_bounds(const double &dt);
       void compute_steady_state_max_principle_bounds();
       Vector<double> min_values;

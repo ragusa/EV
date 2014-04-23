@@ -1010,19 +1010,6 @@ void TransportProblem<dim>::run()
          unsigned int n = 1; // time step index
          while (in_transient)
          {
-            // determine time step size
-            double dt = parameters.time_step_size;
-            if (t + dt_const > t_end) dt = t_end - t; // correct dt if new t would overshoot t_end 
-            // enforce CFL condition and get CFL number
-            double CFL;
-            enforce_CFL_condition(dt,CFL);
-            // increment time
-            std::cout << "time step " << n << ": t = " << t << "->";
-            t += dt;
-            std::cout << t << ", CFL = " << CFL << std::endl;
-            // determine if end of transient has been reached (within machine precision)
-            in_transient = t < (t_end - machine_precision);
-
             // compute inviscid system matrix and steady-state right hand side (ss_rhs)
             // This inviscid system matrix will contain inviscid terms and Laplacian viscous terms if there are any.
             // Max-principle viscosity terms will be added in a separate step afterward.
@@ -1045,6 +1032,19 @@ void TransportProblem<dim>::run()
             // sometime after assemble_system() but before old_solution is used in the
             // assembly of the transient residual.
             old_solution = new_solution;
+
+            // determine time step size
+            double dt = parameters.time_step_size;
+            if (t + dt_const > t_end) dt = t_end - t; // correct dt if new t would overshoot t_end 
+            // enforce CFL condition and get CFL number
+            double CFL;
+            enforce_CFL_condition(dt,CFL);
+            // increment time
+            std::cout << "time step " << n << ": t = " << t << "->";
+            t += dt;
+            std::cout << t << ", CFL = " << CFL << std::endl;
+            // determine if end of transient has been reached (within machine precision)
+            in_transient = t < (t_end - machine_precision);
 
             // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
             system_rhs = 0;
@@ -1077,9 +1077,8 @@ void TransportProblem<dim>::run()
                constraints.distribute(new_solution);
             }
 
-            debug_max_principle(dt);
             // check that local discrete maximum principle is satisfied at all time steps
-            bool max_principle_satisfied_this_time_step = check_local_discrete_max_principle(n);
+            bool max_principle_satisfied_this_time_step = check_max_principle(n,dt);
             max_principle_satisfied = max_principle_satisfied and max_principle_satisfied_this_time_step;
 
             // update old time step size
@@ -1131,7 +1130,7 @@ void TransportProblem<dim>::solve_steady_state()
    // compute bounds for maximum principle check
    compute_steady_state_max_principle_bounds();
    // check that solution satisfies maximum principle
-   bool satisfied_max_principle = check_local_discrete_max_principle(0);
+   bool satisfied_max_principle = check_max_principle(0,0.0);
    // report if max principle was satisfied or not
    if (satisfied_max_principle)
       std::cout << "The local discrete maximum principle was satisfied." << std::endl;
@@ -1358,31 +1357,14 @@ void TransportProblem<dim>::evaluate_error(const unsigned int cycle)
    convergence_table.add_value("L2 error", L2_error);
 }
 
-/** \brief check that the solution is non-negative at all nodes.
- */
-template<int dim>
-void TransportProblem<dim>::check_solution_nonnegative() const
-{
-   // loop over all degrees of freedom
-   bool solution_is_negative = false;
-   for (unsigned int i = 0; i < n_dofs; ++i)
-      if (new_solution(i) < 0)
-         solution_is_negative = true;
-
-   // report if solution was negative anywhere or not
-   if (solution_is_negative)
-      std::cout << "Solution is negative!" << std::endl;
-   else
-      std::cout << "Solution is not negative at any node." << std::endl;
-}
-
 /** \brief check that the local discrete max principle is satisfied.
  */
 template<int dim>
-bool TransportProblem<dim>::check_local_discrete_max_principle(const unsigned int &n) const
+bool TransportProblem<dim>::check_max_principle(const unsigned int &n,
+                                                const double       &dt)
 {
    // machine precision for floating point comparisons
-   const double machine_tolerance = 1.0e-15;
+   const double machine_tolerance = 1.0e-12;
 
    // now set new precision
    std::cout.precision(15);
@@ -1399,19 +1381,28 @@ bool TransportProblem<dim>::check_local_discrete_max_principle(const unsigned in
             std::cout << "Max principle violated at time step " << n
                << " with dof " << i << ": " << std::scientific
                << value_i << " < " << min_values(i) << std::endl;
+            debug_max_principle(i,dt);
          }
          if (value_i > max_values(i) + machine_tolerance) {
             local_max_principle_satisfied = false;
             std::cout << "Max principle violated at time step " << n
                << " with dof " << i << ": " << std::scientific
                << value_i << " > " << max_values(i) << std::endl;
+            debug_max_principle(i,dt);
          }
       }
    }
 
    // restore default precision and format
    std::cout.unsetf(std::ios_base::floatfield);
-   
+
+   // exit if max principle was violated
+   if (not local_max_principle_satisfied)
+   {
+      std::cout << "Program terminated due to max-principle violation." << std::endl;
+      std::exit(0);
+   }
+
    return local_max_principle_satisfied;
 }
 
@@ -1420,52 +1411,76 @@ bool TransportProblem<dim>::check_local_discrete_max_principle(const unsigned in
  *         required to be met for the principle to be satisfied.
  */
 template <int dim>
-void TransportProblem<dim>::debug_max_principle(const double &dt)
+void TransportProblem<dim>::debug_max_principle(const unsigned int &i,
+                                                const double &dt)
 {
-   for (unsigned int i = 0; i < n_dofs; ++i)
+   // flag to determine if no conditions were violated
+   bool condition_violated = false;
+
+   // get nonzero entries of row i of A
+   std::vector<double>       row_values;
+   std::vector<unsigned int> row_indices;
+   unsigned int              n_col;
+   get_matrix_row(system_matrix,
+                  i,
+                  row_values,
+                  row_indices,
+                  n_col);
+
+   // diagonal entry
+   double Aii = system_matrix(i,i);
+
+   // check that system matrix diagonal elements are non-negative
+   if (Aii < 0.0)
    {
-      // get nonzero entries of row i of A
-      std::vector<double>       row_values;
-      std::vector<unsigned int> row_indices;
-      unsigned int              n_col;
-      get_matrix_row(system_matrix,
-                     i,
-                     row_values,
-                     row_indices,
-                     n_col);
+      std::cout << "   DEBUG: diagonal element " << i << " is negative: " << Aii << std::endl;
+      condition_violated = true;
+   }
+   
+   // loop over nonzero entries in row i to compute off-diagonal sum
+   // for diagonal dominance check and also check that each off-diagonal
+   // element is non-positive
+   double off_diagonal_sum = 0.0;
+   for (unsigned int k = 0; k < n_col; ++k)
+   {
+      unsigned int j = row_indices[k];
+      double Aij = row_values[k];
 
-      // check that system matrix diagonal elements are non-negative
-      if (system_matrix(i,i) < 0.0)
-         std::cout << "diagonal element " << i << " is negative" << std::endl;
-      
-      // loop over nonzero entries in row i to compute off-diagonal sum
-      // for diagonal dominance check and also check that each off-diagonal
-      // element is non-positive
-      double off_diagonal_sum = 0.0;
-      for (unsigned int k = 0; k < n_col; ++k)
+      if (j != i)
       {
-         unsigned int j = row_indices[k];
-         double Aij = row_values[k];
-
-         if (j != i)
+         // add to off-diagonal sum
+         off_diagonal_sum += std::abs(Aij);
+         // check that system matrix off-diagonal elements are non-positive
+         if (Aij > 0.0)
          {
-            // add to off-diagonal sum
-            off_diagonal_sum += std::abs(Aij);
-            // check that system matrix off-diagonal elements are non-positive
-            if (Aij > 0.0)
-               std::cout << "off-diagonal element (" << i << "," << j << ") is positive" << std::endl;
+            std::cout << "   DEBUG: off-diagonal element (" << i << "," << j << ") is positive: " << Aij << std::endl;
+            condition_violated = true;
          }
       }
+   }
 
-      // check that system matrix is diagonally dominant
-      if (system_matrix(i,i) < off_diagonal_sum)
-         std::cout << "row " << i << " is not diagonally dominant" << std::endl;
-        
-      // check that CFL condition is satisfied
+   // check that system matrix is diagonally dominant
+   if (Aii < off_diagonal_sum)
+   {
+      std::cout << "   DEBUG: row " << i << " is not diagonally dominant: Aii = "
+         << Aii << ", off-diagonal sum = " << off_diagonal_sum << std::endl;
+      condition_violated = true;
+   }
+     
+   // check that CFL condition is satisfied if transient problem
+   if (!parameters.is_steady_state)
+   {
       double cfl = dt/lumped_mass_matrix(i,i)*system_matrix(i,i);
       if (cfl > 1.0)
-         std::cout << "row " << i << " does not satisfy CFL condition" << std::endl;
+      {
+         std::cout << "   DEBUG: row " << i << " does not satisfy CFL condition: CFL = " << cfl << std::endl;
+         condition_violated = true;
+      }
    }
+
+   // report if no conditions were violated
+   if (not condition_violated)
+      std::cout << "   DEBUG: No max principle conditions were violated, so further debugging is necessary." << std::endl;
 }
 
 /** \brief Computes min and max quantities for max principle
@@ -1800,12 +1815,19 @@ void TransportProblem<dim>::compute_high_order_solution()
 template <int dim>
 void TransportProblem<dim>::enforce_CFL_condition(double &dt, double &CFL) const
 {
-   double speed = 1.0; // for now, speed is hard-coded to be 1
-   CFL = speed*dt/minimum_cell_diameter;
+   // CFL is computed as max over all i of dt*A(i,i)/mL(i,i)
+   double max_A_over_m = 0.0; // max over all i of A(i,i)/mL(i,i)
+   for (unsigned int i = 0; i < n_dofs; ++i)
+      max_A_over_m = std::max(max_A_over_m, system_matrix(i,i) / lumped_mass_matrix(i,i));
+
+   // compute CFL number
+   CFL = dt * max_A_over_m;
+
+   // if computed CFL number is greater than the set limit, then adjust dt
    if (CFL > parameters.CFL_limit)
    {
       CFL = parameters.CFL_limit;
-      dt = CFL * minimum_cell_diameter / speed;
+      dt = CFL / max_A_over_m;
    }
 }
 
