@@ -1706,8 +1706,8 @@ void TransportProblem<dim>::assemble_high_order_coefficient_matrix(const double 
          unsigned int j = row_indices[k];
 
          // add A2(i,j) to A(i,j)
-         high_order_coefficient_matrix.add(i,j,dt*(auxiliary_mass_matrix(i,j)*system_rhs(j)
-                                                  -auxiliary_mass_matrix(j,i)*system_rhs(i)));
+         high_order_coefficient_matrix.add(i,j,dt*(auxiliary_mass_matrix(j,i)*system_rhs(i)
+                                                  -auxiliary_mass_matrix(i,j)*system_rhs(k)));
       }
    }
 }
