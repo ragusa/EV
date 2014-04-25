@@ -238,9 +238,16 @@ void TransportProblem<dim>::setup_system()
    max_values.reinit(n_dofs);
 
    // reinitialize viscosities
-   entropy_viscosity        .reinit(triangulation.n_active_cells());
-   low_order_viscosity      .reinit(triangulation.n_active_cells());
-   high_order_viscosity     .reinit(triangulation.n_active_cells());
+   entropy_viscosity   .reinit(triangulation.n_active_cells());
+   low_order_viscosity .reinit(triangulation.n_active_cells());
+   high_order_viscosity.reinit(triangulation.n_active_cells());
+
+   // these are not needed; they are used only for debugging
+   P_plus .reinit(n_dofs);
+   P_minus.reinit(n_dofs);
+   Q_plus .reinit(n_dofs);
+   Q_minus.reinit(n_dofs);
+   low_order_solution.reinit(n_dofs);
 }
 
 /** \brief Assembles the mass matrix, either consistent or lumped.
@@ -1038,7 +1045,7 @@ void TransportProblem<dim>::run()
             double CFL;
             enforce_CFL_condition(dt,CFL);
             // increment time
-            std::cout << "time step " << n << ": t = " << t << "->";
+            std::cout << "   time step " << n << ": t = " << t << "->";
             t += dt;
             std::cout << t << ", CFL = " << CFL << std::endl;
             // determine if end of transient has been reached (within machine precision)
@@ -1064,16 +1071,12 @@ void TransportProblem<dim>::run()
             bool max_principle_satisfied_low_order = check_max_principle(dt,false);
             max_principle_satisfied = max_principle_satisfied and max_principle_satisfied_low_order;
 
+            // used for debugging; later, may be removed
+            low_order_solution = new_solution;
+
             bool using_high_order = parameters.viscosity_option == 4;
             if (using_high_order) // high-order max-principle preserving viscosity
             {
-               // check conservation of low-order solution
-               double conservation_sum = 0.0;
-               for (unsigned int i = 0; i < n_dofs; ++i)
-                  conservation_sum += (new_solution(i) - old_solution(i))*lumped_mass_matrix(i,i);
-               if (std::abs(conservation_sum) > 1.0e-15)
-                  std::cout << "Low-order conservation sum != 0; sum = " << conservation_sum << std::endl;
-
                // compute high-order right hand side (G) and store in system_rhs
                compute_high_order_rhs();
                // compute high-order coefficient matrix (A)
@@ -1392,12 +1395,12 @@ bool TransportProblem<dim>::check_max_principle(const double &dt,
             // determine which condition was violated
             if (using_high_order)
             {
-               std::cout << "Max principle lower bound violated with dof "
+               std::cout << "      Max principle lower bound violated with dof "
                   << i << " of high-order solution: " << std::scientific
                   << value_i << " < " << min_values(i) << std::endl;
                debug_max_principle_high_order(i,dt);
             } else {
-               std::cout << "Max principle lower bound violated with dof "
+               std::cout << "      Max principle lower bound violated with dof "
                   << i << " of low-order solution: " << std::scientific
                   << value_i << " < " << min_values(i) << std::endl;
                debug_max_principle_low_order (i,dt);
@@ -1409,12 +1412,12 @@ bool TransportProblem<dim>::check_max_principle(const double &dt,
             // determine which condition was violated
             if (using_high_order)
             {
-               std::cout << "Max principle upper bound violated with dof "
+               std::cout << "      Max principle upper bound violated with dof "
                   << i << " of high-order solution: " << std::scientific
                   << value_i << " > " << max_values(i) << std::endl;
                debug_max_principle_high_order(i,dt);
             } else {
-               std::cout << "Max principle upper bound violated with dof "
+               std::cout << "      Max principle upper bound violated with dof "
                   << i << " of low-order solution: " << std::scientific
                   << value_i << " > " << max_values(i) << std::endl;
                debug_max_principle_low_order (i,dt);
@@ -1464,7 +1467,7 @@ void TransportProblem<dim>::debug_max_principle_low_order(const unsigned int &i,
    // check that system matrix diagonal elements are non-negative
    if (Aii < 0.0)
    {
-      std::cout << "   DEBUG: diagonal element is negative: " << Aii << std::endl;
+      std::cout << "         DEBUG: diagonal element is negative: " << Aii << std::endl;
       condition_violated = true;
    }
    
@@ -1484,7 +1487,7 @@ void TransportProblem<dim>::debug_max_principle_low_order(const unsigned int &i,
          // check that system matrix off-diagonal elements are non-positive
          if (Aij > 0.0)
          {
-            std::cout << "   DEBUG: off-diagonal element (" << i << "," << j << ") is positive: " << Aij << std::endl;
+            std::cout << "         DEBUG: off-diagonal element (" << i << "," << j << ") is positive: " << Aij << std::endl;
             condition_violated = true;
          }
       }
@@ -1493,7 +1496,7 @@ void TransportProblem<dim>::debug_max_principle_low_order(const unsigned int &i,
    // check that system matrix is diagonally dominant
    if (Aii < off_diagonal_sum)
    {
-      std::cout << "   DEBUG: row is not diagonally dominant: Aii = "
+      std::cout << "         DEBUG: row is not diagonally dominant: Aii = "
          << Aii << ", off-diagonal sum = " << off_diagonal_sum << std::endl;
       condition_violated = true;
    }
@@ -1504,14 +1507,14 @@ void TransportProblem<dim>::debug_max_principle_low_order(const unsigned int &i,
       double cfl = dt/lumped_mass_matrix(i,i)*system_matrix(i,i);
       if (cfl > 1.0)
       {
-         std::cout << "   DEBUG: row does not satisfy CFL condition: CFL = " << cfl << std::endl;
+         std::cout << "         DEBUG: row does not satisfy CFL condition: CFL = " << cfl << std::endl;
          condition_violated = true;
       }
    }
 
    // report if no conditions were violated
    if (not condition_violated)
-      std::cout << "   DEBUG: No checks returned flags; deeper debugging is necessary." << std::endl;
+      std::cout << "         DEBUG: No checks returned flags; deeper debugging is necessary." << std::endl;
 }
 
 /** \brief Debugging function used for determining why the maximum
@@ -1526,6 +1529,8 @@ void TransportProblem<dim>::debug_max_principle_high_order(const unsigned int &i
    // flag to determine if no conditions were violated
    bool condition_violated = false;
 
+   const double small_number = 1.0e-15;
+
    // check that the high order coefficient matrix A is skew symmetric
    // get nonzero entries of row i of A
    std::vector<double>       row_values;
@@ -1536,41 +1541,86 @@ void TransportProblem<dim>::debug_max_principle_high_order(const unsigned int &i
                   row_values,
                   row_indices,
                   n_col);
-   const double small_number = 1.0e-15;
-   for (unsigned int k = 0; k < n_col; ++k)
+
+   // check lower bound conditions
+   bool lower_bound_violated = true;
+   if (lower_bound_violated)
    {
-      unsigned int j = row_indices[k];
-      if (j != i)
+      double lhs = lumped_mass_matrix(i,i)*(new_solution(i) - low_order_solution(i));
+      double rhs;
+      std::string condition;
+
+      // check m*(U - UL) >= m*(Wmin - UL) 
+      condition = "m*(U - UL) >= m*(Wmin - UL)";
+      rhs = lumped_mass_matrix(i,i)*(min_values(i) - low_order_solution(i));
+      if (lhs < rhs)
+         std::cout << "         DEBUG: VIOLATED:  " << condition << std::endl;
+      else
+         std::cout << "         DEBUG: SATISFIED: " << condition << std::endl;
+
+      // check m*(U - UL) >= Qminus
+      condition = "m*(U - UL) >= Qminus";
+      rhs = Q_minus(i);
+      if (lhs < rhs)
+         std::cout << "         DEBUG: VIOLATED:  " << condition << std::endl;
+      else
+         std::cout << "         DEBUG: SATISFIED: " << condition << std::endl;
+
+      // check m*(U - UL) >= sum_{j,Aij < 0} Rminus_i*Aij
+      condition = "m*(U - UL) >= sum_{j,Aij < 0} Rminus_i*Aij";
+      rhs = 0.0;
+      for (unsigned int k = 0; k < n_col; ++k)
       {
+         unsigned int j = row_indices[k];
          double Aij = row_values[k];
-         double Aji = high_order_coefficient_matrix(j,i);
-         // check that Aij = -Aji
-         if (std::abs(Aij + Aji) > small_number)
-         {
-            std::cout << "   DEBUG: High-order coefficient matrix is not skew symmetric: A("
-               << i << "," << j << ") = " << Aij << " != A(" << j << "," << i << ") = " << Aji
-               << std::endl;
-            condition_violated = true;
-         }
+         if (Aij < 0)
+            rhs += R_minus(j)*Aij;
       }
-   }
+      if (lhs < rhs)
+         std::cout << "         DEBUG: VIOLATED:  " << condition << std::endl;
+      else
+         std::cout << "         DEBUG: SATISFIED: " << condition << std::endl;
 
-   // check conservation of u^n -> uH^{n+1}
-   // It is sufficient to check that sum_i G_i = 0 and sum_i B_ij = 0 (see Corollary 3.5)
-   // first check sum_i G_i = 0
-   double G_sum = 0.0;
-   for (unsigned int i = 0; i < n_dofs; ++i)
-      G_sum += system_rhs(i);
-   if (std::abs(G_sum) > small_number)
-   {
-      std::cout << "   DEBUG: u^n -> uH^{n+1} is not conservative: sum_i G_i != 0; instead, = "
-         << G_sum << std::endl;
-      condition_violated = true;
-   }
+      // check m*(U - UL) >= sum_{j,Aij < 0} Lij*Aij
+      condition = "m*(U - UL) >= sum_{j,Aij < 0} Lij*Aij";
+      rhs = 0.0;
+      for (unsigned int k = 0; k < n_col; ++k)
+      {
+         unsigned int j = row_indices[k];
+         double Aij = row_values[k];
+         double Lij;
+         if (Aij >= 0)
+            Lij = std::min(R_plus(i),R_minus(j));
+         else
+            Lij = std::min(R_minus(i),R_plus(j));
 
-   // report if no conditions were violated
-   if (not condition_violated)
-      std::cout << "   DEBUG: No checks returned flags; deeper debugging is necessary." << std::endl;
+         if (Aij < 0)
+            rhs += Lij*Aij;
+      }
+      if (lhs < rhs)
+         std::cout << "         DEBUG: VIOLATED:  " << condition << std::endl;
+      else
+         std::cout << "         DEBUG: SATISFIED: " << condition << std::endl;
+
+      // check m*(U - UL) == sum_j Lij*Aij
+      condition = "m*(U - UL) == sum_j Lij*Aij";
+      rhs = 0.0;
+      for (unsigned int k = 0; k < n_col; ++k)
+      {
+         unsigned int j = row_indices[k];
+         double Aij = row_values[k];
+         double Lij;
+         if (Aij >= 0)
+            Lij = std::min(R_plus(i),R_minus(j));
+         else
+            Lij = std::min(R_minus(i),R_plus(j));
+         rhs += Lij*Aij;
+      }
+      if (std::abs(lhs - rhs) > small_number)
+         std::cout << "         DEBUG: VIOLATED:  " << condition << std::endl;
+      else
+         std::cout << "         DEBUG: SATISFIED: " << condition << std::endl;
+   }
 }
 
 /** \brief Computes min and max quantities for max principle
@@ -1634,6 +1684,19 @@ void TransportProblem<dim>::compute_max_principle_bounds(const double &dt)
          + dt/lumped_mass_matrix(i,i)*ss_rhs(i);
       min_values(i) = min_values(i)*(1.0 - dt/lumped_mass_matrix(i,i)*row_sum)
          + dt/lumped_mass_matrix(i,i)*ss_rhs(i);
+   }
+
+   // alter the Dirichlet nodes to make both upper and lower bounds equal to
+   // Dirichlet value
+   std::map<unsigned int, double> boundary_values;
+   VectorTools::interpolate_boundary_values(dof_handler,
+                                            incoming_boundary,
+                                            ConstantFunction<dim>(incoming_flux_value, 1),
+                                            boundary_values);
+   for (std::map<unsigned int, double>::iterator it = boundary_values.begin(); it != boundary_values.end(); ++it)
+   {
+      min_values(it->first) = it->second;
+      max_values(it->first) = it->second;
    }
 }
 
@@ -1809,9 +1872,6 @@ void TransportProblem<dim>::assemble_high_order_coefficient_matrix(const double 
 template <int dim>
 void TransportProblem<dim>::compute_limiting_coefficients()
 {
-   // small number around machine precision, used for floating point comparisons
-   const double small_number = 1.0e-15;
-
    for (unsigned int i = 0; i < n_dofs; ++i)
    {
       // get nonzero entries in row i of high-order coefficient matrix A
@@ -1824,30 +1884,35 @@ void TransportProblem<dim>::compute_limiting_coefficients()
                      row_indices,
                      n_col);
 
-      double P_plus  = 0.0;
-      double P_minus = 0.0;
+      double P_plus_i  = 0.0;
+      double P_minus_i = 0.0;
       // compute P_plus, P_minus
       for (unsigned int k = 0; k < n_col; ++k)
       {
          // get value of nonzero entry k
          double Aij = row_values[k];
 
-         P_plus  += std::max(0.0,Aij);
-         P_minus += std::min(0.0,Aij);
+         P_plus_i  += std::max(0.0,Aij);
+         P_minus_i += std::min(0.0,Aij);
       }
+      P_plus(i)  = P_plus_i;
+      P_minus(i) = P_minus_i;
+
       // compute Q_plus and Q_minus
-      double Q_plus  = lumped_mass_matrix(i,i)*(max_values(i) - new_solution(i));
-      double Q_minus = lumped_mass_matrix(i,i)*(min_values(i) - new_solution(i));
+      double Q_plus_i  = lumped_mass_matrix(i,i)*(max_values(i) - new_solution(i));
+      double Q_minus_i = lumped_mass_matrix(i,i)*(min_values(i) - new_solution(i));
+      Q_plus(i)  = Q_plus_i;
+      Q_minus(i) = Q_minus_i;
 
       // compute R_plus(i)
-      if (std::abs(P_plus) > small_number)
-         R_plus(i) = std::min(1.0, Q_plus/P_plus);
+      if (P_plus_i != 0.0)
+         R_plus(i) = std::min(1.0, Q_plus_i/P_plus_i);
       else
          R_plus(i) = 1.0;
 
       // compute R_minus(i)
-      if (std::abs(P_minus) > small_number)
-         R_minus(i) = std::min(1.0, Q_minus/P_minus);
+      if (P_minus_i != 0.0)
+         R_minus(i) = std::min(1.0, Q_minus_i/P_minus_i);
       else
          R_minus(i) = 1.0;
    }
@@ -1878,10 +1943,15 @@ void TransportProblem<dim>::compute_high_order_solution()
       for (unsigned int k = 0; k < n_col; ++k) {
          unsigned int j = row_indices[k];
          double Aij     = row_values[k];
+         // compute limiting coefficient Lij
+         double Lij;
          if (Aij >= 0.0)
-            flux_correction_sum += std::min(R_plus(i),R_minus(j))*Aij;
+            Lij = std::min(R_plus(i),R_minus(j));
          else
-            flux_correction_sum += std::min(R_minus(i),R_plus(j))*Aij;
+            Lij = std::min(R_minus(i),R_plus(j));
+
+         // add Lij*Aij to flux correction sum
+         flux_correction_sum += Lij*Aij;
       }
 
       // compute high-order solution for dof i

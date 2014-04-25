@@ -21,7 +21,7 @@ set Jump coefficient = 1.0
 # mesh refinement options
 set Use adaptive mesh refinement = false
 set Number of refinement cycles = 1
-set Initial refinement level = 10
+set Initial refinement level = 5
 
 # finite element options
 set Finite element degree = 1

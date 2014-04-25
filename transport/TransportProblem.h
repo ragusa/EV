@@ -111,6 +111,13 @@ class TransportProblem {
       Vector<double> R_plus;
       Vector<double> R_minus;
 
+      // these are not needed; used only for debugging
+      Vector<double> P_plus;
+      Vector<double> P_minus;
+      Vector<double> Q_plus;
+      Vector<double> Q_minus;
+      Vector<double> low_order_solution;
+
       // input parameters
       const TransportParameters &parameters;
 
