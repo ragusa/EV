@@ -187,14 +187,14 @@ class TransportProblem {
       double minimum_cell_diameter;
    
       // checks
-      bool check_max_principle(const unsigned int &n, const double &dt);
-      void debug_max_principle(const unsigned int &i, const double &dt);
+      bool check_max_principle(const double &dt,
+                               const bool   &using_high_order);
+      void debug_max_principle_low_order (const unsigned int &i, const double &dt);
+      void debug_max_principle_high_order(const unsigned int &i, const double &dt);
       void compute_max_principle_bounds(const double &dt);
       void compute_steady_state_max_principle_bounds();
       Vector<double> min_values;
       Vector<double> max_values;
-      Vector<double> interaction_integral;
-      Vector<double> source_integral;
 
       // boundary nodes
       void get_dirichlet_nodes();

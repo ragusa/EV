@@ -233,11 +233,9 @@ void TransportProblem<dim>::setup_system()
    R_plus      .reinit(n_dofs);
    R_minus     .reinit(n_dofs);
 
-   // reinitialize max principle quantities
-   min_values  .reinit(n_dofs);
-   max_values  .reinit(n_dofs);
-   interaction_integral.reinit(n_dofs);
-   source_integral     .reinit(n_dofs);
+   // reinitialize max principle bounds
+   min_values.reinit(n_dofs);
+   max_values.reinit(n_dofs);
 
    // reinitialize viscosities
    entropy_viscosity        .reinit(triangulation.n_active_cells());
@@ -1062,8 +1060,12 @@ void TransportProblem<dim>::run()
 
             // compute max principle min and max values
             compute_max_principle_bounds(dt);
+            // check that local discrete maximum principle is satisfied at all time steps
+            bool max_principle_satisfied_low_order = check_max_principle(dt,false);
+            max_principle_satisfied = max_principle_satisfied and max_principle_satisfied_low_order;
 
-            if (parameters.viscosity_option == 4) // high-order max-principle preserving viscosity
+            bool using_high_order = parameters.viscosity_option == 4;
+            if (using_high_order) // high-order max-principle preserving viscosity
             {
                // compute high-order right hand side (G) and store in system_rhs
                compute_high_order_rhs();
@@ -1075,11 +1077,12 @@ void TransportProblem<dim>::run()
                compute_high_order_solution();
                // distribute constraints
                constraints.distribute(new_solution);
+
+               // check that local discrete maximum principle is satisfied at all time steps
+               bool max_principle_satisfied_high_order = check_max_principle(dt,true);
+               max_principle_satisfied = max_principle_satisfied and max_principle_satisfied_high_order;
             }
 
-            // check that local discrete maximum principle is satisfied at all time steps
-            bool max_principle_satisfied_this_time_step = check_max_principle(n,dt);
-            max_principle_satisfied = max_principle_satisfied and max_principle_satisfied_this_time_step;
 
             // update old time step size
             old_dt = dt;
@@ -1360,8 +1363,8 @@ void TransportProblem<dim>::evaluate_error(const unsigned int cycle)
 /** \brief check that the local discrete max principle is satisfied.
  */
 template<int dim>
-bool TransportProblem<dim>::check_max_principle(const unsigned int &n,
-                                                const double       &dt)
+bool TransportProblem<dim>::check_max_principle(const double &dt,
+                                                const bool   &using_high_order)
 {
    // machine precision for floating point comparisons
    const double machine_tolerance = 1.0e-12;
@@ -1376,19 +1379,39 @@ bool TransportProblem<dim>::check_max_principle(const unsigned int &n,
       if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) == dirichlet_nodes.end())
       {
          double value_i = new_solution(i);
+         // check lower bound
          if (value_i < min_values(i) - machine_tolerance) {
             local_max_principle_satisfied = false;
-            std::cout << "Max principle violated at time step " << n
-               << " with dof " << i << ": " << std::scientific
-               << value_i << " < " << min_values(i) << std::endl;
-            debug_max_principle(i,dt);
+            // determine which condition was violated
+            if (using_high_order)
+            {
+               std::cout << "Max principle lower bound violated with dof "
+                  << i << " of high-order solution: " << std::scientific
+                  << value_i << " < " << min_values(i) << std::endl;
+               debug_max_principle_high_order(i,dt);
+            } else {
+               std::cout << "Max principle lower bound violated with dof "
+                  << i << " of low-order solution: " << std::scientific
+                  << value_i << " < " << min_values(i) << std::endl;
+               debug_max_principle_low_order (i,dt);
+            }
          }
+         // check upper bound
          if (value_i > max_values(i) + machine_tolerance) {
             local_max_principle_satisfied = false;
-            std::cout << "Max principle violated at time step " << n
-               << " with dof " << i << ": " << std::scientific
-               << value_i << " > " << max_values(i) << std::endl;
-            debug_max_principle(i,dt);
+            // determine which condition was violated
+            if (using_high_order)
+            {
+               std::cout << "Max principle upper bound violated with dof "
+                  << i << " of high-order solution: " << std::scientific
+                  << value_i << " > " << max_values(i) << std::endl;
+               debug_max_principle_high_order(i,dt);
+            } else {
+               std::cout << "Max principle upper bound violated with dof "
+                  << i << " of low-order solution: " << std::scientific
+                  << value_i << " > " << max_values(i) << std::endl;
+               debug_max_principle_low_order (i,dt);
+            }
          }
       }
    }
@@ -1407,12 +1430,13 @@ bool TransportProblem<dim>::check_max_principle(const unsigned int &n,
 }
 
 /** \brief Debugging function used for determining why the maximum
- *         principle is failing; examines the conditions that are
- *         required to be met for the principle to be satisfied.
+ *         principle is failing for the low-order method;
+ *         examines the conditions that are required to be met for
+ *         the principle to be satisfied.
  */
 template <int dim>
-void TransportProblem<dim>::debug_max_principle(const unsigned int &i,
-                                                const double &dt)
+void TransportProblem<dim>::debug_max_principle_low_order(const unsigned int &i,
+                                                          const double &dt)
 {
    // flag to determine if no conditions were violated
    bool condition_violated = false;
@@ -1433,7 +1457,7 @@ void TransportProblem<dim>::debug_max_principle(const unsigned int &i,
    // check that system matrix diagonal elements are non-negative
    if (Aii < 0.0)
    {
-      std::cout << "   DEBUG: diagonal element " << i << " is negative: " << Aii << std::endl;
+      std::cout << "   DEBUG: diagonal element is negative: " << Aii << std::endl;
       condition_violated = true;
    }
    
@@ -1462,7 +1486,7 @@ void TransportProblem<dim>::debug_max_principle(const unsigned int &i,
    // check that system matrix is diagonally dominant
    if (Aii < off_diagonal_sum)
    {
-      std::cout << "   DEBUG: row " << i << " is not diagonally dominant: Aii = "
+      std::cout << "   DEBUG: row is not diagonally dominant: Aii = "
          << Aii << ", off-diagonal sum = " << off_diagonal_sum << std::endl;
       condition_violated = true;
    }
@@ -1473,14 +1497,73 @@ void TransportProblem<dim>::debug_max_principle(const unsigned int &i,
       double cfl = dt/lumped_mass_matrix(i,i)*system_matrix(i,i);
       if (cfl > 1.0)
       {
-         std::cout << "   DEBUG: row " << i << " does not satisfy CFL condition: CFL = " << cfl << std::endl;
+         std::cout << "   DEBUG: row does not satisfy CFL condition: CFL = " << cfl << std::endl;
          condition_violated = true;
       }
    }
 
    // report if no conditions were violated
    if (not condition_violated)
-      std::cout << "   DEBUG: No max principle conditions were violated, so further debugging is necessary." << std::endl;
+      std::cout << "   DEBUG: No checks returned flags; deeper debugging is necessary." << std::endl;
+}
+
+/** \brief Debugging function used for determining why the maximum
+ *         principle is failing for the low-order method;
+ *         examines the conditions that are required to be met for
+ *         the principle to be satisfied.
+ */
+template <int dim>
+void TransportProblem<dim>::debug_max_principle_high_order(const unsigned int &i,
+                                                           const double &dt)
+{
+   // flag to determine if no conditions were violated
+   bool condition_violated = false;
+
+   // check that the high order coefficient matrix A is skew symmetric
+   // get nonzero entries of row i of A
+   std::vector<double>       row_values;
+   std::vector<unsigned int> row_indices;
+   unsigned int              n_col;
+   get_matrix_row(high_order_coefficient_matrix,
+                  i,
+                  row_values,
+                  row_indices,
+                  n_col);
+   const double small_number = 1.0e-15;
+   for (unsigned int k = 0; k < n_col; ++k)
+   {
+      unsigned int j = row_indices[k];
+      if (j != i)
+      {
+         double Aij = row_values[k];
+         double Aji = high_order_coefficient_matrix(j,i);
+         // check that Aij = -Aji
+         if (std::abs(Aij + Aji) > small_number)
+         {
+            std::cout << "   DEBUG: High-order coefficient matrix is not skew symmetric: A("
+               << i << "," << j << ") = " << Aij << " != A(" << j << "," << i << ") = " << Aji
+               << std::endl;
+            condition_violated = true;
+         }
+      }
+   }
+
+   // check conservation of u^n -> uH^{n+1}
+   // It is sufficient to check that sum_i G_i = 0 and sum_i B_ij = 0 (see Corollary 3.5)
+   // first check sum_i G_i = 0
+   double G_sum = 0.0;
+   for (unsigned int i = 0; i < n_dofs; ++i)
+      G_sum += system_rhs(i);
+   if (std::abs(G_sum) > small_number)
+   {
+      std::cout << "   DEBUG: u^n -> uH^{n+1} is not conservative: sum_i G_i != 0; instead, = "
+         << G_sum << std::endl;
+      condition_violated = true;
+   }
+
+   // report if no conditions were violated
+   if (not condition_violated)
+      std::cout << "   DEBUG: No checks returned flags; deeper debugging is necessary." << std::endl;
 }
 
 /** \brief Computes min and max quantities for max principle
@@ -1707,7 +1790,7 @@ void TransportProblem<dim>::assemble_high_order_coefficient_matrix(const double 
 
          // add A2(i,j) to A(i,j)
          high_order_coefficient_matrix.add(i,j,dt*(auxiliary_mass_matrix(j,i)*system_rhs(i)
-                                                  -auxiliary_mass_matrix(i,j)*system_rhs(k)));
+                                                  -auxiliary_mass_matrix(i,j)*system_rhs(j)));
       }
    }
 }
@@ -1736,25 +1819,16 @@ void TransportProblem<dim>::compute_limiting_coefficients()
 
       double P_plus  = 0.0;
       double P_minus = 0.0;
-      // compute P_plus, P_minus, U_max, and U_min
-      // initialize U_max and U_min to arbitrary U in set for max() and min() functions
-      double U_max = old_solution(row_indices[0]);
-      double U_min = old_solution(row_indices[0]);
+      // compute P_plus, P_minus
       for (unsigned int k = 0; k < n_col; ++k)
       {
-         // get index of nonzero entry k
-         unsigned int j = row_indices[k];
          // get value of nonzero entry k
          double Aij = row_values[k];
 
          P_plus  += std::max(0.0,Aij);
          P_minus += std::min(0.0,Aij);
-         U_max = std::max(U_max, old_solution(j));
-         U_min = std::min(U_min, old_solution(j));
       }
       // compute Q_plus and Q_minus
-//      double Q_plus  = lumped_mass_matrix(i,i)*(U_max - new_solution(i));
-//      double Q_minus = lumped_mass_matrix(i,i)*(U_min - new_solution(i));
       double Q_plus  = lumped_mass_matrix(i,i)*(max_values(i) - new_solution(i));
       double Q_minus = lumped_mass_matrix(i,i)*(min_values(i) - new_solution(i));
 
