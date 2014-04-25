@@ -1067,6 +1067,13 @@ void TransportProblem<dim>::run()
             bool using_high_order = parameters.viscosity_option == 4;
             if (using_high_order) // high-order max-principle preserving viscosity
             {
+               // check conservation of low-order solution
+               double conservation_sum = 0.0;
+               for (unsigned int i = 0; i < n_dofs; ++i)
+                  conservation_sum += (new_solution(i) - old_solution(i))*lumped_mass_matrix(i,i);
+               if (std::abs(conservation_sum) > 1.0e-15)
+                  std::cout << "Low-order conservation sum != 0; sum = " << conservation_sum << std::endl;
+
                // compute high-order right hand side (G) and store in system_rhs
                compute_high_order_rhs();
                // compute high-order coefficient matrix (A)
