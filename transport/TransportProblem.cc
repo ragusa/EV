@@ -119,12 +119,21 @@ void TransportProblem<dim>::process_problem_ID()
          incoming_flux_value = 1.0e0;
          initial_conditions_string = "0";
          has_exact_solution = true;
-         if (dim == 1)
-            exact_solution_string = "if(x-t<-1, if(x<0, incoming, exp(-sigma*x)), 0)";
-         else if (dim == 2)
-            exact_solution_string = "if(x-t<-1, if(y<0, incoming, if(x<0.0, incoming, exp(-sigma*x))), 0)";
-         else
-            Assert(false,ExcNotImplemented());
+         if (parameters.is_steady_state) { // steady-state
+            if (dim == 1)
+               exact_solution_string = "if(x<0, incoming, exp(-sigma*x))";
+            else if (dim == 2)
+               exact_solution_string = "if(y<0, incoming, if(x<0.0, incoming, exp(-sigma*x)))";
+            else
+               Assert(false,ExcNotImplemented());
+         } else { // transient
+            if (dim == 1)
+               exact_solution_string = "if(x-t<-1, if(x<0, incoming, exp(-sigma*x)), 0)";
+            else if (dim == 2)
+               exact_solution_string = "if(x-t<-1, if(y<0, incoming, if(x<0.0, incoming, exp(-sigma*x))), 0)";
+            else
+               Assert(false,ExcNotImplemented());
+         }
          break;
       } case 3: {
          cross_section_option = 1;
@@ -1120,6 +1129,9 @@ void TransportProblem<dim>::run()
 template<int dim>
 void TransportProblem<dim>::solve_steady_state()
 {
+   // FCT cannot be applied to steady-state
+   Assert(parameters.viscosity_option != 4,ExcNotImplemented());
+
    // compute inviscid system matrix and steady-state right hand side (ss_rhs)
    // This inviscid system matrix will contain inviscid terms and Laplacian viscous terms if there are any.
    assemble_system(1.0e15);

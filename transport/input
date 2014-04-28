@@ -1,9 +1,9 @@
 # problem options
-set Problem ID = 1
+set Problem ID = 2
 
 # transient options
 set Is steady state = false
-set End time = 0.50
+set End time = 3.00
 set Time step size = 0.01
 set CFL limit = 0.8
 
@@ -21,7 +21,7 @@ set Jump coefficient = 1.0
 # mesh refinement options
 set Use adaptive mesh refinement = false
 set Number of refinement cycles = 1
-set Initial refinement level = 5
+set Initial refinement level = 7
 
 # finite element options
 set Finite element degree = 1
