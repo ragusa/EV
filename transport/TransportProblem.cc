@@ -212,7 +212,8 @@ void TransportProblem<dim>::setup_system()
 
    // reinitialize system matrix and mass matrices
    system_matrix         .reinit(constrained_sparsity_pattern);
-   inviscid_system_matrix.reinit(constrained_sparsity_pattern);
+   ss_matrix             .reinit(constrained_sparsity_pattern);
+   inviscid_ss_matrix    .reinit(constrained_sparsity_pattern);
    consistent_mass_matrix.reinit(constrained_sparsity_pattern);
    lumped_mass_matrix    .reinit(constrained_sparsity_pattern);
    if (parameters.viscosity_option == 4) // high-order max principle viscosity
@@ -381,7 +382,7 @@ void TransportProblem<dim>::compute_viscous_bilinear_forms()
 template<int dim>
 void TransportProblem<dim>::assemble_system(const double &dt)
 {
-   inviscid_system_matrix = 0;
+   inviscid_ss_matrix = 0;
    ss_rhs = 0;
    max_principle_viscosity_numerators = 0;
 
@@ -504,7 +505,7 @@ void TransportProblem<dim>::assemble_system(const double &dt)
       constraints.distribute_local_to_global(cell_matrix,
                                              cell_rhs,
                                              local_dof_indices,
-                                             inviscid_system_matrix,
+                                             inviscid_ss_matrix,
                                              ss_rhs);
 
       // aggregate local inviscid matrix into global matrix
@@ -798,7 +799,7 @@ void TransportProblem<dim>::add_viscous_matrix(const Vector<double> &viscosity)
       cell->get_dof_indices(local_dof_indices);
       constraints.distribute_local_to_global(cell_matrix,
                                              local_dof_indices,
-                                             system_matrix);
+                                             ss_matrix);
 
    }
 }
@@ -1028,14 +1029,14 @@ void TransportProblem<dim>::run()
             // This inviscid system matrix will contain inviscid terms and Laplacian viscous terms if there are any.
             // Max-principle viscosity terms will be added in a separate step afterward.
             assemble_system(old_dt);
-            // add inviscid component to total system matrix (A)
-            system_matrix.copy_from(inviscid_system_matrix);
+            // add inviscid component to total steady-state matrix (A)
+            ss_matrix.copy_from(inviscid_ss_matrix);
             // add viscous bilinear form for maximum-principle preserving viscosity
             bool using_max_principle_viscosity = (parameters.viscosity_option == 3) or (parameters.viscosity_option == 4);
             if (using_max_principle_viscosity) {
                // compute max-principle-preserving viscosity (both low-order and high-order)
                compute_max_principle_viscosity();
-               // add viscous component to total system matrix (A)
+               // add viscous component to total steady-state matrix (A)
                add_viscous_matrix(low_order_viscosity);
             }
 
@@ -1062,15 +1063,16 @@ void TransportProblem<dim>::run()
 
             // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
             system_rhs = 0;
-            system_rhs.add(dt, ss_rhs); //................. now, system_rhs = dt*(ss_rhs)
+            system_rhs.add(dt, ss_rhs); //       now, system_rhs = dt*(ss_rhs)
             lumped_mass_matrix.vmult(tmp_vector, old_solution);
-            system_rhs.add(1.0, tmp_vector); //............ now, system_rhs = M*u_old + dt*(ss_rhs)
-            system_matrix.vmult(tmp_vector, old_solution);
-            system_rhs.add(-dt, tmp_vector); //............ now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old), so it is complete
-            // enforce the Dirichlet BC after solution has been formed
-            apply_Dirichlet_BC(lumped_mass_matrix, new_solution, system_rhs);
+            system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
+            ss_matrix.vmult(tmp_vector, old_solution);
+            system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
+
             // solve the linear system M*u_new = system_rhs
-            solve_linear_system(lumped_mass_matrix, system_rhs);
+            system_matrix.copy_from(lumped_mass_matrix);
+            apply_Dirichlet_BC(system_matrix, new_solution, system_rhs); // apply Dirichlet BC
+            solve_linear_system(system_matrix, system_rhs);
             // distribute constraints
             constraints.distribute(new_solution);
 
@@ -1101,7 +1103,6 @@ void TransportProblem<dim>::run()
                bool max_principle_satisfied_high_order = check_max_principle(dt,true);
                max_principle_satisfied = max_principle_satisfied and max_principle_satisfied_high_order;
             }
-
 
             // update old time step size
             old_dt = dt;
@@ -1136,7 +1137,7 @@ void TransportProblem<dim>::solve_steady_state()
    // This inviscid system matrix will contain inviscid terms and Laplacian viscous terms if there are any.
    assemble_system(1.0e15);
    // add inviscid component to total system matrix (A)
-   system_matrix.copy_from(inviscid_system_matrix);
+   ss_matrix.copy_from(inviscid_ss_matrix);
    // add viscous bilinear form for maximum-principle preserving viscosity
    bool using_max_principle_viscosity = (parameters.viscosity_option == 3) or (parameters.viscosity_option == 4);
    if (using_max_principle_viscosity) {
@@ -1146,9 +1147,9 @@ void TransportProblem<dim>::solve_steady_state()
       add_viscous_matrix(low_order_viscosity);
    }
    // enforce Dirichlet BC on total system matrix
-   apply_Dirichlet_BC(system_matrix, new_solution, ss_rhs);
-   // solve the linear system: system_matrix*new_solution = ss_rhs
-   solve_linear_system(system_matrix, ss_rhs);
+   apply_Dirichlet_BC(ss_matrix, new_solution, ss_rhs);
+   // solve the linear system: ss_matrix*new_solution = ss_rhs
+   solve_linear_system(ss_matrix, ss_rhs);
    // distribute constraints
    constraints.distribute(new_solution);
 
@@ -1410,7 +1411,7 @@ bool TransportProblem<dim>::check_max_principle(const double &dt,
                std::cout << "      Max principle lower bound violated with dof "
                   << i << " of high-order solution: " << std::scientific
                   << value_i << " < " << min_values(i) << std::endl;
-               debug_max_principle_high_order(i,dt);
+               debug_max_principle_high_order(i,true);
             } else {
                std::cout << "      Max principle lower bound violated with dof "
                   << i << " of low-order solution: " << std::scientific
@@ -1427,7 +1428,7 @@ bool TransportProblem<dim>::check_max_principle(const double &dt,
                std::cout << "      Max principle upper bound violated with dof "
                   << i << " of high-order solution: " << std::scientific
                   << value_i << " > " << max_values(i) << std::endl;
-               debug_max_principle_high_order(i,dt);
+               debug_max_principle_high_order(i,false);
             } else {
                std::cout << "      Max principle upper bound violated with dof "
                   << i << " of low-order solution: " << std::scientific
@@ -1467,14 +1468,14 @@ void TransportProblem<dim>::debug_max_principle_low_order(const unsigned int &i,
    std::vector<double>       row_values;
    std::vector<unsigned int> row_indices;
    unsigned int              n_col;
-   get_matrix_row(system_matrix,
+   get_matrix_row(ss_matrix,
                   i,
                   row_values,
                   row_indices,
                   n_col);
 
    // diagonal entry
-   double Aii = system_matrix(i,i);
+   double Aii = ss_matrix(i,i);
 
    // check that system matrix diagonal elements are non-negative
    if (Aii < 0.0)
@@ -1516,7 +1517,7 @@ void TransportProblem<dim>::debug_max_principle_low_order(const unsigned int &i,
    // check that CFL condition is satisfied if transient problem
    if (!parameters.is_steady_state)
    {
-      double cfl = dt/lumped_mass_matrix(i,i)*system_matrix(i,i);
+      double cfl = dt/lumped_mass_matrix(i,i)*ss_matrix(i,i);
       if (cfl > 1.0)
       {
          std::cout << "         DEBUG: row does not satisfy CFL condition: CFL = " << cfl << std::endl;
@@ -1536,11 +1537,9 @@ void TransportProblem<dim>::debug_max_principle_low_order(const unsigned int &i,
  */
 template <int dim>
 void TransportProblem<dim>::debug_max_principle_high_order(const unsigned int &i,
-                                                           const double &dt)
+                                                           const bool &lower_bound_violated)
 {
-   // flag to determine if no conditions were violated
-   bool condition_violated = false;
-
+   // small number for floating point comparisons
    const double small_number = 1.0e-15;
 
    // check that the high order coefficient matrix A is skew symmetric
@@ -1555,7 +1554,6 @@ void TransportProblem<dim>::debug_max_principle_high_order(const unsigned int &i
                   n_col);
 
    // check lower bound conditions
-   bool lower_bound_violated = true;
    if (lower_bound_violated)
    {
       double lhs = lumped_mass_matrix(i,i)*(new_solution(i) - low_order_solution(i));
@@ -1632,6 +1630,8 @@ void TransportProblem<dim>::debug_max_principle_high_order(const unsigned int &i
          std::cout << "         DEBUG: VIOLATED:  " << condition << std::endl;
       else
          std::cout << "         DEBUG: SATISFIED: " << condition << std::endl;
+   } else {
+      Assert(false,ExcNotImplemented());
    }
 }
 
@@ -1681,7 +1681,7 @@ void TransportProblem<dim>::compute_max_principle_bounds(const double &dt)
       std::vector<double>       row_values;
       std::vector<unsigned int> row_indices;
       unsigned int              n_col;
-      get_matrix_row(system_matrix,
+      get_matrix_row(ss_matrix,
                      i,
                      row_values,
                      row_indices,
@@ -1700,6 +1700,7 @@ void TransportProblem<dim>::compute_max_principle_bounds(const double &dt)
 
    // alter the Dirichlet nodes to make both upper and lower bounds equal to
    // Dirichlet value
+/*
    std::map<unsigned int, double> boundary_values;
    VectorTools::interpolate_boundary_values(dof_handler,
                                             incoming_boundary,
@@ -1710,6 +1711,7 @@ void TransportProblem<dim>::compute_max_principle_bounds(const double &dt)
       min_values(it->first) = it->second;
       max_values(it->first) = it->second;
    }
+*/
 }
 
 /** \brief Computes min and max quantities for steady-state max principle
@@ -1758,7 +1760,7 @@ void TransportProblem<dim>::compute_steady_state_max_principle_bounds()
       std::vector<double>       row_values;
       std::vector<unsigned int> row_indices;
       unsigned int              n_col;
-      get_matrix_row(system_matrix,
+      get_matrix_row(ss_matrix,
                      i,
                      row_values,
                      row_indices,
@@ -1769,30 +1771,30 @@ void TransportProblem<dim>::compute_steady_state_max_principle_bounds()
          row_sum += row_values[k];
       
       // compute the max and min values for the maximum principle
-      max_values(i) = max_values(i)*(1.0 - row_sum/system_matrix(i,i))
-         + ss_rhs(i)/system_matrix(i,i);
-      min_values(i) = min_values(i)*(1.0 - row_sum/system_matrix(i,i))
-         + ss_rhs(i)/system_matrix(i,i);
+      max_values(i) = max_values(i)*(1.0 - row_sum/ss_matrix(i,i))
+         + ss_rhs(i)/ss_matrix(i,i);
+      min_values(i) = min_values(i)*(1.0 - row_sum/ss_matrix(i,i))
+         + ss_rhs(i)/ss_matrix(i,i);
    }
 }
 
 /** \brief Computes the high-order right hand side vector (G) and
- *         stores in system_matrix.
+ *         stores in ss_matrix.
  */
 template <int dim>
 void TransportProblem<dim>::compute_high_order_rhs()
 {
    // Form total system matrix, first adding the inviscid component
-   system_matrix.copy_from(inviscid_system_matrix);
+   ss_matrix.copy_from(inviscid_ss_matrix);
    // add viscous component to total system matrix (A)
    // Note that high_order_viscosity has already been computed in compute_max_principle_viscosity(),
    // which was called for the assembly of the low-order system.
    add_viscous_matrix(high_order_viscosity);
 
-   // G is to be stored in system_rhs and is computed as G = ss_rhs - system_matrix*old_solution
+   // G is to be stored in system_rhs and is computed as G = ss_rhs - ss_matrix*old_solution
    system_rhs = ss_rhs;
-   // now use ss_rhs as tmp vector to hold system_matrix*old_solution
-   system_matrix.vmult(ss_rhs, old_solution);
+   // now use ss_rhs as tmp vector to hold ss_matrix*old_solution
+   ss_matrix.vmult(ss_rhs, old_solution);
    // complete computation of G
    system_rhs.add(-1.0, ss_rhs);
 }
@@ -1886,47 +1888,56 @@ void TransportProblem<dim>::compute_limiting_coefficients()
 {
    for (unsigned int i = 0; i < n_dofs; ++i)
    {
-      // get nonzero entries in row i of high-order coefficient matrix A
-      std::vector<double>       row_values;
-      std::vector<unsigned int> row_indices;
-      unsigned int              n_col;
-      get_matrix_row(high_order_coefficient_matrix,
-                     i,
-                     row_values,
-                     row_indices,
-                     n_col);
-
-      double P_plus_i  = 0.0;
-      double P_minus_i = 0.0;
-      // compute P_plus, P_minus
-      for (unsigned int k = 0; k < n_col; ++k)
+      // for Dirichlet nodes, set R_minus and R_plus to 1 because no limiting is needed
+      if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) != dirichlet_nodes.end())
       {
-         // get value of nonzero entry k
-         double Aij = row_values[k];
-
-         P_plus_i  += std::max(0.0,Aij);
-         P_minus_i += std::min(0.0,Aij);
-      }
-      P_plus(i)  = P_plus_i;
-      P_minus(i) = P_minus_i;
-
-      // compute Q_plus and Q_minus
-      double Q_plus_i  = lumped_mass_matrix(i,i)*(max_values(i) - new_solution(i));
-      double Q_minus_i = lumped_mass_matrix(i,i)*(min_values(i) - new_solution(i));
-      Q_plus(i)  = Q_plus_i;
-      Q_minus(i) = Q_minus_i;
-
-      // compute R_plus(i)
-      if (P_plus_i != 0.0)
-         R_plus(i) = std::min(1.0, Q_plus_i/P_plus_i);
-      else
-         R_plus(i) = 1.0;
-
-      // compute R_minus(i)
-      if (P_minus_i != 0.0)
-         R_minus(i) = std::min(1.0, Q_minus_i/P_minus_i);
-      else
          R_minus(i) = 1.0;
+         R_plus(i) = 1.0;
+      }
+      else
+      {
+         // get nonzero entries in row i of high-order coefficient matrix A
+         std::vector<double>       row_values;
+         std::vector<unsigned int> row_indices;
+         unsigned int              n_col;
+         get_matrix_row(high_order_coefficient_matrix,
+                        i,
+                        row_values,
+                        row_indices,
+                        n_col);
+   
+         double P_plus_i  = 0.0;
+         double P_minus_i = 0.0;
+         // compute P_plus, P_minus
+         for (unsigned int k = 0; k < n_col; ++k)
+         {
+            // get value of nonzero entry k
+            double Aij = row_values[k];
+   
+            P_plus_i  += std::max(0.0,Aij);
+            P_minus_i += std::min(0.0,Aij);
+         }
+         P_plus(i)  = P_plus_i;
+         P_minus(i) = P_minus_i;
+   
+         // compute Q_plus and Q_minus
+         double Q_plus_i  = lumped_mass_matrix(i,i)*(max_values(i) - new_solution(i));
+         double Q_minus_i = lumped_mass_matrix(i,i)*(min_values(i) - new_solution(i));
+         Q_plus(i)  = Q_plus_i;
+         Q_minus(i) = Q_minus_i;
+   
+         // compute R_plus(i)
+         if (P_plus_i != 0.0)
+            R_plus(i) = std::min(1.0, Q_plus_i/P_plus_i);
+         else
+            R_plus(i) = 1.0;
+   
+         // compute R_minus(i)
+         if (P_minus_i != 0.0)
+            R_minus(i) = std::min(1.0, Q_minus_i/P_minus_i);
+         else
+            R_minus(i) = 1.0;
+      }
    }
 }
 
@@ -1981,7 +1992,7 @@ void TransportProblem<dim>::enforce_CFL_condition(double &dt, double &CFL) const
    // CFL is computed as max over all i of dt*A(i,i)/mL(i,i)
    double max_A_over_m = 0.0; // max over all i of A(i,i)/mL(i,i)
    for (unsigned int i = 0; i < n_dofs; ++i)
-      max_A_over_m = std::max(max_A_over_m, system_matrix(i,i) / lumped_mass_matrix(i,i));
+      max_A_over_m = std::max(max_A_over_m, ss_matrix(i,i) / lumped_mass_matrix(i,i));
 
    // compute CFL number
    CFL = dt * max_A_over_m;

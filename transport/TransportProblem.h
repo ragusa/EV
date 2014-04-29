@@ -141,7 +141,8 @@ class TransportProblem {
       ConstraintMatrix constraints;
       SparsityPattern constrained_sparsity_pattern;
       SparseMatrix<double> system_matrix;
-      SparseMatrix<double> inviscid_system_matrix;
+      SparseMatrix<double> ss_matrix;
+      SparseMatrix<double> inviscid_ss_matrix;
       SparseMatrix<double> consistent_mass_matrix;
       SparseMatrix<double> lumped_mass_matrix;
       SparseMatrix<double> auxiliary_mass_matrix;
@@ -197,7 +198,7 @@ class TransportProblem {
       bool check_max_principle(const double &dt,
                                const bool   &using_high_order);
       void debug_max_principle_low_order (const unsigned int &i, const double &dt);
-      void debug_max_principle_high_order(const unsigned int &i, const double &dt);
+      void debug_max_principle_high_order(const unsigned int &i, const bool &lower_bound_violated);
       void compute_max_principle_bounds(const double &dt);
       void compute_steady_state_max_principle_bounds();
       Vector<double> min_values;
