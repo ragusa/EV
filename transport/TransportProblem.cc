@@ -1090,12 +1090,20 @@ void TransportProblem<dim>::run()
             {
                // compute high-order right hand side (G) and store in system_rhs
                compute_high_order_rhs();
+system_rhs*=dt;
+consistent_mass_matrix.vmult(tmp_vector, old_solution);
+system_rhs.add(1.0, tmp_vector);
+system_matrix.copy_from(consistent_mass_matrix);
+apply_Dirichlet_BC(system_matrix, new_solution, system_rhs); // apply Dirichlet BC
+solve_linear_system(system_matrix, system_rhs);
+/*
                // compute high-order coefficient matrix (A)
                assemble_high_order_coefficient_matrix(dt);
                // compute the limiting coefficient matrix (L)
                compute_limiting_coefficients();
                // compute the high-order solution using the low-order solution and L
                compute_high_order_solution();
+*/
                // distribute constraints
                constraints.distribute(new_solution);
 
@@ -1779,7 +1787,7 @@ void TransportProblem<dim>::compute_steady_state_max_principle_bounds()
 }
 
 /** \brief Computes the high-order right hand side vector (G) and
- *         stores in ss_matrix.
+ *         stores in system_rhs.
  */
 template <int dim>
 void TransportProblem<dim>::compute_high_order_rhs()
@@ -1939,6 +1947,17 @@ void TransportProblem<dim>::compute_limiting_coefficients()
             R_minus(i) = 1.0;
       }
    }
+
+   // if user chose not to limit, set R+ and R- = 1 so that limiting
+   // coefficients will equal 1 and thus no limiting will occur
+   if (parameters.do_not_limit)
+   {
+      for (unsigned int i = 0; i < n_dofs; ++i)
+      {
+         R_minus(i) = 1.0;
+         R_plus(i)  = 1.0;
+      }
+   }
 }
 
 /** \brief Computes the high-order maximum-principle preserving solution
@@ -1950,35 +1969,53 @@ void TransportProblem<dim>::compute_high_order_solution()
 {
    for (unsigned int i = 0; i < n_dofs; ++i)
    {
-      // get values and indices of nonzero entries in row i of coefficient matrix A
-      std::vector<double>       row_values;
-      std::vector<unsigned int> row_indices;
-      unsigned int              n_col;
-      get_matrix_row(high_order_coefficient_matrix,
-                     i,
-                     row_values,
-                     row_indices,
-                     n_col);
-
-      // perform flux correction for dof i
-      // Note that flux_correction_sum is sum_{j in I(S_i)} of Lij*Aij.
-      double flux_correction_sum = 0.0;
-      for (unsigned int k = 0; k < n_col; ++k) {
-         unsigned int j = row_indices[k];
-         double Aij     = row_values[k];
-         // compute limiting coefficient Lij
-         double Lij;
-         if (Aij >= 0.0)
-            Lij = std::min(R_plus(i),R_minus(j));
-         else
-            Lij = std::min(R_minus(i),R_plus(j));
-
-         // add Lij*Aij to flux correction sum
-         flux_correction_sum += Lij*Aij;
+      // check if dof is a Dirichlet node or not - if it is, don't check max principle
+      if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) == dirichlet_nodes.end())
+      { // i does not correspond to a Dirichlet node
+         // get values and indices of nonzero entries in row i of coefficient matrix A
+         std::vector<double>       row_values;
+         std::vector<unsigned int> row_indices;
+         unsigned int              n_col;
+         get_matrix_row(high_order_coefficient_matrix,
+                        i,
+                        row_values,
+                        row_indices,
+                        n_col);
+   
+         // perform flux correction for dof i
+         // Note that flux_correction_sum is sum_{j in I(S_i)} of Lij*Aij.
+         double flux_correction_sum = 0.0;
+         for (unsigned int k = 0; k < n_col; ++k) {
+            unsigned int j = row_indices[k];
+            double Aij     = row_values[k];
+            // compute limiting coefficient Lij
+            double Lij;
+            if (Aij >= 0.0)
+               Lij = std::min(R_plus(i),R_minus(j));
+            else
+               Lij = std::min(R_minus(i),R_plus(j));
+   
+            // add Lij*Aij to flux correction sum
+            flux_correction_sum += Lij*Aij;
+         }
+   
+         // compute high-order solution for dof i
+         new_solution(i) = new_solution(i) + flux_correction_sum / lumped_mass_matrix(i,i);
       }
-
-      // compute high-order solution for dof i
-      new_solution(i) = new_solution(i) + flux_correction_sum / lumped_mass_matrix(i,i);
+      else // i corresponds to a Dirichlet node
+      {
+         // get Dirichlet value for node i
+         std::map<unsigned int, double> boundary_values;
+         VectorTools::interpolate_boundary_values(dof_handler,
+                                            incoming_boundary,
+                                            ConstantFunction<dim>(incoming_flux_value, 1),
+                                            boundary_values);
+         std::map<unsigned int, double>::iterator it = boundary_values.find(i);
+         // ensure that Dirichlet node i was actually found in Dirichlet node list
+         Assert(it != boundary_values.end(),ExcInvalidState());
+         // set new solution to have Dirichlet value
+         new_solution(i) = it->second;
+      }
    }
 }
 

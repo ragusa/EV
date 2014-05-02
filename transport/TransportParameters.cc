@@ -20,7 +20,8 @@ TransportParameters::TransportParameters() :
       time_step_size(0.001),
       output_exact_solution(false),
       output_initial_solution(false),
-      CFL_limit(0.5)
+      CFL_limit(0.5),
+      do_not_limit(false)
 {
 }
 
@@ -69,6 +70,8 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
          "Option to output initial solution");
    prm.declare_entry("CFL limit", "0.5", Patterns::Double(),
          "Upper bound for the CFL number");
+   prm.declare_entry("Do not limit", "false", Patterns::Bool(),
+         "Option to choose not to limit when constructing high-order solution");
 }
 
 /** \brief get the input parameters
@@ -94,4 +97,5 @@ void TransportParameters::get_parameters(ParameterHandler &prm) {
    output_exact_solution = prm.get_bool("Output exact solution");
    output_initial_solution = prm.get_bool("Output initial solution");
    CFL_limit = prm.get_double("CFL limit");
+   do_not_limit = prm.get_bool("Do not limit");
 }

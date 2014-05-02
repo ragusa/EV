@@ -33,6 +33,7 @@ class TransportParameters {
     bool output_exact_solution; // option to output exact solution
     bool output_initial_solution; // option to output initial solution
     double CFL_limit; // upper bound for the CFL number
+    bool do_not_limit; // flag to turn off limiting for high order solution
 };
 
 #include "TransportParameters.cc"
