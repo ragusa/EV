@@ -1,4 +1,4 @@
-function [MC,K,ML,D,b]=build_matrices(len,nel,omega,sigma,src,inc)
+function [MC,K,ML,D,b]=build_matrices(len,nel,omega,sigma,src)
 
 % integral bi bj
 m=[2 1;1 2]/3;
@@ -25,7 +25,6 @@ for iel=1:nel
     K(g(iel,:),g(iel,:))  = K(g(iel,:),g(iel,:))  + gr;
     b(g(iel,:)) = b(g(iel,:)) +jac*f*src;
 end
-b(1)=inc;
 
 % kuzmin write K on the rhs
 K=-omega*K-sigma*MC;

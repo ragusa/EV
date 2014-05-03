@@ -1,43 +1,170 @@
 close all; clc;
 
-len=10;
-nel=10;
-omega=.1;
-sigma=1;
-src=0;
-inc=1;
-x=linspace(0,len,nel+1);
+% ML*du/dt-(K+D)*u = b
+% MC*du/dt-(K  )*u = b
 
-[MC,K,ML,D,b]=build_matrices(len,nel,omega,sigma,src,inc);
+len=10;    % length of domain
+nel=10;    % number of elements
+omega=1.0; % omega
+sigma=1;   % sigma
+src=0;     % source
+inc=1;     % incoming flux
+n_dt  = 10;      % number of time steps
+CFL = 0.8;       % CFL number
+limiting_option = 2; % 0 = set limiting coefficients to 0 (no correction)
+                     % 1 = set limiting coefficients to 1 (full correction)
+                     % 2 = compute limiting coefficients normally
+%==========================================================================
 
-% low order solve
-A=-(K+D);
-A(1,:)=0;A(1,1)=1;
-uL=A\b;
-plot(x,uL,'s-'); hold all
+n_dof = nel + 1; % number of dofs
 
-% high order solve
-A=-K;
-A(1,:)=0;A(1,1)=1;
-uH=A\b;
-plot(x,uH,'+-')
+x=linspace(0,len,nel+1); % x points for plotting
 
-% compute limiter
-LIM=fct(uH,MC,ML,D,uL);
+% build matrices
+[MC,K,ML,D,b]=build_matrices(len,nel,omega,sigma,src);
+ML = diag(ML);
+B = (ML-MC)/ML; % B = (ML-MC)*ML^-1 (Guermond)
+AL = -(K+D);    % low-order steady-state matrix
+AH = -K;        % high-order steady-state matrix
+% compute modified lumped mass matrix for Dirichlet BC
+ML_mod = ML;
+ML_mod(1,:)=0;ML_mod(1,1)=1;
+% compute modified consistent mass matrix for Dirichlet BC
+MC_mod = MC;
+MC_mod(1,:)=0;MC_mod(1,1)=1;
 
-% high order solve with limiter
-A=-(K+D);
-A(1,:)=0;A(1,1)=1;
-rhs=b+LIM*(-D*uH);
-rhs(1)=0;
-uLim=A\rhs;
-plot(x,uLim,'v-')
+% compute dt using CFL condition
+dt = CFL*ML(1,1)/AL(1,1);
+for i = 2:n_dof
+    dt = min(dt, CFL*ML(i,i)/AL(i,i));
+end
 
-% exact 
+% initial conditions for pseudotransient (equal to exact steady-state solution)
+if(sigma>eps)
+    u0=src/sigma+(inc-src/sigma)*exp(-sigma*x'/omega);
+else
+    u0=inc+src/omega*x';
+end
+
+hold all;
+
+% exact solution
+%==========================================================================
 xx=linspace(0,len,1000);
 if(sigma>eps)
     exact=src/sigma+(inc-src/sigma)*exp(-sigma*xx/omega);
 else
     exact=inc+src/omega*xx;
 end
-plot(xx,exact,'r-')
+plot(xx,exact,'k-');
+legend_entries = char('Exact');
+
+% low-order solve
+%==========================================================================
+fprintf('Computing low-order solution...\n');
+u_old = u0;
+for n = 1:n_dt
+    % compute rhs
+    rhs = ML*u_old + dt*(b-AL*u_old);
+    % modify rhs for Dirichlet BC
+    rhs(1) = inc;
+    % solve modified system
+    u_new = ML_mod \ rhs;
+    % reset u_old
+    u_old = u_new;
+end
+plot(x,u_new,'r-s');
+legend_entries = char(legend_entries,'Low-order');
+
+% high-order solve
+%==========================================================================
+fprintf('Computing high-order solution...\n');
+u_old = u0;
+for n = 1:n_dt
+    % compute rhs
+    rhs = MC*u_old + dt*(b-AH*u_old);
+    % modify rhs for Dirichlet BC
+    rhs(1) = inc;
+    % solve modified system
+    u_new = MC_mod \ rhs;
+    % reset u_old
+    u_old = u_new;
+end
+plot(x,u_new,'b-+');
+legend_entries = char(legend_entries,'High-order');
+
+% FCT solve, incorrect correction
+%==========================================================================
+fprintf('Computing FCT (incorrect correction) solution...\n');
+u_old = u0;
+for n = 1:n_dt
+    % low-order solve
+    %----------------
+    % compute rhs
+    rhs = ML*u_old + dt*(b-AL*u_old);
+    % modify rhs for Dirichlet BC
+    rhs(1) = inc;
+    % solve modified system
+    uL = ML_mod \ rhs;
+
+    % FCT solve
+    %----------------
+    % compute flux correction matrix. You can check the following
+    %    sum(F,2) = -dt*D*u_old + dt*B*(K*u_old + b), where sum(F,2) is row-sum
+    correction = compute_flux_correction_matrix(u_old,dt,D,B,K,b);
+    % compute the upper and lower bound for max principle
+    [W_max,W_min] = compute_max_principle_bounds(u_old,dt,ML,AL,b,inc);
+    % compute limiting coefficients
+    switch limiting_option
+        case 0 % no correction
+            limiter = zeros(n_dof,n_dof);
+        case 1 % full correction (no limiting)
+            limiter = ones(n_dof,n_dof);
+        case 2 % normal limiting
+            limiter = compute_limiting_coefficients(correction,uL,ML,W_max,W_min);
+        otherwise
+            error('Invalid limiting option');
+    end
+    % compute correction rhs
+    rhs = ML*uL + sum((limiter.*correction),2);
+    % modify rhs for Dirichlet BC
+    rhs(1) = inc;
+    % solve modified system
+    u_new = ML_mod \ rhs;
+    % check that max principle is satisfied
+    check_max_principle(u_new,W_max,W_min);
+    % reset u_old
+    u_old = u_new;
+end
+plot(x,u_new,'g-x');
+legend_entries = char(legend_entries,'FCT, incorrect correction');
+
+% FCT solve, correct correction
+%==========================================================================
+fprintf('Computing FCT (correct correction) solution...\n');
+u_old = u0;
+for n = 1:n_dt
+    % low-order solve
+    % compute rhs
+    rhs = ML*u_old + dt*(b-AL*u_old);
+    % modify rhs for Dirichlet BC
+    rhs(1) = inc;
+    % solve modified system
+    uL = ML_mod \ rhs;
+
+    % consult my notes FCT.pdf, Equation (12):
+    %    correction_rowsum = \mathcal{A}*1
+    Ftr = ML*u_old + dt*(b-AL*u_old);
+    Ftr(1) = inc;
+    Gtr = MC*u_old + dt*(b-AH*u_old);
+    Gtr(1) = inc;
+    correction_rowsum = ML/MC_mod*Gtr - ML/ML_mod*Ftr;
+    u_new = uL + ML\correction_rowsum;
+
+    % reset u_old
+    u_old = u_new;
+end
+plot(x,u_new,'m-o');
+legend_entries = char(legend_entries,'FCT, correct correction');
+
+legend(legend_entries);
