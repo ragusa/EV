@@ -8,5 +8,7 @@ then
 fi
 
 gnuplot ../plotscripts/burgers.gp
+sleep 1
+evince burgers.pdf
 
 cd ..

@@ -245,8 +245,8 @@ void Burgers<dim>::compute_ss_residual(Vector<double> &f)
       fe_values.reinit(cell);
    
       // get current solution values and gradients
-      fe_values[velocity_extractor].get_function_values   (this->current_solution,solution_values);
-      fe_values[velocity_extractor].get_function_gradients(this->current_solution,solution_gradients);
+      fe_values[velocity_extractor].get_function_values   (this->new_solution,solution_values);
+      fe_values[velocity_extractor].get_function_gradients(this->new_solution,solution_gradients);
       
       // loop over quadrature points
       for (unsigned int q = 0; q < this->n_q_points_cell; ++q) {
@@ -285,7 +285,7 @@ void Burgers<dim>::compute_ss_residual(Vector<double> &f)
          fe_values.reinit(cell);
       
          // get current solution gradients
-         fe_values[velocity_extractor].get_function_gradients(this->current_solution,solution_gradients);
+         fe_values[velocity_extractor].get_function_gradients(this->new_solution,solution_gradients);
          
          // loop over quadrature points
          for (unsigned int q = 0; q < this->n_q_points_cell; ++q) {
@@ -326,7 +326,7 @@ void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
          fe_face_values.reinit(cell, face);
 
          std::vector<Tensor<1, dim> > solution_gradients_face(this->n_q_points_face);
-         fe_face_values[velocity_extractor].get_function_gradients   (this->current_solution,solution_gradients_face);
+         fe_face_values[velocity_extractor].get_function_gradients   (this->new_solution,solution_gradients_face);
 
          // compute viscosity
          Vector<double> viscosity_face(this->n_q_points_face);
@@ -342,7 +342,7 @@ void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
             {
                // get max velocity on cell
                std::vector<double> local_solution(this->n_q_points_face);
-               fe_face_values.get_function_values(this->current_solution, local_solution);
+               fe_face_values.get_function_values(this->new_solution, local_solution);
                double max_velocity = 0.0;
                for (unsigned int q = 0; q < this->n_q_points_face; ++q)
                   max_velocity = std::max( max_velocity, local_solution[q]);
@@ -412,7 +412,7 @@ void Burgers<dim>::compute_ss_jacobian()
 
       fe_values.reinit(cell);
       // get velocity values at each quadrature point in cell
-      fe_values[velocity_extractor].get_function_values (this->current_solution, velocity);
+      fe_values[velocity_extractor].get_function_values (this->new_solution, velocity);
 
       for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
          for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
@@ -448,7 +448,7 @@ void Burgers<dim>::update_flux_speeds()
    for (; cell != endc; ++cell)
    {
       fe_values.reinit(cell);
-      fe_values[velocity_extractor].get_function_values(this->current_solution, velocity);
+      fe_values[velocity_extractor].get_function_values(this->new_solution, velocity);
 
       this->max_flux_speed_cell[cell] = 0.0;
       for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
@@ -537,7 +537,7 @@ void Burgers<dim>::output_solution (double time)
    DataOut<dim> data_out;
    data_out.attach_dof_handler       (this->dof_handler);
 
-   data_out.add_data_vector (this->current_solution,
+   data_out.add_data_vector (this->new_solution,
                              this->component_names,
                              DataOut<dim>::type_dof_data,
                              this->component_interpretations);

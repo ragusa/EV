@@ -80,9 +80,7 @@ class ConservationLaw
     double compute_dt_from_cfl_condition();
     double compute_cfl_number(const double &dt) const;
 
-    void mass_matrix_solve (Vector<double> &x);
-    void linear_solve (const typename ConservationLawParameters<dim>::LinearSolverType     &linear_solver,
-                       const SparseMatrix<double> &A,
+    void linear_solve (const SparseMatrix<double> &A,
                        const Vector<double>       &b,
                              Vector<double>       &x);
 
@@ -119,8 +117,12 @@ class ConservationLaw
     void output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, double> &map,
                     const std::string &output_filename_base);
 
-    // error checking functions
+    // checking functions
     void check_nan();
+    bool check_local_discrete_max_principle(const unsigned int &n) const;
+    void compute_max_principle_quantities();
+    Vector<double> min_values;
+    Vector<double> max_values;
 
     // utility functions
     void get_matrix_row(const SparseMatrix<double> &matrix,
@@ -151,6 +153,8 @@ class ConservationLaw
     const unsigned int   dofs_per_cell;
     /** faces per cell */
     const unsigned int   faces_per_cell;
+    /** number of DoFs in global system */
+    unsigned int         n_dofs;
     /** DoF handler */
     DoFHandler<dim>      dof_handler;
     /** constraint matrix */
@@ -168,7 +172,7 @@ class ConservationLaw
     const unsigned int   n_q_points_face;
 
     /** solution of current time step */
-    Vector<double>       current_solution;
+    Vector<double>       new_solution;
     /** solution of previous time step */
     Vector<double>       old_solution;
     /** exact solutuion of current time step */
@@ -186,8 +190,10 @@ class ConservationLaw
     SparsityPattern      constrained_sparsity_pattern;
     /* unconstrained sparsity pattern */
     SparsityPattern      unconstrained_sparsity_pattern;
-    /* mass matrix */
-    SparseMatrix<double> mass_matrix;
+    /* consistent mass matrix */
+    SparseMatrix<double> consistent_mass_matrix;
+    /* lumped mass matrix */
+    SparseMatrix<double> lumped_mass_matrix;
     /* system matrix; Jacobian matrix */
     SparseMatrix<double> system_matrix;
     /** Matrix for the viscous bilinear forms, to be used in computing viscosity.
@@ -276,6 +282,10 @@ class ConservationLaw
        std::vector<Vector<double> > f;
     };
     RungeKuttaParameters rk;
+
+    // boundary nodes
+    void get_dirichlet_nodes();
+    std::vector<unsigned int> dirichlet_nodes;
 };
 
 #include "ConservationLaw.cc"

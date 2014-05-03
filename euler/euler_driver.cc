@@ -1,6 +1,3 @@
-/** \file euler_driver.cc
- *  \brief Solves Euler equations.
- */
 #include <iostream>
 
 #include <deal.II/base/logstream.h>

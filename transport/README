@@ -1,20 +1,37 @@
 README for transport
 ====================
 Main source file: transport.cc
+
 To compile program:
+---------------------------------------------------------------------------------
 1. run cmake, for example "cmake -DCMAKE_INSTALL_PREFIX=~/bin/deal.II ."
 2. run make
 
 To run program:
-$ transport <#>
-where <#> is a number corresponding to a coded test problem, 1-4
+---------------------------------------------------------------------------------
+$ ./transport
+Output files are stored in ./output.
 
-Input files are located in /input and are named according to the
-test problem: test_problem_#.in
+To edit input:
+---------------------------------------------------------------------------------
+Input file: ./input
 
-Output files are stored in /output.
+To plot the results:
+---------------------------------------------------------------------------------
+Some gnuplot scripts are available in ./plotscripts:
+solution.gp
+viscosity.gp
 
-Some gnuplot scripts are available in /plotscripts. One just needs to
-run, for example:
-$ gnuplot test_problem_1.gp
+For solution.gp, which plots the solution of a test problem with all
+available output (corresponding to different viscosity options),
+the shell script "plot" is available in the current directory. This
+script must be used because gnuplot does not accept command-line arguments,
+so arguments must be passed using environment variables. "plot" accomplishes
+this and takes the problem ID from the input file and passes it to solution.gp.
+So just run "plot" after you run the problem to plot it (and automatically view
+the output).
+
+To plot the viscosity, go into the plotscripts directory and run the viscosity.gp
+script:
+$ gnuplot viscosity.gp
 which produces a .pdf file in the /plotscripts directory

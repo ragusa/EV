@@ -12,9 +12,10 @@ template<int dim>
 class TotalSource: public Function<dim>
 {
    public:
-      TotalSource(const TransportParameters &parameters) :
+      TotalSource(const unsigned int &source_option, const double &source_value) :
          Function<dim>(),
-         parameters(parameters)
+         source_option(source_option),
+         source_value(source_value)
       {}
 
       double value(const Point<dim> &p) const;
@@ -22,7 +23,8 @@ class TotalSource: public Function<dim>
       void value_list(const std::vector<Point<dim> > &points,
                       std::vector<double> &values) const;
    private:
-      const TransportParameters &parameters;
+      const unsigned int source_option;
+      const double source_value;
 };
 
 #include "TotalSource.cc"

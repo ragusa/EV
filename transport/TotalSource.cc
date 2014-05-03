@@ -4,9 +4,9 @@ template<int dim>
 double TotalSource<dim>::value(const Point<dim> &p) const
 {
    double return_value = 0.0;
-   switch (parameters.source_option) {
+   switch (source_option) {
       case 1: {
-         return_value = parameters.source_value / (4.0 * numbers::PI); // isotropic source term
+         return_value = source_value; // isotropic source term
          break;
       } case 2: {
          bool in_nonzero_region = true;
@@ -16,7 +16,7 @@ double TotalSource<dim>::value(const Point<dim> &p) const
                break;
             }
          if (in_nonzero_region)
-            return_value = parameters.source_value;
+            return_value = source_value;
          break;
       } case 3: {
          /* manufactured solution source

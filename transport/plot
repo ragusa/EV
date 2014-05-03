@@ -1,0 +1,30 @@
+#!/usr/bin/env perl
+# reads the input file to determine which problem was
+# just run and then plots the results of that run
+# with gnuplot and then views the resulting plot with evince
+
+use strict;
+
+# read input file to determine the test problem ID
+my $input_file = "input";
+open(IN, '<', $input_file) or die $!;
+my $input_line; # input file line
+my @input_line; # array of fields of input line
+my $problem_ID; # problem ID
+while ($input_line = <IN>) {
+   chomp($input_line);
+   @input_line = split /\s+=\s+/, $input_line;
+   if ($input_line[0] eq "set Problem ID") {
+      $problem_ID = $input_line[1];
+      last;
+   }
+}
+
+# create gnuplot script name from problem ID
+my $output_file = "solutions_$problem_ID.pdf";
+
+# call gnuplot
+chdir "plotscripts";
+system("gnuplot -e 'problem_ID=$problem_ID' solutions.gp");
+system("sleep 1");
+system("evince $output_file");

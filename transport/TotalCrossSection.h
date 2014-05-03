@@ -12,9 +12,10 @@ template<int dim>
 class TotalCrossSection: public Function<dim>
 {
    public:
-      TotalCrossSection(const TransportParameters &parameters) :
+      TotalCrossSection(const unsigned int &cross_section_option, const double &cross_section_value) :
          Function<dim>(),
-         parameters(parameters)
+         cross_section_option(cross_section_option),
+         cross_section_value(cross_section_value)
       {}
 
       double value(const Point<dim> &p) const;
@@ -22,7 +23,8 @@ class TotalCrossSection: public Function<dim>
       void value_list(const std::vector<Point<dim> > &points,
                       std::vector<double> &values) const;
    private:
-      const TransportParameters parameters;
+      const unsigned int cross_section_option;
+      const double cross_section_value;
 };
 
 #include "TotalCrossSection.cc"

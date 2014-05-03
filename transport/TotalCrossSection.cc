@@ -4,9 +4,9 @@ template<int dim>
 double TotalCrossSection<dim>::value(const Point<dim> &p) const
 {
    double return_value = 0.0;
-   switch (parameters.total_cross_section_option) {
+   switch (cross_section_option) {
       case 1: {
-         return_value = parameters.total_cross_section_value;
+         return_value = cross_section_value;
          break;
       }
       case 2: {
@@ -17,7 +17,7 @@ double TotalCrossSection<dim>::value(const Point<dim> &p) const
                break;
             }
          if (in_nonzero_region)
-            return_value = parameters.total_cross_section_value;
+            return_value = cross_section_value;
          break;
       }
       default: {

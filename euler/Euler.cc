@@ -286,14 +286,14 @@ void Euler<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
    std::vector<double>         dpdrho           (this->n_q_points_cell);
    std::vector<double>         dpdmx            (this->n_q_points_cell);
    std::vector<double>         dpdE             (this->n_q_points_cell);
-   fe_values[density_extractor].get_function_values    (this->current_solution, density);
-   fe_values[density_extractor].get_function_gradients (this->current_solution, density_gradient);
-   fe_values[momentum_extractor].get_function_values   (this->current_solution, momentum);
-   fe_values[momentum_extractor].get_function_gradients(this->current_solution, momentum_gradient);
-   fe_values[momentum_extractor].get_function_symmetric_gradients (this->current_solution, momentum_symmetric_gradient);
-   fe_values[momentum_extractor].get_function_divergences (this->current_solution, momentum_divergence);
-   fe_values[energy_extractor].get_function_values     (this->current_solution, energy);
-   fe_values[energy_extractor].get_function_gradients  (this->current_solution, energy_gradient);
+   fe_values[density_extractor].get_function_values    (this->new_solution, density);
+   fe_values[density_extractor].get_function_gradients (this->new_solution, density_gradient);
+   fe_values[momentum_extractor].get_function_values   (this->new_solution, momentum);
+   fe_values[momentum_extractor].get_function_gradients(this->new_solution, momentum_gradient);
+   fe_values[momentum_extractor].get_function_symmetric_gradients (this->new_solution, momentum_symmetric_gradient);
+   fe_values[momentum_extractor].get_function_divergences (this->new_solution, momentum_divergence);
+   fe_values[energy_extractor].get_function_values     (this->new_solution, energy);
+   fe_values[energy_extractor].get_function_gradients  (this->new_solution, energy_gradient);
 
    // compute velocity and thermodynamic properties
    compute_velocity             (velocity, density, momentum);
@@ -393,7 +393,7 @@ void Euler<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
          fe_face_values.reinit(cell, face);
 
          std::vector<Tensor<1, dim> > solution_gradients_face(this->n_q_points_face);
-         fe_face_values[velocity].get_function_gradients   (this->current_solution,solution_gradients_face);
+         fe_face_values[velocity].get_function_gradients   (this->new_solution,solution_gradients_face);
 
          // compute viscosity
          Vector<double> viscosity_face(this->n_q_points_face);
@@ -409,7 +409,7 @@ void Euler<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
             {
                // get max velocity on cell
                std::vector<double> local_solution(this->n_q_points_face);
-               fe_face_values.get_function_values(this->current_solution, local_solution);
+               fe_face_values.get_function_values(this->new_solution, local_solution);
                double max_velocity = 0.0;
                for (unsigned int q = 0; q < this->n_q_points_face; ++q)
                   max_velocity = std::max( max_velocity, local_solution[q]);
@@ -506,14 +506,14 @@ void Euler<dim>::compute_ss_jacobian()
    {
       fe_values.reinit(cell);
 
-      fe_values[density_extractor] .get_function_values   (this->current_solution, density);
-      fe_values[density_extractor] .get_function_gradients(this->current_solution, density_gradient);
-      fe_values[momentum_extractor].get_function_values   (this->current_solution, momentum);
-      fe_values[momentum_extractor].get_function_gradients(this->current_solution, momentum_gradient);
-      fe_values[momentum_extractor].get_function_symmetric_gradients (this->current_solution, momentum_symmetric_gradient);
-      fe_values[momentum_extractor].get_function_divergences(this->current_solution, momentum_divergence);
-      fe_values[energy_extractor]  .get_function_values     (this->current_solution, energy);
-      fe_values[energy_extractor]  .get_function_gradients  (this->current_solution, energy_gradient);
+      fe_values[density_extractor] .get_function_values   (this->new_solution, density);
+      fe_values[density_extractor] .get_function_gradients(this->new_solution, density_gradient);
+      fe_values[momentum_extractor].get_function_values   (this->new_solution, momentum);
+      fe_values[momentum_extractor].get_function_gradients(this->new_solution, momentum_gradient);
+      fe_values[momentum_extractor].get_function_symmetric_gradients (this->new_solution, momentum_symmetric_gradient);
+      fe_values[momentum_extractor].get_function_divergences(this->new_solution, momentum_divergence);
+      fe_values[energy_extractor]  .get_function_values     (this->new_solution, energy);
+      fe_values[energy_extractor]  .get_function_gradients  (this->new_solution, energy_gradient);
       compute_pressure_cell (pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
       dfdu_rho_rho = 0.0;
       dfdu_rho_mx  = unit_vector_x;
@@ -732,9 +732,9 @@ void Euler<dim>::update_flux_speeds()
    for (; cell != endc; ++cell)
    {
       fe_values.reinit(cell);
-      fe_values[density_extractor].get_function_values (this->current_solution, density);
-      fe_values[momentum_extractor].get_function_values(this->current_solution, momentum);
-      fe_values[energy_extractor].get_function_values(this->current_solution, energy);
+      fe_values[density_extractor].get_function_values (this->new_solution, density);
+      fe_values[momentum_extractor].get_function_values(this->new_solution, momentum);
+      fe_values[energy_extractor].get_function_values(this->new_solution, energy);
       // compute velocity
       compute_velocity(velocity, density, momentum);
       // compute speed of sound
@@ -777,9 +777,9 @@ void Euler<dim>::compute_entropy(const Vector<double> &solution,
    std::vector<double>         temperature     (this->n_q_points_cell);
    std::vector<double>         internal_energy (this->n_q_points_cell);
 
-   fe_values[density_extractor].get_function_values  (this->current_solution, density);
-   fe_values[momentum_extractor].get_function_values (this->current_solution, momentum);
-   fe_values[energy_extractor].get_function_values   (this->current_solution, energy);
+   fe_values[density_extractor].get_function_values  (this->new_solution, density);
+   fe_values[momentum_extractor].get_function_values (this->new_solution, momentum);
+   fe_values[energy_extractor].get_function_values   (this->new_solution, energy);
    compute_internal_energy_cell (internal_energy, density, momentum, energy);
    compute_temperature_cell     (temperature, internal_energy);
    compute_pressure_cell        (pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
@@ -808,9 +808,9 @@ void Euler<dim>::compute_entropy_face(const Vector<double> &solution,
    std::vector<double> temperature      (this->n_q_points_face);
    std::vector<double> internal_energy  (this->n_q_points_face);
 
-   fe_values_face[density_extractor].get_function_values  (this->current_solution, density);
-   fe_values_face[momentum_extractor].get_function_values (this->current_solution, momentum);
-   fe_values_face[energy_extractor].get_function_values   (this->current_solution, energy);
+   fe_values_face[density_extractor].get_function_values  (this->new_solution, density);
+   fe_values_face[momentum_extractor].get_function_values (this->new_solution, momentum);
+   fe_values_face[energy_extractor].get_function_values   (this->new_solution, energy);
    compute_internal_energy_face (internal_energy, density, momentum, energy);
    compute_temperature_face     (temperature, internal_energy);
    compute_pressure_face        (pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
@@ -842,13 +842,13 @@ void Euler<dim>::compute_divergence_entropy_flux (const Vector<double> &solution
    std::vector<double>         momentum_divergence (this->n_q_points_cell);
    Tensor<1, dim> pressure_gradient;
 
-   fe_values[density_extractor].get_function_values       (this->current_solution, density);
-   fe_values[momentum_extractor].get_function_values      (this->current_solution, momentum);
-   fe_values[energy_extractor].get_function_values        (this->current_solution, energy);
-   fe_values[density_extractor].get_function_gradients    (this->current_solution, density_gradient);
-   fe_values[momentum_extractor].get_function_gradients   (this->current_solution, momentum_gradient);
-   fe_values[energy_extractor].get_function_gradients     (this->current_solution, energy_gradient);
-   fe_values[momentum_extractor].get_function_divergences (this->current_solution, momentum_divergence);
+   fe_values[density_extractor].get_function_values       (this->new_solution, density);
+   fe_values[momentum_extractor].get_function_values      (this->new_solution, momentum);
+   fe_values[energy_extractor].get_function_values        (this->new_solution, energy);
+   fe_values[density_extractor].get_function_gradients    (this->new_solution, density_gradient);
+   fe_values[momentum_extractor].get_function_gradients   (this->new_solution, momentum_gradient);
+   fe_values[energy_extractor].get_function_gradients     (this->new_solution, energy_gradient);
+   fe_values[momentum_extractor].get_function_divergences (this->new_solution, momentum_divergence);
    compute_pressure_cell (pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
 
    for (unsigned int q = 0; q < this->n_q_points_cell; ++q) {
@@ -867,7 +867,7 @@ void Euler<dim>::output_solution (double time)
    DataOut<dim> data_out;
    data_out.attach_dof_handler (this->dof_handler);
 
-   data_out.add_data_vector (this->current_solution,
+   data_out.add_data_vector (this->new_solution,
       this->component_names,
       DataOut<dim>::type_dof_data,
       this->component_interpretations);
@@ -905,9 +905,9 @@ void Euler<dim>::output_solution (double time)
       for (; cell != endc; ++cell)
       {
          fe_values.reinit(cell);
-         fe_values[density_extractor].get_function_values  (this->current_solution, density);
-         fe_values[momentum_extractor].get_function_values (this->current_solution, momentum);
-         fe_values[energy_extractor].get_function_values   (this->current_solution, energy);
+         fe_values[density_extractor].get_function_values  (this->new_solution, density);
+         fe_values[momentum_extractor].get_function_values (this->new_solution, momentum);
+         fe_values[energy_extractor].get_function_values   (this->new_solution, energy);
 
          for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
          {
