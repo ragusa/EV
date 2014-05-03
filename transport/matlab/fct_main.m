@@ -23,15 +23,15 @@ uH=A\b;
 plot(x,uH,'+-')
 
 % compute limiter
-LIM=fct(uH,MC,ML,D);
+LIM=fct(uH,MC,ML,D,uL);
 
 % high order solve with limiter
 A=-(K+D);
 A(1,:)=0;A(1,1)=1;
-rhs=b+L*(-D*uH);
+rhs=b+LIM*(-D*uH);
 rhs(1)=0;
 uLim=A\rhs;
-plot(x,uLim,'+-')
+plot(x,uLim,'v-')
 
 % exact 
 xx=linspace(0,len,1000);
