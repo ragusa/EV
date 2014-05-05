@@ -5,6 +5,7 @@ function F = compute_flux_correction_matrix(u_old,dt,D,B,K,b)
 %    F_ij = dt*D_ij*(u_old,j - u_old,i) + dt*(B_ji*G_i - B_ij*G_j)
 %
 % F     = flux correction matrix
+%
 % u_old = old solution
 % dt    = time step size
 % D     = Kuzmin's artificial dissipation matrix

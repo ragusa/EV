@@ -2,8 +2,10 @@ function L = compute_limiting_coefficients(F,uL,ML,W_max,W_min)
 % computes the limiting coefficient matrix L
 %
 % L     = limiting coefficient matrix
+%
 % F     = flux correction matrix
 % uL    = low-order solution
+% ML    = lumped mass matrix
 % W_max = upper bound for max principle
 % W_min = lower bound for max principle
 

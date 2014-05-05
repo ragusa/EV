@@ -1,14 +1,16 @@
-function [W_max,W_min] = compute_max_principle_bounds(u_old,dt,ML,AL,b,inc)
+function [W_max,W_min] = compute_max_principle_bounds(u_old,dt,ML,AL,b)
 % computes the upper and lower bound for max principle:
 %   W_max,i = u_old,min,i*(1-dt/m_i*sum(A(i,:)) + dt/m_i*b_i <= u_new,i
 %   W_min,i = u_old,max,i*(1-dt/m_i*sum(A(i,:)) + dt/m_i*b_i >= u_new,i
 %
 % W_max = upper bound for max principle
 % W_min = lower bound for max principle
+%
 % u_old = old solution
 % dt    = time step size
-% AL    = low-order steady-state matrix; A = -(K+D)
 % ML    = lumped mass matrix
+% AL    = low-order steady-state matrix; A = -(K+D)
+% b     = steady-state rhs
 
 % size of system
 n = length(u_old);
@@ -27,9 +29,6 @@ for i = 1:n
     W_max(i) = u_max*(1-dt/ML(i,i)*sum(AL(i,:))) + dt/ML(i,i)*b(i);
     W_min(i) = u_min*(1-dt/ML(i,i)*sum(AL(i,:))) + dt/ML(i,i)*b(i);
 end
-% set upper and lower bounds for Dirichlet node to be the Dirichlet value
-W_max(1) = inc;
-W_min(1) = inc;
 
 return
 end
