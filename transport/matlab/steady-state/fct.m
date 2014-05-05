@@ -1,4 +1,4 @@
-function LIM=fct(uH,MC,ML,D,uL)
+function LIM=fct(uH,D,uL,K)
 
 % definition: f_ij = d_ij (u_i-u_j), j/=i
 
@@ -33,10 +33,15 @@ for i=1:n
 end
 
 % P vectors
-for i=1:n   
-    Pplus(i) =sum(max(0,F(i,:)));
-    Pminus(i)=sum(min(0,F(i,:)));
-
+for i=1:n
+    for j = 1:n
+        if (K(i,j) <= K(j,i))
+            Pplus(i)  = Pplus(i)  + max(0,F(i,j));
+            Pminus(i) = Pminus(i) + min(0,F(i,j));
+        end
+    end
+    %Pplus(i) =sum(max(0,F(i,:)));
+    %Pminus(i)=sum(min(0,F(i,:)));
 end
 
 % Q vectors
@@ -67,14 +72,13 @@ Rminus(1) = 1.0;
 
 for i=1:n
     for j=1:n
-        if(F(i,j)>0)
+        if(F(i,j)>=0)
             LIM(i,j)=Rplus(i);
         else
-            LIM(i,j)=Rplus(i);
+            LIM(i,j)=Rminus(i);
         end
     end
 end
-% check if LIM is symmetric
 
 return
 end

@@ -27,16 +27,19 @@ plot(x,uH,'+-')
 legend_entries=char(legend_entries,'high-order');
 
 % compute limiter
-LIM=fct(uH,MC,ML,D,uL);
+LIM=fct(uH,D,uL,K);
 
 % high order solve with limiter
 A=-(K+D);
 A(1,:)=0;A(1,1)=1;
-LIM(:,:)=.25;
+%LIM(:,:)=.25;
 aux=-((LIM.*D)*uH);
 aux(1)=0;
 rhs=b+aux;
 uLim=A\rhs;
+AL = -(K+D);
+[W_max,W_min] = compute_max_principle_bounds(uL,AL,b);
+check_max_principle(uLim,W_max,W_min);
 plot(x,uLim,'v-')
 legend_entries=char(legend_entries,'limited');
 
