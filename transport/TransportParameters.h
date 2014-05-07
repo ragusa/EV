@@ -24,8 +24,6 @@ class TransportParameters {
     double old_first_order_viscosity_coefficient; // value of old first order viscosity coefficient
     double entropy_viscosity_coefficient; // value of entropy viscosity coefficient
     double jump_coefficient; // value of jump coefficient
-    unsigned int max_nonlinear_iterations; // maximum number of nonlinear iterations
-    double relative_difference_tolerance; // relative difference tolerance for nonlinear convergence
     bool output_meshes; // option to output meshes as .eps files
     bool is_steady_state; // is the problem steady-state?
     double end_time; // end time if transient problem is run

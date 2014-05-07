@@ -82,12 +82,6 @@ class TransportProblem {
                            const bool            &append_viscosity) const;
       void output_grid() const;
       void evaluate_error(const unsigned int cycle);
-      double compute_viscosity(const typename DoFHandler<dim>::active_cell_iterator &cell,
-                               const unsigned int  &i_cell,
-                               const FEValues<dim> &fe_values,
-                               const std::vector<double> &total_cross_section,
-                               const std::vector<double> &total_source,
-                               const double &dt);
 
       // low-order max-principle viscosity functions and data
       void compute_viscous_bilinear_forms();
@@ -99,7 +93,7 @@ class TransportProblem {
 
       // high-order max-principle viscosity functions and data
       void compute_high_order_rhs();
-      void assemble_high_order_coefficient_matrix(const double &dt);
+      void assemble_flux_correction_matrix(const double &dt);
       void compute_limiting_coefficients();
       void compute_high_order_solution();
       void get_matrix_row(const SparseMatrix<double>      &matrix,
@@ -110,13 +104,6 @@ class TransportProblem {
                          );
       Vector<double> R_plus;
       Vector<double> R_minus;
-
-      // these are not needed; used only for debugging
-      Vector<double> P_plus;
-      Vector<double> P_minus;
-      Vector<double> Q_plus;
-      Vector<double> Q_minus;
-      Vector<double> low_order_solution;
 
       // input parameters
       const TransportParameters &parameters;
@@ -146,7 +133,7 @@ class TransportProblem {
       SparseMatrix<double> consistent_mass_matrix;
       SparseMatrix<double> lumped_mass_matrix;
       SparseMatrix<double> auxiliary_mass_matrix;
-      SparseMatrix<double> high_order_coefficient_matrix;
+      SparseMatrix<double> flux_correction_matrix;
 
       // vectors for solutions and right hand sides
       Vector<double> old_solution;
@@ -158,8 +145,6 @@ class TransportProblem {
       Vector<double> entropy_viscosity;
       Vector<double> low_order_viscosity;
       Vector<double> high_order_viscosity;
-
-      unsigned int nonlinear_iteration;
 
       ConvergenceTable convergence_table;
 
@@ -176,7 +161,6 @@ class TransportProblem {
       unsigned int cross_section_option;
       double cross_section_value;
       double incoming_flux_value;
-      bool is_linear;
 
       // entropy viscosity functions and data
       void compute_entropy_viscosity(const typename DoFHandler<dim>::active_cell_iterator &cell,
@@ -198,7 +182,6 @@ class TransportProblem {
       bool check_max_principle(const double &dt,
                                const bool   &using_high_order);
       void debug_max_principle_low_order (const unsigned int &i, const double &dt);
-      void debug_max_principle_high_order(const unsigned int &i, const bool &lower_bound_violated);
       void compute_max_principle_bounds(const double &dt);
       void compute_steady_state_max_principle_bounds();
       Vector<double> min_values;

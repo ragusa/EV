@@ -13,7 +13,6 @@ TransportProblem<dim>::TransportProblem(const TransportParameters &parameters) :
       face_quadrature(degree+1),
       n_q_points_cell(cell_quadrature.size()),
       n_q_points_face(face_quadrature.size()),
-      nonlinear_iteration(0),
       transport_direction(0.0),
       incoming_boundary(1),
       has_exact_solution(false),
@@ -22,7 +21,6 @@ TransportProblem<dim>::TransportProblem(const TransportParameters &parameters) :
       cross_section_option(1),
       cross_section_value(0.0),
       incoming_flux_value(0.0),
-      is_linear(false),
       domain_volume(0.0)
 {
 }
@@ -41,12 +39,6 @@ void TransportProblem<dim>::initialize_system()
 {
    // process problem ID
    process_problem_ID();
-
-   // determine if problem is linear or not; this will depend on which viscosity is used
-   if (parameters.viscosity_option == 2) // entropy viscosity
-      is_linear = false;
-   else
-      is_linear = true;
 
    // decide that transport direction is the unit x vector
    transport_direction[0] = 1.0;
@@ -135,25 +127,7 @@ void TransportProblem<dim>::process_problem_ID()
                Assert(false,ExcNotImplemented());
          }
          break;
-      } case 3: {
-         cross_section_option = 1;
-         cross_section_value = 1.0e2;
-         source_option = 2;
-         source_value = 1.0e2;
-         incoming_flux_value = 1.0e0;
-         has_exact_solution = true;
-         Assert(false,ExcNotImplemented());
-         break;
-      } case 4: {
-         cross_section_option = 1;
-         cross_section_value = 1.0e0;
-         source_option = 3;
-         source_value = 1.0e0;
-         incoming_flux_value = 2.28735528717884;
-         has_exact_solution = true;
-         Assert(false,ExcNotImplemented());
-         break;
-      } case 5: { // linear advection problem with step IC
+      } case 3: { // linear advection problem with step IC
          cross_section_option = 1;
          cross_section_value = 0.0;
          source_option = 1;
@@ -216,13 +190,12 @@ void TransportProblem<dim>::setup_system()
    inviscid_ss_matrix    .reinit(constrained_sparsity_pattern);
    consistent_mass_matrix.reinit(constrained_sparsity_pattern);
    lumped_mass_matrix    .reinit(constrained_sparsity_pattern);
-   if (parameters.viscosity_option == 4) // high-order max principle viscosity
+   if (parameters.viscosity_option == 2) // high-order max principle viscosity
    {
       auxiliary_mass_matrix        .reinit(constrained_sparsity_pattern);
-      high_order_coefficient_matrix.reinit(constrained_sparsity_pattern);
+      flux_correction_matrix.reinit(constrained_sparsity_pattern);
    }
       
-
    // assemble mass matrices
    assemble_mass_matrices();
 
@@ -251,13 +224,6 @@ void TransportProblem<dim>::setup_system()
    entropy_viscosity   .reinit(triangulation.n_active_cells());
    low_order_viscosity .reinit(triangulation.n_active_cells());
    high_order_viscosity.reinit(triangulation.n_active_cells());
-
-   // these are not needed; they are used only for debugging
-   P_plus .reinit(n_dofs);
-   P_minus.reinit(n_dofs);
-   Q_plus .reinit(n_dofs);
-   Q_minus.reinit(n_dofs);
-   low_order_solution.reinit(n_dofs);
 }
 
 /** \brief Assembles the mass matrix, either consistent or lumped.
@@ -306,7 +272,7 @@ void TransportProblem<dim>::assemble_mass_matrices()
 
    // if using high-order max-principle viscosity, then assemble B-matrix
    //----------------------------
-   if (parameters.viscosity_option == 4) // high-order max-principle viscosity
+   if (parameters.viscosity_option == 2) // high-order max-principle viscosity
    {
       auxiliary_mass_matrix.copy_from(lumped_mass_matrix);
       auxiliary_mass_matrix.add(-1.0, consistent_mass_matrix);
@@ -374,10 +340,6 @@ void TransportProblem<dim>::compute_viscous_bilinear_forms()
 }
 
 /** \brief Assemble the inviscid system matrix and steady-state right hand side.
- * 
- *         The "inviscid system matrix" will contain inviscid terms and Laplacian
- *         viscous terms if there are any (old, non-maximum-principle-preserving
- *         defininitions of viscosity).
  */
 template<int dim>
 void TransportProblem<dim>::assemble_system(const double &dt)
@@ -394,14 +356,8 @@ void TransportProblem<dim>::assemble_system(const double &dt)
          update_values | update_gradients | update_quadrature_points
                | update_JxW_values);
 
-   // FE face values, for boundary conditions
-   FEFaceValues<dim> fe_face_values(fe, face_quadrature,
-         update_values | update_quadrature_points | update_JxW_values
-               | update_normal_vectors | update_gradients);
-
-   FullMatrix<double> inviscid_cell_matrix(dofs_per_cell, dofs_per_cell);
-   FullMatrix<double>          cell_matrix(dofs_per_cell, dofs_per_cell);
-   Vector<double>              cell_rhs   (dofs_per_cell);
+   FullMatrix<double> cell_matrix(dofs_per_cell, dofs_per_cell);
+   Vector<double>     cell_rhs   (dofs_per_cell);
 
    std::vector<unsigned int> local_dof_indices(dofs_per_cell);
 
@@ -412,8 +368,7 @@ void TransportProblem<dim>::assemble_system(const double &dt)
 
    // get domain-averaged entropy if using entropy viscosity for this iteration
    max_entropy_deviation_domain = 0.0;
-   bool need_to_compute_entropy_viscosity = (parameters.viscosity_option == 2) or
-                                            (parameters.viscosity_option == 4);
+   bool need_to_compute_entropy_viscosity = (parameters.viscosity_option == 2);
    if (need_to_compute_entropy_viscosity)
       compute_entropy_domain_average();
 
@@ -424,7 +379,6 @@ void TransportProblem<dim>::assemble_system(const double &dt)
    unsigned int i_cell = 0;
    for (cell = dof_handler.begin_active(); cell != endc; ++cell, ++i_cell) {
       // initialize local matrix and rhs to zero
-      inviscid_cell_matrix = 0;
       cell_matrix = 0;
       cell_rhs = 0;
 
@@ -438,8 +392,14 @@ void TransportProblem<dim>::assemble_system(const double &dt)
       total_source.value_list(fe_values.get_quadrature_points(),
                               total_source_values);
 
-      // compute viscosity
-      double viscosity = compute_viscosity(cell, i_cell, fe_values, total_cross_section_values, total_source_values, dt);
+      // compute entropy viscosity if needed
+      if (need_to_compute_entropy_viscosity)
+         compute_entropy_viscosity(cell,
+                                   i_cell,
+                                   fe_values,
+                                   total_cross_section_values,
+                                   total_source_values,
+                                   dt);
 
       // compute cell contributions to global system
       // ------------------------------------------------------------------
@@ -452,7 +412,7 @@ void TransportProblem<dim>::assemble_system(const double &dt)
                // store integrals of divergence and total interaction term
                // so that they may be used in computation of max-principle
                // preserving viscosity
-               inviscid_cell_matrix(i,j) += (
+               cell_matrix(i,j) += (
                   // divergence term
                   fe_values[flux].value(i, q)
                      * transport_direction
@@ -462,14 +422,6 @@ void TransportProblem<dim>::assemble_system(const double &dt)
                      * total_cross_section_values[q]
                      * fe_values[flux].value(j, q)
                   ) * fe_values.JxW(q);
-
-               // add to matrix
-               cell_matrix(i, j) +=
-                  // Laplacian viscosity term
-                  viscosity
-                     * fe_values[flux].gradient(i, q)
-                     * fe_values[flux].gradient(j, q)
-                     * fe_values.JxW(q);
             } // end j
 
             cell_rhs(i) +=
@@ -478,28 +430,6 @@ void TransportProblem<dim>::assemble_system(const double &dt)
                   * total_source_values[q] * fe_values.JxW(q);
          } // end i
       } // end q
-
-      // compute face contributions to global system;
-      //  these arise due to integration by parts of Laplacian viscosity term
-      // ------------------------------------------------------------------
-      for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell; ++face)
-      {
-         if (cell->face(face)->at_boundary()) {
-            fe_face_values.reinit(cell, face);
-
-            for (unsigned int q = 0; q < n_q_points_face; ++q)
-               for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                  for (unsigned int j = 0; j < dofs_per_cell; ++j)
-                     cell_matrix(i, j) -= (viscosity
-                           * fe_face_values.shape_value(i, q)
-                           * fe_face_values.normal_vector(q)
-                           * fe_face_values.shape_grad(j, q)
-                           * fe_face_values.JxW(q));
-         }
-      } 
-
-      // add inviscid terms to cell matrix
-      cell_matrix.add(1.0, inviscid_cell_matrix);
 
       // aggregate local matrix and rhs to global matrix and rhs
       constraints.distribute_local_to_global(cell_matrix,
@@ -513,11 +443,9 @@ void TransportProblem<dim>::assemble_system(const double &dt)
          for (unsigned int j = 0; j < dofs_per_cell; ++j)
             max_principle_viscosity_numerators.add(local_dof_indices[i],
                                                    local_dof_indices[j],
-                                                   inviscid_cell_matrix(i,j));
+                                                   cell_matrix(i,j));
             
    } // end cell
-
-
 } // end assembly
 
 /** \brief Applies Dirichlet boundary conditions to a linear system A*x=b.
@@ -594,71 +522,6 @@ void TransportProblem<dim>::compute_entropy_domain_average()
    }
 }
 
-/** \brief computes the viscosity in a cell
- */
-template <int dim>
-double TransportProblem<dim>::compute_viscosity(const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                                const unsigned int        &i_cell,
-                                                const FEValues<dim>       &fe_values,
-                                                const std::vector<double> &total_cross_section_values,
-                                                const std::vector<double> &total_source_values,
-                                                const double              &dt)
-{
-   double viscosity;
-   // cell size
-   double h = cell->diameter();
-   // compute old definition of first-order viscosity
-   double old_first_order_viscosity_cell = parameters.old_first_order_viscosity_coefficient * h;
-   switch (parameters.viscosity_option) {
-      case 0: { // no viscosity
-         break;
-      } case 1: { // old definition of first-order viscosity
-         viscosity                   = old_first_order_viscosity_cell;
-         low_order_viscosity(i_cell) = viscosity;
-         break;
-      } case 2: { // old definition of high-order viscosity
-         low_order_viscosity(i_cell) = old_first_order_viscosity_cell;
-
-         compute_entropy_viscosity(cell,
-                                   i_cell,
-                                   fe_values,
-                                   total_cross_section_values,
-                                   total_source_values,
-                                   dt);
-
-         // determine high-order viscosity: minimum of low-order viscosity and entropy viscosity
-         viscosity = std::min(old_first_order_viscosity_cell, entropy_viscosity(i_cell));
-         high_order_viscosity(i_cell) = viscosity;
-         break;
-      } case 3: { // maximum-principle preserving low-order viscosity
-         // maximum-principle preserving viscosity does not add Laplacian term;
-         // to avoid unnecessary branching in assembly loop, just add Laplacian
-         // term with zero viscosity, so just keep viscosity with its initialization
-         // of zero
-         viscosity = 0.0;
-         break;
-      } case 4: { // maximum-principle preserving high-order viscosity
-         compute_entropy_viscosity(cell,
-                                   i_cell,
-                                   fe_values,
-                                   total_cross_section_values,
-                                   total_source_values,
-                                   dt);
-
-         // maximum-principle preserving viscosity does not add Laplacian term;
-         // to avoid unnecessary branching in assembly loop, just add Laplacian
-         // term with zero viscosity, so just keep viscosity with its initialization
-         // of zero
-         viscosity = 0.0;
-         break;
-      } default: { // invalid viscosity option
-         break;
-      }
-   }
-
-   return viscosity;
-}
-
 /** \brief Computes the entropy viscosity in a cell.
  */
 template <int dim>
@@ -690,11 +553,6 @@ void TransportProblem<dim>::compute_entropy_viscosity(const typename DoFHandler<
    // compute entropy residual values at each quadrature point on cell
    std::vector<double> entropy_residual_values(n_q_points_cell,0.0);
    for (unsigned int q = 0; q < n_q_points_cell; ++q)
-/*
-      entropy_residual_values[q] = (new_entropy_values[q] - old_entropy_values[q])/dt
-         + transport_direction * new_values[q] * new_gradients[q]
-         + total_cross_section_values[q] * new_entropy_values[q];
-*/
       entropy_residual_values[q] = (new_entropy_values[q] - old_entropy_values[q])/dt
          + transport_direction * new_values[q] * new_gradients[q]
          + total_cross_section_values[q] * new_values[q] * new_values[q]
@@ -992,9 +850,6 @@ void TransportProblem<dim>::run()
          // solve for steady-state solution
          solve_steady_state();
       } else {
-         // have not yet added the capability for nonlinear transients
-         Assert(is_linear,ExcNotImplemented());
-
          // interpolate initial conditions
          VectorTools::interpolate(dof_handler,
                                   initial_conditions,
@@ -1032,7 +887,7 @@ void TransportProblem<dim>::run()
             // add inviscid component to total steady-state matrix (A)
             ss_matrix.copy_from(inviscid_ss_matrix);
             // add viscous bilinear form for maximum-principle preserving viscosity
-            bool using_max_principle_viscosity = (parameters.viscosity_option == 3) or (parameters.viscosity_option == 4);
+            bool using_max_principle_viscosity = (parameters.viscosity_option == 1) or (parameters.viscosity_option == 2);
             if (using_max_principle_viscosity) {
                // compute max-principle-preserving viscosity (both low-order and high-order)
                compute_max_principle_viscosity();
@@ -1061,49 +916,62 @@ void TransportProblem<dim>::run()
             // determine if end of transient has been reached (within machine precision)
             in_transient = t < (t_end - machine_precision);
 
-            // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
-            system_rhs = 0;
-            system_rhs.add(dt, ss_rhs); //       now, system_rhs = dt*(ss_rhs)
-            lumped_mass_matrix.vmult(tmp_vector, old_solution);
-            system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
-            ss_matrix.vmult(tmp_vector, old_solution);
-            system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
+            if (parameters.viscosity_option == 0)
+            {
+               // solve high-order system
 
-            // solve the linear system M*u_new = system_rhs
-            system_matrix.copy_from(lumped_mass_matrix);
-            apply_Dirichlet_BC(system_matrix, new_solution, system_rhs); // apply Dirichlet BC
-            solve_linear_system(system_matrix, system_rhs);
+               // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
+               system_rhs = 0;
+               system_rhs.add(dt, ss_rhs); //       now, system_rhs = dt*(ss_rhs)
+               consistent_mass_matrix.vmult(tmp_vector, old_solution);
+               system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
+               ss_matrix.vmult(tmp_vector, old_solution);
+               system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
+   
+               // solve the linear system M*u_new = system_rhs
+               system_matrix.copy_from(consistent_mass_matrix);
+               apply_Dirichlet_BC(system_matrix, new_solution, system_rhs); // apply Dirichlet BC
+               solve_linear_system(system_matrix, system_rhs);
+            } else {
+               // solve low-order system
+
+               // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
+               system_rhs = 0;
+               system_rhs.add(dt, ss_rhs); //       now, system_rhs = dt*(ss_rhs)
+               lumped_mass_matrix.vmult(tmp_vector, old_solution);
+               system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
+               ss_matrix.vmult(tmp_vector, old_solution);
+               system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
+   
+               // solve the linear system M*u_new = system_rhs
+               system_matrix.copy_from(lumped_mass_matrix);
+               apply_Dirichlet_BC(system_matrix, new_solution, system_rhs); // apply Dirichlet BC
+               solve_linear_system(system_matrix, system_rhs);
+            }
+
             // distribute constraints
             constraints.distribute(new_solution);
 
-            // compute max principle min and max values
-            compute_max_principle_bounds(dt);
-            // check that local discrete maximum principle is satisfied at all time steps
-            bool max_principle_satisfied_low_order = check_max_principle(dt,false);
-            max_principle_satisfied = max_principle_satisfied and max_principle_satisfied_low_order;
+            if (parameters.viscosity_option != 0)
+            {
+               // compute max principle min and max values
+               compute_max_principle_bounds(dt);
+               // check that local discrete maximum principle is satisfied at all time steps
+               bool max_principle_satisfied_low_order = check_max_principle(dt,false);
+               max_principle_satisfied = max_principle_satisfied and max_principle_satisfied_low_order;
+            }
 
-            // used for debugging; later, may be removed
-            low_order_solution = new_solution;
-
-            bool using_high_order = parameters.viscosity_option == 4;
+            bool using_high_order = parameters.viscosity_option == 2;
             if (using_high_order) // high-order max-principle preserving viscosity
             {
                // compute high-order right hand side (G) and store in system_rhs
                compute_high_order_rhs();
-system_rhs*=dt;
-consistent_mass_matrix.vmult(tmp_vector, old_solution);
-system_rhs.add(1.0, tmp_vector);
-system_matrix.copy_from(consistent_mass_matrix);
-apply_Dirichlet_BC(system_matrix, new_solution, system_rhs); // apply Dirichlet BC
-solve_linear_system(system_matrix, system_rhs);
-/*
                // compute high-order coefficient matrix (A)
-               assemble_high_order_coefficient_matrix(dt);
+               assemble_flux_correction_matrix(dt);
                // compute the limiting coefficient matrix (L)
                compute_limiting_coefficients();
                // compute the high-order solution using the low-order solution and L
                compute_high_order_solution();
-*/
                // distribute constraints
                constraints.distribute(new_solution);
 
@@ -1118,11 +986,14 @@ solve_linear_system(system_matrix, system_rhs);
             // increment time step index
             n++;
          }
-         // report if local discrete maximum principle is satisfied at all time steps
-         if (max_principle_satisfied)
-            std::cout << "Local discrete maximum principle was satisfied at all time steps" << std::endl;
-         else
-            std::cout << "Local discrete maximum principle was NOT satisfied at all time steps" << std::endl;
+         if (parameters.viscosity_option != 0)
+         {
+            // report if local discrete maximum principle is satisfied at all time steps
+            if (max_principle_satisfied)
+               std::cout << "Local discrete maximum principle was satisfied at all time steps" << std::endl;
+            else
+               std::cout << "Local discrete maximum principle was NOT satisfied at all time steps" << std::endl;
+         }
       }
 
       // evaluate errors for use in adaptive mesh refinement
@@ -1138,8 +1009,8 @@ solve_linear_system(system_matrix, system_rhs);
 template<int dim>
 void TransportProblem<dim>::solve_steady_state()
 {
-   // FCT cannot be applied to steady-state
-   Assert(parameters.viscosity_option != 4,ExcNotImplemented());
+   // FCT cannot be applied to steady-state yet
+   Assert(parameters.viscosity_option != 2, ExcNotImplemented());
 
    // compute inviscid system matrix and steady-state right hand side (ss_rhs)
    // This inviscid system matrix will contain inviscid terms and Laplacian viscous terms if there are any.
@@ -1147,7 +1018,7 @@ void TransportProblem<dim>::solve_steady_state()
    // add inviscid component to total system matrix (A)
    ss_matrix.copy_from(inviscid_ss_matrix);
    // add viscous bilinear form for maximum-principle preserving viscosity
-   bool using_max_principle_viscosity = (parameters.viscosity_option == 3) or (parameters.viscosity_option == 4);
+   bool using_max_principle_viscosity = (parameters.viscosity_option == 1) or (parameters.viscosity_option == 2);
    if (using_max_principle_viscosity) {
       // compute max-principle-preserving viscosity (both low-order and high-order)
       compute_max_principle_viscosity();
@@ -1227,17 +1098,9 @@ void TransportProblem<dim>::output_results()
       switch (parameters.viscosity_option)
       {
          case 1: {
-            visc_out.add_data_vector(low_order_viscosity,"Old_Low_Order_Viscosity",DataOut<dim>::type_cell_data);
-            break;
-         } case 2: {
-            visc_out.add_data_vector(low_order_viscosity, "Old_Low_Order_Viscosity",DataOut<dim>::type_cell_data);
-            visc_out.add_data_vector(entropy_viscosity,   "Entropy_Viscosity",        DataOut<dim>::type_cell_data);
-            visc_out.add_data_vector(high_order_viscosity,"Old_High_Order_Viscosity",     DataOut<dim>::type_cell_data);
-            break;
-         } case 3: {
             visc_out.add_data_vector(low_order_viscosity,"Low_Order_Viscosity",DataOut<dim>::type_cell_data);
             break;
-         } case 4: {
+         } case 2: {
             visc_out.add_data_vector(low_order_viscosity, "Low_Order_Viscosity", DataOut<dim>::type_cell_data);
             visc_out.add_data_vector(entropy_viscosity,   "Entropy_Viscosity",   DataOut<dim>::type_cell_data);
             visc_out.add_data_vector(high_order_viscosity,"High_Order_Viscosity",DataOut<dim>::type_cell_data);
@@ -1272,7 +1135,7 @@ void TransportProblem<dim>::output_results()
    }
 
    // output min and max values for maximum principle check
-   if ((parameters.viscosity_option == 3) or (parameters.viscosity_option == 4))
+   if ((parameters.viscosity_option == 1) or (parameters.viscosity_option == 2))
    {
       output_solution(min_values,dof_handler,"min_values",false);
       output_solution(max_values,dof_handler,"max_values",false);
@@ -1318,15 +1181,9 @@ void TransportProblem<dim>::output_solution(const Vector<double>  &solution,
             viscosity_string = "_none";
             break;
          } case 1: {
-            viscosity_string = "_old_first_order";
-            break;
-         } case 2: {
-            viscosity_string = "_entropy";
-            break;
-         } case 3: {
             viscosity_string = "_low_order";
             break;
-         } case 4: {
+         } case 2: {
             viscosity_string = "_high_order";
             break;
          } default: {
@@ -1419,7 +1276,6 @@ bool TransportProblem<dim>::check_max_principle(const double &dt,
                std::cout << "      Max principle lower bound violated with dof "
                   << i << " of high-order solution: " << std::scientific
                   << value_i << " < " << min_values(i) << std::endl;
-               debug_max_principle_high_order(i,true);
             } else {
                std::cout << "      Max principle lower bound violated with dof "
                   << i << " of low-order solution: " << std::scientific
@@ -1436,7 +1292,6 @@ bool TransportProblem<dim>::check_max_principle(const double &dt,
                std::cout << "      Max principle upper bound violated with dof "
                   << i << " of high-order solution: " << std::scientific
                   << value_i << " > " << max_values(i) << std::endl;
-               debug_max_principle_high_order(i,false);
             } else {
                std::cout << "      Max principle upper bound violated with dof "
                   << i << " of low-order solution: " << std::scientific
@@ -1538,111 +1393,6 @@ void TransportProblem<dim>::debug_max_principle_low_order(const unsigned int &i,
       std::cout << "         DEBUG: No checks returned flags; deeper debugging is necessary." << std::endl;
 }
 
-/** \brief Debugging function used for determining why the maximum
- *         principle is failing for the low-order method;
- *         examines the conditions that are required to be met for
- *         the principle to be satisfied.
- */
-template <int dim>
-void TransportProblem<dim>::debug_max_principle_high_order(const unsigned int &i,
-                                                           const bool &lower_bound_violated)
-{
-   // small number for floating point comparisons
-   const double small_number = 1.0e-15;
-
-   // check that the high order coefficient matrix A is skew symmetric
-   // get nonzero entries of row i of A
-   std::vector<double>       row_values;
-   std::vector<unsigned int> row_indices;
-   unsigned int              n_col;
-   get_matrix_row(high_order_coefficient_matrix,
-                  i,
-                  row_values,
-                  row_indices,
-                  n_col);
-
-   // check lower bound conditions
-   if (lower_bound_violated)
-   {
-      double lhs = lumped_mass_matrix(i,i)*(new_solution(i) - low_order_solution(i));
-      double rhs;
-      std::string condition;
-
-      // check m*(U - UL) >= m*(Wmin - UL) 
-      condition = "m*(U - UL) >= m*(Wmin - UL)";
-      rhs = lumped_mass_matrix(i,i)*(min_values(i) - low_order_solution(i));
-      if (lhs < rhs)
-         std::cout << "         DEBUG: VIOLATED:  " << condition << std::endl;
-      else
-         std::cout << "         DEBUG: SATISFIED: " << condition << std::endl;
-
-      // check m*(U - UL) >= Qminus
-      condition = "m*(U - UL) >= Qminus";
-      rhs = Q_minus(i);
-      if (lhs < rhs)
-         std::cout << "         DEBUG: VIOLATED:  " << condition << std::endl;
-      else
-         std::cout << "         DEBUG: SATISFIED: " << condition << std::endl;
-
-      // check m*(U - UL) >= sum_{j,Aij < 0} Rminus_i*Aij
-      condition = "m*(U - UL) >= sum_{j,Aij < 0} Rminus_i*Aij";
-      rhs = 0.0;
-      for (unsigned int k = 0; k < n_col; ++k)
-      {
-         unsigned int j = row_indices[k];
-         double Aij = row_values[k];
-         if (Aij < 0)
-            rhs += R_minus(j)*Aij;
-      }
-      if (lhs < rhs)
-         std::cout << "         DEBUG: VIOLATED:  " << condition << std::endl;
-      else
-         std::cout << "         DEBUG: SATISFIED: " << condition << std::endl;
-
-      // check m*(U - UL) >= sum_{j,Aij < 0} Lij*Aij
-      condition = "m*(U - UL) >= sum_{j,Aij < 0} Lij*Aij";
-      rhs = 0.0;
-      for (unsigned int k = 0; k < n_col; ++k)
-      {
-         unsigned int j = row_indices[k];
-         double Aij = row_values[k];
-         double Lij;
-         if (Aij >= 0)
-            Lij = std::min(R_plus(i),R_minus(j));
-         else
-            Lij = std::min(R_minus(i),R_plus(j));
-
-         if (Aij < 0)
-            rhs += Lij*Aij;
-      }
-      if (lhs < rhs)
-         std::cout << "         DEBUG: VIOLATED:  " << condition << std::endl;
-      else
-         std::cout << "         DEBUG: SATISFIED: " << condition << std::endl;
-
-      // check m*(U - UL) == sum_j Lij*Aij
-      condition = "m*(U - UL) == sum_j Lij*Aij";
-      rhs = 0.0;
-      for (unsigned int k = 0; k < n_col; ++k)
-      {
-         unsigned int j = row_indices[k];
-         double Aij = row_values[k];
-         double Lij;
-         if (Aij >= 0)
-            Lij = std::min(R_plus(i),R_minus(j));
-         else
-            Lij = std::min(R_minus(i),R_plus(j));
-         rhs += Lij*Aij;
-      }
-      if (std::abs(lhs - rhs) > small_number)
-         std::cout << "         DEBUG: VIOLATED:  " << condition << std::endl;
-      else
-         std::cout << "         DEBUG: SATISFIED: " << condition << std::endl;
-   } else {
-      Assert(false,ExcNotImplemented());
-   }
-}
-
 /** \brief Computes min and max quantities for max principle
  */
 template <int dim>
@@ -1705,21 +1455,6 @@ void TransportProblem<dim>::compute_max_principle_bounds(const double &dt)
       min_values(i) = min_values(i)*(1.0 - dt/lumped_mass_matrix(i,i)*row_sum)
          + dt/lumped_mass_matrix(i,i)*ss_rhs(i);
    }
-
-   // alter the Dirichlet nodes to make both upper and lower bounds equal to
-   // Dirichlet value
-/*
-   std::map<unsigned int, double> boundary_values;
-   VectorTools::interpolate_boundary_values(dof_handler,
-                                            incoming_boundary,
-                                            ConstantFunction<dim>(incoming_flux_value, 1),
-                                            boundary_values);
-   for (std::map<unsigned int, double>::iterator it = boundary_values.begin(); it != boundary_values.end(); ++it)
-   {
-      min_values(it->first) = it->second;
-      max_values(it->first) = it->second;
-   }
-*/
 }
 
 /** \brief Computes min and max quantities for steady-state max principle
@@ -1811,10 +1546,10 @@ void TransportProblem<dim>::compute_high_order_rhs()
  *  \param [in] dt current time step size
  */
 template <int dim>
-void TransportProblem<dim>::assemble_high_order_coefficient_matrix(const double &dt)
+void TransportProblem<dim>::assemble_flux_correction_matrix(const double &dt)
 {
    // reset A to zero
-   high_order_coefficient_matrix = 0;
+   flux_correction_matrix = 0;
 
    // add A1 matrix to A by looping over cells
    //--------------------------------------------------------
@@ -1852,7 +1587,7 @@ void TransportProblem<dim>::assemble_high_order_coefficient_matrix(const double 
             // compute cell contribution to A1(i,j)
             double A1_ij = dt*(nu_L - nu_H)*(old_solution(j) - old_solution(i))*bK;
             // add it to A(i,j)
-            high_order_coefficient_matrix.add(i,j,A1_ij);
+            flux_correction_matrix.add(i,j,A1_ij);
          }
       }
    }
@@ -1881,7 +1616,7 @@ void TransportProblem<dim>::assemble_high_order_coefficient_matrix(const double 
          unsigned int j = row_indices[k];
 
          // add A2(i,j) to A(i,j)
-         high_order_coefficient_matrix.add(i,j,dt*(auxiliary_mass_matrix(j,i)*system_rhs(i)
+         flux_correction_matrix.add(i,j,dt*(auxiliary_mass_matrix(j,i)*system_rhs(i)
                                                   -auxiliary_mass_matrix(i,j)*system_rhs(j)));
       }
    }
@@ -1908,7 +1643,7 @@ void TransportProblem<dim>::compute_limiting_coefficients()
          std::vector<double>       row_values;
          std::vector<unsigned int> row_indices;
          unsigned int              n_col;
-         get_matrix_row(high_order_coefficient_matrix,
+         get_matrix_row(flux_correction_matrix,
                         i,
                         row_values,
                         row_indices,
@@ -1925,14 +1660,10 @@ void TransportProblem<dim>::compute_limiting_coefficients()
             P_plus_i  += std::max(0.0,Aij);
             P_minus_i += std::min(0.0,Aij);
          }
-         P_plus(i)  = P_plus_i;
-         P_minus(i) = P_minus_i;
    
          // compute Q_plus and Q_minus
          double Q_plus_i  = lumped_mass_matrix(i,i)*(max_values(i) - new_solution(i));
          double Q_minus_i = lumped_mass_matrix(i,i)*(min_values(i) - new_solution(i));
-         Q_plus(i)  = Q_plus_i;
-         Q_minus(i) = Q_minus_i;
    
          // compute R_plus(i)
          if (P_plus_i != 0.0)
@@ -1976,7 +1707,7 @@ void TransportProblem<dim>::compute_high_order_solution()
          std::vector<double>       row_values;
          std::vector<unsigned int> row_indices;
          unsigned int              n_col;
-         get_matrix_row(high_order_coefficient_matrix,
+         get_matrix_row(flux_correction_matrix,
                         i,
                         row_values,
                         row_indices,

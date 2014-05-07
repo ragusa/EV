@@ -12,8 +12,6 @@ TransportParameters::TransportParameters() :
       old_first_order_viscosity_coefficient(5.0e-1),
       entropy_viscosity_coefficient(1.0),
       jump_coefficient(1.0),
-      max_nonlinear_iterations(10),
-      relative_difference_tolerance(1.0e-6),
       output_meshes(false),
       is_steady_state(true),
       end_time(1.0),
@@ -52,10 +50,6 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
          "Coefficient for the entropy viscosity");
    prm.declare_entry("Jump coefficient", "1.0", Patterns::Double(),
          "Coefficient for jumps used with entropy viscosity");
-   prm.declare_entry("Maximum number of nonlinear iterations", "10", Patterns::Integer(),
-         "Maximum number of nonlinear iterations to use when using entropy viscosity");
-   prm.declare_entry("Relative difference tolerance", "1.0e-6", Patterns::Double(),
-         "Relative difference tolerance for nonlinear convergence");
    prm.declare_entry("Output mesh", "false", Patterns::Bool(),
          "Option to output meshes as .eps files");
    prm.declare_entry("Is steady state", "true", Patterns::Bool(),
@@ -88,8 +82,6 @@ void TransportParameters::get_parameters(ParameterHandler &prm) {
    old_first_order_viscosity_coefficient = prm.get_double("Old first order viscosity coefficient");
    entropy_viscosity_coefficient = prm.get_double("Entropy viscosity coefficient");
    jump_coefficient = prm.get_double("Jump coefficient");
-   max_nonlinear_iterations = prm.get_integer("Maximum number of nonlinear iterations");
-   relative_difference_tolerance = prm.get_double("Relative difference tolerance");
    output_meshes = prm.get_bool("Output mesh");
    is_steady_state = prm.get_bool("Is steady state");
    end_time = prm.get_double("End time");
