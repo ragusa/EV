@@ -2,6 +2,7 @@ close all; clc;
 % Solves a transient transport equation:
 %   MC*du/dt-(K  )*u = b (high-order system)
 %   ML*du/dt-(K+D)*u = b (low-order system)
+% using either explicit Euler or implicit Euler
 
 len=10;    % length of domain
 nel=10;    % number of elements
@@ -14,6 +15,8 @@ CFL = 0.8;       % CFL number
 limiting_option = 2; % 0 = set limiting coefficients to 0 (no correction)
                      % 1 = set limiting coefficients to 1 (full correction)
                      % 2 = compute limiting coefficients normally
+use_explicit = 0; % 0 = use implicit Euler
+                  % 1 = use explicit Euler
 %==========================================================================
 
 n_dof = nel + 1; % number of dofs
@@ -23,17 +26,23 @@ x=linspace(0,len,nel+1); % x points for plotting
 % build matrices
 [MC,ML,K,D,b]=build_matrices(len,nel,omega,sigma,src);
 ML = diag(ML);
+A = -(K+D);    % low-order steady-state system matrix
 
 % compute dt using CFL condition, even for implicit, just so that time
 % steps will be equal between explicit and implicit, for comparison
-dt = CFL*ML(1,1)/(-K(1,1)-D(1,1));
+dt = CFL*ML(1,1)/A(1,1);
 for i = 2:n_dof
-    dt = min(dt, CFL*ML(i,i)/(-K(i,i)-D(i,i)));
+    dt = min(dt, CFL*ML(i,i)/A(i,i));
 end
 
-A = -(K+D); % low-order steady-state system matrix
-AL = ML-dt*(K+D); % low-order transient sytem matrix to be inverted
-AH = MC-dt*K;     % high-order transient sytem matrix to be inverted
+% define low-order and high-order transient sytem matrices to be inverted
+if (use_explicit)
+    AL = ML;
+    AH = MC;
+else
+    AL = ML-dt*(K+D);
+    AH = MC-dt*K;
+end
 % compute modified transient sytem matrix for Dirichlet BC
 AL_mod = AL;
 AL_mod(1,:)=0; AL_mod(1,1)=1;
@@ -67,7 +76,11 @@ fprintf('Computing low-order solution...\n');
 u_old = u0;
 for n = 1:n_dt
     % compute rhs
-    rhs = ML*u_old + dt*b;
+    if (use_explicit)
+        rhs = (ML - dt*A)*u_old + dt*b;
+    else
+        rhs = ML*u_old + dt*b;
+    end
     % modify rhs for Dirichlet BC
     rhs(1) = inc;
     % solve modified system
@@ -84,7 +97,11 @@ fprintf('Computing high-order solution...\n');
 u_old = u0;
 for n = 1:n_dt
     % compute rhs
-    rhs = MC*u_old + dt*b;
+    if (use_explicit)
+        rhs = (MC + dt*K)*u_old + dt*b;
+    else
+        rhs = MC*u_old + dt*b;
+    end
     % modify rhs for Dirichlet BC
     rhs(1) = inc;
     % solve modified system
@@ -103,7 +120,11 @@ for n = 1:n_dt
     % high-order solve
     %----------------
     % compute rhs
-    rhs = MC*u_old + dt*b;
+    if (use_explicit)
+        rhs = (MC + dt*K)*u_old + dt*b;
+    else
+        rhs = MC*u_old + dt*b;
+    end
     % modify rhs for Dirichlet BC
     rhs(1) = inc;
     % solve modified system
@@ -112,7 +133,7 @@ for n = 1:n_dt
     % FCT solve
     %----------------
     % compute flux correction matrix
-    F = compute_flux_correction_matrix_implicit(u_old,uH,dt,D,MC);
+    F = compute_kuzmin_flux_correction_matrix(u_old,uH,dt,D,MC,use_explicit);
     % compute the upper and lower bound for max principle
     [W_max,W_min] = compute_max_principle_bounds(u_old,dt,ML,A,b);
     % compute limiting coefficients
@@ -127,7 +148,11 @@ for n = 1:n_dt
             error('Invalid limiting option');
     end
     % compute correction rhs
-    rhs = ML*u_old + dt*b + sum((limiter.*F),2);
+    if (use_explicit)
+        rhs = (ML - dt*A)*u_old + dt*b + sum((limiter.*F),2);
+    else
+        rhs = ML*u_old + dt*b + sum((limiter.*F),2);
+    end
     % modify rhs for Dirichlet BC
     rhs(1) = inc;
     % solve modified system
