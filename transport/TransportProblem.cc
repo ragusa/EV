@@ -342,7 +342,7 @@ void TransportProblem<dim>::compute_viscous_bilinear_forms()
 /** \brief Assemble the inviscid system matrix and steady-state right hand side.
  */
 template<int dim>
-void TransportProblem<dim>::assemble_system(const double &dt)
+void TransportProblem<dim>::assemble_system()
 {
    inviscid_ss_matrix = 0;
    ss_rhs = 0;
@@ -366,12 +366,6 @@ void TransportProblem<dim>::assemble_system(const double &dt)
    // total source values at each quadrature point on cell
    std::vector<double> total_source_values(n_q_points_cell);
 
-   // get domain-averaged entropy if using entropy viscosity for this iteration
-   max_entropy_deviation_domain = 0.0;
-   bool need_to_compute_entropy_viscosity = (parameters.viscosity_option == 2);
-   if (need_to_compute_entropy_viscosity)
-      compute_entropy_domain_average();
-
    // cell iterator
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
@@ -391,15 +385,6 @@ void TransportProblem<dim>::assemble_system(const double &dt)
       // get total source for all quadrature points
       total_source.value_list(fe_values.get_quadrature_points(),
                               total_source_values);
-
-      // compute entropy viscosity if needed
-      if (need_to_compute_entropy_viscosity)
-         compute_entropy_viscosity(cell,
-                                   i_cell,
-                                   fe_values,
-                                   total_cross_section_values,
-                                   total_source_values,
-                                   dt);
 
       // compute cell contributions to global system
       // ------------------------------------------------------------------
@@ -504,6 +489,8 @@ void TransportProblem<dim>::compute_entropy_domain_average()
 
    // compute max deviation of entropy from domain-averaged entropy
    //--------------------------------------------------------------
+   max_entropy_deviation_domain = 0.0;
+
    // loop over cells
    for (cell = dof_handler.begin_active(); cell != endc; ++cell) {
       // reinitialize FE values
@@ -522,106 +509,139 @@ void TransportProblem<dim>::compute_entropy_domain_average()
    }
 }
 
-/** \brief Computes the entropy viscosity in a cell.
+/** \brief Computes the entropy viscosity for each cell.
  */
 template <int dim>
-void TransportProblem<dim>::compute_entropy_viscosity(const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                                      const unsigned int        &i_cell,
-                                                      const FEValues<dim>       &fe_values,
-                                                      const std::vector<double> &total_cross_section_values,
-                                                      const std::vector<double> &total_source_values,
-                                                      const double              &dt)
+void TransportProblem<dim>::compute_entropy_viscosity(const double &dt)
 {
-   // get previous time step (n) values and gradients
-   std::vector<double>         new_values   (n_q_points_cell);
-   std::vector<Tensor<1,dim> > new_gradients(n_q_points_cell);
-   fe_values[flux].get_function_values   (new_solution, new_values);
-   fe_values[flux].get_function_gradients(new_solution, new_gradients);
-   // get previous previous time step (n-1) values
-   std::vector<double>         old_values   (n_q_points_cell);
-   fe_values[flux].get_function_values   (old_solution, old_values);
+   // compute entropy average in domain
+   compute_entropy_domain_average();
 
-   // compute max entropy residual in cell
-   //----------------------------------------------------------------------------
-   // compute entropy values at each quadrature point on cell. The entropy definition s = 0.5*u^2 is used.
-   std::vector<double> new_entropy_values(n_q_points_cell,0.0);
-   std::vector<double> old_entropy_values(n_q_points_cell,0.0);
-   for (unsigned int q = 0; q < n_q_points_cell; ++q) {
-      new_entropy_values[q] = 0.5 * new_values[q] * new_values[q];
-      old_entropy_values[q] = 0.5 * old_values[q] * old_values[q];
-   }
-   // compute entropy residual values at each quadrature point on cell
-   std::vector<double> entropy_residual_values(n_q_points_cell,0.0);
-   for (unsigned int q = 0; q < n_q_points_cell; ++q)
-      entropy_residual_values[q] = (new_entropy_values[q] - old_entropy_values[q])/dt
-         + transport_direction * new_values[q] * new_gradients[q]
-         + total_cross_section_values[q] * new_values[q] * new_values[q]
-         - total_source_values[q] * new_values[q];
-   // determine maximum entropy residual in cell
-   double max_entropy_residual = 0.0;
-   for (unsigned int q = 0; q < n_q_points_cell; ++q) {
-      max_entropy_residual  = std::max(max_entropy_residual,  std::abs(entropy_residual_values[q]));
-   }
+   // total cross section values at each quadrature point on cell
+   const TotalCrossSection<dim> total_cross_section(cross_section_option,cross_section_value);
+   std::vector<double> total_cross_section_values(n_q_points_cell);
 
-   // compute max jump in cell
-   //----------------------------------------------------------------------------
+   // total source values at each quadrature point on cell
+   const TotalSource<dim> total_source(source_option,source_value);
+   std::vector<double> total_source_values(n_q_points_cell);
+
+   // FE cell values for computing entropy
+   FEValues<dim> fe_values(fe, cell_quadrature,
+         update_values | update_gradients | update_quadrature_points
+               | update_JxW_values);
+
+   // FE face values for computing entropy jumps
    FEFaceValues<dim> fe_values_face         (fe, face_quadrature,
       update_values | update_gradients | update_JxW_values | update_normal_vectors);
    FEFaceValues<dim> fe_values_face_neighbor(fe, face_quadrature,
       update_values | update_gradients | update_JxW_values | update_normal_vectors);
 
+   // cell values
+   std::vector<double>         new_values   (n_q_points_cell);
+   std::vector<Tensor<1,dim> > new_gradients(n_q_points_cell);
+   std::vector<double>         old_values   (n_q_points_cell);
+   std::vector<double>         new_entropy_values(n_q_points_cell,0.0);
+   std::vector<double>         old_entropy_values(n_q_points_cell,0.0);
+
+   // face values
    std::vector<double>         values_face            (n_q_points_face);
    std::vector<double>         values_face_neighbor   (n_q_points_face);
    std::vector<Tensor<1,dim> > gradients_face         (n_q_points_face);
    std::vector<Tensor<1,dim> > gradients_face_neighbor(n_q_points_face);
    std::vector<Point<dim> >    normal_vectors         (n_q_points_face);
-   Vector<double> entropy_face(n_q_points_face);
+   Vector<double>              entropy_face           (n_q_points_face);
 
-   double max_jump_in_cell = 0.0;
-   double max_jump_on_face = 0.0;
-   for (unsigned int iface = 0; iface < faces_per_cell; ++iface)
+   // cell iterator
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
+                                                  endc = dof_handler.end();
+   // loop over cells
+   unsigned int i_cell = 0;
+   for (cell = dof_handler.begin_active(); cell != endc; ++cell, ++i_cell)
    {
-      typename DoFHandler<dim>::face_iterator face = cell->face(iface);
-      if (face->at_boundary() == false)
+      // reinitialize FE values
+      fe_values.reinit(cell);
+
+      // get previous time step (n) values and gradients
+      fe_values[flux].get_function_values   (new_solution, new_values);
+      fe_values[flux].get_function_gradients(new_solution, new_gradients);
+      // get previous previous time step (n-1) values
+      fe_values[flux].get_function_values   (old_solution, old_values);
+   
+      // get total cross section for all quadrature points
+      total_cross_section.value_list(fe_values.get_quadrature_points(),
+                                     total_cross_section_values);
+      // get total source for all quadrature points
+      total_source.value_list(fe_values.get_quadrature_points(),
+                              total_source_values);
+
+      // compute max entropy residual in cell
+      //----------------------------------------------------------------------------
+      // compute entropy values at each quadrature point on cell. The entropy definition s = 0.5*u^2 is used.
+      for (unsigned int q = 0; q < n_q_points_cell; ++q) {
+         new_entropy_values[q] = 0.5 * new_values[q] * new_values[q];
+         old_entropy_values[q] = 0.5 * old_values[q] * old_values[q];
+      }
+      // compute entropy residual values at each quadrature point on cell
+      std::vector<double> entropy_residual_values(n_q_points_cell,0.0);
+      for (unsigned int q = 0; q < n_q_points_cell; ++q)
+         entropy_residual_values[q] = (new_entropy_values[q] - old_entropy_values[q])/dt
+            + transport_direction * new_values[q] * new_gradients[q]
+            + total_cross_section_values[q] * new_values[q] * new_values[q]
+            - total_source_values[q] * new_values[q];
+      // determine maximum entropy residual in cell
+      double max_entropy_residual = 0.0;
+      for (unsigned int q = 0; q < n_q_points_cell; ++q) {
+         max_entropy_residual  = std::max(max_entropy_residual,  std::abs(entropy_residual_values[q]));
+      }
+   
+      // compute max jump in cell
+      //----------------------------------------------------------------------------
+      double max_jump_in_cell = 0.0;
+      double max_jump_on_face = 0.0;
+      for (unsigned int iface = 0; iface < faces_per_cell; ++iface)
       {
-         Assert(cell->neighbor(iface).state() == IteratorState::valid, ExcInternalError());
-         typename DoFHandler<dim>::cell_iterator neighbor = cell->neighbor(iface);
-         const unsigned int ineighbor = cell->neighbor_of_neighbor(iface);
-         Assert(ineighbor < faces_per_cell, ExcInternalError());
-
-         fe_values_face.reinit(         cell,    iface);
-         fe_values_face_neighbor.reinit(neighbor,ineighbor);
-
-         // get values on face
-         fe_values_face.get_function_values(new_solution, values_face);
-
-         // compute entropy at each quadrature point on face
-         for (unsigned int q = 0; q < n_q_points_face; ++q)
-            entropy_face[q] = 0.5 * values_face[q] * values_face[q];
-
-         // get gradients on adjacent faces of current cell and neighboring cell
-         fe_values_face.get_function_gradients(         new_solution, gradients_face);
-         fe_values_face_neighbor.get_function_gradients(new_solution, gradients_face_neighbor);
-
-         // get normal vectors
-         normal_vectors = fe_values_face.get_normal_vectors();
-
-         max_jump_on_face = 0.0;
-         for (unsigned int q = 0; q < n_q_points_face; ++q)
+         typename DoFHandler<dim>::face_iterator face = cell->face(iface);
+         if (face->at_boundary() == false)
          {
-            double jump_dEdn = (gradients_face[q]*values_face[q]
-               - gradients_face_neighbor[q]*values_face_neighbor[q]) * normal_vectors[q];
-            double jump_on_face = std::abs(transport_direction * normal_vectors[q] * jump_dEdn);
-            max_jump_on_face = std::max(max_jump_on_face, jump_on_face);
-         }
-      } // end if (at_boundary())
-      max_jump_in_cell = std::max(max_jump_in_cell, max_jump_on_face);
-   } // end face loop
-
-   // compute entropy viscosity in cell
-   //----------------------------------------------------------------------------
-   entropy_viscosity(i_cell) = (parameters.entropy_viscosity_coefficient * max_entropy_residual
-      + parameters.jump_coefficient * max_jump_in_cell) / max_entropy_deviation_domain;
+            Assert(cell->neighbor(iface).state() == IteratorState::valid, ExcInternalError());
+            typename DoFHandler<dim>::cell_iterator neighbor = cell->neighbor(iface);
+            const unsigned int ineighbor = cell->neighbor_of_neighbor(iface);
+            Assert(ineighbor < faces_per_cell, ExcInternalError());
+   
+            fe_values_face.reinit(         cell,    iface);
+            fe_values_face_neighbor.reinit(neighbor,ineighbor);
+   
+            // get values on face
+            fe_values_face.get_function_values(new_solution, values_face);
+   
+            // compute entropy at each quadrature point on face
+            for (unsigned int q = 0; q < n_q_points_face; ++q)
+               entropy_face[q] = 0.5 * values_face[q] * values_face[q];
+   
+            // get gradients on adjacent faces of current cell and neighboring cell
+            fe_values_face.get_function_gradients(         new_solution, gradients_face);
+            fe_values_face_neighbor.get_function_gradients(new_solution, gradients_face_neighbor);
+   
+            // get normal vectors
+            normal_vectors = fe_values_face.get_normal_vectors();
+   
+            max_jump_on_face = 0.0;
+            for (unsigned int q = 0; q < n_q_points_face; ++q)
+            {
+               double jump_dEdn = (gradients_face[q]*values_face[q]
+                  - gradients_face_neighbor[q]*values_face_neighbor[q]) * normal_vectors[q];
+               double jump_on_face = std::abs(transport_direction * normal_vectors[q] * jump_dEdn);
+               max_jump_on_face = std::max(max_jump_on_face, jump_on_face);
+            }
+         } // end if (at_boundary())
+         max_jump_in_cell = std::max(max_jump_in_cell, max_jump_on_face);
+      } // end face loop
+   
+      // compute entropy viscosity in cell
+      //----------------------------------------------------------------------------
+      entropy_viscosity(i_cell) = (parameters.entropy_viscosity_coefficient * max_entropy_residual
+         + parameters.jump_coefficient * max_jump_in_cell) / max_entropy_deviation_domain;
+   }
 }
 
 /** \brief adds the viscous bilinear form for the maximum-principle preserving viscosity
@@ -868,6 +888,10 @@ void TransportProblem<dim>::run()
          // set old solution to the current solution
          old_solution = new_solution;
          
+         // compute inviscid system matrix and steady-state right hand side (ss_rhs)
+         // Max-principle viscosity terms will be added in a separate step afterward.
+         assemble_system();
+
          // time loop
          double t = 0.0;
          const double t_end = parameters.end_time;
@@ -880,10 +904,10 @@ void TransportProblem<dim>::run()
          unsigned int n = 1; // time step index
          while (in_transient)
          {
-            // compute inviscid system matrix and steady-state right hand side (ss_rhs)
-            // This inviscid system matrix will contain inviscid terms and Laplacian viscous terms if there are any.
-            // Max-principle viscosity terms will be added in a separate step afterward.
-            assemble_system(old_dt);
+            // compute entropy viscosity if needed
+            if (parameters.viscosity_option == 2)
+               compute_entropy_viscosity(old_dt);
+
             // add inviscid component to total steady-state matrix (A)
             ss_matrix.copy_from(inviscid_ss_matrix);
             // add viscous bilinear form for maximum-principle preserving viscosity
@@ -898,8 +922,8 @@ void TransportProblem<dim>::run()
             // update old solution to previous step's new solution
             // Note that this is done here because the old old_solution is needed in the
             // computation of the entropy viscosity time derivative term, which occurs in
-            // assemble_system(), so the following update to old_solution needs to come
-            // sometime after assemble_system() but before old_solution is used in the
+            // compute_entropy_viscosity(), so the following update to old_solution needs to come
+            // sometime after compute_entropy_viscosity() but before old_solution is used in the
             // assembly of the transient residual.
             old_solution = new_solution;
 
@@ -1013,8 +1037,7 @@ void TransportProblem<dim>::solve_steady_state()
    Assert(parameters.viscosity_option != 2, ExcNotImplemented());
 
    // compute inviscid system matrix and steady-state right hand side (ss_rhs)
-   // This inviscid system matrix will contain inviscid terms and Laplacian viscous terms if there are any.
-   assemble_system(1.0e15);
+   assemble_system();
    // add inviscid component to total system matrix (A)
    ss_matrix.copy_from(inviscid_ss_matrix);
    // add viscous bilinear form for maximum-principle preserving viscosity

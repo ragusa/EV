@@ -67,7 +67,7 @@ class TransportProblem {
       void setup_system();
       void set_boundary_indicators();
       void assemble_mass_matrices();
-      void assemble_system(const double &dt);
+      void assemble_system();
       void apply_Dirichlet_BC(SparseMatrix<double> &A,
                               Vector<double>       &x,
                               Vector<double>       &b);
@@ -163,12 +163,7 @@ class TransportProblem {
       double incoming_flux_value;
 
       // entropy viscosity functions and data
-      void compute_entropy_viscosity(const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                     const unsigned int  &i_cell,
-                                     const FEValues<dim> &fe_values,
-                                     const std::vector<double> &total_cross_section,
-                                     const std::vector<double> &total_source,
-                                     const double &dt);
+      void compute_entropy_viscosity(const double &dt);
       void compute_entropy_domain_average();
       double domain_volume;
       double domain_averaged_entropy;
