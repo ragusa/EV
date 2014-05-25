@@ -12,8 +12,6 @@ function [MC,ML,K,D,b]=build_matrices(len,nel,omega,sigma,src)
 M_cell=[2 1;1 2]/3;
 % integral omega * bi * dbj/dx
 K_cell=omega*[-1 1;-1 1]/2;
-% integral -omega * dbi/dx bj
-K_cell_weak = -K_cell';
 % integral bi
 b_cell=[1;1];
 
@@ -27,18 +25,29 @@ n = nel+1; % system size
 nnz = 3*n; % max number of nonzero entries
 MC = spalloc(n,n,nnz);
 K  = spalloc(n,n,nnz);
+A  = spalloc(n,n,nnz);
 D  = spalloc(n,n,nnz);
 b  = zeros(n,1);
+
+% compute sigma for each cell
+sigma_cell = zeros(nel,1);
+% center x-value for each cell
+x_center = linspace(0.5*h,len-0.5*h,nel);
+for iel = 1:nel
+    sigma_cell(iel) = sigma(x_center(iel));
+end
 
 % assemble consistent mass matrix and steady-state rhs
 for iel=1:nel
     MC(g(iel,:),g(iel,:)) = MC(g(iel,:),g(iel,:)) + M_cell*jac;
     K(g(iel,:),g(iel,:))  = K(g(iel,:),g(iel,:))  + K_cell;
+    A(g(iel,:),g(iel,:))  = A(g(iel,:),g(iel,:))  + sigma_cell(iel)*M_cell*jac;
     b(g(iel,:))           = b(g(iel,:))           + b_cell*src*jac;
 end
 
 % kuzmin writes K on the rhs
-K=-K-sigma*MC;
+%K=-K-sigma*MC;
+K = -(K+A);
 
 % lump mass
 ML=(sum(MC));

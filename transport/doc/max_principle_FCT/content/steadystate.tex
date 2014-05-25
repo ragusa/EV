@@ -1,0 +1,217 @@
+%================================================================================
+\section{Steady-State Radiation Transport}
+%================================================================================
+%--------------------------------------------------------------------------------
+\subsection{Deriving a Maximum Principle}
+%--------------------------------------------------------------------------------
+A maximum principle is satisfied by adding a viscous bilinear form with a local
+viscosity coefficient given in the following definition.
+\begin{definition}
+The low-order viscosity for the radiative transfer equation on cell $K$ is
+defined as follows:
+\begin{equation}
+	\nu_K^L = \max\limits_{i\ne j\in \mathcal{I}(K)}\frac{\left|\int\limits_{S_{ij}}
+      \left(\mathbf{\Omega}\cdot\nabla\varphi_j +
+		\sigma_t\varphi_j\right)\varphi_i d\mathbf{x}\right|}
+		{-\sum\limits_{T\subset S_{ij}} b_T(\varphi_j, \varphi_i)},
+\end{equation}
+where $S_{ij}$ is the dual-support of degrees of freedom $i$ and $j$,
+$\mathcal{I}(K)$ is the set of indices corresponding to degrees of freedom in
+the support of cell $K$, and $b_K(\varphi_j, \varphi_i)$ is a local bilinear
+form defined as follows:
+\begin{equation}
+   b_K(\varphi_j, \varphi_i) = \left\{\begin{array}{l l}
+      -\frac{1}{n_K - 1}|K| & i\ne j, \quad i,j\in \mathcal{I}(K),\\
+      |K|                   & i = j,  \quad i,j\in \mathcal{I}(K),\\
+      0                     & i\notin\mathcal{I}(K) \quad | \quad j\notin\mathcal{I}(K),
+   \end{array}\right.
+\end{equation}
+where $n_K = \mbox{card}(\mathcal{I}(K))$.
+\end{definition}
+
+Applying the Galerkin finite element method to Equation \ref{ss} and adding a
+viscous bilinear form gives a linear system $\mathbf{A^L} \mathbf{U} = \mathbf{b}$.
+The superscript $L$ denotes the low-order matrix (use of the low-order viscosity). 
+The $i$-th equation is the following:
+\begin{equation}
+	\sum\limits_{K\subset S_i}\left[\int\limits_K\left(\mathbf{\Omega}\cdot\nabla\psi
+      + \sigma_t\psi\right)\varphi_i d\mathbf{x} + \nu_K^L b_K(\psi, \varphi_i)\right]
+      = \sum\limits_{K\subset S_i}\int\limits_K q \varphi_i d\mathbf{x} = b_i.
+\end{equation}
+
+\begin{lemma}
+The coefficients of the resulting linear system are given by the following equation:
+\begin{equation}\label{Aij}
+	A^L_{i,j} = \int\limits_{S_{ij}}\left(\mathbf{\Omega}\cdot\nabla\varphi_j +
+		\sigma_t\varphi_j\right)\varphi_i d\mathbf{x} +
+		\sum\limits_{K\subset S_{ij}}\nu_K^L b_K(\varphi_j, \varphi_i).
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Expanding the solution gives
+\[
+	\sum\limits_{K\subset S_i}\left[\int\limits_K\left(\mathbf{\Omega}\cdot
+      \nabla\sum\limits_{j\in \mathcal{I}(K)}U_j\varphi_j +
+		\sigma_t\sum\limits_{j\in \mathcal{I}(K)}U_j\varphi_j\right)\varphi_i d\mathbf{x} +
+		\nu_K^L \sum\limits_{j\in \mathcal{I}(K)}U_j b_K(\varphi_j, \varphi_i)\right] = b_i,
+\]
+and rearranging gives
+\[
+	\sum\limits_{j\in \mathcal{I}(S_{i})}U_j\sum\limits_{K\subset S_{ij}}
+      \left(\int\limits_K\left(\mathbf{\Omega}\cdot\nabla\varphi_j +
+		\sigma_t\varphi_j\right)\varphi_i d\mathbf{x} +
+		\nu_K^L b_K(\varphi_j, \varphi_i)\right) = b_i
+\]
+Thus the elements of the linear system matrix are:
+\begin{eqnarray*}
+	A^L_{i,j} & = & \sum\limits_{K\subset S_{ij}}\left(\int\limits_K
+      \left(\mathbf{\Omega}\cdot\nabla\varphi_j +
+		\sigma_t\varphi_j\right)\varphi_i d\mathbf{x} +
+		\nu_K^L b_K(\varphi_j, \varphi_i)\right)\\
+  & = & \int\limits_{S_{ij}}\left(\mathbf{\Omega}\cdot\nabla\varphi_j +
+		\sigma_t\varphi_j\right)\varphi_i d\mathbf{x} +
+		\sum\limits_{K\subset S_{ij}}\nu_K^L b_K(\varphi_j, \varphi_i).\qed
+\end{eqnarray*}
+\end{proof}
+
+\newpage
+\begin{lemma}\label{offdiagonalnegative}
+   The off-diagonal elements of the linear system matrix are non-positive:
+   $A^L_{i,j}\le 0, j\ne i$.
+\end{lemma}
+\begin{proof}
+This proof begins by bounding the term
+$\sum\limits_{K\subset S_{ij}}\nu_K^L b_K(\varphi_j, \varphi_i)$:
+\begin{eqnarray*}
+   \sum\limits_{K\subset S_{ij}}\nu_K^L b_K(\varphi_j, \varphi_i)
+   & = & \sum\limits_{K\subset S_{ij}} \max\limits_{i\ne j\in \mathcal{I}(K)}
+      \frac{\left|\int\limits_{S_{ij}}\left(\mathbf{\Omega}\cdot\nabla\varphi_j +
+		\sigma_t\varphi_j\right)\varphi_i d\mathbf{x}\right|}
+		{-\sum\limits_{T\subset S_{ij}} b_T(\varphi_j, \varphi_i)}b_K(\varphi_j,\varphi_i)\\
+   & \le & \sum\limits_{K\subset S_{ij}} \frac{\left|\int\limits_{S_{ij}}
+      \left(\mathbf{\Omega}\cdot\nabla\varphi_j +
+		\sigma_t\varphi_j\right)\varphi_i d\mathbf{x}\right|}
+		{-\sum\limits_{T\subset S_{ij}} b_T(\varphi_j, \varphi_i)}b_K(\varphi_j,\varphi_i)\\
+   & \le & -\left|\int\limits_{S_{ij}}\left(\mathbf{\Omega}\cdot\nabla\varphi_j +
+		\sigma_t\varphi_j\right)\varphi_i d\mathbf{x}\right|
+\end{eqnarray*}
+Now, recalling Equation \ref{Aij},
+\begin{eqnarray*}
+	A^L_{i,j} & = & \int\limits_{S_{ij}}\left(\mathbf{\Omega}\cdot\nabla\varphi_j +
+		\sigma_t\varphi_j\right)\varphi_i d\mathbf{x} +
+		\sum\limits_{K\subset S_{ij}}\nu_K^L b_K(\varphi_j, \varphi_i)\\
+      & \le & \int\limits_{S_{ij}}\left(\mathbf{\Omega}\cdot\nabla\varphi_j +
+		\sigma_t\varphi_j\right)\varphi_i d\mathbf{x} -\left|\int\limits_{S_{ij}}
+      \left(\mathbf{\Omega}\cdot\nabla\varphi_j +
+		\sigma_t\varphi_j\right)\varphi_i d\mathbf{x}\right|\\
+      & \le & 0.\qed
+\end{eqnarray*}
+\end{proof}
+
+\begin{lemma}\label{diagonalpositive}
+   The diagonal elements  of the linear system matrix are non-negative: $A^L_{i,i}\ge 0$.
+\end{lemma}
+\begin{proof}
+\[
+	A^L_{i,i} = \int\limits_{S_{i}}\left(\nabla\cdot\frac{\mathbf{\Omega}\varphi_i^2}{2} +
+		\sigma_t\varphi_i^2\right) d\mathbf{x} +
+		\sum\limits_{K\subset S_{i}}\nu_K^L b_K(\varphi_i, \varphi_i).
+\]
+To prove that $A^L_{i,i}$ is non-negative, it is sufficient to prove that
+each term in the above expression is non-negative. The non-negativity of
+the interaction term and viscous term are obvious ($\sigma_t \ge 0, 
+\, \nu_K^L\ge 0, \, b_K(\varphi_i, \varphi_i)>0$), but
+the non-negativity of the divergence term is not necessarily obvious. On the interior of
+the domain, the divergence term gives zero contribution because the divergence integral may
+be transformed into a surface integral $\int\limits_{\partial S_{i}}
+\mathbf{\Omega}\cdot\mathbf{n}\frac{\varphi_i^2}{2} d\mathbf{x}$
+via the divergence theorem; one can then recognize that
+the basis function $\varphi_i$ evaluates to zero on the boundary of its support $S_{i}$.\\
+On the outflow boundary of the domain, the term $\mathbf{\Omega}\cdot\mathbf{n}
+\frac{\varphi_i^2}{2}$ is positive because the $\mathbf{\Omega}\cdot\mathbf{n} >0$
+for an outflow boundary. This quantity is of course negative for the inflow boundary,
+but a Dirichlet boundary condition is strongly imposed on the incoming boundary, so
+for degrees of freedom $i$ on the incoming boundary, $A^L_{i,i}$ will be set equal
+to some positive value such as 1 with a corresponding incoming value
+accounted for in the right hand side $\mathbf{b}$ of the linear system.\qed
+\end{proof}
+
+\newpage
+\begin{lemma}
+   The sum of all elements in a row $i$ is non-negative: $\sum\limits_j A^L_{i,j} \ge 0$.
+\end{lemma}
+
+\begin{proof}
+Using the fact that $\sum\limits_j\varphi_j=1$,
+\begin{eqnarray*}
+	\sum\limits_j A^L_{i,j} & = & \sum\limits_j\int\limits_{S_{ij}}
+      \left(\mathbf{\Omega}\cdot\nabla\varphi_j +
+		\sigma_t\varphi_j\right)\varphi_i d\mathbf{x} +
+		\sum\limits_j\sum\limits_{K\subset S_{ij}}\nu_K b_K(\varphi_j, \varphi_i)\\
+		& = & \int\limits_{S_{i}}\left(\mathbf{\Omega}\cdot\nabla\sum\limits_j\varphi_j +
+		\sigma_t\sum\limits_j\varphi_j\right)\varphi_i d\mathbf{x}\\
+		& = & \int\limits_{S_{i}}\sigma_t\varphi_i d\mathbf{x}\\
+		&\ge& 0.\qed
+\end{eqnarray*}
+\end{proof}
+
+\begin{lemma}\label{diagonallydominant}
+   $\mathbf{A^L}$ is strictly diagonally dominant:
+   $\left|A^L_{i,i}\right| \ge \sum\limits_{j\ne i} \left|A^L_{i,j}\right|$.
+\end{lemma}
+\begin{proof}
+Using the inequalities $\sum\limits_j A^L_{i,j} \ge 0$ and $A^L_{i,j}\le 0, j\ne i$,
+it is proven that $\mathbf{A^L}$ is strictly diagonally dominant:
+\begin{eqnarray*}
+	\sum\limits_j A^L_{i,j} & \ge & 0\\
+	\sum\limits_{j\ne i} A^L_{i,j} + A^L_{i,i} & \ge & 0\\
+	\left|A^L_{i,i}\right| & \ge & \sum\limits_{j\ne i} -A^L_{i,j}\\
+	\left|A^L_{i,i}\right| & \ge & \sum\limits_{j\ne i} \left|A^L_{i,j}\right|.\qed
+\end{eqnarray*}
+\end{proof}
+
+\begin{lemma}
+   $\mathbf{A^L}$ is an M-Matrix.
+\end{lemma}
+\begin{proof}
+To prove that a matrix is an M-Matrix, it is sufficient to prove that:
+\[
+\left\{\begin{array}{l}
+A^L_{i,j}\le 0, j\ne i\\
+A^L_{i,i}\ge 0\\
+\left|A^L_{i,i}\right| \ge \sum\limits_{j\ne i} \left|A^L_{i,j}\right|\\
+\end{array}
+\right.,
+\]
+which are given by Lemmas \ref{offdiagonalnegative}, \ref{diagonalpositive}, and
+\ref{diagonallydominant}, respectively.\qed
+\end{proof}
+
+\begin{theorem}
+The solution $\mathbf{\psi}$ is non-negative and satisfies the following maximum principle:
+\begin{equation}\label{ss_max_principle}
+   \left(1 - \frac{1}{A^L_{i,i}}\sum\limits_j A^L_{i,j}\right)U_{min,i}
+      + \frac{b_i}{A^L_{i,i}}\le U_i
+   \le \left(1 - \frac{1}{A^L_{i,i}}\sum\limits_j A^L_{i,j}\right)U_{max,i}
+      + \frac{b_i}{A^L_{i,i}},
+\end{equation}
+where $U_{min,i} = \min\limits_{j\in \mathcal{I}(S_i)}U_j$, $U_{max,i}
+= \max\limits_{j\in \mathcal{I}(S_i)}U_j$,
+and $\mathcal{I}(S_i)$ is the set of indices of degrees of freedom in the support
+of degree of freedom $i$.
+\end{theorem}
+\begin{proof}
+\begin{eqnarray*}
+	\sum\limits_j A^L_{i,j}U_j & = & b_i\\
+	A^L_{i,i}U_i & = & \sum\limits_{j\ne i} -A^L_{i,j}U_j + b_i\\
+	A^L_{i,i}U_i & \le & \left(\sum\limits_{j\ne i} -A^L_{i,j}\right)U_{max,i} + b_i\\
+	A^L_{i,i}(U_i - U_{max,i}) & \le & \left(-\sum\limits_j A^L_{i,j}\right)U_{max,i}
+      + b_i\\
+	U_i - U_{max,i} & \le & \left(-\frac{1}{A^L_{i,i}}\sum\limits_j A^L_{i,j}\right)
+      U_{max,i} + \frac{b_i}{A^L_{i,i}}\\
+	U_i & \le & \left(1 - \frac{1}{A^L_{i,i}}\sum\limits_j A^L_{i,j}\right)U_{max,i}
+      + \frac{b_i}{A^L_{i,i}}
+\end{eqnarray*}
+A similar analysis is performed to prove the lower bound for $U_i$.\qed
+\end{proof}

@@ -7,3 +7,5 @@ html
 latex
 tags
 *.asv
+doc/.svn
+doc/MATH676_report

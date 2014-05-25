@@ -1,15 +1,16 @@
-function L = compute_limiting_coefficients_kuzmin(F,u_old,u_new,ML,W_max,W_min,AL,b,dt,use_explicit)
+function L = compute_limiting_coefficients_kuzmin(F,u,W_max,W_min,AL,b)
 % computes the limiting coefficient matrix L
 %
 % L     = limiting coefficient matrix
 %
 % F     = flux correction matrix
-% uL    = low-order solution
-% ML    = lumped mass matrix
+% u     = solution
 % W_max = upper bound for max principle
 % W_min = lower bound for max principle
+% AL    = low-order system matrix
+% b     = steady-state rhs
 
-n = length(u_old);
+n = length(u);
 
 L      = zeros(n,n);
 Pplus  = zeros(n,1);
@@ -26,18 +27,9 @@ for i=1:n
 end
 
 % Q vectors
-if (use_explicit)
-    for i=1:n
-        Qplus(i)  = ML(i,i)*(W_max(i) - u_old(i)) + dt*AL(i,:)*u_old - dt*b(i);
-        Qminus(i) = ML(i,i)*(W_min(i) - u_old(i)) + dt*AL(i,:)*u_old - dt*b(i);
-    end
-else
-    for i=1:n
-        Qplus(i)  = (ML(i,i) + dt*AL(i,i))*W_max(i) +...
-            dt*(AL(i,:)*u_new - AL(i,i)*u_new(i)) - ML(i,i)*u_old(i) - dt*b(i);
-        Qminus(i) = (ML(i,i) + dt*AL(i,i))*W_min(i) +...
-            dt*(AL(i,:)*u_new - AL(i,i)*u_new(i)) - ML(i,i)*u_old(i) - dt*b(i);
-    end
+for i=1:n
+    Qplus(i)  = AL(i,i)*W_max(i) + AL(i,:)*u - AL(i,i)*u(i) - b(i);
+    Qminus(i) = AL(i,i)*W_min(i) + AL(i,:)*u - AL(i,i)*u(i) - b(i);
 end
 
 % R vectors
@@ -68,6 +60,5 @@ for i=1:n
         end
     end
 end
-
 return
 end

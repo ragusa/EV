@@ -1,11 +1,19 @@
-function [MC,K,ML,D,b]=build_matrices(len,nel,omega,sigma,src,inc)
+function [MC,ML,K,D,b]=build_matrices(len,nel,omega,sigma,src)
+% builds the mass matrices, steady state system matrix, artificial
+% dissipation matrix, and steady state rhs
+%
+% MC = consistent mass matrix
+% ML = lumped mass matrix
+% K  = Kuzmin's K matrix
+% D  = Kuzmin's D matrix
+% b  = steady-state rhs
 
 % integral bi bj
-m=[2 1;1 2]/3;
-% integral bi dbj/dx
-gr=[-1 1;-1 1]/2;
+M_cell=[2 1;1 2]/3;
+% integral omega * bi * dbj/dx
+K_cell=omega*[-1 1;-1 1]/2;
 % integral bi
-f=[1;1];
+b_cell=[1;1];
 
 h=len/nel;
 jac=h/2;
@@ -13,22 +21,33 @@ jac=h/2;
 g=[linspace(1,nel,nel)' linspace(2,nel+1,nel)'];
 
 % intialize matrices
-n=nel+1;
-nnz_=3*n;
-MC=spalloc(n,n,nnz_);
-K=MC;
-D=MC;
-b=zeros(n,1);
+n = nel+1; % system size
+nnz = 3*n; % max number of nonzero entries
+MC = spalloc(n,n,nnz);
+K  = spalloc(n,n,nnz);
+A  = spalloc(n,n,nnz);
+D  = spalloc(n,n,nnz);
+b  = zeros(n,1);
 
-for iel=1:nel
-    MC(g(iel,:),g(iel,:)) = MC(g(iel,:),g(iel,:)) + jac*m;
-    K(g(iel,:),g(iel,:))  = K(g(iel,:),g(iel,:))  + gr;
-    b(g(iel,:)) = b(g(iel,:)) +jac*f*src;
+% compute sigma for each cell
+sigma_cell = zeros(nel,1);
+% center x-value for each cell
+x_center = linspace(0.5*h,len-0.5*h,nel);
+for iel = 1:nel
+    sigma_cell(iel) = sigma(x_center(iel));
 end
-b(1)=inc;
 
-% kuzmin write K on the rhs
-K=-omega*K-sigma*MC;
+% assemble consistent mass matrix and steady-state rhs
+for iel=1:nel
+    MC(g(iel,:),g(iel,:)) = MC(g(iel,:),g(iel,:)) + M_cell*jac;
+    K(g(iel,:),g(iel,:))  = K(g(iel,:),g(iel,:))  + K_cell;
+    A(g(iel,:),g(iel,:))  = A(g(iel,:),g(iel,:))  + sigma_cell(iel)*M_cell*jac;
+    b(g(iel,:))           = b(g(iel,:))           + b_cell*src*jac;
+end
+
+% kuzmin writes K on the rhs
+%K=-K-sigma*MC;
+K = -(K+A);
 
 % lump mass
 ML=(sum(MC));
