@@ -179,7 +179,7 @@ for cycle = 1:n_cycle
         % compute flux correction matrix
         F = flux_correction_matrix(u_old,uH_FCT_loop,dt,D,MC,theta);
         % cancel antidiffusive fluxes down the gradient of u_aux
-        F = cancel_down_gradient(F,u_aux);
+%         F = cancel_down_gradient(F,u_aux);
         % compute limiting coefficients
         switch limiting_option
             case 0 % no correction
@@ -192,7 +192,7 @@ for cycle = 1:n_cycle
                 error('Invalid limiting option');
         end
         % enforce LED
-        Flim = enforce_LED(Flim,u_aux);
+%         Flim = enforce_LED(Flim,u_aux);
         % compute correction rhs
         rhs = ML*u_aux + theta*dt*b + sum(Flim,2);
         % modify rhs for Dirichlet BC
