@@ -18,7 +18,7 @@ theta = 0.0; % 0:   explicit euler
              % 1:   implicit euler
              % 1/2: crank nicholson
 ss_tol = 1.0e-6; % steady-state tolerance
-n_max = 20000;      % maximum number of time steps
+n_max = 200;      % maximum number of time steps
 CFL = 0.8;       % CFL number
 
 limiting_option = 2; % 0 = set limiting coefficients to 0 (no correction)
@@ -26,6 +26,7 @@ limiting_option = 2; % 0 = set limiting coefficients to 0 (no correction)
                      % 2 = compute limiting coefficients normally
 
 save_convergence_data = 0; % option to save convergence data (0=no,1=yes)
+impose_strongly = false; 
 
 %% Setup
 
@@ -73,7 +74,7 @@ for cycle = 1:n_cycle
     fprintf('Cycle %i: n_dof = %i\n',cycle,n_dof);
     
     % build matrices
-    [MC,ML,K,D,b] = build_matrices(len,nel,omega,sigma,src,speed,inc);
+    [MC,ML,K,D,b] = build_matrices(len,nel,omega,sigma,src,speed,inc,impose_strongly);
     ML = diag(ML);
     AL = -(K+D);    % low-order steady-state system matrix
     AH = -K;        % high-order steady-state system matrix
@@ -87,17 +88,18 @@ for cycle = 1:n_cycle
         dtH= min(dtH, CFL*ML(i,i)/AH(i,i));
     end
     fprintf('dt from low %g , from high %g \n',full(dt),full(dtH));
-    dt=dt/10;
+    dt=dt/3;
+%     dt=len/nel/omega/2;
     
     % define low-order and high-order transient sytem matrices to be inverted
     ALtr = ML + theta*dt*AL;
     AHtr = MC + theta*dt*AH;
     % compute modified transient sytem matrix for Dirichlet BC
     ALtr_mod = ALtr;
-%     ALtr_mod(1,:)=0; ALtr_mod(1,1)=1;
+    if impose_strongly; ALtr_mod(1,:)=0; ALtr_mod(1,1)=1; end
     % compute modified transient sytem matrix for Dirichlet BC
     AHtr_mod = AHtr;
-%     AHtr_mod(1,:)=0; AHtr_mod(1,1)=1;
+    if impose_strongly; AHtr_mod(1,:)=0; AHtr_mod(1,1)=1; end
     
     % initial conditions for pseudotransient (equal to exact steady-state solution)
     x = linspace(0,len,nel+1);
@@ -110,12 +112,12 @@ for cycle = 1:n_cycle
     dtb=dt*b;
     MLow=(ML - (1-theta)*dt*AL);
     figure(); 
-    for n = 1:0 %n_max
+    for n = 1:n_max
         fprintf('\t\tTime step %i:',n);
         % compute rhs
         rhs = MLow*u_old + dtb;
         % modify rhs for Dirichlet BC
-%         rhs(1) = inc;
+        if impose_strongly; rhs(1) = inc; end
         % solve modified system
         uL = ALtr_mod \ rhs;
         % test steady-state convergence
@@ -153,7 +155,7 @@ for cycle = 1:n_cycle
         rhs(1)=rhs(1)+dt*dirichlet_value;
         
         % modify rhs for Dirichlet BC
-%         rhs(1) = inc;
+        if impose_strongly; rhs(1) = inc; end
         % solve modified system
         uH = AHtr_mod \ rhs;
         % test steady-state convergence
@@ -165,12 +167,69 @@ for cycle = 1:n_cycle
             break;
         end
         plot(x,uH);
-        pause(0.1);        
+        pause(0.001);        
         % reset u_old
         u_old = uH;
     end
-    error('stopping here');
     
+% %     % high-order solve, other BC 
+% %     %======================================================================
+% %     impose_strongly_sav=impose_strongly;
+% %     AHtr_mod_sav=AHtr_mod ;
+% %     uH_sav=uH;
+% %     AL_sav=AL;
+% %     AH_sav=AH;
+% %     
+% %     impose_strongly=~impose_strongly; 
+% %     % build matrices
+% %     [MC,ML,K,D,b] = build_matrices(len,nel,omega,sigma,src,speed,inc,impose_strongly);
+% %     AH = -K;        % high-order steady-state system matrix    
+% %     AHtr = MC + theta*dt*AH;
+% %     % compute modified transient sytem matrix for Dirichlet BC
+% %     ALtr_mod = ALtr;
+% %     if impose_strongly; AHtr_mod(1,:)=0; AHtr_mod(1,1)=1; end
+% % 
+% %     fprintf('\tComputing high-order solution...\n');
+% %     figure();
+% %     u_old = u0;
+% % %     dt=dt/10      
+% %     MHigh=(MC - (1-theta)*dt*AH);
+% %     dtb=dt*b;
+% %     for n = 1:n_max
+% %         fprintf('\t\tTime step %i:',n);
+% %         % compute rhs
+% % %         rhs = MHigh*u_old + dtb;
+% %         rhs = MHigh*u_old;
+% %         time_n  =dt*(n-1);
+% %         time_np1=dt*(n  );
+% %         ramp=0.1;
+% %         dirichlet_value=   theta *min(inc,ramp*time_n)+...
+% %                         (1-theta)*min(inc,ramp*time_np1);
+% %         rhs(1)=rhs(1)+dt*dirichlet_value;
+% %         
+% %         % modify rhs for Dirichlet BC
+% %         if impose_strongly; rhs(1) = dt*dirichlet_value; end
+% %         % solve modified system
+% %         uH = AHtr_mod \ rhs;
+% %         % test steady-state convergence
+% %         ss_err = norm(uH-u_old,2);
+% %         fprintf(' norm(u_new - u_old) = %e\n',ss_err);
+% %         converged = ss_err < ss_tol;
+% %         if (converged)
+% %             fprintf('\t\tReached steady-state at time step %i\n',n);
+% %             break;
+% %         end
+% %         plot(x,uH);
+% %         pause(0.001);        
+% %         % reset u_old
+% %         u_old = uH;
+% %     end
+% %     
+% %     impose_strongly=impose_strongly_sav;
+% %     AHtr_mod=AHtr_mod_sav;
+% %     AL=AL_sav;
+% %     AH=AH_sav;
+
     % FCT solve
     %======================================================================
     fprintf('\tComputing FCT solution...\n');
@@ -184,7 +243,7 @@ for cycle = 1:n_cycle
         % compute rhs
         rhs = (ML - (1-theta)*dt*AL)*u_old + (1-theta)*dt*b;
         % modify rhs for Dirichlet BC
-%         rhs(1) = inc;
+        if impose_strongly; rhs(1) = inc; end
         % solve for aux. solution
         ML_mod = ML; ML_mod(1) = 1.0;
         u_aux = ML_mod \ rhs;
@@ -194,7 +253,7 @@ for cycle = 1:n_cycle
         % compute rhs
         rhs = (MC - (1-theta)*dt*AH)*u_old + dt*b;
         % modify rhs for Dirichlet BC
-%         rhs(1) = inc;
+        if impose_strongly; rhs(1) = inc; end
         % solve modified system
         uH_FCT_loop = AHtr_mod \ rhs;
         
@@ -203,7 +262,7 @@ for cycle = 1:n_cycle
         % compute flux correction matrix
         F = flux_correction_matrix(u_old,uH_FCT_loop,dt,D,MC,theta);
         % cancel antidiffusive fluxes down the gradient of u_aux
-%         F = cancel_down_gradient(F,u_aux);
+        F = cancel_down_gradient(F,u_aux);
         % compute limiting coefficients
         switch limiting_option
             case 0 % no correction
@@ -216,7 +275,7 @@ for cycle = 1:n_cycle
                 error('Invalid limiting option');
         end
         % enforce LED
-%         Flim = enforce_LED(Flim,u_aux);
+        Flim = enforce_LED(Flim,u_aux);
         % compute correction rhs
         rhs = ML*u_aux + theta*dt*b + sum(Flim,2);
         % modify rhs for Dirichlet BC
@@ -290,6 +349,16 @@ end
 
 %% Plot
 
+if impose_strongly    
+    uH_strong=uH;
+    save uH_strongly.mat uH_strong;
+    load uH_weakly.mat uH_weak;
+else
+    uH_weak=uH;
+    save uH_weakly.mat uH_weak;
+    load uH_strongly.mat uH_strong;
+end
+
 figure()
 hold all;
 % exact solution
@@ -298,12 +367,14 @@ u_exact = exact_solution(problemID,x_exact,sigma,src,inc,omega,speed);
 plot(x_exact,u_exact,'k-');
 % numerical solutions
 plot(x,uL,'r-s');
-plot(x,uH,'b-+');
+plot(x,uH_strong,'b-+');
+plot(x,uH_weak,'m-d');
 plot(x,uFCT,'g-x');
 % plot legend
 legend_entries = char('Exact');
 legend_entries = char(legend_entries,'Low-order');
-legend_entries = char(legend_entries,'High-order');
+legend_entries = char(legend_entries,'High-order strong');
+legend_entries = char(legend_entries,'High-order weak');
 switch limiting_option
     case 0 % no correction
         limiter_string = 'no correction';

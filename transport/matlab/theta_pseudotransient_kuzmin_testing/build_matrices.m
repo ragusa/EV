@@ -1,4 +1,4 @@
-function [MC,ML,K,D,b]=build_matrices(len,nel,omega,sigma,src,speed,inc)
+function [MC,ML,K,D,b]=build_matrices(len,nel,omega,sigma,src,speed,inc,impose_strongly)
 % builds the mass matrices, steady state system matrix, artificial
 % dissipation matrix, and steady state rhs
 %
@@ -11,7 +11,10 @@ function [MC,ML,K,D,b]=build_matrices(len,nel,omega,sigma,src,speed,inc)
 % integral bi bj
 M_cell=[2 1;1 2]/3/speed;
 % integral omega * bi * dbj/dx
-K_cell=-(omega*[-1 1;-1 1]/2)';
+K_cell=omega*[-1 1;-1 1]/2;
+if ~impose_strongly
+    K_cell = -K_cell';
+end
 % integral bi
 b_cell=[1;1];
 
@@ -45,7 +48,11 @@ for iel=1:nel
     b(g(iel,:))           = b(g(iel,:))           + b_cell*src*jac;
 end
 
-K(end,end)=K(end,end)+omega;
+if ~impose_strongly
+    % weak BC
+    b(1)=b(1)+omega*inc;
+    K(end,end)=K(end,end)+omega;
+end
 
 % kuzmin writes K on the rhs
 %K=-K-sigma*MC;
@@ -62,8 +69,6 @@ for i=1:n
     D(i,i)=-(sum(D(i,1:i-1))+sum(D(i,i+1:n)));
 end
 
-% weak BC
-b(1)=b(1)+omega*inc;
 
 return
 end
