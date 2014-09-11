@@ -8,17 +8,17 @@ clear all; close all; clc;
 
 %% User Options
 
-nel_init = 10; % number of elements in first cycle
+nel_init = 50; % number of elements in first cycle
 n_cycle  = 1;  % number of refinement cycles
 
 problemID = 1; % 1 = smooth exponential decay
                % 2 = sharp exponential decay; heterogenous sigma
 
-theta = 1.0; % 0:   explicit euler
+theta = 0.0; % 0:   explicit euler
              % 1:   implicit euler
              % 1/2: crank nicholson
 ss_tol = 1.0e-6; % steady-state tolerance
-n_max = 2000;      % maximum number of time steps
+n_max = 20000;      % maximum number of time steps
 CFL = 0.8;       % CFL number
 
 limiting_option = 2; % 0 = set limiting coefficients to 0 (no correction)
@@ -87,7 +87,7 @@ for cycle = 1:n_cycle
         dtH= min(dtH, CFL*ML(i,i)/AH(i,i));
     end
     fprintf('dt from low %g , from high %g \n',full(dt),full(dtH));
- 
+    dt=dt/10;
     
     % define low-order and high-order transient sytem matrices to be inverted
     ALtr = ML + theta*dt*AL;
@@ -110,7 +110,7 @@ for cycle = 1:n_cycle
     dtb=dt*b;
     MLow=(ML - (1-theta)*dt*AL);
     figure(); 
-    for n = 1:n_max
+    for n = 1:0 %n_max
         fprintf('\t\tTime step %i:',n);
         % compute rhs
         rhs = MLow*u_old + dtb;
@@ -143,7 +143,15 @@ for cycle = 1:n_cycle
     for n = 1:n_max
         fprintf('\t\tTime step %i:',n);
         % compute rhs
-        rhs = MHigh*u_old + dtb;
+%         rhs = MHigh*u_old + dtb;
+        rhs = MHigh*u_old;
+        time_n  =dt*(n-1);
+        time_np1=dt*(n  );
+        ramp=0.1;
+        dirichlet_value=   theta *min(inc,ramp*time_n)+...
+                        (1-theta)*min(inc,ramp*time_np1);
+        rhs(1)=rhs(1)+dt*dirichlet_value;
+        
         % modify rhs for Dirichlet BC
 %         rhs(1) = inc;
         % solve modified system
@@ -157,10 +165,11 @@ for cycle = 1:n_cycle
             break;
         end
         plot(x,uH);
-        pause(0.001);        
+        pause(0.1);        
         % reset u_old
         u_old = uH;
     end
+    error('stopping here');
     
     % FCT solve
     %======================================================================
