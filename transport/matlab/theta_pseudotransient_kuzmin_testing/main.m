@@ -1,4 +1,4 @@
-close all; clc;
+clear all; close all; clc;
 %% Introduction
 
 % Solves a transient transport equation:
@@ -8,17 +8,17 @@ close all; clc;
 
 %% User Options
 
-nel_init = 50; % number of elements in first cycle
+nel_init = 10; % number of elements in first cycle
 n_cycle  = 1;  % number of refinement cycles
 
 problemID = 1; % 1 = smooth exponential decay
                % 2 = sharp exponential decay; heterogenous sigma
 
-theta = 0.0; % 0:   explicit euler
+theta = 1.0; % 0:   explicit euler
              % 1:   implicit euler
              % 1/2: crank nicholson
 ss_tol = 1.0e-6; % steady-state tolerance
-n_max = 200;      % maximum number of time steps
+n_max = 2000;      % maximum number of time steps
 CFL = 0.8;       % CFL number
 
 limiting_option = 2; % 0 = set limiting coefficients to 0 (no correction)
@@ -81,9 +81,13 @@ for cycle = 1:n_cycle
     % compute dt using CFL condition for explicit Euler, even if not
     % using explicit Euler, just for consistency in dt for comparison
     dt = CFL*ML(1,1)/AL(1,1);
+    dtH= CFL*ML(1,1)/AH(1,1);
     for i = 2:n_dof
-        dt = min(dt, CFL*ML(i,i)/AL(i,i));
+        dt = min(dt , CFL*ML(i,i)/AL(i,i));
+        dtH= min(dtH, CFL*ML(i,i)/AH(i,i));
     end
+    fprintf('dt from low %g , from high %g \n',full(dt),full(dtH));
+ 
     
     % define low-order and high-order transient sytem matrices to be inverted
     ALtr = ML + theta*dt*AL;
@@ -103,10 +107,13 @@ for cycle = 1:n_cycle
     %======================================================================
     fprintf('\tComputing low-order solution...\n');
     u_old = u0;
+    dtb=dt*b;
+    MLow=(ML - (1-theta)*dt*AL);
+    figure(); 
     for n = 1:n_max
         fprintf('\t\tTime step %i:',n);
         % compute rhs
-        rhs = (ML - (1-theta)*dt*AL)*u_old + dt*b;
+        rhs = MLow*u_old + dtb;
         % modify rhs for Dirichlet BC
 %         rhs(1) = inc;
         % solve modified system
@@ -119,6 +126,8 @@ for cycle = 1:n_cycle
             fprintf('\t\tReached steady-state at time step %i\n',n);
             break;
         end
+        plot(x,uL);
+        pause(0.001);        
         % reset u_old
         u_old = uL;
     end
@@ -126,11 +135,15 @@ for cycle = 1:n_cycle
     % high-order solve
     %======================================================================
     fprintf('\tComputing high-order solution...\n');
+    figure();
     u_old = u0;
+%     dt=dt/10      
+    MHigh=(MC - (1-theta)*dt*AH);
+    dtb=dt*b;
     for n = 1:n_max
         fprintf('\t\tTime step %i:',n);
         % compute rhs
-        rhs = (MC - (1-theta)*dt*AH)*u_old + dt*b;
+        rhs = MHigh*u_old + dtb;
         % modify rhs for Dirichlet BC
 %         rhs(1) = inc;
         % solve modified system
@@ -143,6 +156,8 @@ for cycle = 1:n_cycle
             fprintf('\t\tReached steady-state at time step %i\n',n);
             break;
         end
+        plot(x,uH);
+        pause(0.001);        
         % reset u_old
         u_old = uH;
     end
@@ -203,7 +218,7 @@ for cycle = 1:n_cycle
         % check maximum principle
         satisfied_max_principle = check_max_principle(u_aux,uFCT);
         if (~satisfied_max_principle)
-            error('Did not satisfy maximum principle\n');
+            warning('Did not satisfy maximum principle\n');
         end
 
         % plot
@@ -224,9 +239,9 @@ for cycle = 1:n_cycle
     
     % compute error
     %======================================================================
-    uL_err(cycle)   = compute_error(uL,x);
-    uH_err(cycle)   = compute_error(uH,x);
-    uFCT_err(cycle) = compute_error(uFCT,x);
+%     uL_err(cycle)   = compute_error(uL,x);
+%     uH_err(cycle)   = compute_error(uH,x);
+%     uFCT_err(cycle) = compute_error(uFCT,x);
 end
 
 %% Convergence Rates
@@ -266,29 +281,30 @@ end
 
 %% Plot
 
-% hold all;
-% % exact solution
-% x_exact = linspace(0,len,1000);
-% u_exact = exact_solution(problemID,x_exact,sigma,src,inc,omega,speed);
-% plot(x_exact,u_exact,'k-');
-% % numerical solutions
-% plot(x,uL,'r-s');
-% plot(x,uH,'b-+');
-% plot(x,uFCT,'g-x');
-% % plot legend
-% legend_entries = char('Exact');
-% legend_entries = char(legend_entries,'Low-order');
-% legend_entries = char(legend_entries,'High-order');
-% switch limiting_option
-%     case 0 % no correction
-%         limiter_string = 'no correction';
-%     case 1 % full correction (no limiting)
-%         limiter_string = 'not limited';
-%     case 2 % normal limiting
-%         limiter_string = 'limited';
-%     otherwise
-%         error('Invalid limiting option');
-% end
-% FCT_legend_string = ['FCT, ',limiter_string];
-% legend_entries = char(legend_entries,FCT_legend_string);
-% legend(legend_entries);
+figure()
+hold all;
+% exact solution
+x_exact = linspace(0,len,1000);
+u_exact = exact_solution(problemID,x_exact,sigma,src,inc,omega,speed);
+plot(x_exact,u_exact,'k-');
+% numerical solutions
+plot(x,uL,'r-s');
+plot(x,uH,'b-+');
+plot(x,uFCT,'g-x');
+% plot legend
+legend_entries = char('Exact');
+legend_entries = char(legend_entries,'Low-order');
+legend_entries = char(legend_entries,'High-order');
+switch limiting_option
+    case 0 % no correction
+        limiter_string = 'no correction';
+    case 1 % full correction (no limiting)
+        limiter_string = 'not limited';
+    case 2 % normal limiting
+        limiter_string = 'limited';
+    otherwise
+        error('Invalid limiting option');
+end
+FCT_legend_string = ['FCT, ',limiter_string];
+legend_entries = char(legend_entries,FCT_legend_string);
+legend(legend_entries);
