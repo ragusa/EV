@@ -50,7 +50,7 @@ end
 
 if ~impose_strongly
     % weak BC
-    b(1)=b(1)+omega*inc;
+    % b(1)=b(1)+omega*inc; % done as ramp in solve loop now
     K(end,end)=K(end,end)+omega;
 end
 
@@ -59,7 +59,7 @@ end
 K = -(K+A);
 
 % lump mass
-ML=(sum(MC));
+ML = diag(sum(MC));
 
 % compute D
 for i=1:n
