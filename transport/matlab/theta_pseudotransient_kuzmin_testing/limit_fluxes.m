@@ -1,4 +1,4 @@
-function Flim = limit_fluxes(F,u_aux,ML,AL,b,dt,theta)
+function Flim = limit_fluxes(F,u_aux,ML)
 % computes the limiting coefficient matrix L
 %
 % L     = limiting coefficient matrix
@@ -54,15 +54,25 @@ end
 % prevents L_ij from automatically being 0 for j in the support of i
 Rplus(1)  = 1.0;
 Rminus(1) = 1.0;
+Rplus(end) = 1.0;
+Rminus(end)=1.0;
 
 % limiting coefficients
 for i=1:n
     for j=1:n
+        % symmetric limitation
         if(F(i,j)>=0)
             Flim(i,j) = min(Rplus(i),Rminus(j))*F(i,j);
         else
             Flim(i,j) = min(Rminus(i),Rplus(j))*F(i,j);
         end
+%         % upwind-biased limitation
+%         k = min(i,j); % upwind node
+%         if (F(i,j)>=0)
+%             Flim(i,j) = Rplus(k)*F(i,j);
+%         else
+%             Flim(i,j) = Rminus(k)*F(i,j);
+%         end
     end
 end
 
