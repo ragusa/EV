@@ -1,4 +1,5 @@
-clear all; close all; clc;
+close all; clc; clear;
+format shortE;
 %% Introduction
 
 % Solves a transient transport equation:
@@ -14,19 +15,24 @@ n_cycle  = 1;  % number of refinement cycles
 problemID = 1; % 1 = smooth exponential decay
                % 2 = sharp exponential decay; heterogenous sigma
 
-theta = 0.0; % 0:   explicit euler
+impose_strongly = true; % impose Dirichlet BC strongly?
+               
+theta = 1.0; % 0:   explicit euler
              % 1:   implicit euler
              % 1/2: crank nicholson
-ss_tol = 1.0e-6; % steady-state tolerance
-n_max = 2000;      % maximum number of time steps
-CFL = 0.8;       % CFL number
+ss_tol = 1.0e-4; % steady-state tolerance
+n_max = 1000;    % maximum number of time steps
+CFL = 50.0;       % CFL number
 
 limiting_option = 2; % 0 = set limiting coefficients to 0 (no correction)
                      % 1 = set limiting coefficients to 1 (full correction)
                      % 2 = compute limiting coefficients normally
 
 save_convergence_data = 0; % option to save convergence data (0=no,1=yes)
-impose_strongly = true; 
+
+plot_low_order  = false; % plot low-order transient?
+plot_high_order = false; % plot high-order transient?
+plot_FCT        = false; % plot FCT transient?
 
 %% Setup
 
@@ -43,13 +49,6 @@ switch problemID
         len=10;
         omega=1.0;
         sigma = @hetero_sigma;
-        src=0;
-        inc=1;
-        speed=1.0;
-    case 3
-        len=10;
-        omega=1.0;
-        sigma = @(x) 1;
         src=0;
         inc=1;
         speed=1.0;
@@ -75,25 +74,31 @@ for cycle = 1:n_cycle
     
     % build matrices
     [MC,ML,K,D,b] = build_matrices(len,nel,omega,sigma,src,speed,inc,impose_strongly);
+    ML = diag(ML);
     AL = -(K+D);    % low-order steady-state system matrix
     AH = -K;        % high-order steady-state system matrix
     
     % compute dt using CFL condition for explicit Euler, even if not
     % using explicit Euler, just for consistency in dt for comparison
-    dt = CFL*ML(1,1)/AL(1,1);
-    dtH= CFL*MC(1,1)/AH(1,1);
+    dt = abs(CFL*ML(1,1)/AL(1,1));
     for i = 2:n_dof
-        dt = min(dt , CFL*ML(i,i)/AL(i,i));
-        dtH= min(dtH, CFL*MC(i,i)/AH(i,i));
+        dt = min(dt, abs(CFL*ML(i,i)/AL(i,i)));
     end
-    fprintf('dt from low %g , from high %g \n',full(dt),full(dtH));
-    dt=dt/3;
-%     dt=len/nel/omega/2;
-    
+
     % define low-order and high-order transient sytem matrices to be inverted
     ALtr = ML + theta*dt*AL;
     AHtr = MC + theta*dt*AH;
-   
+    % compute modified transient sytem matrix for Dirichlet BC
+    ALtr_mod = ALtr;
+    if (impose_strongly)
+        ALtr_mod(1,:)=0; ALtr_mod(1,1)=1;
+    end
+    % compute modified transient sytem matrix for Dirichlet BC
+    AHtr_mod = AHtr;
+    if (impose_strongly)
+        AHtr_mod(1,:)=0; AHtr_mod(1,1)=1;
+    end
+    
     % initial conditions for pseudotransient (equal to exact steady-state solution)
     x = linspace(0,len,nel+1);
     u0 = zeros(n_dof,1);
@@ -101,25 +106,15 @@ for cycle = 1:n_cycle
     % low-order solve
     %======================================================================
     fprintf('\tComputing low-order solution...\n');
-    % compute modified transient sytem matrix for Dirichlet BC
-    ALtr_mod = ALtr;
-    if impose_strongly; 
-        ALtr_mod(1,:)=0; 
-        ALtr_mod(1,1)=1; 
-    end
     u_old = u0;
-    dtb=dt*b;
-    MLow=(ML - (1-theta)*dt*AL);
-    figure(); 
+    t = 0;
     for n = 1:n_max
-        fprintf('\t\tTime step %i:',n);
+        fprintf('\t\tTime step %i: t = %f->%f',n,t,t+dt);
         % compute rhs
-        rhs = MLow*u_old + dtb;
+        rhs = (ML - (1-theta)*dt*AL)*u_old + dt*b;
         % modify rhs for Dirichlet BC
-        if impose_strongly; 
-            rhs(1) = dirichlet_value( n,dt,inc,theta ); 
-        else
-            rhs(1)=rhs(1)+dt*dirichlet_value( n,dt,inc,theta );           
+        if (impose_strongly) 
+            rhs(1) = inc;
         end
         % solve modified system
         uL = ALtr_mod \ rhs;
@@ -131,141 +126,76 @@ for cycle = 1:n_cycle
             fprintf('\t\tReached steady-state at time step %i\n',n);
             break;
         end
-        plot(x,uL);
-        pause(0.001);        
+        % plot
+        if (plot_low_order)
+            plot(x,uL);
+            legend('Low-order');
+            pause(0.1);
+        end
         % reset u_old
         u_old = uL;
+        t = t+dt;
     end
-    
+
     % high-order solve
     %======================================================================
-    fprintf('\tComputing high-order solution...\n');
-    % compute modified transient sytem matrix for Dirichlet BC
-    AHtr_mod = AHtr;
-    if impose_strongly; 
-        AHtr_mod(1,:)=0; 
-        AHtr_mod(1,1)=1; 
-    end
-    figure();
-    u_old = u0;
-    MHigh=(MC - (1-theta)*dt*AH);
-    dtb=dt*b;
-    for n = 1:n_max
-        fprintf('\t\tTime step %i:',n);
-        % compute rhs with volumetric src term
-        rhs = MHigh*u_old + dtb;
-        % modify rhs for Dirichlet BC
-        if impose_strongly; 
-            rhs(1) = dirichlet_value( n,dt,inc,theta ); 
-        else
-            rhs(1)=rhs(1)+dt*dirichlet_value( n,dt,inc,theta );
+    if (theta == 1)
+        fprintf('\tComputing high-order solution...\n');
+        u_old = u0;
+        t = 0;
+        for n = 1:n_max
+            fprintf('\t\tTime step %i: t = %f->%f',n,t,t+dt);
+            % compute rhs
+            rhs = (MC - (1-theta)*dt*AH)*u_old + dt*b;
+            % modify rhs for Dirichlet BC
+            if (impose_strongly)
+                rhs(1) = inc;
+            end
+            % solve modified system
+            uH = AHtr_mod \ rhs;
+            % test steady-state convergence
+            ss_err = norm(uH-u_old,2);
+            fprintf(' norm(u_new - u_old) = %e\n',ss_err);
+            converged = ss_err < ss_tol;
+            if (converged)
+                fprintf('\t\tReached steady-state at time step %i\n',n);
+                break;
+            end
+            % plot
+            if (plot_high_order)
+                plot(x,uH);
+                legend('High-order');
+                pause(0.1);
+            end
+            % reset u_old
+            u_old = uH;
+            t = t+dt;
         end
-        % solve modified system
-        uH = AHtr_mod \ rhs;
-        % test steady-state convergence
-        ss_err = norm(uH-u_old,2);
-        fprintf(' norm(u_new - u_old) = %e\n',ss_err);
-        converged = ss_err < ss_tol;
-        if (converged)
-            fprintf('\t\tReached steady-state at time step %i\n',n);
-            break;
-        end
-        plot(x,uH);
-        pause(0.001);        
-        % reset u_old
-        u_old = uH;
     end
     
-    if impose_strongly
-        uH_strong=uH;
-    else
-        uH_weak=uH;
-    end
-    
-    % high-order solve, other BC 
-    %======================================================================
-    impose_strongly_sav=impose_strongly;
-    AHtr_mod_sav=AHtr_mod ;
-    uH_sav=uH;
-    AL_sav=AL;
-    AH_sav=AH;
-    
-    impose_strongly=~impose_strongly; 
-    % build matrices
-    [MC,ML,K,D,b] = build_matrices(len,nel,omega,sigma,src,speed,inc,impose_strongly);
-    AH = -K;        % high-order steady-state system matrix    
-    AHtr = MC + theta*dt*AH;
-    % compute modified transient sytem matrix for Dirichlet BC
-    AHtr_mod = AHtr;
-    if impose_strongly; 
-        AHtr_mod(1,:)=0; 
-        AHtr_mod(1,1)=1; 
-    end
-    fprintf('\tComputing high-order solution...\n');
-    figure();
-    u_old = u0;
-    MHigh=(MC - (1-theta)*dt*AH);
-    dtb=dt*b;
-    for n = 1:n_max
-        fprintf('\t\tTime step %i:',n);
-        % compute rhs
-        rhs = MHigh*u_old + dtb;       
-        % modify rhs for Dirichlet BC
-        if impose_strongly; 
-            rhs(1) = dirichlet_value( n,dt,inc,theta ); 
-        else
-            rhs(1)=rhs(1)+dt*dirichlet_value( n,dt,inc,theta );           
-        end
-        % solve modified system
-        uH = AHtr_mod \ rhs;
-        % test steady-state convergence
-        ss_err = norm(uH-u_old,2);
-        fprintf(' norm(u_new - u_old) = %e\n',ss_err);
-        converged = ss_err < ss_tol;
-        if (converged)
-            fprintf('\t\tReached steady-state at time step %i\n',n);
-            break;
-        end
-        plot(x,uH);
-        pause(0.001);        
-        % reset u_old
-        u_old = uH;
-    end
-    
-    if impose_strongly
-        uH_strong=uH;
-    else
-        uH_weak=uH;
-    end
-    impose_strongly=impose_strongly_sav;
-    AHtr_mod=AHtr_mod_sav;
-    AL=AL_sav;
-    AH=AH_sav;
-
     % FCT solve
     %======================================================================
     fprintf('\tComputing FCT solution...\n');
     u_old = u0;
     uFCT  = u0;
-    for n = 1:0 %n_max
+    for n = 1:n_max
         fprintf('\t\tTime step %i:',n);
         
         % compute auxiliary solution
         %----------------
         % compute rhs
         rhs = (ML - (1-theta)*dt*AL)*u_old + (1-theta)*dt*b;
-        % modify rhs for Dirichlet BC
-        if impose_strongly; rhs(1) = inc; end
         % solve for aux. solution
-        ML_mod = ML; ML_mod(1) = 1.0;
-        u_aux = ML_mod \ rhs;
+        u_aux = ML \ rhs;
     
         % high-order solve
         %----------------
         % compute rhs
         rhs = (MC - (1-theta)*dt*AH)*u_old + dt*b;
         % modify rhs for Dirichlet BC
-        if impose_strongly; rhs(1) = inc; end
+        if (impose_strongly)
+            rhs(1) = inc;
+        end
         % solve modified system
         uH_FCT_loop = AHtr_mod \ rhs;
         
@@ -273,8 +203,6 @@ for cycle = 1:n_cycle
         %----------------
         % compute flux correction matrix
         F = flux_correction_matrix(u_old,uH_FCT_loop,dt,D,MC,theta);
-        % cancel antidiffusive fluxes down the gradient of u_aux
-        F = cancel_down_gradient(F,u_aux);
         % compute limiting coefficients
         switch limiting_option
             case 0 % no correction
@@ -282,28 +210,25 @@ for cycle = 1:n_cycle
             case 1 % full correction (no limiting)
                 Flim = F;
             case 2 % normal limiting
-                Flim = limit_fluxes(F,u_aux,ML,AL,b,dt,theta);
+                Flim = limit_fluxes(F,u_aux,ML);
             otherwise
                 error('Invalid limiting option');
         end
-        % enforce LED
-        Flim = enforce_LED(Flim,u_aux);
         % compute correction rhs
         rhs = ML*u_aux + theta*dt*b + sum(Flim,2);
         % modify rhs for Dirichlet BC
-%         rhs(1) = inc;
+        if (impose_strongly)
+            rhs(1) = inc;
+        end
         % solve for FCT solution
         uFCT = ALtr_mod \ rhs;
-        
-        % check maximum principle
-        satisfied_max_principle = check_max_principle(u_aux,uFCT);
-        if (~satisfied_max_principle)
-            warning('Did not satisfy maximum principle\n');
-        end
 
         % plot
-        plot(x,uFCT);
-        pause(0.1);
+        if (plot_FCT)
+            plot(x,uFCT);
+            legend('FCT');
+            pause(0.1);
+        end
         
         % test steady-state convergence
         ss_err = norm(uFCT-u_old,2);
@@ -316,80 +241,67 @@ for cycle = 1:n_cycle
         % reset u_old
         u_old = uFCT;
     end
-    
-    % compute error
-    %======================================================================
+
+%     % compute error
+%     %======================================================================
 %     uL_err(cycle)   = compute_error(uL,x);
 %     uH_err(cycle)   = compute_error(uH,x);
 %     uFCT_err(cycle) = compute_error(uFCT,x);
 end
 
 %% Convergence Rates
-
-fprintf('\nLow-order Convergence:\n')
-for cycle = 1:n_cycle
-    if (cycle == 1)
-        fprintf('Cycle %i: L2 error = %e\n',cycle,uL_err(cycle));
-    else
-        rate = log(uL_err(cycle)/uL_err(cycle-1))/log(h(cycle)/h(cycle-1));
-        fprintf('Cycle %i: L2 error = %e, rate = %f\n',cycle,uL_err(cycle),rate);
-    end
-end
-fprintf('\nHigh-order Convergence:\n')
-for cycle = 1:n_cycle
-    if (cycle == 1)
-        fprintf('Cycle %i: L2 error = %e\n',cycle,uH_err(cycle));
-    else
-        rate = log(uH_err(cycle)/uH_err(cycle-1))/log(h(cycle)/h(cycle-1));
-        fprintf('Cycle %i: L2 error = %e, rate = %f\n',cycle,uH_err(cycle),rate);
-    end
-end
-fprintf('\nFCT Convergence:\n')
-for cycle = 1:n_cycle
-    if (cycle == 1)
-        fprintf('Cycle %i: L2 error = %e\n',cycle,uFCT_err(cycle));
-    else
-        rate = log(uFCT_err(cycle)/uFCT_err(cycle-1))/log(h(cycle)/h(cycle-1));
-        fprintf('Cycle %i: L2 error = %e, rate = %f\n',cycle,uFCT_err(cycle),rate);
-    end
-end
-
-if (save_convergence_data)
-    % save convergence data to file
-    dlmwrite('output/convergence.csv',[h,uL_err,uH_err,uFCT_err]);
-end
+% 
+% fprintf('\nLow-order Convergence:\n')
+% for cycle = 1:n_cycle
+%     if (cycle == 1)
+%         fprintf('Cycle %i: L2 error = %e\n',cycle,uL_err(cycle));
+%     else
+%         rate = log(uL_err(cycle)/uL_err(cycle-1))/log(h(cycle)/h(cycle-1));
+%         fprintf('Cycle %i: L2 error = %e, rate = %f\n',cycle,uL_err(cycle),rate);
+%     end
+% end
+% fprintf('\nHigh-order Convergence:\n')
+% for cycle = 1:n_cycle
+%     if (cycle == 1)
+%         fprintf('Cycle %i: L2 error = %e\n',cycle,uH_err(cycle));
+%     else
+%         rate = log(uH_err(cycle)/uH_err(cycle-1))/log(h(cycle)/h(cycle-1));
+%         fprintf('Cycle %i: L2 error = %e, rate = %f\n',cycle,uH_err(cycle),rate);
+%     end
+% end
+% fprintf('\nFCT Convergence:\n')
+% for cycle = 1:n_cycle
+%     if (cycle == 1)
+%         fprintf('Cycle %i: L2 error = %e\n',cycle,uFCT_err(cycle));
+%     else
+%         rate = log(uFCT_err(cycle)/uFCT_err(cycle-1))/log(h(cycle)/h(cycle-1));
+%         fprintf('Cycle %i: L2 error = %e, rate = %f\n',cycle,uFCT_err(cycle),rate);
+%     end
+% end
+% 
+% if (save_convergence_data)
+%     % save convergence data to file
+%     dlmwrite('output/convergence.csv',[h,uL_err,uH_err,uFCT_err]);
+% end
 
 %% Plot
 
-if impose_strongly    
-    uH_strong_bis=uH_strong;
-    save uH_strongly.mat uH_strong_bis;
-    load uH_weakly.mat uH_weak_bis;
-else
-    uH_weak_bis=uH_weak;
-    save uH_weakly.mat uH_weak_bis;
-    load uH_strongly.mat uH_strong_bis;
-end
-figure(); % double checking we get the same thing either way
-plot(x,uH_strong-uH_strong_bis)
-plot(x,uH_weak-uH_weak_bis)
-
-figure()
-hold all;
+figure(1); clf; hold on;
 % exact solution
 x_exact = linspace(0,len,1000);
 u_exact = exact_solution(problemID,x_exact,sigma,src,inc,omega,speed);
 plot(x_exact,u_exact,'k-');
-% numerical solutions
-plot(x,uL,'r-s');
-plot(x,uH_strong,'b-+');
-plot(x,uH_weak,'m-d');
-plot(x,uFCT,'g-x');
-% plot legend
 legend_entries = char('Exact');
+% low-order solution
+plot(x,uL,'r-s');
 legend_entries = char(legend_entries,'Low-order');
-legend_entries = char(legend_entries,'High-order strong');
-legend_entries = char(legend_entries,'High-order weak');
+% high-order solution
+if (theta == 1)
+    plot(x,uH,'b-+');
+    legend_entries = char(legend_entries,'High-order');
+end
+% FCT solution
+plot(x,uFCT,'g-x');
 switch limiting_option
     case 0 % no correction
         limiter_string = 'no correction';
@@ -402,4 +314,6 @@ switch limiting_option
 end
 FCT_legend_string = ['FCT, ',limiter_string];
 legend_entries = char(legend_entries,FCT_legend_string);
-legend(legend_entries);
+
+% legend
+legend(legend_entries,'Location','Best');

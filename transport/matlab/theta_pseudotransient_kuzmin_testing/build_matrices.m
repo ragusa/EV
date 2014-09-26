@@ -11,9 +11,10 @@ function [MC,ML,K,D,b]=build_matrices(len,nel,omega,sigma,src,speed,inc,impose_s
 % integral bi bj
 M_cell=[2 1;1 2]/3/speed;
 % integral omega * bi * dbj/dx
-K_cell=omega*[-1 1;-1 1]/2;
-if ~impose_strongly
-    K_cell = -K_cell';
+if (impose_strongly)
+    K_cell= omega*[-1 1;-1 1]/2;
+else
+    K_cell=-omega*[-1 1;-1 1]/2; K_cell = K_cell';
 end
 % integral bi
 b_cell=[1;1];
@@ -27,8 +28,7 @@ g=[linspace(1,nel,nel)' linspace(2,nel+1,nel)'];
 n = nel+1; % system size
 nnz = 3*n; % max number of nonzero entries
 MC = spalloc(n,n,nnz);
-K  = spalloc(n,n,nnz);
-A  = spalloc(n,n,nnz);
+AH = spalloc(n,n,nnz);
 D  = spalloc(n,n,nnz);
 b  = zeros(n,1);
 
@@ -43,32 +43,30 @@ end
 % assemble consistent mass matrix and steady-state rhs
 for iel=1:nel
     MC(g(iel,:),g(iel,:)) = MC(g(iel,:),g(iel,:)) + M_cell*jac;
-    K(g(iel,:),g(iel,:))  = K(g(iel,:),g(iel,:))  + K_cell;
-    A(g(iel,:),g(iel,:))  = A(g(iel,:),g(iel,:))  + sigma_cell(iel)*M_cell*jac;
+    AH(g(iel,:),g(iel,:)) = AH(g(iel,:),g(iel,:)) + K_cell + sigma_cell(iel)*M_cell*jac;
     b(g(iel,:))           = b(g(iel,:))           + b_cell*src*jac;
 end
-
-if ~impose_strongly
-    % weak BC
-    % b(1)=b(1)+omega*inc; % done as ramp in solve loop now
-    K(end,end)=K(end,end)+omega;
+if (~impose_strongly)
+    AH(end,end) = AH(end,end) + omega;
 end
 
 % kuzmin writes K on the rhs
-%K=-K-sigma*MC;
-K = -(K+A);
+K = -AH;
 
 % lump mass
-ML = diag(sum(MC));
+ML=(sum(MC));
 
 % compute D
 for i=1:n
     for j=1:n
-        D(i,j)=max([0,-K(i,j),-K(j,i)]);
+        D(i,j)=max([0,AH(i,j),AH(j,i)]);
     end
     D(i,i)=-(sum(D(i,1:i-1))+sum(D(i,i+1:n)));
 end
 
+if (~impose_strongly)
+    b(1)=b(1)+omega*inc;
+end
 
 return
 end
