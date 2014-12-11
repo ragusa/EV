@@ -20,7 +20,7 @@ class TransportParameters {
     unsigned int initial_refinement_level; // initial level of refinement
     unsigned int solver_option; // solver option
     unsigned int preconditioner_option; // preconditioner option
-    unsigned int viscosity_option; // option for viscosity definition used
+    unsigned int scheme_option; // option for scheme used
     double old_first_order_viscosity_coefficient; // value of old first order viscosity coefficient
     double entropy_viscosity_coefficient; // value of entropy viscosity coefficient
     double jump_coefficient; // value of jump coefficient
@@ -30,6 +30,7 @@ class TransportParameters {
     double time_step_size; // time step size if transient problem is run
     bool output_exact_solution; // option to output exact solution
     bool output_initial_solution; // option to output initial solution
+    bool output_DMP_bounds; // option to output DMP bounds
     double CFL_limit; // upper bound for the CFL number
     bool do_not_limit; // flag to turn off limiting for high order solution
 };

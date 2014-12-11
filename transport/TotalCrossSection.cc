@@ -12,7 +12,7 @@ double TotalCrossSection<dim>::value(const Point<dim> &p) const
       case 2: {
          bool in_nonzero_region = true;
          for (unsigned int i = 0; i < dim; ++i)
-            if (p[i] < 0.0) {
+            if (p[i] < x_mid) {
                in_nonzero_region = false;
                break;
             }

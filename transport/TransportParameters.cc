@@ -8,7 +8,7 @@ TransportParameters::TransportParameters() :
       initial_refinement_level(2),
       solver_option(1),
       preconditioner_option(1),
-      viscosity_option(0),
+      scheme_option(0),
       old_first_order_viscosity_coefficient(5.0e-1),
       entropy_viscosity_coefficient(1.0),
       jump_coefficient(1.0),
@@ -18,6 +18,7 @@ TransportParameters::TransportParameters() :
       time_step_size(0.001),
       output_exact_solution(false),
       output_initial_solution(false),
+      output_DMP_bounds(false),
       CFL_limit(0.5),
       do_not_limit(false)
 {
@@ -42,8 +43,8 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
          "Option for linear solver");
    prm.declare_entry("Preconditioner option", "1", Patterns::Integer(),
          "Option for preconditioner for linear solver");
-   prm.declare_entry("Viscosity option", "0", Patterns::Integer(),
-         "Option for viscosity definition: none, first-order, or entropy");
+   prm.declare_entry("Scheme option", "0", Patterns::Integer(),
+         "Option for scheme to be used");
    prm.declare_entry("Old first order viscosity coefficient", "5.0e-1", Patterns::Double(),
          "Coefficient for the first-order viscosity");
    prm.declare_entry("Entropy viscosity coefficient", "1.0", Patterns::Double(),
@@ -62,6 +63,8 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
          "Option to output exact solution");
    prm.declare_entry("Output initial solution", "false", Patterns::Bool(),
          "Option to output initial solution");
+   prm.declare_entry("Output DMP bounds", "false", Patterns::Bool(),
+         "Option to output DMP bounds");
    prm.declare_entry("CFL limit", "0.5", Patterns::Double(),
          "Upper bound for the CFL number");
    prm.declare_entry("Do not limit", "false", Patterns::Bool(),
@@ -78,7 +81,7 @@ void TransportParameters::get_parameters(ParameterHandler &prm) {
    initial_refinement_level = prm.get_integer("Initial refinement level");
    solver_option = prm.get_integer("Solver option");
    preconditioner_option = prm.get_integer("Preconditioner option");
-   viscosity_option = prm.get_integer("Viscosity option");
+   scheme_option = prm.get_integer("Scheme option");
    old_first_order_viscosity_coefficient = prm.get_double("Old first order viscosity coefficient");
    entropy_viscosity_coefficient = prm.get_double("Entropy viscosity coefficient");
    jump_coefficient = prm.get_double("Jump coefficient");
@@ -88,6 +91,7 @@ void TransportParameters::get_parameters(ParameterHandler &prm) {
    time_step_size = prm.get_double("Time step size");
    output_exact_solution = prm.get_bool("Output exact solution");
    output_initial_solution = prm.get_bool("Output initial solution");
+   output_DMP_bounds = prm.get_bool("Output DMP bounds");
    CFL_limit = prm.get_double("CFL limit");
    do_not_limit = prm.get_bool("Do not limit");
 }

@@ -85,8 +85,9 @@ class TransportProblem {
 
       // low-order max-principle viscosity functions and data
       void compute_viscous_bilinear_forms();
-      void compute_max_principle_viscosity();
-      void add_viscous_matrix(const Vector<double> &viscosity);
+      void compute_viscosity();
+      void compute_viscous_matrix(const Vector<double> &viscosity,
+                                  SparseMatrix<double> &viscous_matrix);
       SparsityPattern unconstrained_sparsity_pattern;
       SparseMatrix<double> max_principle_viscosity_numerators;
       SparseMatrix<double> viscous_bilinear_forms;
@@ -95,7 +96,6 @@ class TransportProblem {
       void compute_high_order_rhs();
       void assemble_flux_correction_matrix(const double &dt);
       void compute_limiting_coefficients();
-      void compute_high_order_solution();
       void get_matrix_row(const SparseMatrix<double>      &matrix,
                           const unsigned int              &i,
                                 std::vector<double>       &row_values,
@@ -128,11 +128,13 @@ class TransportProblem {
       ConstraintMatrix constraints;
       SparsityPattern constrained_sparsity_pattern;
       SparseMatrix<double> system_matrix;
-      SparseMatrix<double> ss_matrix;
+      SparseMatrix<double> low_order_ss_matrix;
+      SparseMatrix<double> high_order_ss_matrix;
       SparseMatrix<double> inviscid_ss_matrix;
+      SparseMatrix<double> low_order_viscous_matrix;
+      SparseMatrix<double> high_order_viscous_matrix;
       SparseMatrix<double> consistent_mass_matrix;
       SparseMatrix<double> lumped_mass_matrix;
-      SparseMatrix<double> auxiliary_mass_matrix;
       SparseMatrix<double> flux_correction_matrix;
 
       // vectors for solutions and right hand sides
@@ -161,6 +163,8 @@ class TransportProblem {
       unsigned int cross_section_option;
       double cross_section_value;
       double incoming_flux_value;
+      double x_min;
+      double x_max;
 
       // entropy viscosity functions and data
       void compute_entropy_viscosity(const double &dt);
@@ -181,10 +185,15 @@ class TransportProblem {
       void compute_steady_state_max_principle_bounds();
       Vector<double> min_values;
       Vector<double> max_values;
+      Vector<double> Q_plus;
+      Vector<double> Q_minus;
 
       // boundary nodes
       void get_dirichlet_nodes();
       std::vector<unsigned int> dirichlet_nodes;
+
+     // flux correction vector
+     Vector<double> flux_correction_vector;
 };
 
 #include "TransportProblem.cc"

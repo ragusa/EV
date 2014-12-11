@@ -18,20 +18,7 @@ Input file: ./input
 
 To plot the results:
 ---------------------------------------------------------------------------------
-Some gnuplot scripts are available in ./plotscripts:
+./plot
+Also, some gnuplot scripts are available in ./plotscripts:
 solution.gp
 viscosity.gp
-
-For solution.gp, which plots the solution of a test problem with all
-available output (corresponding to different viscosity options),
-the shell script "plot" is available in the current directory. This
-script must be used because gnuplot does not accept command-line arguments,
-so arguments must be passed using environment variables. "plot" accomplishes
-this and takes the problem ID from the input file and passes it to solution.gp.
-So just run "plot" after you run the problem to plot it (and automatically view
-the output).
-
-To plot the viscosity, go into the plotscripts directory and run the viscosity.gp
-script:
-$ gnuplot viscosity.gp
-which produces a .pdf file in the /plotscripts directory

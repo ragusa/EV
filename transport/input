@@ -2,27 +2,29 @@
 # 1: constant source, constant cross section, incoming flux
 # 2: no source, heterogeneous cross section, incoming flux
 # 3: no source, zero cross section, incoming flux
-set Problem ID = 1
+# 4: no source, homogeneous cross section, incoming flux
+set Problem ID = 2
 
 # transient options
 set Is steady state = false
-set End time = 1.0
-set Time step size = 0.01
+set End time = 5.0
+set Time step size = 0.1
 set CFL limit = 0.8
 
 # artificial viscosity options
-# 0: no artificial viscosity
-# 1: first order viscosity (maximum-principle preserving)
-# 2: high order viscosity (maximum-principle preserving with FCT)
-set Viscosity option = 2
+# 0: Galerkin scheme
+# 1: low-order scheme
+# 2: high-order (with high-order viscosity) scheme
+# 3: FCT scheme
+set Scheme option = 3
 set Entropy viscosity coefficient = 1.0
 set Jump coefficient = 1.0
 set Do not limit = true
 
 # mesh refinement options
 set Use adaptive mesh refinement = false
-set Number of refinement cycles = 4
-set Initial refinement level = 3
+set Number of refinement cycles = 1
+set Initial refinement level = 5
 
 # finite element options
 set Finite element degree = 1
@@ -41,3 +43,4 @@ set Preconditioner option = 1
 set Output mesh = false
 set Output exact solution = true
 set Output initial solution = false 
+set Output DMP bounds = true

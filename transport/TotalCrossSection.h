@@ -12,10 +12,13 @@ template<int dim>
 class TotalCrossSection: public Function<dim>
 {
    public:
-      TotalCrossSection(const unsigned int &cross_section_option, const double &cross_section_value) :
+      TotalCrossSection(const unsigned int &cross_section_option,
+                        const double       &cross_section_value,
+                        const double       &x_mid) :
          Function<dim>(),
          cross_section_option(cross_section_option),
-         cross_section_value(cross_section_value)
+         cross_section_value(cross_section_value),
+         x_mid(x_mid)
       {}
 
       double value(const Point<dim> &p) const;
@@ -25,6 +28,7 @@ class TotalCrossSection: public Function<dim>
    private:
       const unsigned int cross_section_option;
       const double cross_section_value;
+      const double x_mid;
 };
 
 #include "TotalCrossSection.cc"
