@@ -1,9 +1,0 @@
-Attached are the newest files. There are three programs, each in its own directory:
-
-steady_state/: my attempt at the steady-state algorithm given in his 2010 book
-transient/: the linear advection problem with periodic BC (with old algorithm)
-transient_to_ss/: transient code that marches to steady-state, has the incoming flux problems (with old and new algorithms)
-
-The mistake I fixed was in transient_to_ss/. For limiting_option = 2 (the old algorithm), I had accidentally deleted the line that computes the flux, so who knows what it was using. It's fixed now. You can run that with a low CFL number like 0.8 and a high one like 50, and you'll see a huge difference for the old algorithm.
-
-Let me know if you have any questions.

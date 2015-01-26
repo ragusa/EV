@@ -3,6 +3,7 @@
 TransportParameters::TransportParameters() :
       problem_id(1),
       degree(1),
+      time_integrator_option(1),
       use_adaptive_mesh_refinement(false),
       n_refinement_cycles(5),
       initial_refinement_level(2),
@@ -32,8 +33,9 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
          "Problem ID");
    prm.declare_entry("Finite element degree", "1", Patterns::Integer(),
          "Polynomial degree of finite elements");
-   prm.declare_entry("Use adaptive mesh refinement", "false",
-         Patterns::Bool(),
+   prm.declare_entry("Time integrator option", "1", Patterns::Integer(),
+         "Choice of time integrator");
+   prm.declare_entry("Use adaptive mesh refinement", "false", Patterns::Bool(),
          "Option to use adaptive mesh refinement instead of uniform");
    prm.declare_entry("Number of refinement cycles", "5", Patterns::Integer(),
          "Number of mesh refinement cycles");
@@ -76,6 +78,7 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
 void TransportParameters::get_parameters(ParameterHandler &prm) {
    problem_id = prm.get_integer("Problem ID");
    degree = prm.get_integer("Finite element degree");
+   time_integrator_option = prm.get_integer("Time integrator option");
    use_adaptive_mesh_refinement = prm.get_bool("Use adaptive mesh refinement");
    n_refinement_cycles = prm.get_integer("Number of refinement cycles");
    initial_refinement_level = prm.get_integer("Initial refinement level");

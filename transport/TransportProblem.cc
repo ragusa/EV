@@ -102,10 +102,11 @@ void TransportProblem<dim>::process_problem_ID()
          source_option = 1;
          source_value = 0.0;
          incoming_flux_value = 1.0;
-         has_exact_solution = true;
+         has_exact_solution = false;
          Assert(dim < 3,ExcNotImplemented());
-         exact_solution_string = "source/sigma + (incoming - source/sigma)*exp(-sigma*(x-x_min))";
-         initial_conditions_string = exact_solution_string; // this creates pseudotransient
+         // steady-state exact solution
+         // exact_solution_string = "source/sigma + (incoming - source/sigma)*exp(-sigma*(x-x_min))";
+         initial_conditions_string = "0";
          break;
       } case 2: { // high cross section in half (1-D) or quarter (2-D) of domain, no source, incoming flux
          x_min = 0.0;
@@ -116,7 +117,6 @@ void TransportProblem<dim>::process_problem_ID()
          source_value = 0.0;
          incoming_flux_value = 1.0;
          has_exact_solution = true;
-/*
          if (parameters.is_steady_state) { // steady-state
             if (dim == 1)
                exact_solution_string = "if(x<x_mid, incoming, exp(-sigma*(x-x_mid)))";
@@ -132,11 +132,7 @@ void TransportProblem<dim>::process_problem_ID()
             else
                Assert(false,ExcNotImplemented());
          }
-*/
-         exact_solution_string = "if(x<x_mid, incoming, exp(-sigma*(x-x_mid)))";
-         initial_conditions_string = "if(x<x_mid, incoming, exp(-sigma*(x-x_mid)))";
-         //initial_conditions_string = exact_solution_string;
-         //initial_conditions_string = "0";
+         initial_conditions_string = "0";
          break;
       } case 3: { // linear advection problem with step IC
          x_min = 0.0;
@@ -962,6 +958,10 @@ void TransportProblem<dim>::run()
             switch (parameters.scheme_option)
             {
                case 0: { // solve system without any viscous terms
+                  // SSPRK33 not yet implemented
+                  if (parameters.time_integrator_option != 1)
+                     Assert(false, ExcNotImplemented());
+
                   // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
                   system_rhs = 0;
                   system_rhs.add(dt, ss_rhs); //       now, system_rhs = dt*(ss_rhs)
@@ -980,6 +980,10 @@ void TransportProblem<dim>::run()
 
                   break;
                } case 1: { // solve low-order system
+                  // SSPRK33 not yet implemented
+                  if (parameters.time_integrator_option != 1)
+                     Assert(false, ExcNotImplemented());
+
                   // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old)
                   system_rhs = 0;
                   system_rhs.add(dt, ss_rhs); //       now, system_rhs = dt*(ss_rhs)
@@ -1004,28 +1008,44 @@ void TransportProblem<dim>::run()
 
                   break;
                } case 2: { // high-order system with entropy viscosity
-                  // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
-                  system_rhs = 0;
-                  system_rhs.add(dt, ss_rhs); //       now, system_rhs = dt*(ss_rhs)
-                  consistent_mass_matrix.vmult(tmp_vector, old_solution);
-                  system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
-                  inviscid_ss_matrix.vmult(tmp_vector, old_solution);
-                  system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
+                  switch (parameters.scheme_option)
+                  {
+                     case 1: { // forward Euler
+                        // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
+                        system_rhs = 0;
+                        system_rhs.add(dt, ss_rhs); //       now, system_rhs = dt*(ss_rhs)
+                        consistent_mass_matrix.vmult(tmp_vector, old_solution);
+                        system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
+                        inviscid_ss_matrix.vmult(tmp_vector, old_solution);
+                        system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
+            
+                        // add viscous matrix to rhs
+                        high_order_viscous_matrix.vmult(tmp_vector, old_solution);
+                        system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old)
       
-                  // add viscous matrix to rhs
-                  high_order_viscous_matrix.vmult(tmp_vector, old_solution);
-                  system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old)
+                        // solve the linear system M*u_new = system_rhs
+                        system_matrix.copy_from(consistent_mass_matrix);
+                        apply_Dirichlet_BC(system_matrix, new_solution, system_rhs); // apply Dirichlet BC
+                        solve_linear_system(system_matrix, system_rhs);
+      
+                        // distribute constraints
+                        constraints.distribute(new_solution);
 
-                  // solve the linear system M*u_new = system_rhs
-                  system_matrix.copy_from(consistent_mass_matrix);
-                  apply_Dirichlet_BC(system_matrix, new_solution, system_rhs); // apply Dirichlet BC
-                  solve_linear_system(system_matrix, system_rhs);
-
-                  // distribute constraints
-                  constraints.distribute(new_solution);
+                        break;
+                     } case 2: { // SSPRK33
+                        break;
+                     } default: {
+                        Assert(false, ExcNotImplemented());
+                        break;
+                     }
+                  }
 
                   break;
                } case 3: { // FCT
+                  // SSPRK33 not yet implemented
+                  if (parameters.time_integrator_option != 1)
+                     Assert(false, ExcNotImplemented());
+
                   // solve high-order system
                   // ------------------------------------------------------------
                   // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_old)

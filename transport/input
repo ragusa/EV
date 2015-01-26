@@ -7,16 +7,21 @@ set Problem ID = 2
 
 # transient options
 set Is steady state = false
-set End time = 5.0
+set End time = 2.0
 set Time step size = 0.1
-set CFL limit = 0.8
+set CFL limit = 0.9
+
+# time integrator options
+# 0: forward Euler
+# 1: SSPRK33
+set Time integrator option = 1
 
 # artificial viscosity options
-# 0: Galerkin scheme
+# 0: high-order Galerkin scheme
 # 1: low-order scheme
-# 2: high-order (with high-order viscosity) scheme
+# 2: high-order EV scheme
 # 3: FCT scheme
-set Scheme option = 3
+set Scheme option = 2
 set Entropy viscosity coefficient = 1.0
 set Jump coefficient = 1.0
 set Do not limit = true

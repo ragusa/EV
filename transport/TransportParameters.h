@@ -13,8 +13,10 @@ class TransportParameters {
     TransportParameters();
     static void declare_parameters(ParameterHandler &prm);
     void get_parameters(ParameterHandler &prm);
+
     unsigned int problem_id; // problem ID
     unsigned int degree; // polynomial degree of finite elements
+    unsigned int time_integrator_option; // time integrator option
     bool use_adaptive_mesh_refinement; // option to use adaptive mesh refinement
     unsigned int n_refinement_cycles; // number of refinement cycles
     unsigned int initial_refinement_level; // initial level of refinement
