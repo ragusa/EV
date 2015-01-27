@@ -71,6 +71,8 @@ class TransportProblem {
       void apply_Dirichlet_BC(SparseMatrix<double> &A,
                               Vector<double>       &x,
                               Vector<double>       &b);
+      void forward_euler_step_low_order(const Vector<double> &old_solution_stage,
+                                        const double         &dt);
       void solve_steady_state();
       void solve_linear_system(const SparseMatrix<double> &A,
                                const Vector<double> &b);
@@ -148,6 +150,7 @@ class TransportProblem {
       Vector<double> low_order_viscosity;
       Vector<double> high_order_viscosity;
 
+      // convergence table
       ConvergenceTable convergence_table;
 
       // physics data
@@ -186,6 +189,9 @@ class TransportProblem {
       void debug_max_principle_low_order (const unsigned int &i, const double &dt);
       void compute_max_principle_bounds(const double &dt);
       void compute_steady_state_max_principle_bounds();
+
+      // FCT quantities
+      Vector<double> flux_correction_vector;
       Vector<double> min_values;
       Vector<double> max_values;
       Vector<double> Q_plus;
@@ -195,8 +201,6 @@ class TransportProblem {
       void get_dirichlet_nodes();
       std::vector<unsigned int> dirichlet_nodes;
 
-     // flux correction vector
-     Vector<double> flux_correction_vector;
 };
 
 #include "TransportProblem.cc"

@@ -1,21 +1,23 @@
 # problem options
 #    Problem ID:
-#     1: constant source, constant cross section, incoming flux
-#     2: no source, heterogeneous cross section, incoming flux
-#     3: no source, zero cross section, incoming flux
-#     4: no source, homogeneous cross section, incoming flux
-#     5: MMS problem
+#     ID  case        source   sigma       BC  
+#     --------------------------------------------------------
+#     1   homogeneous constant constant    Dirichlet
+#     2   hetero      zero     PW constant Dirichlet
+#     3   advection   zero     zero        Dirichlet
+#     4   decay       zero     constant    Dirichlet
+#     5   MMS         MMS      constant    zero Dirichlet
 set Problem ID = 5
 
 # transient options
 set Is steady state = false
-set End time = 1.0
+set End time = 3.0
 set Time step size = 0.01
 set CFL limit = 0.9
 #    Time integrator option:
 #     1: forward Euler
 #     2: SSPRK33
-set Time integrator option = 1
+set Time integrator option = 2
 
 # artificial viscosity options
 #    Scheme option:
@@ -33,10 +35,18 @@ set Do not limit = true
 #     1: refine space only
 #     2: refine time only
 #     3: refine both space and time
-set Refinement option = 3
+set Refinement option = 2
 set Time refinement factor = 0.5
 set Use adaptive mesh refinement = false
-set Number of refinement cycles = 1
+set Number of refinement cycles = 3
+# level  cells
+# 1      2
+# 2      4
+# 3      8
+# 4      16
+# 5      32
+# ...    ...
+# n      2^n
 set Initial refinement level = 5
 
 # finite element options

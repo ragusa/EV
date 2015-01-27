@@ -1029,31 +1029,42 @@ void TransportProblem<dim>::run()
 
                   break;
                } case 1: { // solve low-order system
-                  // SSPRK33 not yet implemented
-                  if (parameters.time_integrator_option != 1)
-                     Assert(false, ExcNotImplemented());
+                  switch (parameters.time_integrator_option)
+                  {
+                     case 1: { // forward Euler
+                        forward_euler_step_low_order(old_solution,dt);
+                        break;
+                     } case 2: { // SSPRK33
+                        // stage 1
+                        tmp_vector = old_solution;
+                        forward_euler_step_low_order(tmp_vector,dt);
+                        // stage 2
+                        tmp_vector = new_solution;
+                        forward_euler_step_low_order(tmp_vector,dt);
+                        // stage 3
+                        tmp_vector = 0;
+                        tmp_vector.add(0.75,old_solution,0.25,new_solution);
+                        forward_euler_step_low_order(tmp_vector,dt);
+                        // final combination
+                        tmp_vector = new_solution;
+                        new_solution = 0;
+                        new_solution.add(1./3.,old_solution,2./3.,tmp_vector);
+                        constraints.distribute(new_solution);
 
-                  // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old)
-                  system_rhs = 0;
-                  system_rhs.add(dt, ss_rhs); //       now, system_rhs = dt*(ss_rhs)
-                  lumped_mass_matrix.vmult(tmp_vector, old_solution);
-                  system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
-                  low_order_ss_matrix.vmult(tmp_vector, old_solution);
-                  system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
-
-                  // solve the linear system M*u_new = system_rhs
-                  system_matrix.copy_from(lumped_mass_matrix);
-                  apply_Dirichlet_BC(system_matrix, new_solution, system_rhs); // apply Dirichlet BC
-                  solve_linear_system(system_matrix, system_rhs);
-
+                        break;
+                     } default: {
+                        Assert(false, ExcNotImplemented());
+                        break;
+                     }
+                  }
+                  
+/*
                   // compute max principle min and max values
                   compute_max_principle_bounds(dt);
                   // check that local discrete maximum principle is satisfied at all time steps
                   bool DMP_satisfied_this_step = check_max_principle(dt,false);
                   DMP_satisfied_at_all_steps = DMP_satisfied_at_all_steps and DMP_satisfied_this_step;
-
-                  // distribute constraints
-                  constraints.distribute(new_solution);
+*/
 
                   break;
                } case 2: { // high-order system with entropy viscosity
@@ -1202,6 +1213,31 @@ void TransportProblem<dim>::run()
 
    // output grid, solution, and viscosity and print convergence results
    output_results();
+}
+
+/** \brief 
+ */
+template<int dim>
+void TransportProblem<dim>::forward_euler_step_low_order(const Vector<double> &old_solution_stage,
+                                                         const double         &dt)
+{
+   static Vector<double> tmp_vector(n_dofs);
+
+   // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old)
+   system_rhs = 0;
+   system_rhs.add(dt, ss_rhs);      //  now, system_rhs = dt*(ss_rhs)
+   lumped_mass_matrix.vmult(tmp_vector, old_solution_stage);
+   system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
+   low_order_ss_matrix.vmult(tmp_vector, old_solution_stage);
+   system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
+      
+   // solve the linear system M*u_new = system_rhs
+   system_matrix.copy_from(lumped_mass_matrix);
+   apply_Dirichlet_BC(system_matrix, new_solution, system_rhs); // apply Dirichlet BC
+   solve_linear_system(system_matrix, system_rhs);
+     
+   // distribute constraints
+   constraints.distribute(new_solution);
 }
 
 /** \brief 
