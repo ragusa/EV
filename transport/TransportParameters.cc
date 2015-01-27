@@ -4,6 +4,8 @@ TransportParameters::TransportParameters() :
       problem_id(1),
       degree(1),
       time_integrator_option(1),
+      refinement_option(1),
+      time_refinement_factor(0.5),
       use_adaptive_mesh_refinement(false),
       n_refinement_cycles(5),
       initial_refinement_level(2),
@@ -35,13 +37,17 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
          "Polynomial degree of finite elements");
    prm.declare_entry("Time integrator option", "1", Patterns::Integer(),
          "Choice of time integrator");
+   prm.declare_entry("Refinement option", "1", Patterns::Integer(),
+         "Refinement option (space and/or time)");
+   prm.declare_entry("Time refinement factor", "0.5", Patterns::Double(),
+         "Factor by which to reduce dt if refining time step size");
    prm.declare_entry("Use adaptive mesh refinement", "false", Patterns::Bool(),
          "Option to use adaptive mesh refinement instead of uniform");
    prm.declare_entry("Number of refinement cycles", "5", Patterns::Integer(),
          "Number of mesh refinement cycles");
    prm.declare_entry("Initial refinement level", "2", Patterns::Integer(),
          "Number of refinements for first mesh refinement cycle");
-   prm.declare_entry("Solver option", "1", Patterns::Integer(),
+   prm.declare_entry("Linear solver option", "1", Patterns::Integer(),
          "Option for linear solver");
    prm.declare_entry("Preconditioner option", "1", Patterns::Integer(),
          "Option for preconditioner for linear solver");
@@ -79,10 +85,12 @@ void TransportParameters::get_parameters(ParameterHandler &prm) {
    problem_id = prm.get_integer("Problem ID");
    degree = prm.get_integer("Finite element degree");
    time_integrator_option = prm.get_integer("Time integrator option");
+   refinement_option = prm.get_integer("Refinement option");
+   time_refinement_factor = prm.get_double("Time refinement factor");
    use_adaptive_mesh_refinement = prm.get_bool("Use adaptive mesh refinement");
    n_refinement_cycles = prm.get_integer("Number of refinement cycles");
    initial_refinement_level = prm.get_integer("Initial refinement level");
-   solver_option = prm.get_integer("Solver option");
+   solver_option = prm.get_integer("Linear solver option");
    preconditioner_option = prm.get_integer("Preconditioner option");
    scheme_option = prm.get_integer("Scheme option");
    old_first_order_viscosity_coefficient = prm.get_double("Old first order viscosity coefficient");

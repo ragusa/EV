@@ -158,6 +158,8 @@ class TransportProblem {
       bool has_exact_solution;
       FunctionParser<dim> exact_solution;
       std::string exact_solution_string;
+      FunctionParser<dim> source_function;
+      std::string source_string;
       unsigned int source_option;
       double source_value;
       unsigned int cross_section_option;
@@ -173,7 +175,8 @@ class TransportProblem {
       double domain_averaged_entropy;
       double max_entropy_deviation_domain;
 
-      // CFL condition functions and data
+      // time functions and data
+      double dt_nominal;
       void enforce_CFL_condition(double &dt, double &CFL) const;
       double minimum_cell_diameter;
    

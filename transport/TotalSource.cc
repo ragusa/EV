@@ -18,10 +18,7 @@ double TotalSource<dim>::value(const Point<dim> &p) const
          if (in_nonzero_region)
             return_value = source_value;
          break;
-      } case 3: {
-         /* manufactured solution source
-          * solution is: x*sin(x)*exp(-x) and sigma = 1
-          */
+      } case 3: { // MMS source
          return_value = std::sin(p[0]) * std::exp(-p[0])
                          + p[0] * std::cos(p[0]) * std::exp(-p[0]);
          break;

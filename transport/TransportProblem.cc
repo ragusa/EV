@@ -85,6 +85,20 @@ void TransportProblem<dim>::initialize_system()
                                     function_parser_constants,
                                     true);
    }
+
+   // initialize source function
+   source_function.initialize(variables,
+                              source_string,
+                              function_parser_constants,
+                              true);
+
+   // create grid for initial refinement level
+   GridGenerator::hyper_cube(triangulation, x_min, x_max);
+   domain_volume = std::pow((x_max-x_min),dim);
+   triangulation.refine_global(parameters.initial_refinement_level);
+
+   // get initial dt size
+   dt_nominal = parameters.time_step_size;
 }
 
 /** \brief process problem ID
@@ -101,6 +115,7 @@ void TransportProblem<dim>::process_problem_ID()
          cross_section_value = 1.0;
          source_option = 1;
          source_value = 0.0;
+         source_string = "0";
          incoming_flux_value = 1.0;
          has_exact_solution = false;
          Assert(dim < 3,ExcNotImplemented());
@@ -115,6 +130,7 @@ void TransportProblem<dim>::process_problem_ID()
          cross_section_value = 1.0;
          source_option = 1;
          source_value = 0.0;
+         source_string = "0";
          incoming_flux_value = 1.0;
          has_exact_solution = true;
          if (parameters.is_steady_state) { // steady-state
@@ -141,6 +157,7 @@ void TransportProblem<dim>::process_problem_ID()
          cross_section_value = 0.0;
          source_option = 1;
          source_value = 0.0;
+         source_string = "0";
          incoming_flux_value = 1.0e0;
          has_exact_solution = true;
          if (parameters.is_steady_state)
@@ -156,9 +173,25 @@ void TransportProblem<dim>::process_problem_ID()
          cross_section_value = 1.0;
          source_option = 1;
          source_value = 0.0;
+         source_string = "0";
          incoming_flux_value = 1.0e0;
          has_exact_solution = false;
          initial_conditions_string = "0";
+         break;
+      } case 5: { // MMS
+         Assert(not parameters.is_steady_state,ExcNotImplemented());
+         Assert(dim == 1,ExcNotImplemented());
+         x_min = 0.0;
+         x_max = 1.0;
+         cross_section_option = 1;
+         cross_section_value = 1.0;
+         source_option = 1;
+         source_value = 0.0;
+         source_string = "3*x*t^3 + x*t^4 + sigma*x*t^4";
+         incoming_flux_value = 0.0;
+         has_exact_solution = true;
+         exact_solution_string = "x*t^4"; // assume omega_x = 1 and c = 1
+         initial_conditions_string = exact_solution_string;
          break;
       } default: {
          Assert(false,ExcNotImplemented());
@@ -386,12 +419,16 @@ void TransportProblem<dim>::assemble_system()
       // reinitialize FE values
       fe_values.reinit(cell);
 
+      // get quadrature points on cell
+      std::vector<Point<dim> > points(n_q_points_cell);
+      points = fe_values.get_quadrature_points();
+
       // get total cross section for all quadrature points
-      total_cross_section.value_list(fe_values.get_quadrature_points(),
-                                     total_cross_section_values);
+      total_cross_section.value_list(points, total_cross_section_values);
       // get total source for all quadrature points
-      total_source.value_list(fe_values.get_quadrature_points(),
-                              total_source_values);
+      //total_source.value_list(points, total_source_values);
+      for (unsigned int q = 0; q < n_q_points_cell; ++q)
+         total_source_values[q] = source_function.value(points[q]);
 
       // compute cell contributions to global system
       // ------------------------------------------------------------------
@@ -861,14 +898,18 @@ void TransportProblem<dim>::run()
    // loop over refinement cycles
    for (unsigned int cycle = 0; cycle < parameters.n_refinement_cycles; ++cycle)
    {
-      // generate mesh if in first cycle, else refine
-      if (cycle == 0) {
-         // domain is the dim-dimensional hypercube (-1,1)^dim
-         GridGenerator::hyper_cube(triangulation, x_min, x_max);
-         domain_volume = std::pow((x_max-x_min),dim);
-         triangulation.refine_global(parameters.initial_refinement_level);
-      } else {
-         refine_grid();
+      if (cycle != 0) {
+         // refine mesh if user selected the option
+         if (parameters.refinement_option != 2) // "2" corresponds to "time refinement only"
+         {
+            refine_grid();
+         }
+
+         // refine time if user selected the option
+         if (parameters.refinement_option != 1) // "1" corresponds to "space refinement only"
+         {
+            dt_nominal = dt_nominal * parameters.time_refinement_factor;
+         }
       }
 
       // setup system - distribute finite elements, reintialize matrices and vectors
@@ -877,7 +918,8 @@ void TransportProblem<dim>::run()
       // print information
       std::cout << std::endl << "Cycle " << cycle << ':' << std::endl;
       std::cout << "   Number of active cells:       " << triangulation.n_active_cells() << std::endl;
-      std::cout << "   Number of degrees of freedom: " << n_dofs           << std::endl;
+      std::cout << "   Number of degrees of freedom: " << n_dofs << std::endl;
+      std::cout << "   Time step size: " << dt_nominal << std::endl;
 
       // if problem is steady-state, then just do one solve; else loop over time
       if (parameters.is_steady_state) {
@@ -885,6 +927,7 @@ void TransportProblem<dim>::run()
          solve_steady_state();
       } else {
          // interpolate initial conditions
+         initial_conditions.set_time(0.0);
          VectorTools::interpolate(dof_handler,
                                   initial_conditions,
                                   new_solution);
@@ -913,13 +956,13 @@ void TransportProblem<dim>::run()
          low_order_ss_matrix.add(1.0,low_order_viscous_matrix);
 
          // time loop
-         double t = 0.0;
+         double t_new = 0.0;
+         double t_old = 0.0;
          const double t_end = parameters.end_time;
-         const double dt_const = parameters.time_step_size;
          const double machine_precision = 1.0e-15;
          bool in_transient = true;
          bool DMP_satisfied_at_all_steps = true;
-         double old_dt = parameters.time_step_size; // time step size of previous time step, needed for entropy viscosity
+         double old_dt = dt_nominal; // time step size of previous time step, needed for entropy viscosity
          Vector<double> tmp_vector(n_dofs);
          unsigned int n = 1; // time step index
          while (in_transient)
@@ -943,17 +986,23 @@ void TransportProblem<dim>::run()
             old_solution = new_solution;
 
             // determine time step size
-            double dt = parameters.time_step_size;
-            if (t + dt_const > t_end) dt = t_end - t; // correct dt if new t would overshoot t_end 
+            double dt = dt_nominal;
+            if (t_old + dt > t_end) dt = t_end - t_old; // correct dt if new t would overshoot t_end 
             // enforce CFL condition and get CFL number
             double CFL;
             enforce_CFL_condition(dt,CFL);
             // increment time
-            std::cout << "   time step " << n << ": t = " << t << "->";
-            t += dt;
-            std::cout << t << ", CFL = " << CFL << std::endl;
+            std::cout << "   time step " << n << ": t = " << t_old << "->";
+            t_new = t_old + dt;
+            std::cout << t_new << ", CFL = " << CFL << std::endl;
             // determine if end of transient has been reached (within machine precision)
-            in_transient = t < (t_end - machine_precision);
+            in_transient = t_new < (t_end - machine_precision);
+
+            bool assembly_time_dependent = true;
+            if (assembly_time_dependent) {
+               source_function.set_time(t_old);
+               assemble_system();
+            }
 
             switch (parameters.scheme_option)
             {
@@ -1008,7 +1057,7 @@ void TransportProblem<dim>::run()
 
                   break;
                } case 2: { // high-order system with entropy viscosity
-                  switch (parameters.scheme_option)
+                  switch (parameters.time_integrator_option)
                   {
                      case 1: { // forward Euler
                         // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
@@ -1128,7 +1177,8 @@ void TransportProblem<dim>::run()
 
             }
 
-            // update old time step size
+            // update old time and time step size
+            t_old = t_new;
             old_dt = dt;
 
             // increment time step index
@@ -1136,7 +1186,7 @@ void TransportProblem<dim>::run()
          }
 
          // report if DMP was satisfied at all time steps
-         if (parameters.scheme_option != 0)
+         if (parameters.scheme_option == 3)
          {
             // report if local discrete maximum principle is satisfied at all time steps
             if (DMP_satisfied_at_all_steps)
@@ -1291,7 +1341,7 @@ void TransportProblem<dim>::output_results()
    }
 
    // output min and max bounds for DMP
-   if (parameters.output_DMP_bounds)
+   if (parameters.output_DMP_bounds and parameters.scheme_option == 3)
    {
       output_solution(min_values,dof_handler,"min_values",false);
       output_solution(max_values,dof_handler,"max_values",false);
@@ -1300,11 +1350,14 @@ void TransportProblem<dim>::output_results()
    // print convergence table
    //------------------------
    if (has_exact_solution) {
-      convergence_table.set_precision("cell size", 3);
-      convergence_table.set_scientific("cell size", true);
+      convergence_table.set_precision("dx", 3);
+      convergence_table.set_scientific("dx", true);
+      convergence_table.set_precision("dt", 3);
+      convergence_table.set_scientific("dt", true);
       convergence_table.set_precision("L2 error", 3);
       convergence_table.set_scientific("L2 error", true);
       convergence_table.evaluate_convergence_rates("L2 error", ConvergenceTable::reduction_rate_log2);
+      convergence_table.evaluate_convergence_rates("L2 error", "dt", ConvergenceTable::reduction_rate_log2, 1);
       std::cout << std::endl;
       convergence_table.write_text(std::cout);
    }
@@ -1403,7 +1456,8 @@ void TransportProblem<dim>::evaluate_error(const unsigned int cycle)
    convergence_table.add_value("cycle", cycle);
    convergence_table.add_value("cells", n_active_cells);
    convergence_table.add_value("dofs", n_dofs);
-   convergence_table.add_value("cell size", avg_cell_length);
+   convergence_table.add_value("dx", avg_cell_length);
+   convergence_table.add_value("dt", dt_nominal);
    convergence_table.add_value("L2 error", L2_error);
 }
 
@@ -1925,19 +1979,20 @@ void TransportProblem<dim>::compute_high_order_solution()
 template <int dim>
 void TransportProblem<dim>::enforce_CFL_condition(double &dt, double &CFL) const
 {
-   // CFL is computed as max over all i of dt*A(i,i)/mL(i,i)
-   double max_A_over_m = 0.0; // max over all i of A(i,i)/mL(i,i)
+   // CFL is dt*speed/dx
+   double max_speed_dx = 0.0; // max(speed/dx); max over all i of A(i,i)/mL(i,i)
    for (unsigned int i = 0; i < n_dofs; ++i)
-      max_A_over_m = std::max(max_A_over_m, low_order_ss_matrix(i,i) / lumped_mass_matrix(i,i));
+      max_speed_dx = std::max(max_speed_dx, low_order_ss_matrix(i,i) / lumped_mass_matrix(i,i));
 
    // compute CFL number
-   CFL = dt * max_A_over_m;
+   CFL = dt * max_speed_dx;
 
    // if computed CFL number is greater than the set limit, then adjust dt
    if (CFL > parameters.CFL_limit)
    {
+      std::cout << "CFL limit exceeded; dt has been adjusted" << std::endl;
       CFL = parameters.CFL_limit;
-      dt = CFL / max_A_over_m;
+      dt = CFL / max_speed_dx;
    }
 }
 

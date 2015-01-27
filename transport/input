@@ -1,32 +1,40 @@
 # problem options
-# 1: constant source, constant cross section, incoming flux
-# 2: no source, heterogeneous cross section, incoming flux
-# 3: no source, zero cross section, incoming flux
-# 4: no source, homogeneous cross section, incoming flux
-set Problem ID = 2
+#    Problem ID:
+#     1: constant source, constant cross section, incoming flux
+#     2: no source, heterogeneous cross section, incoming flux
+#     3: no source, zero cross section, incoming flux
+#     4: no source, homogeneous cross section, incoming flux
+#     5: MMS problem
+set Problem ID = 5
 
 # transient options
 set Is steady state = false
-set End time = 2.0
-set Time step size = 0.1
+set End time = 1.0
+set Time step size = 0.01
 set CFL limit = 0.9
-
-# time integrator options
-# 0: forward Euler
-# 1: SSPRK33
+#    Time integrator option:
+#     1: forward Euler
+#     2: SSPRK33
 set Time integrator option = 1
 
 # artificial viscosity options
-# 0: high-order Galerkin scheme
-# 1: low-order scheme
-# 2: high-order EV scheme
-# 3: FCT scheme
-set Scheme option = 2
+#    Scheme option:
+#     0: high-order Galerkin scheme
+#     1: low-order scheme
+#     2: high-order EV scheme
+#     3: FCT scheme
+set Scheme option = 1
 set Entropy viscosity coefficient = 1.0
 set Jump coefficient = 1.0
 set Do not limit = true
 
-# mesh refinement options
+# refinement options
+#    Refinement option:
+#     1: refine space only
+#     2: refine time only
+#     3: refine both space and time
+set Refinement option = 3
+set Time refinement factor = 0.5
 set Use adaptive mesh refinement = false
 set Number of refinement cycles = 1
 set Initial refinement level = 5
@@ -35,13 +43,13 @@ set Initial refinement level = 5
 set Finite element degree = 1
 
 # linear solver options
-# option for linear solver
-# 1: direct linear solve using UMFPACK
-# 2: Bi conjugate gradient stabilized (BiCGstab) solver
-set Solver option = 1
-# preconditioner option for BiCGstab
-# 1: none (identity matrix)
-# 2: Jacobi
+#    Linear solver option: 
+#     1: direct linear solve using UMFPACK
+#     2: Bi conjugate gradient stabilized (BiCGstab) solver
+set Linear solver option = 1
+#    Preconditioner option:
+#     1: none (identity matrix)
+#     2: Jacobi
 set Preconditioner option = 1
 
 # output options
