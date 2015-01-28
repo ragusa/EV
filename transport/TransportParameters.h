@@ -37,6 +37,7 @@ class TransportParameters {
     bool output_DMP_bounds; // option to output DMP bounds
     double CFL_limit; // upper bound for the CFL number
     bool do_not_limit; // flag to turn off limiting for high order solution
+    unsigned int n_quadrature_points; // number of quadrature points to use in formula
 };
 
 #include "TransportParameters.cc"

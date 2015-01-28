@@ -11,9 +11,9 @@ set Problem ID = 5
 
 # transient options
 set Is steady state = false
-set End time = 3.0
-set Time step size = 0.01
-set CFL limit = 0.9
+set End time = 0.0001
+set Time step size = 0.00001
+set CFL limit = 1.0
 #    Time integrator option:
 #     1: forward Euler
 #     2: SSPRK33
@@ -25,7 +25,7 @@ set Time integrator option = 2
 #     1: low-order scheme
 #     2: high-order EV scheme
 #     3: FCT scheme
-set Scheme option = 1
+set Scheme option = 0
 set Entropy viscosity coefficient = 1.0
 set Jump coefficient = 1.0
 set Do not limit = true
@@ -35,7 +35,7 @@ set Do not limit = true
 #     1: refine space only
 #     2: refine time only
 #     3: refine both space and time
-set Refinement option = 2
+set Refinement option = 1
 set Time refinement factor = 0.5
 set Use adaptive mesh refinement = false
 set Number of refinement cycles = 3
@@ -51,6 +51,7 @@ set Initial refinement level = 5
 
 # finite element options
 set Finite element degree = 1
+set Number of quadrature points = 10
 
 # linear solver options
 #    Linear solver option: 

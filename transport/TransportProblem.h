@@ -71,8 +71,10 @@ class TransportProblem {
       void apply_Dirichlet_BC(SparseMatrix<double> &A,
                               Vector<double>       &x,
                               Vector<double>       &b);
-      void forward_euler_step_low_order(const Vector<double> &old_solution_stage,
-                                        const double         &dt);
+      void forward_euler_step(const Vector<double>       &old_solution_stage,
+                              const SparseMatrix<double> &mass_matrix,
+                              const SparseMatrix<double> &ss_matrix,
+                              const double               &dt);
       void solve_steady_state();
       void solve_linear_system(const SparseMatrix<double> &A,
                                const Vector<double> &b);

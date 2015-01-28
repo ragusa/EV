@@ -23,7 +23,8 @@ TransportParameters::TransportParameters() :
       output_initial_solution(false),
       output_DMP_bounds(false),
       CFL_limit(0.5),
-      do_not_limit(false)
+      do_not_limit(false),
+      n_quadrature_points(3)
 {
 }
 
@@ -77,6 +78,8 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
          "Upper bound for the CFL number");
    prm.declare_entry("Do not limit", "false", Patterns::Bool(),
          "Option to choose not to limit when constructing high-order solution");
+   prm.declare_entry("Number of quadrature points", "3", Patterns::Integer(),
+         "Number of quadrature points to use in formula");
 }
 
 /** \brief get the input parameters
@@ -105,4 +108,5 @@ void TransportParameters::get_parameters(ParameterHandler &prm) {
    output_DMP_bounds = prm.get_bool("Output DMP bounds");
    CFL_limit = prm.get_double("CFL limit");
    do_not_limit = prm.get_bool("Do not limit");
+   n_quadrature_points = prm.get_integer("Number of quadrature points");
 }

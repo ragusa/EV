@@ -9,8 +9,8 @@ TransportProblem<dim>::TransportProblem(const TransportParameters &parameters) :
       flux(0),
       dofs_per_cell(fe.dofs_per_cell),
       faces_per_cell(GeometryInfo<dim>::faces_per_cell),
-      cell_quadrature(degree+1),
-      face_quadrature(degree+1),
+      cell_quadrature(parameters.n_quadrature_points),
+      face_quadrature(parameters.n_quadrature_points),
       n_q_points_cell(cell_quadrature.size()),
       n_q_points_face(face_quadrature.size()),
       transport_direction(0.0),
@@ -179,19 +179,23 @@ void TransportProblem<dim>::process_problem_ID()
          initial_conditions_string = "0";
          break;
       } case 5: { // MMS
-         Assert(not parameters.is_steady_state,ExcNotImplemented());
-         Assert(dim == 1,ExcNotImplemented());
+         Assert(dim == 1,ExcNotImplemented()); // assume 1-D
+
          x_min = 0.0;
          x_max = 1.0;
+         incoming_flux_value = 0.0;
          cross_section_option = 1;
          cross_section_value = 1.0;
-         source_option = 1;
-         source_value = 0.0;
-         source_string = "3*x*t^3 + x*t^4 + sigma*x*t^4";
-         incoming_flux_value = 0.0;
          has_exact_solution = true;
-         exact_solution_string = "x*t^4"; // assume omega_x = 1 and c = 1
-         initial_conditions_string = exact_solution_string;
+         // use different MMS for steady-state vs. transient problem
+         if (parameters.is_steady_state) {
+            exact_solution_string = "sin(pi*x)"; // assume omega_x = 1 and c = 1
+            source_string = "pi*cos(pi*x) + sin(pi*x)";
+         } else {
+            exact_solution_string = "t*sin(pi*x)"; // assume omega_x = 1 and c = 1
+            source_string = "sin(pi*x) + pi*t*cos(pi*x) + t*sin(pi*x)";
+            initial_conditions_string = exact_solution_string;
+         }
          break;
       } default: {
          Assert(false,ExcNotImplemented());
@@ -898,6 +902,7 @@ void TransportProblem<dim>::run()
    // loop over refinement cycles
    for (unsigned int cycle = 0; cycle < parameters.n_refinement_cycles; ++cycle)
    {
+      // refine
       if (cycle != 0) {
          // refine mesh if user selected the option
          if (parameters.refinement_option != 2) // "2" corresponds to "time refinement only"
@@ -919,7 +924,8 @@ void TransportProblem<dim>::run()
       std::cout << std::endl << "Cycle " << cycle << ':' << std::endl;
       std::cout << "   Number of active cells:       " << triangulation.n_active_cells() << std::endl;
       std::cout << "   Number of degrees of freedom: " << n_dofs << std::endl;
-      std::cout << "   Time step size: " << dt_nominal << std::endl;
+      if (not parameters.is_steady_state)
+         std::cout << "   Time step size: " << dt_nominal << std::endl;
 
       // if problem is steady-state, then just do one solve; else loop over time
       if (parameters.is_steady_state) {
@@ -1006,11 +1012,50 @@ void TransportProblem<dim>::run()
 
             switch (parameters.scheme_option)
             {
-               case 0: { // solve system without any viscous terms
-                  // SSPRK33 not yet implemented
-                  if (parameters.time_integrator_option != 1)
-                     Assert(false, ExcNotImplemented());
+               case 0: { // unmodified Galerkin scheme
+                  switch (parameters.time_integrator_option)
+                  {
+                     case 1: { // forward Euler
+                        forward_euler_step(old_solution,consistent_mass_matrix,inviscid_ss_matrix,dt);
+                        break;
+                     } case 2: { // SSPRK33
+                        // stage 1
+                        tmp_vector = old_solution;
+                        forward_euler_step(tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt);
+                        // stage 2
+                        tmp_vector = new_solution;
+                        forward_euler_step(tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt);
+                        // stage 3
+                        tmp_vector = 0;
+                        tmp_vector.add(0.75,old_solution,0.25,new_solution);
+                        forward_euler_step(tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt);
+                        // final combination
+                        tmp_vector = new_solution;
+                        new_solution = 0;
+                        new_solution.add(1./3.,old_solution,2./3.,tmp_vector);
+/*
+                        tmp_vector = 0;
+                        // stage 1
+                        forward_euler_step(old_solution,consistent_mass_matrix,inviscid_ss_matrix,dt);
+                        tmp_vector.add(1./3.,new_solution);
+                        // stage 2
+                        forward_euler_step(new_solution,consistent_mass_matrix,inviscid_ss_matrix,dt);
+                        tmp_vector.add(0.5,new_solution);
+                        // stage 3
+                        forward_euler_step(new_solution,consistent_mass_matrix,inviscid_ss_matrix,dt);
+                        tmp_vector.add(1./6.,new_solution);
+                        // final combination
+                        new_solution = tmp_vector;
+*/
+                        constraints.distribute(new_solution);
 
+                        break;
+                     } default: {
+                        Assert(false, ExcNotImplemented());
+                        break;
+                     }
+                  }
+/*
                   // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
                   system_rhs = 0;
                   system_rhs.add(dt, ss_rhs); //       now, system_rhs = dt*(ss_rhs)
@@ -1026,25 +1071,26 @@ void TransportProblem<dim>::run()
                   
                   // distribute constraints
                   constraints.distribute(new_solution);
+*/
 
                   break;
                } case 1: { // solve low-order system
                   switch (parameters.time_integrator_option)
                   {
                      case 1: { // forward Euler
-                        forward_euler_step_low_order(old_solution,dt);
+                        forward_euler_step(old_solution,lumped_mass_matrix,low_order_ss_matrix,dt);
                         break;
                      } case 2: { // SSPRK33
                         // stage 1
                         tmp_vector = old_solution;
-                        forward_euler_step_low_order(tmp_vector,dt);
+                        forward_euler_step(tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt);
                         // stage 2
                         tmp_vector = new_solution;
-                        forward_euler_step_low_order(tmp_vector,dt);
+                        forward_euler_step(tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt);
                         // stage 3
                         tmp_vector = 0;
                         tmp_vector.add(0.75,old_solution,0.25,new_solution);
-                        forward_euler_step_low_order(tmp_vector,dt);
+                        forward_euler_step(tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt);
                         // final combination
                         tmp_vector = new_solution;
                         new_solution = 0;
@@ -1218,21 +1264,23 @@ void TransportProblem<dim>::run()
 /** \brief 
  */
 template<int dim>
-void TransportProblem<dim>::forward_euler_step_low_order(const Vector<double> &old_solution_stage,
-                                                         const double         &dt)
+void TransportProblem<dim>::forward_euler_step(const Vector<double>       &old_solution_stage,
+                                               const SparseMatrix<double> &mass_matrix,
+                                               const SparseMatrix<double> &ss_matrix,
+                                               const double               &dt)
 {
-   static Vector<double> tmp_vector(n_dofs);
+   Vector<double> tmp_vector(n_dofs);
 
    // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old)
    system_rhs = 0;
    system_rhs.add(dt, ss_rhs);      //  now, system_rhs = dt*(ss_rhs)
-   lumped_mass_matrix.vmult(tmp_vector, old_solution_stage);
+   mass_matrix.vmult(tmp_vector, old_solution_stage);
    system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
-   low_order_ss_matrix.vmult(tmp_vector, old_solution_stage);
+   ss_matrix.vmult(tmp_vector, old_solution_stage);
    system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
       
    // solve the linear system M*u_new = system_rhs
-   system_matrix.copy_from(lumped_mass_matrix);
+   system_matrix.copy_from(mass_matrix);
    apply_Dirichlet_BC(system_matrix, new_solution, system_rhs); // apply Dirichlet BC
    solve_linear_system(system_matrix, system_rhs);
      
@@ -1245,27 +1293,29 @@ void TransportProblem<dim>::forward_euler_step_low_order(const Vector<double> &o
 template<int dim>
 void TransportProblem<dim>::solve_steady_state()
 {
-   // FCT cannot be applied to steady-state yet
+   // entropy viscosity and FCT not yet implemented in steady-state
    Assert(parameters.scheme_option != 2, ExcNotImplemented());
+   Assert(parameters.scheme_option != 3, ExcNotImplemented());
 
    // compute inviscid system matrix and steady-state right hand side (ss_rhs)
    assemble_system();
-   // add inviscid component to total system matrix (A)
-   low_order_ss_matrix.copy_from(inviscid_ss_matrix);
-   // add viscous bilinear form for maximum-principle preserving viscosity
-   bool using_max_principle_viscosity = (parameters.scheme_option == 1) or (parameters.scheme_option == 2);
-   if (using_max_principle_viscosity) {
-      // compute max-principle-preserving viscosity (both low-order and high-order)
+   
+   // add inviscid steady-state matrix to system matrix
+   system_matrix.copy_from(inviscid_ss_matrix);
+
+   if (parameters.scheme_option == 1)
+   {
+      // compute viscosity (both low-order and high-order)
       compute_viscosity();
       // compute viscous matrix
       compute_viscous_matrix(low_order_viscosity,low_order_viscous_matrix);
-      // add viscous matrix to steady-state matrix
-      low_order_ss_matrix.add(1.0, low_order_viscous_matrix);
+      // add low-order diffusion matrix to steady-state matrix
+      system_matrix.add(1.0, low_order_viscous_matrix);
    }
    // enforce Dirichlet BC on total system matrix
-   apply_Dirichlet_BC(low_order_ss_matrix, new_solution, ss_rhs);
-   // solve the linear system: low_order_ss_matrix*new_solution = ss_rhs
-   solve_linear_system(low_order_ss_matrix, ss_rhs);
+   apply_Dirichlet_BC(system_matrix, new_solution, ss_rhs);
+   // solve the linear system: ss_matrix*new_solution = ss_rhs
+   solve_linear_system(system_matrix, ss_rhs);
    // distribute constraints
    constraints.distribute(new_solution);
 
@@ -1389,11 +1439,16 @@ void TransportProblem<dim>::output_results()
       convergence_table.set_precision("dx", 3);
       convergence_table.set_scientific("dx", true);
       convergence_table.set_precision("dt", 3);
-      convergence_table.set_scientific("dt", true);
+      if (not parameters.is_steady_state)
+         convergence_table.set_scientific("dt", true);
+      convergence_table.set_precision("L1 error", 3);
+      convergence_table.set_scientific("L1 error", true);
+      convergence_table.evaluate_convergence_rates("L1 error", ConvergenceTable::reduction_rate_log2);
+      //convergence_table.evaluate_convergence_rates("L1 error", "dt", ConvergenceTable::reduction_rate_log2, 1);
       convergence_table.set_precision("L2 error", 3);
       convergence_table.set_scientific("L2 error", true);
       convergence_table.evaluate_convergence_rates("L2 error", ConvergenceTable::reduction_rate_log2);
-      convergence_table.evaluate_convergence_rates("L2 error", "dt", ConvergenceTable::reduction_rate_log2, 1);
+      //convergence_table.evaluate_convergence_rates("L2 error", "dt", ConvergenceTable::reduction_rate_log2, 1);
       std::cout << std::endl;
       convergence_table.write_text(std::cout);
    }
@@ -1469,19 +1524,30 @@ void TransportProblem<dim>::evaluate_error(const unsigned int cycle)
    // assert that this function is only being called when an exact solution is available
    Assert(has_exact_solution,ExcInvalidState());
 
+   // set time for exact solution function
+   exact_solution.set_time(parameters.end_time);
+
    // error per cell
    Vector<double> difference_per_cell (triangulation.n_active_cells());
 
-   // compute error with analytic solution
+   // compute L1 error
    VectorTools::integrate_difference(MappingQ<dim>(1),
                                      dof_handler,
                                      new_solution,
                                      exact_solution,
                                      difference_per_cell,
-                                     QGauss<dim>(degree+1),
-                                     VectorTools::L2_norm);
+                                     cell_quadrature,
+                                     VectorTools::L1_norm);
+   const double L1_error = difference_per_cell.l1_norm();
 
-   // compute L2 error of vector of cell errors
+   // compute L2 error
+   VectorTools::integrate_difference(MappingQ<dim>(1),
+                                     dof_handler,
+                                     new_solution,
+                                     exact_solution,
+                                     difference_per_cell,
+                                     cell_quadrature,
+                                     VectorTools::L2_norm);
    const double L2_error = difference_per_cell.l2_norm();
 
    // compute average cell length
@@ -1493,7 +1559,9 @@ void TransportProblem<dim>::evaluate_error(const unsigned int cycle)
    convergence_table.add_value("cells", n_active_cells);
    convergence_table.add_value("dofs", n_dofs);
    convergence_table.add_value("dx", avg_cell_length);
-   convergence_table.add_value("dt", dt_nominal);
+   if (not parameters.is_steady_state)
+      convergence_table.add_value("dt", dt_nominal);
+   convergence_table.add_value("L1 error", L1_error);
    convergence_table.add_value("L2 error", L2_error);
 }
 
