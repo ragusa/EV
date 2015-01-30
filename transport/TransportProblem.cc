@@ -197,6 +197,34 @@ void TransportProblem<dim>::process_problem_ID()
             initial_conditions_string = exact_solution_string;
          }
          break;
+      } case 6: { // MMS2
+         Assert(dim == 1,ExcNotImplemented()); // assume 1-D
+         Assert(not parameters.is_steady_state,ExcNotImplemented()); // assume not steady-state
+
+         x_min = 0.0;
+         x_max = 1.0;
+         incoming_flux_value = 0.0;
+         cross_section_option = 1;
+         cross_section_value = 1.0;
+         has_exact_solution = true;
+         exact_solution_string = "x*exp(-t)"; // assume omega_x = 1 and c = 1
+         source_string = "-x*exp(-t) + exp(-t) + x*exp(-t)";
+         initial_conditions_string = exact_solution_string;
+         break;
+      } case 7: { // MMS3
+         Assert(dim == 1,ExcNotImplemented()); // assume 1-D
+         Assert(not parameters.is_steady_state,ExcNotImplemented()); // assume not steady-state
+
+         x_min = 0.0;
+         x_max = 1.0;
+         incoming_flux_value = 0.0;
+         cross_section_option = 1;
+         cross_section_value = 1.0;
+         has_exact_solution = true;
+         exact_solution_string = "t^4*sin(pi*x)"; // assume omega_x = 1 and c = 1
+         source_string = "4*t^3*sin(pi*x) + pi*t^4*cos(pi*x) + t^4*sin(pi*x)";
+         initial_conditions_string = exact_solution_string;
+         break;
       } default: {
          Assert(false,ExcNotImplemented());
          break;
@@ -1017,8 +1045,23 @@ void TransportProblem<dim>::run()
                   {
                      case 1: { // forward Euler
                         forward_euler_step(old_solution,consistent_mass_matrix,inviscid_ss_matrix,dt);
+
                         break;
-                     } case 2: { // SSPRK33
+                     } case 2: { // SSPRK22
+                        // stage 1
+                        tmp_vector = old_solution;
+                        forward_euler_step(tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt);
+                        // stage 2
+                        tmp_vector = new_solution;
+                        forward_euler_step(tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt);
+                        // final combination
+                        tmp_vector = new_solution;
+                        new_solution = 0;
+                        new_solution.add(0.5,old_solution,0.5,tmp_vector);
+                        constraints.distribute(new_solution);
+
+                        break;
+                     } case 3: { // SSPRK33
                         // stage 1
                         tmp_vector = old_solution;
                         forward_euler_step(tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt);
@@ -1033,20 +1076,6 @@ void TransportProblem<dim>::run()
                         tmp_vector = new_solution;
                         new_solution = 0;
                         new_solution.add(1./3.,old_solution,2./3.,tmp_vector);
-/*
-                        tmp_vector = 0;
-                        // stage 1
-                        forward_euler_step(old_solution,consistent_mass_matrix,inviscid_ss_matrix,dt);
-                        tmp_vector.add(1./3.,new_solution);
-                        // stage 2
-                        forward_euler_step(new_solution,consistent_mass_matrix,inviscid_ss_matrix,dt);
-                        tmp_vector.add(0.5,new_solution);
-                        // stage 3
-                        forward_euler_step(new_solution,consistent_mass_matrix,inviscid_ss_matrix,dt);
-                        tmp_vector.add(1./6.,new_solution);
-                        // final combination
-                        new_solution = tmp_vector;
-*/
                         constraints.distribute(new_solution);
 
                         break;
@@ -1438,17 +1467,24 @@ void TransportProblem<dim>::output_results()
    if (has_exact_solution) {
       convergence_table.set_precision("dx", 3);
       convergence_table.set_scientific("dx", true);
-      convergence_table.set_precision("dt", 3);
-      if (not parameters.is_steady_state)
+      if (not parameters.is_steady_state) {
+         convergence_table.set_precision("dt", 3);
          convergence_table.set_scientific("dt", true);
+         convergence_table.set_scientific("1/dt", true);
+      }
       convergence_table.set_precision("L1 error", 3);
       convergence_table.set_scientific("L1 error", true);
-      convergence_table.evaluate_convergence_rates("L1 error", ConvergenceTable::reduction_rate_log2);
-      //convergence_table.evaluate_convergence_rates("L1 error", "dt", ConvergenceTable::reduction_rate_log2, 1);
       convergence_table.set_precision("L2 error", 3);
       convergence_table.set_scientific("L2 error", true);
-      convergence_table.evaluate_convergence_rates("L2 error", ConvergenceTable::reduction_rate_log2);
-      //convergence_table.evaluate_convergence_rates("L2 error", "dt", ConvergenceTable::reduction_rate_log2, 1);
+      if (parameters.refinement_option == 2) {
+         // evaluate temporal convergence rates
+         convergence_table.evaluate_convergence_rates("L1 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
+         convergence_table.evaluate_convergence_rates("L2 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
+      } else {
+         // evaluate spatial convergence rates
+         convergence_table.evaluate_convergence_rates("L1 error", ConvergenceTable::reduction_rate_log2);
+         convergence_table.evaluate_convergence_rates("L2 error", ConvergenceTable::reduction_rate_log2);
+      }
       std::cout << std::endl;
       convergence_table.write_text(std::cout);
    }
@@ -1559,8 +1595,10 @@ void TransportProblem<dim>::evaluate_error(const unsigned int cycle)
    convergence_table.add_value("cells", n_active_cells);
    convergence_table.add_value("dofs", n_dofs);
    convergence_table.add_value("dx", avg_cell_length);
-   if (not parameters.is_steady_state)
+   if (not parameters.is_steady_state) {
       convergence_table.add_value("dt", dt_nominal);
+      convergence_table.add_value("1/dt", 1.0/dt_nominal);
+   }
    convergence_table.add_value("L1 error", L1_error);
    convergence_table.add_value("L2 error", L2_error);
 }

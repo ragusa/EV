@@ -7,17 +7,20 @@
 #     3   advection   zero     zero        Dirichlet
 #     4   decay       zero     constant    Dirichlet
 #     5   MMS         MMS      constant    zero Dirichlet
-set Problem ID = 5
+#     6   MMS2        MMS2     constant    zero Dirichlet
+#     7   MMS3        MMS3     constant    zero Dirichlet
+set Problem ID = 6
 
 # transient options
 set Is steady state = false
-set End time = 0.0001
-set Time step size = 0.00001
+set End time = 1.0e-2
+set Time step size = 1.0e-3
 set CFL limit = 1.0
 #    Time integrator option:
 #     1: forward Euler
-#     2: SSPRK33
-set Time integrator option = 2
+#     2: SSPRK22
+#     3: SSPRK33
+set Time integrator option = 1
 
 # artificial viscosity options
 #    Scheme option:
@@ -35,10 +38,10 @@ set Do not limit = true
 #     1: refine space only
 #     2: refine time only
 #     3: refine both space and time
-set Refinement option = 1
+set Refinement option = 2
 set Time refinement factor = 0.5
 set Use adaptive mesh refinement = false
-set Number of refinement cycles = 3
+set Number of refinement cycles = 4
 # level  cells
 # 1      2
 # 2      4
