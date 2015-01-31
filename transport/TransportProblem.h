@@ -67,7 +67,8 @@ class TransportProblem {
       void setup_system();
       void set_boundary_indicators();
       void assemble_mass_matrices();
-      void assemble_system();
+      void assemble_inviscid_ss_matrix();
+      void assemble_ss_rhs();
       void apply_Dirichlet_BC(SparseMatrix<double> &A,
                               Vector<double>       &x,
                               Vector<double>       &b);
