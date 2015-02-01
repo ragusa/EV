@@ -12,8 +12,8 @@ TransportParameters::TransportParameters() :
       solver_option(1),
       preconditioner_option(1),
       scheme_option(0),
-      old_first_order_viscosity_coefficient(5.0e-1),
-      entropy_viscosity_coefficient(1.0),
+      entropy_string("0.5*u*u"),
+      entropy_residual_coefficient(1.0),
       jump_coefficient(1.0),
       output_meshes(false),
       is_steady_state(true),
@@ -54,8 +54,8 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
          "Option for preconditioner for linear solver");
    prm.declare_entry("Scheme option", "0", Patterns::Integer(),
          "Option for scheme to be used");
-   prm.declare_entry("Old first order viscosity coefficient", "5.0e-1", Patterns::Double(),
-         "Coefficient for the first-order viscosity");
+   prm.declare_entry("Entropy function string", "0.5*u*u", Patterns::Anything(),
+         "String for entropy function");
    prm.declare_entry("Entropy viscosity coefficient", "1.0", Patterns::Double(),
          "Coefficient for the entropy viscosity");
    prm.declare_entry("Jump coefficient", "1.0", Patterns::Double(),
@@ -96,8 +96,8 @@ void TransportParameters::get_parameters(ParameterHandler &prm) {
    solver_option = prm.get_integer("Linear solver option");
    preconditioner_option = prm.get_integer("Preconditioner option");
    scheme_option = prm.get_integer("Scheme option");
-   old_first_order_viscosity_coefficient = prm.get_double("Old first order viscosity coefficient");
-   entropy_viscosity_coefficient = prm.get_double("Entropy viscosity coefficient");
+   entropy_string = prm.get("Entropy function string");
+   entropy_residual_coefficient = prm.get_double("Entropy viscosity coefficient");
    jump_coefficient = prm.get_double("Jump coefficient");
    output_meshes = prm.get_bool("Output mesh");
    is_steady_state = prm.get_bool("Is steady state");

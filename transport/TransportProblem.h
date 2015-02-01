@@ -45,9 +45,8 @@
 #include <cstdlib>
 #include <algorithm>
 
-#include "TotalSource.h"
-#include "TotalCrossSection.h"
 #include "TransportParameters.h"
+#include "EntropyViscosity.h"
 
 using namespace dealii;
 
@@ -63,23 +62,22 @@ class TransportProblem {
    private:
       // main functions
       void initialize_system();
-      void process_problem_ID();
       void setup_system();
-      void set_boundary_indicators();
       void assemble_mass_matrices();
       void assemble_inviscid_ss_matrix();
-      void assemble_ss_rhs();
-      void apply_Dirichlet_BC(SparseMatrix<double> &A,
-                              Vector<double>       &x,
-                              Vector<double>       &b);
-      void forward_euler_step(const Vector<double>       &old_solution_stage,
-                              const SparseMatrix<double> &mass_matrix,
-                              const SparseMatrix<double> &ss_matrix,
-                              const double               &dt);
+      void assemble_ss_rhs(const double &t);
+      void transient_step(const Vector<double>       &old_solution_stage,
+                          const Vector<double>       &eval_solution_stage,
+                          const SparseMatrix<double> &mass_matrix,
+                          const SparseMatrix<double> &ss_matrix,
+                          const double               &dt,
+                          const double               &t_eval);
       void solve_steady_state();
       void solve_linear_system(const SparseMatrix<double> &A,
                                const Vector<double> &b);
       void refine_grid();
+
+      // post-processing
       void output_results();
       void output_solution(const Vector<double>  &solution,
                            const DoFHandler<dim> &dof_handler,
@@ -88,33 +86,12 @@ class TransportProblem {
       void output_grid() const;
       void evaluate_error(const unsigned int cycle);
 
-      // low-order max-principle viscosity functions and data
-      void compute_viscous_bilinear_forms();
-      void compute_viscosity();
-      void compute_viscous_matrix(const Vector<double> &viscosity,
-                                  SparseMatrix<double> &viscous_matrix);
-      SparsityPattern unconstrained_sparsity_pattern;
-      SparseMatrix<double> max_principle_viscosity_numerators;
-      SparseMatrix<double> viscous_bilinear_forms;
-
-      // high-order max-principle viscosity functions and data
-      void compute_high_order_rhs();
-      void assemble_flux_correction_matrix(const double &dt);
-      void compute_limiting_coefficients();
-      void get_matrix_row(const SparseMatrix<double>      &matrix,
-                          const unsigned int              &i,
-                                std::vector<double>       &row_values,
-                                std::vector<unsigned int> &row_indices,
-                                unsigned int              &n_col
-                         );
-      Vector<double> R_plus;
-      Vector<double> R_minus;
-
       // input parameters
       const TransportParameters &parameters;
 
       // mesh and dof data
       Triangulation<dim> triangulation;
+      unsigned int n_cells;
       DoFHandler<dim> dof_handler;
       unsigned int n_dofs;
       const unsigned int degree;
@@ -122,6 +99,7 @@ class TransportProblem {
       const FEValuesExtractors::Scalar flux;
       const unsigned int dofs_per_cell;
       const unsigned int faces_per_cell;
+      void set_boundary_indicators();
 
       // quadrature data
       const QGauss<dim>   cell_quadrature;
@@ -157,41 +135,51 @@ class TransportProblem {
       ConvergenceTable convergence_table;
 
       // physics data
+      void process_problem_ID();
+      std::map<std::string,double> function_parser_constants;
       Tensor<1,dim> transport_direction;
       const unsigned int incoming_boundary;
       FunctionParser<dim> initial_conditions;
-      std::string initial_conditions_string;
-      bool has_exact_solution;
       FunctionParser<dim> exact_solution;
-      std::string exact_solution_string;
       FunctionParser<dim> source_function;
+      FunctionParser<dim> cross_section_function;
+      std::string initial_conditions_string;
+      std::string exact_solution_string;
       std::string source_string;
-      unsigned int source_option;
-      double source_value;
-      unsigned int cross_section_option;
-      double cross_section_value;
+      std::string cross_section_string;
+      bool has_exact_solution;
+      bool source_time_dependent;
       double incoming_flux_value;
       double x_min;
       double x_max;
-
-      // entropy viscosity functions and data
-      void compute_entropy_viscosity(const double &dt);
-      void compute_entropy_domain_average();
       double domain_volume;
-      double domain_averaged_entropy;
-      double max_entropy_deviation_domain;
 
       // time functions and data
       double dt_nominal;
       void enforce_CFL_condition(double &dt, double &CFL) const;
       double minimum_cell_diameter;
-   
-      // checks
-      bool check_max_principle(const double &dt,
-                               const bool   &using_high_order);
-      void debug_max_principle_low_order (const unsigned int &i, const double &dt);
-      void compute_max_principle_bounds(const double &dt);
-      void compute_steady_state_max_principle_bounds();
+
+      // low-order max-principle viscosity functions and data
+      void compute_viscous_bilinear_forms();
+      void compute_low_order_viscosity();
+      void compute_viscous_matrix(const Vector<double> &viscosity,
+                                  SparseMatrix<double> &viscous_matrix);
+      SparsityPattern unconstrained_sparsity_pattern;
+      SparseMatrix<double> max_principle_viscosity_numerators;
+      SparseMatrix<double> viscous_bilinear_forms;
+
+      // high-order max-principle viscosity functions and data
+      void compute_high_order_rhs();
+      void assemble_flux_correction_matrix(const double &dt);
+      void compute_limiting_coefficients();
+      void get_matrix_row(const SparseMatrix<double>      &matrix,
+                          const unsigned int              &i,
+                                std::vector<double>       &row_values,
+                                std::vector<unsigned int> &row_indices,
+                                unsigned int              &n_col
+                         );
+      Vector<double> R_plus;
+      Vector<double> R_minus;
 
       // FCT quantities
       Vector<double> flux_correction_vector;
@@ -199,11 +187,19 @@ class TransportProblem {
       Vector<double> max_values;
       Vector<double> Q_plus;
       Vector<double> Q_minus;
+      // max-principle checks
+      bool check_max_principle(const double &dt,
+                               const bool   &using_high_order);
+      void debug_max_principle_low_order (const unsigned int &i, const double &dt);
+      void compute_max_principle_bounds(const double &dt);
+      void compute_steady_state_max_principle_bounds();
 
-      // boundary nodes
+      // Dirichlet boundary condition
       void get_dirichlet_nodes();
+      void apply_Dirichlet_BC(SparseMatrix<double> &A,
+                              Vector<double>       &x,
+                              Vector<double>       &b);
       std::vector<unsigned int> dirichlet_nodes;
-
 };
 
 #include "TransportProblem.cc"

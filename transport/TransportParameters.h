@@ -25,8 +25,8 @@ class TransportParameters {
     unsigned int solver_option; // solver option
     unsigned int preconditioner_option; // preconditioner option
     unsigned int scheme_option; // option for scheme used
-    double old_first_order_viscosity_coefficient; // value of old first order viscosity coefficient
-    double entropy_viscosity_coefficient; // value of entropy viscosity coefficient
+    std::string entropy_string; // string for entropy function
+    double entropy_residual_coefficient; // value of entropy residual coefficient
     double jump_coefficient; // value of jump coefficient
     bool output_meshes; // option to output meshes as .eps files
     bool is_steady_state; // is the problem steady-state?

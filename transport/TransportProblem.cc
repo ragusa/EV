@@ -16,10 +16,6 @@ TransportProblem<dim>::TransportProblem(const TransportParameters &parameters) :
       transport_direction(0.0),
       incoming_boundary(1),
       has_exact_solution(false),
-      source_option(1),
-      source_value(0.0),
-      cross_section_option(1),
-      cross_section_value(0.0),
       incoming_flux_value(0.0),
       domain_volume(0.0)
 {
@@ -60,9 +56,6 @@ void TransportProblem<dim>::initialize_system()
       variables += ",t";
 
    // create function parser constants
-   std::map<std::string,double> function_parser_constants;
-   function_parser_constants["sigma"]    = cross_section_value;
-   function_parser_constants["source"]   = source_value;
    function_parser_constants["incoming"] = incoming_flux_value;
    function_parser_constants["pi"]       = numbers::PI;
    function_parser_constants["x_min"]    = x_min;
@@ -70,21 +63,17 @@ void TransportProblem<dim>::initialize_system()
 
    // initialize exact solution function
    if (has_exact_solution)
-   {
       exact_solution.initialize(variables,
                                 exact_solution_string,
                                 function_parser_constants,
                                 true);
-   }
 
    // initialize initial conditions function
    if (!parameters.is_steady_state)
-   {
       initial_conditions.initialize(variables,
                                     initial_conditions_string,
                                     function_parser_constants,
                                     true);
-   }
 
    // initialize source function
    source_function.initialize(variables,
@@ -92,10 +81,17 @@ void TransportProblem<dim>::initialize_system()
                               function_parser_constants,
                               true);
 
+   // initialize cross section function
+   cross_section_function.initialize(variables,
+                                     cross_section_string,
+                                     function_parser_constants,
+                                     true);
+
    // create grid for initial refinement level
    GridGenerator::hyper_cube(triangulation, x_min, x_max);
    domain_volume = std::pow((x_max-x_min),dim);
    triangulation.refine_global(parameters.initial_refinement_level);
+   n_cells = triangulation.n_active_cells();
 
    // get initial dt size
    dt_nominal = parameters.time_step_size;
@@ -109,56 +105,74 @@ void TransportProblem<dim>::process_problem_ID()
    switch (parameters.problem_id)
    {
       case 1: { // incoming flux, constant cross section, constant source
+         Assert(dim < 3,ExcNotImplemented());
+
          x_min = 0.0;
          x_max = 10.0;
-         cross_section_option = 1;
-         cross_section_value = 1.0;
-         source_option = 1;
-         source_value = 0.0;
-         source_string = "0";
+
          incoming_flux_value = 1.0;
-         has_exact_solution = false;
-         Assert(dim < 3,ExcNotImplemented());
-         // steady-state exact solution
-         // exact_solution_string = "source/sigma + (incoming - source/sigma)*exp(-sigma*(x-x_min))";
+         function_parser_constants["incoming"]  = 1.0;
+
+         cross_section_string = "1.0";
+         function_parser_constants["sigma"]  = 1.0;
+
+         source_time_dependent = false;
+         source_string = "0";
+         function_parser_constants["source"] = 0.0;
+
+         if (parameters.is_steady_state) {
+            has_exact_solution = true;
+            exact_solution_string = "source/sigma + (incoming - source/sigma)*exp(-sigma*(x-x_min))";
+         } else {
+            has_exact_solution = false;
+         }
+
          initial_conditions_string = "0";
+
          break;
       } case 2: { // high cross section in half (1-D) or quarter (2-D) of domain, no source, incoming flux
+         Assert(dim < 3,ExcNotImplemented());
+
          x_min = 0.0;
          x_max = 10.0;
-         cross_section_option = 2;
-         cross_section_value = 1.0;
-         source_option = 1;
-         source_value = 0.0;
-         source_string = "0";
+
          incoming_flux_value = 1.0;
+         function_parser_constants["incoming"]  = 1.0;
+
+         cross_section_string = "if(x<x_mid, 0, 1)";
+         function_parser_constants["sigma"]  = 1.0;
+
+         source_time_dependent = false;
+         source_string = "0";
+         function_parser_constants["source"] = 0.0;
+
          has_exact_solution = true;
          if (parameters.is_steady_state) { // steady-state
-            if (dim == 1)
+            if (dim == 1) // 1-D
                exact_solution_string = "if(x<x_mid, incoming, exp(-sigma*(x-x_mid)))";
-            else if (dim == 2)
+            else if (dim == 2) // 2-D
                exact_solution_string = "if(y<x_mid, incoming, if(x<x_mid, incoming, exp(-sigma*(x-x_mid))))";
             else
                Assert(false,ExcNotImplemented());
          } else { // transient
-            if (dim == 1)
+            if (dim == 1) // 1-D
                exact_solution_string = "if(x-t<x_min, if(x<x_mid, incoming, exp(-sigma*(x-x_mid))), 0)";
-            else if (dim == 2)
+            else if (dim == 2) // 2-D
                exact_solution_string = "if(x-t<x_min, if(y<x_mid, incoming, if(x<x_mid, incoming, exp(-sigma*(x-x_mid)))), 0)";
             else
                Assert(false,ExcNotImplemented());
          }
          initial_conditions_string = "0";
          break;
-      } case 3: { // linear advection problem with step IC
+      } case 3: { // 1-D linear advection problem with step IC
+         Assert(dim == 1,ExcNotImplemented());
+
          x_min = 0.0;
-         x_max = 10.0;
-         cross_section_option = 1;
-         cross_section_value = 0.0;
-         source_option = 1;
-         source_value = 0.0;
+         x_max = 1.0;
+         cross_section_string = "0";
          source_string = "0";
-         incoming_flux_value = 1.0e0;
+         source_time_dependent = false;
+         incoming_flux_value = 1.0;
          has_exact_solution = true;
          if (parameters.is_steady_state)
             exact_solution_string = "1.0";
@@ -166,63 +180,52 @@ void TransportProblem<dim>::process_problem_ID()
             exact_solution_string = "if((x-t)<0,incoming,0)";
          initial_conditions_string = "if(x<0,incoming,0)";
          break;
-      } case 4: { // no source, constant cross section, incoming BC, zero IC
-         x_min = 0.0;
-         x_max = 10.0;
-         cross_section_option = 1;
-         cross_section_value = 1.0;
-         source_option = 1;
-         source_value = 0.0;
-         source_string = "0";
-         incoming_flux_value = 1.0e0;
-         has_exact_solution = false;
-         initial_conditions_string = "0";
-         break;
-      } case 5: { // MMS
+      } case 5: { // MMS-1
          Assert(dim == 1,ExcNotImplemented()); // assume 1-D
 
          x_min = 0.0;
          x_max = 1.0;
          incoming_flux_value = 0.0;
-         cross_section_option = 1;
-         cross_section_value = 1.0;
+         cross_section_string = "1.0";
          has_exact_solution = true;
-         // use different MMS for steady-state vs. transient problem
+         // use different MS for steady-state vs. transient problem
          if (parameters.is_steady_state) {
             exact_solution_string = "sin(pi*x)"; // assume omega_x = 1 and c = 1
             source_string = "pi*cos(pi*x) + sin(pi*x)";
+            source_time_dependent = false;
          } else {
             exact_solution_string = "t*sin(pi*x)"; // assume omega_x = 1 and c = 1
             source_string = "sin(pi*x) + pi*t*cos(pi*x) + t*sin(pi*x)";
+            source_time_dependent = true;
             initial_conditions_string = exact_solution_string;
          }
          break;
-      } case 6: { // MMS2
+      } case 6: { // MMS-2
          Assert(dim == 1,ExcNotImplemented()); // assume 1-D
          Assert(not parameters.is_steady_state,ExcNotImplemented()); // assume not steady-state
 
          x_min = 0.0;
          x_max = 1.0;
          incoming_flux_value = 0.0;
-         cross_section_option = 1;
-         cross_section_value = 1.0;
+         cross_section_string = "1";
          has_exact_solution = true;
          exact_solution_string = "x*exp(-t)"; // assume omega_x = 1 and c = 1
          source_string = "-x*exp(-t) + exp(-t) + x*exp(-t)";
+         source_time_dependent = true;
          initial_conditions_string = exact_solution_string;
          break;
-      } case 7: { // MMS3
+      } case 7: { // MMS-3
          Assert(dim == 1,ExcNotImplemented()); // assume 1-D
          Assert(not parameters.is_steady_state,ExcNotImplemented()); // assume not steady-state
 
          x_min = 0.0;
          x_max = 1.0;
          incoming_flux_value = 0.0;
-         cross_section_option = 1;
-         cross_section_value = 1.0;
+         cross_section_string = "1";
          has_exact_solution = true;
          exact_solution_string = "t^4*sin(pi*x)"; // assume omega_x = 1 and c = 1
          source_string = "4*t^3*sin(pi*x) + pi*t^4*cos(pi*x) + t^4*sin(pi*x)";
+         source_time_dependent = true;
          initial_conditions_string = exact_solution_string;
          break;
       } default: {
@@ -311,9 +314,9 @@ void TransportProblem<dim>::setup_system()
    max_values.reinit(n_dofs);
 
    // reinitialize viscosities
-   entropy_viscosity   .reinit(triangulation.n_active_cells());
-   low_order_viscosity .reinit(triangulation.n_active_cells());
-   high_order_viscosity.reinit(triangulation.n_active_cells());
+   entropy_viscosity   .reinit(n_cells);
+   low_order_viscosity .reinit(n_cells);
+   high_order_viscosity.reinit(n_cells);
 }
 
 /** \brief Assembles the mass matrix, either consistent or lumped.
@@ -418,11 +421,6 @@ void TransportProblem<dim>::assemble_inviscid_ss_matrix()
    inviscid_ss_matrix = 0;
    max_principle_viscosity_numerators = 0;
 
-   double x_mid = x_min + 0.5*(x_max-x_min);
-   const TotalCrossSection<dim> total_cross_section(cross_section_option,
-                                                    cross_section_value,
-                                                    x_mid);
-
    // FE values, for assembly terms
    FEValues<dim> fe_values(fe, cell_quadrature,
          update_values | update_gradients | update_quadrature_points
@@ -451,8 +449,9 @@ void TransportProblem<dim>::assemble_inviscid_ss_matrix()
       std::vector<Point<dim> > points(n_q_points_cell);
       points = fe_values.get_quadrature_points();
 
-      // get total cross section for all quadrature points
-      total_cross_section.value_list(points, total_cross_section_values);
+      // get cross section values for all quadrature points
+      for (unsigned int q = 0; q < n_q_points_cell; ++q)
+         total_cross_section_values[q] = cross_section_function.value(points[q]);
 
       // compute cell contributions to global system
       // ------------------------------------------------------------------
@@ -497,28 +496,32 @@ void TransportProblem<dim>::assemble_inviscid_ss_matrix()
 /** \brief Assemble the steady-state rhs.
  */
 template<int dim>
-void TransportProblem<dim>::assemble_ss_rhs()
+void TransportProblem<dim>::assemble_ss_rhs(const double &t)
 {
+   // reset steady-state rhs
    ss_rhs = 0;
+
+   // set the time to be used in the source function
+   source_function.set_time(t);
 
    // FE values, for assembly terms
    FEValues<dim> fe_values(fe, cell_quadrature,
          update_values | update_gradients | update_quadrature_points
                | update_JxW_values);
 
-   Vector<double>     cell_rhs   (dofs_per_cell);
+   Vector<double>            cell_rhs   (dofs_per_cell);
 
    std::vector<unsigned int> local_dof_indices(dofs_per_cell);
 
-   // total source values at each quadrature point on cell
-   std::vector<double> total_source_values(n_q_points_cell);
+   // source values at each quadrature point on cell
+   std::vector<Point<dim> > points(n_q_points_cell);
+   std::vector<double> source_values(n_q_points_cell);
 
    // cell iterator
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
    // loop over cells
-   unsigned int i_cell = 0;
-   for (cell = dof_handler.begin_active(); cell != endc; ++cell, ++i_cell) {
+   for (cell = dof_handler.begin_active(); cell != endc; ++cell) {
       // initialize local rhs to zero
       cell_rhs = 0;
 
@@ -526,24 +529,20 @@ void TransportProblem<dim>::assemble_ss_rhs()
       fe_values.reinit(cell);
 
       // get quadrature points on cell
-      std::vector<Point<dim> > points(n_q_points_cell);
       points = fe_values.get_quadrature_points();
 
       // get total source for all quadrature points
       for (unsigned int q = 0; q < n_q_points_cell; ++q)
-         total_source_values[q] = source_function.value(points[q]);
+         source_values[q] = source_function.value(points[q]);
 
-      // compute cell contributions to global system
-      // ------------------------------------------------------------------
       // get local dof indices
       cell->get_dof_indices(local_dof_indices);
 
       for (unsigned int q = 0; q < n_q_points_cell; ++q)
          for (unsigned int i = 0; i < dofs_per_cell; ++i)
             cell_rhs(i) +=
-               // total source term
                fe_values[flux].value(i, q)
-                  * total_source_values[q] * fe_values.JxW(q);
+                  * source_values[q] * fe_values.JxW(q);
 
       // aggregate local matrix and rhs to global matrix and rhs
       constraints.distribute_local_to_global(cell_rhs, local_dof_indices, ss_rhs);
@@ -575,6 +574,7 @@ void TransportProblem<dim>::apply_Dirichlet_BC(SparseMatrix<double> &A,
 /** \brief computes the domain-averaged entropy and the max entropy
  *         deviation in the domain
  */
+/*
 template <int dim>
 void TransportProblem<dim>::compute_entropy_domain_average()
 {
@@ -625,25 +625,20 @@ void TransportProblem<dim>::compute_entropy_domain_average()
       }
    }
 }
+*/
 
 /** \brief Computes the entropy viscosity for each cell.
  */
+/*
 template <int dim>
 void TransportProblem<dim>::compute_entropy_viscosity(const double &dt)
 {
    // compute entropy average in domain
    compute_entropy_domain_average();
 
-   // total cross section values at each quadrature point on cell
-   double x_mid = x_min + 0.5*(x_max-x_min);
-   const TotalCrossSection<dim> total_cross_section(cross_section_option,
-                                                    cross_section_value,
-                                                    x_mid);
-   std::vector<double> total_cross_section_values(n_q_points_cell);
-
-   // total source values at each quadrature point on cell
-   const TotalSource<dim> total_source(source_option,source_value);
-   std::vector<double> total_source_values(n_q_points_cell);
+   std::vector<Point<dim> > points(n_q_points_cell);
+   std::vector<double> cross_section_values(n_q_points_cell);
+   std::vector<double> source_values(n_q_points_cell);
 
    // FE cell values for computing entropy
    FEValues<dim> fe_values(fe, cell_quadrature,
@@ -687,12 +682,16 @@ void TransportProblem<dim>::compute_entropy_viscosity(const double &dt)
       // get previous previous time step (n-1) values
       fe_values[flux].get_function_values   (old_solution, old_values);
    
-      // get total cross section for all quadrature points
-      total_cross_section.value_list(fe_values.get_quadrature_points(),
-                                     total_cross_section_values);
-      // get total source for all quadrature points
-      total_source.value_list(fe_values.get_quadrature_points(),
-                              total_source_values);
+      // get quadrature points on cell
+      points = fe_values.get_quadrature_points();
+
+      // get source values for all quadrature points
+      for (unsigned int q = 0; q < n_q_points_cell; ++q)
+         source_values[q] = source_function.value(points[q]);
+
+      // get cross section values for all quadrature points
+      for (unsigned int q = 0; q < n_q_points_cell; ++q)
+         cross_section_values[q] = cross_section_function.value(points[q]);
 
       // compute max entropy residual in cell
       //----------------------------------------------------------------------------
@@ -706,8 +705,8 @@ void TransportProblem<dim>::compute_entropy_viscosity(const double &dt)
       for (unsigned int q = 0; q < n_q_points_cell; ++q)
          entropy_residual_values[q] = (new_entropy_values[q] - old_entropy_values[q])/dt
             + transport_direction * new_values[q] * new_gradients[q]
-            + total_cross_section_values[q] * new_values[q] * new_values[q]
-            - total_source_values[q] * new_values[q];
+            + cross_section_values[q] * new_values[q] * new_values[q]
+            - source_values[q] * new_values[q];
       // determine maximum entropy residual in cell
       double max_entropy_residual = 0.0;
       for (unsigned int q = 0; q < n_q_points_cell; ++q) {
@@ -766,6 +765,7 @@ void TransportProblem<dim>::compute_entropy_viscosity(const double &dt)
       high_order_viscosity(i_cell) = std::min(low_order_viscosity(i_cell), entropy_viscosity(i_cell));
    }
 }
+*/
 
 /** \brief adds the viscous bilinear form for the maximum-principle preserving viscosity
  */
@@ -853,7 +853,7 @@ void TransportProblem<dim>::set_boundary_indicators()
 /** \brief Computes the low-order viscosity for each cell.
  */
 template <int dim>
-void TransportProblem<dim>::compute_viscosity()
+void TransportProblem<dim>::compute_low_order_viscosity()
 {
    // local dof indices
    std::vector<unsigned int> local_dof_indices (dofs_per_cell);
@@ -931,8 +931,9 @@ void TransportProblem<dim>::solve_linear_system(const SparseMatrix<double> &A,
  */
 template<int dim>
 void TransportProblem<dim>::refine_grid() {
+   // refine adaptively or globally
    if (parameters.use_adaptive_mesh_refinement) {
-      Vector<float> estimated_error_per_cell(triangulation.n_active_cells());
+      Vector<float> estimated_error_per_cell(n_cells);
 
       KellyErrorEstimator<dim>::estimate(dof_handler, QGauss<dim - 1>(3),
             typename FunctionMap<dim>::type(), new_solution,
@@ -944,6 +945,9 @@ void TransportProblem<dim>::refine_grid() {
       triangulation.execute_coarsening_and_refinement();
    } else
       triangulation.refine_global(1);
+
+   // update number of cells
+   n_cells = triangulation.n_active_cells();
 }
 
 /** \brief output the grid of the given cycle
@@ -975,15 +979,11 @@ void TransportProblem<dim>::run()
       if (cycle != 0) {
          // refine mesh if user selected the option
          if (parameters.refinement_option != 2) // "2" corresponds to "time refinement only"
-         {
             refine_grid();
-         }
 
          // refine time if user selected the option
          if (parameters.refinement_option != 1) // "1" corresponds to "space refinement only"
-         {
             dt_nominal = dt_nominal * parameters.time_refinement_factor;
-         }
       }
 
       // setup system - distribute finite elements, reintialize matrices and vectors
@@ -991,10 +991,24 @@ void TransportProblem<dim>::run()
 
       // print information
       std::cout << std::endl << "Cycle " << cycle << ':' << std::endl;
-      std::cout << "   Number of active cells:       " << triangulation.n_active_cells() << std::endl;
-      std::cout << "   Number of degrees of freedom: " << n_dofs << std::endl;
+      std::cout << "   Number of active cells:       " << n_cells << std::endl;
+      std::cout << "   Number of degrees of freedom: " << n_dofs  << std::endl;
       if (not parameters.is_steady_state)
          std::cout << "   Time step size: " << dt_nominal << std::endl;
+
+      // create entropy viscosity object
+      EntropyViscosity<dim> EV(fe,
+                               n_cells,
+                               dof_handler,
+                               cell_quadrature,
+                               face_quadrature,
+                               transport_direction,
+                               cross_section_function,
+                               source_function,
+                               parameters.entropy_string,
+                               parameters.entropy_residual_coefficient,
+                               parameters.jump_coefficient,
+                               domain_volume);                      
 
       // if problem is steady-state, then just do one solve; else loop over time
       if (parameters.is_steady_state) {
@@ -1022,10 +1036,11 @@ void TransportProblem<dim>::run()
 
          // compute inviscid system matrix and steady-state right hand side (ss_rhs)
          assemble_inviscid_ss_matrix();
-         assemble_ss_rhs();
+         if (not source_time_dependent)
+            assemble_ss_rhs(0.0);
          
          // compute low-order viscous matrix
-         compute_viscosity();
+         compute_low_order_viscosity();
          compute_viscous_matrix(low_order_viscosity,low_order_viscous_matrix);
          // form low-order steady-state matrix
          low_order_ss_matrix.copy_from(inviscid_ss_matrix);
@@ -1048,7 +1063,9 @@ void TransportProblem<dim>::run()
                if (n == 1) {
                   compute_viscous_matrix(low_order_viscosity,high_order_viscous_matrix);
                } else {
-                  compute_entropy_viscosity(old_dt);
+                  entropy_viscosity = EV.compute_entropy_viscosity(new_solution,old_solution,old_dt);
+                  for (unsigned int i_cell = 0; i_cell < n_cells; ++i_cell)
+                     high_order_viscosity(i_cell) = std::min(entropy_viscosity(i_cell),low_order_viscosity(i_cell));
                   compute_viscous_matrix(high_order_viscosity,high_order_viscous_matrix);
                }
             }
@@ -1074,28 +1091,22 @@ void TransportProblem<dim>::run()
             // determine if end of transient has been reached (within machine precision)
             in_transient = t_new < (t_end - machine_precision);
 
-            bool assembly_time_dependent = true;
-            if (assembly_time_dependent) {
-               source_function.set_time(t_old);
-               assemble_ss_rhs();
-            }
-
             switch (parameters.scheme_option)
             {
                case 0: { // unmodified Galerkin scheme
                   switch (parameters.time_integrator_option)
                   {
                      case 1: { // forward Euler
-                        forward_euler_step(old_solution,consistent_mass_matrix,inviscid_ss_matrix,dt);
+                        transient_step(old_solution,old_solution,consistent_mass_matrix,inviscid_ss_matrix,dt,t_old);
 
                         break;
                      } case 2: { // SSPRK22
                         // stage 1
                         tmp_vector = old_solution;
-                        forward_euler_step(tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt);
+                        transient_step(tmp_vector,tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt,t_old);
                         // stage 2
                         tmp_vector = new_solution;
-                        forward_euler_step(tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt);
+                        transient_step(tmp_vector,tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt,t_new);
                         // final combination
                         tmp_vector = new_solution;
                         new_solution = 0;
@@ -1106,14 +1117,14 @@ void TransportProblem<dim>::run()
                      } case 3: { // SSPRK33
                         // stage 1
                         tmp_vector = old_solution;
-                        forward_euler_step(tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt);
+                        transient_step(tmp_vector,tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt,t_old);
                         // stage 2
                         tmp_vector = new_solution;
-                        forward_euler_step(tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt);
+                        transient_step(tmp_vector,tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt,t_new);
                         // stage 3
                         tmp_vector = 0;
                         tmp_vector.add(0.75,old_solution,0.25,new_solution);
-                        forward_euler_step(tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt);
+                        transient_step(tmp_vector,tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt,t_old+0.5*dt);
                         // final combination
                         tmp_vector = new_solution;
                         new_solution = 0;
@@ -1126,42 +1137,40 @@ void TransportProblem<dim>::run()
                         break;
                      }
                   }
-/*
-                  // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
-                  system_rhs = 0;
-                  system_rhs.add(dt, ss_rhs); //       now, system_rhs = dt*(ss_rhs)
-                  consistent_mass_matrix.vmult(tmp_vector, old_solution);
-                  system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
-                  inviscid_ss_matrix.vmult(tmp_vector, old_solution);
-                  system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
-      
-                  // solve the linear system M*u_new = system_rhs
-                  system_matrix.copy_from(consistent_mass_matrix);
-                  apply_Dirichlet_BC(system_matrix, new_solution, system_rhs); // apply Dirichlet BC
-                  solve_linear_system(system_matrix, system_rhs);
-                  
-                  // distribute constraints
-                  constraints.distribute(new_solution);
-*/
 
                   break;
                } case 1: { // solve low-order system
                   switch (parameters.time_integrator_option)
                   {
                      case 1: { // forward Euler
-                        forward_euler_step(old_solution,lumped_mass_matrix,low_order_ss_matrix,dt);
+                        transient_step(old_solution,old_solution,lumped_mass_matrix,low_order_ss_matrix,dt,t_old);
+
                         break;
-                     } case 2: { // SSPRK33
+                     } case 2: { // SSPRK22
                         // stage 1
                         tmp_vector = old_solution;
-                        forward_euler_step(tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt);
+                        transient_step(tmp_vector,tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt,t_old);
                         // stage 2
                         tmp_vector = new_solution;
-                        forward_euler_step(tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt);
+                        transient_step(tmp_vector,tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt,t_new);
+                        // final combination
+                        tmp_vector = new_solution;
+                        new_solution = 0;
+                        new_solution.add(0.5,old_solution,0.5,tmp_vector);
+                        constraints.distribute(new_solution);
+
+                        break;
+                     } case 3: { // SSPRK33
+                        // stage 1
+                        tmp_vector = old_solution;
+                        transient_step(tmp_vector,tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt,t_old);
+                        // stage 2
+                        tmp_vector = new_solution;
+                        transient_step(tmp_vector,tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt,t_new);
                         // stage 3
                         tmp_vector = 0;
                         tmp_vector.add(0.75,old_solution,0.25,new_solution);
-                        forward_euler_step(tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt);
+                        transient_step(tmp_vector,tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt,t_old+0.5*dt);
                         // final combination
                         tmp_vector = new_solution;
                         new_solution = 0;
@@ -1210,6 +1219,7 @@ void TransportProblem<dim>::run()
 
                         break;
                      } case 2: { // SSPRK33
+                        Assert(false, ExcNotImplemented());
                         break;
                      } default: {
                         Assert(false, ExcNotImplemented());
@@ -1219,6 +1229,8 @@ void TransportProblem<dim>::run()
 
                   break;
                } case 3: { // FCT
+                  Assert(false, ExcNotImplemented());
+/*
                   // SSPRK33 not yet implemented
                   if (parameters.time_integrator_option != 1)
                      Assert(false, ExcNotImplemented());
@@ -1296,6 +1308,7 @@ void TransportProblem<dim>::run()
                   // check that local discrete maximum principle is satisfied at all time steps
                   bool DMP_satisfied_this_step = check_max_principle(dt,false);
                   DMP_satisfied_at_all_steps = DMP_satisfied_at_all_steps and DMP_satisfied_this_step;
+*/
 
                   break;
                } default: {
@@ -1335,20 +1348,26 @@ void TransportProblem<dim>::run()
 /** \brief 
  */
 template<int dim>
-void TransportProblem<dim>::forward_euler_step(const Vector<double>       &old_solution_stage,
-                                               const SparseMatrix<double> &mass_matrix,
-                                               const SparseMatrix<double> &ss_matrix,
-                                               const double               &dt)
+void TransportProblem<dim>::transient_step(const Vector<double>       &old_solution_stage,
+                                           const Vector<double>       &eval_solution_stage,
+                                           const SparseMatrix<double> &mass_matrix,
+                                           const SparseMatrix<double> &ss_matrix,
+                                           const double               &dt,
+                                           const double               &t_eval)
 {
    Vector<double> tmp_vector(n_dofs);
 
-   // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old)
+   // recompute the source if it is time-dependent
+   if (source_time_dependent)
+      assemble_ss_rhs(t_eval);
+
+   // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_eval)
    system_rhs = 0;
    system_rhs.add(dt, ss_rhs);      //  now, system_rhs = dt*(ss_rhs)
    mass_matrix.vmult(tmp_vector, old_solution_stage);
    system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
-   ss_matrix.vmult(tmp_vector, old_solution_stage);
-   system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
+   ss_matrix.vmult(tmp_vector, eval_solution_stage);
+   system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_eval)
       
    // solve the linear system M*u_new = system_rhs
    system_matrix.copy_from(mass_matrix);
@@ -1370,7 +1389,7 @@ void TransportProblem<dim>::solve_steady_state()
 
    // compute inviscid system matrix and steady-state right hand side (ss_rhs)
    assemble_inviscid_ss_matrix();
-   assemble_ss_rhs();
+   assemble_ss_rhs(0.0);
    
    // add inviscid steady-state matrix to system matrix
    system_matrix.copy_from(inviscid_ss_matrix);
@@ -1378,7 +1397,7 @@ void TransportProblem<dim>::solve_steady_state()
    if (parameters.scheme_option == 1)
    {
       // compute viscosity (both low-order and high-order)
-      compute_viscosity();
+      compute_low_order_viscosity();
       // compute viscous matrix
       compute_viscous_matrix(low_order_viscosity,low_order_viscous_matrix);
       // add low-order diffusion matrix to steady-state matrix
@@ -1607,7 +1626,7 @@ void TransportProblem<dim>::evaluate_error(const unsigned int cycle)
    exact_solution.set_time(parameters.end_time);
 
    // error per cell
-   Vector<double> difference_per_cell (triangulation.n_active_cells());
+   Vector<double> difference_per_cell (n_cells);
 
    // compute L1 error
    VectorTools::integrate_difference(MappingQ<dim>(1),
@@ -1630,12 +1649,11 @@ void TransportProblem<dim>::evaluate_error(const unsigned int cycle)
    const double L2_error = difference_per_cell.l2_norm();
 
    // compute average cell length
-   const unsigned int n_active_cells = triangulation.n_active_cells();
-   const double avg_cell_length = std::pow((x_max-x_min),dim) / std::pow(n_active_cells,1.0/dim);
+   const double avg_cell_length = std::pow((x_max-x_min),dim) / std::pow(n_cells,1.0/dim);
 
    // add error values to convergence table
    convergence_table.add_value("cycle", cycle);
-   convergence_table.add_value("cells", n_active_cells);
+   convergence_table.add_value("cells", n_cells);
    convergence_table.add_value("dofs", n_dofs);
    convergence_table.add_value("dx", avg_cell_length);
    if (not parameters.is_steady_state) {
@@ -1933,7 +1951,7 @@ void TransportProblem<dim>::compute_high_order_rhs()
    // Form total system matrix, first adding the inviscid component
    high_order_ss_matrix.copy_from(inviscid_ss_matrix);
    // add viscous component to total system matrix (A)
-   // Note that high_order_viscosity has already been computed in compute_viscosity(),
+   // Note that high_order_viscosity has already been computed in compute_low_order_viscosity(),
    // which was called for the assembly of the low-order system.
    compute_viscous_matrix(high_order_viscosity,high_order_viscous_matrix);
    // add viscous matrix to steady-state system matrix

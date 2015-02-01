@@ -9,13 +9,13 @@
 #     5   MMS         MMS      constant    zero Dirichlet
 #     6   MMS2        MMS2     constant    zero Dirichlet
 #     7   MMS3        MMS3     constant    zero Dirichlet
-set Problem ID = 6
+set Problem ID = 2
 
 # transient options
 set Is steady state = false
-set End time = 1.0e-2
-set Time step size = 1.0e-3
-set CFL limit = 1.0
+set End time = 2.0
+set Time step size = 1.0
+set CFL limit = 0.9
 #    Time integrator option:
 #     1: forward Euler
 #     2: SSPRK22
@@ -29,6 +29,7 @@ set Time integrator option = 1
 #     2: high-order EV scheme
 #     3: FCT scheme
 set Scheme option = 0
+set Entropy function string = 0.5*u*u
 set Entropy viscosity coefficient = 1.0
 set Jump coefficient = 1.0
 set Do not limit = true
@@ -38,10 +39,10 @@ set Do not limit = true
 #     1: refine space only
 #     2: refine time only
 #     3: refine both space and time
-set Refinement option = 2
+set Refinement option = 1
 set Time refinement factor = 0.5
 set Use adaptive mesh refinement = false
-set Number of refinement cycles = 4
+set Number of refinement cycles = 1
 # level  cells
 # 1      2
 # 2      4
