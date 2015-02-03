@@ -90,12 +90,12 @@ void EntropyViscosity<dim>::compute_entropy_domain_average(const Vector<double> 
       // reinitialize FE values
       fe_values.reinit(cell);
       // get old values and gradients
-      std::vector<double> old_solution_values(n_q_points_cell);
-      fe_values[flux].get_function_values(old_solution,old_solution_values);
+      std::vector<double> new_solution_values(n_q_points_cell);
+      fe_values[flux].get_function_values(new_solution,new_solution_values);
       // loop over quadrature points
       for (unsigned int q = 0; q < n_q_points_cell; ++q) {
          // compute entropy at quadrature point
-         double entropy = 0.5 * old_solution_values[q] * old_solution_values[q];
+         double entropy = 0.5 * new_solution_values[q] * new_solution_values[q];
          // add contribution of quadrature point to entropy integral
          max_entropy_deviation_domain = std::max(max_entropy_deviation_domain,
                std::abs(entropy - domain_averaged_entropy));
@@ -130,8 +130,8 @@ Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<dou
 
    // cell values
    std::vector<double>         new_values   (n_q_points_cell);
-   std::vector<Tensor<1,dim> > new_gradients(n_q_points_cell);
    std::vector<double>         old_values   (n_q_points_cell);
+   std::vector<Tensor<1,dim> > new_gradients(n_q_points_cell);
    std::vector<double>         new_entropy_values(n_q_points_cell,0.0);
    std::vector<double>         old_entropy_values(n_q_points_cell,0.0);
 

@@ -4,7 +4,7 @@ close all; clear; clc;
 %--------------------------------------------------------------------------
 % mesh options
 %--------------------------------------------------------------------------
-nel = 50; % number of elements
+nel = 32; % number of elements
 %--------------------------------------------------------------------------
 % method options
 %--------------------------------------------------------------------------
@@ -15,10 +15,10 @@ nel = 50; % number of elements
 %
 low_order_scheme  = 2; % low-order scheme option
 high_order_scheme = 2; % high-order scheme option
-cE = 0.1; % coefficient for entropy residual in entropy viscosity
-cJ = cE; % coefficient for jumps            in entropy viscosity
-entropy       = @(u) 0.5*u.^2; % entropy function
-entropy_deriv = @(u) u;       % derivative of entropy function
+cE = 1; % coefficient for entropy residual in entropy viscosity
+cJ = 0; % coefficient for jumps in entropy viscosity
+entropy       = @(u) 0.5*u.^2;%log(abs(u-u.^2));% % entropy function
+entropy_deriv = @(u) u;%(1-2*u)./(u-u.^2);       % derivative of entropy function
 %--------------------------------------------------------------------------
 % quadrature options
 %--------------------------------------------------------------------------
@@ -30,10 +30,10 @@ nq = 3; % number of quadrature points
 %                  2 = SSPRK(3,3) (Shu-Osher)
 %
 temporal_scheme = 1; % temporal discretization scheme
-CFL = 1.0;       % CFL number
+CFL = 0.9;       % CFL number
 ss_tol = 1.0e-5; % steady-state tolerance
 n_max = 1000;    % maximum number of time steps
-t_max = 5.0;    % max time to run
+t_max = 2.0;    % max time to run
 %--------------------------------------------------------------------------
 % FCT options
 %--------------------------------------------------------------------------
@@ -49,12 +49,13 @@ limiting_option = 2;  % limiter option
 %--------------------------------------------------------------------------
 % plot options
 %--------------------------------------------------------------------------
-compute_FCT        = true;  % compute and plot FCT solution?
+compute_low_order  = false; % compute and plot low-order solution?
 compute_high_order = true; % compute and plot high-order solution?
+compute_FCT        = false; % compute and plot FCT solution?
 plot_viscosity     = false; % plot viscosities?
 plot_low_order_transient  = false; % plot low-order transient?
-plot_high_order_transient = true; % plot high-order transient?
-plot_FCT_transient        = true; % plot FCT transient?
+plot_high_order_transient = false; % plot high-order transient?
+plot_FCT_transient        = false; % plot FCT transient?
 pausetime = 0.1;                   % time to pause for transient plots
 %--------------------------------------------------------------------------
 % physics options
@@ -62,13 +63,15 @@ pausetime = 0.1;                   % time to pause for transient plots
 % problemID: 0: custom - use parameters below
 %            1: void without source -> absorber without source
 %            2: void with source    -> absorber without source
-%            3: linear advection with periodic BC
+%            3: linear advection with periodic BC and exponential and
+%               square pulse IC
+%            4: linear advection with periodic BC and square pulse IC
 % IC_option: 0: zero
 %            1: exponential pulse
 %            2: exponential and square pulse
 %
 problemID = 1; % problem ID (if any)
-periodic_BC = false; % option for periodic BC; otherwise Dirichlet
+periodic_BC = true; % option for periodic BC; otherwise Dirichlet
 IC_option = 0; % initial solution option
 len    = 10;    % length of domain
 omega  = 1;    % omega
@@ -81,10 +84,10 @@ speed  = 1;    % advection speed
 %--------------------------------------------------------------------------
 % output options
 %--------------------------------------------------------------------------
-save_exact_solution      = true; % option to save exact solution 
-save_low_order_solution  = true; % option to save low-order solution
+save_exact_solution      = false; % option to save exact solution 
+save_low_order_solution  = false; % option to save low-order solution
 save_high_order_solution = true; % option to save high-order solution
-save_FCT_solution        = true; % option to save FCT solution
+save_FCT_solution        = false; % option to save FCT solution
 %-------------------------------------------------------------------------
 
 %% Setup
@@ -115,9 +118,20 @@ switch problemID
         qR     = 0;
         inc    = 1;
         speed  = 1;
-    case 3 % linear advection
+    case 3 % linear advection with exponential and square pulse IC
         periodic_BC = true;
         IC_option = 2;
+        len    = 1;
+        omega  = 1;
+        sigmaL = 0;
+        sigmaR = 0;
+        qL     = 0;
+        qR     = 0;
+        inc    = 0;
+        speed  = 1;
+    case 4 % linear advection with square pulse IC
+        periodic_BC = true;
+        IC_option = 3;
         len    = 1;
         omega  = 1;
         sigmaL = 0;
@@ -152,12 +166,13 @@ switch IC_option
         IC = @(x) exp(-200*(x-0.5).^2);
     case 2 % exponential and square pulse
         IC = @(x) exp(-200*(x-0.3).^2)+(x>=0.6).*(x<=0.8);
+    case 3 % square pulse
+        IC = @(x) (x>=0.4).*(x<0.7);
     otherwise
         error('Invalid IC option');
 end
 % compute initial solution
 u0 = IC(x);
-plot(x,u0,'+-');
 
 % get quadrature points and weights and evaluate basis functions
 [zq,wq]  = get_GL_quadrature(nq);
@@ -214,13 +229,14 @@ end
 
 % compute dt using CFL condition, even for implicit, just so that time
 % steps will be equal between explicit and implicit, for comparison
-dt = CFL*ML(1,1)/AL(1,1);
-for i = 2:n_dof
-    dt = min(dt, CFL*ML(i,i)/AL(i,i));
+max_speed_dx = 0.0;
+for i = 1:n_dof
+    max_speed_dx = max(max_speed_dx, AL(i,i)/ML(i,i));
 end
+dtCFL = CFL / max_speed_dx;
 
 % compute transient sytem matrices and modify for Dirichlet BC
-ALtr = ML + dt*theta*AL;
+ALtr = ML + dtCFL*theta*AL;
 ALtr_mod = ALtr;
 if ~periodic_BC
     ALtr_mod(1,:)=0; ALtr_mod(1,1)=1;
@@ -228,53 +244,69 @@ end
 
 %% Low-order Solution
 
-fprintf('\nComputing low-order solution...\n\n');
-u_old = u0;
-t = 0;
-for time_step = 1:n_max
-    fprintf('Time step %i: t = %f->%f',time_step,t,t+dt);
-    
-    switch temporal_scheme
-        case 1 % explicit Euler
-            uL = low_order_step(u_old,AL,ALtr_mod,ML,b,dt,theta,inc,periodic_BC);
-        case 2 % SSP3
-            % stage 1
-            u_old_stage = u_old;
-            uL_stage = low_order_step(u_old_stage,AL,ALtr_mod,ML,b,dt,theta,inc,periodic_BC);
-            % stage 2
-            u_old_stage = uL_stage;
-            uL_stage = low_order_step(u_old_stage,AL,ALtr_mod,ML,b,dt,theta,inc,periodic_BC);
-            % stage 3
-            u_old_stage = 0.75*u_old + 0.25*uL_stage;
-            uL_stage = low_order_step(u_old_stage,AL,ALtr_mod,ML,b,dt,theta,inc,periodic_BC);
-            % final combination
-            uL = 1/3*u_old + 2/3*uL_stage;
-        otherwise
-            error('Invalid temporal discretization scheme');
+if (compute_low_order)
+    fprintf('\nComputing low-order solution...\n\n');
+    u_old = u0;
+    t = 0;
+    reached_end_of_transient = false;
+    for time_step = 1:n_max
+        % shorten time step if necessary
+        if (t+dtCFL >= t_max)
+            dt = t_max - t;
+            reached_end_of_transient = true;
+        else
+            dt = dtCFL;
+            ALtr = ML + dt*theta*AL;
+            ALtr_mod = ALtr;
+            if ~periodic_BC
+                ALtr_mod(1,:)=0; ALtr_mod(1,1)=1;
+            end
+            reached_end_of_transient = false;
+        end
+        fprintf('Time step %i: t = %f->%f',time_step,t,t+dt);
+        
+        switch temporal_scheme
+            case 1 % explicit Euler
+                uL = low_order_step(u_old,AL,ALtr_mod,ML,b,dt,theta,inc,periodic_BC);
+            case 2 % SSP3
+                % stage 1
+                u_old_stage = u_old;
+                uL_stage = low_order_step(u_old_stage,AL,ALtr_mod,ML,b,dt,theta,inc,periodic_BC);
+                % stage 2
+                u_old_stage = uL_stage;
+                uL_stage = low_order_step(u_old_stage,AL,ALtr_mod,ML,b,dt,theta,inc,periodic_BC);
+                % stage 3
+                u_old_stage = 0.75*u_old + 0.25*uL_stage;
+                uL_stage = low_order_step(u_old_stage,AL,ALtr_mod,ML,b,dt,theta,inc,periodic_BC);
+                % final combination
+                uL = 1/3*u_old + 2/3*uL_stage;
+            otherwise
+                error('Invalid temporal discretization scheme');
+        end
+        
+        % test steady-state convergence
+        ss_err = norm(uL-u_old,2);
+        fprintf(' norm(u_new - u_old) = %e\n',ss_err);
+        finished = ss_err < ss_tol || reached_end_of_transient;
+        if (finished)
+            break;
+        end
+        
+        % plot
+        if (plot_low_order_transient)
+            plot(x,uL);
+            legend('Low-order','Location','Best');
+            axis([0 len 0 1]);
+            pause(pausetime);
+        end
+        
+        % reset u_old
+        u_old = uL;
+        t = t+dt;
     end
-    
-    % test steady-state convergence
-    ss_err = norm(uL-u_old,2);
-    fprintf(' norm(u_new - u_old) = %e\n',ss_err);
-    finished = ss_err < ss_tol || t >= t_max;
-    if (finished)
-        break;
-    end
-    
-    % plot
-    if (plot_low_order_transient)
-        plot(x,uL);
-        legend('Low-order','Location','Best');
-        axis([0 len 0 1]);
-        pause(pausetime);
-    end
-    
-    % reset u_old
-    u_old = uL;
-    t = t+dt;
+    % save uL for plotting because "uL" is used in FCT loop
+    uL_final = uL;
 end
-% save uL for plotting because "uL" is used in FCT loop
-uL_final = uL;
 
 %% High-order solution
 
@@ -283,32 +315,42 @@ if (compute_high_order)
     u_old   = u0;
     u_older = u0;
     t = 0;
+    dt_old = dtCFL;
+    reached_end_of_transient = false;
     for time_step = 1:n_max
+        % shorten time step if necessary
+        if (t+dtCFL >= t_max)
+            dt = t_max - t;
+            reached_end_of_transient = true;
+        else
+            dt = dtCFL;
+            reached_end_of_transient = false;
+        end
         fprintf('Time step %i: t = %f->%f',time_step,t,t+dt);
         
         switch temporal_scheme
             case 1 % explicit Euler
                 [uH,DH] = high_order_step(u_older,u_old,viscL,dx,...
-                    x,omega,sigma,source,inc,dt,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
+                    x,omega,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
                     A,b,MC,theta,time_step,high_order_scheme,periodic_BC);
             case 2 % SSP3
                 % stage 1
                 u_old_stage = u_old;
                 u_older_stage = u_older;
                 [uH_stage,DH] = high_order_step(u_older_stage,u_old_stage,viscL,dx,...
-                    x,omega,sigma,source,inc,dt,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
+                    x,omega,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
                     A,b,MC,theta,time_step,high_order_scheme,periodic_BC);
                 % stage 2
                 u_old_stage = uH_stage;
                 u_older_stage = u_older;
                 [uH_stage,DH] = high_order_step(u_older_stage,u_old_stage,viscL,dx,...
-                    x,omega,sigma,source,inc,dt,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
+                    x,omega,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
                     A,b,MC,theta,time_step,high_order_scheme,periodic_BC);
                 % stage 3
                 u_old_stage = 0.75*u_old + 0.25*uH_stage;
                 u_older_stage = u_older;
                 [uH_stage,DH] = high_order_step(u_older_stage,u_old_stage,viscL,dx,...
-                    x,omega,sigma,source,inc,dt,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
+                    x,omega,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
                     A,b,MC,theta,time_step,high_order_scheme,periodic_BC);
                 % final combination
                 uH = 1/3*u_old + 2/3*uH_stage;
@@ -319,7 +361,7 @@ if (compute_high_order)
         % test steady-state convergence
         ss_err = norm(uH-u_old,2);
         fprintf(' norm(u_new - u_old) = %e\n',ss_err);
-        finished = ss_err < ss_tol || t >= t_max;
+        finished = ss_err < ss_tol || reached_end_of_transient;
         if (finished)
             break;
         end
@@ -334,6 +376,7 @@ if (compute_high_order)
         % reset u_old and u_older and advance time
         u_older = u_old;
         u_old   = uH;
+        dt_old = dt;
         t = t+dt;
     end
     
@@ -348,6 +391,7 @@ if (compute_FCT)
     u_old   = u0;
     u_older = u0;
     t = 0;
+    dt_old = dtCFL;
     for time_step = 1:n_max
         fprintf('Time step %i: t = %f->%f\n',time_step,t,t+dt);
         
@@ -355,7 +399,7 @@ if (compute_FCT)
             case 1 % explicit Euler
                 % perform high-order step
                 [uH,DH] = high_order_step(u_older,u_old,viscL,dx,...
-                    x,omega,sigma,source,inc,dt,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
+                    x,omega,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
                     A,b,MC,theta,time_step,high_order_scheme,periodic_BC);
 
                 % perform FCT step
@@ -366,7 +410,7 @@ if (compute_FCT)
                 u_old_stage = u_old;
                 u_older_stage = u_older;
                 [uH_stage,DH] = high_order_step(u_older_stage,u_old_stage,viscL,dx,...
-                    x,omega,sigma,source,inc,dt,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
+                    x,omega,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
                     A,b,MC,theta,time_step,high_order_scheme,periodic_BC);
                 uFCT_stage = FCT_step_explicit(u_old_stage,uH_stage,dt,ML,MC,AL,DH,DL,b,inc,speed,...
                     sigma_min,sigma_max,q_min,q_max,DMP_option,limiting_option,periodic_BC);
@@ -375,7 +419,7 @@ if (compute_FCT)
                 u_old_stage = uFCT_stage;
                 u_older_stage = u_older;
                 [uH_stage,DH] = high_order_step(u_older_stage,u_old_stage,viscL,dx,...
-                    x,omega,sigma,source,inc,dt,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
+                    x,omega,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
                     A,b,MC,theta,time_step,high_order_scheme,periodic_BC);
                 uFCT_stage = FCT_step_explicit(u_old_stage,uH_stage,dt,ML,MC,AL,DH,DL,b,inc,speed,...
                     sigma_min,sigma_max,q_min,q_max,DMP_option,limiting_option,periodic_BC);
@@ -384,7 +428,7 @@ if (compute_FCT)
                 u_old_stage = 0.75*u_old + 0.25*uFCT_stage;
                 u_older_stage = u_older;
                 [uH_stage,DH] = high_order_step(u_older_stage,u_old_stage,viscL,dx,...
-                    x,omega,sigma,source,inc,dt,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
+                    x,omega,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
                     A,b,MC,theta,time_step,high_order_scheme,periodic_BC);
                 uFCT_stage = FCT_step_explicit(u_old_stage,uH_stage,dt,ML,MC,AL,DH,DL,b,inc,speed,...
                     sigma_min,sigma_max,q_min,q_max,DMP_option,limiting_option,periodic_BC);
@@ -413,6 +457,7 @@ if (compute_FCT)
         % reset u_old and u_older and advance time
         u_older = u_old;
         u_old   = uFCT;
+        dt_old = dt;
         t = t+dt;
     end
 end
@@ -428,8 +473,10 @@ plot(xx,u_exact,'k-');
 legend_entries = char('Exact');
 
 % plot low-order solution
-plot(x,uL_final,'r-s');
-legend_entries = char(legend_entries,'Low-order');
+if (compute_low_order)
+    plot(x,uL_final,'r-s');
+    legend_entries = char(legend_entries,'Low-order');
+end
 
 % plot high-order solution
 if (compute_high_order)
@@ -487,8 +534,8 @@ end
 
 % save exact solution
 if (save_exact_solution)
-    exact_file = 'output/uexact.csv';
-    csvwrite(exact_file,[xx,u_exact]);
+    exact_file = 'output/uexact.txt';
+    dlmwrite(exact_file,[xx,u_exact],' ');
 end
 
 % determine string to be appended to results for time discretization
@@ -503,8 +550,10 @@ end
 
 % save low-order solution
 if (save_low_order_solution)
-    low_order_file = ['output/uL_',time_string,'.csv'];
-    csvwrite(low_order_file,[x,uL_final]);
+    if (compute_low_order)
+        low_order_file = ['output/uL_',time_string,'.txt'];
+        dlmwrite(low_order_file,[x,uL_final],' ');
+    end
 end
 
 % determine string to be appended for high-order scheme
@@ -519,12 +568,16 @@ end
 
 % save high-order solution
 if (save_high_order_solution)
-    high_order_file = ['output/uH_',high_order_string,'_',time_string,'.csv'];
-    csvwrite(high_order_file,[x,uH_final]);
+    if (compute_high_order)
+        high_order_file = ['output/uH_',high_order_string,'_',time_string,'.txt'];
+        dlmwrite(high_order_file,[x,uH_final],' ');
+    end
 end
 
 % save FCT solution
 if (save_FCT_solution)
-    FCT_file = ['output/uFCT_',high_order_string,'_',time_string,'.csv'];
-    csvwrite(FCT_file,[x,uFCT]);
+    if (compute_FCT)
+        FCT_file = ['output/uFCT_',high_order_string,'_',time_string,'.txt'];
+        dlmwrite(FCT_file,[x,uFCT],' ');
+    end
 end

@@ -3,11 +3,11 @@ clear; clc; close all;
 
 %% User options
 
-plot_low_order  = true;
-plot_high_order = true;
+plot_low_order  = false;
+plot_high_order = false;
 plot_FCT        = true;
 
-include_Gal = false;
+include_Gal = true;
 include_EV  = true;
 
 include_FE      = false;
@@ -16,7 +16,7 @@ include_BE      = false;
 include_SSPRK33 = true;
 
 save_plot = true;
-output_file = 'output/source.pdf';
+output_file = 'output/zeroincoming_sourceinvoid_FCT_comp.pdf';
 
 %% Plot
 

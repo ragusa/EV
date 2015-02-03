@@ -16,8 +16,8 @@ end
 % compute domain average of entropy
 E_integral = 0;
 for iel = 1:nel
-    u_local = v' * u_new(g(iel,:)); % solution evaluated at quad. points
-    Eq = entropy(u_local);
+    u_new_local = v' * u_new(g(iel,:)); % solution evaluated at quad. points
+    Eq = entropy(u_new_local);
     E_integral = E_integral + dot(wq,Eq)*Jac(iel);
 end
 L = x(end)-x(1);        % length of domain
@@ -26,8 +26,8 @@ E_avg = E_integral / L; % domain average of entropy
 % compute max entropy deviation in domain for normalization constant
 E_dev_max = 0;
 for iel = 1:nel
-    u_local = v' * u_new(g(iel,:)); % solution evaluated at quad. points
-    Eq = entropy(u_local);
+    u_new_local = v' * u_new(g(iel,:)); % solution evaluated at quad. points
+    Eq = entropy(u_new_local);
     E_dev_max = max(E_dev_max, max(abs(Eq-E_avg)));
 end
 
@@ -66,18 +66,18 @@ for iel = 1:nel
     % evaluate new and old solution at quadrature points
     u_new_local_nodes = u_new(g(iel,:));
     u_old_local_nodes = u_old(g(iel,:));
-    u_local     = v' * u_new_local_nodes;
+    u_new_local     = v' * u_new_local_nodes;
     u_old_local = v' * u_old_local_nodes;
-    dudx_local  = dvdz' * u_new(g(iel,:)) / Jac(iel);
+    dudx_new_local  = dvdz' * u_new(g(iel,:)) / Jac(iel);
     % evaluate entropy and derivative
-    E_new = entropy(u_local);
+    E_new = entropy(u_new_local);
     E_old = entropy(u_old_local);
-    dEdu_old = entropy_deriv(u_old_local);
-    dEdx_old = dEdu_old.*dudx_local;
+    dEdu_new = entropy_deriv(u_new_local);
+    dEdx_new = dEdu_new.*dudx_new_local;
     
     % compute maximum entropy residual at quadrature points
-    R = (E_new-E_old)/dt + mu*dEdx_old +...
-        dEdu_old.*(sigma(iel)*u_local - source(iel));
+    R = (E_new-E_old)/dt + mu*dEdx_new +...
+        dEdu_new.*(sigma(iel)*u_new_local - source(iel));
     R_max = max(abs(R));
     
     % compute max jump

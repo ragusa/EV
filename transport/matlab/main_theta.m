@@ -4,7 +4,7 @@ close all; clear; clc;
 %--------------------------------------------------------------------------
 % mesh options
 %--------------------------------------------------------------------------
-nel = 50; % number of elements
+nel = 32; % number of elements
 %--------------------------------------------------------------------------
 % method options
 %--------------------------------------------------------------------------
@@ -14,7 +14,7 @@ nel = 50; % number of elements
 %                    2 = Entropy viscosity
 %
 low_order_scheme  = 2; % low-order scheme option
-high_order_scheme = 2; % high-order scheme option
+high_order_scheme = 1; % high-order scheme option
 cE = 1; % coefficient for entropy residual in entropy viscosity
 cJ = cE; % coefficient for jumps in entropy viscosity
 entropy       = @(u) 0.5*u.^2; % entropy function
@@ -27,7 +27,7 @@ nq = 3; % number of quadrature points
 % time options
 %--------------------------------------------------------------------------
 theta = 0.0;     % theta for theta time integration scheme (0 = FE, 1 = BE)
-CFL = 1.0;       % CFL number
+CFL = 0.9;       % CFL number
 ss_tol = 1.0e-5; % steady-state tolerance
 n_max = 1000;    % maximum number of time steps
 t_max = 10.0;    % max time to run
@@ -41,6 +41,7 @@ t_max = 10.0;    % max time to run
 %                  1 = set limiting coefficients to 1 (full correction)
 %                  2 = use Zalesak's limiter
 %                  3 = use Josh's limiter
+%                  4 = use Josh's upwind limiter
 %
 DMP_option = 1;        % DMP option
 limiting_option = 2;   % limiter option
@@ -50,8 +51,8 @@ dc_tol = 1e-4;         % defect-correction tolerance for discrete L2 norm
 %--------------------------------------------------------------------------
 % plot options
 %--------------------------------------------------------------------------
-compute_FCT        = false;  % compute and plot FCT solution?
-compute_high_order = true;  % compute and plot high-order solution?
+compute_FCT        = true;  % compute and plot FCT solution?
+compute_high_order = false;  % compute and plot high-order solution?
 plot_viscosity     = false; % plot viscosities?
 plot_low_order_transient  = false; % plot low-order transient?
 plot_high_order_transient = true; % plot high-order transient?
@@ -309,7 +310,7 @@ if (compute_FCT)
         
         % perform high-order step
         [uH,DH] = high_order_step(u_older,u_old,viscL,dx,...
-            x,omega,sigma,source,inc,dt,v,dvdz,zq,wq,Jac,cE,cJ,...
+            x,omega,sigma,source,inc,dt,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
             A,b,MC,theta,time_step,high_order_scheme,periodic_BC);
         
         % compute FCT solution
@@ -356,8 +357,8 @@ if (compute_FCT)
             end
             [Qplus,Qminus] = compute_Q(...
                 u_old,uFCT,ML,Wplus,Wminus,AL,b,dt,theta);
-            Qplus = max(Qplus,0);
-            Qminus = min(Qminus,0);
+%             Qplus = max(Qplus,0);
+%             Qminus = min(Qminus,0);
             
             % compute limited fluxes
             switch limiting_option
@@ -369,6 +370,8 @@ if (compute_FCT)
                     flim = limiter_zalesak(F,Qplus,Qminus,periodic_BC);
                 case 3 % Josh's limiter
                     flim = limiter_josh(F,Qplus,Qminus,periodic_BC);
+                case 4 % Josh's limiter
+                    flim = limiter_josh_upwind(F,Qplus,Qminus);
                 otherwise
                     error('Invalid limiting option');
             end
@@ -409,11 +412,10 @@ if (compute_FCT)
             plot(x,Wminus,'k:o');
             hold on;
             plot(x,Wplus,'k:x');
-            plot(x,uL,'r-^');
             plot(x,uH,'b-+');
             plot(x,uFCT,'g-s');
             hold off;
-            legend('W-','W+','Low','High','FCT','Location','Best');
+            legend('W-','W+','High','FCT','Location','Best');
             pause(pausetime);
         end
         
@@ -456,6 +458,8 @@ if (compute_FCT)
             limiter_string = 'Zalesak limiter';
         case 3 % Josh limiter
             limiter_string = 'Josh limiter';
+        case 4 % Josh limiter
+            limiter_string = 'Josh limiter upwind';
         otherwise
             error('Invalid limiting option');
     end

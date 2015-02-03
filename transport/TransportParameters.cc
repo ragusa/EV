@@ -56,7 +56,7 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
          "Option for scheme to be used");
    prm.declare_entry("Entropy function string", "0.5*u*u", Patterns::Anything(),
          "String for entropy function");
-   prm.declare_entry("Entropy viscosity coefficient", "1.0", Patterns::Double(),
+   prm.declare_entry("Entropy residual coefficient", "1.0", Patterns::Double(),
          "Coefficient for the entropy viscosity");
    prm.declare_entry("Jump coefficient", "1.0", Patterns::Double(),
          "Coefficient for jumps used with entropy viscosity");
@@ -97,7 +97,7 @@ void TransportParameters::get_parameters(ParameterHandler &prm) {
    preconditioner_option = prm.get_integer("Preconditioner option");
    scheme_option = prm.get_integer("Scheme option");
    entropy_string = prm.get("Entropy function string");
-   entropy_residual_coefficient = prm.get_double("Entropy viscosity coefficient");
+   entropy_residual_coefficient = prm.get_double("Entropy residual coefficient");
    jump_coefficient = prm.get_double("Jump coefficient");
    output_meshes = prm.get_bool("Output mesh");
    is_steady_state = prm.get_bool("Is steady state");

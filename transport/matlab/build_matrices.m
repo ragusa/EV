@@ -60,7 +60,9 @@ if low_order_scheme == 2 || high_order_scheme == 2
         for i = 1:dofs_per_cell
             for j = 1:dofs_per_cell
                 if (i ~= j)
-                    viscL(iel) = max(viscL(iel),-abs(A(i,j))/visc_bilin(i,j));
+                    ii = g(iel,i);
+                    jj = g(iel,j);
+                    viscL(iel) = max(viscL(iel),-max(0,A(ii,jj))/visc_bilin(ii,jj));
                 end
             end
         end

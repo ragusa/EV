@@ -156,7 +156,8 @@ class TransportProblem {
 
       // time functions and data
       double dt_nominal;
-      void enforce_CFL_condition(double &dt, double &CFL) const;
+      double CFL_nominal;
+      double enforce_CFL_condition(double &dt);
       double minimum_cell_diameter;
 
       // low-order max-principle viscosity functions and data
@@ -165,7 +166,6 @@ class TransportProblem {
       void compute_viscous_matrix(const Vector<double> &viscosity,
                                   SparseMatrix<double> &viscous_matrix);
       SparsityPattern unconstrained_sparsity_pattern;
-      SparseMatrix<double> max_principle_viscosity_numerators;
       SparseMatrix<double> viscous_bilinear_forms;
 
       // high-order max-principle viscosity functions and data
