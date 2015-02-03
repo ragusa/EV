@@ -26,5 +26,5 @@ my $output_file = "solutions_$problem_ID.pdf";
 # call gnuplot
 chdir "plotscripts";
 system("gnuplot -e 'problem_ID=$problem_ID' solutions.gp");
-#system("sleep 1");
-#system("evince $output_file");
+system("sleep 1");
+system("evince $output_file");

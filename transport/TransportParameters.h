@@ -26,6 +26,7 @@ class TransportParameters {
     unsigned int preconditioner_option; // preconditioner option
     unsigned int scheme_option; // option for scheme used
     std::string entropy_string; // string for entropy function
+    std::string entropy_derivative_string; // string for entropy derivative function
     double entropy_residual_coefficient; // value of entropy residual coefficient
     double jump_coefficient; // value of jump coefficient
     bool output_meshes; // option to output meshes as .eps files

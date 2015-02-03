@@ -816,6 +816,7 @@ void TransportProblem<dim>::run()
                                cross_section_function,
                                source_function,
                                parameters.entropy_string,
+                               parameters.entropy_derivative_string,
                                parameters.entropy_residual_coefficient,
                                parameters.jump_coefficient,
                                domain_volume);                      
@@ -830,7 +831,6 @@ void TransportProblem<dim>::run()
          VectorTools::interpolate(dof_handler,
                                   initial_conditions,
                                   new_solution);
-         // distribute hanging node and Dirichlet constraints to intial solution
          constraints.distribute(new_solution);
 
          // if last cycle, output initial conditions if user requested
@@ -991,26 +991,9 @@ void TransportProblem<dim>::run()
                   switch (parameters.time_integrator_option)
                   {
                      case 1: { // forward Euler
-                        // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
-                        system_rhs = 0;
-                        system_rhs.add(dt, ss_rhs); //       now, system_rhs = dt*(ss_rhs)
-                        consistent_mass_matrix.vmult(tmp_vector, old_solution);
-                        system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
-                        inviscid_ss_matrix.vmult(tmp_vector, old_solution);
-                        system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
-            
-                        // add viscous matrix to rhs
-                        high_order_viscous_matrix.vmult(tmp_vector, old_solution);
-                        system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old)
-      
-                        // solve the linear system M*u_new = system_rhs
-                        system_matrix.copy_from(consistent_mass_matrix);
-                        apply_Dirichlet_BC(system_matrix, new_solution, system_rhs); // apply Dirichlet BC
-                        solve_linear_system(system_matrix, system_rhs);
-      
-                        // distribute constraints
-                        constraints.distribute(new_solution);
-std::cout<<"l2norm="<<new_solution.l2_norm()<<std::endl;
+                        high_order_ss_matrix.copy_from(inviscid_ss_matrix);
+                        high_order_ss_matrix.add(1.0,high_order_viscous_matrix);
+                        transient_step(old_solution,old_solution,consistent_mass_matrix,high_order_ss_matrix,dt,t_old);
 
                         break;
                      } case 2: { // SSPRK33

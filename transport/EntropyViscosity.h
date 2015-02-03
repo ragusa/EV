@@ -2,34 +2,18 @@
 #define EntropyViscosity_cc
 
 #include <deal.II/base/quadrature_lib.h>
-//#include <deal.II/base/logstream.h>
 #include <deal.II/base/function_parser.h>
-//#include <deal.II/base/tensor_function.h>
 
 #include <deal.II/lac/vector.h>
-//#include <deal.II/lac/full_matrix.h>
 
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
-//#include <deal.II/grid/tria_boundary_lib.h>
 
 #include <deal.II/dofs/dof_handler.h>
-//#include <deal.II/dofs/dof_accessor.h>
-//#include <deal.II/dofs/dof_tools.h>
 
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_q.h>
-//#include <deal.II/fe/mapping_q.h>
-
-//#include <deal.II/numerics/vector_tools.h>
-//#include <deal.II/numerics/matrix_tools.h>
-
-//#include <fstream>
-//#include <iostream>
-//#include <sstream>
-//#include <cstdlib>
-//#include <algorithm>
 
 using namespace dealii;
 
@@ -47,6 +31,7 @@ class EntropyViscosity {
                        const FunctionParser<dim> &cross_section_function,
                        const FunctionParser<dim> &source_function,
                        const std::string     &entropy_string,
+                       const std::string     &entropy_derivative_string,
                        const double          &entropy_residual_coefficient,
                        const double          &jump_coefficient,
                        const double          &domain_volume);
@@ -81,7 +66,9 @@ class EntropyViscosity {
 
       // entropy viscosity functions and data
       FunctionParser<dim> entropy_function;
+      FunctionParser<dim> entropy_derivative_function;
       std::string entropy_string;
+      std::string entropy_derivative_string;
       double entropy_residual_coefficient;
       double jump_coefficient;
       double domain_volume;

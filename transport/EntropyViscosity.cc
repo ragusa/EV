@@ -11,6 +11,7 @@ EntropyViscosity<dim>::EntropyViscosity(
    const FunctionParser<dim> &cross_section_function,
    const FunctionParser<dim> &source_function,
    const std::string     &entropy_string,
+   const std::string     &entropy_derivative_string,
    const double          &entropy_residual_coefficient,
    const double          &jump_coefficient,
    const double          &domain_volume) :                      
@@ -29,6 +30,7 @@ EntropyViscosity<dim>::EntropyViscosity(
       cross_section_function(&cross_section_function),
       source_function(&source_function),
       entropy_string(entropy_string),
+      entropy_derivative_string(entropy_derivative_string),
       entropy_residual_coefficient(entropy_residual_coefficient),
       jump_coefficient(jump_coefficient),
       domain_volume(domain_volume),
@@ -37,9 +39,7 @@ EntropyViscosity<dim>::EntropyViscosity(
    // initialize entropy function
    std::map<std::string,double> constants;
    entropy_function.initialize("u",entropy_string,constants,false);
-
-   // initialize transport direction
-   //transport_direction = transport_direction;
+   entropy_derivative_function.initialize("u",entropy_derivative_string,constants,false);
 }
 
 /** \brief destructor
@@ -153,26 +153,19 @@ Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<dou
       // reinitialize FE values
       fe_values.reinit(cell);
 
-      // get previous time step (n) values and gradients
+      // get solution values and gradients
       fe_values[flux].get_function_values   (new_solution, new_values);
-      fe_values[flux].get_function_gradients(new_solution, new_gradients);
-      // get previous previous time step (n-1) values
       fe_values[flux].get_function_values   (old_solution, old_values);
+      fe_values[flux].get_function_gradients(new_solution, new_gradients);
    
-      // get quadrature points on cell
+      // get cross section and source values for all quadrature points
       points = fe_values.get_quadrature_points();
-
-      // get source values for all quadrature points
-      for (unsigned int q = 0; q < n_q_points_cell; ++q)
-         source_values[q] = (*source_function).value(points[q]);
-
-      // get cross section values for all quadrature points
-      for (unsigned int q = 0; q < n_q_points_cell; ++q)
-         cross_section_values[q] = (*cross_section_function).value(points[q]);
+      (*source_function).value_list(points,source_values);
+      (*cross_section_function).value_list(points,cross_section_values);
 
       // compute max entropy residual in cell
       //----------------------------------------------------------------------------
-      // compute entropy values at each quadrature point on cell. The entropy definition s = 0.5*u^2 is used.
+      // compute entropy values at each quadrature point on cell
       for (unsigned int q = 0; q < n_q_points_cell; ++q) {
          new_entropy_values[q] = 0.5 * new_values[q] * new_values[q];
          old_entropy_values[q] = 0.5 * old_values[q] * old_values[q];

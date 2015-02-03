@@ -29,7 +29,8 @@ set Time integrator option = 1
 #     2: high-order EV scheme
 #     3: FCT scheme
 set Scheme option = 2
-set Entropy function string = 0.5*u*u
+set Entropy string            = 0.5*u*u
+set Entropy derivative string = u
 set Entropy residual coefficient = 1.0
 set Jump coefficient = 0.0
 set Do not limit = true

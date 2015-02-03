@@ -13,6 +13,7 @@ TransportParameters::TransportParameters() :
       preconditioner_option(1),
       scheme_option(0),
       entropy_string("0.5*u*u"),
+      entropy_derivative_string("u"),
       entropy_residual_coefficient(1.0),
       jump_coefficient(1.0),
       output_meshes(false),
@@ -54,8 +55,10 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
          "Option for preconditioner for linear solver");
    prm.declare_entry("Scheme option", "0", Patterns::Integer(),
          "Option for scheme to be used");
-   prm.declare_entry("Entropy function string", "0.5*u*u", Patterns::Anything(),
+   prm.declare_entry("Entropy string", "0.5*u*u", Patterns::Anything(),
          "String for entropy function");
+   prm.declare_entry("Entropy derivative string", "0.5*u*u", Patterns::Anything(),
+         "String for entropy derivative function");
    prm.declare_entry("Entropy residual coefficient", "1.0", Patterns::Double(),
          "Coefficient for the entropy viscosity");
    prm.declare_entry("Jump coefficient", "1.0", Patterns::Double(),
@@ -96,7 +99,8 @@ void TransportParameters::get_parameters(ParameterHandler &prm) {
    solver_option = prm.get_integer("Linear solver option");
    preconditioner_option = prm.get_integer("Preconditioner option");
    scheme_option = prm.get_integer("Scheme option");
-   entropy_string = prm.get("Entropy function string");
+   entropy_string = prm.get("Entropy string");
+   entropy_derivative_string = prm.get("Entropy derivative string");
    entropy_residual_coefficient = prm.get_double("Entropy residual coefficient");
    jump_coefficient = prm.get_double("Jump coefficient");
    output_meshes = prm.get_bool("Output mesh");
