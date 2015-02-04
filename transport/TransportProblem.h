@@ -12,9 +12,7 @@
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/sparse_matrix.h>
-#include <deal.II/lac/solver_bicgstab.h>
 #include <deal.II/lac/sparse_direct.h>
-#include <deal.II/lac/precondition.h>
 #include <deal.II/lac/constraint_matrix.h>
 
 #include <deal.II/grid/tria.h>
@@ -47,6 +45,7 @@
 
 #include "TransportParameters.h"
 #include "EntropyViscosity.h"
+#include "LinearSolver.h"
 
 using namespace dealii;
 
@@ -71,10 +70,9 @@ class TransportProblem {
                           const SparseMatrix<double> &mass_matrix,
                           const SparseMatrix<double> &ss_matrix,
                           const double               &dt,
-                          const double               &t_eval);
+                          const double               &t_eval,
+                          const LinearSolver         &linear_solver);
       void solve_steady_state();
-      void solve_linear_system(const SparseMatrix<double> &A,
-                               const Vector<double> &b);
       void refine_grid();
 
       // post-processing

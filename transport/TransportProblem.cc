@@ -689,52 +689,6 @@ void TransportProblem<dim>::compute_low_order_viscosity()
    }
 }
 
-/** \brief solve the linear system
- */
-template<int dim>
-void TransportProblem<dim>::solve_linear_system(const SparseMatrix<double> &A,
-                                                const Vector<double>       &b)
-{
-   switch (parameters.solver_option) {
-      case 1: {
-         SparseDirectUMFPACK A_direct;
-         A_direct.initialize(A);
-         A_direct.vmult(new_solution, b);
-         break;
-      }
-      case 2: {
-         SolverControl solver_control(1000, 1e-6);
-         SolverBicgstab<> solver(solver_control);
-
-         switch (parameters.preconditioner_option) {
-            case 1: {
-               solver.solve(A, new_solution, b,
-                     PreconditionIdentity());
-               break;
-            }
-            case 2: {
-               PreconditionJacobi<> preconditioner;
-               preconditioner.initialize(A, 1.0);
-               solver.solve(A, new_solution, b,
-                     preconditioner);
-               break;
-            }
-            default: {
-               Assert(false,ExcNotImplemented());
-               break;
-            }
-         }
-         break;
-      }
-      default: {
-         Assert(false,ExcNotImplemented());
-         break;
-      }
-   }
-
-   constraints.distribute(new_solution);
-}
-
 /** \brief refine the grid
  */
 template<int dim>
@@ -821,11 +775,13 @@ void TransportProblem<dim>::run()
                                parameters.jump_coefficient,
                                domain_volume);                      
 
+      // create linear solver object
+      LinearSolver linear_solver(parameters.linear_solver_option, constraints);
+
       // if problem is steady-state, then just do one solve; else loop over time
-      if (parameters.is_steady_state) {
-         // solve for steady-state solution
+      if (parameters.is_steady_state) { // run steady-state problem
          solve_steady_state();
-      } else {
+      } else {                          // run transient problem
          // interpolate initial conditions
          initial_conditions.set_time(0.0);
          VectorTools::interpolate(dof_handler,
@@ -875,13 +831,12 @@ void TransportProblem<dim>::run()
             // assembly of the transient residual.
             old_solution = new_solution;
 
-            // shorten dt if new t would overshoot t_end
+            // shorten dt if new time would overshoot end time, then update t_new
             double dt = dt_nominal;
             if (t_old + dt >= t_end) {
                dt = t_end - t_old;
                in_transient = false;
             }
-            // increment time
             t_new = t_old + dt;
             std::cout << "   time step " << n << ": t = " << t_old << "->" << t_new << std::endl;
 
@@ -891,16 +846,16 @@ void TransportProblem<dim>::run()
                   switch (parameters.time_integrator_option)
                   {
                      case 1: { // forward Euler
-                        transient_step(old_solution,old_solution,consistent_mass_matrix,inviscid_ss_matrix,dt,t_old);
+                        transient_step(old_solution,old_solution,consistent_mass_matrix,inviscid_ss_matrix,dt,t_old,linear_solver);
 
                         break;
                      } case 2: { // SSPRK22
                         // stage 1
                         tmp_vector = old_solution;
-                        transient_step(tmp_vector,tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt,t_old);
+                        transient_step(tmp_vector,tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt,t_old,linear_solver);
                         // stage 2
                         tmp_vector = new_solution;
-                        transient_step(tmp_vector,tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt,t_new);
+                        transient_step(tmp_vector,tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt,t_new,linear_solver);
                         // final combination
                         tmp_vector = new_solution;
                         new_solution = 0;
@@ -911,14 +866,14 @@ void TransportProblem<dim>::run()
                      } case 3: { // SSPRK33
                         // stage 1
                         tmp_vector = old_solution;
-                        transient_step(tmp_vector,tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt,t_old);
+                        transient_step(tmp_vector,tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt,t_old,linear_solver);
                         // stage 2
                         tmp_vector = new_solution;
-                        transient_step(tmp_vector,tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt,t_new);
+                        transient_step(tmp_vector,tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt,t_new,linear_solver);
                         // stage 3
                         tmp_vector = 0;
                         tmp_vector.add(0.75,old_solution,0.25,new_solution);
-                        transient_step(tmp_vector,tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt,t_old+0.5*dt);
+                        transient_step(tmp_vector,tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt,t_old+0.5*dt,linear_solver);
                         // final combination
                         tmp_vector = new_solution;
                         new_solution = 0;
@@ -937,16 +892,16 @@ void TransportProblem<dim>::run()
                   switch (parameters.time_integrator_option)
                   {
                      case 1: { // forward Euler
-                        transient_step(old_solution,old_solution,lumped_mass_matrix,low_order_ss_matrix,dt,t_old);
+                        transient_step(old_solution,old_solution,lumped_mass_matrix,low_order_ss_matrix,dt,t_old,linear_solver);
 
                         break;
                      } case 2: { // SSPRK22
                         // stage 1
                         tmp_vector = old_solution;
-                        transient_step(tmp_vector,tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt,t_old);
+                        transient_step(tmp_vector,tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt,t_old,linear_solver);
                         // stage 2
                         tmp_vector = new_solution;
-                        transient_step(tmp_vector,tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt,t_new);
+                        transient_step(tmp_vector,tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt,t_new,linear_solver);
                         // final combination
                         tmp_vector = new_solution;
                         new_solution = 0;
@@ -957,14 +912,14 @@ void TransportProblem<dim>::run()
                      } case 3: { // SSPRK33
                         // stage 1
                         tmp_vector = old_solution;
-                        transient_step(tmp_vector,tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt,t_old);
+                        transient_step(tmp_vector,tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt,t_old,linear_solver);
                         // stage 2
                         tmp_vector = new_solution;
-                        transient_step(tmp_vector,tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt,t_new);
+                        transient_step(tmp_vector,tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt,t_new,linear_solver);
                         // stage 3
                         tmp_vector = 0;
                         tmp_vector.add(0.75,old_solution,0.25,new_solution);
-                        transient_step(tmp_vector,tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt,t_old+0.5*dt);
+                        transient_step(tmp_vector,tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt,t_old+0.5*dt,linear_solver);
                         // final combination
                         tmp_vector = new_solution;
                         new_solution = 0;
@@ -993,7 +948,7 @@ void TransportProblem<dim>::run()
                      case 1: { // forward Euler
                         high_order_ss_matrix.copy_from(inviscid_ss_matrix);
                         high_order_ss_matrix.add(1.0,high_order_viscous_matrix);
-                        transient_step(old_solution,old_solution,consistent_mass_matrix,high_order_ss_matrix,dt,t_old);
+                        transient_step(old_solution,old_solution,consistent_mass_matrix,high_order_ss_matrix,dt,t_old,linear_solver);
 
                         break;
                      } case 2: { // SSPRK33
@@ -1131,7 +1086,8 @@ void TransportProblem<dim>::transient_step(const Vector<double>       &old_solut
                                            const SparseMatrix<double> &mass_matrix,
                                            const SparseMatrix<double> &ss_matrix,
                                            const double               &dt,
-                                           const double               &t_eval)
+                                           const double               &t_eval,
+                                           const LinearSolver         &linear_solver)
 {
    Vector<double> tmp_vector(n_dofs);
 
@@ -1150,7 +1106,7 @@ void TransportProblem<dim>::transient_step(const Vector<double>       &old_solut
    // solve the linear system M*u_new = system_rhs
    system_matrix.copy_from(mass_matrix);
    apply_Dirichlet_BC(system_matrix, new_solution, system_rhs); // apply Dirichlet BC
-   solve_linear_system(system_matrix, system_rhs);
+   linear_solver.solve(system_matrix, system_rhs, new_solution);
      
    // distribute constraints
    constraints.distribute(new_solution);
@@ -1184,7 +1140,9 @@ void TransportProblem<dim>::solve_steady_state()
    // enforce Dirichlet BC on total system matrix
    apply_Dirichlet_BC(system_matrix, new_solution, ss_rhs);
    // solve the linear system: ss_matrix*new_solution = ss_rhs
-   solve_linear_system(system_matrix, ss_rhs);
+   //solve_linear_system(system_matrix, ss_rhs);
+   LinearSolver linear_solver(parameters.linear_solver_option, constraints);
+   linear_solver.solve(system_matrix, ss_rhs, new_solution);
    // distribute constraints
    constraints.distribute(new_solution);
 

@@ -22,8 +22,7 @@ class TransportParameters {
     bool use_adaptive_mesh_refinement; // option to use adaptive mesh refinement
     unsigned int n_refinement_cycles; // number of refinement cycles
     unsigned int initial_refinement_level; // initial level of refinement
-    unsigned int solver_option; // solver option
-    unsigned int preconditioner_option; // preconditioner option
+    unsigned int linear_solver_option; // linear solver option
     unsigned int scheme_option; // option for scheme used
     std::string entropy_string; // string for entropy function
     std::string entropy_derivative_string; // string for entropy derivative function

@@ -9,8 +9,7 @@ TransportParameters::TransportParameters() :
       use_adaptive_mesh_refinement(false),
       n_refinement_cycles(5),
       initial_refinement_level(2),
-      solver_option(1),
-      preconditioner_option(1),
+      linear_solver_option(1),
       scheme_option(0),
       entropy_string("0.5*u*u"),
       entropy_derivative_string("u"),
@@ -51,8 +50,6 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
          "Number of refinements for first mesh refinement cycle");
    prm.declare_entry("Linear solver option", "1", Patterns::Integer(),
          "Option for linear solver");
-   prm.declare_entry("Preconditioner option", "1", Patterns::Integer(),
-         "Option for preconditioner for linear solver");
    prm.declare_entry("Scheme option", "0", Patterns::Integer(),
          "Option for scheme to be used");
    prm.declare_entry("Entropy string", "0.5*u*u", Patterns::Anything(),
@@ -96,8 +93,7 @@ void TransportParameters::get_parameters(ParameterHandler &prm) {
    use_adaptive_mesh_refinement = prm.get_bool("Use adaptive mesh refinement");
    n_refinement_cycles = prm.get_integer("Number of refinement cycles");
    initial_refinement_level = prm.get_integer("Initial refinement level");
-   solver_option = prm.get_integer("Linear solver option");
-   preconditioner_option = prm.get_integer("Preconditioner option");
+   linear_solver_option = prm.get_integer("Linear solver option");
    scheme_option = prm.get_integer("Scheme option");
    entropy_string = prm.get("Entropy string");
    entropy_derivative_string = prm.get("Entropy derivative string");
