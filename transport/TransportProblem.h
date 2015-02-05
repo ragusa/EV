@@ -46,6 +46,7 @@
 #include "TransportParameters.h"
 #include "EntropyViscosity.h"
 #include "LinearSolver.h"
+#include "SSPRungeKuttaTimeIntegrator.h"
 
 using namespace dealii;
 
@@ -65,14 +66,7 @@ class TransportProblem {
       void assemble_mass_matrices();
       void assemble_inviscid_ss_matrix();
       void assemble_ss_rhs(const double &t);
-      void transient_step(const Vector<double>       &old_solution_stage,
-                          const Vector<double>       &eval_solution_stage,
-                          const SparseMatrix<double> &mass_matrix,
-                          const SparseMatrix<double> &ss_matrix,
-                          const double               &dt,
-                          const double               &t_eval,
-                          const LinearSolver         &linear_solver);
-      void solve_steady_state();
+      void solve_steady_state(const LinearSolver<dim> &linear_solver);
       void refine_grid();
 
       // post-processing
@@ -136,18 +130,18 @@ class TransportProblem {
       void process_problem_ID();
       std::map<std::string,double> function_parser_constants;
       Tensor<1,dim> transport_direction;
-      const unsigned int incoming_boundary;
       FunctionParser<dim> initial_conditions;
       FunctionParser<dim> exact_solution;
       FunctionParser<dim> source_function;
       FunctionParser<dim> cross_section_function;
+      FunctionParser<dim> incoming_function;
       std::string initial_conditions_string;
       std::string exact_solution_string;
       std::string source_string;
       std::string cross_section_string;
+      std::string incoming_string;
       bool has_exact_solution;
       bool source_time_dependent;
-      double incoming_flux_value;
       double x_min;
       double x_max;
       double domain_volume;
@@ -194,9 +188,6 @@ class TransportProblem {
 
       // Dirichlet boundary condition
       void get_dirichlet_nodes();
-      void apply_Dirichlet_BC(SparseMatrix<double> &A,
-                              Vector<double>       &x,
-                              Vector<double>       &b);
       std::vector<unsigned int> dirichlet_nodes;
 };
 

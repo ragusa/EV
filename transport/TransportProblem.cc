@@ -14,9 +14,7 @@ TransportProblem<dim>::TransportProblem(const TransportParameters &parameters) :
       n_q_points_cell(cell_quadrature.size()),
       n_q_points_face(face_quadrature.size()),
       transport_direction(0.0),
-      incoming_boundary(1),
       has_exact_solution(false),
-      incoming_flux_value(0.0),
       domain_volume(0.0)
 {
 }
@@ -56,7 +54,6 @@ void TransportProblem<dim>::initialize_system()
       variables += ",t";
 
    // create function parser constants
-   function_parser_constants["incoming"] = incoming_flux_value;
    function_parser_constants["pi"]       = numbers::PI;
    function_parser_constants["x_min"]    = x_min;
    function_parser_constants["x_mid"]    = x_min + 0.5*(x_max-x_min);
@@ -87,6 +84,12 @@ void TransportProblem<dim>::initialize_system()
                                      function_parser_constants,
                                      true);
 
+   // initialize Dirichlet boundary value function
+   incoming_function.initialize(variables,
+                                       incoming_string,
+                                       function_parser_constants,
+                                       true);
+
    // create grid for initial refinement level
    GridGenerator::hyper_cube(triangulation, x_min, x_max);
    domain_volume = std::pow((x_max-x_min),dim);
@@ -110,7 +113,7 @@ void TransportProblem<dim>::process_problem_ID()
          x_min = 0.0;
          x_max = 10.0;
 
-         incoming_flux_value = 1.0;
+         incoming_string = "1";
          function_parser_constants["incoming"]  = 1.0;
 
          cross_section_string = "1.0";
@@ -136,7 +139,7 @@ void TransportProblem<dim>::process_problem_ID()
          x_min = 0.0;
          x_max = 10.0;
 
-         incoming_flux_value = 1.0;
+         incoming_string = "1";
          function_parser_constants["incoming"]  = 1.0;
 
          cross_section_string = "if(x<x_mid, 0, 1)";
@@ -172,7 +175,10 @@ void TransportProblem<dim>::process_problem_ID()
          cross_section_string = "0";
          source_string = "0";
          source_time_dependent = false;
-         incoming_flux_value = 1.0;
+
+         incoming_string = "1";
+         function_parser_constants["incoming"]  = 1.0;
+
          has_exact_solution = true;
          if (parameters.is_steady_state)
             exact_solution_string = "1.0";
@@ -185,7 +191,9 @@ void TransportProblem<dim>::process_problem_ID()
 
          x_min = 0.0;
          x_max = 1.0;
-         incoming_flux_value = 0.0;
+
+         incoming_string = "0";
+
          cross_section_string = "1.0";
          has_exact_solution = true;
          // use different MS for steady-state vs. transient problem
@@ -206,7 +214,9 @@ void TransportProblem<dim>::process_problem_ID()
 
          x_min = 0.0;
          x_max = 1.0;
-         incoming_flux_value = 0.0;
+
+         incoming_string = "0";
+
          cross_section_string = "1";
          has_exact_solution = true;
          exact_solution_string = "x*exp(-t)"; // assume omega_x = 1 and c = 1
@@ -220,7 +230,9 @@ void TransportProblem<dim>::process_problem_ID()
 
          x_min = 0.0;
          x_max = 1.0;
-         incoming_flux_value = 0.0;
+
+         incoming_string = "0";
+
          cross_section_string = "1";
          has_exact_solution = true;
          exact_solution_string = "t^4*sin(pi*x)"; // assume omega_x = 1 and c = 1
@@ -558,6 +570,7 @@ void TransportProblem<dim>::assemble_ss_rhs(const double &t)
  *  \param [in,out] x linear system solution vector
  *  \param [in,out] b linear system rhs vector
  */
+/*
 template <int dim>
 void TransportProblem<dim>::apply_Dirichlet_BC(SparseMatrix<double> &A,
                                                Vector<double>       &x,
@@ -566,7 +579,7 @@ void TransportProblem<dim>::apply_Dirichlet_BC(SparseMatrix<double> &A,
    // apply Dirichlet boundary condition
    std::map<unsigned int, double> boundary_values;
    VectorTools::interpolate_boundary_values(dof_handler,
-                                            incoming_boundary,
+                                            1,
                                             ConstantFunction<dim>(incoming_flux_value, 1),
                                             boundary_values);
    MatrixTools::apply_boundary_values(boundary_values,
@@ -574,6 +587,7 @@ void TransportProblem<dim>::apply_Dirichlet_BC(SparseMatrix<double> &A,
                                       x,
                                       b);
 }
+*/
 
 /** \brief adds the viscous bilinear form for the maximum-principle preserving viscosity
  */
@@ -651,7 +665,7 @@ void TransportProblem<dim>::set_boundary_indicators()
             double small = -1.0e-12;
             if (fe_face_values.normal_vector(0) * transport_direction < small) {
                // mark boundary as incoming flux boundary: indicator 1
-               cell->face(face)->set_boundary_indicator(incoming_boundary);
+               cell->face(face)->set_boundary_indicator(1);
             }
          }
       }
@@ -776,11 +790,14 @@ void TransportProblem<dim>::run()
                                domain_volume);                      
 
       // create linear solver object
-      LinearSolver linear_solver(parameters.linear_solver_option, constraints);
+      LinearSolver<dim> linear_solver(parameters.linear_solver_option,
+                                      constraints,
+                                      dof_handler,
+                                      incoming_function);
 
       // if problem is steady-state, then just do one solve; else loop over time
       if (parameters.is_steady_state) { // run steady-state problem
-         solve_steady_state();
+         solve_steady_state(linear_solver);
       } else {                          // run transient problem
          // interpolate initial conditions
          initial_conditions.set_time(0.0);
@@ -799,6 +816,12 @@ void TransportProblem<dim>::run()
 
          // set old solution to the current solution
          old_solution = new_solution;
+
+         // create SSP Runge-Kutta time integrator object
+         SSPRungeKuttaTimeIntegrator<dim> ssprk(parameters.time_integrator_option,
+                                                n_dofs,
+                                                linear_solver,
+                                                constrained_sparsity_pattern);
 
          // time loop
          double t_new = 0.0;
@@ -840,99 +863,43 @@ void TransportProblem<dim>::run()
             t_new = t_old + dt;
             std::cout << "   time step " << n << ": t = " << t_old << "->" << t_new << std::endl;
 
+            // initialize SSPRK time step
+            ssprk.initialize_time_step(old_solution,dt);
+
             switch (parameters.scheme_option)
             {
                case 0: { // unmodified Galerkin scheme
-                  switch (parameters.time_integrator_option)
+
+                  for (unsigned int i = 0; i < ssprk.n_stages; ++i)
                   {
-                     case 1: { // forward Euler
-                        transient_step(old_solution,old_solution,consistent_mass_matrix,inviscid_ss_matrix,dt,t_old,linear_solver);
-
-                        break;
-                     } case 2: { // SSPRK22
-                        // stage 1
-                        tmp_vector = old_solution;
-                        transient_step(tmp_vector,tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt,t_old,linear_solver);
-                        // stage 2
-                        tmp_vector = new_solution;
-                        transient_step(tmp_vector,tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt,t_new,linear_solver);
-                        // final combination
-                        tmp_vector = new_solution;
-                        new_solution = 0;
-                        new_solution.add(0.5,old_solution,0.5,tmp_vector);
-                        constraints.distribute(new_solution);
-
-                        break;
-                     } case 3: { // SSPRK33
-                        // stage 1
-                        tmp_vector = old_solution;
-                        transient_step(tmp_vector,tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt,t_old,linear_solver);
-                        // stage 2
-                        tmp_vector = new_solution;
-                        transient_step(tmp_vector,tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt,t_new,linear_solver);
-                        // stage 3
-                        tmp_vector = 0;
-                        tmp_vector.add(0.75,old_solution,0.25,new_solution);
-                        transient_step(tmp_vector,tmp_vector,consistent_mass_matrix,inviscid_ss_matrix,dt,t_old+0.5*dt,linear_solver);
-                        // final combination
-                        tmp_vector = new_solution;
-                        new_solution = 0;
-                        new_solution.add(1./3.,old_solution,2./3.,tmp_vector);
-                        constraints.distribute(new_solution);
-
-                        break;
-                     } default: {
-                        Assert(false, ExcNotImplemented());
-                        break;
+                     // recompute steady-state rhs if it is time-dependent
+                     if (source_time_dependent) {
+                        double t_stage = ssprk.get_stage_time();
+                        assemble_ss_rhs(t_stage);
                      }
+
+                     // advance by an SSPRK step
+                     ssprk.advance_stage(consistent_mass_matrix,inviscid_ss_matrix,ss_rhs);
                   }
+                  // retrieve the final solution
+                  ssprk.get_new_solution(new_solution);
 
                   break;
                } case 1: { // solve low-order system
-                  switch (parameters.time_integrator_option)
+
+                  for (unsigned int i = 0; i < ssprk.n_stages; ++i)
                   {
-                     case 1: { // forward Euler
-                        transient_step(old_solution,old_solution,lumped_mass_matrix,low_order_ss_matrix,dt,t_old,linear_solver);
-
-                        break;
-                     } case 2: { // SSPRK22
-                        // stage 1
-                        tmp_vector = old_solution;
-                        transient_step(tmp_vector,tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt,t_old,linear_solver);
-                        // stage 2
-                        tmp_vector = new_solution;
-                        transient_step(tmp_vector,tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt,t_new,linear_solver);
-                        // final combination
-                        tmp_vector = new_solution;
-                        new_solution = 0;
-                        new_solution.add(0.5,old_solution,0.5,tmp_vector);
-                        constraints.distribute(new_solution);
-
-                        break;
-                     } case 3: { // SSPRK33
-                        // stage 1
-                        tmp_vector = old_solution;
-                        transient_step(tmp_vector,tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt,t_old,linear_solver);
-                        // stage 2
-                        tmp_vector = new_solution;
-                        transient_step(tmp_vector,tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt,t_new,linear_solver);
-                        // stage 3
-                        tmp_vector = 0;
-                        tmp_vector.add(0.75,old_solution,0.25,new_solution);
-                        transient_step(tmp_vector,tmp_vector,lumped_mass_matrix,low_order_ss_matrix,dt,t_old+0.5*dt,linear_solver);
-                        // final combination
-                        tmp_vector = new_solution;
-                        new_solution = 0;
-                        new_solution.add(1./3.,old_solution,2./3.,tmp_vector);
-                        constraints.distribute(new_solution);
-
-                        break;
-                     } default: {
-                        Assert(false, ExcNotImplemented());
-                        break;
+                     // recompute steady-state rhs if it is time-dependent
+                     if (source_time_dependent) {
+                        double t_stage = ssprk.get_stage_time();
+                        assemble_ss_rhs(t_stage);
                      }
+
+                     // advance by an SSPRK step
+                     ssprk.advance_stage(lumped_mass_matrix,low_order_ss_matrix,ss_rhs);
                   }
-                  
+                  // retrieve the final solution
+                  ssprk.get_new_solution(new_solution);
 /*
                   // compute max principle min and max values
                   compute_max_principle_bounds(dt);
@@ -943,6 +910,8 @@ void TransportProblem<dim>::run()
 
                   break;
                } case 2: { // high-order system with entropy viscosity
+                  Assert(false, ExcNotImplemented());
+/*
                   switch (parameters.time_integrator_option)
                   {
                      case 1: { // forward Euler
@@ -959,6 +928,7 @@ void TransportProblem<dim>::run()
                         break;
                      }
                   }
+*/
 
                   break;
                } case 3: { // FCT
@@ -1081,41 +1051,7 @@ void TransportProblem<dim>::run()
 /** \brief 
  */
 template<int dim>
-void TransportProblem<dim>::transient_step(const Vector<double>       &old_solution_stage,
-                                           const Vector<double>       &eval_solution_stage,
-                                           const SparseMatrix<double> &mass_matrix,
-                                           const SparseMatrix<double> &ss_matrix,
-                                           const double               &dt,
-                                           const double               &t_eval,
-                                           const LinearSolver         &linear_solver)
-{
-   Vector<double> tmp_vector(n_dofs);
-
-   // recompute the source if it is time-dependent
-   if (source_time_dependent)
-      assemble_ss_rhs(t_eval);
-
-   // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_eval)
-   system_rhs = 0;
-   system_rhs.add(dt, ss_rhs);      //  now, system_rhs = dt*(ss_rhs)
-   mass_matrix.vmult(tmp_vector, old_solution_stage);
-   system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
-   ss_matrix.vmult(tmp_vector, eval_solution_stage);
-   system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_eval)
-      
-   // solve the linear system M*u_new = system_rhs
-   system_matrix.copy_from(mass_matrix);
-   apply_Dirichlet_BC(system_matrix, new_solution, system_rhs); // apply Dirichlet BC
-   linear_solver.solve(system_matrix, system_rhs, new_solution);
-     
-   // distribute constraints
-   constraints.distribute(new_solution);
-}
-
-/** \brief 
- */
-template<int dim>
-void TransportProblem<dim>::solve_steady_state()
+void TransportProblem<dim>::solve_steady_state(const LinearSolver<dim> &linear_solver)
 {
    // entropy viscosity and FCT not yet implemented in steady-state
    Assert(parameters.scheme_option != 2, ExcNotImplemented());
@@ -1138,10 +1074,9 @@ void TransportProblem<dim>::solve_steady_state()
       system_matrix.add(1.0, low_order_viscous_matrix);
    }
    // enforce Dirichlet BC on total system matrix
-   apply_Dirichlet_BC(system_matrix, new_solution, ss_rhs);
+   //apply_Dirichlet_BC(system_matrix, new_solution, ss_rhs);
    // solve the linear system: ss_matrix*new_solution = ss_rhs
    //solve_linear_system(system_matrix, ss_rhs);
-   LinearSolver linear_solver(parameters.linear_solver_option, constraints);
    linear_solver.solve(system_matrix, ss_rhs, new_solution);
    // distribute constraints
    constraints.distribute(new_solution);
@@ -1898,7 +1833,7 @@ void TransportProblem<dim>::compute_high_order_solution()
          // get Dirichlet value for node i
          std::map<unsigned int, double> boundary_values;
          VectorTools::interpolate_boundary_values(dof_handler,
-                                            incoming_boundary,
+                                            1,
                                             ConstantFunction<dim>(incoming_flux_value, 1),
                                             boundary_values);
          std::map<unsigned int, double>::iterator it = boundary_values.find(i);
@@ -1979,8 +1914,8 @@ void TransportProblem<dim>::get_dirichlet_nodes()
    // get map of Dirichlet dof indices to Dirichlet values
    std::map<unsigned int, double> boundary_values;
    VectorTools::interpolate_boundary_values(dof_handler,
-                                            incoming_boundary,
-                                            ConstantFunction<dim>(incoming_flux_value, 1),
+                                            1,
+                                            ZeroFunction<dim>(),
                                             boundary_values);
    // extract dof indices from map
    dirichlet_nodes.clear();
