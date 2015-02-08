@@ -29,20 +29,21 @@ class EntropyViscosity {
                        const QGauss<dim-1>   &face_quadrature,
                        const Tensor<1,dim>   &transport_direction,
                        const FunctionParser<dim> &cross_section_function,
-                       const FunctionParser<dim> &source_function,
+                       FunctionParser<dim>   &source_function,
                        const std::string     &entropy_string,
                        const std::string     &entropy_derivative_string,
                        const double          &entropy_residual_coefficient,
                        const double          &jump_coefficient,
                        const double          &domain_volume);
       ~EntropyViscosity();
-      Vector<double> compute_entropy_viscosity(const Vector<double> &new_solution,
-                                               const Vector<double> &old_solution,
-                                               const double         &dt);
+      Vector<double> compute_entropy_viscosity(const Vector<double> &old_solution,
+                                               const Vector<double> &older_solution,
+                                               const double         &dt,
+                                               const double         &time);
 
    private:
-      void compute_entropy_domain_average(const Vector<double> &new_solution,
-                                          const Vector<double> &old_solution);
+      void compute_entropy_domain_average(const Vector<double> &old_solution,
+                                          const Vector<double> &older_solution);
 
       // mesh and dof data
       const FESystem<dim> *fe;
@@ -62,7 +63,7 @@ class EntropyViscosity {
       // physics data
       Tensor<1,dim> transport_direction;
       const FunctionParser<dim> *cross_section_function;
-      const FunctionParser<dim> *source_function;
+      FunctionParser<dim> *source_function;
 
       // entropy viscosity functions and data
       FunctionParser<dim> entropy_function;

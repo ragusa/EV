@@ -9,7 +9,7 @@ EntropyViscosity<dim>::EntropyViscosity(
    const QGauss<dim-1>   &face_quadrature,
    const Tensor<1,dim>   &transport_direction,
    const FunctionParser<dim> &cross_section_function,
-   const FunctionParser<dim> &source_function,
+   FunctionParser<dim>   &source_function,
    const std::string     &entropy_string,
    const std::string     &entropy_derivative_string,
    const double          &entropy_residual_coefficient,
@@ -106,12 +106,16 @@ void EntropyViscosity<dim>::compute_entropy_domain_average(const Vector<double> 
 /** \brief Computes the entropy viscosity for each cell.
  */
 template <int dim>
-Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<double> &new_solution,
-                                                                const Vector<double> &old_solution,
-                                                                const double         &dt)
+Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<double> &old_solution,
+                                                                const Vector<double> &older_solution,
+                                                                const double         &dt,
+                                                                const double         &time)
 {
+   // set the time of the source function
+   (*source_function).set_time(time);
+   
    // compute entropy average in domain
-   compute_entropy_domain_average(new_solution,old_solution);
+   compute_entropy_domain_average(old_solution,older_solution);
 
    std::vector<Point<dim> > points(n_q_points_cell);
    std::vector<double> cross_section_values(n_q_points_cell);
@@ -154,9 +158,9 @@ Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<dou
       fe_values.reinit(cell);
 
       // get solution values and gradients
-      fe_values[flux].get_function_values   (new_solution, new_values);
-      fe_values[flux].get_function_values   (old_solution, old_values);
-      fe_values[flux].get_function_gradients(new_solution, new_gradients);
+      fe_values[flux].get_function_values   (old_solution,   new_values);
+      fe_values[flux].get_function_values   (older_solution, old_values);
+      fe_values[flux].get_function_gradients(old_solution, new_gradients);
    
       // get cross section and source values for all quadrature points
       points = fe_values.get_quadrature_points();
@@ -201,15 +205,15 @@ Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<dou
             fe_values_face_neighbor.reinit(neighbor,ineighbor);
    
             // get values on face
-            fe_values_face.get_function_values(new_solution, values_face);
+            fe_values_face.get_function_values(old_solution, values_face);
    
             // compute entropy at each quadrature point on face
             for (unsigned int q = 0; q < n_q_points_face; ++q)
                entropy_face[q] = 0.5 * values_face[q] * values_face[q];
    
             // get gradients on adjacent faces of current cell and neighboring cell
-            fe_values_face.get_function_gradients(         new_solution, gradients_face);
-            fe_values_face_neighbor.get_function_gradients(new_solution, gradients_face_neighbor);
+            fe_values_face.get_function_gradients(         old_solution, gradients_face);
+            fe_values_face_neighbor.get_function_gradients(old_solution, gradients_face_neighbor);
    
             // get normal vectors
             normal_vectors = fe_values_face.get_normal_vectors();

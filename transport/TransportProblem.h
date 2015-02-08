@@ -113,8 +113,9 @@ class TransportProblem {
       SparseMatrix<double> flux_correction_matrix;
 
       // vectors for solutions and right hand sides
-      Vector<double> old_solution;
       Vector<double> new_solution;
+      Vector<double> old_solution;
+      Vector<double> older_solution;
       Vector<double> system_rhs;
       Vector<double> ss_rhs;
 

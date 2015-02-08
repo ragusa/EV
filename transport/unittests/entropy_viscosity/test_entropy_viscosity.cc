@@ -13,7 +13,7 @@
 #include <fstream>
 #include <sstream>
 #include <cstdlib>
-#include "../EntropyViscosity.h"
+#include "../../EntropyViscosity.h"
 
 using namespace dealii;
 
@@ -32,6 +32,7 @@ int main(int argc, char ** argv) {
       std::string source_string = "3";
       unsigned int n_quadrature_points = 3;
       std::string entropy_string = "0.5*u*u";
+      std::string entropy_derivative_string = "u";
       double entropy_residual_coefficient = 1.0;
       double jump_coefficient = 0.0;
       double x_min = 0.0;
@@ -81,13 +82,14 @@ int main(int argc, char ** argv) {
                                cross_section_function,
                                source_function,
                                entropy_string,
+                               entropy_derivative_string,
                                entropy_residual_coefficient,
                                jump_coefficient,
                                domain_volume);                      
       
       // compute entropy viscosity
       Vector<double> entropy_viscosity
-         = EV.compute_entropy_viscosity(new_solution,old_solution,dt);
+         = EV.compute_entropy_viscosity(new_solution,old_solution,dt,0.0);
 
       // output entropy viscosity
       DataOut<dim> visc_out;

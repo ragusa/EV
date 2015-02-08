@@ -308,6 +308,7 @@ void TransportProblem<dim>::setup_system()
 
    // reinitialize solution vector, system matrix, and rhs
    old_solution.reinit(n_dofs);
+   older_solution.reinit(n_dofs);
    new_solution.reinit(n_dofs);
    system_rhs  .reinit(n_dofs);
    ss_rhs      .reinit(n_dofs);
@@ -316,8 +317,6 @@ void TransportProblem<dim>::setup_system()
    Q_plus      .reinit(n_dofs);
    Q_minus     .reinit(n_dofs);
    flux_correction_vector.reinit(n_dofs);
-
-   // reinitialize max principle bounds
    min_values.reinit(n_dofs);
    max_values.reinit(n_dofs);
 
@@ -814,9 +813,6 @@ void TransportProblem<dim>::run()
                             "initial_solution",
                             false);
 
-         // set old solution to the current solution
-         old_solution = new_solution;
-
          // create SSP Runge-Kutta time integrator object
          SSPRungeKuttaTimeIntegrator<dim> ssprk(parameters.time_integrator_option,
                                                 n_dofs,
@@ -826,34 +822,16 @@ void TransportProblem<dim>::run()
          // time loop
          double t_new = 0.0;
          double t_old = 0.0;
+         double old_dt = dt_nominal;
+         old_solution   = new_solution;
+         older_solution = new_solution;
          const double t_end = parameters.end_time;
          bool in_transient = true;
          bool DMP_satisfied_at_all_steps = true;
-         double old_dt = dt_nominal; // time step size of previous time step, needed for entropy viscosity
          Vector<double> tmp_vector(n_dofs);
          unsigned int n = 1; // time step index
          while (in_transient)
          {
-            // compute high-order viscosity and viscous matrix if needed
-            if ((parameters.scheme_option == 2)||(parameters.scheme_option == 3)) {
-               if (n == 1) {
-                  compute_viscous_matrix(low_order_viscosity,high_order_viscous_matrix);
-               } else {
-                  entropy_viscosity = EV.compute_entropy_viscosity(new_solution,old_solution,old_dt);
-                  for (unsigned int i_cell = 0; i_cell < n_cells; ++i_cell)
-                     high_order_viscosity(i_cell) = std::min(entropy_viscosity(i_cell),low_order_viscosity(i_cell));
-                  compute_viscous_matrix(high_order_viscosity,high_order_viscous_matrix);
-               }
-            }
-
-            // update old solution to previous step's new solution
-            // Note that this is done here because the old old_solution is needed in the
-            // computation of the entropy viscosity time derivative term, which occurs in
-            // compute_entropy_viscosity(), so the following update to old_solution needs to come
-            // sometime after compute_entropy_viscosity() but before old_solution is used in the
-            // assembly of the transient residual.
-            old_solution = new_solution;
-
             // shorten dt if new time would overshoot end time, then update t_new
             double dt = dt_nominal;
             if (t_old + dt >= t_end) {
@@ -872,9 +850,11 @@ void TransportProblem<dim>::run()
 
                   for (unsigned int i = 0; i < ssprk.n_stages; ++i)
                   {
+                     // get stage time
+                     double t_stage = ssprk.get_stage_time();
+
                      // recompute steady-state rhs if it is time-dependent
                      if (source_time_dependent) {
-                        double t_stage = ssprk.get_stage_time();
                         assemble_ss_rhs(t_stage);
                      }
 
@@ -889,9 +869,11 @@ void TransportProblem<dim>::run()
 
                   for (unsigned int i = 0; i < ssprk.n_stages; ++i)
                   {
+                     // get stage time
+                     double t_stage = ssprk.get_stage_time();
+
                      // recompute steady-state rhs if it is time-dependent
                      if (source_time_dependent) {
-                        double t_stage = ssprk.get_stage_time();
                         assemble_ss_rhs(t_stage);
                      }
 
@@ -910,25 +892,34 @@ void TransportProblem<dim>::run()
 
                   break;
                } case 2: { // high-order system with entropy viscosity
-                  Assert(false, ExcNotImplemented());
-/*
-                  switch (parameters.time_integrator_option)
-                  {
-                     case 1: { // forward Euler
-                        high_order_ss_matrix.copy_from(inviscid_ss_matrix);
-                        high_order_ss_matrix.add(1.0,high_order_viscous_matrix);
-                        transient_step(old_solution,old_solution,consistent_mass_matrix,high_order_ss_matrix,dt,t_old,linear_solver);
 
-                        break;
-                     } case 2: { // SSPRK33
-                        Assert(false, ExcNotImplemented());
-                        break;
-                     } default: {
-                        Assert(false, ExcNotImplemented());
-                        break;
+                  for (unsigned int i = 0; i < ssprk.n_stages; ++i)
+                  {
+                     // get stage time
+                     double t_stage = ssprk.get_stage_time();
+
+                     // recompute steady-state rhs if it is time-dependent
+                     if (source_time_dependent) {
+                        assemble_ss_rhs(t_stage);
                      }
+
+                     // recompute high-order steady-state matrix
+                     if (n == 1) {
+                        high_order_viscosity = low_order_viscosity;
+                     } else {
+                        entropy_viscosity = EV.compute_entropy_viscosity(old_solution,older_solution,old_dt,t_stage);
+                        for (unsigned int i_cell = 0; i_cell < n_cells; ++i_cell)
+                           high_order_viscosity(i_cell) = std::min(entropy_viscosity(i_cell),low_order_viscosity(i_cell));
+                     }
+                     compute_viscous_matrix(high_order_viscosity,high_order_viscous_matrix);
+                     high_order_ss_matrix.copy_from(inviscid_ss_matrix);
+                     high_order_ss_matrix.add(1.0,high_order_viscous_matrix);
+
+                     // advance by an SSPRK step
+                     ssprk.advance_stage(consistent_mass_matrix,high_order_ss_matrix,ss_rhs);
                   }
-*/
+                  // retrieve the final solution
+                  ssprk.get_new_solution(new_solution);
 
                   break;
                } case 3: { // FCT
@@ -1021,7 +1012,9 @@ void TransportProblem<dim>::run()
 
             }
 
-            // update old time and time step size
+            // update old solution, time, and time step size
+            older_solution = old_solution;
+            old_solution = new_solution;
             t_old = t_new;
             old_dt = dt;
 
