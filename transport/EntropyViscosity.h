@@ -42,8 +42,7 @@ class EntropyViscosity {
                                                const double         &time);
 
    private:
-      void compute_entropy_domain_average(const Vector<double> &old_solution,
-                                          const Vector<double> &older_solution);
+      void compute_entropy_domain_average(const Vector<double> &old_solution);
 
       // mesh and dof data
       const FESystem<dim> *fe;
