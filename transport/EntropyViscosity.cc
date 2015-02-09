@@ -123,25 +123,28 @@ Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<dou
    compute_entropy_domain_average(old_solution);
 
    // cell values
-   std::vector<Point<dim> > points              (n_q_points_cell);
-   std::vector<double>      cross_section_values(n_q_points_cell);
-   std::vector<double>      source_values       (n_q_points_cell);
-   std::vector<double>      old_solution_local  (n_q_points_cell);
-   std::vector<double>      older_solution_local(n_q_points_cell);
-   std::vector<double>      old_entropy         (n_q_points_cell);
-   std::vector<double>      older_entropy       (n_q_points_cell);
-   std::vector<double>      old_entropy_derivative(n_q_points_cell);
-   std::vector<Point<1> >   old_solution_local_points  (n_q_points_cell);
-   std::vector<Point<1> >   older_solution_local_points(n_q_points_cell);
-   std::vector<Tensor<1,dim> > old_gradients(n_q_points_cell);
+   std::vector<Point<dim> > points  (n_q_points_cell);
+   std::vector<double>      sigma   (n_q_points_cell);
+   std::vector<double>      source  (n_q_points_cell);
+   std::vector<double>      u_old   (n_q_points_cell);
+   std::vector<double>      u_older (n_q_points_cell);
+   std::vector<Point<1> >   u_old_points  (n_q_points_cell);
+   std::vector<Point<1> >   u_older_points(n_q_points_cell);
+   std::vector<Tensor<1,dim> > dudx_old(n_q_points_cell);
+   std::vector<double>      s_old   (n_q_points_cell);
+   std::vector<double>      s_older (n_q_points_cell);
+   std::vector<double>      dsdu_old(n_q_points_cell);
 
    // face values
-   std::vector<double>         values_face            (n_q_points_face);
-   std::vector<double>         values_face_neighbor   (n_q_points_face);
-   std::vector<Tensor<1,dim> > gradients_face         (n_q_points_face);
-   std::vector<Tensor<1,dim> > gradients_face_neighbor(n_q_points_face);
-   std::vector<Point<dim> >    normal_vectors         (n_q_points_face);
-   Vector<double>              entropy_face           (n_q_points_face);
+   std::vector<Point<dim> >    normal                (n_q_points_face);
+   std::vector<double>         u_old_face            (n_q_points_face);
+   std::vector<double>         u_old_face_neighbor   (n_q_points_face);
+   std::vector<Tensor<1,dim> > dudx_old_face         (n_q_points_face);
+   std::vector<Tensor<1,dim> > dudx_old_face_neighbor(n_q_points_face);
+   std::vector<Point<1> >      u_old_face_points         (n_q_points_face);
+   std::vector<Point<1> >      u_old_face_points_neighbor(n_q_points_face);
+   std::vector<double>              dsdu_old_face         (n_q_points_face);
+   std::vector<double>              dsdu_old_face_neighbor(n_q_points_face);
 
    // FE cell values for computing entropy
    FEValues<dim> fe_values(*fe, cell_quadrature,
@@ -155,43 +158,43 @@ Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<dou
       update_values | update_gradients | update_JxW_values | update_normal_vectors);
 
    // cell iterator
-   typename DoFHandler<dim>::active_cell_iterator cell = (*dof_handler).begin_active(),
-                                                  endc = (*dof_handler).end();
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler->begin_active(),
+                                                  endc = dof_handler->end();
    // loop over cells
    unsigned int i_cell = 0;
-   for (cell = (*dof_handler).begin_active(); cell != endc; ++cell, ++i_cell)
+   for (cell = dof_handler->begin_active(); cell != endc; ++cell, ++i_cell)
    {
       // reinitialize FE values
       fe_values.reinit(cell);
 
       // get solution values and gradients
-      fe_values[flux].get_function_values   (old_solution,   old_solution_local);
-      fe_values[flux].get_function_values   (older_solution, older_solution_local);
-      fe_values[flux].get_function_gradients(old_solution,   old_gradients);
+      fe_values[flux].get_function_values   (old_solution,   u_old);
+      fe_values[flux].get_function_values   (older_solution, u_older);
+      fe_values[flux].get_function_gradients(old_solution,   dudx_old);
    
       // get cross section and source values for all quadrature points
       points = fe_values.get_quadrature_points();
-      source_function       ->value_list(points,source_values);
-      cross_section_function->value_list(points,cross_section_values);
+      source_function       ->value_list(points,source);
+      cross_section_function->value_list(points,sigma);
 
       // compute max entropy residual in cell
       //----------------------------------------------------------------------------
       // compute entropy values at each quadrature point on cell
       for (unsigned int q = 0; q < n_q_points_cell; ++q) {
-         old_solution_local_points[q][0]   = old_solution_local[q];
-         older_solution_local_points[q][0] = older_solution_local[q];
+         u_old_points[q][0]   = u_old[q];
+         u_older_points[q][0] = u_older[q];
       }
-      entropy_function.value_list(old_solution_local_points,  old_entropy);
-      entropy_function.value_list(older_solution_local_points,older_entropy);
-      entropy_derivative_function.value_list(old_solution_local_points,old_entropy_derivative);
+      entropy_function.value_list(u_old_points,  s_old);
+      entropy_function.value_list(u_older_points,s_older);
+      entropy_derivative_function.value_list(u_old_points,dsdu_old);
 
       // compute entropy residual values at each quadrature point on cell
       std::vector<double> entropy_residual_values(n_q_points_cell,0.0);
       for (unsigned int q = 0; q < n_q_points_cell; ++q)
-         entropy_residual_values[q] = (old_entropy[q] - older_entropy[q])/dt
-            + old_entropy_derivative[q] * (transport_direction * old_gradients[q]
-            + cross_section_values[q] * old_solution_local[q]
-            - source_values[q]);
+         entropy_residual_values[q] = (s_old[q] - s_older[q])/dt
+            + dsdu_old[q] * (transport_direction * dudx_old[q]
+            + sigma[q] * u_old[q]
+            - source[q]);
 
       // determine maximum entropy residual in cell
       double max_entropy_residual = 0.0;
@@ -213,29 +216,33 @@ Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<dou
             const unsigned int ineighbor = cell->neighbor_of_neighbor(iface);
             Assert(ineighbor < faces_per_cell, ExcInternalError());
    
-            fe_values_face.reinit(         cell,    iface);
+            fe_values_face         .reinit(cell,    iface);
             fe_values_face_neighbor.reinit(neighbor,ineighbor);
    
-            // get values on face
-            fe_values_face.get_function_values(old_solution, values_face);
-   
-            // compute entropy at each quadrature point on face
-            for (unsigned int q = 0; q < n_q_points_face; ++q)
-               entropy_face[q] = 0.5 * values_face[q] * values_face[q];
-   
-            // get gradients on adjacent faces of current cell and neighboring cell
-            fe_values_face.get_function_gradients(         old_solution, gradients_face);
-            fe_values_face_neighbor.get_function_gradients(old_solution, gradients_face_neighbor);
+            // get solution and gradients on face
+            fe_values_face         .get_function_values   (old_solution, u_old_face);
+            fe_values_face_neighbor.get_function_values   (old_solution, u_old_face_neighbor);
+            fe_values_face         .get_function_gradients(old_solution, dudx_old_face);
+            fe_values_face_neighbor.get_function_gradients(old_solution, dudx_old_face_neighbor);
    
             // get normal vectors
-            normal_vectors = fe_values_face.get_normal_vectors();
+            normal = fe_values_face.get_normal_vectors();
+
+            // compute entropy at each quadrature point on face
+            for (unsigned int q = 0; q < n_q_points_face; ++q) {
+               u_old_face_points[q][0]          = u_old_face[q];
+               u_old_face_points_neighbor[q][0] = u_old_face_neighbor[q];
+            }
+            entropy_derivative_function.value_list(u_old_face_points,         dsdu_old_face);
+            entropy_derivative_function.value_list(u_old_face_points_neighbor,dsdu_old_face_neighbor);
    
+            // compute max jump on face
             max_jump_on_face = 0.0;
             for (unsigned int q = 0; q < n_q_points_face; ++q)
             {
-               double jump_dEdn = (gradients_face[q]*values_face[q]
-                  - gradients_face_neighbor[q]*values_face_neighbor[q]) * normal_vectors[q];
-               double jump_on_face = std::abs(transport_direction * normal_vectors[q] * jump_dEdn);
+               double jump_dsdn = normal[q] * (dsdu_old_face[q] * dudx_old_face[q]
+                  - dsdu_old_face_neighbor[q] * dudx_old_face_neighbor[q]);
+               double jump_on_face = std::abs(transport_direction * normal[q] * jump_dsdn);
                max_jump_on_face = std::max(max_jump_on_face, jump_on_face);
             }
          } // end if (at_boundary())

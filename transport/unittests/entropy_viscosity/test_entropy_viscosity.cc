@@ -34,7 +34,7 @@ int main(int argc, char ** argv) {
       std::string entropy_string = "0.5*u*u";
       std::string entropy_derivative_string = "u";
       double entropy_residual_coefficient = 1.0;
-      double jump_coefficient = 0.0;
+      double jump_coefficient = 0.5;
       double x_min = 0.0;
       double x_max = 10.0;
 
