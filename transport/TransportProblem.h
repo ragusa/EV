@@ -70,6 +70,7 @@ class TransportProblem {
       void refine_grid();
 
       // post-processing
+      /*
       void output_results();
       void output_solution(const Vector<double>  &solution,
                            const DoFHandler<dim> &dof_handler,
@@ -77,6 +78,7 @@ class TransportProblem {
                            const bool            &append_viscosity) const;
       void output_grid() const;
       void evaluate_error(const unsigned int cycle);
+*/
 
       // input parameters
       const TransportParameters &parameters;

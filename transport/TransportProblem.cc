@@ -295,7 +295,7 @@ void TransportProblem<dim>::setup_system()
    if ((parameters.scheme_option == 2)||(parameters.scheme_option == 3))
    {
       high_order_viscous_matrix.reinit(constrained_sparsity_pattern);
-      flux_correction_matrix.reinit(constrained_sparsity_pattern);
+      //flux_correction_matrix.reinit(constrained_sparsity_pattern);
    }
       
    // reinitialize auxiliary matrices
@@ -729,6 +729,7 @@ void TransportProblem<dim>::refine_grid() {
 
 /** \brief output the grid of the given cycle
  */
+/*
 template<int dim>
 void TransportProblem<dim>::output_grid() const
 {
@@ -740,6 +741,7 @@ void TransportProblem<dim>::output_grid() const
    GridOut grid_out;
    grid_out.write_eps(triangulation, output);
 }
+*/
 
 /** \brief run the problem
  */
@@ -796,6 +798,9 @@ void TransportProblem<dim>::run()
                                       dof_handler,
                                       incoming_function);
 
+      // create post-processor object
+      //PostProcessor postprocessor
+
       // if problem is steady-state, then just do one solve; else loop over time
       if (parameters.is_steady_state) { // run steady-state problem
          solve_steady_state(linear_solver);
@@ -808,12 +813,14 @@ void TransportProblem<dim>::run()
          constraints.distribute(new_solution);
 
          // if last cycle, output initial conditions if user requested
+         /*
          if ((cycle == parameters.n_refinement_cycles-1) and
             (parameters.output_initial_solution))
-            output_solution(new_solution,
-                            dof_handler,
-                            "initial_solution",
-                            false);
+            postprocessor.output_solution(new_solution,
+                                          dof_handler,
+                                          "initial_solution",
+                                          false);
+*/
 
          // create SSP Runge-Kutta time integrator object
          SSPRungeKuttaTimeIntegrator<dim> ssprk(parameters.time_integrator_option,
@@ -1068,11 +1075,11 @@ void TransportProblem<dim>::run()
       }
 
       // evaluate errors for use in adaptive mesh refinement
-      if (has_exact_solution) evaluate_error(cycle);
+ //     if (has_exact_solution) evaluate_error(cycle);
    }
 
    // output grid, solution, and viscosity and print convergence results
-   output_results();
+//   output_results();
 }
 
 /** \brief 
@@ -1108,6 +1115,7 @@ void TransportProblem<dim>::solve_steady_state(const LinearSolver<dim> &linear_s
    // distribute constraints
    constraints.distribute(new_solution);
 
+/*
    // compute bounds for maximum principle check
    compute_steady_state_max_principle_bounds();
    // check that solution satisfies maximum principle
@@ -1117,11 +1125,13 @@ void TransportProblem<dim>::solve_steady_state(const LinearSolver<dim> &linear_s
       std::cout << "The local discrete maximum principle was satisfied." << std::endl;
    else
       std::cout << "The local discrete maximum principle was NOT satisfied." << std::endl;
+*/
 }
 
 /** \brief Output grid, solution, and viscosity to output file and print
  *         convergence table.
  */
+/*
 template<int dim>
 void TransportProblem<dim>::output_results()
 {
@@ -1249,6 +1259,7 @@ void TransportProblem<dim>::output_results()
       convergence_table.write_text(std::cout);
    }
 }
+*/
 
 /** \brief Outputs a solution to a file.
  *  \param [in] solution a vector of solution values.
@@ -1256,6 +1267,7 @@ void TransportProblem<dim>::output_results()
  *  \param [in] output_string string for the output filename.
  *  \param [in] append_viscosity the option to include a string for viscosity type in output filename
  */
+/*
 template<int dim>
 void TransportProblem<dim>::output_solution(const Vector<double>  &solution,
                                             const DoFHandler<dim> &dof_handler,
@@ -1311,9 +1323,11 @@ void TransportProblem<dim>::output_solution(const Vector<double>  &solution,
    if (dim == 1) data_out.write_gnuplot(output_filestream);
    else          data_out.write_vtk    (output_filestream);
 }
+*/
 
 /** \brief evaluate error between numerical and exact solution
  */
+/*
 template<int dim>
 void TransportProblem<dim>::evaluate_error(const unsigned int cycle)
 {
@@ -1361,6 +1375,7 @@ void TransportProblem<dim>::evaluate_error(const unsigned int cycle)
    convergence_table.add_value("L1 error", L1_error);
    convergence_table.add_value("L2 error", L2_error);
 }
+*/
 
 /** \brief check that the local discrete max principle is satisfied.
  */

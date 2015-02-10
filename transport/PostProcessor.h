@@ -1,5 +1,5 @@
-#ifndef FCT_cc
-#define FCT_cc
+#ifndef PostProcessor_cc
+#define PostProcessor_cc
 
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/vector.h>
@@ -11,11 +11,11 @@ using namespace dealii;
 /** \brief Class for implementing SSP Runge-Kutta time integration
  */
 template<int dim>
-class FCT {
+class PostProcessor {
    public:
-      FCT(const SparsistyPattern &sparsity_pattern);
-      ~FCT();
-      void solve_FCT_system();
+      PostProcessor(const SparsistyPattern &sparsity_pattern);
+      ~PostProcessor();
+      void solve_PostProcessor_system();
 
    private:
       void compute_bounds();
@@ -33,5 +33,5 @@ class FCT {
       Vector<double> system_rhs;
 };
 
-#include "FCT.cc"
+#include "PostProcessor.cc"
 #endif
