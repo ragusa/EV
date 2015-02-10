@@ -312,6 +312,7 @@ void TransportProblem<dim>::setup_system()
    new_solution.reinit(n_dofs);
    system_rhs  .reinit(n_dofs);
    ss_rhs      .reinit(n_dofs);
+/*
    R_plus      .reinit(n_dofs);
    R_minus     .reinit(n_dofs);
    Q_plus      .reinit(n_dofs);
@@ -319,6 +320,7 @@ void TransportProblem<dim>::setup_system()
    flux_correction_vector.reinit(n_dofs);
    min_values.reinit(n_dofs);
    max_values.reinit(n_dofs);
+*/
 
    // reinitialize viscosities
    entropy_viscosity   .reinit(n_cells);
@@ -923,11 +925,43 @@ void TransportProblem<dim>::run()
 
                   break;
                } case 3: { // FCT
-                  Assert(false, ExcNotImplemented());
+
 /*
-                  // SSPRK33 not yet implemented
-                  if (parameters.time_integrator_option != 1)
-                     Assert(false, ExcNotImplemented());
+                  for (unsigned int i = 0; i < ssprk.n_stages; ++i)
+                  {
+                     // get stage time
+                     double t_stage = ssprk.get_stage_time();
+
+                     // recompute steady-state rhs if it is time-dependent
+                     if (source_time_dependent) {
+                        assemble_ss_rhs(t_stage);
+                     }
+
+                     // recompute high-order steady-state matrix
+                     if (n == 1) {
+                        high_order_viscosity = low_order_viscosity;
+                     } else {
+                        entropy_viscosity = EV.compute_entropy_viscosity(old_solution,older_solution,old_dt,t_stage);
+                        for (unsigned int i_cell = 0; i_cell < n_cells; ++i_cell)
+                           high_order_viscosity(i_cell) = std::min(entropy_viscosity(i_cell),low_order_viscosity(i_cell));
+                     }
+                     compute_viscous_matrix(high_order_viscosity,high_order_viscous_matrix);
+                     high_order_ss_matrix.copy_from(inviscid_ss_matrix);
+                     high_order_ss_matrix.add(1.0,high_order_viscous_matrix);
+
+                     // advance by an SSPRK step
+                     ssprk.advance_stage(consistent_mass_matrix,high_order_ss_matrix,ss_rhs);
+
+                     // perform FCT
+                     fct.solve_FCT_system();
+
+                     // set stage solution to be FCT solution for this stage
+                     ssprk.set_stage_solution(i+1,new_solution);
+                  }
+                  // retrieve the final solution
+                  ssprk.get_new_solution(new_solution);
+*/
+/*
 
                   // solve high-order system
                   // ------------------------------------------------------------
@@ -1330,6 +1364,7 @@ void TransportProblem<dim>::evaluate_error(const unsigned int cycle)
 
 /** \brief check that the local discrete max principle is satisfied.
  */
+/*
 template<int dim>
 bool TransportProblem<dim>::check_max_principle(const double &dt,
                                                 const bool   &using_high_order)
@@ -1394,12 +1429,14 @@ bool TransportProblem<dim>::check_max_principle(const double &dt,
 
    return local_max_principle_satisfied;
 }
+*/
 
 /** \brief Debugging function used for determining why the maximum
  *         principle is failing for the low-order method;
  *         examines the conditions that are required to be met for
  *         the principle to be satisfied.
  */
+/*
 template <int dim>
 void TransportProblem<dim>::debug_max_principle_low_order(const unsigned int &i,
                                                           const double &dt)
@@ -1472,9 +1509,11 @@ void TransportProblem<dim>::debug_max_principle_low_order(const unsigned int &i,
    if (not condition_violated)
       std::cout << "         DEBUG: No checks returned flags; deeper debugging is necessary." << std::endl;
 }
+*/
 
 /** \brief Computes min and max quantities for max principle
  */
+/*
 template <int dim>
 void TransportProblem<dim>::compute_max_principle_bounds(const double &dt)
 {
@@ -1541,9 +1580,11 @@ void TransportProblem<dim>::compute_max_principle_bounds(const double &dt)
          + dt/lumped_mass_matrix(i,i)*ss_rhs(i);
    }
 }
+*/
 
 /** \brief Computes min and max quantities for steady-state max principle
  */
+/*
 template <int dim>
 void TransportProblem<dim>::compute_steady_state_max_principle_bounds()
 {
@@ -1605,37 +1646,15 @@ void TransportProblem<dim>::compute_steady_state_max_principle_bounds()
          + ss_rhs(i)/low_order_ss_matrix(i,i);
    }
 }
-
-/** \brief Computes the high-order right hand side vector (G) and
- *         stores in system_rhs.
- */
-template <int dim>
-void TransportProblem<dim>::compute_high_order_rhs()
-{
-   // Form total system matrix, first adding the inviscid component
-   high_order_ss_matrix.copy_from(inviscid_ss_matrix);
-   // add viscous component to total system matrix (A)
-   // Note that high_order_viscosity has already been computed in compute_low_order_viscosity(),
-   // which was called for the assembly of the low-order system.
-   compute_viscous_matrix(high_order_viscosity,high_order_viscous_matrix);
-   // add viscous matrix to steady-state system matrix
-   high_order_ss_matrix.add(1.0, high_order_viscous_matrix);
-
-   // G is to be stored in system_rhs and is computed as G = ss_rhs - high_order_ss_matrix*old_solution
-   system_rhs = ss_rhs;
-   // now use ss_rhs as tmp vector to hold high_order_ss_matrix*old_solution
-   high_order_ss_matrix.vmult(ss_rhs, old_solution);
-   // complete computation of G
-   system_rhs.add(-1.0, ss_rhs);
-}
+*/
 
 /** \brief Assembles the high-order coefficient matrix \f$\mathcal{A}\f$.
  *  \param [in] dt current time step size
  */
+/*
 template <int dim>
 void TransportProblem<dim>::assemble_flux_correction_matrix(const double &dt)
 {
-/*
    // reset A to zero
    flux_correction_matrix = 0;
 
@@ -1708,13 +1727,14 @@ void TransportProblem<dim>::assemble_flux_correction_matrix(const double &dt)
                                                   -auxiliary_mass_matrix(i,j)*system_rhs(j)));
       }
    }
-*/
 }
+*/
 
 /** \brief Computes the limiting coefficient vectors \f$R^+\f$ and \f$R^-\f$,
  *         used for computing the high-order solution from the low-order
  *         solution.
  */
+/*
 template <int dim>
 void TransportProblem<dim>::compute_limiting_coefficients()
 {
@@ -1808,35 +1828,6 @@ void TransportProblem<dim>::compute_limiting_coefficients()
       }
    }
 }
-
-/** \brief Computes the high-order maximum-principle preserving solution
- *         using the low-order solution and the limiting coefficient
- *         matrix \f$\mathcal{L}\f$.
- */
-/*
-template <int dim>
-void TransportProblem<dim>::compute_high_order_solution()
-{
-   
-         // compute high-order solution for dof i
-         new_solution(i) = new_solution(i) + flux_correction_sum / lumped_mass_matrix(i,i);
-      }
-      else // i corresponds to a Dirichlet node
-      {
-         // get Dirichlet value for node i
-         std::map<unsigned int, double> boundary_values;
-         VectorTools::interpolate_boundary_values(dof_handler,
-                                            1,
-                                            ConstantFunction<dim>(incoming_flux_value, 1),
-                                            boundary_values);
-         std::map<unsigned int, double>::iterator it = boundary_values.find(i);
-         // ensure that Dirichlet node i was actually found in Dirichlet node list
-         Assert(it != boundary_values.end(),ExcInvalidState());
-         // set new solution to have Dirichlet value
-         new_solution(i) = it->second;
-      }
-   }
-}
 */
 
 /** \brief Checks that the CFL condition is satisfied; If not, adjusts time step size.
@@ -1873,6 +1864,7 @@ double TransportProblem<dim>::enforce_CFL_condition(double &dt)
  *  \param [out] row_indices vector of indices of nonzero entries of row i
  *  \param [out] n_col number of nonzero entries of row i
  */
+/*
 template <int dim>
 void TransportProblem<dim>::get_matrix_row(const SparseMatrix<double>      &matrix,
                                            const unsigned int              &i,
@@ -1897,6 +1889,7 @@ void TransportProblem<dim>::get_matrix_row(const SparseMatrix<double>      &matr
       row_indices[k] = matrix_iterator->column();
     }
 }
+*/
 
 /** \brief Gets a list of dofs subject to Dirichlet boundary conditions.
  *         This is necessary because max principle checks are not applied to these nodes.

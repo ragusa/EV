@@ -110,7 +110,7 @@ class TransportProblem {
       SparseMatrix<double> high_order_viscous_matrix;
       SparseMatrix<double> consistent_mass_matrix;
       SparseMatrix<double> lumped_mass_matrix;
-      SparseMatrix<double> flux_correction_matrix;
+//      SparseMatrix<double> flux_correction_matrix;
 
       // vectors for solutions and right hand sides
       Vector<double> new_solution;
@@ -161,8 +161,8 @@ class TransportProblem {
       SparsityPattern unconstrained_sparsity_pattern;
       SparseMatrix<double> viscous_bilinear_forms;
 
+/*
       // high-order max-principle viscosity functions and data
-      void compute_high_order_rhs();
       void assemble_flux_correction_matrix(const double &dt);
       void compute_limiting_coefficients();
       void get_matrix_row(const SparseMatrix<double>      &matrix,
@@ -186,6 +186,7 @@ class TransportProblem {
       void debug_max_principle_low_order (const unsigned int &i, const double &dt);
       void compute_max_principle_bounds(const double &dt);
       void compute_steady_state_max_principle_bounds();
+*/
 
       // Dirichlet boundary condition
       void get_dirichlet_nodes();

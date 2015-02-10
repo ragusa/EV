@@ -1,0 +1,168 @@
+\documentclass{report}
+\usepackage{float}
+\setlength{\oddsidemargin}{0in}
+\setlength{\evensidemargin}{0in}
+\setlength{\textwidth}{6.5in}
+\begin{document}
+
+% title
+\begin{center}
+   \Large\textbf{Convergence Analysis of Some 1-D Test Problems}\\
+   \large Joshua Hansel
+\end{center}
+\vspace{2em}
+
+\begin{table}[H]\caption{\label{runparams}Convergence Run Parameters}
+\begin{center}
+\begin{tabular}{l}\hline\hline
+$\Delta x_0 = 1/32$ \\
+$\Delta t_0 = 10^{-3}$ \\
+$t_{end} = 10^{-2}$ \\\hline\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+% Test Problem 1
+%--------------------------------------------------------------------------------
+\section{Test Problem 1: $u(x,t) = t\sin(\pi x)$}
+
+For this test problem, the manufactured solution $u(x,t) = t\sin(\pi x)$
+was chosen. A summary of the problem is given in Table \ref{prob1params}.
+Since this solution is linear in time, Forward Euler (FE) is expected
+to give no temporal error, in which case the spatial convergence rate should be
+recovered. Table \ref{prob1} shows the convergence rate results. Two refinement
+strategies are employed, the first where only the spatial mesh size $\Delta x$ refined, and
+the second where both the spatial mesh size $\Delta x$ and the time step size $\Delta t$
+are refined at the same rate (thus keeping the CFL number constant). Results are included
+for Forward Euler (FE) and SSPRK33 at two initial time step sizes. The rates in each cell
+correspond to the $L^1$ and $L^2$ error convergence rates, respectively. Results for which
+the rates are fractional were all observed to be decreasing with refinement.
+
+\begin{table}[H]\caption{\label{prob1params}Problem Description and Run Parameters for Test Problem 1}
+\begin{center}
+\begin{tabular}{l}\hline\hline
+$x\in(0,1)$ \\
+$\mathbf{\Omega} = \mathbf{e_x}$ \\
+$\sigma(x) = 1$ \\
+$u(x,t) = t\sin(\pi x)$ \\
+$q(x,t) = \sin(\pi x) + \pi t\cos(\pi x) + t\sin(\pi x)$ \\\hline\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\begin{table}[H]\caption{\label{prob1}Convergence Results for Test Problem 1}
+\begin{center}
+\begin{tabular}{c|c|c|c||c|c|c|c}\hline\hline
+& & & & \multicolumn{2}{c}{$L^1$} & \multicolumn{2}{|c}{$L^2$}\\ \cline{5-8}
+Viscosity Used         & Temporal Integrator & $\Delta x$ & $\Delta t$ & Error & Slope & Error & Slope \\ \hline\hline
+                       &                     & $1/32$     &            &       &       &       &       \\
+                       &                     & $1/64$     &            &       &       &       &       \\
+Entropy Viscosity      & SSPRK33             & $1/128$    &            &       &       &       &       \\
+                       &                     & $1/256$    &            &       &       &       &       \\
+                       &                     & $1/512$    &            &       &       &       &       \\ \hline
+                       &                     & $1/32$     &            &       &       &       &       \\
+                       &                     & $1/64$     &            &       &       &       &       \\
+Entropy Viscosity      & SSPRK33             & $1/128$    &            &       &       &       &       \\
+with FCT (DMP)         &                     & $1/256$    &            &       &       &       &       \\
+                       &                     & $1/512$    &            &       &       &       &       \\ \hline
+                       &                     & $1/32$     &            &       &       &       &       \\
+                       &                     & $1/64$     &            &       &       &       &       \\
+Entropy Viscosity      & SSPRK33             & $1/128$    &            &       &       &       &       \\
+with FCT (CMP)         &                     & $1/256$    &            &       &       &       &       \\
+                       &                     & $1/512$    &            &       &       &       &       \\ \hline\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+% Test Problem 2
+%--------------------------------------------------------------------------------
+\section{Test Problem 2: $u(x,t) = x e^{-t}$}
+
+For this test problem, the manufactured solution $u(x,t) = x e^{-t}$
+was chosen. A summary of the problem is given in Table \ref{prob2params}.
+This problem is designed to generate no spatial error since
+the solution is linear in space, thus allowing the temporal error
+to be isolated. Table \ref{prob2} shows the convergence rate results.
+
+\begin{table}[H]\caption{\label{prob2params}Problem Description and Run Parameters for Test Problem 2}
+\begin{center}
+\begin{tabular}{l}\hline\hline
+$x\in(0,1)$ \\
+$\mathbf{\Omega} = \mathbf{e_x}$ \\
+$\sigma(x) = 1$ \\
+$u(x,t) = x e^{-t}$ \\
+$q(x,t) = e^{-t}$ \\\hline\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\begin{table}[H]\caption{\label{prob2}Convergence Results for Test Problem 2}
+\begin{center}
+\begin{tabular}{c|c|c|c||c|c|c|c}\hline\hline
+& & & & \multicolumn{2}{c}{$L^1$} & \multicolumn{2}{|c}{$L^2$}\\ \cline{5-8}
+Viscosity Used         & Temporal Integrator & $\Delta x$ & $\Delta t$ & Error & Slope & Error & Slope \\ \hline\hline
+                       &                     & $1/32$     &            &       &       &       &       \\
+                       &                     & $1/64$     &            &       &       &       &       \\
+Entropy Viscosity      & SSPRK33             & $1/128$    &            &       &       &       &       \\
+                       &                     & $1/256$    &            &       &       &       &       \\
+                       &                     & $1/512$    &            &       &       &       &       \\ \hline
+                       &                     & $1/32$     &            &       &       &       &       \\
+                       &                     & $1/64$     &            &       &       &       &       \\
+Entropy Viscosity      & SSPRK33             & $1/128$    &            &       &       &       &       \\
+with FCT (DMP)         &                     & $1/256$    &            &       &       &       &       \\
+                       &                     & $1/512$    &            &       &       &       &       \\ \hline
+                       &                     & $1/32$     &            &       &       &       &       \\
+                       &                     & $1/64$     &            &       &       &       &       \\
+Entropy Viscosity      & SSPRK33             & $1/128$    &            &       &       &       &       \\
+with FCT (CMP)         &                     & $1/256$    &            &       &       &       &       \\
+                       &                     & $1/512$    &            &       &       &       &       \\ \hline\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+% Test Problem 3
+%--------------------------------------------------------------------------------
+\section{Test Problem 3: $u(x,t) = t^4 \sin(\pi x)$}
+
+For this test problem, the manufactured solution $u(x,t) = t^4 \sin(\pi x)$
+was chosen.  A summary of the problem is given in Table \ref{prob3params}.
+Table \ref{prob3} shows the convergence rate results.
+
+\begin{table}[H]\caption{\label{prob3params}Problem Description and Run Parameters for Test Problem 3}
+\begin{center}
+\begin{tabular}{l}\hline\hline
+$x\in(0,1)$ \\
+$\mathbf{\Omega} = \mathbf{e_x}$ \\
+$\sigma(x) = 1$ \\
+$u(x,t) = t^4\sin(\pi x)$ \\
+$q(x,t) = 4t^3\sin(\pi x) + \pi t^4\cos(\pi x) + t^4\sin(\pi x)$ \\\hline\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+\begin{table}[H]\caption{\label{prob3}Convergence Results for Test Problem 3}
+\begin{center}
+\begin{tabular}{c|c|c|c||c|c|c|c}\hline\hline
+& & & & \multicolumn{2}{c}{$L^1$} & \multicolumn{2}{|c}{$L^2$}\\ \cline{5-8}
+Viscosity Used         & Temporal Integrator & $\Delta x$ & $\Delta t$ & Error & Slope & Error & Slope \\ \hline\hline
+                       &                     & $1/32$     &            &       &       &       &       \\
+                       &                     & $1/64$     &            &       &       &       &       \\
+Entropy Viscosity      & SSPRK33             & $1/128$    &            &       &       &       &       \\
+                       &                     & $1/256$    &            &       &       &       &       \\
+                       &                     & $1/512$    &            &       &       &       &       \\ \hline
+                       &                     & $1/32$     &            &       &       &       &       \\
+                       &                     & $1/64$     &            &       &       &       &       \\
+Entropy Viscosity      & SSPRK33             & $1/128$    &            &       &       &       &       \\
+with FCT (DMP)         &                     & $1/256$    &            &       &       &       &       \\
+                       &                     & $1/512$    &            &       &       &       &       \\ \hline
+                       &                     & $1/32$     &            &       &       &       &       \\
+                       &                     & $1/64$     &            &       &       &       &       \\
+Entropy Viscosity      & SSPRK33             & $1/128$    &            &       &       &       &       \\
+with FCT (CMP)         &                     & $1/256$    &            &       &       &       &       \\
+                       &                     & $1/512$    &            &       &       &       &       \\ \hline\hline
+\end{tabular}
+\end{center}
+\end{table}
+
+
+\end{document}
