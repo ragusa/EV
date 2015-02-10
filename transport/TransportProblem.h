@@ -1,13 +1,11 @@
 #ifndef TransportProblem_cc
 #define TransportProblem_cc
 
-#include <deal.II/base/convergence_table.h>
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/function_parser.h>
 #include <deal.II/base/tensor_function.h>
-#include <deal.II/base/table.h>
 
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/full_matrix.h>
@@ -21,7 +19,6 @@
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
 #include <deal.II/grid/tria_boundary_lib.h>
-#include <deal.II/grid/grid_out.h>
 
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_accessor.h>
@@ -30,11 +27,9 @@
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_q.h>
-#include <deal.II/fe/mapping_q.h>
 
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
-#include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/error_estimator.h>
 
 #include <fstream>
@@ -47,6 +42,7 @@
 #include "EntropyViscosity.h"
 #include "LinearSolver.h"
 #include "SSPRungeKuttaTimeIntegrator.h"
+#include "PostProcessor.h"
 
 using namespace dealii;
 
@@ -68,17 +64,6 @@ class TransportProblem {
       void assemble_ss_rhs(const double &t);
       void solve_steady_state(const LinearSolver<dim> &linear_solver);
       void refine_grid();
-
-      // post-processing
-      /*
-      void output_results();
-      void output_solution(const Vector<double>  &solution,
-                           const DoFHandler<dim> &dof_handler,
-                           const std::string     &output_string,
-                           const bool            &append_viscosity) const;
-      void output_grid() const;
-      void evaluate_error(const unsigned int cycle);
-*/
 
       // input parameters
       const TransportParameters &parameters;
@@ -126,15 +111,12 @@ class TransportProblem {
       Vector<double> low_order_viscosity;
       Vector<double> high_order_viscosity;
 
-      // convergence table
-      ConvergenceTable convergence_table;
-
       // physics data
       void process_problem_ID();
       std::map<std::string,double> function_parser_constants;
       Tensor<1,dim> transport_direction;
       FunctionParser<dim> initial_conditions;
-      FunctionParser<dim> exact_solution;
+      FunctionParser<dim> exact_solution_function;
       FunctionParser<dim> source_function;
       FunctionParser<dim> cross_section_function;
       FunctionParser<dim> incoming_function;

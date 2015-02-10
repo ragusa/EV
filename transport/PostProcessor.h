@@ -1,36 +1,81 @@
 #ifndef PostProcessor_cc
 #define PostProcessor_cc
 
-#include <deal.II/lac/sparse_matrix.h>
+#include <deal.II/base/convergence_table.h>
+#include <deal.II/base/function_parser.h>
+#include <deal.II/base/quadrature_lib.h>
+
 #include <deal.II/lac/vector.h>
 
-#include "LinearSolver.h"
+#include <deal.II/grid/tria.h>
+#include <deal.II/grid/grid_out.h>
+
+#include <deal.II/dofs/dof_handler.h>
+
+#include <deal.II/numerics/vector_tools.h>
+#include <deal.II/numerics/data_out.h>
 
 using namespace dealii;
 
-/** \brief Class for implementing SSP Runge-Kutta time integration
+/** \brief Class for outputting solutions and evaluating error and convergence.
  */
 template<int dim>
 class PostProcessor {
    public:
-      PostProcessor(const SparsistyPattern &sparsity_pattern);
+      PostProcessor(
+         const bool               &output_mesh,
+         const bool               &output_exact_solution,
+         const bool               &has_exact_solution,
+         FunctionParser<dim> &exact_solution_function,
+         const double             &time,
+         const double             &dt_nominal,
+         const bool               &is_steady_state,
+         const unsigned int       &refinement_option,
+         const unsigned int       &final_refinement_level,
+         const FESystem<dim>      &fe,
+         const unsigned int       &degree,
+         const unsigned int       &scheme_option,
+         const unsigned int       &problem_ID,
+         const QGauss<dim>        &cell_quadrature);
       ~PostProcessor();
-      void solve_PostProcessor_system();
+
+      void output_results(const Vector<double>     &solution,
+                          const DoFHandler<dim>    &dof_handler,
+                          const Triangulation<dim> &triangulation);
+      void output_solution(const Vector<double>  &solution,
+                           const DoFHandler<dim> &dof_handler,
+                           const std::string     &output_string,
+                           const bool            &append_viscosity) const;
+      void evaluate_error(const Vector<double>     &solution,
+                          const DoFHandler<dim>    &dof_handler,
+                          const Triangulation<dim> &triangulation,
+                          const unsigned int       &cycle);
 
    private:
-      void compute_bounds();
-      void compute_steady_state_bounds();
-      void check_bounds();
+      void output_grid(const Triangulation<dim> &triangulation) const;
 
-      SparsityPattern sparsity_pattern;
-      SparseMatrix<double> flux_corrections;
-      Vector<double> min_bound;
-      Vector<double> max_bound;
-      Vector<double> solution_min;
-      Vector<double> solution_max;
+      ConvergenceTable convergence_table;
 
-      Vector<double> tmp_vector;
-      Vector<double> system_rhs;
+      const bool               output_mesh;
+      const bool               output_exact_solution;
+
+      const bool               has_exact_solution;
+      FunctionParser<dim>      *exact_solution_function;
+
+      const double             time;
+      const double             dt_nominal;
+      const bool               is_steady_state;
+
+      const unsigned int       refinement_option;
+      const unsigned int       final_refinement_level;
+
+      const FESystem<dim>      *fe;
+      const unsigned int       degree;
+
+      const unsigned int       scheme_option;
+      const unsigned int       problem_ID;
+
+      const QGauss<dim>        cell_quadrature;
 };
 
 #include "PostProcessor.cc"
