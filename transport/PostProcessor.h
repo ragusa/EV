@@ -3,6 +3,7 @@
 
 #include <deal.II/base/convergence_table.h>
 #include <deal.II/base/function_parser.h>
+//#include <deal.II/base/table_handler.h>
 #include <deal.II/base/quadrature_lib.h>
 
 #include <deal.II/lac/vector.h>
@@ -25,6 +26,7 @@ class PostProcessor {
       PostProcessor(
          const bool               &output_mesh,
          const bool               &output_exact_solution,
+         const bool               &save_convergence_results,
          const bool               &has_exact_solution,
          FunctionParser<dim> &exact_solution_function,
          const double             &time,
@@ -46,6 +48,10 @@ class PostProcessor {
                            const DoFHandler<dim> &dof_handler,
                            const std::string     &output_string,
                            const bool            &append_viscosity) const;
+     void output_viscosity(const Vector<double>  &low_order_viscosity,
+                           const Vector<double>  &entropy_viscosity,
+                           const Vector<double>  &high_order_viscosity,
+                           const DoFHandler<dim> &dof_handler) const;
       void evaluate_error(const Vector<double>     &solution,
                           const DoFHandler<dim>    &dof_handler,
                           const Triangulation<dim> &triangulation,
@@ -58,6 +64,7 @@ class PostProcessor {
 
       const bool               output_mesh;
       const bool               output_exact_solution;
+      const bool               save_convergence_results;
 
       const bool               has_exact_solution;
       FunctionParser<dim>      *exact_solution_function;
@@ -76,6 +83,8 @@ class PostProcessor {
       const unsigned int       problem_ID;
 
       const QGauss<dim>        cell_quadrature;
+
+      std::string              viscosity_string;
 };
 
 #include "PostProcessor.cc"

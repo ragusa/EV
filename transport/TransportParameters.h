@@ -38,6 +38,7 @@ class TransportParameters {
     double CFL_limit; // upper bound for the CFL number
     bool do_not_limit; // flag to turn off limiting for high order solution
     unsigned int n_quadrature_points; // number of quadrature points to use in formula
+    bool save_convergence_results; // option to save convergence results
 };
 
 #include "TransportParameters.cc"

@@ -4,6 +4,7 @@ template<int dim>
 PostProcessor<dim>::PostProcessor(
    const bool          &output_mesh,
    const bool          &output_exact_solution,
+   const bool          &save_convergence_results,
    const bool          &has_exact_solution,
    FunctionParser<dim> &exact_solution_function,
    const double        &time,
@@ -18,6 +19,7 @@ PostProcessor<dim>::PostProcessor(
    const QGauss<dim>   &cell_quadrature) :
    output_mesh(output_mesh),
    output_exact_solution(output_exact_solution),
+   save_convergence_results(save_convergence_results),
    has_exact_solution(has_exact_solution),
    exact_solution_function(&exact_solution_function),
    time(time),
@@ -31,6 +33,25 @@ PostProcessor<dim>::PostProcessor(
    problem_ID(problem_ID),
    cell_quadrature(cell_quadrature)
 {
+   // determine viscosity string
+   switch (scheme_option) {
+      case 0: {
+         viscosity_string = "_galerkin";
+         break;
+      } case 1: {
+         viscosity_string = "_low_order";
+         break;
+      } case 2: {
+         viscosity_string = "_high_order";
+         break;
+      } case 3: {
+         viscosity_string = "_FCT";
+         break;
+      } default: {
+         Assert(false, ExcNotImplemented());
+         break;
+      }
+   }
 }
 
 /** \brief Destructor.
@@ -86,14 +107,121 @@ void PostProcessor<dim>::output_results(const Vector<double>     &solution,
                       false);
    }
 
+
 /*
+   // output min and max bounds for DMP
+   if (parameters.output_DMP_bounds and parameters.scheme_option == 3)
+   {
+      output_solution(min_values,dof_handler,"min_values",false);
+      output_solution(max_values,dof_handler,"max_values",false);
+   }
+*/
+
+   // output convergence table
+   //------------------------
+   if (has_exact_solution) {
+      // format columns
+      convergence_table.set_precision("dx", 3);
+      convergence_table.set_scientific("dx", true);
+      if (is_steady_state) {
+         convergence_table.set_precision("dt", 3);
+         convergence_table.set_scientific("dt", true);
+         convergence_table.set_scientific("1/dt", true);
+      }
+      convergence_table.set_precision("L1 error", 3);
+      convergence_table.set_scientific("L1 error", true);
+      convergence_table.set_precision("L2 error", 3);
+      convergence_table.set_scientific("L2 error", true);
+      if (refinement_option == 2) {
+         // evaluate temporal convergence rates
+         convergence_table.evaluate_convergence_rates("L1 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
+         convergence_table.evaluate_convergence_rates("L2 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
+      } else {
+         // evaluate spatial convergence rates
+         convergence_table.evaluate_convergence_rates("L1 error", ConvergenceTable::reduction_rate_log2);
+         convergence_table.evaluate_convergence_rates("L2 error", ConvergenceTable::reduction_rate_log2);
+      }
+      // print convergence table to console
+      std::cout << std::endl;
+      convergence_table.write_text(std::cout);
+
+      // save convergence results to file
+      if (save_convergence_results) {
+         // create filename
+         std::stringstream filename_ss;
+         filename_ss << "output/convergence" << viscosity_string << "_" << problem_ID << ".gpl";
+         std::string filename = filename_ss.str();
+         char *filename_char = (char*)filename.c_str();
+         // create output filestream for exact solution
+         std::ofstream output_filestream(filename_char);
+         // write convergence results to file
+         convergence_table.write_text(output_filestream,TableHandler::table_with_separate_column_description);
+      }
+   }
+}
+
+/** \brief Outputs a solution to a file.
+ *  \param [in] solution a vector of solution values.
+ *  \param [in] dof_handler degrees of freedom handler.
+ *  \param [in] output_string string for the output filename.
+ *  \param [in] append_viscosity the option to include a string for viscosity type in output filename
+ */
+template<int dim>
+void PostProcessor<dim>::output_solution(const Vector<double>  &solution,
+                                         const DoFHandler<dim> &dof_handler,
+                                         const std::string     &output_string,
+                                         const bool            &append_viscosity) const
+{
+   // create DataOut object for solution
+   DataOut<dim> data_out;
+   data_out.attach_dof_handler(dof_handler);
+   data_out.add_data_vector(solution, "flux");
+   data_out.build_patches(degree + 1);
+
+   // create string for viscosity type if it is to be included in output filename
+   std::string append_string;
+   if (append_viscosity)
+      append_string = viscosity_string;
+   else
+      append_string = "";
+
+   // create output filename for exact solution
+   std::string filename_extension;
+   if (dim == 1) filename_extension = ".gpl";
+   else          filename_extension = ".vtk";
+
+   std::stringstream filename_ss;
+   filename_ss << "output/" << output_string << append_string
+      << "_" << problem_ID << filename_extension;
+   std::string filename = filename_ss.str();
+   char *filename_char = (char*)filename.c_str();
+
+   // create output filestream for exact solution
+   std::ofstream output_filestream(filename_char);
+   // write file
+   if (dim == 1) data_out.write_gnuplot(output_filestream);
+   else          data_out.write_vtk    (output_filestream);
+}
+
+/** \brief Outputs viscosities to file.
+ *  \param [in] low_order_viscosity low-order viscosity in each cell.
+ *  \param [in] entropy_viscosity entropy viscosity in each cell.
+ *  \param [in] high_order_viscosity high-order viscosity in each cell.
+ *  \param [in] dof_handler degrees of freedom handler.
+ */
+template<int dim>
+void PostProcessor<dim>::output_viscosity(const Vector<double>  &low_order_viscosity,
+                                          const Vector<double>  &entropy_viscosity,
+                                          const Vector<double>  &high_order_viscosity,
+                                          const DoFHandler<dim> &dof_handler) const
+{
    // write viscosity output file
    //----------------------------
-   if (parameters.scheme_option != 0) {
+   if (scheme_option != 0) {
       DataOut<dim> visc_out;
       visc_out.attach_dof_handler(dof_handler);
       // add viscosity data vector(s)
-      switch (parameters.scheme_option)
+      switch (scheme_option)
       {
          case 1: {
             visc_out.add_data_vector(low_order_viscosity,"Low_Order_Viscosity",DataOut<dim>::type_cell_data);
@@ -136,105 +264,6 @@ void PostProcessor<dim>::output_results(const Vector<double>     &solution,
       else
          visc_out.write_vtk(viscosity_outstream);
    }
-*/
-
-/*
-   // output min and max bounds for DMP
-   if (parameters.output_DMP_bounds and parameters.scheme_option == 3)
-   {
-      output_solution(min_values,dof_handler,"min_values",false);
-      output_solution(max_values,dof_handler,"max_values",false);
-   }
-*/
-
-   // print convergence table
-   //------------------------
-   if (has_exact_solution) {
-      convergence_table.set_precision("dx", 3);
-      convergence_table.set_scientific("dx", true);
-      if (is_steady_state) {
-         convergence_table.set_precision("dt", 3);
-         convergence_table.set_scientific("dt", true);
-         convergence_table.set_scientific("1/dt", true);
-      }
-      convergence_table.set_precision("L1 error", 3);
-      convergence_table.set_scientific("L1 error", true);
-      convergence_table.set_precision("L2 error", 3);
-      convergence_table.set_scientific("L2 error", true);
-      if (refinement_option == 2) {
-         // evaluate temporal convergence rates
-         convergence_table.evaluate_convergence_rates("L1 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
-         convergence_table.evaluate_convergence_rates("L2 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
-      } else {
-         // evaluate spatial convergence rates
-         convergence_table.evaluate_convergence_rates("L1 error", ConvergenceTable::reduction_rate_log2);
-         convergence_table.evaluate_convergence_rates("L2 error", ConvergenceTable::reduction_rate_log2);
-      }
-      std::cout << std::endl;
-      convergence_table.write_text(std::cout);
-   }
-}
-
-/** \brief Outputs a solution to a file.
- *  \param [in] solution a vector of solution values.
- *  \param [in] dof_handler degrees of freedom handler.
- *  \param [in] output_string string for the output filename.
- *  \param [in] append_viscosity the option to include a string for viscosity type in output filename
- */
-template<int dim>
-void PostProcessor<dim>::output_solution(const Vector<double>  &solution,
-                                         const DoFHandler<dim> &dof_handler,
-                                         const std::string     &output_string,
-                                         const bool            &append_viscosity) const
-{
-   // create DataOut object for solution
-   DataOut<dim> data_out;
-   data_out.attach_dof_handler(dof_handler);
-   data_out.add_data_vector(solution, "flux");
-   data_out.build_patches(degree + 1);
-
-   // create string for viscosity type if it is to be included in output filename
-   std::string viscosity_string;
-   if (append_viscosity)
-   {
-      switch (scheme_option) {
-         case 0: {
-            viscosity_string = "_galerkin";
-            break;
-         } case 1: {
-            viscosity_string = "_low_order";
-            break;
-         } case 2: {
-            viscosity_string = "_high_order";
-            break;
-         } case 3: {
-            viscosity_string = "_FCT";
-            break;
-         } default: {
-            Assert(false, ExcNotImplemented());
-            break;
-         }
-      }
-   } else {
-      viscosity_string = "";
-   }
-
-   // create output filename for exact solution
-   std::string filename_extension;
-   if (dim == 1) filename_extension = ".gpl";
-   else          filename_extension = ".vtk";
-
-   std::stringstream filename_ss;
-   filename_ss << "output/" << output_string << viscosity_string
-      << "_" << problem_ID << filename_extension;
-   std::string filename = filename_ss.str();
-   char *filename_char = (char*)filename.c_str();
-
-   // create output filestream for exact solution
-   std::ofstream output_filestream(filename_char);
-   // write file
-   if (dim == 1) data_out.write_gnuplot(output_filestream);
-   else          data_out.write_vtk    (output_filestream);
 }
 
 /** \brief evaluate error between numerical and exact solution

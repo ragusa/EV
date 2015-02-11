@@ -716,6 +716,7 @@ void TransportProblem<dim>::run()
       + parameters.n_refinement_cycles - 1;
    PostProcessor<dim> postprocessor(parameters.output_meshes,
                                     parameters.output_exact_solution,
+                                    parameters.save_convergence_results,
                                     has_exact_solution,
                                     exact_solution_function,
                                     parameters.end_time,
@@ -1055,8 +1056,10 @@ void TransportProblem<dim>::run()
                                                            cycle);
    }
 
-   // output grid, solution, and viscosity and print convergence results
+   // output grid and solution and print convergence results
    postprocessor.output_results(new_solution,dof_handler,triangulation);
+   // output viscosities if they were used
+   postprocessor.output_viscosity(low_order_viscosity,entropy_viscosity,high_order_viscosity,dof_handler);
 }
 
 /** \brief 

@@ -68,3 +68,4 @@ set Output mesh = false
 set Output exact solution = true
 set Output initial solution = false 
 set Output DMP bounds = true
+set Save convergence results = true
