@@ -907,8 +907,7 @@ void TransportProblem<dim>::run()
 
                   break;
                } case 3: { // FCT
-
-/*
+                  Assert(false,ExcNotImplemented());
                   for (unsigned int i = 0; i < ssprk.n_stages; ++i)
                   {
                      // get stage time
@@ -935,14 +934,13 @@ void TransportProblem<dim>::run()
                      ssprk.advance_stage(consistent_mass_matrix,high_order_ss_matrix,ss_rhs);
 
                      // perform FCT
-                     fct.solve_FCT_system();
+                     //fct.solve_FCT_system();
 
                      // set stage solution to be FCT solution for this stage
                      ssprk.set_stage_solution(i+1,new_solution);
                   }
                   // retrieve the final solution
                   ssprk.get_new_solution(new_solution);
-*/
 /*
 
                   // solve high-order system

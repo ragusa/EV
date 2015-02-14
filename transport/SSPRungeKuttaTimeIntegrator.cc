@@ -128,3 +128,12 @@ double SSPRungeKuttaTimeIntegrator<dim>::get_stage_time() const
 {
    return t_old + c[current_stage]*dt;
 }
+
+/** \brief Sets a stage solution.
+ */
+template<int dim>
+void SSPRungeKuttaTimeIntegrator<dim>::set_stage_solution(const unsigned int   &i,
+                                                          const Vector<double> &solution)
+{
+   u_stage[i] = solution;
+}

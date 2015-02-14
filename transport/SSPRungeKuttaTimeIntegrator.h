@@ -26,6 +26,7 @@ class SSPRungeKuttaTimeIntegrator {
                          const Vector<double>       &ss_rhs);
       void get_new_solution(Vector<double> &new_solution) const;
       double get_stage_time() const;
+      void set_stage_solution(const unsigned int &i, const Vector<double> &solution);
 
       unsigned int n_stages;
 
