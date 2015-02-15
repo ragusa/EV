@@ -1,7 +1,21 @@
 template<int dim>
 FCT<dim>::FCT(
-   const SparseMatrix<double> &lumped_mass_matrix)
+   const SparseMatrix<double> &lumped_mass_matrix,
+   const SparseMatrix<double> &consistent_mass_matrix,
+   const LinearSolver<dim>    &linear_solver,
+   const SparsityPattern      &sparsity_pattern,
+   const unsigned int         &n_dofs):
+   lumped_mass_matrix(&lumped_mass_matrix),
+   consistent_mass_matrix(&consistent_mass_matrix),
+   linear_solver(linear_solver),
+   n_dofs(n_dofs)
 {
+   // allocate memory for temporary vectors
+   tmp_vector.reinit(n_dofs);
+   system_rhs.reinit(n_dofs);
+
+   // initialize sparse matrix
+   system_matrix.reinit(sparsity_pattern);
 }
 
 template<int dim>
@@ -10,7 +24,8 @@ FCT<dim>::~FCT()
 }
 
 template<int dim>
-FCT<dim>::solve_FCT_system(const Vector<double> &old_solution,
+FCT<dim>::solve_FCT_system(const Vector<double> &high_order_solution,
+                           const Vector<double> &old_solution,
                            const SparseMatrix<double> &low_order_ss_matrix,
                            const Vector<double> &ss_rhs,
                            const double         &dt)
@@ -18,7 +33,7 @@ FCT<dim>::solve_FCT_system(const Vector<double> &old_solution,
    // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old)
    system_rhs = 0;
    system_rhs.add(dt, ss_rhs); //       now, system_rhs = dt*(ss_rhs)
-   lumped_mass_matrix.vmult(tmp_vector, old_solution);
+   lumped_mass_matrix->vmult(tmp_vector, old_solution);
    system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
    low_order_ss_matrix.vmult(tmp_vector, old_solution);
    system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
@@ -55,8 +70,7 @@ FCT<dim>::solve_FCT_system(const Vector<double> &old_solution,
 
    // solve the linear system M*u_new = system_rhs
    system_matrix.copy_from(lumped_mass_matrix);
-   apply_Dirichlet_BC(system_matrix, new_solution, system_rhs); // apply Dirichlet BC
-   solve_linear_system(system_matrix, system_rhs);
+   linear_solver.solve(system_matrix, system_rhs, new_solution);
 
    // check that local discrete maximum principle is satisfied at all time steps
    bool DMP_satisfied_this_step = check_max_principle(dt,false);
@@ -197,7 +211,7 @@ void FCT<dim>::compute_steady_state_max_principle_bounds()
    }
 }
 
-/** \brief Assembles the high-order coefficient matrix \f$\mathcal{A}\f$.
+/** \brief Assembles the flux correction matrix.
  *  \param [in] dt current time step size
  */
 template <int dim>
@@ -209,8 +223,8 @@ void FCT<dim>::compute_flux_corrections(const double &dt)
    // add A1 matrix to A by looping over cells
    //--------------------------------------------------------
    std::vector<unsigned int> local_dof_indices(dofs_per_cell);
-   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
-                                                  endc = dof_handler.end();
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler->begin_active(),
+                                                  endc = dof_handler->end();
    for (unsigned int i_cell = 0; cell != endc; ++cell, ++i_cell)
    {
       // get global dof indices for local dofs
@@ -383,12 +397,11 @@ void FCT<dim>::compute_limiting_coefficients()
  *  \param [out] n_col number of nonzero entries of row i
  */
 template <int dim>
-void FCT<dim>::get_matrix_row(const SparseMatrix<double>      &matrix,
-                                           const unsigned int              &i,
-                                                 std::vector<double>       &row_values,
-                                                 std::vector<unsigned int> &row_indices,
-                                                 unsigned int              &n_col
-                                          )
+void FCT<dim>::get_matrix_row(const SparseMatrix<double> &matrix,
+                              const unsigned int         &i,
+                              std::vector<double>        &row_values,
+                              std::vector<unsigned int>  &row_indices,
+                              unsigned int               &n_col)
 {
     // get first and one-past-last iterator for row
     SparseMatrix<double>::const_iterator matrix_iterator     = matrix.begin(i);
@@ -409,6 +422,7 @@ void FCT<dim>::get_matrix_row(const SparseMatrix<double>      &matrix,
 
 /** \brief check that the local discrete max principle is satisfied.
  */
+/*
 template<int dim>
 bool FCT<dim>::check_max_principle(const double &dt,
                                                 const bool   &using_high_order)
@@ -473,12 +487,14 @@ bool FCT<dim>::check_max_principle(const double &dt,
 
    return local_max_principle_satisfied;
 }
+*/
 
 /** \brief Debugging function used for determining why the maximum
  *         principle is failing for the low-order method;
  *         examines the conditions that are required to be met for
  *         the principle to be satisfied.
  */
+/*
 template <int dim>
 void FCT<dim>::debug_max_principle_low_order(const unsigned int &i,
                                                           const double &dt)
@@ -551,3 +567,4 @@ void FCT<dim>::debug_max_principle_low_order(const unsigned int &i,
    if (not condition_violated)
       std::cout << "         DEBUG: No checks returned flags; deeper debugging is necessary." << std::endl;
 }
+*/
