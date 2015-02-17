@@ -43,6 +43,7 @@
 #include "LinearSolver.h"
 #include "SSPRungeKuttaTimeIntegrator.h"
 #include "PostProcessor.h"
+#include "FCT.h"
 
 using namespace dealii;
 
@@ -93,8 +94,8 @@ class TransportProblem {
       SparseMatrix<double> low_order_ss_matrix;
       SparseMatrix<double> high_order_ss_matrix;
       SparseMatrix<double> inviscid_ss_matrix;
-      SparseMatrix<double> low_order_viscous_matrix;
-      SparseMatrix<double> high_order_viscous_matrix;
+      SparseMatrix<double> low_order_diffusion_matrix;
+      SparseMatrix<double> high_order_diffusion_matrix;
       SparseMatrix<double> consistent_mass_matrix;
       SparseMatrix<double> lumped_mass_matrix;
 //      SparseMatrix<double> flux_correction_matrix;
@@ -140,8 +141,8 @@ class TransportProblem {
       // low-order max-principle viscosity functions and data
       void compute_viscous_bilinear_forms();
       void compute_low_order_viscosity();
-      void compute_viscous_matrix(const Vector<double> &viscosity,
-                                  SparseMatrix<double> &viscous_matrix);
+      void compute_diffusion_matrix(const Vector<double> &viscosity,
+                                    SparseMatrix<double> &diffusion_matrix);
       SparsityPattern unconstrained_sparsity_pattern;
       SparseMatrix<double> viscous_bilinear_forms;
 

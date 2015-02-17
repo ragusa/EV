@@ -289,12 +289,12 @@ void TransportProblem<dim>::setup_system()
    low_order_ss_matrix      .reinit(constrained_sparsity_pattern);
    high_order_ss_matrix     .reinit(constrained_sparsity_pattern);
    inviscid_ss_matrix       .reinit(constrained_sparsity_pattern);
-   low_order_viscous_matrix .reinit(constrained_sparsity_pattern);
+   low_order_diffusion_matrix .reinit(constrained_sparsity_pattern);
    consistent_mass_matrix   .reinit(constrained_sparsity_pattern);
    lumped_mass_matrix       .reinit(constrained_sparsity_pattern);
    if ((parameters.scheme_option == 2)||(parameters.scheme_option == 3))
    {
-      high_order_viscous_matrix.reinit(constrained_sparsity_pattern);
+      high_order_diffusion_matrix.reinit(constrained_sparsity_pattern);
       //flux_correction_matrix.reinit(constrained_sparsity_pattern);
    }
       
@@ -337,9 +337,9 @@ void TransportProblem<dim>::setup_system()
       
    // compute low-order viscous matrix and low-order steady-state matrix
    compute_low_order_viscosity();
-   compute_viscous_matrix(low_order_viscosity,low_order_viscous_matrix);
+   compute_diffusion_matrix(low_order_viscosity,low_order_diffusion_matrix);
    low_order_ss_matrix.copy_from(inviscid_ss_matrix);
-   low_order_ss_matrix.add(1.0,low_order_viscous_matrix);
+   low_order_ss_matrix.add(1.0,low_order_diffusion_matrix);
 
    // enforce CFL condition on nominal dt size
    CFL_nominal = enforce_CFL_condition(dt_nominal);
@@ -569,11 +569,11 @@ void TransportProblem<dim>::assemble_ss_rhs(const double &t)
 /** \brief adds the viscous bilinear form for the maximum-principle preserving viscosity
  */
 template <int dim>
-void TransportProblem<dim>::compute_viscous_matrix(const Vector<double> &viscosity,
-                                                   SparseMatrix<double> &viscous_matrix)
+void TransportProblem<dim>::compute_diffusion_matrix(const Vector<double> &viscosity,
+                                                     SparseMatrix<double> &diffusion_matrix)
 {
    // reset viscous matrix
-   viscous_matrix = 0;
+   diffusion_matrix = 0;
 
    unsigned int i_cell = 0;
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
@@ -603,7 +603,7 @@ void TransportProblem<dim>::compute_viscous_matrix(const Vector<double> &viscosi
       cell->get_dof_indices(local_dof_indices);
       constraints.distribute_local_to_global(cell_matrix,
                                              local_dof_indices,
-                                             viscous_matrix);
+                                             diffusion_matrix);
 
    }
 }
@@ -777,6 +777,16 @@ void TransportProblem<dim>::run()
                                       dof_handler,
                                       incoming_function);
 
+      // create FCT object
+      FCT<dim> fct(dof_handler,
+                   lumped_mass_matrix,
+                   consistent_mass_matrix,
+                   linear_solver,
+                   sparsity_pattern,
+                   dirichlet_nodes,
+                   n_dofs,
+                   dofs_per_cell,
+                   parameters.do_not_limit);
 
       // if problem is steady-state, then just do one solve; else loop over time
       if (parameters.is_steady_state) { // run steady-state problem
@@ -895,9 +905,9 @@ void TransportProblem<dim>::run()
                         for (unsigned int i_cell = 0; i_cell < n_cells; ++i_cell)
                            high_order_viscosity(i_cell) = std::min(entropy_viscosity(i_cell),low_order_viscosity(i_cell));
                      }
-                     compute_viscous_matrix(high_order_viscosity,high_order_viscous_matrix);
+                     compute_diffusion_matrix(high_order_viscosity,high_order_diffusion_matrix);
                      high_order_ss_matrix.copy_from(inviscid_ss_matrix);
-                     high_order_ss_matrix.add(1.0,high_order_viscous_matrix);
+                     high_order_ss_matrix.add(1.0,high_order_diffusion_matrix);
 
                      // advance by an SSPRK step
                      ssprk.advance_stage(consistent_mass_matrix,high_order_ss_matrix,ss_rhs);
@@ -926,15 +936,24 @@ void TransportProblem<dim>::run()
                         for (unsigned int i_cell = 0; i_cell < n_cells; ++i_cell)
                            high_order_viscosity(i_cell) = std::min(entropy_viscosity(i_cell),low_order_viscosity(i_cell));
                      }
-                     compute_viscous_matrix(high_order_viscosity,high_order_viscous_matrix);
+                     compute_diffusion_matrix(high_order_viscosity,high_order_diffusion_matrix);
                      high_order_ss_matrix.copy_from(inviscid_ss_matrix);
-                     high_order_ss_matrix.add(1.0,high_order_viscous_matrix);
+                     high_order_ss_matrix.add(1.0,high_order_diffusion_matrix);
 
                      // advance by an SSPRK step
                      ssprk.advance_stage(consistent_mass_matrix,high_order_ss_matrix,ss_rhs);
 
+                     // get stage solution
+                     ssprk.get_stage_solution(new_solution);
+
                      // perform FCT
-                     //fct.solve_FCT_system();
+                     fct.solve_FCT_system(new_solution,
+                                          old_solution,
+                                          low_order_ss_matrix,
+                                          ss_rhs,
+                                          dt,
+                                          low_order_diffusion_matrix,
+                                          high_order_diffusion_matrix);
 
                      // set stage solution to be FCT solution for this stage
                      ssprk.set_stage_solution(i+1,new_solution);
@@ -1081,9 +1100,9 @@ void TransportProblem<dim>::solve_steady_state(const LinearSolver<dim> &linear_s
       // compute viscosity (both low-order and high-order)
       compute_low_order_viscosity();
       // compute viscous matrix
-      compute_viscous_matrix(low_order_viscosity,low_order_viscous_matrix);
+      compute_diffusion_matrix(low_order_viscosity,low_order_diffusion_matrix);
       // add low-order diffusion matrix to steady-state matrix
-      system_matrix.add(1.0, low_order_viscous_matrix);
+      system_matrix.add(1.0, low_order_diffusion_matrix);
    }
    // enforce Dirichlet BC on total system matrix
    //apply_Dirichlet_BC(system_matrix, new_solution, ss_rhs);

@@ -1,18 +1,33 @@
 template<int dim>
 FCT<dim>::FCT(
+   const DoFHandler<dim>      &dof_handler,
    const SparseMatrix<double> &lumped_mass_matrix,
    const SparseMatrix<double> &consistent_mass_matrix,
    const LinearSolver<dim>    &linear_solver,
    const SparsityPattern      &sparsity_pattern,
-   const unsigned int         &n_dofs):
+   const std::vector<unsigned int> &dirichlet_nodes,
+   const unsigned int         &n_dofs,
+   const unsigned int         &dofs_per_cell,
+   const bool                 &do_not_limit):
+   dof_handler(&dof_handler),
    lumped_mass_matrix(&lumped_mass_matrix),
    consistent_mass_matrix(&consistent_mass_matrix),
    linear_solver(linear_solver),
-   n_dofs(n_dofs)
+   dirichlet_nodes(dirichlet_nodes),
+   n_dofs(n_dofs),
+   dofs_per_cell(dofs_per_cell),
+   do_not_limit(do_not_limit)
 {
-   // allocate memory for temporary vectors
-   tmp_vector.reinit(n_dofs);
-   system_rhs.reinit(n_dofs);
+   // allocate memory for vectors
+   tmp_vector  .reinit(n_dofs);
+   system_rhs  .reinit(n_dofs);
+   solution_min.reinit(n_dofs);
+   solution_max.reinit(n_dofs);
+   flux_correction_vector.reinit(n_dofs);
+   Q_minus.reinit(n_dofs);
+   Q_plus.reinit(n_dofs);
+   R_minus.reinit(n_dofs);
+   R_plus.reinit(n_dofs);
 
    // initialize sparse matrix
    system_matrix.reinit(sparsity_pattern);
@@ -24,11 +39,13 @@ FCT<dim>::~FCT()
 }
 
 template<int dim>
-FCT<dim>::solve_FCT_system(const Vector<double> &high_order_solution,
-                           const Vector<double> &old_solution,
-                           const SparseMatrix<double> &low_order_ss_matrix,
-                           const Vector<double> &ss_rhs,
-                           const double         &dt)
+void FCT<dim>::solve_FCT_system(Vector<double>             &new_solution,
+                                const Vector<double>       &old_solution,
+                                const SparseMatrix<double> &low_order_ss_matrix,
+                                const Vector<double>       &ss_rhs,
+                                const double               &dt,
+                                const SparseMatrix<double> &low_order_diffusion_matrix,
+                                const SparseMatrix<double> &high_order_diffusion_matrix)
 {
    // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old)
    system_rhs = 0;
@@ -39,69 +56,54 @@ FCT<dim>::solve_FCT_system(const Vector<double> &high_order_solution,
    system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
 
    // compute flux corrections
-   compute_flux_corrections(dt);
+   compute_flux_corrections(new_solution,
+                            old_solution,
+                            dt,
+                            low_order_diffusion_matrix,
+                            high_order_diffusion_matrix);
 
    // compute max principle min and max values
-   compute_bounds(dt);
+   compute_bounds(old_solution,low_order_ss_matrix,ss_rhs,dt);
 
-   // compute Q+
-   Q_plus = 0;
-   lumped_mass_matrix.vmult(tmp_vector, solution_max);
-   Q_plus.add(1.0/dt, tmp_vector);
-   lumped_mass_matrix.vmult(tmp_vector, old_solution);
-   Q_plus.add(-1.0/dt,tmp_vector);
-   low_order_ss_matrix.vmult(tmp_vector, old_solution);
-   Q_plus.add(1.0,tmp_vector);
-   Q_plus.add(-1.0,ss_rhs);
-   
-   // compute Q-
-   Q_minus = 0;
-   lumped_mass_matrix.vmult(tmp_vector, solution_max);
-   Q_minus.add(1.0/dt, tmp_vector);
-   lumped_mass_matrix.vmult(tmp_vector, old_solution);
-   Q_minus.add(-1.0/dt,tmp_vector);
-   low_order_ss_matrix.vmult(tmp_vector, old_solution);
-   Q_minus.add(1.0,tmp_vector);
-   Q_minus.add(-1.0,ss_rhs);
 
    // compute limited flux correction sum and add it to rhs
    compute_limiting_coefficients();
    system_rhs.add(dt, flux_correction_vector);   // now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old + f)
 
    // solve the linear system M*u_new = system_rhs
-   system_matrix.copy_from(lumped_mass_matrix);
+   system_matrix.copy_from(*lumped_mass_matrix);
    linear_solver.solve(system_matrix, system_rhs, new_solution);
 
    // check that local discrete maximum principle is satisfied at all time steps
-   bool DMP_satisfied_this_step = check_max_principle(dt,false);
-   DMP_satisfied_at_all_steps = DMP_satisfied_at_all_steps and DMP_satisfied_this_step;
+   //bool DMP_satisfied_this_step = check_max_principle(dt,false);
+   //DMP_satisfied_at_all_steps = DMP_satisfied_at_all_steps and DMP_satisfied_this_step;
 }
 
 /** \brief Computes min and max quantities for max principle
  */
 template <int dim>
-void FCT<dim>::compute_bounds(const Vector<double> &old_solution,
-                              const double &dt)
+void FCT<dim>::compute_bounds(const Vector<double>       &old_solution,
+                              const SparseMatrix<double> &low_order_ss_matrix,
+                              const Vector<double>       &ss_rhs,
+                              const double               &dt)
 {
-   // initialize min and max values
    for (unsigned int i = 0; i < n_dofs; ++i)
    {
       solution_max(i) = old_solution(i);
       solution_min(i) = old_solution(i);
    }
 
-   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
-
    // loop over cells
-   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
-                                                  endc = dof_handler.end();
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler->begin_active(),
+                                                  endc = dof_handler->end();
+   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
    for (; cell != endc; ++cell) {
       // get local dof indices
       cell->get_dof_indices(local_dof_indices);
 
       // find min and max values on cell
-      double max_cell = old_solution(local_dof_indices[0]); // initialized to arbitrary value on cell
-      double min_cell = old_solution(local_dof_indices[0]); // initialized to arbitrary value on cell
+      double max_cell = old_solution(local_dof_indices[0]);
+      double min_cell = old_solution(local_dof_indices[0]);
       for (unsigned int j = 0; j < dofs_per_cell; ++j) {
          double value_j = old_solution(local_dof_indices[j]);
          max_cell = std::max(max_cell, value_j);
@@ -150,7 +152,11 @@ void FCT<dim>::compute_bounds(const Vector<double> &old_solution,
 /** \brief Computes min and max quantities for steady-state max principle
  */
 template <int dim>
-void FCT<dim>::compute_steady_state_max_principle_bounds()
+void FCT<dim>::compute_steady_state_max_principle_bounds(
+   const Vector<double>       &old_solution,
+   const SparseMatrix<double> &low_order_ss_matrix,
+   const Vector<double>       &ss_rhs,
+   const double               &dt)
 {
    // initialize min and max values
    for (unsigned int i = 0; i < n_dofs; ++i)
@@ -159,18 +165,17 @@ void FCT<dim>::compute_steady_state_max_principle_bounds()
       solution_min(i) = new_solution(i);
    }
 
-   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
-
    // loop over cells
-   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
-                                                  endc = dof_handler.end();
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler->begin_active(),
+                                                  endc = dof_handler->end();
+   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
    for (; cell != endc; ++cell) {
       // get local dof indices
       cell->get_dof_indices(local_dof_indices);
 
       // find min and max values on cell
-      double max_cell = new_solution(local_dof_indices[0]); // initialized to arbitrary value on cell
-      double min_cell = new_solution(local_dof_indices[0]); // initialized to arbitrary value on cell
+      double max_cell = new_solution(local_dof_indices[0]);
+      double min_cell = new_solution(local_dof_indices[0]);
       for (unsigned int j = 0; j < dofs_per_cell; ++j) {
          double value_j = new_solution(local_dof_indices[j]);
          max_cell = std::max(max_cell, value_j);
@@ -188,7 +193,7 @@ void FCT<dim>::compute_steady_state_max_principle_bounds()
    // compute the upper and lower bounds for the maximum principle
    for (unsigned int i = 0; i < n_dofs; ++i)
    {
-      // compute sum of A_ij over row i
+      // compute sum of low-order ss matrix over row i
       // get nonzero entries of row i of A
       std::vector<double>       row_values;
       std::vector<unsigned int> row_indices;
@@ -215,78 +220,28 @@ void FCT<dim>::compute_steady_state_max_principle_bounds()
  *  \param [in] dt current time step size
  */
 template <int dim>
-void FCT<dim>::compute_flux_corrections(const double &dt)
+void FCT<dim>::compute_flux_corrections(const Vector<double>       &high_order_solution,
+                                        const Vector<double>       &old_solution,
+                                        const double               &dt,
+                                        const SparseMatrix<double> &low_order_diffusion_matrix,
+                                        const SparseMatrix<double> &high_order_diffusion_matrix)
 {
-   // reset A to zero
+   // reset flux correction matrix to zero 
    flux_correction_matrix = 0;
 
-   // add A1 matrix to A by looping over cells
-   //--------------------------------------------------------
-   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
-   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler->begin_active(),
-                                                  endc = dof_handler->end();
-   for (unsigned int i_cell = 0; cell != endc; ++cell, ++i_cell)
-   {
-      // get global dof indices for local dofs
-      cell->get_dof_indices(local_dof_indices);
+   // compute time derivate of high-order solution
+   tmp_vector = 0;
+   tmp_vector.add(1.0/dt,high_order_solution,-1.0/dt,old_solution);
 
-      // get low-order and high-order viscosities for cell
-      double nu_L = low_order_viscosity (i_cell);
-      double nu_H = high_order_viscosity(i_cell);
-      // compute cell volume, needed for viscous bilinear form bK(phi_j,phi_i)
-      double cell_volume = cell->measure();
-
-      for (unsigned int ii = 0; ii < dofs_per_cell; ++ii)
-      {
-         // get global index for local dof i
-         unsigned int i = local_dof_indices[ii];
-         
-         for (unsigned int jj = 0; jj < dofs_per_cell; ++jj)
-         {
-            // get global index for local dof j
-            unsigned int j = local_dof_indices[jj];
-
-            // compute viscous bilinear form bK(phi_j,phi_i)
-            double bK;
-            if (ii == jj)
-               bK = cell_volume;
-            else
-               bK = cell_volume / (1.0 - dofs_per_cell);
-
-            // compute cell contribution to A1(i,j)
-            double A1_ij = dt*(nu_L - nu_H)*(old_solution(j) - old_solution(i))*bK;
-            // add it to A(i,j)
-            flux_correction_matrix.add(i,j,A1_ij);
-         }
-      }
-   }
-   
-   // add A2 matrix to A by looping over all degrees of freedom
-   //----------------------------------------------------------
+   // loop over rows
    for (unsigned int i = 0; i < n_dofs; ++i)
    {
-      // Note that the high-order right hand side (G) is stored in system_rhs,
-      // and auxiliary_mass_matrix is the "B" matrix
-
-      // get nonzero entries in row i of B
-      std::vector<double>       row_values;
-      std::vector<unsigned int> row_indices;
-      unsigned int              n_col;
-      get_matrix_row(auxiliary_mass_matrix,
-                     i,
-                     row_values,
-                     row_indices,
-                     n_col);
-
-      // loop over nonzero entries in row i of B
-      for (unsigned int k = 0; k < n_col; ++k)
+      // loop over nonzero entries in row i
+      for (unsigned int j = std::max(i-1,0); j < std::min(i+1,n_dofs); ++j)
       {
-         // get the column index of nonzero entry k
-         unsigned int j = row_indices[k];
-
-         // add A2(i,j) to A(i,j)
-         flux_correction_matrix.add(i,j,dt*(auxiliary_mass_matrix(j,i)*system_rhs(i)
-                                                  -auxiliary_mass_matrix(i,j)*system_rhs(j)));
+         flux_correction_matrix(i,j) = -consistent_mass_matrix(i,j)*(tmp_vector(j)-tmp_vector(i)) +
+            (low_order_diffusion_matrix(i,j)-high_order_diffusion_matrix(i,j)) *
+            (old_solution(j) - old_solution(i));
       }
    }
 }
@@ -301,6 +256,26 @@ void FCT<dim>::compute_limiting_coefficients()
    // reset flux correction vector
    flux_correction_vector = 0;
 
+   // compute Q+
+   Q_plus = 0;
+   lumped_mass_matrix->vmult(tmp_vector, solution_max);
+   Q_plus.add(1.0/dt, tmp_vector);
+   lumped_mass_matrix->vmult(tmp_vector, old_solution);
+   Q_plus.add(-1.0/dt,tmp_vector);
+   low_order_ss_matrix.vmult(tmp_vector, old_solution);
+   Q_plus.add(1.0,tmp_vector);
+   Q_plus.add(-1.0,ss_rhs);
+   
+   // compute Q-
+   Q_minus = 0;
+   lumped_mass_matrix->vmult(tmp_vector, solution_max);
+   Q_minus.add(1.0/dt, tmp_vector);
+   lumped_mass_matrix->vmult(tmp_vector, old_solution);
+   Q_minus.add(-1.0/dt,tmp_vector);
+   low_order_ss_matrix.vmult(tmp_vector, old_solution);
+   Q_minus.add(1.0,tmp_vector);
+   Q_minus.add(-1.0,ss_rhs);
+
    for (unsigned int i = 0; i < n_dofs; ++i)
    {
       // for Dirichlet nodes, set R_minus and R_plus to 1 because no limiting is needed
@@ -311,7 +286,7 @@ void FCT<dim>::compute_limiting_coefficients()
       }
       else
       {
-         // get nonzero entries in row i of high-order coefficient matrix A
+         // get nonzero entries in row i of flux correction matrix
          std::vector<double>       row_values;
          std::vector<unsigned int> row_indices;
          unsigned int              n_col;
@@ -349,7 +324,7 @@ void FCT<dim>::compute_limiting_coefficients()
 
    // if user chose not to limit, set R+ and R- = 1 so that limiting
    // coefficients will equal 1 and thus no limiting will occur
-   if (parameters.do_not_limit)
+   if (do_not_limit)
    {
       for (unsigned int i = 0; i < n_dofs; ++i)
       {
