@@ -24,7 +24,7 @@ class SSPRungeKuttaTimeIntegrator {
       void advance_stage(const SparseMatrix<double> &mass_matrix,
                          const SparseMatrix<double> &ss_matrix,
                          const Vector<double>       &ss_rhs);
-      void get_stage_solution(Vector<double> &new_solution) const;
+      void get_stage_solution(const unsigned int &i, Vector<double> &new_solution) const;
       void get_new_solution(Vector<double> &new_solution) const;
       double get_stage_time() const;
       void set_stage_solution(const unsigned int &i, const Vector<double> &solution);

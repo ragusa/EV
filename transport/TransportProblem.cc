@@ -293,10 +293,7 @@ void TransportProblem<dim>::setup_system()
    consistent_mass_matrix   .reinit(constrained_sparsity_pattern);
    lumped_mass_matrix       .reinit(constrained_sparsity_pattern);
    if ((parameters.scheme_option == 2)||(parameters.scheme_option == 3))
-   {
       high_order_diffusion_matrix.reinit(constrained_sparsity_pattern);
-      //flux_correction_matrix.reinit(constrained_sparsity_pattern);
-   }
       
    // reinitialize auxiliary matrices
    CompressedSparsityPattern compressed_unconstrained_sparsity_pattern(n_dofs);
@@ -309,18 +306,10 @@ void TransportProblem<dim>::setup_system()
    // reinitialize solution vector, system matrix, and rhs
    old_solution.reinit(n_dofs);
    older_solution.reinit(n_dofs);
+   old_stage_solution.reinit(n_dofs);
    new_solution.reinit(n_dofs);
    system_rhs  .reinit(n_dofs);
    ss_rhs      .reinit(n_dofs);
-/*
-   R_plus      .reinit(n_dofs);
-   R_minus     .reinit(n_dofs);
-   Q_plus      .reinit(n_dofs);
-   Q_minus     .reinit(n_dofs);
-   flux_correction_vector.reinit(n_dofs);
-   min_values.reinit(n_dofs);
-   max_values.reinit(n_dofs);
-*/
 
    // reinitialize viscosities
    entropy_viscosity   .reinit(n_cells);
@@ -782,7 +771,7 @@ void TransportProblem<dim>::run()
                    lumped_mass_matrix,
                    consistent_mass_matrix,
                    linear_solver,
-                   sparsity_pattern,
+                   constrained_sparsity_pattern,
                    dirichlet_nodes,
                    n_dofs,
                    dofs_per_cell,
@@ -821,7 +810,6 @@ void TransportProblem<dim>::run()
          older_solution = new_solution;
          const double t_end = parameters.end_time;
          bool in_transient = true;
-         bool DMP_satisfied_at_all_steps = true;
          Vector<double> tmp_vector(n_dofs);
          unsigned int n = 1; // time step index
          while (in_transient)
@@ -876,13 +864,6 @@ void TransportProblem<dim>::run()
                   }
                   // retrieve the final solution
                   ssprk.get_new_solution(new_solution);
-/*
-                  // compute max principle min and max values
-                  compute_max_principle_bounds(dt);
-                  // check that local discrete maximum principle is satisfied at all time steps
-                  bool DMP_satisfied_this_step = check_max_principle(dt,false);
-                  DMP_satisfied_at_all_steps = DMP_satisfied_at_all_steps and DMP_satisfied_this_step;
-*/
 
                   break;
                } case 2: { // high-order system with entropy viscosity
@@ -917,7 +898,7 @@ void TransportProblem<dim>::run()
 
                   break;
                } case 3: { // FCT
-                  Assert(false,ExcNotImplemented());
+
                   for (unsigned int i = 0; i < ssprk.n_stages; ++i)
                   {
                      // get stage time
@@ -943,12 +924,15 @@ void TransportProblem<dim>::run()
                      // advance by an SSPRK step
                      ssprk.advance_stage(consistent_mass_matrix,high_order_ss_matrix,ss_rhs);
 
+                     // get old stage solution
+                     ssprk.get_stage_solution(i,old_stage_solution);
+
                      // get stage solution
-                     ssprk.get_stage_solution(new_solution);
+                     ssprk.get_stage_solution(i+1,new_solution);
 
                      // perform FCT
                      fct.solve_FCT_system(new_solution,
-                                          old_solution,
+                                          old_stage_solution,
                                           low_order_ss_matrix,
                                           ss_rhs,
                                           dt,
@@ -960,82 +944,6 @@ void TransportProblem<dim>::run()
                   }
                   // retrieve the final solution
                   ssprk.get_new_solution(new_solution);
-/*
-
-                  // solve high-order system
-                  // ------------------------------------------------------------
-                  // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
-                  system_rhs = 0;
-                  system_rhs.add(dt, ss_rhs); //       now, system_rhs = dt*(ss_rhs)
-                  consistent_mass_matrix.vmult(tmp_vector, old_solution);
-                  system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
-                  inviscid_ss_matrix.vmult(tmp_vector, old_solution);
-                  system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
-      
-                  // add viscous matrix to rhs
-                  high_order_viscous_matrix.vmult(tmp_vector, old_solution);
-                  system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old)
-
-                  // solve the linear system M*u_new = system_rhs
-                  system_matrix.copy_from(consistent_mass_matrix);
-                  apply_Dirichlet_BC(system_matrix, new_solution, system_rhs); // apply Dirichlet BC
-                  solve_linear_system(system_matrix, system_rhs);
-            
-                  // distribute constraints
-                  constraints.distribute(new_solution);
-
-                  // solve FCT system
-                  // ------------------------------------------------------------
-                  // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old)
-                  system_rhs = 0;
-                  system_rhs.add(dt, ss_rhs); //       now, system_rhs = dt*(ss_rhs)
-                  lumped_mass_matrix.vmult(tmp_vector, old_solution);
-                  system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
-                  low_order_ss_matrix.vmult(tmp_vector, old_solution);
-                  system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
-
-                  // add limited flux sum
-                  assemble_flux_correction_matrix(dt);
-
-                  // compute max principle min and max values
-                  compute_max_principle_bounds(dt);
-
-                  // compute Q+
-                  Q_plus = 0;
-                  lumped_mass_matrix.vmult(tmp_vector, max_values);
-                  Q_plus.add(1.0/dt, tmp_vector);
-                  lumped_mass_matrix.vmult(tmp_vector, old_solution);
-                  Q_plus.add(-1.0/dt,tmp_vector);
-                  low_order_ss_matrix.vmult(tmp_vector, old_solution);
-                  Q_plus.add(1.0,tmp_vector);
-                  Q_plus.add(-1.0,ss_rhs);
-                  
-                  // compute Q-
-                  Q_minus = 0;
-                  lumped_mass_matrix.vmult(tmp_vector, max_values);
-                  Q_minus.add(1.0/dt, tmp_vector);
-                  lumped_mass_matrix.vmult(tmp_vector, old_solution);
-                  Q_minus.add(-1.0/dt,tmp_vector);
-                  low_order_ss_matrix.vmult(tmp_vector, old_solution);
-                  Q_minus.add(1.0,tmp_vector);
-                  Q_minus.add(-1.0,ss_rhs);
-
-                  // compute limited flux correction sum and add it to rhs
-                  compute_limiting_coefficients();
-                  system_rhs.add(dt, flux_correction_vector);   // now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old + f)
-
-                  // solve the linear system M*u_new = system_rhs
-                  system_matrix.copy_from(lumped_mass_matrix);
-                  apply_Dirichlet_BC(system_matrix, new_solution, system_rhs); // apply Dirichlet BC
-                  solve_linear_system(system_matrix, system_rhs);
-
-                  // distribute constraints
-                  constraints.distribute(new_solution);
-
-                  // check that local discrete maximum principle is satisfied at all time steps
-                  bool DMP_satisfied_this_step = check_max_principle(dt,false);
-                  DMP_satisfied_at_all_steps = DMP_satisfied_at_all_steps and DMP_satisfied_this_step;
-*/
 
                   break;
                } default: {
@@ -1059,7 +967,7 @@ void TransportProblem<dim>::run()
          if (parameters.scheme_option == 3)
          {
             // report if local discrete maximum principle is satisfied at all time steps
-            if (DMP_satisfied_at_all_steps)
+            if (fct.check_DMP_satisfied())
                std::cout << "Local discrete maximum principle was satisfied at all time steps" << std::endl;
             else
                std::cout << "Local discrete maximum principle was NOT satisfied at all time steps" << std::endl;
@@ -1079,7 +987,7 @@ void TransportProblem<dim>::run()
    postprocessor.output_viscosity(low_order_viscosity,entropy_viscosity,high_order_viscosity,dof_handler);
 }
 
-/** \brief 
+/** \brief Solves the steady-state system.
  */
 template<int dim>
 void TransportProblem<dim>::solve_steady_state(const LinearSolver<dim> &linear_solver)
@@ -1104,494 +1012,11 @@ void TransportProblem<dim>::solve_steady_state(const LinearSolver<dim> &linear_s
       // add low-order diffusion matrix to steady-state matrix
       system_matrix.add(1.0, low_order_diffusion_matrix);
    }
-   // enforce Dirichlet BC on total system matrix
-   //apply_Dirichlet_BC(system_matrix, new_solution, ss_rhs);
    // solve the linear system: ss_matrix*new_solution = ss_rhs
-   //solve_linear_system(system_matrix, ss_rhs);
    linear_solver.solve(system_matrix, ss_rhs, new_solution);
    // distribute constraints
    constraints.distribute(new_solution);
-
-/*
-   // compute bounds for maximum principle check
-   compute_steady_state_max_principle_bounds();
-   // check that solution satisfies maximum principle
-   bool satisfied_max_principle = check_max_principle(0,0.0);
-   // report if max principle was satisfied or not
-   if (satisfied_max_principle)
-      std::cout << "The local discrete maximum principle was satisfied." << std::endl;
-   else
-      std::cout << "The local discrete maximum principle was NOT satisfied." << std::endl;
-*/
 }
-
-/** \brief check that the local discrete max principle is satisfied.
- */
-/*
-template<int dim>
-bool TransportProblem<dim>::check_max_principle(const double &dt,
-                                                const bool   &using_high_order)
-{
-   // machine precision for floating point comparisons
-   const double machine_tolerance = 1.0e-12;
-
-   // now set new precision
-   std::cout.precision(15);
-
-   // check that each dof value is bounded by its neighbors
-   bool local_max_principle_satisfied = true;
-   for (unsigned int i = 0; i < n_dofs; ++i) {
-      // check if dof is a Dirichlet node or not - if it is, don't check max principle
-      if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) == dirichlet_nodes.end())
-      {
-         double value_i = new_solution(i);
-         // check lower bound
-         if (value_i < min_values(i) - machine_tolerance) {
-            local_max_principle_satisfied = false;
-            // determine which condition was violated
-            if (using_high_order)
-            {
-               std::cout << "      Max principle lower bound violated with dof "
-                  << i << " of high-order solution: " << std::scientific
-                  << value_i << " < " << min_values(i) << std::endl;
-            } else {
-               std::cout << "      Max principle lower bound violated with dof "
-                  << i << " of low-order solution: " << std::scientific
-                  << value_i << " < " << min_values(i) << std::endl;
-               debug_max_principle_low_order (i,dt);
-            }
-         }
-         // check upper bound
-         if (value_i > max_values(i) + machine_tolerance) {
-            local_max_principle_satisfied = false;
-            // determine which condition was violated
-            if (using_high_order)
-            {
-               std::cout << "      Max principle upper bound violated with dof "
-                  << i << " of high-order solution: " << std::scientific
-                  << value_i << " > " << max_values(i) << std::endl;
-            } else {
-               std::cout << "      Max principle upper bound violated with dof "
-                  << i << " of low-order solution: " << std::scientific
-                  << value_i << " > " << max_values(i) << std::endl;
-               debug_max_principle_low_order (i,dt);
-            }
-         }
-      }
-   }
-
-   // restore default precision and format
-   std::cout.unsetf(std::ios_base::floatfield);
-
-   // exit if max principle was violated
-   if (not local_max_principle_satisfied)
-   {
-      std::cout << "Program terminated due to max-principle violation." << std::endl;
-      std::exit(0);
-   }
-
-   return local_max_principle_satisfied;
-}
-*/
-
-/** \brief Debugging function used for determining why the maximum
- *         principle is failing for the low-order method;
- *         examines the conditions that are required to be met for
- *         the principle to be satisfied.
- */
-/*
-template <int dim>
-void TransportProblem<dim>::debug_max_principle_low_order(const unsigned int &i,
-                                                          const double &dt)
-{
-   // flag to determine if no conditions were violated
-   bool condition_violated = false;
-
-   // get nonzero entries of row i of A
-   std::vector<double>       row_values;
-   std::vector<unsigned int> row_indices;
-   unsigned int              n_col;
-   get_matrix_row(low_order_ss_matrix,
-                  i,
-                  row_values,
-                  row_indices,
-                  n_col);
-
-   // diagonal entry
-   double Aii = low_order_ss_matrix(i,i);
-
-   // check that system matrix diagonal elements are non-negative
-   if (Aii < 0.0)
-   {
-      std::cout << "         DEBUG: diagonal element is negative: " << Aii << std::endl;
-      condition_violated = true;
-   }
-   
-   // loop over nonzero entries in row i to compute off-diagonal sum
-   // for diagonal dominance check and also check that each off-diagonal
-   // element is non-positive
-   double off_diagonal_sum = 0.0;
-   for (unsigned int k = 0; k < n_col; ++k)
-   {
-      unsigned int j = row_indices[k];
-      double Aij = row_values[k];
-
-      if (j != i)
-      {
-         // add to off-diagonal sum
-         off_diagonal_sum += std::abs(Aij);
-         // check that system matrix off-diagonal elements are non-positive
-         if (Aij > 0.0)
-         {
-            std::cout << "         DEBUG: off-diagonal element (" << i << "," << j << ") is positive: " << Aij << std::endl;
-            condition_violated = true;
-         }
-      }
-   }
-
-   // check that system matrix is diagonally dominant
-   if (Aii < off_diagonal_sum)
-   {
-      std::cout << "         DEBUG: row is not diagonally dominant: Aii = "
-         << Aii << ", off-diagonal sum = " << off_diagonal_sum << std::endl;
-      condition_violated = true;
-   }
-     
-   // check that CFL condition is satisfied if transient problem
-   if (!parameters.is_steady_state)
-   {
-      double cfl = dt/lumped_mass_matrix(i,i)*low_order_ss_matrix(i,i);
-      if (cfl > 1.0)
-      {
-         std::cout << "         DEBUG: row does not satisfy CFL condition: CFL = " << cfl << std::endl;
-         condition_violated = true;
-      }
-   }
-
-   // report if no conditions were violated
-   if (not condition_violated)
-      std::cout << "         DEBUG: No checks returned flags; deeper debugging is necessary." << std::endl;
-}
-*/
-
-/** \brief Computes min and max quantities for max principle
- */
-/*
-template <int dim>
-void TransportProblem<dim>::compute_max_principle_bounds(const double &dt)
-{
-   // initialize min and max values
-   for (unsigned int i = 0; i < n_dofs; ++i)
-   {
-      max_values(i) = old_solution(i);
-      min_values(i) = old_solution(i);
-   }
-
-   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
-
-   // loop over cells
-   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
-                                                  endc = dof_handler.end();
-   for (; cell != endc; ++cell) {
-      // get local dof indices
-      cell->get_dof_indices(local_dof_indices);
-
-      // find min and max values on cell
-      double max_cell = old_solution(local_dof_indices[0]); // initialized to arbitrary value on cell
-      double min_cell = old_solution(local_dof_indices[0]); // initialized to arbitrary value on cell
-      for (unsigned int j = 0; j < dofs_per_cell; ++j) {
-         double value_j = old_solution(local_dof_indices[j]);
-         max_cell = std::max(max_cell, value_j);
-         min_cell = std::min(min_cell, value_j);
-      }
-
-      // update the max and min values of neighborhood of each dof
-      for (unsigned int j = 0; j < dofs_per_cell; ++j) {
-         unsigned int i = local_dof_indices[j]; // global index
-         max_values(i) = std::max(max_values(i), max_cell);
-         min_values(i) = std::min(min_values(i), min_cell);
-      }
-   }
-
-   // At this point, the min/max values of the old solution in the support
-   // of test function i are stored in min_values(i) and max_values(i).
-   // Now these values are multiplied by (1-dt/m(i))*sum_j(A(i,j)) and
-   // added to dt/m(i)*b(i).
-
-   // compute the upper and lower bounds for the maximum principle
-   for (unsigned int i = 0; i < n_dofs; ++i)
-   {
-      // compute sum of A_ij over row i
-      // get nonzero entries of row i of A
-      std::vector<double>       row_values;
-      std::vector<unsigned int> row_indices;
-      unsigned int              n_col;
-      get_matrix_row(low_order_ss_matrix,
-                     i,
-                     row_values,
-                     row_indices,
-                     n_col);
-      // add nonzero entries to get the row sum
-      double row_sum = 0.0;
-      for (unsigned int k = 0; k < n_col; ++k)
-         row_sum += row_values[k];
-      
-      // compute the max and min values for the maximum principle
-      max_values(i) = max_values(i)*(1.0 - dt/lumped_mass_matrix(i,i)*row_sum)
-         + dt/lumped_mass_matrix(i,i)*ss_rhs(i);
-      min_values(i) = min_values(i)*(1.0 - dt/lumped_mass_matrix(i,i)*row_sum)
-         + dt/lumped_mass_matrix(i,i)*ss_rhs(i);
-   }
-}
-*/
-
-/** \brief Computes min and max quantities for steady-state max principle
- */
-/*
-template <int dim>
-void TransportProblem<dim>::compute_steady_state_max_principle_bounds()
-{
-   // initialize min and max values
-   for (unsigned int i = 0; i < n_dofs; ++i)
-   {
-      max_values(i) = new_solution(i);
-      min_values(i) = new_solution(i);
-   }
-
-   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
-
-   // loop over cells
-   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
-                                                  endc = dof_handler.end();
-   for (; cell != endc; ++cell) {
-      // get local dof indices
-      cell->get_dof_indices(local_dof_indices);
-
-      // find min and max values on cell
-      double max_cell = new_solution(local_dof_indices[0]); // initialized to arbitrary value on cell
-      double min_cell = new_solution(local_dof_indices[0]); // initialized to arbitrary value on cell
-      for (unsigned int j = 0; j < dofs_per_cell; ++j) {
-         double value_j = new_solution(local_dof_indices[j]);
-         max_cell = std::max(max_cell, value_j);
-         min_cell = std::min(min_cell, value_j);
-      }
-
-      // update the max and min values of neighborhood of each dof
-      for (unsigned int j = 0; j < dofs_per_cell; ++j) {
-         unsigned int i = local_dof_indices[j]; // global index
-         max_values(i) = std::max(max_values(i), max_cell);
-         min_values(i) = std::min(min_values(i), min_cell);
-      }
-   }
-
-   // compute the upper and lower bounds for the maximum principle
-   for (unsigned int i = 0; i < n_dofs; ++i)
-   {
-      // compute sum of A_ij over row i
-      // get nonzero entries of row i of A
-      std::vector<double>       row_values;
-      std::vector<unsigned int> row_indices;
-      unsigned int              n_col;
-      get_matrix_row(low_order_ss_matrix,
-                     i,
-                     row_values,
-                     row_indices,
-                     n_col);
-      // add nonzero entries to get the row sum
-      double row_sum = 0.0;
-      for (unsigned int k = 0; k < n_col; ++k)
-         row_sum += row_values[k];
-      
-      // compute the max and min values for the maximum principle
-      max_values(i) = max_values(i)*(1.0 - row_sum/low_order_ss_matrix(i,i))
-         + ss_rhs(i)/low_order_ss_matrix(i,i);
-      min_values(i) = min_values(i)*(1.0 - row_sum/low_order_ss_matrix(i,i))
-         + ss_rhs(i)/low_order_ss_matrix(i,i);
-   }
-}
-*/
-
-/** \brief Assembles the high-order coefficient matrix \f$\mathcal{A}\f$.
- *  \param [in] dt current time step size
- */
-/*
-template <int dim>
-void TransportProblem<dim>::assemble_flux_correction_matrix(const double &dt)
-{
-   // reset A to zero
-   flux_correction_matrix = 0;
-
-   // add A1 matrix to A by looping over cells
-   //--------------------------------------------------------
-   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
-   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
-                                                  endc = dof_handler.end();
-   for (unsigned int i_cell = 0; cell != endc; ++cell, ++i_cell)
-   {
-      // get global dof indices for local dofs
-      cell->get_dof_indices(local_dof_indices);
-
-      // get low-order and high-order viscosities for cell
-      double nu_L = low_order_viscosity (i_cell);
-      double nu_H = high_order_viscosity(i_cell);
-      // compute cell volume, needed for viscous bilinear form bK(phi_j,phi_i)
-      double cell_volume = cell->measure();
-
-      for (unsigned int ii = 0; ii < dofs_per_cell; ++ii)
-      {
-         // get global index for local dof i
-         unsigned int i = local_dof_indices[ii];
-         
-         for (unsigned int jj = 0; jj < dofs_per_cell; ++jj)
-         {
-            // get global index for local dof j
-            unsigned int j = local_dof_indices[jj];
-
-            // compute viscous bilinear form bK(phi_j,phi_i)
-            double bK;
-            if (ii == jj)
-               bK = cell_volume;
-            else
-               bK = cell_volume / (1.0 - dofs_per_cell);
-
-            // compute cell contribution to A1(i,j)
-            double A1_ij = dt*(nu_L - nu_H)*(old_solution(j) - old_solution(i))*bK;
-            // add it to A(i,j)
-            flux_correction_matrix.add(i,j,A1_ij);
-         }
-      }
-   }
-   
-   // add A2 matrix to A by looping over all degrees of freedom
-   //----------------------------------------------------------
-   for (unsigned int i = 0; i < n_dofs; ++i)
-   {
-      // Note that the high-order right hand side (G) is stored in system_rhs,
-      // and auxiliary_mass_matrix is the "B" matrix
-
-      // get nonzero entries in row i of B
-      std::vector<double>       row_values;
-      std::vector<unsigned int> row_indices;
-      unsigned int              n_col;
-      get_matrix_row(auxiliary_mass_matrix,
-                     i,
-                     row_values,
-                     row_indices,
-                     n_col);
-
-      // loop over nonzero entries in row i of B
-      for (unsigned int k = 0; k < n_col; ++k)
-      {
-         // get the column index of nonzero entry k
-         unsigned int j = row_indices[k];
-
-         // add A2(i,j) to A(i,j)
-         flux_correction_matrix.add(i,j,dt*(auxiliary_mass_matrix(j,i)*system_rhs(i)
-                                                  -auxiliary_mass_matrix(i,j)*system_rhs(j)));
-      }
-   }
-}
-*/
-
-/** \brief Computes the limiting coefficient vectors \f$R^+\f$ and \f$R^-\f$,
- *         used for computing the high-order solution from the low-order
- *         solution.
- */
-/*
-template <int dim>
-void TransportProblem<dim>::compute_limiting_coefficients()
-{
-   // reset flux correction vector
-   flux_correction_vector = 0;
-
-   for (unsigned int i = 0; i < n_dofs; ++i)
-   {
-      // for Dirichlet nodes, set R_minus and R_plus to 1 because no limiting is needed
-      if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) != dirichlet_nodes.end())
-      {
-         R_minus(i) = 1.0;
-         R_plus(i) = 1.0;
-      }
-      else
-      {
-         // get nonzero entries in row i of high-order coefficient matrix A
-         std::vector<double>       row_values;
-         std::vector<unsigned int> row_indices;
-         unsigned int              n_col;
-         get_matrix_row(flux_correction_matrix,
-                        i,
-                        row_values,
-                        row_indices,
-                        n_col);
-   
-         double P_plus_i  = 0.0;
-         double P_minus_i = 0.0;
-         // compute P_plus, P_minus
-         for (unsigned int k = 0; k < n_col; ++k)
-         {
-            // get value of nonzero entry k
-            double Fij = row_values[k];
-   
-            P_plus_i  += std::max(0.0,Fij);
-            P_minus_i += std::min(0.0,Fij);
-         }
-   
-         // compute R_plus(i)
-         if (P_plus_i != 0.0)
-            R_plus(i) = std::min(1.0, Q_plus(i)/P_plus_i);
-         else
-            R_plus(i) = 1.0;
-   
-         // compute R_minus(i)
-         if (P_minus_i != 0.0)
-            R_minus(i) = std::min(1.0, Q_minus(i)/P_minus_i);
-         else
-            R_minus(i) = 1.0;
-      }
-   }
-
-   // if user chose not to limit, set R+ and R- = 1 so that limiting
-   // coefficients will equal 1 and thus no limiting will occur
-   if (parameters.do_not_limit)
-   {
-      for (unsigned int i = 0; i < n_dofs; ++i)
-      {
-         R_minus(i) = 1.0;
-         R_plus(i)  = 1.0;
-      }
-   }
-
-   // compute limited flux correction sum
-   for (unsigned int i = 0; i < n_dofs; ++i)
-   {
-      // get values and indices of nonzero entries in row i of coefficient matrix A
-      std::vector<double>       row_values;
-      std::vector<unsigned int> row_indices;
-      unsigned int              n_col;
-      get_matrix_row(flux_correction_matrix,
-                     i,
-                     row_values,
-                     row_indices,
-                     n_col);
-
-      // perform flux correction for dof i
-      // Note that flux correction sum is sum_{j in I(S_i)} of Lij*Fij.
-      for (unsigned int k = 0; k < n_col; ++k) {
-         unsigned int j = row_indices[k];
-         double Fij     = row_values[k];
-         // compute limiting coefficient Lij
-         double Lij;
-         if (Fij >= 0.0)
-            Lij = std::min(R_plus(i),R_minus(j));
-         else
-            Lij = std::min(R_minus(i),R_plus(j));
-
-         // add Lij*Fij to flux correction sum
-         flux_correction_vector(i) += Lij*Fij;
-      }
-   }
-}
-*/
 
 /** \brief Checks that the CFL condition is satisfied; If not, adjusts time step size.
     \param [in,out] dt time step size for current time step
@@ -1619,40 +1044,6 @@ double TransportProblem<dim>::enforce_CFL_condition(double &dt)
    // return adjusted CFL number
    return adjusted_CFL;
 }
-
-/** \brief Gets the values and indices of nonzero elements in a row of a sparse matrix.
- *  \param [in] matrix sparse matrix whose row will be retrieved
- *  \param [in] i index of row to be retrieved
- *  \param [out] row_values vector of values of nonzero entries of row i
- *  \param [out] row_indices vector of indices of nonzero entries of row i
- *  \param [out] n_col number of nonzero entries of row i
- */
-/*
-template <int dim>
-void TransportProblem<dim>::get_matrix_row(const SparseMatrix<double>      &matrix,
-                                           const unsigned int              &i,
-                                                 std::vector<double>       &row_values,
-                                                 std::vector<unsigned int> &row_indices,
-                                                 unsigned int              &n_col
-                                          )
-{
-    // get first and one-past-last iterator for row
-    SparseMatrix<double>::const_iterator matrix_iterator     = matrix.begin(i);
-    SparseMatrix<double>::const_iterator matrix_iterator_end = matrix.end(i);
-
-    // compute number of entries in row and then allocate memory
-    n_col = matrix_iterator_end - matrix_iterator;
-    row_values .resize(n_col);
-    row_indices.resize(n_col);
-
-    // loop over columns in row
-    for(unsigned int k = 0; matrix_iterator != matrix_iterator_end; ++matrix_iterator, ++k)
-    {
-      row_values[k]  = matrix_iterator->value();
-      row_indices[k] = matrix_iterator->column();
-    }
-}
-*/
 
 /** \brief Gets a list of dofs subject to Dirichlet boundary conditions.
  *         This is necessary because max principle checks are not applied to these nodes.

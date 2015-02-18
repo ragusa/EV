@@ -98,12 +98,12 @@ class TransportProblem {
       SparseMatrix<double> high_order_diffusion_matrix;
       SparseMatrix<double> consistent_mass_matrix;
       SparseMatrix<double> lumped_mass_matrix;
-//      SparseMatrix<double> flux_correction_matrix;
 
       // vectors for solutions and right hand sides
       Vector<double> new_solution;
       Vector<double> old_solution;
       Vector<double> older_solution;
+      Vector<double> old_stage_solution;
       Vector<double> system_rhs;
       Vector<double> ss_rhs;
 
@@ -145,33 +145,6 @@ class TransportProblem {
                                     SparseMatrix<double> &diffusion_matrix);
       SparsityPattern unconstrained_sparsity_pattern;
       SparseMatrix<double> viscous_bilinear_forms;
-
-/*
-      // high-order max-principle viscosity functions and data
-      void assemble_flux_correction_matrix(const double &dt);
-      void compute_limiting_coefficients();
-      void get_matrix_row(const SparseMatrix<double>      &matrix,
-                          const unsigned int              &i,
-                                std::vector<double>       &row_values,
-                                std::vector<unsigned int> &row_indices,
-                                unsigned int              &n_col
-                         );
-      Vector<double> R_plus;
-      Vector<double> R_minus;
-
-      // FCT quantities
-      Vector<double> flux_correction_vector;
-      Vector<double> min_values;
-      Vector<double> max_values;
-      Vector<double> Q_plus;
-      Vector<double> Q_minus;
-      // max-principle checks
-      bool check_max_principle(const double &dt,
-                               const bool   &using_high_order);
-      void debug_max_principle_low_order (const unsigned int &i, const double &dt);
-      void compute_max_principle_bounds(const double &dt);
-      void compute_steady_state_max_principle_bounds();
-*/
 
       // Dirichlet boundary condition
       void get_dirichlet_nodes();

@@ -85,10 +85,11 @@ void SSPRungeKuttaTimeIntegrator<dim>::initialize_time_step(
 /** \brief Retrieves the current stage solution.
  */
 template<int dim>
-void SSPRungeKuttaTimeIntegrator<dim>::get_stage_solution(Vector<double> &new_solution) const
+void SSPRungeKuttaTimeIntegrator<dim>::get_stage_solution(const unsigned int &i,
+                                                          Vector<double>     &new_solution) const
 {
    // return final stage solution, which is new solution
-   new_solution = u_stage[n_stages];
+   new_solution = u_stage[i];
 }
 
 /** \brief retrieves the new solution.
@@ -100,7 +101,7 @@ void SSPRungeKuttaTimeIntegrator<dim>::get_new_solution(Vector<double> &new_solu
    Assert(current_stage == n_stages, ExcInvalidState());
 
    // return final stage solution, which is new solution
-   new_solution = u_stage[current_stage];
+   new_solution = u_stage[n_stages];
 }
 
 /** \brief Advances one stage of a Runge-Kutta method.

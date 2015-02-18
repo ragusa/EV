@@ -32,6 +32,7 @@ class FCT {
                             const double               &dt,
                             const SparseMatrix<double> &low_order_diffusion_matrix,
                             const SparseMatrix<double> &high_order_diffusion_matrix);
+      bool check_DMP_satisfied();
 
    private:
       void compute_bounds(const Vector<double>       &old_solution,
@@ -48,20 +49,28 @@ class FCT {
                                     const double               &dt,
                                     const SparseMatrix<double> &low_order_diffusion_matrix,
                                     const SparseMatrix<double> &high_order_diffusion_matrix);
-      void compute_limiting_coefficients();
+      void compute_limiting_coefficients(const Vector<double>       &old_solution,
+                                         const SparseMatrix<double> &low_order_ss_matrix,
+                                         const Vector<double>       &ss_rhs,
+                                         const double               &dt);
       void get_matrix_row(const SparseMatrix<double> &matrix,
                           const unsigned int         &i,
                           std::vector<double>        &row_values,
                           std::vector<unsigned int>  &row_indices,
                           unsigned int               &n_col);
-      //void check_bounds();
+      bool check_max_principle(const Vector<double>       &new_solution,
+                               const SparseMatrix<double> &low_order_ss_matrix,
+                               const double               &dt);
+      void debug_max_principle_low_order(const unsigned int         &i,
+                                         const SparseMatrix<double> &low_order_ss_matrix,
+                                         const double               &dt);
 
       const DoFHandler<dim> *dof_handler;
 
       const SparseMatrix<double> *lumped_mass_matrix;
       const SparseMatrix<double> *consistent_mass_matrix;
       SparsityPattern sparsity_pattern;
-      SparseMatrix<double> flux_corrections;
+      SparseMatrix<double> flux_correction_matrix;
       Vector<double> min_bound;
       Vector<double> max_bound;
       Vector<double> solution_min;
@@ -78,12 +87,14 @@ class FCT {
 
       LinearSolver<dim> linear_solver;
 
+      const std::vector<unsigned int> dirichlet_nodes;
+
       const unsigned int n_dofs;
       const unsigned int dofs_per_cell;
 
-      const std::vector<unsigned int> dirichlet_nodes;
-
       const bool do_not_limit;
+
+      bool DMP_satisfied_at_all_steps;
 };
 
 #include "FCT.cc"

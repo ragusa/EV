@@ -16,7 +16,8 @@ FCT<dim>::FCT(
    dirichlet_nodes(dirichlet_nodes),
    n_dofs(n_dofs),
    dofs_per_cell(dofs_per_cell),
-   do_not_limit(do_not_limit)
+   do_not_limit(do_not_limit),
+   DMP_satisfied_at_all_steps(true)
 {
    // allocate memory for vectors
    tmp_vector  .reinit(n_dofs);
@@ -29,8 +30,9 @@ FCT<dim>::FCT(
    R_minus.reinit(n_dofs);
    R_plus.reinit(n_dofs);
 
-   // initialize sparse matrix
+   // initialize sparse matrices
    system_matrix.reinit(sparsity_pattern);
+   flux_correction_matrix.reinit(sparsity_pattern);
 }
 
 template<int dim>
@@ -47,14 +49,6 @@ void FCT<dim>::solve_FCT_system(Vector<double>             &new_solution,
                                 const SparseMatrix<double> &low_order_diffusion_matrix,
                                 const SparseMatrix<double> &high_order_diffusion_matrix)
 {
-   // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old)
-   system_rhs = 0;
-   system_rhs.add(dt, ss_rhs); //       now, system_rhs = dt*(ss_rhs)
-   lumped_mass_matrix->vmult(tmp_vector, old_solution);
-   system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
-   low_order_ss_matrix.vmult(tmp_vector, old_solution);
-   system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
-
    // compute flux corrections
    compute_flux_corrections(new_solution,
                             old_solution,
@@ -65,18 +59,25 @@ void FCT<dim>::solve_FCT_system(Vector<double>             &new_solution,
    // compute max principle min and max values
    compute_bounds(old_solution,low_order_ss_matrix,ss_rhs,dt);
 
-
    // compute limited flux correction sum and add it to rhs
-   compute_limiting_coefficients();
-   system_rhs.add(dt, flux_correction_vector);   // now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old + f)
+   compute_limiting_coefficients(old_solution,low_order_ss_matrix,ss_rhs,dt);
+
+   // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old + f)
+   system_rhs = 0;
+   system_rhs.add(dt, ss_rhs); //       now, system_rhs = dt*(ss_rhs)
+   lumped_mass_matrix->vmult(tmp_vector, old_solution);
+   system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
+   low_order_ss_matrix.vmult(tmp_vector, old_solution);
+   system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old)
+   system_rhs.add(dt, flux_correction_vector);   // now, system_rhs is complete
 
    // solve the linear system M*u_new = system_rhs
    system_matrix.copy_from(*lumped_mass_matrix);
    linear_solver.solve(system_matrix, system_rhs, new_solution);
 
    // check that local discrete maximum principle is satisfied at all time steps
-   //bool DMP_satisfied_this_step = check_max_principle(dt,false);
-   //DMP_satisfied_at_all_steps = DMP_satisfied_at_all_steps and DMP_satisfied_this_step;
+   bool DMP_satisfied_this_step = check_max_principle(new_solution,low_order_ss_matrix,dt);
+   DMP_satisfied_at_all_steps = DMP_satisfied_at_all_steps and DMP_satisfied_this_step;
 }
 
 /** \brief Computes min and max quantities for max principle
@@ -142,18 +143,18 @@ void FCT<dim>::compute_bounds(const Vector<double>       &old_solution,
          row_sum += row_values[k];
       
       // compute the max and min values for the maximum principle
-      solution_max(i) = solution_max(i)*(1.0 - dt/lumped_mass_matrix(i,i)*row_sum)
-         + dt/lumped_mass_matrix(i,i)*ss_rhs(i);
-      solution_min(i) = solution_min(i)*(1.0 - dt/lumped_mass_matrix(i,i)*row_sum)
-         + dt/lumped_mass_matrix(i,i)*ss_rhs(i);
+      solution_max(i) = solution_max(i)*(1.0 - dt/(*lumped_mass_matrix)(i,i)*row_sum)
+         + dt/(*lumped_mass_matrix)(i,i)*ss_rhs(i);
+      solution_min(i) = solution_min(i)*(1.0 - dt/(*lumped_mass_matrix)(i,i)*row_sum)
+         + dt/(*lumped_mass_matrix)(i,i)*ss_rhs(i);
    }
 }
 
 /** \brief Computes min and max quantities for steady-state max principle
  */
 template <int dim>
-void FCT<dim>::compute_steady_state_max_principle_bounds(
-   const Vector<double>       &old_solution,
+void FCT<dim>::compute_steady_state_bounds(
+   const Vector<double>       &new_solution,
    const SparseMatrix<double> &low_order_ss_matrix,
    const Vector<double>       &ss_rhs,
    const double               &dt)
@@ -234,14 +235,19 @@ void FCT<dim>::compute_flux_corrections(const Vector<double>       &high_order_s
    tmp_vector.add(1.0/dt,high_order_solution,-1.0/dt,old_solution);
 
    // loop over rows
-   for (unsigned int i = 0; i < n_dofs; ++i)
+   for (int i = 0; i < n_dofs; ++i)
    {
+      // get min and max neighbor indices
+      unsigned int jmin = std::max(i-1,0);
+      unsigned int jmax = std::min<int>(i+1,n_dofs-1);
+
       // loop over nonzero entries in row i
-      for (unsigned int j = std::max(i-1,0); j < std::min(i+1,n_dofs); ++j)
+      for (unsigned int j = jmin; j <= jmax; ++j)
       {
-         flux_correction_matrix(i,j) = -consistent_mass_matrix(i,j)*(tmp_vector(j)-tmp_vector(i)) +
+         double Fij = -(*consistent_mass_matrix)(i,j)*(tmp_vector(j)-tmp_vector(i)) +
             (low_order_diffusion_matrix(i,j)-high_order_diffusion_matrix(i,j)) *
             (old_solution(j) - old_solution(i));
+         flux_correction_matrix.set(i,j,Fij);
       }
    }
 }
@@ -251,7 +257,10 @@ void FCT<dim>::compute_flux_corrections(const Vector<double>       &high_order_s
  *         solution.
  */
 template <int dim>
-void FCT<dim>::compute_limiting_coefficients()
+void FCT<dim>::compute_limiting_coefficients(const Vector<double>       &old_solution,
+                                             const SparseMatrix<double> &low_order_ss_matrix,
+                                             const Vector<double>       &ss_rhs,
+                                             const double               &dt)
 {
    // reset flux correction vector
    flux_correction_vector = 0;
@@ -268,7 +277,7 @@ void FCT<dim>::compute_limiting_coefficients()
    
    // compute Q-
    Q_minus = 0;
-   lumped_mass_matrix->vmult(tmp_vector, solution_max);
+   lumped_mass_matrix->vmult(tmp_vector, solution_min);
    Q_minus.add(1.0/dt, tmp_vector);
    lumped_mass_matrix->vmult(tmp_vector, old_solution);
    Q_minus.add(-1.0/dt,tmp_vector);
@@ -395,12 +404,12 @@ void FCT<dim>::get_matrix_row(const SparseMatrix<double> &matrix,
     }
 }
 
-/** \brief check that the local discrete max principle is satisfied.
+/** \brief Check that the DMP is satisfied for a time step.
  */
-/*
 template<int dim>
-bool FCT<dim>::check_max_principle(const double &dt,
-                                                const bool   &using_high_order)
+bool FCT<dim>::check_max_principle(const Vector<double>       &new_solution,
+                                   const SparseMatrix<double> &low_order_ss_matrix,
+                                   const double               &dt)
 {
    // machine precision for floating point comparisons
    const double machine_tolerance = 1.0e-12;
@@ -419,33 +428,19 @@ bool FCT<dim>::check_max_principle(const double &dt,
          if (value_i < solution_min(i) - machine_tolerance) {
             local_max_principle_satisfied = false;
             // determine which condition was violated
-            if (using_high_order)
-            {
-               std::cout << "      Max principle lower bound violated with dof "
-                  << i << " of high-order solution: " << std::scientific
-                  << value_i << " < " << solution_min(i) << std::endl;
-            } else {
-               std::cout << "      Max principle lower bound violated with dof "
-                  << i << " of low-order solution: " << std::scientific
-                  << value_i << " < " << solution_min(i) << std::endl;
-               debug_max_principle_low_order (i,dt);
-            }
+            std::cout << "      Max principle lower bound violated with dof "
+              << i << " of low-order solution: " << std::scientific
+              << value_i << " < " << solution_min(i) << std::endl;
+            debug_max_principle_low_order(i,low_order_ss_matrix,dt);
          }
          // check upper bound
          if (value_i > solution_max(i) + machine_tolerance) {
             local_max_principle_satisfied = false;
             // determine which condition was violated
-            if (using_high_order)
-            {
-               std::cout << "      Max principle upper bound violated with dof "
-                  << i << " of high-order solution: " << std::scientific
-                  << value_i << " > " << solution_max(i) << std::endl;
-            } else {
-               std::cout << "      Max principle upper bound violated with dof "
-                  << i << " of low-order solution: " << std::scientific
-                  << value_i << " > " << solution_max(i) << std::endl;
-               debug_max_principle_low_order (i,dt);
-            }
+            std::cout << "      Max principle upper bound violated with dof "
+               << i << " of low-order solution: " << std::scientific
+               << value_i << " > " << solution_max(i) << std::endl;
+            debug_max_principle_low_order(i,low_order_ss_matrix,dt);
          }
       }
    }
@@ -460,19 +455,19 @@ bool FCT<dim>::check_max_principle(const double &dt,
       std::exit(0);
    }
 
+   // return boolean for satisfaction of DMP
    return local_max_principle_satisfied;
 }
-*/
 
 /** \brief Debugging function used for determining why the maximum
  *         principle is failing for the low-order method;
  *         examines the conditions that are required to be met for
  *         the principle to be satisfied.
  */
-/*
 template <int dim>
-void FCT<dim>::debug_max_principle_low_order(const unsigned int &i,
-                                                          const double &dt)
+void FCT<dim>::debug_max_principle_low_order(const unsigned int         &i,
+                                             const SparseMatrix<double> &low_order_ss_matrix,
+                                             const double               &dt)
 {
    // flag to determine if no conditions were violated
    bool condition_violated = false;
@@ -528,18 +523,25 @@ void FCT<dim>::debug_max_principle_low_order(const unsigned int &i,
    }
      
    // check that CFL condition is satisfied if transient problem
-   if (!parameters.is_steady_state)
-   {
-      double cfl = dt/lumped_mass_matrix(i,i)*low_order_ss_matrix(i,i);
+   //if (!parameters.is_steady_state)
+   //{
+      double cfl = dt/(*lumped_mass_matrix)(i,i)*low_order_ss_matrix(i,i);
       if (cfl > 1.0)
       {
          std::cout << "         DEBUG: row does not satisfy CFL condition: CFL = " << cfl << std::endl;
          condition_violated = true;
       }
-   }
+   //}
 
    // report if no conditions were violated
    if (not condition_violated)
       std::cout << "         DEBUG: No checks returned flags; deeper debugging is necessary." << std::endl;
 }
-*/
+
+/* \brief Check to see if the DMP was satisfied at all time steps.
+ */
+template <int dim>
+bool FCT<dim>::check_DMP_satisfied()
+{
+   return DMP_satisfied_at_all_steps;
+}
