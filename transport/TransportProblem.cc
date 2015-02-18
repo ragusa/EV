@@ -841,7 +841,7 @@ void TransportProblem<dim>::run()
                      }
 
                      // advance by an SSPRK step
-                     ssprk.advance_stage(consistent_mass_matrix,inviscid_ss_matrix,ss_rhs);
+                     ssprk.advance_stage(consistent_mass_matrix,inviscid_ss_matrix,ss_rhs,false);
                   }
                   // retrieve the final solution
                   ssprk.get_new_solution(new_solution);
@@ -860,7 +860,7 @@ void TransportProblem<dim>::run()
                      }
 
                      // advance by an SSPRK step
-                     ssprk.advance_stage(lumped_mass_matrix,low_order_ss_matrix,ss_rhs);
+                     ssprk.advance_stage(lumped_mass_matrix,low_order_ss_matrix,ss_rhs,false);
                   }
                   // retrieve the final solution
                   ssprk.get_new_solution(new_solution);
@@ -891,7 +891,7 @@ void TransportProblem<dim>::run()
                      high_order_ss_matrix.add(1.0,high_order_diffusion_matrix);
 
                      // advance by an SSPRK step
-                     ssprk.advance_stage(consistent_mass_matrix,high_order_ss_matrix,ss_rhs);
+                     ssprk.advance_stage(consistent_mass_matrix,high_order_ss_matrix,ss_rhs,false);
                   }
                   // retrieve the final solution
                   ssprk.get_new_solution(new_solution);
@@ -922,13 +922,13 @@ void TransportProblem<dim>::run()
                      high_order_ss_matrix.add(1.0,high_order_diffusion_matrix);
 
                      // advance by an SSPRK step
-                     ssprk.advance_stage(consistent_mass_matrix,high_order_ss_matrix,ss_rhs);
+                     ssprk.advance_stage(consistent_mass_matrix,high_order_ss_matrix,ss_rhs,true);
 
                      // get old stage solution
                      ssprk.get_stage_solution(i,old_stage_solution);
 
-                     // get stage solution
-                     ssprk.get_stage_solution(i+1,new_solution);
+                     // get intermediate solution
+                     ssprk.get_intermediate_solution(new_solution);
 
                      // perform FCT
                      fct.solve_FCT_system(new_solution,
@@ -940,7 +940,11 @@ void TransportProblem<dim>::run()
                                           high_order_diffusion_matrix);
 
                      // set stage solution to be FCT solution for this stage
-                     ssprk.set_stage_solution(i+1,new_solution);
+                     ssprk.set_intermediate_solution(new_solution);
+
+                     // finish computing stage solution
+                     ssprk.compute_stage_solution();
+                     
                   }
                   // retrieve the final solution
                   ssprk.get_new_solution(new_solution);

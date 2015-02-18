@@ -47,7 +47,7 @@ SSPRungeKuttaTimeIntegrator<dim>::SSPRungeKuttaTimeIntegrator(
    dt = 0.0;
 
    // allocate memory for temporary vectors
-   tmp_vector.reinit(n);
+   intermediate_solution.reinit(n);
    system_rhs.reinit(n);
 
    // initialize sparse matrix
@@ -109,7 +109,8 @@ void SSPRungeKuttaTimeIntegrator<dim>::get_new_solution(Vector<double> &new_solu
 template<int dim>
 void SSPRungeKuttaTimeIntegrator<dim>::advance_stage(const SparseMatrix<double> &mass_matrix,
                                                      const SparseMatrix<double> &ss_matrix,
-                                                     const Vector<double>       &ss_rhs)
+                                                     const Vector<double>       &ss_rhs,
+                                                     const bool                 &delay_stage_solution)
 {
    // advance current stage index
    current_stage++;
@@ -117,18 +118,46 @@ void SSPRungeKuttaTimeIntegrator<dim>::advance_stage(const SparseMatrix<double> 
    // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
    system_rhs = 0;
    system_rhs.add(dt, ss_rhs);      //  now, system_rhs = dt*(ss_rhs)
-   mass_matrix.vmult(tmp_vector, u_stage[current_stage-1]);
-   system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
-   ss_matrix.vmult(tmp_vector,   u_stage[current_stage-1]);
-   system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
+   mass_matrix.vmult(intermediate_solution, u_stage[current_stage-1]);
+   system_rhs.add(1.0, intermediate_solution); //  now, system_rhs = M*u_old + dt*(ss_rhs)
+   ss_matrix.vmult(intermediate_solution,   u_stage[current_stage-1]);
+   system_rhs.add(-dt, intermediate_solution); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
       
    // solve the linear system M*u_new = system_rhs
    system_matrix.copy_from(mass_matrix);
-   linear_solver.solve(system_matrix, system_rhs, tmp_vector);
+   linear_solver.solve(system_matrix, system_rhs, intermediate_solution);
 
-   // compute new stage solution
+   // compute new stage solution if there are no additional steps to be taken on intermediate solution
+   if (not delay_stage_solution)
+   {
+      u_stage[current_stage] = 0;
+      u_stage[current_stage].add(a[current_stage-1],u_stage[0],b[current_stage-1],intermediate_solution);
+   }
+}
+
+/** \brief Computes stage solution.
+ */
+template<int dim>
+void SSPRungeKuttaTimeIntegrator<dim>::compute_stage_solution()
+{
    u_stage[current_stage] = 0;
-   u_stage[current_stage].add(a[current_stage-1],u_stage[0],b[current_stage-1],tmp_vector);
+   u_stage[current_stage].add(a[current_stage-1],u_stage[0],b[current_stage-1],intermediate_solution);
+}
+
+/** \brief Gets the intermediate stage solution.
+ */
+template<int dim>
+void SSPRungeKuttaTimeIntegrator<dim>::get_intermediate_solution(Vector<double> &solution) const
+{
+   solution = intermediate_solution;
+}
+
+/** \brief Sets the intermediate stage solution.
+ */
+template<int dim>
+void SSPRungeKuttaTimeIntegrator<dim>::set_intermediate_solution(Vector<double> &solution)
+{
+   intermediate_solution = solution;
 }
 
 /** \brief Gets the current stage time.
