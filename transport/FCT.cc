@@ -235,11 +235,11 @@ void FCT<dim>::compute_flux_corrections(const Vector<double>       &high_order_s
    tmp_vector.add(1.0/dt,high_order_solution,-1.0/dt,old_solution);
 
    // loop over rows
-   for (int i = 0; i < n_dofs; ++i)
+   for (unsigned int i = 0; i < n_dofs; ++i)
    {
       // get min and max neighbor indices
-      unsigned int jmin = std::max(i-1,0);
-      unsigned int jmax = std::min<int>(i+1,n_dofs-1);
+      unsigned int jmin = std::max<unsigned int>(i-1,0);
+      unsigned int jmax = std::min(i+1,n_dofs-1);
 
       // loop over nonzero entries in row i
       for (unsigned int j = jmin; j <= jmax; ++j)

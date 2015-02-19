@@ -46,6 +46,7 @@ set logscale xy
 set key top right
 set format y "10^{%L}"
 set format x "10^{%L}"
+set yrange [:1e0]
 
 # define reference slope functions
 c1 = 512    * 10**(-5)

@@ -137,7 +137,7 @@ void TransportProblem<dim>::process_problem_ID()
          Assert(dim < 3,ExcNotImplemented());
 
          x_min = 0.0;
-         x_max = 10.0;
+         x_max = 1.0;
 
          incoming_string = "1";
          function_parser_constants["incoming"]  = 1.0;
@@ -151,14 +151,14 @@ void TransportProblem<dim>::process_problem_ID()
 
          has_exact_solution = true;
          if (parameters.is_steady_state) { // steady-state
-            if (dim == 1) // 1-D
+            if (dim == 1)      // 1-D
                exact_solution_string = "if(x<x_mid, incoming, exp(-sigma*(x-x_mid)))";
             else if (dim == 2) // 2-D
                exact_solution_string = "if(y<x_mid, incoming, if(x<x_mid, incoming, exp(-sigma*(x-x_mid))))";
             else
                Assert(false,ExcNotImplemented());
-         } else { // transient
-            if (dim == 1) // 1-D
+         } else {                          // transient
+            if (dim == 1)      // 1-D
                exact_solution_string = "if(x-t<x_min, if(x<x_mid, incoming, exp(-sigma*(x-x_mid))), 0)";
             else if (dim == 2) // 2-D
                exact_solution_string = "if(x-t<x_min, if(y<x_mid, incoming, if(x<x_mid, incoming, exp(-sigma*(x-x_mid)))), 0)";
