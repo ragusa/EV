@@ -123,7 +123,7 @@ void PostProcessor<dim>::output_results(const Vector<double>     &solution,
       // format columns
       convergence_table.set_precision("dx", 3);
       convergence_table.set_scientific("dx", true);
-      if (is_steady_state) {
+      if (not is_steady_state) {
          convergence_table.set_precision("dt", 3);
          convergence_table.set_scientific("dt", true);
          convergence_table.set_scientific("1/dt", true);
@@ -340,3 +340,12 @@ void PostProcessor<dim>::output_grid(const Triangulation<dim> &triangulation) co
    GridOut grid_out;
    grid_out.write_eps(triangulation, output);
 }
+
+/** \brief Update the time step size to be put in convergence table
+ */
+template<int dim>
+void PostProcessor<dim>::update_dt(const double &dt)
+{
+   dt_nominal = dt;
+}
+

@@ -48,14 +48,15 @@ class PostProcessor {
                            const DoFHandler<dim> &dof_handler,
                            const std::string     &output_string,
                            const bool            &append_viscosity) const;
-     void output_viscosity(const Vector<double>  &low_order_viscosity,
-                           const Vector<double>  &entropy_viscosity,
-                           const Vector<double>  &high_order_viscosity,
-                           const DoFHandler<dim> &dof_handler) const;
+      void output_viscosity(const Vector<double>  &low_order_viscosity,
+                            const Vector<double>  &entropy_viscosity,
+                            const Vector<double>  &high_order_viscosity,
+                            const DoFHandler<dim> &dof_handler) const;
       void evaluate_error(const Vector<double>     &solution,
                           const DoFHandler<dim>    &dof_handler,
                           const Triangulation<dim> &triangulation,
                           const unsigned int       &cycle);
+      void update_dt(const double &dt);
 
    private:
       void output_grid(const Triangulation<dim> &triangulation) const;
@@ -70,7 +71,7 @@ class PostProcessor {
       FunctionParser<dim>      *exact_solution_function;
 
       const double             time;
-      const double             dt_nominal;
+      double                   dt_nominal;
       const bool               is_steady_state;
 
       const unsigned int       refinement_option;

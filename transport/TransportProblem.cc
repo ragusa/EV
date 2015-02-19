@@ -235,8 +235,8 @@ void TransportProblem<dim>::process_problem_ID()
 
          cross_section_string = "1";
          has_exact_solution = true;
-         exact_solution_string = "t^4*sin(pi*x)"; // assume omega_x = 1 and c = 1
-         source_string = "4*t^3*sin(pi*x) + pi*t^4*cos(pi*x) + t^4*sin(pi*x)";
+         exact_solution_string = "exp(-t)*sin(pi*x)"; // assume omega_x = 1 and c = 1
+         source_string = "-exp(-t)*sin(pi*x) + pi*exp(-t)*cos(pi*x) + exp(-t)*sin(pi*x)";
          source_time_dependent = true;
          initial_conditions_string = exact_solution_string;
          break;
@@ -729,8 +729,10 @@ void TransportProblem<dim>::run()
             refine_grid();
 
          // refine time if user selected the option
-         if (parameters.refinement_option != 1) // "1" corresponds to "space refinement only"
+         if (parameters.refinement_option != 1) {// "1" corresponds to "space refinement only"
             dt_nominal = dt_nominal * parameters.time_refinement_factor;
+            postprocessor.update_dt(dt_nominal);
+         }
       }
 
       // setup system - distribute finite elements, reintialize matrices and vectors
