@@ -5,6 +5,9 @@
 
 use strict;
 
+# option to crop pdf to remove excess whitespace
+my $crop_file = 1;
+
 # read input file to determine the test problem ID
 my $input_file = "input";
 open(IN, '<', $input_file) or die $!;
@@ -27,4 +30,12 @@ chdir "plotscripts";
 my $output_file = "solutions_$problem_ID.pdf";
 system("gnuplot -e 'problem_ID=$problem_ID' solutions.gp");
 system("sleep 1");
+
+# crop pdf if specified
+if ($crop_file)
+{
+   system("pdfcrop $output_file $output_file");
+}
+
+# view output
 system("evince $output_file");

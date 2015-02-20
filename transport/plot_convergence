@@ -5,6 +5,9 @@
 
 use strict;
 
+# option to crop pdf to remove excess whitespace
+my $crop_file = 1;
+
 # read input file to determine the test problem ID
 my $input_file = "input";
 open(IN, '<', $input_file) or die $!;
@@ -24,7 +27,18 @@ while ($input_line = <IN>) {
 chdir "plotscripts";
 
 # call gnuplot
+my $convergence_file_L1 = "convergence_$problem_ID"."_L1.pdf";
 my $convergence_file_L2 = "convergence_$problem_ID"."_L2.pdf";
 system("gnuplot -e 'problem_ID=$problem_ID' convergence.gp");
 system("sleep 1");
+
+# crop pdf if specified
+if ($crop_file)
+{
+   system("pdfcrop $convergence_file_L1 $convergence_file_L1");
+   system("pdfcrop $convergence_file_L2 $convergence_file_L2");
+}
+
+# view output
+system("evince $convergence_file_L1");
 system("evince $convergence_file_L2");

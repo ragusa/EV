@@ -46,15 +46,22 @@ set logscale xy
 set key top right
 set format y "10^{%L}"
 set format x "10^{%L}"
-set yrange [:1e0]
+#set yrange [:1e-1]
 
 # define reference slope functions
-c1 = 512    * 10**(-5)
-c2 = 512**2 * 10**(-5)
-c3 = 512**3 * 10**(-5)
-ref1(x) = c1 * x
-ref2(x) = c2 * x*x
-ref3(x) = c3 * x*x*x
+L1c1 = 512**1 * 1.0e-4
+L1c2 = 512**2 * 1.0e-4
+L1c3 = 512**3 * 1.0e-4
+L1ref1(x) = L1c1 * x**1   
+L1ref2(x) = L1c2 * x**2  
+L1ref3(x) = L1c3 * x**3 
+
+L2c1 = 512**1 * 2.0e-4
+L2c2 = 512**2 * 2.0e-4
+L2c3 = 512**3 * 2.0e-4
+L2ref1(x) = L2c1 * x**1   
+L2ref2(x) = L2c2 * x**2  
+L2ref3(x) = L2c3 * x**3 
 
 # Plot L-1 error
 output_file = "convergence_".problem_ID."_L1.pdf"
@@ -65,9 +72,9 @@ plot for [i=1:words(existing_file_list)] "../output/".word(existing_file_list,i)
    linecolor word(existing_lc_list,i)\
    pointtype word(existing_sym_list,i)\
    title word(existing_title_list,i),\
-   ref1(x) title "m=1 slope" with lines linestyle 2 linecolor 9,\
-   ref2(x) title "m=2 slope" with lines linestyle 2 linecolor 9,\
-   ref3(x) title "m=3 slope" with lines linestyle 2 linecolor 9
+   L1ref1(x) title "m=1 slope" with lines linestyle 2 linecolor 9,\
+   L1ref2(x) title "m=2 slope" with lines linestyle 2 linecolor 9,\
+   L1ref3(x) title "m=3 slope" with lines linestyle 2 linecolor 9
 
 # Plot L-2 error
 output_file = "convergence_".problem_ID."_L2.pdf"
@@ -78,6 +85,6 @@ plot for [i=1:words(existing_file_list)] "../output/".word(existing_file_list,i)
    linecolor word(existing_lc_list,i)\
    pointtype word(existing_sym_list,i)\
    title word(existing_title_list,i),\
-   ref1(x) title "m=1 slope" with lines linestyle 2 linecolor 9,\
-   ref2(x) title "m=2 slope" with lines linestyle 2 linecolor 9,\
-   ref3(x) title "m=3 slope" with lines linestyle 2 linecolor 9
+   L2ref1(x) title "m=1 slope" with lines linestyle 2 linecolor 9,\
+   L2ref2(x) title "m=2 slope" with lines linestyle 2 linecolor 9,\
+   L2ref3(x) title "m=3 slope" with lines linestyle 2 linecolor 9

@@ -142,8 +142,8 @@ void TransportProblem<dim>::process_problem_ID()
          incoming_string = "1";
          function_parser_constants["incoming"]  = 1.0;
 
-         cross_section_string = "if(x<x_mid, 0, 1)";
-         function_parser_constants["sigma"]  = 1.0;
+         cross_section_string = "if(x<x_mid, 0, 10)";
+         function_parser_constants["sigma"]  = 10.0;
 
          source_time_dependent = false;
          source_string = "0";
