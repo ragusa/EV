@@ -1,5 +1,5 @@
 set terminal postscript enhanced color
-set output '| ps2pdf - test_problem_2.pdf'
+set output '| ps2pdf - ../plots/test_problem_2.pdf'
 set multiplot layout 2, 1 title "Test Problem 2, t = 0.5"
 set ylabel "Angular Flux"
 set key top right

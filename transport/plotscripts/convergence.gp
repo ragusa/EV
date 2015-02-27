@@ -64,7 +64,7 @@ L2ref2(x) = L2c2 * x**2
 L2ref3(x) = L2c3 * x**3 
 
 # Plot L-1 error
-output_file = "convergence_".problem_ID."_L1.pdf"
+output_file = "../plots/convergence_".problem_ID."_L1.pdf"
 set output '| ps2pdf - '.output_file
 set ylabel "L-1 Error"
 plot for [i=1:words(existing_file_list)] "../output/".word(existing_file_list,i)\
@@ -77,7 +77,7 @@ plot for [i=1:words(existing_file_list)] "../output/".word(existing_file_list,i)
    L1ref3(x) title "m=3 slope" with lines linestyle 2 linecolor 9
 
 # Plot L-2 error
-output_file = "convergence_".problem_ID."_L2.pdf"
+output_file = "../plots/convergence_".problem_ID."_L2.pdf"
 set output '| ps2pdf - '.output_file
 set ylabel "L-2 Error"
 plot for [i=1:words(existing_file_list)] "../output/".word(existing_file_list,i)\

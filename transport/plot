@@ -27,7 +27,7 @@ while ($input_line = <IN>) {
 chdir "plotscripts";
 
 # call gnuplot
-my $output_file = "solutions_$problem_ID.pdf";
+my $output_file = "../plots/solutions_$problem_ID.pdf";
 system("gnuplot -e 'problem_ID=$problem_ID' solutions.gp");
 system("sleep 1");
 

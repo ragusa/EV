@@ -1,5 +1,5 @@
 set terminal postscript enhanced color
-set output '| ps2pdf - compare_solutions.pdf'
+set output '| ps2pdf - ../plots/compare_solutions.pdf'
 set ylabel "Solution"
 set xlabel "x"
 set title "Comparison of Solutions"

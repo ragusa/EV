@@ -27,8 +27,8 @@ while ($input_line = <IN>) {
 chdir "plotscripts";
 
 # call gnuplot
-my $convergence_file_L1 = "convergence_$problem_ID"."_L1.pdf";
-my $convergence_file_L2 = "convergence_$problem_ID"."_L2.pdf";
+my $convergence_file_L1 = "../plots/convergence_$problem_ID"."_L1.pdf";
+my $convergence_file_L2 = "../plots/convergence_$problem_ID"."_L2.pdf";
 system("gnuplot -e 'problem_ID=$problem_ID' convergence.gp");
 system("sleep 1");
 

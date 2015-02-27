@@ -49,7 +49,7 @@ do for [i=1:words(file_list)] {
 }
 
 set terminal postscript enhanced color
-output_file = "solutions_".problem_ID.".pdf"
+output_file = "../plots/solutions_".problem_ID.".pdf"
 set output '| ps2pdf - '.output_file
 set ylabel "Angular Flux"
 set xlabel "x"

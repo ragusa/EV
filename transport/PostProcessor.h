@@ -3,7 +3,6 @@
 
 #include <deal.II/base/convergence_table.h>
 #include <deal.II/base/function_parser.h>
-//#include <deal.II/base/table_handler.h>
 #include <deal.II/base/quadrature_lib.h>
 
 #include <deal.II/lac/vector.h>
