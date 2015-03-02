@@ -28,7 +28,7 @@ chdir "plotscripts";
 
 # call gnuplot
 my $convergence_file = "../plots/convergence_$problem_ID".".pdf";
-system("gnuplot -e 'problem_ID=$problem_ID' convergence.gp");
+system("gnuplot -e 'problem_ID=$problem_ID' convergence_ss.gp");
 system("sleep 1");
 
 # crop pdf if specified

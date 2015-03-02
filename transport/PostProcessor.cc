@@ -198,6 +198,7 @@ void PostProcessor<dim>::output_solution(const Vector<double>  &solution,
 
    // create output filestream for exact solution
    std::ofstream output_filestream(filename_char);
+   output_filestream.precision(15);
    // write file
    if (dim == 1) data_out.write_gnuplot(output_filestream);
    else          data_out.write_vtk    (output_filestream);

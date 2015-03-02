@@ -50,7 +50,8 @@ void TransportProblem<dim>::initialize_system()
       Assert(false,ExcInvalidState());
 
    // add time variable if not steady state
-   if (!parameters.is_steady_state)
+   bool time_dependent = !parameters.is_steady_state;
+   if (time_dependent)
       variables += ",t";
 
    // create function parser constants
@@ -63,32 +64,32 @@ void TransportProblem<dim>::initialize_system()
       exact_solution_function.initialize(variables,
                                          exact_solution_string,
                                          function_parser_constants,
-                                         true);
+                                         time_dependent);
 
    // initialize initial conditions function
    if (!parameters.is_steady_state)
       initial_conditions.initialize(variables,
                                     initial_conditions_string,
                                     function_parser_constants,
-                                    true);
+                                    time_dependent);
 
    // initialize source function
    source_function.initialize(variables,
                               source_string,
                               function_parser_constants,
-                              true);
+                              time_dependent);
 
    // initialize cross section function
    cross_section_function.initialize(variables,
                                      cross_section_string,
                                      function_parser_constants,
-                                     true);
+                                     time_dependent);
 
    // initialize Dirichlet boundary value function
    incoming_function.initialize(variables,
-                                       incoming_string,
-                                       function_parser_constants,
-                                       true);
+                                incoming_string,
+                                function_parser_constants,
+                                time_dependent);
 
    // create grid for initial refinement level
    GridGenerator::hyper_cube(triangulation, x_min, x_max);
@@ -111,7 +112,7 @@ void TransportProblem<dim>::process_problem_ID()
          Assert(dim < 3,ExcNotImplemented());
 
          x_min = 0.0;
-         x_max = 10.0;
+         x_max = 1.0;
 
          incoming_string = "1";
          function_parser_constants["incoming"]  = 1.0;
@@ -127,7 +128,8 @@ void TransportProblem<dim>::process_problem_ID()
             has_exact_solution = true;
             exact_solution_string = "source/sigma + (incoming - source/sigma)*exp(-sigma*(x-x_min))";
          } else {
-            has_exact_solution = false;
+            has_exact_solution = true;
+            exact_solution_string = "if(x<=t,source/sigma + (incoming - source/sigma)*exp(-sigma*(x-x_min)),0)";
          }
 
          initial_conditions_string = "0";
@@ -192,18 +194,18 @@ void TransportProblem<dim>::process_problem_ID()
          x_min = 0.0;
          x_max = 1.0;
 
-         incoming_string = "0";
+         incoming_string = "1";
 
          cross_section_string = "1.0";
          has_exact_solution = true;
          // use different MS for steady-state vs. transient problem
          if (parameters.is_steady_state) {
-            exact_solution_string = "sin(pi*x)"; // assume omega_x = 1 and c = 1
-            source_string = "pi*cos(pi*x) + sin(pi*x)";
+            exact_solution_string = "sin(pi*x) + 1"; // assume omega_x = 1 and c = 1
+            source_string = "pi*cos(pi*x) + sin(pi*x) + 1";
             source_time_dependent = false;
          } else {
-            exact_solution_string = "t*sin(pi*x)"; // assume omega_x = 1 and c = 1
-            source_string = "sin(pi*x) + pi*t*cos(pi*x) + t*sin(pi*x)";
+            exact_solution_string = "t*sin(pi*x) + 1"; // assume omega_x = 1 and c = 1
+            source_string = "sin(pi*x) + pi*t*cos(pi*x) + t*sin(pi*x) + 1";
             source_time_dependent = true;
             initial_conditions_string = exact_solution_string;
          }
@@ -564,6 +566,8 @@ void TransportProblem<dim>::compute_diffusion_matrix(const Vector<double> &visco
    // reset viscous matrix
    diffusion_matrix = 0;
 
+   FEValues<dim> fe_values(fe, cell_quadrature, update_gradients | update_JxW_values);
+
    unsigned int i_cell = 0;
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
@@ -571,6 +575,8 @@ void TransportProblem<dim>::compute_diffusion_matrix(const Vector<double> &visco
       // reset cell matrix to zero
       FullMatrix<double> cell_matrix(dofs_per_cell, dofs_per_cell);
       cell_matrix = 0;
+
+      fe_values.reinit(cell);
 
       // compute cell volume
       double cell_volume = cell->measure();
@@ -586,6 +592,18 @@ void TransportProblem<dim>::compute_diffusion_matrix(const Vector<double> &visco
             cell_matrix(i,j) += viscosity(i_cell) * viscous_bilinear_form;
          }
       }
+/*
+      for (unsigned int q = 0; q < n_q_points_cell; ++q) {
+         for (unsigned int i = 0; i < dofs_per_cell; ++i) {
+            for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+               cell_matrix(i,j) += (
+                  fe_values[flux].gradient(j, q) *
+                  fe_values[flux].gradient(i, q)
+                  ) * fe_values.JxW(q);
+            } // end j
+         } // end i
+      } // end q
+*/
 
       // aggregate local matrix and rhs to global matrix and rhs
       std::vector<unsigned int> local_dof_indices(dofs_per_cell);

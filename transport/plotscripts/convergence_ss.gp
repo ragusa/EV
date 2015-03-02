@@ -43,10 +43,10 @@ do for [i=1:words(file_list)] {
 stats "../output/".word(existing_file_list,words(existing_file_list)) using 4 noout
 h_min = STATS_min
 
-stats "../output/".word(existing_file_list,words(existing_file_list)) using 7 noout
+stats "../output/".word(existing_file_list,words(existing_file_list)) using 5 noout
 L1_min = STATS_min
 
-stats "../output/".word(existing_file_list,words(existing_file_list)) using 9 noout
+stats "../output/".word(existing_file_list,words(existing_file_list)) using 7 noout
 L2_min = STATS_min
 
 # define reference slope functions
@@ -81,7 +81,7 @@ set multiplot layout 1, 2
 #set output '| ps2pdf - '.output_file
 set ylabel "L-1 Error"
 plot for [i=1:words(existing_file_list)] "../output/".word(existing_file_list,i)\
-   using 4:7 with linesp linetype word(existing_lt_list,i)\
+   using 4:5 with linesp linetype word(existing_lt_list,i)\
    linecolor word(existing_lc_list,i)\
    pointtype word(existing_sym_list,i)\
    title word(existing_title_list,i),\
@@ -94,7 +94,7 @@ plot for [i=1:words(existing_file_list)] "../output/".word(existing_file_list,i)
 #set output '| ps2pdf - '.output_file
 set ylabel "L-2 Error"
 plot for [i=1:words(existing_file_list)] "../output/".word(existing_file_list,i)\
-   using 4:9 with linesp linetype word(existing_lt_list,i)\
+   using 4:7 with linesp linetype word(existing_lt_list,i)\
    linecolor word(existing_lc_list,i)\
    pointtype word(existing_sym_list,i)\
    title word(existing_title_list,i),\
