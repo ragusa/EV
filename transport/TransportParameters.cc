@@ -11,6 +11,7 @@ TransportParameters::TransportParameters() :
       initial_refinement_level(2),
       linear_solver_option(1),
       scheme_option(0),
+      low_order_diffusion_option(1),
       entropy_string("0.5*u*u"),
       entropy_derivative_string("u"),
       entropy_residual_coefficient(1.0),
@@ -53,6 +54,8 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
          "Option for linear solver");
    prm.declare_entry("Scheme option", "0", Patterns::Integer(),
          "Option for scheme to be used");
+   prm.declare_entry("Low order diffusion option", "1", Patterns::Integer(),
+         "Option for low-order diffusion to be used");
    prm.declare_entry("Entropy string", "0.5*u*u", Patterns::Anything(),
          "String for entropy function");
    prm.declare_entry("Entropy derivative string", "0.5*u*u", Patterns::Anything(),
@@ -98,6 +101,7 @@ void TransportParameters::get_parameters(ParameterHandler &prm) {
    initial_refinement_level = prm.get_integer("Initial refinement level");
    linear_solver_option = prm.get_integer("Linear solver option");
    scheme_option = prm.get_integer("Scheme option");
+   low_order_diffusion_option = prm.get_integer("Low order diffusion option");
    entropy_string = prm.get("Entropy string");
    entropy_derivative_string = prm.get("Entropy derivative string");
    entropy_residual_coefficient = prm.get_double("Entropy residual coefficient");

@@ -24,6 +24,7 @@ class TransportParameters {
     unsigned int initial_refinement_level; // initial level of refinement
     unsigned int linear_solver_option; // linear solver option
     unsigned int scheme_option; // option for scheme used
+    unsigned int low_order_diffusion_option; // option for low-order diffusion used
     std::string entropy_string; // string for entropy function
     std::string entropy_derivative_string; // string for entropy derivative function
     double entropy_residual_coefficient; // value of entropy residual coefficient

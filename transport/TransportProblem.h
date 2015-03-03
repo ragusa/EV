@@ -141,8 +141,12 @@ class TransportProblem {
       // low-order max-principle viscosity functions and data
       void compute_viscous_bilinear_forms();
       void compute_low_order_viscosity();
-      void compute_diffusion_matrix(const Vector<double> &viscosity,
-                                    SparseMatrix<double> &diffusion_matrix);
+      void compute_standard_diffusion_matrix(
+         const Vector<double> &viscosity,
+         SparseMatrix<double> &diffusion_matrix);
+      void compute_graphLaplacian_diffusion_matrix(
+         const Vector<double> &viscosity,
+         SparseMatrix<double> &diffusion_matrix);
       SparsityPattern unconstrained_sparsity_pattern;
       SparseMatrix<double> viscous_bilinear_forms;
 

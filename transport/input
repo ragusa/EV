@@ -1,34 +1,22 @@
 # problem options
-#    Problem ID:
-#     ID  case        source   sigma       BC  
-#     --------------------------------------------------------
-#     1   homogeneous constant constant    Dirichlet
-#     2   hetero      zero     PW constant Dirichlet
-#     3   advection   zero     zero        Dirichlet
-#     4   decay       zero     constant    Dirichlet
-#     5   MMS         MMS      constant    zero Dirichlet
-#     6   MMS2        MMS2     constant    zero Dirichlet
-#     7   MMS3        MMS3     constant    zero Dirichlet
-set Problem ID = 5
+# 1 = pure absorber
+# 2 = void-to-absorber
+# 3 = void
+# 5 = MMS-1
+# 6 = MMS-2
+# 7 = MMS-3
+set Problem ID = 1
 
 # transient options
 set Is steady state = false
-set End time = 1e-6
-set Time step size = 1e-3
+set End time = 0.5
+set Time step size = 5.00
 set CFL limit = 1.0
-#    Time integrator option:
-#     1: forward Euler
-#     2: SSPRK22
-#     3: SSPRK33
-set Time integrator option = 1
+set Time integrator option = 1 # 1 = FE, 2 = SSPRK22, 3 = SSPRK33
 
 # artificial viscosity options
-#    Scheme option:
-#     0: high-order Galerkin scheme
-#     1: low-order scheme
-#     2: high-order EV scheme
-#     3: FCT scheme
-set Scheme option = 1
+set Scheme option = 1 # 0 = Galerkin, 1 = low-order, 2 = EV, 3 = EV+FCT
+set Low order diffusion option = 2 # 1 = graph-Laplacian, 2 = standard Laplacian
 set Entropy string = 0.5*u*u
 set Entropy derivative string = u
 set Entropy residual coefficient = 1.0
@@ -36,32 +24,18 @@ set Jump coefficient = 1.0
 set Do not limit = false
 
 # refinement options
-#    Refinement option:
-#     1: refine space only
-#     2: refine time only
-#     3: refine both space and time
-set Refinement option = 1
+set Refinement option = 1 # 1 = refine space, 2 = refine time, 3 = refine space and time
 set Time refinement factor = 0.5
 set Use adaptive mesh refinement = false
-set Number of refinement cycles = 1 #16
-# level  cells
-# 1      2
-# 2      4
-# 3      8
-# 4      16
-# 5      32
-# ...    ...
-# n      2^n
-set Initial refinement level = 5 #2
+set Initial refinement level = 2
+set Number of refinement cycles = 5 #16
 
 # finite element options
 set Finite element degree = 1
 set Number of quadrature points = 10
 
 # linear solver options
-#    Linear solver option: 
-#     1: direct linear solve using UMFPACK
-set Linear solver option = 1
+set Linear solver option = 1 # 1 = UMFPACK direct solve
 
 # output options
 set Output mesh = false

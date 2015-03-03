@@ -176,7 +176,7 @@ void PostProcessor<dim>::output_solution(const Vector<double>  &solution,
    DataOut<dim> data_out;
    data_out.attach_dof_handler(dof_handler);
    data_out.add_data_vector(solution, "flux");
-   data_out.build_patches(degree + 1);
+   data_out.build_patches();
 
    // create string for viscosity type if it is to be included in output filename
    std::string append_string;
