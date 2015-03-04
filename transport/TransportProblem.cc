@@ -831,12 +831,14 @@ void TransportProblem<dim>::run()
          // refine time if user selected the option
          if (parameters.refinement_option != 1) {// "1" corresponds to "space refinement only"
             dt_nominal = dt_nominal * parameters.time_refinement_factor;
-            postprocessor.update_dt(dt_nominal);
          }
       }
 
       // setup system - distribute finite elements, reintialize matrices and vectors
       setup_system();
+
+      // update dt displayed in convergence table
+      postprocessor.update_dt(dt_nominal);
 
       // print information
       std::cout << std::endl << "Cycle " << cycle << ':' << std::endl;
@@ -1145,7 +1147,7 @@ double TransportProblem<dim>::enforce_CFL_condition(double &dt)
    // CFL is dt*speed/dx
    double max_speed_dx = 0.0; // max(speed/dx); max over all i of A(i,i)/mL(i,i)
    for (unsigned int i = 0; i < n_dofs; ++i)
-      max_speed_dx = std::max(max_speed_dx, low_order_ss_matrix(i,i) / lumped_mass_matrix(i,i));
+      max_speed_dx = std::max(max_speed_dx, std::abs(low_order_ss_matrix(i,i)) / lumped_mass_matrix(i,i));
 
    // compute CFL number
    double proposed_CFL = dt * max_speed_dx;
@@ -1154,7 +1156,6 @@ double TransportProblem<dim>::enforce_CFL_condition(double &dt)
    double adjusted_CFL = proposed_CFL;
    if (proposed_CFL > parameters.CFL_limit)
    {
-      std::cout << "CFL limit exceeded; dt has been adjusted" << std::endl;
       adjusted_CFL = parameters.CFL_limit;
       dt = adjusted_CFL / max_speed_dx;
    }
