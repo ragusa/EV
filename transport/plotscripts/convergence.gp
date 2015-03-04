@@ -1,6 +1,11 @@
 # note: this script requires Gnuplot version 4.6 or higher
 # usage: gnuplot -e 'problem_ID=<problem ID>' convergence.gp
 
+# Reference slopes
+slope1 = 0.25
+slope2 = 0.50
+slope3 = 0.75
+
 # list of possible input files to plot and their corresponding titles
 file_list = "convergence_galerkin\
              convergence_low_order\
@@ -13,7 +18,6 @@ title_list = "Galerkin\
 linetypes = "1 1 1 1"
 linecolors = "1 3 4 2"
 symboltypes = "1 2 3 4"
-
 
 # define is_missing(x) function for determining if an input file exists
 is_missing_aux(x)=system("ismissing.sh ".x)
@@ -50,19 +54,19 @@ stats "../output/".word(existing_file_list,words(existing_file_list)) using 9 no
 L2_min = STATS_min
 
 # define reference slope functions
-L1c1 = (1.0/h_min)**1 * L1_min
-L1c2 = (1.0/h_min)**2 * L1_min
-L1c3 = (1.0/h_min)**3 * L1_min
-L1ref1(x) = L1c1 * x**1   
-L1ref2(x) = L1c2 * x**2  
-L1ref3(x) = L1c3 * x**3 
+L1c1 = (1.0/h_min)**slope1 * L1_min
+L1c2 = (1.0/h_min)**slope2 * L1_min
+L1c3 = (1.0/h_min)**slope3 * L1_min
+L1ref1(x) = L1c1 * x**slope1
+L1ref2(x) = L1c2 * x**slope2
+L1ref3(x) = L1c3 * x**slope3
 
-L2c1 = (1.0/h_min)**1 * L2_min
-L2c2 = (1.0/h_min)**2 * L2_min
-L2c3 = (1.0/h_min)**3 * L2_min
-L2ref1(x) = L2c1 * x**1   
-L2ref2(x) = L2c2 * x**2  
-L2ref3(x) = L2c3 * x**3 
+L2c1 = (1.0/h_min)**slope1 * L2_min
+L2c2 = (1.0/h_min)**slope2 * L2_min
+L2c3 = (1.0/h_min)**slope3 * L2_min
+L2ref1(x) = L2c1 * x**slope1
+L2ref2(x) = L2c2 * x**slope2
+L2ref3(x) = L2c3 * x**slope3
 
 set terminal postscript enhanced color
 set xlabel "Mesh Size"
@@ -85,9 +89,9 @@ plot for [i=1:words(existing_file_list)] "../output/".word(existing_file_list,i)
    linecolor word(existing_lc_list,i)\
    pointtype word(existing_sym_list,i)\
    title word(existing_title_list,i),\
-   L1ref1(x) title "m=1 slope" with lines linestyle 2 linecolor 9,\
-   L1ref2(x) title "m=2 slope" with lines linestyle 2 linecolor 9,\
-   L1ref3(x) title "m=3 slope" with lines linestyle 2 linecolor 9
+   L1ref1(x) title "m=0.25 slope" with lines linestyle 2 linecolor 9,\
+   L1ref2(x) title "m=0.50 slope" with lines linestyle 2 linecolor 9,\
+   L1ref3(x) title "m=0.75 slope" with lines linestyle 2 linecolor 9
 
 # Plot L-2 error
 #output_file = "../plots/convergence_".problem_ID."_L2.pdf"
@@ -98,8 +102,8 @@ plot for [i=1:words(existing_file_list)] "../output/".word(existing_file_list,i)
    linecolor word(existing_lc_list,i)\
    pointtype word(existing_sym_list,i)\
    title word(existing_title_list,i),\
-   L2ref1(x) title "m=1 slope" with lines linestyle 2 linecolor 9,\
-   L2ref2(x) title "m=2 slope" with lines linestyle 2 linecolor 9,\
-   L2ref3(x) title "m=3 slope" with lines linestyle 2 linecolor 9
+   L2ref1(x) title "m=0.25 slope" with lines linestyle 2 linecolor 9,\
+   L2ref2(x) title "m=0.50 slope" with lines linestyle 2 linecolor 9,\
+   L2ref3(x) title "m=0.75 slope" with lines linestyle 2 linecolor 9
 
 unset multiplot

@@ -1,0 +1,89 @@
+\documentclass{article}
+\author{Joshua Hansel}
+\date{March 4, 2015}
+\title{Observation of Super-asymptotic Convergence for Hyperbolic Problems}
+\begin{document}
+
+\maketitle
+
+It was observed in the course of convergence studies that in some circumstances,
+a convergence rate was greater than expected. More specifically, a spatially
+first-order scheme was showing second-order convergence in space. This
+article demonstrates how this can occur.
+
+In short, this is believed to be an issue unique to hyperbolic PDEs that
+occurrs when the end time is not large enough.
+This issue will be demonstrated using the simplest hyperbolic PDE, the
+linear advection equation, but the analysis easily extends to more complicated
+hyperbolic PDEs. The low-order scheme is assumed to employ a first-order
+artificial diffusion term $h\frac{\partial^2 u_h}{\partial x^2}$.
+Consider the PDEs for the exact solution $u$ and the approximate solution
+$u_h$, where $h$ is the mesh size:
+
+\begin{equation}
+  \frac{\partial u}{\partial t} + \frac{\partial u}{\partial x} = q(x,t)
+\end{equation}
+
+\begin{equation}
+  \frac{\partial u_h}{\partial t} + \frac{\partial u_h}{\partial x} = h\frac{\partial^2 u_h}{\partial x^2} + q(x,t)
+\end{equation}
+
+\noindent Taking a difference of these equations gives a PDE for the error:
+
+\begin{equation}\label{error}
+  \frac{\partial e}{\partial t} + \frac{\partial e}{\partial x} = -h\frac{\partial^2 u_h}{\partial x^2},
+\end{equation}
+
+\noindent where $e=u-u_h$. Thus the error equation is a hyperbolic equation of the same form as
+the original equation, but with the source term being the first-order artificial diffusion error.
+This equation will now be solved using the method of characteristics.
+Regarding $x$ as a function of time,
+
+\[
+  x\rightarrow x(t)=x_0 + t, \qquad u(x,t)\rightarrow u(x(t),t),
+\]
+
+\noindent Equation \ref{error} may be rewritten as
+
+\begin{equation}
+  \frac{de}{dt} = -h\frac{\partial^2 u_h}{\partial x^2},
+\end{equation}
+
+\noindent Integrating from $t'=0$ to $t'=t$ gives
+
+\begin{equation}
+  e = e_0 -h\int\limits_0^t\frac{\partial^2 u_h}{\partial x^2}dt',
+\end{equation}
+
+\noindent where $e_0$ is the error at time 0, assumed to be only error due to interpolation
+of the initial conditions. With $p$-degree finite elements, the interpolation error
+is $O(h^{p+1})$. Here, linear finite elements are used, so $e_0=O(h^2)$. 
+Expanding the diffusion term in a Taylor series
+about $t'=0$ gives
+
+\[
+  \frac{\partial^2 u_h}{\partial x^2} = \left.\frac{\partial^2 u_h}{\partial x^2}\right|_0
+    + O(t')
+\]
+
+\noindent Thus the error becomes
+
+\[
+  e = O(h^2) -h t\left.\frac{\partial^2 u_h}{\partial x^2}\right|_0 + O(h t^2).
+\]
+
+\noindent If $t<h$, this becomes
+
+\begin{eqnarray*}
+  e & = & O(h^2) + O(h^2) + O(h^3)\\
+    & = & O(h^2),
+\end{eqnarray*}
+
+\noindent instead of the case $t>h$:
+
+\begin{eqnarray*}
+  e & = & O(h^2) + O(h)\\
+    & = & O(h).
+\end{eqnarray*}
+
+\end{document}

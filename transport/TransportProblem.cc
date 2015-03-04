@@ -194,18 +194,18 @@ void TransportProblem<dim>::process_problem_ID()
          x_min = 0.0;
          x_max = 1.0;
 
-         incoming_string = "1";
+         incoming_string = "0";
 
          cross_section_string = "1.0";
          has_exact_solution = true;
          // use different MS for steady-state vs. transient problem
          if (parameters.is_steady_state) {
-            exact_solution_string = "sin(pi*x) + 1"; // assume omega_x = 1 and c = 1
-            source_string = "pi*cos(pi*x) + sin(pi*x) + 1";
+            exact_solution_string = "sin(pi*x)"; // assume omega_x = 1 and c = 1
+            source_string = "pi*cos(pi*x) + sin(pi*x)";
             source_time_dependent = false;
          } else {
-            exact_solution_string = "t*sin(pi*x) + 1"; // assume omega_x = 1 and c = 1
-            source_string = "sin(pi*x) + pi*t*cos(pi*x) + t*sin(pi*x) + 1";
+            exact_solution_string = "t*sin(pi*x)"; // assume omega_x = 1 and c = 1
+            source_string = "sin(pi*x) + pi*t*cos(pi*x) + t*sin(pi*x)";
             source_time_dependent = true;
             initial_conditions_string = exact_solution_string;
          }
