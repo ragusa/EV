@@ -15,6 +15,8 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/data_out.h>
 
+#include <sys/stat.h>
+
 using namespace dealii;
 
 /** \brief Class for outputting solutions and evaluating error and convergence.
@@ -59,6 +61,7 @@ class PostProcessor {
 
    private:
       void output_grid(const Triangulation<dim> &triangulation) const;
+      void create_directory(const std::string &dir) const;
 
       ConvergenceTable convergence_table;
 

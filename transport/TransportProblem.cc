@@ -800,6 +800,30 @@ void TransportProblem<dim>::run()
    // initialize problem
    initialize_system();
 
+   // create name of output subdirectory
+   std::stringstream subdir_ss;
+   subdir_ss << "problem_" << parameters.problem_id;
+   std::string subdir = subdir_ss.str();
+
+   // create filename appendage
+   std::stringstream appendage_ss;
+   std::string timedisc_string;
+   if (parameters.is_steady_state)
+      timedisc_string = "_ss";
+   else
+      switch (parameters.time_integrator_option) {
+         case 1: {
+            timedisc_string = "_FE";
+         } case 3: {
+            timedisc_string = "_SSPRK33";
+         } default: {
+            ExcNotImplemented();
+         }
+      }
+   appendage_ss << "_" << parameters.problem_id << timedisc_string;
+   std::string appendage = appendage_ss.str();
+
+
    // create post-processor object
    unsigned int final_refinement_level = parameters.initial_refinement_level
       + parameters.n_refinement_cycles - 1;
@@ -986,11 +1010,18 @@ void TransportProblem<dim>::run()
                      if (n == 1) {
                         high_order_viscosity = low_order_viscosity;
                      } else {
-                        entropy_viscosity = EV.compute_entropy_viscosity(old_solution,older_solution,old_dt,t_stage);
+                        entropy_viscosity = EV.compute_entropy_viscosity(
+                           old_solution,
+                           older_solution,
+                           old_dt,
+                           t_stage);
                         for (unsigned int i_cell = 0; i_cell < n_cells; ++i_cell)
-                           high_order_viscosity(i_cell) = std::min(entropy_viscosity(i_cell),low_order_viscosity(i_cell));
+                           high_order_viscosity(i_cell) = std::min(
+                              entropy_viscosity(i_cell),
+                              low_order_viscosity(i_cell));
                      }
-                     compute_graphLaplacian_diffusion_matrix(high_order_viscosity,high_order_diffusion_matrix);
+                     compute_graphLaplacian_diffusion_matrix(
+                        high_order_viscosity,high_order_diffusion_matrix);
                      high_order_ss_matrix.copy_from(inviscid_ss_matrix);
                      high_order_ss_matrix.add(1.0,high_order_diffusion_matrix);
 

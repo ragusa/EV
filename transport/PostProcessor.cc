@@ -69,8 +69,10 @@ void PostProcessor<dim>::output_results(const Vector<double>     &solution,
                                         const DoFHandler<dim>    &dof_handler,
                                         const Triangulation<dim> &triangulation)
 {
+   // create output directory if it doesn't exist
+   create_directory("output");
+
    // output grid
-   //------------
    if ((output_mesh) and (dim > 1))
       output_grid(triangulation);
 
@@ -81,7 +83,6 @@ void PostProcessor<dim>::output_results(const Vector<double>     &solution,
                    true);
 
    // write exact solution output file
-   //---------------------------------
    if (output_exact_solution and has_exact_solution)
    {
       // create fine mesh on which to interpolate exact solution function
@@ -107,18 +108,7 @@ void PostProcessor<dim>::output_results(const Vector<double>     &solution,
                       false);
    }
 
-
-/*
-   // output min and max bounds for DMP
-   if (parameters.output_DMP_bounds and parameters.scheme_option == 3)
-   {
-      output_solution(min_values,dof_handler,"min_values",false);
-      output_solution(max_values,dof_handler,"max_values",false);
-   }
-*/
-
    // output convergence table
-   //------------------------
    if (has_exact_solution) {
       // format columns
       convergence_table.set_precision("dx", 3);
@@ -350,3 +340,24 @@ void PostProcessor<dim>::update_dt(const double &dt)
    dt_nominal = dt;
 }
 
+/** \brief Check if a directory exists and create it if it doesn't.
+ */
+template<int dim>
+void PostProcessor<dim>::create_directory(const std::string &directory) const
+{
+   // convert to char
+   char *directory_char = (char*)directory.c_str();
+
+   // use stat to determine if directory exists
+   struct stat mystat;
+   bool directory_exists = false;
+   if (stat(directory_char,&mystat) == 0)
+      if (S_ISDIR(mystat.st_mode))
+         directory_exists = true;
+
+   // create directory if it doesn't exist
+   int make_status;
+   if (!directory_exists)
+      make_status = system(("mkdir "+directory).c_str());
+   Assert(make_status == 0, ExcInternalError());
+}
