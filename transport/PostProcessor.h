@@ -36,9 +36,9 @@ class PostProcessor {
          const unsigned int       &refinement_option,
          const unsigned int       &final_refinement_level,
          const FESystem<dim>      &fe,
-         const unsigned int       &degree,
-         const unsigned int       &scheme_option,
          const unsigned int       &problem_ID,
+         const std::string        &appendage_string,
+         const std::string        &filename_exact,
          const QGauss<dim>        &cell_quadrature);
       ~PostProcessor();
 
@@ -47,8 +47,7 @@ class PostProcessor {
                           const Triangulation<dim> &triangulation);
       void output_solution(const Vector<double>  &solution,
                            const DoFHandler<dim> &dof_handler,
-                           const std::string     &output_string,
-                           const bool            &append_viscosity) const;
+                           const std::string     &output_string) const;
       void output_viscosity(const Vector<double>  &low_order_viscosity,
                             const Vector<double>  &entropy_viscosity,
                             const Vector<double>  &high_order_viscosity,
@@ -80,14 +79,12 @@ class PostProcessor {
       const unsigned int       final_refinement_level;
 
       const FESystem<dim>      *fe;
-      const unsigned int       degree;
 
-      const unsigned int       scheme_option;
       const unsigned int       problem_ID;
+      const std::string        appendage_string;
+      const std::string        filename_exact;
 
       const QGauss<dim>        cell_quadrature;
-
-      std::string              viscosity_string;
 };
 
 #include "PostProcessor.cc"
