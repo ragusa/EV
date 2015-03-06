@@ -36,7 +36,7 @@ class PostProcessor {
          const unsigned int       &refinement_option,
          const unsigned int       &final_refinement_level,
          const FESystem<dim>      &fe,
-         const unsigned int       &problem_ID,
+         const std::string        &output_dir,
          const std::string        &appendage_string,
          const std::string        &filename_exact,
          const QGauss<dim>        &cell_quadrature);
@@ -64,27 +64,27 @@ class PostProcessor {
 
       ConvergenceTable convergence_table;
 
-      const bool               output_mesh;
-      const bool               output_exact_solution;
-      const bool               save_convergence_results;
+      const bool          output_mesh;
+      const bool          output_exact_solution;
+      const bool          save_convergence_results;
 
-      const bool               has_exact_solution;
-      FunctionParser<dim>      *exact_solution_function;
+      const bool          has_exact_solution;
+      FunctionParser<dim> *exact_solution_function;
 
-      const double             time;
-      double                   dt_nominal;
-      const bool               is_steady_state;
+      const double        time;
+      double              dt_nominal;
+      const bool          is_steady_state;
 
-      const unsigned int       refinement_option;
-      const unsigned int       final_refinement_level;
+      const unsigned int  refinement_option;
+      const unsigned int  final_refinement_level;
 
-      const FESystem<dim>      *fe;
+      const FESystem<dim> *fe;
 
-      const unsigned int       problem_ID;
-      const std::string        appendage_string;
-      const std::string        filename_exact;
+      const std::string   output_dir;
+      const std::string   appendage_string;
+      const std::string   filename_exact;
 
-      const QGauss<dim>        cell_quadrature;
+      const QGauss<dim>   cell_quadrature;
 };
 
 #include "PostProcessor.cc"

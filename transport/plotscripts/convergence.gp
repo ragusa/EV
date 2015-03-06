@@ -1,5 +1,6 @@
 # note: this script requires Gnuplot version 4.6 or higher
-# usage: gnuplot -e 'problem_ID=<problem ID>' convergence.gp
+# usage: gnuplot -e 'problem_ID=<problem ID>;
+#           timeintegrator=<time integrator string>' convergence.gp
 
 # Reference slopes
 slope1 = 1.00
@@ -13,10 +14,14 @@ conv_mode = 2
 ss_mode = 1
 
 # list of possible input files to plot and their corresponding titles
-file_list = "convergence_galerkin\
-             convergence_low_order\
-             convergence_high_order\
-             convergence_FCT"
+file_galerkin = "convergence_".problem_ID."_galerkin_".timeintegrator
+file_low      = "convergence_".problem_ID."_low_order_".timeintegrator
+file_high     = "convergence_".problem_ID."_high_order_".timeintegrator
+file_FCT      = "convergence_".problem_ID."_FCT_"     .timeintegrator
+file_list = file_galerkin." ".\
+            file_low." ".\
+            file_high." ".\
+            file_FCT
 title_list = "Galerkin\
               Low-Order\
               High-Order\
@@ -26,7 +31,8 @@ linecolors = "1 3 4 2"
 symboltypes = "1 2 3 4"
 
 # define is_missing(x) function for determining if an input file exists
-is_missing_aux(x)=system("ismissing.sh ".x)
+outdir = "../output/problem_".problem_ID."/"
+is_missing_aux(x)=system("ismissing.sh ".outdir.x)
 is_missing(x)=int(is_missing_aux(x)+0)
 
 # get a list of the possible input files that exist and their titles
@@ -36,7 +42,7 @@ existing_lt_list = ""
 existing_lc_list = ""
 existing_sym_list = ""
 do for [i=1:words(file_list)] {
-   myfile = word(file_list,i)."_".problem_ID.".gpl"
+   myfile = word(file_list,i).".gpl"
    mytitle = word(title_list,i)
    mylt = word(linetypes,i)
    mylc = word(linecolors,i)
@@ -55,7 +61,7 @@ if (conv_mode == 1) \
   h_col = 4; \
 else \
   h_col = 5
-stats "../output/".word(existing_file_list,words(existing_file_list)) using h_col noout
+stats outdir.word(existing_file_list,words(existing_file_list)) using h_col noout
 h_min = STATS_min
 
 # get minimum L1 error
@@ -63,7 +69,7 @@ if (ss_mode == 1) \
   L1_col = 7; \
 else \
   L1_col = 5
-stats "../output/".word(existing_file_list,words(existing_file_list)) using L1_col noout
+stats outdir.word(existing_file_list,words(existing_file_list)) using L1_col noout
 L1_min = STATS_min
 L1_max = STATS_max
 
@@ -72,7 +78,7 @@ if (ss_mode == 1) \
   L2_col = 9; \
 else \
   L2_col = 7
-stats "../output/".word(existing_file_list,words(existing_file_list)) using L2_col noout
+stats outdir.word(existing_file_list,words(existing_file_list)) using L2_col noout
 L2_min = STATS_min
 L2_max = STATS_max
 
@@ -107,7 +113,7 @@ set key top right
 set format y "10^{%L}"
 set format x "10^{%L}"
 
-output_file = "../plots/convergence_".problem_ID.".pdf"
+output_file = "../plots/convergence_".problem_ID."_".timeintegrator.".pdf"
 set output '| ps2pdf - '.output_file
 
 # create multiplot
@@ -119,7 +125,7 @@ if (L1_max > 1) \
 else \
   set yrange[*:*]
 set ylabel "L-1 Error"
-plot for [i=1:words(existing_file_list)] "../output/".word(existing_file_list,i)\
+plot for [i=1:words(existing_file_list)] outdir.word(existing_file_list,i)\
    using h_col:L1_col with linesp linetype word(existing_lt_list,i)\
    linecolor word(existing_lc_list,i)\
    pointtype word(existing_sym_list,i)\
@@ -134,7 +140,7 @@ if (L2_max > 1) \
 else \
   set yrange[*:*]
 set ylabel "L-2 Error"
-plot for [i=1:words(existing_file_list)] "../output/".word(existing_file_list,i)\
+plot for [i=1:words(existing_file_list)] outdir.word(existing_file_list,i)\
    using h_col:L2_col with linesp linetype word(existing_lt_list,i)\
    linecolor word(existing_lc_list,i)\
    pointtype word(existing_sym_list,i)\

@@ -13,7 +13,7 @@ PostProcessor<dim>::PostProcessor(
    const unsigned int  &refinement_option,
    const unsigned int  &final_refinement_level,
    const FESystem<dim> &fe,
-   const unsigned int  &problem_ID,
+   const std::string   &output_dir,
    const std::string   &appendage_string,
    const std::string   &filename_exact,
    const QGauss<dim>   &cell_quadrature) :
@@ -29,7 +29,7 @@ PostProcessor<dim>::PostProcessor(
    refinement_option(refinement_option),
    final_refinement_level(final_refinement_level),
    fe(&fe),
-   problem_ID(problem_ID),
+   output_dir(output_dir),
    appendage_string(appendage_string),
    filename_exact(filename_exact),
    cell_quadrature(cell_quadrature)
@@ -53,6 +53,9 @@ void PostProcessor<dim>::output_results(const Vector<double>     &solution,
 {
    // create output directory if it doesn't exist
    create_directory("output");
+
+   // create output subdirectory if it doesn't exist
+   create_directory(output_dir);
 
    // output grid
    if (output_mesh) {
@@ -121,7 +124,7 @@ void PostProcessor<dim>::output_results(const Vector<double>     &solution,
       // save convergence results to file
       if (save_convergence_results) {
          // create output filestream for exact solution
-         std::string filename = "output/convergence" + appendage_string + ".gpl";
+         std::string filename = output_dir + "convergence" + appendage_string + ".gpl";
          std::ofstream output_filestream(filename.c_str());
          // write convergence results to file
          convergence_table.write_text(output_filestream,TableHandler::table_with_separate_column_description);
@@ -139,19 +142,25 @@ void PostProcessor<dim>::output_solution(const Vector<double>  &solution,
                                          const DoFHandler<dim> &dof_handler,
                                          const std::string     &output_string) const
 {
+   // create output directory if it doesn't exist
+   create_directory("output");
+
+   // create output subdirectory if it doesn't exist
+   create_directory(output_dir);
+
    // create DataOut object for solution
    DataOut<dim> data_out;
    data_out.attach_dof_handler(dof_handler);
    data_out.add_data_vector(solution, "flux");
    data_out.build_patches();
 
-   // create output filename for exact solution
+   // create output filename for solution
    std::string filename_extension;
    if (dim == 1) filename_extension = ".gpl";
    else          filename_extension = ".vtk";
 
    std::stringstream filename_ss;
-   filename_ss << "output/" << output_string << filename_extension;
+   filename_ss << output_dir << output_string << filename_extension;
    std::string filename = filename_ss.str();
 
    // create output filestream for exact solution
@@ -174,6 +183,12 @@ void PostProcessor<dim>::output_viscosity(const Vector<double>  &low_order_visco
                                           const Vector<double>  &high_order_viscosity,
                                           const DoFHandler<dim> &dof_handler) const
 {
+   // create output directory if it doesn't exist
+   create_directory("output");
+
+   // create output subdirectory if it doesn't exist
+   create_directory(output_dir);
+
    // add viscosities to data out object
    DataOut<dim> visc_out;
    visc_out.attach_dof_handler(dof_handler);
@@ -187,7 +202,7 @@ void PostProcessor<dim>::output_viscosity(const Vector<double>  &low_order_visco
    else           filename_extension = ".vtk";
 
    // create output filestream
-   std::string viscosity_filename = "output/viscosity" + appendage_string
+   std::string viscosity_filename = output_dir + "viscosity" + appendage_string
       + filename_extension;
    std::ofstream viscosity_outstream(viscosity_filename.c_str());
 
@@ -263,8 +278,14 @@ void PostProcessor<dim>::evaluate_error(const Vector<double>     &solution,
 template<int dim>
 void PostProcessor<dim>::output_grid(const Triangulation<dim> &triangulation) const
 {
+   // create output directory if it doesn't exist
+   create_directory("output");
+
+   // create output subdirectory if it doesn't exist
+   create_directory(output_dir);
+
    // create output filestream
-   std::string filename = "output/grid.eps";
+   std::string filename = output_dir + "grid.eps";
    std::ofstream output(filename.c_str());
 
    // write grid to eps

@@ -801,9 +801,9 @@ void TransportProblem<dim>::run()
    initialize_system();
 
    // create name of output subdirectory
-   std::stringstream output_subdir_ss;
-   output_subdir_ss << "problem_" << parameters.problem_id;
-   std::string output_subdir = output_subdir_ss.str();
+   std::stringstream output_dir_ss;
+   output_dir_ss << "output/problem_" << parameters.problem_id << "/";
+   std::string output_dir = output_dir_ss.str();
 
    // determine time integrator string
    std::string timedisc_string;
@@ -829,7 +829,6 @@ void TransportProblem<dim>::run()
    std::stringstream appendage_ss;
    appendage_ss << "_" << parameters.problem_id << "_" << viscosity_string
       << "_" << timedisc_string;
-   std::string appendage_string = appendage_ss.str();
 
    // create filename for exact solution
    std::stringstream filename_exact_ss;
@@ -849,8 +848,8 @@ void TransportProblem<dim>::run()
                                     parameters.refinement_option,
                                     final_refinement_level,
                                     fe,
-                                    parameters.problem_id,
-                                    appendage_string,
+                                    output_dir,
+                                    appendage_ss.str(),
                                     filename_exact_ss.str(),
                                     cell_quadrature);
 

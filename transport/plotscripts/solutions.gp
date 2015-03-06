@@ -26,7 +26,8 @@ linecolors = "5 -1 1 3 4 2"
 symboltypes = "-1 -2 1 2 3 4"
 
 # define is_missing(x) function for determining if an input file exists
-is_missing_aux(x)=system("ismissing.sh ".x)
+outdir = "../output/problem_".problem_ID."/"
+is_missing_aux(x)=system("ismissing.sh ".outdir.x)
 is_missing(x)=int(is_missing_aux(x)+0)
 
 # get a list of the possible input files that exist and their titles
@@ -57,7 +58,7 @@ set ylabel "Angular Flux"
 set xlabel "x"
 set key top right
 
-plot for [i=1:words(existing_file_list)] "../output/".word(existing_file_list,i)\
+plot for [i=1:words(existing_file_list)] outdir.word(existing_file_list,i)\
    using 1:2 with linesp linetype word(existing_lt_list,i)\
    linecolor word(existing_lc_list,i)\
    pointtype word(existing_sym_list,i)\

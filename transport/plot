@@ -60,7 +60,8 @@ if ($time_integrator == 1) {
 chdir "plotscripts";
 
 # call gnuplot
-system("gnuplot -e \"problem_ID='$problem_ID'; timeintegrator='$time_integrator_string'\" solutions.gp");
+system("gnuplot -e \"problem_ID='$problem_ID';
+   timeintegrator='$time_integrator_string'\" solutions.gp");
 system("sleep 1");
 
 # name of resulting plot file
