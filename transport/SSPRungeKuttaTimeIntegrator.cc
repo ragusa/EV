@@ -52,7 +52,6 @@ SSPRungeKuttaTimeIntegrator<dim>::SSPRungeKuttaTimeIntegrator(
 
    // initialize sparse matrix
    system_matrix.reinit(sparsity_pattern);
-
 }
 
 /** \brief destructor; deallocates memory for constants and stage solutions.
@@ -107,20 +106,17 @@ void SSPRungeKuttaTimeIntegrator<dim>::get_new_solution(Vector<double> &new_solu
 /** \brief Advances one stage of a Runge-Kutta method.
  */
 template<int dim>
-void SSPRungeKuttaTimeIntegrator<dim>::advance_stage(const SparseMatrix<double> &mass_matrix,
-                                                     const SparseMatrix<double> &ss_matrix,
-                                                     const Vector<double>       &ss_rhs,
-                                                     const bool                 &delay_stage_solution)
+void SSPRungeKuttaTimeIntegrator<dim>::step(const SparseMatrix<double> &mass_matrix,
+                                            const SparseMatrix<double> &ss_matrix,
+                                            const Vector<double>       &ss_rhs,
+                                            const bool                 &call_complete_stage_solution)
 {
-   // advance current stage index
-   current_stage++;
-
    // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
    system_rhs = 0;
    system_rhs.add(dt, ss_rhs);      //  now, system_rhs = dt*(ss_rhs)
-   mass_matrix.vmult(intermediate_solution, u_stage[current_stage-1]);
+   mass_matrix.vmult(intermediate_solution, u_stage[current_stage]);
    system_rhs.add(1.0, intermediate_solution); //  now, system_rhs = M*u_old + dt*(ss_rhs)
-   ss_matrix.vmult(intermediate_solution,   u_stage[current_stage-1]);
+   ss_matrix.vmult(intermediate_solution,   u_stage[current_stage]);
    system_rhs.add(-dt, intermediate_solution); //  now, system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
       
    // solve the linear system M*u_new = system_rhs
@@ -128,18 +124,18 @@ void SSPRungeKuttaTimeIntegrator<dim>::advance_stage(const SparseMatrix<double> 
    linear_solver.solve(system_matrix, system_rhs, intermediate_solution);
 
    // compute new stage solution if there are no additional steps to be taken on intermediate solution
-   if (not delay_stage_solution)
-   {
-      u_stage[current_stage] = 0;
-      u_stage[current_stage].add(a[current_stage-1],u_stage[0],b[current_stage-1],intermediate_solution);
-   }
+   if (call_complete_stage_solution)
+      complete_stage_solution();
 }
 
 /** \brief Computes stage solution.
  */
 template<int dim>
-void SSPRungeKuttaTimeIntegrator<dim>::compute_stage_solution()
+void SSPRungeKuttaTimeIntegrator<dim>::complete_stage_solution()
 {
+   // advance current stage index
+   current_stage++;
+
    u_stage[current_stage] = 0;
    u_stage[current_stage].add(a[current_stage-1],u_stage[0],b[current_stage-1],intermediate_solution);
 }

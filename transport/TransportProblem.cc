@@ -969,7 +969,7 @@ void TransportProblem<dim>::run()
                      }
 
                      // advance by an SSPRK step
-                     ssprk.advance_stage(consistent_mass_matrix,inviscid_ss_matrix,ss_rhs,false);
+                     ssprk.step(consistent_mass_matrix,inviscid_ss_matrix,ss_rhs,true);
                   }
                   // retrieve the final solution
                   ssprk.get_new_solution(new_solution);
@@ -988,7 +988,7 @@ void TransportProblem<dim>::run()
                      }
 
                      // advance by an SSPRK step
-                     ssprk.advance_stage(lumped_mass_matrix,low_order_ss_matrix,ss_rhs,false);
+                     ssprk.step(lumped_mass_matrix,low_order_ss_matrix,ss_rhs,true);
                   }
                   // retrieve the final solution
                   ssprk.get_new_solution(new_solution);
@@ -1006,27 +1006,32 @@ void TransportProblem<dim>::run()
                         assemble_ss_rhs(t_stage);
                      }
 
+                     // compute Galerkin solution
+                     ssprk.step(consistent_mass_matrix,inviscid_ss_matrix,ss_rhs,false);
+
+                     // get Galerkin solution
+                     ssprk.get_intermediate_solution(new_solution);
+
+                     // get old stage solution
+                     ssprk.get_stage_solution(i,old_stage_solution);
+
                      // recompute high-order steady-state matrix
-                     if (n == 1) {
-                        high_order_viscosity = low_order_viscosity;
-                     } else {
-                        entropy_viscosity = EV.compute_entropy_viscosity(
-                           old_solution,
-                           older_solution,
-                           old_dt,
-                           t_stage);
-                        for (unsigned int i_cell = 0; i_cell < n_cells; ++i_cell)
-                           high_order_viscosity(i_cell) = std::min(
-                              entropy_viscosity(i_cell),
-                              low_order_viscosity(i_cell));
-                     }
+                     entropy_viscosity = EV.compute_entropy_viscosity(
+                        new_solution,
+                        old_stage_solution,
+                        dt,
+                        t_stage);
+                     for (unsigned int i_cell = 0; i_cell < n_cells; ++i_cell)
+                        high_order_viscosity(i_cell) = std::min(
+                           entropy_viscosity(i_cell),
+                           low_order_viscosity(i_cell));
                      compute_graphLaplacian_diffusion_matrix(
                         high_order_viscosity,high_order_diffusion_matrix);
                      high_order_ss_matrix.copy_from(inviscid_ss_matrix);
                      high_order_ss_matrix.add(1.0,high_order_diffusion_matrix);
 
                      // advance by an SSPRK step
-                     ssprk.advance_stage(consistent_mass_matrix,high_order_ss_matrix,ss_rhs,false);
+                     ssprk.step(consistent_mass_matrix,high_order_ss_matrix,ss_rhs,true);
                   }
                   // retrieve the final solution
                   ssprk.get_new_solution(new_solution);
@@ -1047,19 +1052,15 @@ void TransportProblem<dim>::run()
                      }
 
                      // recompute high-order steady-state matrix
-                     if (n == 1) {
-                        high_order_viscosity = low_order_viscosity;
-                     } else {
-                        entropy_viscosity = EV.compute_entropy_viscosity(old_solution,older_solution,old_dt,t_stage);
-                        for (unsigned int i_cell = 0; i_cell < n_cells; ++i_cell)
-                           high_order_viscosity(i_cell) = std::min(entropy_viscosity(i_cell),low_order_viscosity(i_cell));
-                     }
+                     entropy_viscosity = EV.compute_entropy_viscosity(old_solution,older_solution,old_dt,t_stage);
+                     for (unsigned int i_cell = 0; i_cell < n_cells; ++i_cell)
+                        high_order_viscosity(i_cell) = std::min(entropy_viscosity(i_cell),low_order_viscosity(i_cell));
                      compute_graphLaplacian_diffusion_matrix(high_order_viscosity,high_order_diffusion_matrix);
                      high_order_ss_matrix.copy_from(inviscid_ss_matrix);
                      high_order_ss_matrix.add(1.0,high_order_diffusion_matrix);
 
                      // advance by an SSPRK step
-                     ssprk.advance_stage(consistent_mass_matrix,high_order_ss_matrix,ss_rhs,true);
+                     ssprk.step(consistent_mass_matrix,high_order_ss_matrix,ss_rhs,false);
 
                      // get old stage solution
                      ssprk.get_stage_solution(i,old_stage_solution);
@@ -1080,7 +1081,7 @@ void TransportProblem<dim>::run()
                      ssprk.set_intermediate_solution(new_solution);
 
                      // finish computing stage solution
-                     ssprk.compute_stage_solution();
+                     ssprk.complete_stage_solution();
                      
                   }
                   // retrieve the final solution

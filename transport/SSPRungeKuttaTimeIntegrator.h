@@ -21,11 +21,11 @@ class SSPRungeKuttaTimeIntegrator {
 
       void initialize_time_step(const Vector<double> &old_solution,
                                 const double         &time_step_size);
-      void advance_stage(const SparseMatrix<double> &mass_matrix,
-                         const SparseMatrix<double> &ss_matrix,
-                         const Vector<double>       &ss_rhs,
-                         const bool                 &delay_stage_solution);
-      void compute_stage_solution();
+      void step(const SparseMatrix<double> &mass_matrix,
+                const SparseMatrix<double> &ss_matrix,
+                const Vector<double>       &ss_rhs,
+                const bool                 &call_complete_stage_solution);
+      void complete_stage_solution();
       void get_stage_solution(const unsigned int &i, Vector<double> &new_solution) const;
       void get_intermediate_solution(Vector<double> &solution) const;
       void set_intermediate_solution(Vector<double> &solution);
