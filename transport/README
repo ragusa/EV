@@ -18,7 +18,8 @@ Input file: ./input
 
 To plot the results:
 ---------------------------------------------------------------------------------
-./plot
-Also, some gnuplot scripts are available in ./plotscripts:
-solution.gp
-viscosity.gp
+$ ./plot
+
+To plot convergence:
+---------------------------------------------------------------------------------
+$ ./plot_convergence

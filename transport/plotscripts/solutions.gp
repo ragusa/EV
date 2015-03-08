@@ -1,30 +1,33 @@
 # note: this script requires Gnuplot version 4.6 or higher
-# usage: gnuplot -e 'problem_ID=<problem ID>' solutions.gp
+# usage: gnuplot -e 'problem_ID=<problem ID>;
+#           timeintegrator=<time integrator string>' solutions.gp
 
 # list of possible input files to plot and their corresponding titles
-file_list = "initial_solution\
-             exact_solution\
-             solution_galerkin\
-             solution_low_order\
-             solution_high_order\
-             solution_FCT\
-             min_values\
-             max_values"
+file_initial  = "solution_".problem_ID."_initial"
+file_exact    = "solution_".problem_ID."_exact"
+file_galerkin = "solution_".problem_ID."_galerkin_".timeintegrator
+file_low      = "solution_".problem_ID."_low_order_".timeintegrator
+file_high     = "solution_".problem_ID."_high_order_".timeintegrator
+file_FCT      = "solution_".problem_ID."_FCT_"     .timeintegrator
+file_list = file_initial." ".\
+            file_exact." ".\
+            file_galerkin." ".\
+            file_low." ".\
+            file_high." ".\
+            file_FCT
 title_list = "Initial\
               Exact\
               Galerkin\
               Low-Order\
               High-Order\
-              FCT\
-              Min\
-              Max"
-linetypes = "1 1 1 1 1 1 2 2"
-linecolors = "5 -1 1 3 4 2 -1 -1"
-symboltypes = "-1 -2 1 2 3 4 -1 -1"
-
+              FCT"
+linetypes = "1 1 1 1 1 1"
+linecolors = "5 -1 1 3 4 2"
+symboltypes = "-1 -2 1 2 3 4"
 
 # define is_missing(x) function for determining if an input file exists
-is_missing_aux(x)=system("ismissing.sh ".x)
+outdir = "../output/problem_".problem_ID."/"
+is_missing_aux(x)=system("ismissing.sh ".outdir.x)
 is_missing(x)=int(is_missing_aux(x)+0)
 
 # get a list of the possible input files that exist and their titles
@@ -34,7 +37,7 @@ existing_lt_list = ""
 existing_lc_list = ""
 existing_sym_list = ""
 do for [i=1:words(file_list)] {
-   myfile = word(file_list,i)."_".problem_ID.".gpl"
+   myfile = word(file_list,i).".gpl"
    mytitle = word(title_list,i)
    mylt = word(linetypes,i)
    mylc = word(linecolors,i)
@@ -49,13 +52,13 @@ do for [i=1:words(file_list)] {
 }
 
 set terminal postscript enhanced color
-output_file = "../plots/solutions_".problem_ID.".pdf"
+output_file = "../plots/solutions_".problem_ID."_".timeintegrator.".pdf"
 set output '| ps2pdf - '.output_file
 set ylabel "Angular Flux"
 set xlabel "x"
 set key top right
 
-plot for [i=1:words(existing_file_list)] "../output/".word(existing_file_list,i)\
+plot for [i=1:words(existing_file_list)] outdir.word(existing_file_list,i)\
    using 1:2 with linesp linetype word(existing_lt_list,i)\
    linecolor word(existing_lc_list,i)\
    pointtype word(existing_sym_list,i)\

@@ -13,10 +13,11 @@ PostProcessor<dim>::PostProcessor(
    const unsigned int  &refinement_option,
    const unsigned int  &final_refinement_level,
    const FESystem<dim> &fe,
-   const unsigned int  &degree,
-   const unsigned int  &scheme_option,
-   const unsigned int  &problem_ID,
+   const std::string   &output_dir,
+   const std::string   &appendage_string,
+   const std::string   &filename_exact,
    const QGauss<dim>   &cell_quadrature) :
+
    output_mesh(output_mesh),
    output_exact_solution(output_exact_solution),
    save_convergence_results(save_convergence_results),
@@ -28,30 +29,11 @@ PostProcessor<dim>::PostProcessor(
    refinement_option(refinement_option),
    final_refinement_level(final_refinement_level),
    fe(&fe),
-   degree(degree),
-   scheme_option(scheme_option),
-   problem_ID(problem_ID),
+   output_dir(output_dir),
+   appendage_string(appendage_string),
+   filename_exact(filename_exact),
    cell_quadrature(cell_quadrature)
 {
-   // determine viscosity string
-   switch (scheme_option) {
-      case 0: {
-         viscosity_string = "_galerkin";
-         break;
-      } case 1: {
-         viscosity_string = "_low_order";
-         break;
-      } case 2: {
-         viscosity_string = "_high_order";
-         break;
-      } case 3: {
-         viscosity_string = "_FCT";
-         break;
-      } default: {
-         Assert(false, ExcNotImplemented());
-         break;
-      }
-   }
 }
 
 /** \brief Destructor.
@@ -72,15 +54,20 @@ void PostProcessor<dim>::output_results(const Vector<double>     &solution,
    // create output directory if it doesn't exist
    create_directory("output");
 
+   // create output subdirectory if it doesn't exist
+   create_directory(output_dir);
+
    // output grid
-   if ((output_mesh) and (dim > 1))
-      output_grid(triangulation);
+   if (output_mesh) {
+      if (dim > 1) output_grid(triangulation);
+      else std::cout << "User specified to output the mesh, but 1-d meshes cannot be outputted" << std::endl;
+   }
 
    // output solution
+   std::string solution_filename = "solution" + appendage_string;
    output_solution(solution,
                    dof_handler,
-                   "solution",
-                   true);
+                   solution_filename);
 
    // write exact solution output file
    if (output_exact_solution and has_exact_solution)
@@ -104,8 +91,7 @@ void PostProcessor<dim>::output_results(const Vector<double>     &solution,
       // output exact solution to file
       output_solution(exact_solution,
                       fine_dof_handler,
-                      "exact_solution",
-                      false);
+                      filename_exact);
    }
 
    // output convergence table
@@ -137,13 +123,9 @@ void PostProcessor<dim>::output_results(const Vector<double>     &solution,
 
       // save convergence results to file
       if (save_convergence_results) {
-         // create filename
-         std::stringstream filename_ss;
-         filename_ss << "output/convergence" << viscosity_string << "_" << problem_ID << ".gpl";
-         std::string filename = filename_ss.str();
-         char *filename_char = (char*)filename.c_str();
          // create output filestream for exact solution
-         std::ofstream output_filestream(filename_char);
+         std::string filename = output_dir + "convergence" + appendage_string + ".gpl";
+         std::ofstream output_filestream(filename.c_str());
          // write convergence results to file
          convergence_table.write_text(output_filestream,TableHandler::table_with_separate_column_description);
       }
@@ -154,40 +136,35 @@ void PostProcessor<dim>::output_results(const Vector<double>     &solution,
  *  \param [in] solution a vector of solution values.
  *  \param [in] dof_handler degrees of freedom handler.
  *  \param [in] output_string string for the output filename.
- *  \param [in] append_viscosity the option to include a string for viscosity type in output filename
  */
 template<int dim>
 void PostProcessor<dim>::output_solution(const Vector<double>  &solution,
                                          const DoFHandler<dim> &dof_handler,
-                                         const std::string     &output_string,
-                                         const bool            &append_viscosity) const
+                                         const std::string     &output_string) const
 {
+   // create output directory if it doesn't exist
+   create_directory("output");
+
+   // create output subdirectory if it doesn't exist
+   create_directory(output_dir);
+
    // create DataOut object for solution
    DataOut<dim> data_out;
    data_out.attach_dof_handler(dof_handler);
    data_out.add_data_vector(solution, "flux");
    data_out.build_patches();
 
-   // create string for viscosity type if it is to be included in output filename
-   std::string append_string;
-   if (append_viscosity)
-      append_string = viscosity_string;
-   else
-      append_string = "";
-
-   // create output filename for exact solution
+   // create output filename for solution
    std::string filename_extension;
    if (dim == 1) filename_extension = ".gpl";
    else          filename_extension = ".vtk";
 
    std::stringstream filename_ss;
-   filename_ss << "output/" << output_string << append_string
-      << "_" << problem_ID << filename_extension;
+   filename_ss << output_dir << output_string << filename_extension;
    std::string filename = filename_ss.str();
-   char *filename_char = (char*)filename.c_str();
 
    // create output filestream for exact solution
-   std::ofstream output_filestream(filename_char);
+   std::ofstream output_filestream(filename.c_str());
    output_filestream.precision(15);
    // write file
    if (dim == 1) data_out.write_gnuplot(output_filestream);
@@ -206,55 +183,33 @@ void PostProcessor<dim>::output_viscosity(const Vector<double>  &low_order_visco
                                           const Vector<double>  &high_order_viscosity,
                                           const DoFHandler<dim> &dof_handler) const
 {
-   // write viscosity output file
-   //----------------------------
-   if (scheme_option != 0) {
-      DataOut<dim> visc_out;
-      visc_out.attach_dof_handler(dof_handler);
-      // add viscosity data vector(s)
-      switch (scheme_option)
-      {
-         case 1: {
-            visc_out.add_data_vector(low_order_viscosity,"Low_Order_Viscosity",DataOut<dim>::type_cell_data);
-            break;
-         } case 2: {
-            visc_out.add_data_vector(low_order_viscosity, "Low_Order_Viscosity", DataOut<dim>::type_cell_data);
-            visc_out.add_data_vector(entropy_viscosity,   "Entropy_Viscosity",   DataOut<dim>::type_cell_data);
-            visc_out.add_data_vector(high_order_viscosity,"High_Order_Viscosity",DataOut<dim>::type_cell_data);
-            break;
-         } case 3: {
-            visc_out.add_data_vector(low_order_viscosity, "Low_Order_Viscosity", DataOut<dim>::type_cell_data);
-            visc_out.add_data_vector(entropy_viscosity,   "Entropy_Viscosity",   DataOut<dim>::type_cell_data);
-            visc_out.add_data_vector(high_order_viscosity,"High_Order_Viscosity",DataOut<dim>::type_cell_data);
-            break;
-         } default: {
-            Assert(false, ExcNotImplemented());
-            break;
-         }
-      }
+   // create output directory if it doesn't exist
+   create_directory("output");
 
-      // determine output file extension
-      std::string filename_extension;
-      if (dim ==  1)
-         filename_extension = ".gpl";
-      else
-         filename_extension = ".vtk";
+   // create output subdirectory if it doesn't exist
+   create_directory(output_dir);
 
-      // create output filename
-      std::stringstream viscosity_filename_ss;
-      viscosity_filename_ss << "output/viscosity" << filename_extension;
-      std::string viscosity_filename = viscosity_filename_ss.str();
-      char *viscosity_filename_char = (char*)viscosity_filename.c_str();
+   // add viscosities to data out object
+   DataOut<dim> visc_out;
+   visc_out.attach_dof_handler(dof_handler);
+   visc_out.add_data_vector(low_order_viscosity, "Low_Order_Viscosity", DataOut<dim>::type_cell_data);
+   visc_out.add_data_vector(entropy_viscosity,   "Entropy_Viscosity",   DataOut<dim>::type_cell_data);
+   visc_out.add_data_vector(high_order_viscosity,"High_Order_Viscosity",DataOut<dim>::type_cell_data);
 
-      // create output filestream
-      std::ofstream viscosity_outstream(viscosity_filename_char);
-      // build patches and write to file
-      visc_out.build_patches(degree + 1);
-      if (dim == 1)
-         visc_out.write_gnuplot(viscosity_outstream);
-      else
-         visc_out.write_vtk(viscosity_outstream);
-   }
+   // determine output file extension
+   std::string filename_extension;
+   if (dim ==  1) filename_extension = ".gpl";
+   else           filename_extension = ".vtk";
+
+   // create output filestream
+   std::string viscosity_filename = output_dir + "viscosity" + appendage_string
+      + filename_extension;
+   std::ofstream viscosity_outstream(viscosity_filename.c_str());
+
+   // build patches and write to file
+   visc_out.build_patches();
+   if (dim == 1) visc_out.write_gnuplot(viscosity_outstream);
+   else          visc_out.write_vtk    (viscosity_outstream);
 }
 
 /** \brief evaluate error between numerical and exact solution
@@ -323,8 +278,14 @@ void PostProcessor<dim>::evaluate_error(const Vector<double>     &solution,
 template<int dim>
 void PostProcessor<dim>::output_grid(const Triangulation<dim> &triangulation) const
 {
+   // create output directory if it doesn't exist
+   create_directory("output");
+
+   // create output subdirectory if it doesn't exist
+   create_directory(output_dir);
+
    // create output filestream
-   std::string filename = "grid.eps";
+   std::string filename = output_dir + "grid.eps";
    std::ofstream output(filename.c_str());
 
    // write grid to eps
@@ -356,7 +317,7 @@ void PostProcessor<dim>::create_directory(const std::string &directory) const
          directory_exists = true;
 
    // create directory if it doesn't exist
-   int make_status;
+   int make_status = 0;
    if (!directory_exists)
       make_status = system(("mkdir "+directory).c_str());
    Assert(make_status == 0, ExcInternalError());

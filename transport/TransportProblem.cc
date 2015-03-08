@@ -801,28 +801,38 @@ void TransportProblem<dim>::run()
    initialize_system();
 
    // create name of output subdirectory
-   std::stringstream subdir_ss;
-   subdir_ss << "problem_" << parameters.problem_id;
-   std::string subdir = subdir_ss.str();
+   std::stringstream output_dir_ss;
+   output_dir_ss << "output/problem_" << parameters.problem_id << "/";
+   std::string output_dir = output_dir_ss.str();
+
+   // determine time integrator string
+   std::string timedisc_string;
+   if (parameters.is_steady_state) timedisc_string = "ss";
+   else
+      switch (parameters.time_integrator_option) {
+         case 1: {timedisc_string = "FE";      break;}
+         case 3: {timedisc_string = "SSPRK33"; break;}
+         default: {ExcNotImplemented();}
+      }
+
+   // determine viscosity string
+   std::string viscosity_string;
+   switch (parameters.scheme_option) {
+      case 0: {viscosity_string = "galerkin";   break;}
+      case 1: {viscosity_string = "low_order";  break;}
+      case 2: {viscosity_string = "high_order"; break;}
+      case 3: {viscosity_string = "FCT";        break;}
+      default: {ExcNotImplemented();}
+   }
 
    // create filename appendage
    std::stringstream appendage_ss;
-   std::string timedisc_string;
-   if (parameters.is_steady_state)
-      timedisc_string = "_ss";
-   else
-      switch (parameters.time_integrator_option) {
-         case 1: {
-            timedisc_string = "_FE";
-         } case 3: {
-            timedisc_string = "_SSPRK33";
-         } default: {
-            ExcNotImplemented();
-         }
-      }
-   appendage_ss << "_" << parameters.problem_id << timedisc_string;
-   std::string appendage = appendage_ss.str();
+   appendage_ss << "_" << parameters.problem_id << "_" << viscosity_string
+      << "_" << timedisc_string;
 
+   // create filename for exact solution
+   std::stringstream filename_exact_ss;
+   filename_exact_ss << "solution_" << parameters.problem_id << "_exact";
 
    // create post-processor object
    unsigned int final_refinement_level = parameters.initial_refinement_level
@@ -838,9 +848,9 @@ void TransportProblem<dim>::run()
                                     parameters.refinement_option,
                                     final_refinement_level,
                                     fe,
-                                    parameters.degree,
-                                    parameters.scheme_option,
-                                    parameters.problem_id,
+                                    output_dir,
+                                    appendage_ss.str(),
+                                    filename_exact_ss.str(),
                                     cell_quadrature);
 
    // loop over refinement cycles
@@ -918,11 +928,13 @@ void TransportProblem<dim>::run()
 
          // if last cycle, output initial conditions if user requested
          if ((cycle == parameters.n_refinement_cycles-1) and
-            (parameters.output_initial_solution))
+            (parameters.output_initial_solution)) {
+            std::stringstream IC_filename_ss;
+            IC_filename_ss << "solution_" << parameters.problem_id << "_initial";
             postprocessor.output_solution(new_solution,
                                           dof_handler,
-                                          "initial_solution",
-                                          false);
+                                          IC_filename_ss.str());
+         }
 
          // create SSP Runge-Kutta time integrator object
          SSPRungeKuttaTimeIntegrator<dim> ssprk(parameters.time_integrator_option,

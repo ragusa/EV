@@ -15,7 +15,7 @@ set CFL limit = 1.0
 set Time integrator option = 3 # 1 = FE, 2 = SSPRK22, 3 = SSPRK33
 
 # artificial viscosity options
-set Scheme option = 2 # 0 = Galerkin, 1 = low-order, 2 = EV, 3 = EV+FCT
+set Scheme option = 1 # 0 = Galerkin, 1 = low-order, 2 = EV, 3 = EV+FCT
 set Low order diffusion option = 1 # 1 = graph-Laplacian, 2 = standard Laplacian
 set Entropy string = 0.5*u*u
 set Entropy derivative string = u
@@ -28,7 +28,7 @@ set Refinement option = 2 # 1 = refine space, 2 = refine time, 3 = refine space 
 set Time refinement factor = 0.5
 set Use adaptive mesh refinement = false
 set Initial refinement level = 5
-set Number of refinement cycles = 1
+set Number of refinement cycles = 3
 
 # finite element options
 set Finite element degree = 1
@@ -40,6 +40,6 @@ set Linear solver option = 1 # 1 = UMFPACK direct solve
 # output options
 set Output mesh = false
 set Output exact solution = true
-set Output initial solution = false 
+set Output initial solution = true 
 set Output DMP bounds = true
 set Save convergence results = true
