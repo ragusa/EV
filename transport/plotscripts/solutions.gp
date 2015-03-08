@@ -8,22 +8,25 @@ file_exact    = "solution_".problem_ID."_exact"
 file_galerkin = "solution_".problem_ID."_galerkin_".timeintegrator
 file_low      = "solution_".problem_ID."_low_order_".timeintegrator
 file_high     = "solution_".problem_ID."_high_order_".timeintegrator
-file_FCT      = "solution_".problem_ID."_FCT_"     .timeintegrator
+file_EVFCT    = "solution_".problem_ID."_EVFCT_"     .timeintegrator
+file_GalFCT   = "solution_".problem_ID."_GalFCT_"    .timeintegrator
 file_list = file_initial." ".\
             file_exact." ".\
             file_galerkin." ".\
             file_low." ".\
             file_high." ".\
-            file_FCT
+            file_EVFCT." ".\
+            file_GalFCT
 title_list = "Initial\
               Exact\
               Galerkin\
               Low-Order\
               High-Order\
-              FCT"
-linetypes = "1 1 1 1 1 1"
-linecolors = "5 -1 1 3 4 2"
-symboltypes = "-1 -2 1 2 3 4"
+              EV-FCT\
+              Galerkin-FCT"
+linetypes = "1 1 1 1 1 1 1"
+linecolors = "5 -1 1 3 2 2 1"
+symboltypes = "-1 -2 2 1 2 4 4"
 
 # define is_missing(x) function for determining if an input file exists
 outdir = "../output/problem_".problem_ID."/"

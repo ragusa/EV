@@ -294,7 +294,8 @@ void TransportProblem<dim>::setup_system()
    low_order_diffusion_matrix .reinit(constrained_sparsity_pattern);
    consistent_mass_matrix   .reinit(constrained_sparsity_pattern);
    lumped_mass_matrix       .reinit(constrained_sparsity_pattern);
-   if ((parameters.scheme_option == 2)||(parameters.scheme_option == 3))
+   if ((parameters.scheme_option == 2)||(parameters.scheme_option == 3)
+      ||(parameters.scheme_option == 4))
       high_order_diffusion_matrix.reinit(constrained_sparsity_pattern);
       
    // reinitialize auxiliary matrices
@@ -821,7 +822,8 @@ void TransportProblem<dim>::run()
       case 0: {viscosity_string = "galerkin";   break;}
       case 1: {viscosity_string = "low_order";  break;}
       case 2: {viscosity_string = "high_order"; break;}
-      case 3: {viscosity_string = "FCT";        break;}
+      case 3: {viscosity_string = "EVFCT";      break;}
+      case 4: {viscosity_string = "GalFCT";     break;}
       default: {ExcNotImplemented();}
    }
 
@@ -1049,7 +1051,7 @@ void TransportProblem<dim>::run()
                   ssprk.get_new_solution(new_solution);
 
                   break;
-               } case 3: { // FCT
+               } case 3: { // EV FCT
                   // assert that the graph-Laplacian low-order diffusion option was used
                   Assert(parameters.low_order_diffusion_option == 1, ExcNotImplemented());
 
@@ -1109,6 +1111,49 @@ void TransportProblem<dim>::run()
                   ssprk.get_new_solution(new_solution);
 
                   break;
+               } case 4: { // Galerkin FCT
+                  // assert that the graph-Laplacian low-order diffusion option was used
+                  Assert(parameters.low_order_diffusion_option == 1, ExcNotImplemented());
+
+                  for (unsigned int i = 0; i < ssprk.n_stages; ++i)
+                  {
+                     // get stage time
+                     double t_stage = ssprk.get_stage_time();
+
+                     // recompute steady-state rhs if it is time-dependent
+                     if (source_time_dependent) {
+                        assemble_ss_rhs(t_stage);
+                     }
+
+                     // compute Galerkin solution
+                     ssprk.step(consistent_mass_matrix,inviscid_ss_matrix,ss_rhs,false);
+
+                     // get Galerkin solution
+                     ssprk.get_intermediate_solution(new_solution);
+
+                     // get old stage solution
+                     ssprk.get_stage_solution(i,old_stage_solution);
+
+                     // perform FCT
+                     fct.solve_FCT_system(new_solution,
+                                          old_stage_solution,
+                                          low_order_ss_matrix,
+                                          ss_rhs,
+                                          dt,
+                                          low_order_diffusion_matrix,
+                                          high_order_diffusion_matrix);
+
+                     // set stage solution to be FCT solution for this stage
+                     ssprk.set_intermediate_solution(new_solution);
+
+                     // finish computing stage solution
+                     ssprk.complete_stage_solution();
+                     
+                  }
+                  // retrieve the final solution
+                  ssprk.get_new_solution(new_solution);
+
+                  break;
                } default: {
                   Assert(false, ExcNotImplemented());
                   break;
@@ -1127,7 +1172,7 @@ void TransportProblem<dim>::run()
          }
 
          // report if DMP was satisfied at all time steps
-         if (parameters.scheme_option == 3)
+         if ((parameters.scheme_option == 3)||(parameters.scheme_option == 4))
          {
             // report if local discrete maximum principle is satisfied at all time steps
             if (fct.check_DMP_satisfied())
@@ -1158,6 +1203,7 @@ void TransportProblem<dim>::solve_steady_state(const LinearSolver<dim> &linear_s
    // entropy viscosity and FCT not yet implemented in steady-state
    Assert(parameters.scheme_option != 2, ExcNotImplemented());
    Assert(parameters.scheme_option != 3, ExcNotImplemented());
+   Assert(parameters.scheme_option != 4, ExcNotImplemented());
 
    // compute inviscid system matrix and steady-state right hand side (ss_rhs)
    assemble_inviscid_ss_matrix();

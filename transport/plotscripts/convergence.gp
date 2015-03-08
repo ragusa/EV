@@ -17,18 +17,21 @@ ss_mode = 1
 file_galerkin = "convergence_".problem_ID."_galerkin_".timeintegrator
 file_low      = "convergence_".problem_ID."_low_order_".timeintegrator
 file_high     = "convergence_".problem_ID."_high_order_".timeintegrator
-file_FCT      = "convergence_".problem_ID."_FCT_"     .timeintegrator
+file_EVFCT    = "convergence_".problem_ID."_EVFCT_"     .timeintegrator
+file_GalFCT   = "convergence_".problem_ID."_GalFCT_"    .timeintegrator
 file_list = file_galerkin." ".\
             file_low." ".\
             file_high." ".\
-            file_FCT
+            file_EVFCT." ".\
+            file_GalFCT
 title_list = "Galerkin\
               Low-Order\
               High-Order\
-              FCT"
-linetypes = "1 1 1 1"
-linecolors = "1 3 4 2"
-symboltypes = "1 2 3 4"
+              EV-FCT\
+              Galerkin-FCT"
+linetypes = "1 1 1 1 1"
+linecolors = "1 3 2 2 1"
+symboltypes = "1 2 2 4 4"
 
 # define is_missing(x) function for determining if an input file exists
 outdir = "../output/problem_".problem_ID."/"
