@@ -25,8 +25,8 @@ title_list = "Initial\
               EV-FCT\
               Galerkin-FCT"
 linetypes = "1 1 1 1 1 1 1"
-linecolors = "5 -1 1 3 2 2 1"
-symboltypes = "-1 -2 2 1 2 4 4"
+linecolors = "7 -1 1 2 3 4 5"
+symboltypes = "-1 -2 1 2 3 4 6"
 
 # define is_missing(x) function for determining if an input file exists
 outdir = "../output/problem_".problem_ID."/"

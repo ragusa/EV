@@ -58,6 +58,7 @@ void TransportProblem<dim>::initialize_system()
    function_parser_constants["pi"]       = numbers::PI;
    function_parser_constants["x_min"]    = x_min;
    function_parser_constants["x_mid"]    = x_min + 0.5*(x_max-x_min);
+   function_parser_constants["x_max"]    = x_max;
 
    // initialize exact solution function
    if (has_exact_solution)
@@ -241,6 +242,32 @@ void TransportProblem<dim>::process_problem_ID()
          source_string = "-exp(-t)*sin(pi*x) + pi*exp(-t)*cos(pi*x) + exp(-t)*sin(pi*x)";
          source_time_dependent = true;
          initial_conditions_string = exact_solution_string;
+         break;
+      } case 8: { // source in left half
+         Assert(!parameters.is_steady_state,ExcNotImplemented());
+         Assert(dim < 2,ExcNotImplemented());
+
+         x_min = 0.0;
+         x_max = 1.0;
+
+         function_parser_constants["speed"] = 1.0;
+
+         incoming_string = "0";
+         function_parser_constants["incoming"] = 0.0;
+
+         cross_section_string = "100";
+         function_parser_constants["sigma"]  = 100.0;
+
+         source_time_dependent = false;
+         source_string = "if (x<x_mid,10,0)";
+         function_parser_constants["source"] = 10.0;
+
+         has_exact_solution = true;
+         exact_solution_string = (std::string)"source/sigma*(1-exp(-sigma*" +
+            "max(0,min(x,x_mid)-max(x-speed*t,0))))" +
+            "*exp(-sigma*max(0,min(x,x_max)-max(x-speed*t,x_mid)))";
+
+         initial_conditions_string = "0";
          break;
       } default: {
          Assert(false,ExcNotImplemented());
@@ -898,7 +925,8 @@ void TransportProblem<dim>::run()
                                parameters.entropy_derivative_string,
                                parameters.entropy_residual_coefficient,
                                parameters.jump_coefficient,
-                               domain_volume);                      
+                               domain_volume);
+                               
 
       // create linear solver object
       LinearSolver<dim> linear_solver(parameters.linear_solver_option,

@@ -3,12 +3,12 @@
 #           timeintegrator=<time integrator string>' convergence.gp
 
 # Reference slopes
-slope1 = 1.00
-slope2 = 2.00
-slope3 = 3.00
+slope1 = 0.25
+slope2 = 0.50
+slope3 = 0.75
 
 # Convergence mode; 1 = space, 2 = time
-conv_mode = 2
+conv_mode = 1
 
 # Steady-state mode; 1 = transient, 2 = steady-state
 ss_mode = 1
@@ -30,8 +30,8 @@ title_list = "Galerkin\
               EV-FCT\
               Galerkin-FCT"
 linetypes = "1 1 1 1 1"
-linecolors = "1 3 2 2 1"
-symboltypes = "1 2 2 4 4"
+linecolors = "1 2 3 4 5"
+symboltypes = "1 2 3 4 6"
 
 # define is_missing(x) function for determining if an input file exists
 outdir = "../output/problem_".problem_ID."/"
@@ -112,7 +112,7 @@ if (conv_mode == 1) \
 else \
   set xlabel "Time Step Size"
 set logscale xy
-set key top right
+set key top left
 set format y "10^{%L}"
 set format x "10^{%L}"
 

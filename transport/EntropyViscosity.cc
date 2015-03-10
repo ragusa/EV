@@ -14,7 +14,8 @@ EntropyViscosity<dim>::EntropyViscosity(
    const std::string     &entropy_derivative_string,
    const double          &entropy_residual_coefficient,
    const double          &jump_coefficient,
-   const double          &domain_volume) :                      
+   const double          &domain_volume) :
+
       fe(&fe),
       flux(0),
       n_cells(n_cells),
@@ -118,8 +119,8 @@ Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<dou
 {
    // set the time of the source function
    source_function->set_time(time);
-   
-   // compute entropy average in domain
+
+   // compute max entropy deviation in domain
    compute_entropy_domain_average(old_solution);
 
    // cell values
@@ -245,7 +246,7 @@ Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<dou
                double jump_on_face = std::abs(transport_direction * normal[q] * jump_dsdn);
                max_jump_on_face = std::max(max_jump_on_face, jump_on_face);
             }
-         } // end if (at_boundary())
+         }
          max_jump_in_cell = std::max(max_jump_in_cell, max_jump_on_face);
       } // end face loop
    
