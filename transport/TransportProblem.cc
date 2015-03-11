@@ -1038,6 +1038,23 @@ void TransportProblem<dim>::run()
                   break;
                } case 2: { // high-order system with entropy viscosity
 
+                  if (parameters.EV_eval_option == 1) { // compute EV only at beginning of time step
+                     // recompute high-order steady-state matrix
+                     entropy_viscosity = EV.compute_entropy_viscosity(
+                        old_solution,
+                        older_solution,
+                        old_dt,
+                        t_old);
+                     for (unsigned int i_cell = 0; i_cell < n_cells; ++i_cell)
+                        high_order_viscosity(i_cell) = std::min(
+                           entropy_viscosity(i_cell),
+                           low_order_viscosity(i_cell));
+                     compute_graphLaplacian_diffusion_matrix(
+                        high_order_viscosity,high_order_diffusion_matrix);
+                     high_order_ss_matrix.copy_from(inviscid_ss_matrix);
+                     high_order_ss_matrix.add(1.0,high_order_diffusion_matrix);
+                  }
+
                   for (unsigned int i = 0; i < ssprk.n_stages; ++i)
                   {
                      // get stage time
@@ -1048,29 +1065,31 @@ void TransportProblem<dim>::run()
                         assemble_ss_rhs(t_stage);
                      }
 
-                     // compute Galerkin solution
-                     ssprk.step(consistent_mass_matrix,inviscid_ss_matrix,ss_rhs,false);
-
-                     // get Galerkin solution
-                     ssprk.get_intermediate_solution(new_solution);
-
-                     // get old stage solution
-                     ssprk.get_stage_solution(i,old_stage_solution);
-
-                     // recompute high-order steady-state matrix
-                     entropy_viscosity = EV.compute_entropy_viscosity(
-                        new_solution,
-                        old_stage_solution,
-                        dt,
-                        t_stage);
-                     for (unsigned int i_cell = 0; i_cell < n_cells; ++i_cell)
-                        high_order_viscosity(i_cell) = std::min(
-                           entropy_viscosity(i_cell),
-                           low_order_viscosity(i_cell));
-                     compute_graphLaplacian_diffusion_matrix(
-                        high_order_viscosity,high_order_diffusion_matrix);
-                     high_order_ss_matrix.copy_from(inviscid_ss_matrix);
-                     high_order_ss_matrix.add(1.0,high_order_diffusion_matrix);
+                     if (parameters.EV_eval_option == 2) { // compute EV at beginning of each stage
+                        // compute Galerkin solution
+                        ssprk.step(consistent_mass_matrix,inviscid_ss_matrix,ss_rhs,false);
+   
+                        // get Galerkin solution
+                        ssprk.get_intermediate_solution(new_solution);
+   
+                        // get old stage solution
+                        ssprk.get_stage_solution(i,old_stage_solution);
+   
+                        // recompute high-order steady-state matrix
+                        entropy_viscosity = EV.compute_entropy_viscosity(
+                           new_solution,
+                           old_stage_solution,
+                           dt,
+                           t_stage);
+                        for (unsigned int i_cell = 0; i_cell < n_cells; ++i_cell)
+                           high_order_viscosity(i_cell) = std::min(
+                              entropy_viscosity(i_cell),
+                              low_order_viscosity(i_cell));
+                        compute_graphLaplacian_diffusion_matrix(
+                           high_order_viscosity,high_order_diffusion_matrix);
+                        high_order_ss_matrix.copy_from(inviscid_ss_matrix);
+                        high_order_ss_matrix.add(1.0,high_order_diffusion_matrix);
+                     }
 
                      // advance by an SSPRK step
                      ssprk.step(consistent_mass_matrix,high_order_ss_matrix,ss_rhs,true);

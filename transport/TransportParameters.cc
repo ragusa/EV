@@ -16,6 +16,7 @@ TransportParameters::TransportParameters() :
       entropy_derivative_string("u"),
       entropy_residual_coefficient(1.0),
       jump_coefficient(1.0),
+      EV_eval_option(1),
       output_meshes(false),
       is_steady_state(true),
       end_time(1.0),
@@ -64,6 +65,8 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
          "Coefficient for the entropy viscosity");
    prm.declare_entry("Jump coefficient", "1.0", Patterns::Double(),
          "Coefficient for jumps used with entropy viscosity");
+   prm.declare_entry("EV evaluation option", "1", Patterns::Integer(),
+         "Option for when to evaluate entropy viscosity");
    prm.declare_entry("Output mesh", "false", Patterns::Bool(),
          "Option to output meshes as .eps files");
    prm.declare_entry("Is steady state", "true", Patterns::Bool(),
@@ -106,6 +109,7 @@ void TransportParameters::get_parameters(ParameterHandler &prm) {
    entropy_derivative_string = prm.get("Entropy derivative string");
    entropy_residual_coefficient = prm.get_double("Entropy residual coefficient");
    jump_coefficient = prm.get_double("Jump coefficient");
+   EV_eval_option = prm.get_integer("EV evaluation option");
    output_meshes = prm.get_bool("Output mesh");
    is_steady_state = prm.get_bool("Is steady state");
    end_time = prm.get_double("End time");

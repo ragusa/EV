@@ -29,6 +29,7 @@ class TransportParameters {
     std::string entropy_derivative_string; // string for entropy derivative function
     double entropy_residual_coefficient; // value of entropy residual coefficient
     double jump_coefficient; // value of jump coefficient
+    unsigned int EV_eval_option; // option for when to evaluate entropy viscosity
     bool output_meshes; // option to output meshes as .eps files
     bool is_steady_state; // is the problem steady-state?
     double end_time; // end time if transient problem is run
