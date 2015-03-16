@@ -25,7 +25,7 @@ int main(int argc, char ** argv) {
 
       // get input parameters
       dealii::ParameterHandler parameter_handler;
-      TransportParameters parameters;
+      TransportParameters<dim> parameters;
       parameters.declare_parameters(parameter_handler);
       parameter_handler.read_input("input");
       parameters.get_parameters(parameter_handler);

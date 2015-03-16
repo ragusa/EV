@@ -1,9 +1,10 @@
 /** \brief constructor
  */
-TransportParameters::TransportParameters() :
+template <int dim>
+TransportParameters<dim>::TransportParameters() :
       problem_id(1),
       degree(1),
-      time_integrator_option(1),
+      time_integrator_option(SSPRKTimeIntegrator<dim>::SSPRKMethod::FE),
       refinement_option(1),
       time_refinement_factor(0.5),
       use_adaptive_mesh_refinement(false),
@@ -33,13 +34,14 @@ TransportParameters::TransportParameters() :
 
 /** \brief defines all of the input parameters
  */
-void TransportParameters::declare_parameters(ParameterHandler &prm)
+template <int dim>
+void TransportParameters<dim>::declare_parameters(ParameterHandler &prm)
 {
    prm.declare_entry("Problem ID", "1", Patterns::Integer(),
          "Problem ID");
    prm.declare_entry("Finite element degree", "1", Patterns::Integer(),
          "Polynomial degree of finite elements");
-   prm.declare_entry("Time integrator option", "1", Patterns::Integer(),
+   prm.declare_entry("Time integrator option", "FE", Patterns::Selection("FE|SSP2|SSP3"),
          "Choice of time integrator");
    prm.declare_entry("Refinement option", "1", Patterns::Integer(),
          "Refinement option (space and/or time)");
@@ -93,10 +95,20 @@ void TransportParameters::declare_parameters(ParameterHandler &prm)
 
 /** \brief get the input parameters
  */
-void TransportParameters::get_parameters(ParameterHandler &prm) {
+template <int dim>
+void TransportParameters<dim>::get_parameters(ParameterHandler &prm) {
    problem_id = prm.get_integer("Problem ID");
    degree = prm.get_integer("Finite element degree");
-   time_integrator_option = prm.get_integer("Time integrator option");
+   std::string time_integrator_string = prm.get("Time integrator option");
+   if (time_integrator_string == "FE") {
+      time_integrator_option = SSPRKTimeIntegrator<dim>::SSPRKMethod::FE;
+   } else if (time_integrator_string == "SSP2") {
+      time_integrator_option = SSPRKTimeIntegrator<dim>::SSPRKMethod::SSP2;
+   } else if (time_integrator_string == "SSP3") {
+      time_integrator_option = SSPRKTimeIntegrator<dim>::SSPRKMethod::SSP3;
+   } else {
+      ExcNotImplemented();
+   }
    refinement_option = prm.get_integer("Refinement option");
    time_refinement_factor = prm.get_double("Time refinement factor");
    use_adaptive_mesh_refinement = prm.get_bool("Use adaptive mesh refinement");

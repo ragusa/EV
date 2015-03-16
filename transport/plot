@@ -1,22 +1,39 @@
 #!/usr/bin/env perl
-# reads the input file to determine which problem was
+#
+# Plots solution or convergence.
+#
+# USAGE: plot <sol|conv>
+#   sol:  plots solution.
+#   conv: plots convergence.
+#
+# Reads the input file to determine which problem was
 # just run and then plots the results of that run
-# with gnuplot and then views the resulting plot with evince
+# with gnuplot and then views the resulting plot with evince.
 
 use strict;
 
-# option to crop pdf to remove excess whitespace
-my $crop_file = 1;
+# check for correct number of input arguments
+if ($#ARGV != 0) {
+   die "USAGE: plot <sol|conv>
+   sol:  plots solution.
+   conv: plots convergence.\n";
+}
 
-# problem ID variables
-my $problem_ID;                           # value
-my $problem_ID_found = 0;                 # flag for being found
-my $problem_ID_search = "set Problem ID"; # search string
+# search variables
+my @search_strings = ("set Problem ID",
+                      "set Is steady state",
+                      "set Time integrator option");
+my @values;
+my @found_strings;
+for (my $i = 0; $i <= $#search_strings; $i++) {
+   push(@values,"");
+   push(@found_strings,0);
+}
 
-# time integrator variables
-my $time_integrator;                           # value
-my $time_integrator_found = 0;                 # flag for being found
-my $time_integrator_search = "set Time integrator option"; # search string
+# associate variables with indices in search arrays
+my $problem_id_i = 0;
+my $ss_i = 1;
+my $time_integrator_i = 2;
 
 # read input file to determine the test problem ID and time integrator
 my $input_file = "input";
@@ -24,53 +41,83 @@ open(IN, '<', $input_file) or die $!;
 my $input_line; # input file line
 my @input_line; # array of fields of input line
 while ($input_line = <IN>) {
-   chomp($input_line);
-   @input_line = split /\s+=\s+/, $input_line;
-   if ($input_line[0] eq $problem_ID_search) {
-      $problem_ID = $input_line[1];
-      $problem_ID_found = 1;
-   }
-   if ($input_line[0] eq $time_integrator_search) {
-      $time_integrator = $input_line[1];
-      $time_integrator_found = 1;
-   }
+   &check_for_strings($input_line);
 }
 
-# check that both problem ID and time integrator were found
-if (not $problem_ID_found) {
-   die "Problem ID could not be determined because search string
-        \"$problem_ID_search\" could not be found in input file.\n"
-}
-if (not $time_integrator_found) {
-   die "Time integrator could not be determined because search string
-        \"$time_integrator_search\" could not be found in input file.\n"
-}
+# check that all search strings were found
+for (my $i = 0; $i < $#search_strings; $i++) {
+   if (not $found_strings[$i]) {
+      die "Search string \"$search_strings[$i]\" could not be found in
+           input file.\n";
+   }
+} 
+
+# extract values
+my $problem_ID = $values[$problem_id_i];
+my $is_ss = $values[$ss_i];
+my $time_integrator = $values[$time_integrator_i];
 
 # determine time integrator string based on time integrator option integer
 my $time_integrator_string;
-if ($time_integrator == 1) {
-   $time_integrator_string = "FE";
-} elsif ($time_integrator == 3) {
-   $time_integrator_string = "SSPRK33";
-} else {
-   die "Invalid time integrator option.\n";
+if ($is_ss) { # steady-state
+   $time_integrator_string = "ss";
+} else {      # transient
+   if ($time_integrator eq "FE") {
+      $time_integrator_string = "FE";
+   } elsif ($time_integrator eq "SSP2") {
+      $time_integrator_string = "SSPRK22";
+   } elsif ($time_integrator eq "SSP3") {
+      $time_integrator_string = "SSPRK33";
+   } else {
+      die "Invalid time integrator option.\n";
+   }
 }
 
 # go to plotscripts directory
 chdir "plotscripts";
 
+# determine which plot to make
+my $rootname;
+if ($ARGV[0] eq "sol") {
+   $rootname = "solutions";
+} elsif ($ARGV[0] eq "conv") {
+   $rootname = "convergence";
+} else {
+   die("Invalid command-line argument: must be \"sol\" or \"conv\"");
+}
+
 # call gnuplot
 system("gnuplot -e \"problem_ID='$problem_ID';
-   timeintegrator='$time_integrator_string'\" solutions.gp");
+   timeintegrator='$time_integrator_string';
+   is_ss='$is_ss'\" $rootname.gp");
 system("sleep 1");
-
+   
 # name of resulting plot file
-my $output_file = "../plots/solutions_$problem_ID"."_$time_integrator_string.pdf";
+my $output_file = "../plots/$rootname"."_$problem_ID"."_$time_integrator_string.pdf";
 
-# crop pdf if specified
-if ($crop_file) {
-   system("pdfcrop $output_file $output_file");
-}
+# crop pdf
+system("pdfcrop $output_file $output_file");
 
 # view output
 system("evince $output_file");
+
+#================================================================================
+sub check_for_strings() {
+   # get command-line arguments
+   my $line = $_[0];
+
+   # split line
+   chomp($line);
+   my @line_fields = split /\s+=\s+/, $line;
+
+   # loop over search strings
+   for (my $i = 0; $i <= $#search_strings; $i++) {
+      # check if lhs of field equals search string
+      if ($line_fields[0] eq $search_strings[$i]) {
+         # extract value and flag it as found
+         my @fields = split /\s+/, $line_fields[1];
+         $values[$i] = $fields[0];
+         $found_strings[$i] = 1;
+      }
+   }
+}

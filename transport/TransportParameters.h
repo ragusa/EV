@@ -2,12 +2,13 @@
 #define TransportParameters_cc
 
 #include <deal.II/base/parameter_handler.h>
+#include "SSPRKTimeIntegrator.h"
 
 using namespace dealii;
 
 /** \brief parameters class for defining input parameters
 */
-//template <int dim>
+template <int dim>
 class TransportParameters {
  public:
     TransportParameters();
@@ -16,7 +17,7 @@ class TransportParameters {
 
     unsigned int problem_id; // problem ID
     unsigned int degree; // polynomial degree of finite elements
-    unsigned int time_integrator_option; // time integrator option
+    typename SSPRKTimeIntegrator<dim>::SSPRKMethod time_integrator_option; // SSPRK method
     unsigned int refinement_option; // refinement option (time and/or space)
     double time_refinement_factor; // reduction factor for time refinement
     bool use_adaptive_mesh_refinement; // option to use adaptive mesh refinement

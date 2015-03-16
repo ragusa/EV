@@ -1,5 +1,5 @@
-#ifndef SSPRungeKuttaTimeIntegrator_cc
-#define SSPRungeKuttaTimeIntegrator_cc
+#ifndef SSPRKTimeIntegrator_cc
+#define SSPRKTimeIntegrator_cc
 
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/vector.h>
@@ -11,13 +11,15 @@ using namespace dealii;
 /** \brief Class for implementing SSP Runge-Kutta time integration
  */
 template<int dim>
-class SSPRungeKuttaTimeIntegrator {
+class SSPRKTimeIntegrator {
    public:
-      SSPRungeKuttaTimeIntegrator(const unsigned int      &n_stages,
-                                  const unsigned int      &system_size,
-                                  const LinearSolver<dim> &linear_solver,
-                                  const SparsityPattern   &sparsity_pattern);
-      ~SSPRungeKuttaTimeIntegrator();
+      enum SSPRKMethod {FE,SSP2,SSP3};
+
+      SSPRKTimeIntegrator(const SSPRKMethod       &ssprk_method,
+                          const unsigned int      &system_size,
+                          const LinearSolver<dim> &linear_solver,
+                          const SparsityPattern   &sparsity_pattern);
+      ~SSPRKTimeIntegrator();
 
       void initialize_time_step(const Vector<double> &old_solution,
                                 const double         &time_step_size);
@@ -55,5 +57,5 @@ class SSPRungeKuttaTimeIntegrator {
       Vector<double> intermediate_solution;
 };
 
-#include "SSPRungeKuttaTimeIntegrator.cc"
+#include "SSPRKTimeIntegrator.cc"
 #endif

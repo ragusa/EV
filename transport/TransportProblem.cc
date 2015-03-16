@@ -1,7 +1,7 @@
 /** \brief constructor for TransportProblem class
  */
 template<int dim>
-TransportProblem<dim>::TransportProblem(const TransportParameters &parameters) :
+TransportProblem<dim>::TransportProblem(const TransportParameters<dim> &parameters) :
       parameters(parameters),
       dof_handler(triangulation),
       degree(parameters.degree),
@@ -838,8 +838,12 @@ void TransportProblem<dim>::run()
    if (parameters.is_steady_state) timedisc_string = "ss";
    else
       switch (parameters.time_integrator_option) {
-         case 1: {timedisc_string = "FE";      break;}
-         case 3: {timedisc_string = "SSPRK33"; break;}
+         case SSPRKTimeIntegrator<dim>::SSPRKMethod::FE:
+            {timedisc_string = "FE";      break;}
+         case SSPRKTimeIntegrator<dim>::SSPRKMethod::SSP2:
+            {timedisc_string = "SSPRK22"; break;}
+         case SSPRKTimeIntegrator<dim>::SSPRKMethod::SSP3: 
+            {timedisc_string = "SSPRK33"; break;}
          default: {ExcNotImplemented();}
       }
 
@@ -967,10 +971,10 @@ void TransportProblem<dim>::run()
          }
 
          // create SSP Runge-Kutta time integrator object
-         SSPRungeKuttaTimeIntegrator<dim> ssprk(parameters.time_integrator_option,
-                                                n_dofs,
-                                                linear_solver,
-                                                constrained_sparsity_pattern);
+         SSPRKTimeIntegrator<dim> ssprk(parameters.time_integrator_option,
+                                        n_dofs,
+                                        linear_solver,
+                                        constrained_sparsity_pattern);
 
          // time loop
          double t_new = 0.0;

@@ -41,7 +41,7 @@
 #include "TransportParameters.h"
 #include "EntropyViscosity.h"
 #include "LinearSolver.h"
-#include "SSPRungeKuttaTimeIntegrator.h"
+#include "SSPRKTimeIntegrator.h"
 #include "PostProcessor.h"
 #include "FCT.h"
 
@@ -52,7 +52,7 @@ using namespace dealii;
 template<int dim>
 class TransportProblem {
    public:
-      TransportProblem(const TransportParameters &parameters);
+      TransportProblem(const TransportParameters<dim> &parameters);
       ~TransportProblem();
       void run();
 
@@ -67,7 +67,7 @@ class TransportProblem {
       void refine_grid();
 
       // input parameters
-      const TransportParameters &parameters;
+      const TransportParameters<dim> &parameters;
 
       // mesh and dof data
       Triangulation<dim> triangulation;

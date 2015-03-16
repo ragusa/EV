@@ -2,15 +2,31 @@
  *         assigns constant tables based on number of stages/order.
  */
 template<int dim>
-SSPRungeKuttaTimeIntegrator<dim>::SSPRungeKuttaTimeIntegrator(
-   const unsigned int      &n_stages,
+SSPRKTimeIntegrator<dim>::SSPRKTimeIntegrator(
+   const SSPRKMethod       &ssprk_method,
    const unsigned int      &system_size,
    const LinearSolver<dim> &linear_solver,
    const SparsityPattern   &sparsity_pattern) :
-   n_stages(n_stages),
    n(system_size),
    linear_solver(linear_solver)
 {
+   // determine number of stages for chosen method
+   switch (ssprk_method)
+   {
+      case SSPRKMethod::FE:
+         n_stages = 1;
+         break;
+      case SSPRKMethod::SSP2:
+         n_stages = 2;
+         break;
+      case SSPRKMethod::SSP3:
+         n_stages = 3;
+         break;
+      default:
+         Assert(false,ExcNotImplemented());
+         break;
+   }
+
    // allocate memory for constants and stage solutions
    a.reinit(n_stages);
    b.reinit(n_stages);
@@ -20,16 +36,16 @@ SSPRungeKuttaTimeIntegrator<dim>::SSPRungeKuttaTimeIntegrator(
       u_stage[i].reinit(n);
 
    // assign RK parameters a, b, and c
-   switch (n_stages)
+   switch (ssprk_method)
    {
-      case 1:
+      case SSPRKMethod::FE:
          a[0] = 0.0; b[0] = 1.0; c[0] = 0.0;
          break;
-      case 2:
+      case SSPRKMethod::SSP2:
          a[0] = 0.0; b[0] = 1.0; c[0] = 0.0;
          a[1] = 0.5; b[1] = 0.5; c[1] = 1.0;
          break;
-      case 3:
+      case SSPRKMethod::SSP3:
          a[0] = 0.0;     b[0] = 1.0;     c[0] = 0.0;
          a[1] = 0.75;    b[1] = 0.25;    c[1] = 1.0;
          a[2] = 1.0/3.0; b[2] = 2.0/3.0; c[2] = 0.5;
@@ -57,14 +73,14 @@ SSPRungeKuttaTimeIntegrator<dim>::SSPRungeKuttaTimeIntegrator(
 /** \brief destructor; deallocates memory for constants and stage solutions.
  */
 template<int dim>
-SSPRungeKuttaTimeIntegrator<dim>::~SSPRungeKuttaTimeIntegrator()
+SSPRKTimeIntegrator<dim>::~SSPRKTimeIntegrator()
 {
 }
 
 /** \brief resets the current stage index, old solution, and time step size
  */
 template<int dim>
-void SSPRungeKuttaTimeIntegrator<dim>::initialize_time_step(
+void SSPRKTimeIntegrator<dim>::initialize_time_step(
    const Vector<double> &old_solution,
    const double &time_step_size)
 {
@@ -84,7 +100,7 @@ void SSPRungeKuttaTimeIntegrator<dim>::initialize_time_step(
 /** \brief Retrieves the current stage solution.
  */
 template<int dim>
-void SSPRungeKuttaTimeIntegrator<dim>::get_stage_solution(const unsigned int &i,
+void SSPRKTimeIntegrator<dim>::get_stage_solution(const unsigned int &i,
                                                           Vector<double>     &new_solution) const
 {
    // return final stage solution, which is new solution
@@ -94,7 +110,7 @@ void SSPRungeKuttaTimeIntegrator<dim>::get_stage_solution(const unsigned int &i,
 /** \brief retrieves the new solution.
  */
 template<int dim>
-void SSPRungeKuttaTimeIntegrator<dim>::get_new_solution(Vector<double> &new_solution) const
+void SSPRKTimeIntegrator<dim>::get_new_solution(Vector<double> &new_solution) const
 {
    // check that the correct number of stages were taken
    Assert(current_stage == n_stages, ExcInvalidState());
@@ -106,7 +122,7 @@ void SSPRungeKuttaTimeIntegrator<dim>::get_new_solution(Vector<double> &new_solu
 /** \brief Advances one stage of a Runge-Kutta method.
  */
 template<int dim>
-void SSPRungeKuttaTimeIntegrator<dim>::step(const SparseMatrix<double> &mass_matrix,
+void SSPRKTimeIntegrator<dim>::step(const SparseMatrix<double> &mass_matrix,
                                             const SparseMatrix<double> &ss_matrix,
                                             const Vector<double>       &ss_rhs,
                                             const bool                 &call_complete_stage_solution)
@@ -131,7 +147,7 @@ void SSPRungeKuttaTimeIntegrator<dim>::step(const SparseMatrix<double> &mass_mat
 /** \brief Computes stage solution.
  */
 template<int dim>
-void SSPRungeKuttaTimeIntegrator<dim>::complete_stage_solution()
+void SSPRKTimeIntegrator<dim>::complete_stage_solution()
 {
    // advance current stage index
    current_stage++;
@@ -143,7 +159,7 @@ void SSPRungeKuttaTimeIntegrator<dim>::complete_stage_solution()
 /** \brief Gets the intermediate stage solution.
  */
 template<int dim>
-void SSPRungeKuttaTimeIntegrator<dim>::get_intermediate_solution(Vector<double> &solution) const
+void SSPRKTimeIntegrator<dim>::get_intermediate_solution(Vector<double> &solution) const
 {
    solution = intermediate_solution;
 }
@@ -151,7 +167,7 @@ void SSPRungeKuttaTimeIntegrator<dim>::get_intermediate_solution(Vector<double> 
 /** \brief Sets the intermediate stage solution.
  */
 template<int dim>
-void SSPRungeKuttaTimeIntegrator<dim>::set_intermediate_solution(Vector<double> &solution)
+void SSPRKTimeIntegrator<dim>::set_intermediate_solution(Vector<double> &solution)
 {
    intermediate_solution = solution;
 }
@@ -159,7 +175,7 @@ void SSPRungeKuttaTimeIntegrator<dim>::set_intermediate_solution(Vector<double> 
 /** \brief Gets the current stage time.
  */
 template<int dim>
-double SSPRungeKuttaTimeIntegrator<dim>::get_stage_time() const
+double SSPRKTimeIntegrator<dim>::get_stage_time() const
 {
    return t_old + c[current_stage]*dt;
 }
@@ -167,7 +183,7 @@ double SSPRungeKuttaTimeIntegrator<dim>::get_stage_time() const
 /** \brief Sets a stage solution.
  */
 template<int dim>
-void SSPRungeKuttaTimeIntegrator<dim>::set_stage_solution(const unsigned int   &i,
+void SSPRKTimeIntegrator<dim>::set_stage_solution(const unsigned int   &i,
                                                           const Vector<double> &solution)
 {
    u_stage[i] = solution;

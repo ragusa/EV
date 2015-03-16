@@ -1,6 +1,7 @@
 # note: this script requires Gnuplot version 4.6 or higher
 # usage: gnuplot -e 'problem_ID=<problem ID>;
-#           timeintegrator=<time integrator string>' convergence.gp
+#           timeintegrator=<time integrator string>
+#           is_ss=<is steady state?>' convergence.gp
 
 # Reference slopes
 slope1 = 0.25
@@ -9,9 +10,6 @@ slope3 = 0.75
 
 # Convergence mode; 1 = space, 2 = time
 conv_mode = 1
-
-# Steady-state mode; 1 = transient, 2 = steady-state
-ss_mode = 1
 
 # list of possible input files to plot and their corresponding titles
 file_galerkin = "convergence_".problem_ID."_galerkin_".timeintegrator
@@ -68,19 +66,19 @@ stats outdir.word(existing_file_list,words(existing_file_list)) using h_col noou
 h_min = STATS_min
 
 # get minimum L1 error
-if (ss_mode == 1) \
-  L1_col = 7; \
+if (is_ss == 1) \
+  L1_col = 5; \
 else \
-  L1_col = 5
+  L1_col = 7
 stats outdir.word(existing_file_list,words(existing_file_list)) using L1_col noout
 L1_min = STATS_min
 L1_max = STATS_max
 
 # get minimum L2 error
-if (ss_mode == 1) \
-  L2_col = 9; \
+if (is_ss == 1) \
+  L2_col = 7; \
 else \
-  L2_col = 7
+  L2_col = 9
 stats outdir.word(existing_file_list,words(existing_file_list)) using L2_col noout
 L2_min = STATS_min
 L2_max = STATS_max
