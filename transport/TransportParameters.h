@@ -3,6 +3,7 @@
 
 #include <deal.II/base/parameter_handler.h>
 #include "SSPRKTimeIntegrator.h"
+#include "RefinementHandler.h"
 
 using namespace dealii;
 
@@ -18,9 +19,9 @@ class TransportParameters {
     unsigned int problem_id; // problem ID
     unsigned int degree; // polynomial degree of finite elements
     typename SSPRKTimeIntegrator<dim>::SSPRKMethod time_integrator_option; // SSPRK method
-    unsigned int refinement_option; // refinement option (time and/or space)
+    typename RefinementHandler<dim>::RefinementMode refinement_mode; // refinement mode (space or time)
     double time_refinement_factor; // reduction factor for time refinement
-    bool use_adaptive_mesh_refinement; // option to use adaptive mesh refinement
+    bool use_adaptive_refinement; // option to use adaptive mesh refinement
     unsigned int n_refinement_cycles; // number of refinement cycles
     unsigned int initial_refinement_level; // initial level of refinement
     unsigned int linear_solver_option; // linear solver option

@@ -17,6 +17,8 @@
 
 #include <sys/stat.h>
 
+#include "RefinementHandler.h"
+
 using namespace dealii;
 
 /** \brief Class for outputting solutions and evaluating error and convergence.
@@ -29,11 +31,11 @@ class PostProcessor {
          const bool               &output_exact_solution,
          const bool               &save_convergence_results,
          const bool               &has_exact_solution,
-         FunctionParser<dim> &exact_solution_function,
+         FunctionParser<dim>      &exact_solution_function,
          const double             &time,
          const double             &dt_nominal,
          const bool               &is_steady_state,
-         const unsigned int       &refinement_option,
+         const typename RefinementHandler<dim>::RefinementMode &refinement_mode,
          const unsigned int       &final_refinement_level,
          const FESystem<dim>      &fe,
          const std::string        &output_dir,
@@ -75,7 +77,7 @@ class PostProcessor {
       double              dt_nominal;
       const bool          is_steady_state;
 
-      const unsigned int  refinement_option;
+      const typename RefinementHandler<dim>::RefinementMode refinement_mode;
       const unsigned int  final_refinement_level;
 
       const FESystem<dim> *fe;

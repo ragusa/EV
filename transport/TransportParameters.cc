@@ -5,9 +5,9 @@ TransportParameters<dim>::TransportParameters() :
       problem_id(1),
       degree(1),
       time_integrator_option(SSPRKTimeIntegrator<dim>::SSPRKMethod::FE),
-      refinement_option(1),
+      refinement_mode(RefinementHandler<dim>::RefinementMode::space),
       time_refinement_factor(0.5),
-      use_adaptive_mesh_refinement(false),
+      use_adaptive_refinement(false),
       n_refinement_cycles(5),
       initial_refinement_level(2),
       linear_solver_option(1),
@@ -43,11 +43,11 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler &prm)
          "Polynomial degree of finite elements");
    prm.declare_entry("Time integrator option", "FE", Patterns::Selection("FE|SSP2|SSP3"),
          "Choice of time integrator");
-   prm.declare_entry("Refinement option", "1", Patterns::Integer(),
-         "Refinement option (space and/or time)");
+   prm.declare_entry("Refinement mode", "space", Patterns::Selection("space|time"),
+         "Refinement mode (space or time)");
    prm.declare_entry("Time refinement factor", "0.5", Patterns::Double(),
          "Factor by which to reduce dt if refining time step size");
-   prm.declare_entry("Use adaptive mesh refinement", "false", Patterns::Bool(),
+   prm.declare_entry("Use adaptive refinement", "false", Patterns::Bool(),
          "Option to use adaptive mesh refinement instead of uniform");
    prm.declare_entry("Number of refinement cycles", "5", Patterns::Integer(),
          "Number of mesh refinement cycles");
@@ -99,6 +99,7 @@ template <int dim>
 void TransportParameters<dim>::get_parameters(ParameterHandler &prm) {
    problem_id = prm.get_integer("Problem ID");
    degree = prm.get_integer("Finite element degree");
+
    std::string time_integrator_string = prm.get("Time integrator option");
    if (time_integrator_string == "FE") {
       time_integrator_option = SSPRKTimeIntegrator<dim>::SSPRKMethod::FE;
@@ -109,9 +110,18 @@ void TransportParameters<dim>::get_parameters(ParameterHandler &prm) {
    } else {
       ExcNotImplemented();
    }
-   refinement_option = prm.get_integer("Refinement option");
+
+   std::string refinement_mode_string = prm.get("Refinement mode");
+   if (refinement_mode_string == "space") {
+      refinement_mode = RefinementHandler<dim>::RefinementMode::space;
+   } else if (refinement_mode_string == "time") {
+      refinement_mode = RefinementHandler<dim>::RefinementMode::time;
+   } else {
+      ExcNotImplemented();
+   }
+
    time_refinement_factor = prm.get_double("Time refinement factor");
-   use_adaptive_mesh_refinement = prm.get_bool("Use adaptive mesh refinement");
+   use_adaptive_refinement = prm.get_bool("Use adaptive refinement");
    n_refinement_cycles = prm.get_integer("Number of refinement cycles");
    initial_refinement_level = prm.get_integer("Initial refinement level");
    linear_solver_option = prm.get_integer("Linear solver option");

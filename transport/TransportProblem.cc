@@ -799,6 +799,7 @@ void TransportProblem<dim>::compute_low_order_viscosity()
 
 /** \brief refine the grid
  */
+/*
 template<int dim>
 void TransportProblem<dim>::refine_grid() {
    // refine adaptively or globally
@@ -819,6 +820,7 @@ void TransportProblem<dim>::refine_grid() {
    // update number of cells
    n_cells = triangulation.n_active_cells();
 }
+*/
 
 /** \brief run the problem
  */
@@ -878,7 +880,7 @@ void TransportProblem<dim>::run()
                                     parameters.end_time,
                                     dt_nominal,
                                     parameters.is_steady_state,
-                                    parameters.refinement_option,
+                                    parameters.refinement_mode,
                                     final_refinement_level,
                                     fe,
                                     output_dir,
@@ -886,13 +888,23 @@ void TransportProblem<dim>::run()
                                     filename_exact_ss.str(),
                                     cell_quadrature);
 
+   // create refinement handler object
+   RefinementHandler<dim> refinement_handler(triangulation,
+                                             n_cells,
+                                             dt_nominal,
+                                             parameters.refinement_mode,
+                                             parameters.use_adaptive_refinement,
+                                             parameters.time_refinement_factor);
+
    // loop over refinement cycles
    for (unsigned int cycle = 0; cycle < parameters.n_refinement_cycles; ++cycle)
    {
       // refine
+      refinement_handler.refine(cycle);
+/*
       if (cycle != 0) {
          // refine mesh if user selected the option
-         if (parameters.refinement_option != 2) // "2" corresponds to "time refinement only"
+         if (parameters.refinement_option == 2) // "2" corresponds to "time refinement only"
             refine_grid();
 
          // refine time if user selected the option
@@ -900,6 +912,7 @@ void TransportProblem<dim>::run()
             dt_nominal = dt_nominal * parameters.time_refinement_factor;
          }
       }
+*/
 
       // setup system - distribute finite elements, reintialize matrices and vectors
       setup_system();

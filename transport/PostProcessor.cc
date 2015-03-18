@@ -10,7 +10,7 @@ PostProcessor<dim>::PostProcessor(
    const double        &time,
    const double        &dt_nominal,
    const bool          &is_steady_state,
-   const unsigned int  &refinement_option,
+   const typename RefinementHandler<dim>::RefinementMode &refinement_mode,
    const unsigned int  &final_refinement_level,
    const FESystem<dim> &fe,
    const std::string   &output_dir,
@@ -26,7 +26,7 @@ PostProcessor<dim>::PostProcessor(
    time(time),
    dt_nominal(dt_nominal),
    is_steady_state(is_steady_state),
-   refinement_option(refinement_option),
+   refinement_mode(refinement_mode),
    final_refinement_level(final_refinement_level),
    fe(&fe),
    output_dir(output_dir),
@@ -108,14 +108,20 @@ void PostProcessor<dim>::output_results(const Vector<double>     &solution,
       convergence_table.set_scientific("L1 error", true);
       convergence_table.set_precision("L2 error", 3);
       convergence_table.set_scientific("L2 error", true);
-      if (refinement_option == 2) {
-         // evaluate temporal convergence rates
-         convergence_table.evaluate_convergence_rates("L1 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
-         convergence_table.evaluate_convergence_rates("L2 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
-      } else {
-         // evaluate spatial convergence rates
-         convergence_table.evaluate_convergence_rates("L1 error", ConvergenceTable::reduction_rate_log2);
-         convergence_table.evaluate_convergence_rates("L2 error", ConvergenceTable::reduction_rate_log2);
+      switch (refinement_mode) {
+         case RefinementHandler<dim>::RefinementMode::time : {
+            // evaluate temporal convergence rates
+            convergence_table.evaluate_convergence_rates("L1 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
+            convergence_table.evaluate_convergence_rates("L2 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
+            break;
+         } case RefinementHandler<dim>::RefinementMode::space : {
+            // evaluate spatial convergence rates
+            convergence_table.evaluate_convergence_rates("L1 error", ConvergenceTable::reduction_rate_log2);
+            convergence_table.evaluate_convergence_rates("L2 error", ConvergenceTable::reduction_rate_log2);
+            break;
+         } default : {
+            ExcNotImplemented();
+         }
       }
       // print convergence table to console
       std::cout << std::endl;
