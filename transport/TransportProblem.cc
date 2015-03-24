@@ -336,6 +336,7 @@ void TransportProblem<dim>::setup_system()
    // reinitialize solution vector, system matrix, and rhs
    old_solution.reinit(n_dofs);
    older_solution.reinit(n_dofs);
+   oldest_solution.reinit(n_dofs);
    old_stage_solution.reinit(n_dofs);
    new_solution.reinit(n_dofs);
    system_rhs  .reinit(n_dofs);
@@ -797,31 +798,6 @@ void TransportProblem<dim>::compute_low_order_viscosity()
    }
 }
 
-/** \brief refine the grid
- */
-/*
-template<int dim>
-void TransportProblem<dim>::refine_grid() {
-   // refine adaptively or globally
-   if (parameters.use_adaptive_mesh_refinement) {
-      Vector<float> estimated_error_per_cell(n_cells);
-
-      KellyErrorEstimator<dim>::estimate(dof_handler, QGauss<dim - 1>(3),
-            typename FunctionMap<dim>::type(), new_solution,
-            estimated_error_per_cell);
-
-      GridRefinement::refine_and_coarsen_fixed_number(triangulation,
-            estimated_error_per_cell, 0.3, 0.03);
-
-      triangulation.execute_coarsening_and_refinement();
-   } else
-      triangulation.refine_global(1);
-
-   // update number of cells
-   n_cells = triangulation.n_active_cells();
-}
-*/
-
 /** \brief run the problem
  */
 template<int dim>
@@ -901,18 +877,6 @@ void TransportProblem<dim>::run()
    {
       // refine
       refinement_handler.refine(cycle);
-/*
-      if (cycle != 0) {
-         // refine mesh if user selected the option
-         if (parameters.refinement_option == 2) // "2" corresponds to "time refinement only"
-            refine_grid();
-
-         // refine time if user selected the option
-         if (parameters.refinement_option != 1) {// "1" corresponds to "space refinement only"
-            dt_nominal = dt_nominal * parameters.time_refinement_factor;
-         }
-      }
-*/
 
       // setup system - distribute finite elements, reintialize matrices and vectors
       setup_system();
@@ -942,8 +906,8 @@ void TransportProblem<dim>::run()
                                parameters.entropy_derivative_string,
                                parameters.entropy_residual_coefficient,
                                parameters.jump_coefficient,
-                               domain_volume);
-                               
+                               domain_volume,
+                               parameters.EV_time_discretization);
 
       // create linear solver object
       LinearSolver<dim> linear_solver(parameters.linear_solver_option,
@@ -992,9 +956,11 @@ void TransportProblem<dim>::run()
          // time loop
          double t_new = 0.0;
          double t_old = 0.0;
-         double old_dt = dt_nominal;
-         old_solution   = new_solution;
-         older_solution = new_solution;
+         double old_dt   = dt_nominal;
+         double older_dt = dt_nominal;
+         old_solution    = new_solution;
+         older_solution  = new_solution;
+         oldest_solution = new_solution;
          const double t_end = parameters.end_time;
          bool in_transient = true;
          Vector<double> tmp_vector(n_dofs);
@@ -1055,12 +1021,15 @@ void TransportProblem<dim>::run()
                   break;
                } case 2: { // high-order system with entropy viscosity
 
-                  if (parameters.EV_eval_option == 1) { // compute EV only at beginning of time step
+                  // compute EV only at beginning of time step
+                  if (parameters.EV_time_discretization != EntropyViscosity<dim>::TemporalDiscretization::FE) {
                      // recompute high-order steady-state matrix
                      entropy_viscosity = EV.compute_entropy_viscosity(
                         old_solution,
                         older_solution,
+                        oldest_solution,
                         old_dt,
+                        older_dt,
                         t_old);
                      for (unsigned int i_cell = 0; i_cell < n_cells; ++i_cell)
                         high_order_viscosity(i_cell) = std::min(
@@ -1082,7 +1051,7 @@ void TransportProblem<dim>::run()
                         assemble_ss_rhs(t_stage);
                      }
 
-                     if (parameters.EV_eval_option == 2) { // compute EV at beginning of each stage
+                     if (parameters.EV_time_discretization == EntropyViscosity<dim>::TemporalDiscretization::FE) {
                         // compute Galerkin solution
                         ssprk.step(consistent_mass_matrix,inviscid_ss_matrix,ss_rhs,false);
    
@@ -1096,7 +1065,9 @@ void TransportProblem<dim>::run()
                         entropy_viscosity = EV.compute_entropy_viscosity(
                            new_solution,
                            old_stage_solution,
+                           old_solution, // not used; supply arbitrary argument
                            dt,
+                           old_dt,       // not used; supply arbitrary argument
                            t_stage);
                         for (unsigned int i_cell = 0; i_cell < n_cells; ++i_cell)
                            high_order_viscosity(i_cell) = std::min(
@@ -1139,7 +1110,7 @@ void TransportProblem<dim>::run()
                      ssprk.get_stage_solution(i,old_stage_solution);
 
                      // recompute high-order steady-state matrix
-                     entropy_viscosity = EV.compute_entropy_viscosity(new_solution,old_stage_solution,dt,t_stage);
+                     entropy_viscosity = EV.compute_entropy_viscosity(new_solution,old_stage_solution,old_solution,dt,old_dt,t_stage);
                      for (unsigned int i_cell = 0; i_cell < n_cells; ++i_cell)
                         high_order_viscosity(i_cell) = std::min(entropy_viscosity(i_cell),low_order_viscosity(i_cell));
                      compute_graphLaplacian_diffusion_matrix(high_order_viscosity,high_order_diffusion_matrix);
@@ -1226,10 +1197,12 @@ void TransportProblem<dim>::run()
             }
 
             // update old solution, time, and time step size
-            older_solution = old_solution;
-            old_solution = new_solution;
+            oldest_solution = older_solution;
+            older_solution  = old_solution;
+            old_solution    = new_solution;
+            older_dt = old_dt;
+            old_dt   = dt;
             t_old = t_new;
-            old_dt = dt;
 
             // increment time step index
             n++;

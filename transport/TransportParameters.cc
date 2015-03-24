@@ -17,7 +17,7 @@ TransportParameters<dim>::TransportParameters() :
       entropy_derivative_string("u"),
       entropy_residual_coefficient(1.0),
       jump_coefficient(1.0),
-      EV_eval_option(1),
+      EV_time_discretization(EntropyViscosity<dim>::TemporalDiscretization::BE),
       output_meshes(false),
       is_steady_state(true),
       end_time(1.0),
@@ -67,8 +67,8 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler &prm)
          "Coefficient for the entropy viscosity");
    prm.declare_entry("Jump coefficient", "1.0", Patterns::Double(),
          "Coefficient for jumps used with entropy viscosity");
-   prm.declare_entry("EV evaluation option", "1", Patterns::Integer(),
-         "Option for when to evaluate entropy viscosity");
+   prm.declare_entry("EV temporal discretization", "BE", Patterns::Selection("FE|BE|CN|BDF2"),
+         "Temporal discretization for entropy residual");
    prm.declare_entry("Output mesh", "false", Patterns::Bool(),
          "Option to output meshes as .eps files");
    prm.declare_entry("Is steady state", "true", Patterns::Bool(),
@@ -131,7 +131,20 @@ void TransportParameters<dim>::get_parameters(ParameterHandler &prm) {
    entropy_derivative_string = prm.get("Entropy derivative string");
    entropy_residual_coefficient = prm.get_double("Entropy residual coefficient");
    jump_coefficient = prm.get_double("Jump coefficient");
-   EV_eval_option = prm.get_integer("EV evaluation option");
+
+   std::string EV_time_discretization_string = prm.get("EV temporal discretization");
+   if (EV_time_discretization_string == "FE") {
+      EV_time_discretization = EntropyViscosity<dim>::TemporalDiscretization::FE;
+   } else if (EV_time_discretization_string == "BE") {
+      EV_time_discretization = EntropyViscosity<dim>::TemporalDiscretization::BE;
+   } else if (EV_time_discretization_string == "CN") {
+      EV_time_discretization = EntropyViscosity<dim>::TemporalDiscretization::CN;
+   } else if (EV_time_discretization_string == "BDF2") {
+      EV_time_discretization = EntropyViscosity<dim>::TemporalDiscretization::BDF2;
+   } else {
+      ExcNotImplemented();
+   }
+
    output_meshes = prm.get_bool("Output mesh");
    is_steady_state = prm.get_bool("Is steady state");
    end_time = prm.get_double("End time");

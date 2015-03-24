@@ -22,6 +22,9 @@ using namespace dealii;
 template<int dim>
 class EntropyViscosity {
    public:
+      // temporal discretization type for entropy residual
+      enum TemporalDiscretization {FE, BE, CN, BDF2};
+
       EntropyViscosity(const FESystem<dim>   &fe,
                        const unsigned int    &n_cells,
                        const DoFHandler<dim> &dof_handler,
@@ -34,15 +37,21 @@ class EntropyViscosity {
                        const std::string     &entropy_derivative_string,
                        const double          &entropy_residual_coefficient,
                        const double          &jump_coefficient,
-                       const double          &domain_volume);
+                       const double          &domain_volume,
+                       const TemporalDiscretization temporal_discretization);
+
       ~EntropyViscosity();
+
       Vector<double> compute_entropy_viscosity(const Vector<double> &old_solution,
                                                const Vector<double> &older_solution,
-                                               const double         &dt,
+                                               const Vector<double> &oldest_solution,
+                                               const double         &old_dt,
+                                               const double         &older_dt,
                                                const double         &time);
 
    private:
       void compute_entropy_domain_average(const Vector<double> &old_solution);
+      void compute_temporal_discretization_constants(const double old_dt, const double older_dt);
 
       // mesh and dof data
       const FESystem<dim> *fe;
@@ -77,6 +86,15 @@ class EntropyViscosity {
 
       // viscosity vectors
       Vector<double> entropy_viscosity;
+
+      TemporalDiscretization temporal_discretization;
+
+      // coefficients for entropy residual
+      double a_old;
+      double a_older;
+      double a_oldest;
+      double b_old;
+      double b_older;
 };
 
 #include "EntropyViscosity.cc"

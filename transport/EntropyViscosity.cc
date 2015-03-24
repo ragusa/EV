@@ -14,7 +14,8 @@ EntropyViscosity<dim>::EntropyViscosity(
    const std::string     &entropy_derivative_string,
    const double          &entropy_residual_coefficient,
    const double          &jump_coefficient,
-   const double          &domain_volume) :
+   const double          &domain_volume,
+   const TemporalDiscretization temporal_discretization) :
 
       fe(&fe),
       flux(0),
@@ -35,7 +36,8 @@ EntropyViscosity<dim>::EntropyViscosity(
       entropy_residual_coefficient(entropy_residual_coefficient),
       jump_coefficient(jump_coefficient),
       domain_volume(domain_volume),
-      entropy_viscosity(n_cells)
+      entropy_viscosity(n_cells),
+      temporal_discretization(temporal_discretization)
 {
    // initialize entropy function
    std::map<std::string,double> constants;
@@ -114,9 +116,14 @@ void EntropyViscosity<dim>::compute_entropy_domain_average(const Vector<double> 
 template <int dim>
 Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<double> &old_solution,
                                                                 const Vector<double> &older_solution,
-                                                                const double         &dt,
+                                                                const Vector<double> &oldest_solution,
+                                                                const double         &old_dt,
+                                                                const double         &older_dt,
                                                                 const double         &time)
 {
+   // compute the temporal discretization constants used in entropy residual
+   compute_temporal_discretization_constants(old_dt,older_dt);
+
    // set the time of the source function
    source_function->set_time(time);
 
@@ -127,14 +134,19 @@ Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<dou
    std::vector<Point<dim> > points  (n_q_points_cell);
    std::vector<double>      sigma   (n_q_points_cell);
    std::vector<double>      source  (n_q_points_cell);
-   std::vector<double>      u_old   (n_q_points_cell);
-   std::vector<double>      u_older (n_q_points_cell);
-   std::vector<Point<1> >   u_old_points  (n_q_points_cell);
-   std::vector<Point<1> >   u_older_points(n_q_points_cell);
+   std::vector<double>      u_old    (n_q_points_cell);
+   std::vector<double>      u_older  (n_q_points_cell);
+   std::vector<double>      u_oldest (n_q_points_cell);
+   std::vector<Point<1> >   u_old_points   (n_q_points_cell);
+   std::vector<Point<1> >   u_older_points (n_q_points_cell);
+   std::vector<Point<1> >   u_oldest_points(n_q_points_cell);
    std::vector<Tensor<1,dim> > dudx_old(n_q_points_cell);
-   std::vector<double>      s_old   (n_q_points_cell);
-   std::vector<double>      s_older (n_q_points_cell);
+   std::vector<Tensor<1,dim> > dudx_older(n_q_points_cell);
+   std::vector<double>      s_old    (n_q_points_cell);
+   std::vector<double>      s_older  (n_q_points_cell);
+   std::vector<double>      s_oldest (n_q_points_cell);
    std::vector<double>      dsdu_old(n_q_points_cell);
+   std::vector<double>      dsdu_older(n_q_points_cell);
 
    // face values
    std::vector<Point<dim> >    normal                (n_q_points_face);
@@ -169,9 +181,11 @@ Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<dou
       fe_values.reinit(cell);
 
       // get solution values and gradients
-      fe_values[flux].get_function_values   (old_solution,   u_old);
-      fe_values[flux].get_function_values   (older_solution, u_older);
+      fe_values[flux].get_function_values   (old_solution,    u_old);
+      fe_values[flux].get_function_values   (older_solution,  u_older);
+      fe_values[flux].get_function_values   (oldest_solution, u_oldest);
       fe_values[flux].get_function_gradients(old_solution,   dudx_old);
+      fe_values[flux].get_function_gradients(older_solution, dudx_older);
    
       // get cross section and source values for all quadrature points
       points = fe_values.get_quadrature_points();
@@ -182,20 +196,27 @@ Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<dou
       //----------------------------------------------------------------------------
       // compute entropy values at each quadrature point on cell
       for (unsigned int q = 0; q < n_q_points_cell; ++q) {
-         u_old_points[q][0]   = u_old[q];
-         u_older_points[q][0] = u_older[q];
+         u_old_points[q][0]    = u_old[q];
+         u_older_points[q][0]  = u_older[q];
+         u_oldest_points[q][0] = u_oldest[q];
       }
-      entropy_function.value_list(u_old_points,  s_old);
-      entropy_function.value_list(u_older_points,s_older);
+      entropy_function.value_list(u_old_points,   s_old);
+      entropy_function.value_list(u_older_points, s_older);
+      entropy_function.value_list(u_oldest_points,s_oldest);
       entropy_derivative_function.value_list(u_old_points,dsdu_old);
+      entropy_derivative_function.value_list(u_older_points,dsdu_older);
 
       // compute entropy residual values at each quadrature point on cell
       std::vector<double> entropy_residual_values(n_q_points_cell,0.0);
       for (unsigned int q = 0; q < n_q_points_cell; ++q)
-         entropy_residual_values[q] = (s_old[q] - s_older[q])/dt
-            + dsdu_old[q] * (transport_direction * dudx_old[q]
-            + sigma[q] * u_old[q]
-            - source[q]);
+         entropy_residual_values[q] =
+            a_old*s_old[q] + a_older*s_older[q] + a_oldest*s_oldest[q]
+            + b_old*(dsdu_old[q] * (transport_direction * dudx_old[q]
+                     + sigma[q] * u_old[q]
+                     - source[q]))
+            + b_older*(dsdu_older[q] * (transport_direction * dudx_older[q]
+                     + sigma[q] * u_older[q]
+                     - source[q]));
 
       // determine maximum entropy residual in cell
       double max_entropy_residual = 0.0;
@@ -257,4 +278,46 @@ Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<dou
    }
 
    return entropy_viscosity;
+}
+
+
+/** \brief Computes the temporal discretization constants used in the entropy
+ *         residual.
+ */
+template <int dim>
+void EntropyViscosity<dim>::compute_temporal_discretization_constants(const double old_dt, const double older_dt)
+{
+   switch (temporal_discretization) {
+      case TemporalDiscretization::FE : {
+         a_old    =  1.0/old_dt;
+         a_older  = -1.0/old_dt;
+         a_oldest =  0.0;
+         b_old   = 1.0;
+         b_older = 0.0;
+         break;
+      } case TemporalDiscretization::BE : {
+         a_old    =  1.0/old_dt;
+         a_older  = -1.0/old_dt;
+         a_oldest =  0.0;
+         b_old   = 1.0;
+         b_older = 0.0;
+         break;
+      } case TemporalDiscretization::CN : {
+         a_old    =  1.0/old_dt;
+         a_older  = -1.0/old_dt;
+         a_oldest =  0.0;
+         b_old   = 0.5;
+         b_older = 0.5;
+         break;
+      } case TemporalDiscretization::BDF2 : {
+         a_old    = (older_dt + 2*old_dt)/(old_dt*(older_dt + old_dt));
+         a_older  = -(older_dt + old_dt)/(older_dt*old_dt);
+         a_oldest = old_dt / (older_dt*(older_dt + old_dt));
+         b_old   = 1.0;
+         b_older = 0.0;
+         break;
+      } default: {
+         ExcNotImplemented();
+      }
+   }
 }

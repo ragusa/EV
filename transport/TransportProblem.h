@@ -103,6 +103,7 @@ class TransportProblem {
       Vector<double> new_solution;
       Vector<double> old_solution;
       Vector<double> older_solution;
+      Vector<double> oldest_solution;
       Vector<double> old_stage_solution;
       Vector<double> system_rhs;
       Vector<double> ss_rhs;

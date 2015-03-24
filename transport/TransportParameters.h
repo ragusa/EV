@@ -4,6 +4,7 @@
 #include <deal.II/base/parameter_handler.h>
 #include "SSPRKTimeIntegrator.h"
 #include "RefinementHandler.h"
+#include "EntropyViscosity.h"
 
 using namespace dealii;
 
@@ -17,6 +18,7 @@ class TransportParameters {
     void get_parameters(ParameterHandler &prm);
 
     unsigned int problem_id; // problem ID
+
     unsigned int degree; // polynomial degree of finite elements
     typename SSPRKTimeIntegrator<dim>::SSPRKMethod time_integrator_option; // SSPRK method
     typename RefinementHandler<dim>::RefinementMode refinement_mode; // refinement mode (space or time)
@@ -30,8 +32,9 @@ class TransportParameters {
     std::string entropy_string; // string for entropy function
     std::string entropy_derivative_string; // string for entropy derivative function
     double entropy_residual_coefficient; // value of entropy residual coefficient
-    double jump_coefficient; // value of jump coefficient
-    unsigned int EV_eval_option; // option for when to evaluate entropy viscosity
+    double jump_coefficient; // value of jump coefficient 
+    // temporal discretization for entropy residual
+    typename EntropyViscosity<dim>::TemporalDiscretization EV_time_discretization;
     bool output_meshes; // option to output meshes as .eps files
     bool is_steady_state; // is the problem steady-state?
     double end_time; // end time if transient problem is run
