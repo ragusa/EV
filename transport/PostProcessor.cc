@@ -109,12 +109,12 @@ void PostProcessor<dim>::output_results(const Vector<double>     &solution,
       convergence_table.set_precision("L2 error", 3);
       convergence_table.set_scientific("L2 error", true);
       switch (refinement_mode) {
-         case RefinementHandler<dim>::RefinementMode::time : {
+         case RefinementHandler<dim>::time : {
             // evaluate temporal convergence rates
             convergence_table.evaluate_convergence_rates("L1 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
             convergence_table.evaluate_convergence_rates("L2 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
             break;
-         } case RefinementHandler<dim>::RefinementMode::space : {
+         } case RefinementHandler<dim>::space : {
             // evaluate spatial convergence rates
             convergence_table.evaluate_convergence_rates("L1 error", ConvergenceTable::reduction_rate_log2);
             convergence_table.evaluate_convergence_rates("L2 error", ConvergenceTable::reduction_rate_log2);

@@ -31,10 +31,10 @@ void RefinementHandler<dim>::refine(unsigned int cycle) const {
    if (cycle != 0) {
       // refine mesh if user selected the option
       switch (refinement_mode) {
-         case RefinementMode::space : { // refine space
+         case space : { // refine space
             refine_grid();
             break;
-         } case RefinementMode::time : { // refine time
+         } case time : { // refine time
             *dt = *dt * time_refinement_factor;
             break;
          } default : {

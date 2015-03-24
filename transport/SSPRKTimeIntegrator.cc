@@ -13,13 +13,13 @@ SSPRKTimeIntegrator<dim>::SSPRKTimeIntegrator(
    // determine number of stages for chosen method
    switch (ssprk_method)
    {
-      case SSPRKMethod::FE:
+      case FE:
          n_stages = 1;
          break;
-      case SSPRKMethod::SSP2:
+      case SSP2:
          n_stages = 2;
          break;
-      case SSPRKMethod::SSP3:
+      case SSP3:
          n_stages = 3;
          break;
       default:
@@ -38,14 +38,14 @@ SSPRKTimeIntegrator<dim>::SSPRKTimeIntegrator(
    // assign RK parameters a, b, and c
    switch (ssprk_method)
    {
-      case SSPRKMethod::FE:
+      case FE:
          a[0] = 0.0; b[0] = 1.0; c[0] = 0.0;
          break;
-      case SSPRKMethod::SSP2:
+      case SSP2:
          a[0] = 0.0; b[0] = 1.0; c[0] = 0.0;
          a[1] = 0.5; b[1] = 0.5; c[1] = 1.0;
          break;
-      case SSPRKMethod::SSP3:
+      case SSP3:
          a[0] = 0.0;     b[0] = 1.0;     c[0] = 0.0;
          a[1] = 0.75;    b[1] = 0.25;    c[1] = 1.0;
          a[2] = 1.0/3.0; b[2] = 2.0/3.0; c[2] = 0.5;

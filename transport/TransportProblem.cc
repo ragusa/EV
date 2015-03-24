@@ -816,11 +816,11 @@ void TransportProblem<dim>::run()
    if (parameters.is_steady_state) timedisc_string = "ss";
    else
       switch (parameters.time_integrator_option) {
-         case SSPRKTimeIntegrator<dim>::SSPRKMethod::FE:
+         case SSPRKTimeIntegrator<dim>::FE:
             {timedisc_string = "FE";      break;}
-         case SSPRKTimeIntegrator<dim>::SSPRKMethod::SSP2:
+         case SSPRKTimeIntegrator<dim>::SSP2:
             {timedisc_string = "SSPRK22"; break;}
-         case SSPRKTimeIntegrator<dim>::SSPRKMethod::SSP3: 
+         case SSPRKTimeIntegrator<dim>::SSP3: 
             {timedisc_string = "SSPRK33"; break;}
          default: {ExcNotImplemented();}
       }
@@ -1022,7 +1022,7 @@ void TransportProblem<dim>::run()
                } case 2: { // high-order system with entropy viscosity
 
                   // compute EV only at beginning of time step
-                  if (parameters.EV_time_discretization != EntropyViscosity<dim>::TemporalDiscretization::FE) {
+                  if (parameters.EV_time_discretization != EntropyViscosity<dim>::FE) {
                      // recompute high-order steady-state matrix
                      entropy_viscosity = EV.compute_entropy_viscosity(
                         old_solution,
@@ -1051,7 +1051,7 @@ void TransportProblem<dim>::run()
                         assemble_ss_rhs(t_stage);
                      }
 
-                     if (parameters.EV_time_discretization == EntropyViscosity<dim>::TemporalDiscretization::FE) {
+                     if (parameters.EV_time_discretization == EntropyViscosity<dim>::FE) {
                         // compute Galerkin solution
                         ssprk.step(consistent_mass_matrix,inviscid_ss_matrix,ss_rhs,false);
    

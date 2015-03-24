@@ -58,27 +58,30 @@ do for [i=1:words(file_list)] {
 }
 
 # determine h_min based on convergence mode and then get minimum dx or dt
-if (conv_mode == 1) \
-  h_col = 4; \
-else \
+if (conv_mode == 1) {
+  h_col = 4
+} else {
   h_col = 5
+}
 stats outdir.word(existing_file_list,words(existing_file_list)) using h_col noout
 h_min = STATS_min
 
 # get minimum L1 error
-if (is_ss == 1) \
-  L1_col = 5; \
-else \
+if (is_ss == 1) {
+  L1_col = 5
+} else {
   L1_col = 7
+}
 stats outdir.word(existing_file_list,words(existing_file_list)) using L1_col noout
 L1_min = STATS_min
 L1_max = STATS_max
 
 # get minimum L2 error
-if (is_ss == 1) \
-  L2_col = 7; \
-else \
+if (is_ss == 1) {
+  L2_col = 7
+} else {
   L2_col = 9
+}
 stats outdir.word(existing_file_list,words(existing_file_list)) using L2_col noout
 L2_min = STATS_min
 L2_max = STATS_max
@@ -105,10 +108,11 @@ L2string2 = sprintf("m=%.2f slope",slope2)
 L2string3 = sprintf("m=%.2f slope",slope3)
 
 set terminal postscript enhanced color
-if (conv_mode == 1) \
-  set xlabel "Mesh Size"; \
-else \
+if (conv_mode == 1) {
+  set xlabel "Mesh Size"
+} else {
   set xlabel "Time Step Size"
+}
 set logscale xy
 set key top left
 set format y "10^{%L}"
@@ -121,10 +125,11 @@ set output '| ps2pdf - '.output_file
 set multiplot layout 1, 2
 
 # Plot L-1 error
-if (L1_max > 1) \
-  set yrange[*:1]; \
-else \
+if (L1_max > 1) {
+  set yrange[*:1]
+} else {
   set yrange[*:*]
+}
 set ylabel "L-1 Error"
 plot for [i=1:words(existing_file_list)] outdir.word(existing_file_list,i)\
    using h_col:L1_col with linesp linetype word(existing_lt_list,i)\
@@ -136,10 +141,11 @@ plot for [i=1:words(existing_file_list)] outdir.word(existing_file_list,i)\
    L1ref3(x) title L1string3 with lines linestyle 2 linecolor 9
 
 # Plot L-2 error
-if (L2_max > 1) \
-  set yrange[*:1]; \
-else \
+if (L2_max > 1) {
+  set yrange[*:1]
+} else {
   set yrange[*:*]
+}
 set ylabel "L-2 Error"
 plot for [i=1:words(existing_file_list)] outdir.word(existing_file_list,i)\
    using h_col:L2_col with linesp linetype word(existing_lt_list,i)\

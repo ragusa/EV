@@ -57,6 +57,12 @@ my $problem_ID = $values[$problem_id_i];
 my $is_ss = $values[$ss_i];
 my $time_integrator = $values[$time_integrator_i];
 
+if ($is_ss eq "true") {
+   $is_ss = 1;
+} else {
+   $is_ss = 0;
+}
+
 # determine time integrator string based on time integrator option integer
 my $time_integrator_string;
 if ($is_ss) { # steady-state

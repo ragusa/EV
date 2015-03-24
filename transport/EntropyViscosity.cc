@@ -288,28 +288,28 @@ template <int dim>
 void EntropyViscosity<dim>::compute_temporal_discretization_constants(const double old_dt, const double older_dt)
 {
    switch (temporal_discretization) {
-      case TemporalDiscretization::FE : {
+      case FE : {
          a_old    =  1.0/old_dt;
          a_older  = -1.0/old_dt;
          a_oldest =  0.0;
          b_old   = 1.0;
          b_older = 0.0;
          break;
-      } case TemporalDiscretization::BE : {
+      } case BE : {
          a_old    =  1.0/old_dt;
          a_older  = -1.0/old_dt;
          a_oldest =  0.0;
          b_old   = 1.0;
          b_older = 0.0;
          break;
-      } case TemporalDiscretization::CN : {
+      } case CN : {
          a_old    =  1.0/old_dt;
          a_older  = -1.0/old_dt;
          a_oldest =  0.0;
          b_old   = 0.5;
          b_older = 0.5;
          break;
-      } case TemporalDiscretization::BDF2 : {
+      } case BDF2 : {
          a_old    = (older_dt + 2*old_dt)/(old_dt*(older_dt + old_dt));
          a_older  = -(older_dt + old_dt)/(older_dt*old_dt);
          a_oldest = old_dt / (older_dt*(older_dt + old_dt));

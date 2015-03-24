@@ -4,8 +4,8 @@ template <int dim>
 TransportParameters<dim>::TransportParameters() :
       problem_id(1),
       degree(1),
-      time_integrator_option(SSPRKTimeIntegrator<dim>::SSPRKMethod::FE),
-      refinement_mode(RefinementHandler<dim>::RefinementMode::space),
+      time_integrator_option(SSPRKTimeIntegrator<dim>::FE),
+      refinement_mode(RefinementHandler<dim>::space),
       time_refinement_factor(0.5),
       use_adaptive_refinement(false),
       n_refinement_cycles(5),
@@ -17,7 +17,7 @@ TransportParameters<dim>::TransportParameters() :
       entropy_derivative_string("u"),
       entropy_residual_coefficient(1.0),
       jump_coefficient(1.0),
-      EV_time_discretization(EntropyViscosity<dim>::TemporalDiscretization::BE),
+      EV_time_discretization(EntropyViscosity<dim>::BE),
       output_meshes(false),
       is_steady_state(true),
       end_time(1.0),
@@ -102,20 +102,20 @@ void TransportParameters<dim>::get_parameters(ParameterHandler &prm) {
 
    std::string time_integrator_string = prm.get("Time integrator option");
    if (time_integrator_string == "FE") {
-      time_integrator_option = SSPRKTimeIntegrator<dim>::SSPRKMethod::FE;
+      time_integrator_option = SSPRKTimeIntegrator<dim>::FE;
    } else if (time_integrator_string == "SSP2") {
-      time_integrator_option = SSPRKTimeIntegrator<dim>::SSPRKMethod::SSP2;
+      time_integrator_option = SSPRKTimeIntegrator<dim>::SSP2;
    } else if (time_integrator_string == "SSP3") {
-      time_integrator_option = SSPRKTimeIntegrator<dim>::SSPRKMethod::SSP3;
+      time_integrator_option = SSPRKTimeIntegrator<dim>::SSP3;
    } else {
       ExcNotImplemented();
    }
 
    std::string refinement_mode_string = prm.get("Refinement mode");
    if (refinement_mode_string == "space") {
-      refinement_mode = RefinementHandler<dim>::RefinementMode::space;
+      refinement_mode = RefinementHandler<dim>::space;
    } else if (refinement_mode_string == "time") {
-      refinement_mode = RefinementHandler<dim>::RefinementMode::time;
+      refinement_mode = RefinementHandler<dim>::time;
    } else {
       ExcNotImplemented();
    }
@@ -134,13 +134,13 @@ void TransportParameters<dim>::get_parameters(ParameterHandler &prm) {
 
    std::string EV_time_discretization_string = prm.get("EV temporal discretization");
    if (EV_time_discretization_string == "FE") {
-      EV_time_discretization = EntropyViscosity<dim>::TemporalDiscretization::FE;
+      EV_time_discretization = EntropyViscosity<dim>::FE;
    } else if (EV_time_discretization_string == "BE") {
-      EV_time_discretization = EntropyViscosity<dim>::TemporalDiscretization::BE;
+      EV_time_discretization = EntropyViscosity<dim>::BE;
    } else if (EV_time_discretization_string == "CN") {
-      EV_time_discretization = EntropyViscosity<dim>::TemporalDiscretization::CN;
+      EV_time_discretization = EntropyViscosity<dim>::CN;
    } else if (EV_time_discretization_string == "BDF2") {
-      EV_time_discretization = EntropyViscosity<dim>::TemporalDiscretization::BDF2;
+      EV_time_discretization = EntropyViscosity<dim>::BDF2;
    } else {
       ExcNotImplemented();
    }
