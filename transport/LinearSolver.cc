@@ -4,7 +4,7 @@ template<int dim>
 LinearSolver<dim>::LinearSolver(const unsigned int     &linear_solver_option,
                                 const ConstraintMatrix &constraints,
                                 const DoFHandler<dim>  &dof_handler,
-                                const Function<dim>    &dirichlet_value_function) :
+                                Function<dim>          &dirichlet_value_function) :
    linear_solver_option(linear_solver_option),
    constraints(constraints),
    dof_handler(&dof_handler),
@@ -27,10 +27,11 @@ LinearSolver<dim>::~LinearSolver()
 template<int dim>
 void LinearSolver<dim>::solve(SparseMatrix<double> &A,
                               Vector<double>       &b,
-                              Vector<double>       &x) const
+                              Vector<double>       &x,
+                              const double          t = 0)
 {
    // apply Dirichlet BC
-   apply_Dirichlet_BC(A,b,x);
+   apply_Dirichlet_BC(A,b,x,t);
 
    // solve linear system
    switch (linear_solver_option) {
@@ -57,8 +58,12 @@ void LinearSolver<dim>::solve(SparseMatrix<double> &A,
 template<int dim>
 void LinearSolver<dim>::apply_Dirichlet_BC(SparseMatrix<double> &A,
                                            Vector<double>       &b,
-                                           Vector<double>       &x) const
+                                           Vector<double>       &x,
+                                           const double          t)
 {
+   // set time for dirichlet function
+   dirichlet_value_function->set_time(t);
+
    // create map of dofs to boundary values to be imposed
    std::map<unsigned int, double> boundary_values;
    VectorTools::interpolate_boundary_values(*dof_handler,

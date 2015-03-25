@@ -50,7 +50,7 @@ class EntropyViscosity {
                                                const double         &time);
 
    private:
-      void compute_entropy_domain_average(const Vector<double> &old_solution);
+      void compute_normalization_constant(const Vector<double> &old_solution);
       void compute_temporal_discretization_constants(const double old_dt, const double older_dt);
 
       // mesh and dof data
@@ -82,7 +82,7 @@ class EntropyViscosity {
       double jump_coefficient;
       double domain_volume;
       double domain_averaged_entropy;
-      double max_entropy_deviation_domain;
+      double normalization_constant;
 
       // viscosity vectors
       Vector<double> entropy_viscosity;

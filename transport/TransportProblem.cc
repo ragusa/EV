@@ -285,6 +285,30 @@ void TransportProblem<dim>::process_problem_ID()
          source_time_dependent = true;
          initial_conditions_string = exact_solution_string;
          break;
+      } case 10: { // MMS-5
+         Assert(dim == 1,ExcNotImplemented()); // assume 1-D
+
+         x_min = 0.0;
+         x_max = 1.0;
+
+         if (parameters.is_steady_state) {
+            incoming_string = "1";
+            cross_section_string = "1";
+            has_exact_solution = true;
+            exact_solution_string = "1"; // assume omega_x = 1 and c = 1
+            source_string = "1";
+            source_time_dependent = false;
+         } else {
+            incoming_string = "t";
+            cross_section_string = "1";
+            has_exact_solution = true;
+            exact_solution_string = "t"; // assume omega_x = 1 and c = 1
+            source_string = "1 + t";
+            source_time_dependent = true;
+            initial_conditions_string = exact_solution_string;
+         }
+
+         break;
       } default: {
          Assert(false,ExcNotImplemented());
          break;
@@ -1251,7 +1275,7 @@ void TransportProblem<dim>::run()
 /** \brief Solves the steady-state system.
  */
 template<int dim>
-void TransportProblem<dim>::solve_steady_state(const LinearSolver<dim> &linear_solver)
+void TransportProblem<dim>::solve_steady_state(LinearSolver<dim> &linear_solver)
 {
    // entropy viscosity and FCT not yet implemented in steady-state
    Assert(parameters.scheme_option != 2, ExcNotImplemented());

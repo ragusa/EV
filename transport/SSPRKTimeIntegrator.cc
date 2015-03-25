@@ -123,9 +123,9 @@ void SSPRKTimeIntegrator<dim>::get_new_solution(Vector<double> &new_solution) co
  */
 template<int dim>
 void SSPRKTimeIntegrator<dim>::step(const SparseMatrix<double> &mass_matrix,
-                                            const SparseMatrix<double> &ss_matrix,
-                                            const Vector<double>       &ss_rhs,
-                                            const bool                 &call_complete_stage_solution)
+                                    const SparseMatrix<double> &ss_matrix,
+                                    const Vector<double>       &ss_rhs,
+                                    const bool                 &call_complete_stage_solution)
 {
    // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - A*u_old)
    system_rhs = 0;
@@ -137,7 +137,8 @@ void SSPRKTimeIntegrator<dim>::step(const SparseMatrix<double> &mass_matrix,
       
    // solve the linear system M*u_new = system_rhs
    system_matrix.copy_from(mass_matrix);
-   linear_solver.solve(system_matrix, system_rhs, intermediate_solution);
+   double t_stage = get_stage_time();
+   linear_solver.solve(system_matrix, system_rhs, intermediate_solution, t_stage);
 
    // compute new stage solution if there are no additional steps to be taken on intermediate solution
    if (call_complete_stage_solution)

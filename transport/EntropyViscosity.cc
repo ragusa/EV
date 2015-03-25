@@ -55,7 +55,7 @@ EntropyViscosity<dim>::~EntropyViscosity() {
  *         deviation in the domain
  */
 template <int dim>
-void EntropyViscosity<dim>::compute_entropy_domain_average(const Vector<double> &old_solution)
+void EntropyViscosity<dim>::compute_normalization_constant(const Vector<double> &old_solution)
 {
    FEValues<dim> fe_values(*fe, cell_quadrature, update_values | update_JxW_values);
    std::vector<double>    old_solution_values      (n_q_points_cell);
@@ -89,7 +89,7 @@ void EntropyViscosity<dim>::compute_entropy_domain_average(const Vector<double> 
 
    // compute max deviation of entropy from domain-averaged entropy
    //--------------------------------------------------------------
-   max_entropy_deviation_domain = 0.0;
+   normalization_constant = 0.0;
 
    // loop over cells
    for (cell = (*dof_handler).begin_active(); cell != endc; ++cell) {
@@ -105,10 +105,14 @@ void EntropyViscosity<dim>::compute_entropy_domain_average(const Vector<double> 
       // loop over quadrature points
       for (unsigned int q = 0; q < n_q_points_cell; ++q) {
          // add contribution of quadrature point to entropy integral
-         max_entropy_deviation_domain = std::max(max_entropy_deviation_domain,
+         normalization_constant = std::max(normalization_constant,
                std::abs(old_entropy[q] - domain_averaged_entropy));
       }
    }
+
+   // guard against division by zero
+   if (normalization_constant == 0.0)
+      normalization_constant = 1.0;
 }
 
 /** \brief Computes the entropy viscosity for each cell.
@@ -128,7 +132,7 @@ Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<dou
    source_function->set_time(time);
 
    // compute max entropy deviation in domain
-   compute_entropy_domain_average(old_solution);
+   compute_normalization_constant(old_solution);
 
    // cell values
    std::vector<Point<dim> > points  (n_q_points_cell);
@@ -274,7 +278,7 @@ Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<dou
       // compute entropy viscosity in cell
       //----------------------------------------------------------------------------
       entropy_viscosity(i_cell) = (entropy_residual_coefficient * max_entropy_residual
-         + jump_coefficient * max_jump_in_cell) / max_entropy_deviation_domain;
+         + jump_coefficient * max_jump_in_cell) / normalization_constant;
    }
 
    return entropy_viscosity;

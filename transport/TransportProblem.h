@@ -63,7 +63,7 @@ class TransportProblem {
       void assemble_mass_matrices();
       void assemble_inviscid_ss_matrix();
       void assemble_ss_rhs(const double &t);
-      void solve_steady_state(const LinearSolver<dim> &linear_solver);
+      void solve_steady_state(LinearSolver<dim> &linear_solver);
       void refine_grid();
 
       // input parameters

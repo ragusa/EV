@@ -20,17 +20,19 @@ class LinearSolver {
       LinearSolver(const unsigned int     &linear_solver_option,
                    const ConstraintMatrix &constraints,
                    const DoFHandler<dim>  &dof_handler,
-                   const Function<dim>    &dirichlet_value_function);
+                   Function<dim>          &dirichlet_value_function);
       ~LinearSolver();
 
       void solve(SparseMatrix<double> &A,
                  Vector<double>       &b,
-                 Vector<double>       &x) const;
+                 Vector<double>       &x,
+                 const double          t);
 
    private:
       void apply_Dirichlet_BC(SparseMatrix<double> &A,
                               Vector<double>       &b,
-                              Vector<double>       &x) const;
+                              Vector<double>       &x,
+                              const double          t);
 
       const unsigned int linear_solver_option;
 
@@ -38,7 +40,7 @@ class LinearSolver {
 
       const DoFHandler<dim> *dof_handler;
 
-      const Function<dim> *dirichlet_value_function;
+      Function<dim> * const dirichlet_value_function;
 };
 
 #include "LinearSolver.cc"
