@@ -269,6 +269,22 @@ void TransportProblem<dim>::process_problem_ID()
 
          initial_conditions_string = "0";
          break;
+      } case 9: { // MMS-4
+         Assert(dim == 1,ExcNotImplemented()); // assume 1-D
+         Assert(not parameters.is_steady_state,ExcNotImplemented()); // assume not steady-state
+
+         x_min = 0.0;
+         x_max = 1.0;
+
+         incoming_string = "0";
+
+         cross_section_string = "1";
+         has_exact_solution = true;
+         exact_solution_string = "x*t"; // assume omega_x = 1 and c = 1
+         source_string = "x + t + x*t";
+         source_time_dependent = true;
+         initial_conditions_string = exact_solution_string;
+         break;
       } default: {
          Assert(false,ExcNotImplemented());
          break;
