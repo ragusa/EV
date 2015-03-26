@@ -1,0 +1,173 @@
+\subsection{Graph-Theoretic Low-Order Scheme}\label{gtloworder}
+%================================================================================
+In this section, a graph-theoretic approach is taken to define a low-order
+scheme that is maximum principle preserving. The following bilinear form
+is employed in the low-order scheme:
+\begin{definition}{Local Bilinear Form}
+   The local bilinear form for cell $K$ is defined as follows:
+   \begin{equation}\label{bilinearform}
+      b_K(\varphi_j, \varphi_i) \equiv \left\{\begin{array}{l l}
+         -\frac{1}{n_K - 1}|K| & i\ne j, \quad i,j\in \mathcal{I}(K),\\
+         |K|                   & i = j,  \quad i,j\in \mathcal{I}(K),\\
+         0                     & i\notin\mathcal{I}(K) \quad | \quad j\notin\mathcal{I}(K),
+      \end{array}\right.
+   \end{equation}
+   where $\mathcal{I}(K)\equiv \{j\in\{1,\ldots,N\}: |S_j\cap K|\ne 0\}$
+   is the set of indices corresponding to degrees of freedom in
+   the support of cell $K$ and $n_K \equiv \mbox{card}(\mathcal{I}(K))$.
+\end{definition}
+%--------------------------------------------------------------------------------
+The low-order viscosity is defined as follows:
+%--------------------------------------------------------------------------------
+\begin{definition}{Low-Order Viscosity}
+   The low-order viscosity for the radiative transfer equation on cell $K$ is
+   defined as follows:
+   \begin{equation}
+      \nu_K^L \equiv \max\limits_{i\ne j\in \mathcal{I}(K)}\frac{\max(0,A_{i,j})}
+         {-\sum\limits_{T\subset S_{i,j}} b_T(\varphi_j, \varphi_i)},
+   \end{equation}
+   where $A_{i,j}$ is the $i,j$th entry of the Galerkin steady-state
+   matrix given by Equation \eqref{Aij} and $S_{i,j}=S_i\cap S_j$ is the
+   dual-support of test functions $\varphi_i$ and $\varphi_j$.
+\end{definition}
+%--------------------------------------------------------------------------------
+Adding a viscous bilinear form to the Galerkin scheme given in Equation
+\eqref{exgalerkin} gives the linear system
+\begin{equation}
+   \mathbf{M}_L\frac{\mathbf{U}^{L,n+1}-\mathbf{U}^n}{\Delta t}
+      +\mathbf{A}^L\mathbf{U}^n = \mathbf{b},
+\end{equation}
+where $\mathbf{U}^{L,n+1}$ is the low-order solution at time $t^{n+1}$, and
+$\mathbf{A}^L$ is the low-order steady-state matrix, which is the Galerkin
+steady-state matrix $\mathbf{A}$ plus a low-order artificial diffusion matrix
+$\mathbf{D}^L$:
+\begin{equation}\label{loworderssmatrix}
+   \mathbf{A}^L = \mathbf{A} + \mathbf{D}^L,
+\end{equation}
+where $\mathbf{D}^L$ is defined as follows:
+\begin{equation}\label{loworderD}
+   D^L_{i,j} = \sum\limits_{K\subset S_{i,j}}\nu_K^L b_K(\varphi_j,\varphi_i).
+\end{equation}
+%--------------------------------------------------------------------------------
+\subsubsection{M-Matrix Property of the Steady-State System Matrix}
+%================================================================================
+In this section, it will be shown that the low-order steady-state
+system matrix defined in Equation \eqref{loworderssmatrix} is an M-matrix, which
+allows a discrete maximum principle for the low-order solution to be proven in
+Section \ref{DMP}.
+%--------------------------------------------------------------------------------
+\begin{lemma}[label={offdiagonalnegative_gt}]{Non-Positivity of Off-Diagonal Elements}
+   The off-diagonal elements of the linear system matrix are non-positive:
+   $A^L_{i,j}\le 0, j\ne i$.
+\end{lemma}
+
+\begin{proof}
+This proof begins by bounding the term
+$D_{i,j}=\sum\limits_{K\subset S_{i,j}}\nu_K^L b_K(\varphi_j, \varphi_i)$:
+\begin{eqnarray*}
+   D_{i,j}=\sum\limits_{K\subset S_{i,j}}\nu_K^L b_K(\varphi_j, \varphi_i)
+   & = & \sum\limits_{K\subset S_{i,j}} \max\limits_{k\ne \ell\in \mathcal{I}(K)}
+      \frac{\max(0,A_{k,\ell})}
+		{-\sum\limits_{T\subset S_{k,\ell}} b_T(\varphi_{\ell}, \varphi_k)}
+      b_K(\varphi_j,\varphi_i)\\
+   & \le & \sum\limits_{K\subset S_{i,j}} \frac{\max(0,A_{i,j})}
+		{-\sum\limits_{T\subset S_{i,j}} b_T(\varphi_j, \varphi_i)}b_K(\varphi_j,\varphi_i)\\
+   & =   & -\max(0,A_{i,j}) \frac{\sum\limits_{K\subset S_{i,j}}
+      b_K(\varphi_j,\varphi_i)}
+		{\sum\limits_{T\subset S_{i,j}} b_T(\varphi_j, \varphi_i)}\\   
+   & = & -\max(0,A_{i,j})\\
+   & \le & -A_{i,j}
+\end{eqnarray*}
+From Equations \eqref{loworderssmatrix} and \eqref{loworderD},
+\begin{eqnarray*}
+	A^L_{i,j} & = & A_{i,j} + D_{i,j}^L\\
+   A^L_{i,j} & \le & A_{i,j} - A_{i,j}\\
+   A^L_{i,j} & \le & 0.\qed
+\end{eqnarray*}
+\end{proof}
+%--------------------------------------------------------------------------------
+\begin{lemma}[label={diagonalpositive_gt}]{Non-Negativity of Diagonal Elements}
+   The diagonal elements  of the linear system matrix are non-negative: $A^L_{i,i}\ge 0$.
+\end{lemma}
+
+\begin{proof}
+The diagonal elements of the low-order system matrix are
+\[
+	A^L_{i,i} = c\int\limits_{S_{i}}\nabla\cdot
+   \frac{\mathbf{\Omega}\varphi_i^2(\mathbf{x})}{2} d\mathbf{x} 
+      + c\int\limits_{S_{i}}\sigma(\mathbf{x})\varphi_i(\mathbf{x})d\mathbf{x} +
+		\sum\limits_{K\subset S_{i}}\nu_K^L b_K(\varphi_i, \varphi_i).
+\]
+To prove that $A^L_{i,i}$ is non-negative, it is sufficient to prove that
+each term in the above expression is non-negative. The non-negativity of
+the interaction term and viscous term are obvious ($\sigma_t \ge 0, 
+\, \nu_K^L\ge 0, \, b_K(\varphi_i, \varphi_i)>0$), but
+the non-negativity of the divergence term is not necessarily obvious. On the interior of
+the domain, the divergence term gives zero contribution because the divergence integral may
+be transformed into a surface integral $\int\limits_{\partial S_{i}}
+\mathbf{\Omega}\cdot\mathbf{n}\frac{\varphi_i^2}{2} d\mathbf{x}$
+via the divergence theorem; one can then recognize that
+the basis function $\varphi_i$ evaluates to zero on the boundary of its support $S_{i}$.\\
+On the outflow boundary of the domain, the term $\mathbf{\Omega}\cdot\mathbf{n}
+\frac{\varphi_i^2}{2}$ is positive because $\mathbf{\Omega}\cdot\mathbf{n} >0$
+for an outflow boundary. This quantity is of course negative for the inflow boundary,
+but a Dirichlet boundary condition is strongly imposed on the incoming boundary, so
+for degrees of freedom $i$ on the incoming boundary, $A^L_{i,i}$ will be set equal
+to some positive value such as 1 with a corresponding incoming value
+accounted for in the right hand side $\mathbf{b}$ of the linear system.\qed
+\end{proof}
+%--------------------------------------------------------------------------------
+\begin{lemma}{Non-Negativity of Row Sums}
+   The sum of all elements in a row $i$ is non-negative: $\sum\limits_j A^L_{i,j} \ge 0$.
+\end{lemma}
+
+\begin{proof}
+Using the fact that $\sum\limits_j\varphi_j(\mathbf{x})=1$ and
+$\sum\limits_j b_K(\varphi_j,\varphi_i)=0$,
+\begin{eqnarray*}
+	\sum\limits_j A^L_{i,j} & = & \sum\limits_j c\int\limits_{S_{ij}}
+      \left(\mathbf{\Omega}\cdot\nabla\varphi_j(\mathbf{x}) +
+		\sigma(\mathbf{x})\varphi_j(\mathbf{x})\right)\varphi_i(\mathbf{x}) d\mathbf{x} +
+		\sum\limits_j\sum\limits_{K\subset S_{ij}}\nu_K^L b_K(\varphi_j, \varphi_i)\\
+		& = & c\int\limits_{S_{i}}\left(\mathbf{\Omega}\cdot
+         \nabla\sum\limits_j\varphi_j(\mathbf{x}) +
+         \sigma(\mathbf{x})\sum\limits_j\varphi_j(\mathbf{x})\right)
+         \varphi_i(\mathbf{x}) d\mathbf{x}\\
+		\label{gtrowsum} & = & c\int\limits_{S_{i}}\sigma(\mathbf{x})
+         \varphi_i(\mathbf{x}) d\mathbf{x}\\
+		&\ge& 0.\qed
+\end{eqnarray*}
+\end{proof}
+%--------------------------------------------------------------------------------
+\begin{lemma}[label={diagonallydominant_gt}]{Diagonal Dominance}
+   $\mathbf{A}^L$ is strictly diagonally dominant:
+   $\left|A^L_{i,i}\right| \ge \sum\limits_{j\ne i} \left|A^L_{i,j}\right|$.
+\end{lemma}
+\begin{proof}
+Using the inequalities $\sum\limits_j A^L_{i,j} \ge 0$ and $A^L_{i,j}\le 0, j\ne i$,
+it is proven that $\mathbf{A}^L$ is strictly diagonally dominant:
+\begin{eqnarray*}
+	\sum\limits_j A^L_{i,j} & \ge & 0\\
+	\sum\limits_{j\ne i} A^L_{i,j} + A^L_{i,i} & \ge & 0\\
+	\left|A^L_{i,i}\right| & \ge & \sum\limits_{j\ne i} -A^L_{i,j}\\
+	\left|A^L_{i,i}\right| & \ge & \sum\limits_{j\ne i} \left|A^L_{i,j}\right|.\qed
+\end{eqnarray*}
+\end{proof}
+%--------------------------------------------------------------------------------
+\begin{lemma}{M-Matrix}
+   $\mathbf{A}^L$ is an M-Matrix.
+\end{lemma}
+\begin{proof}
+To prove that a matrix is an M-Matrix, it is sufficient to prove that:
+\[
+\left\{\begin{array}{l}
+A^L_{i,j}\le 0, j\ne i\\
+A^L_{i,i}\ge 0\\
+\left|A^L_{i,i}\right| \ge \sum\limits_{j\ne i} \left|A^L_{i,j}\right|\\
+\end{array}
+\right.,
+\]
+which are given by Lemmas \ref{offdiagonalnegative_gt}, \ref{diagonalpositive_gt}, and
+\ref{diagonallydominant_gt}, respectively.\qed
+\end{proof}
+%--------------------------------------------------------------------------------

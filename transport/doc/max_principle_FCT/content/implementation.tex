@@ -1,0 +1,79 @@
+\section{Implementation}
+%================================================================================
+\subsection{Galerkin Scheme Using SSPRK}\label{gal_ssprk}
+%================================================================================
+Pseudocode for an $s$-stage SSPRK scheme
+implentation of the Galerkin scheme is as follows,
+where notation is given in Section \ref{ssprk}:
+
+{\noindent\\
+$\hat{\mathbf{U}}^0 = \mathbf{U}^n$\\
+\\
+for $i=1:s$\\
+\tab $\hat{t}^i = t^n+c_i\Delta t$\\
+\tab $\hat{\mathbf{b}} = \mathbf{b}(\hat{t}^i)$\\
+\tab $\hat{\mathbf{U}}^i = \alpha_i\hat{\mathbf{U}}^0
+   + \beta_i\,$\texttt{step}$(\hat{\mathbf{U}}^{i-1},\mathbf{M}^C,
+   \mathbf{A},\hat{\mathbf{b}},\Delta t)$\\
+\\
+$\mathbf{U}^{n+1} = \hat{\mathbf{U}}^s$\\
+}
+
+The function \texttt{step}$()$ is the following:
+
+{\noindent\\
+\texttt{function} $\mathbf{U}$ = \texttt{step}$(\mathbf{U}^{old},
+   \mathbf{M},\mathbf{A},\mathbf{b},\Delta t)$ \{\\
+\tab $\mathbf{U} = \mathbf{U}^{old} + \Delta t\mathbf{M}^{-1}
+   (\mathbf{b} - \mathbf{A}\mathbf{U}^{old})$\\
+\}\\
+}
+%================================================================================
+\subsection{Low-Order Scheme Using SSPRK}
+%================================================================================
+Pseudocode for an $s$-stage SSPRK scheme
+implentation of a low-order scheme is as follows:
+
+{\noindent\\
+$\hat{\mathbf{U}}^0 = \mathbf{U}^n$\\
+\\
+for $i=1:s$\\
+\tab $\hat{t}^i = t^n+c_i\Delta t$\\
+\tab $\hat{\mathbf{b}} = \mathbf{b}(\hat{t}^i)$\\
+\tab $\hat{\mathbf{U}}^i = \alpha_i\hat{\mathbf{U}}^0
+   + \beta_i\,$\texttt{step}$(\hat{\mathbf{U}}^{i-1},\mathbf{M}^L,
+   \mathbf{A}^L,\hat{\mathbf{b}},\Delta t)$\\
+\\
+$\mathbf{U}^{n+1} = \hat{\mathbf{U}}^s$\\
+}
+
+This is the same as the pseudocode for the Galerkin scheme
+given in Section \ref{gal_ssprk} except that the lumped
+mass matrix $\mathbf{M}^L$ and low-order steady-state
+matrix $\mathbf{A}^L$ are passed to the \texttt{step}()
+function instead of the consistent mass matrix and
+inviscid steady-state matrix.
+%================================================================================
+\subsection{Entropy Viscosity Scheme Using SSPRK}
+%================================================================================
+
+{\noindent\\
+$\hat{\mathbf{U}}^0 = \mathbf{U}^n$\\
+\\
+for $i=1:s$\\
+\tab $\hat{t}^i = t^n+c_i\Delta t$\\
+\tab $\hat{\mathbf{b}} = \mathbf{b}(\hat{t}^i)$\\
+\tab $\hat{\mathbf{U}}^G = \alpha_i\hat{\mathbf{U}}^0
+   + \beta_i\,$\texttt{step}$(\hat{\mathbf{U}}^{i-1},\mathbf{M}^C,
+   \mathbf{A},\hat{\mathbf{b}},\Delta t)$\\
+\tab $\hat{\nu}^E = \nu^E(\hat{\mathbf{U}}^G,\mathbf{U}^n,t^n)$\\
+\tab $\hat{\mathbf{D}} = \mathbf{D}(\hat{\nu}^E)$\\
+\tab $\hat{\mathbf{A}} = \mathbf{A} + \hat{\mathbf{D}}$\\
+\tab $\hat{\mathbf{U}}^i = \alpha_i\hat{\mathbf{U}}^0
+   + \beta_i\,$\texttt{step}$(\hat{\mathbf{U}}^{i-1},\mathbf{M}^C,
+   \hat{\mathbf{A}},\hat{\mathbf{b}},\Delta t)$\\
+\\
+$\mathbf{U}^{n+1} = \hat{\mathbf{U}}^s$\\
+}
+
+%================================================================================

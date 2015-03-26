@@ -7,20 +7,20 @@
 Without strongly imposing Dirichlet boundary conditions, the high-order system is
 \begin{equation}
    \mathbf{M}_C\frac{\mathbf{U}^H-\mathbf{U}^n}{\Delta t}
-      = \mathbf{K}\mathbf{U}^n + \mathbf{b},
+      = -(\mathbf{K}^H+\mathbf{R}^H)\mathbf{U}^n + \mathbf{b},
 \end{equation}
 \begin{equation}\label{high}
    \mathbf{M}_C\mathbf{U}^H = \mathbf{M}_C\mathbf{U}^n
-      + \Delta t\mathbf{K}\mathbf{U}^n + \Delta t\mathbf{b} \equiv \mathbf{b}^H,
+      - \Delta t(\mathbf{K}^H+\mathbf{R}^H)\mathbf{U}^n + \Delta t\mathbf{b} \equiv \mathbf{b}^H,
 \end{equation}
 and the corresponding low-order system is
 \begin{equation}
    \mathbf{M}_L\frac{\mathbf{U}^L-\mathbf{U}^n}{\Delta t}
-      = (\mathbf{K} + \mathbf{D})\mathbf{U}^n + \mathbf{b}.
+      = -(\mathbf{K}^H - \mathbf{D} + \mathbf{R}^L)\mathbf{U}^n + \mathbf{b}.
 \end{equation}
 \begin{equation}\label{low}
    \mathbf{M}_L\mathbf{U}^L = \mathbf{M}_L\mathbf{U}^n
-      + \Delta t(\mathbf{K} + \mathbf{D})\mathbf{U}^n + \Delta t\mathbf{b}
+      - \Delta t(\mathbf{K}^H - \mathbf{D} + \mathbf{R}^L)\mathbf{U}^n + \Delta t\mathbf{b}
       \equiv \mathbf{b}^L.
 \end{equation}
 
@@ -102,14 +102,14 @@ of $\mathbf{f}$:
 The flux correction vector $\mathbf{f}$ is defined such that:
 \begin{equation}\label{ex_kuzminfc}
    \mathbf{M}_L\mathbf{U}^H
-      = (\mathbf{M}_L + \Delta t(\mathbf{K} + \mathbf{D}))\mathbf{U}^n
+      = (\mathbf{M}_L - \Delta t(\mathbf{K}^H - \mathbf{D} + \mathbf{R}^L))\mathbf{U}^n
          + \Delta t\mathbf{b} + \mathbf{f} \equiv \mathbf{b}^F,
 \end{equation}
 Subtracting Equation \ref{high} from \ref{ex_kuzminfc} gives the definition of
 $\mathbf{f}$:
 \begin{equation}\label{ex_kuzminFdef}
    \mathbf{f} \equiv -(\mathbf{M}_C-\mathbf{M}_L)\Delta\mathbf{U}^H
-      -\Delta t\mathbf{D}\mathbf{U}^n,
+      -\Delta t\mathbf{D}\mathbf{U}^n - \Delta t(\mathbf{R}^H-\mathbf{R}^L)\mathbf{U}^n,
 \end{equation}
 where $\Delta\mathbf{U}^H = \mathbf{U}^H - \mathbf{U}^n$. Since
 $\mathbf{M}_C-\mathbf{M}_L$ and $\mathbf{D}$ are symmetric
@@ -117,12 +117,13 @@ and feature zero row and column sums, a valid decomposition for $\mathbf{f}$,
 called $\mathbf{F}$, is
 \begin{equation}
    F_{i,j} = -m_{i,j}(\Delta U^H_j - \Delta U^H_i) - \Delta t D_{i,j}(U^n_j - U^n_i)
+   - \Delta R_{i,j}^H(U^n_j - U^n_i)
 \end{equation}
 where $m_{i,j}$ is the $i,j$th element of the consistent mass matrix.
 Applying a limiter to Equation \ref{ex_kuzminfc} gives
 \begin{equation}\label{ex_limited}
    \mathbf{M}_L\mathbf{U}^{n+1}
-      = (\mathbf{M}_L + \Delta t(\mathbf{K} + \mathbf{D}))\mathbf{U}^n
+      = (\mathbf{M}_L - \Delta t(\mathbf{K}^H - \mathbf{D} + \mathbf{R}^L))\mathbf{U}^n
          + \Delta t\mathbf{b} + \mathcal{L}[\mathbf{F}],
 \end{equation}
 where $(\mathcal{L}[\mathbf{F}])_i = \mathcal{L}_{i,:}F_{i,:}^T
@@ -147,19 +148,18 @@ where $(\mathcal{L}[\mathbf{F}])_i = \mathcal{L}_{i,:}F_{i,:}^T
    we take the $i$th equation of the linear system given by Equation \ref{ex_kuzminfcD}:
    \begin{equation}\label{ex_i_eq}
       m_i\hat{U}^H_i
-         = m_i U^n_i + \Delta t((\mathbf{K}+\mathbf{D})\mathbf{U}^n)_i + \Delta t b_i - (\mathbf{M}_C\Delta\mathbf{U}^H)_i
-         + m_i(U^H_i-U^n_i) - \Delta t(\mathbf{D}\mathbf{U}^n)_i.
+         = m_i U^n_i - \Delta t((\mathbf{K}^H - \mathbf{D} + \mathbf{R}^L)\mathbf{U}^n)_i
+         + \Delta t b_i - (\mathbf{M}_C\Delta\mathbf{U}^H)_i
+         + m_i(U^H_i-U^n_i) - \Delta t(\mathbf{D}\mathbf{U}^n)_i - \Delta t(\mathbf{R}^H\mathbf{U}^n)_i.
    \end{equation}
    Examining the $i$th equation of the linear system given by Equation \ref{highD}
    and solving for $\Delta t b_i$ gives
    \begin{equation}
       \Delta t b_i = (\mathbf{M}_C\Delta\mathbf{U}^H)_i
-         - \Delta t(\mathbf{K}\mathbf{U}^n)_i.
+         + \Delta t((\mathbf{K}^H + \mathbf{R}^H)\mathbf{U}^n)_i.
    \end{equation}
    Substituting this back into Equation \ref{ex_i_eq} gives
    \begin{eqnarray}
-      m_i\hat{U}^H_i & = & m_i U^H_i + \Delta t((\mathbf{K}+\mathbf{D})\mathbf{U}^n)_i
-         - \Delta t(\mathbf{K}\mathbf{U}^n)_i - \Delta t(\mathbf{D}\mathbf{U}^n)_i\\
       m_i\hat{U}^H_i & = & m_i U^H_i\\
       \hat{U}^H_i & = & U^H_i
    \end{eqnarray}
@@ -170,18 +170,9 @@ where $(\mathcal{L}[\mathbf{F}])_i = \mathcal{L}_{i,:}F_{i,:}^T
 \subsubsection{Deriving the Limiting Coefficients}
 %================================================================================
 \begin{lemma}
-   The definitions given by Equations \ref{P_defs}, \ref{R_defs}, and \ref{L_defs},
-   and the following definitions yield maximum-principle preserving limiting coefficients,
-   where $W_i^\pm$ are defined to be to be upper and lower bounds of the maximum
-   principle given by Equation \ref{explicit_max_principle}:
-   \begin{equation}
-      W_i^+ \equiv U_{max,i}^n\left(1-\frac{\Delta t}{m_i}\sum\limits_j A^L_{i,j}\right)
-      + \frac{\Delta t}{m_i}b_i,
-   \end{equation}
-   \begin{equation}
-      W_i^- \equiv U_{min,i}^n\left(1-\frac{\Delta t}{m_i}\sum\limits_j A^L_{i,j}\right)
-      + \frac{\Delta t}{m_i}b_i,
-   \end{equation}
+   The definitions given by Equations \ref{P_defs}, \ref{R_defs}, \ref{L_defs},
+   and \ref{ex_bounds} and the following definition yield maximum-principle
+   preserving limiter coefficients:
    \begin{equation}
       Q_i^\pm \equiv m_i(W_i^\pm-U_i^n) + \Delta t\sum\limits_j A_{i,j}^L U_j^n
          - \Delta t b_i,

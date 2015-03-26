@@ -1,0 +1,149 @@
+\subsection{Discrete Maximum Principle}\label{DMP}
+%================================================================================
+In this section, a discrete maximum principle is proved for both of the low-order
+schemes given in Sections \ref{algebraicloworder} and \ref{gtloworder}, which is
+achieved using the M-matrix property of the low-order system matrices
+$\mathbf{A}^L$, which both schemes satisfy.
+%--------------------------------------------------------------------------------
+\begin{theorem}[label={exloworderDMP}]{Explicit Euler Scheme Discrete Maximum Principle}
+If the CFL-like condition
+\begin{equation}\label{ex_CFL}
+   \Delta t \leq \frac{m_i}{A_{i,i}^L}\quad\forall i
+   \qquad\Longleftrightarrow\qquad
+   1 - \frac{\Delta t}{m_i}A_{i,i}^L \geq 0\quad\forall i,
+\end{equation}
+then the low-order solution at the new time value, $\mathbf{U}^{L,n+1}$ satisfies the
+following maximum principle:
+\begin{equation}\label{explicit_max_principle}
+   W_i^-\leq U_i^{L,n+1}\leq W_i^+\quad\forall i,
+\end{equation}
+where
+\begin{equation}\label{ex_bounds}
+   W_i^\pm\equiv U_{\substack{\max\\\min},i}^n\left(1-\frac{\Delta t}{m_i}
+      \sum\limits_j A^L_{i,j}\right)
+      + \frac{\Delta t}{m_i}b_i,
+\end{equation}
+where $U_{\substack{\max\\\min},i}^n =
+\substack{\max\\\min\limits_{j\in \mathcal{I}(S_i)}}U_j^n$,
+and $\mathcal{I}(S_i)$ is the set of indices of degrees of freedom in the
+support of degree of freedom $i$.
+\end{theorem}
+
+\begin{proof}
+Evaluating row $i$ of Equation \eqref{loworderexplicit} and rearranging,
+\begin{equation}
+   U_i^{L,n+1} = U_i^n - \frac{\Delta t}{m_i}\sum\limits_j U_j^n A^L_{i,j}
+      + \frac{\Delta t}{m_i}b_i,
+\end{equation}
+where $m_i$ is the $i$th element of the lumped mass matrix.
+Rearranging this equation,
+\[
+   U_i^{L,n+1} = \left(1-\frac{\Delta t}{m_i}A^L_{i,i}\right)U_i^n - \frac{\Delta t}{m_i}
+      \sum\limits_{j\ne i} U_j^n A^L_{i,j} + \frac{\Delta t}{m_i}b_i,
+\]
+The CFL-like condition in Equation \eqref{ex_CFL} gives that $1-\frac{\Delta t}{m_i}A^L_{i,i} \ge 0$, and by
+Lemma \ref{offdiagonalnegative}, it is known that the off-diagonal
+elements $A^L_{i,j}, j\ne i$, are non-positive. Thus, the following inequality is
+able to be applied:
+\[
+   U_i^{L,n+1} \le
+   U_{\max,i}^n\left(1-\frac{\Delta t}{m_i}\sum\limits_j A^L_{i,j}\right)
+      + \frac{\Delta t}{m_i}b_i,
+\]
+and similarly for the lower bound.\qed
+\end{proof}
+%--------------------------------------------------------------------------------
+\begin{corollary}{Low-Order Solution Satisfies Upper CMP Bound without Source}\label{withoutsource}
+   Without any source, the low-order solution $U_i^{L,n+1}$ satisfies the upper bound
+   for the continuous maximum principle given by Theorem \ref{cont}:
+   \begin{equation}\label{loworderDMP}
+      U_i^{L,n+1} \le
+      U_{\max,i}^n e^{-c\Delta t\sigma_{\min,i}}.
+   \end{equation}
+\end{corollary}
+
+\begin{proof}
+Without a source, the upper bound of the discrete maximum principle for the low-order solution
+proven in Theorem \ref{exloworderDMP} is the following:
+\[
+   U_i^{L,n+1}\leq
+   U_{\max,i}^n\left(1-\frac{\Delta t}{m_i}\sum\limits_j A^L_{i,j}\right).
+\]
+Employing Equation \eqref{rowsum} or \eqref{gtrowsum},
+\[
+   U_i^{L,n+1} \le
+   U_{\max,i}^n(1-c\Delta t\sigma_i),
+\]
+where $\sigma_i$ is the $\varphi_i$-weighted average of $\sigma(\mathbf{x})$ over
+$S_i$, which can be bounded by
+$\sigma_{\min,i}\equiv\min\limits_{\mathbf{x}\in S_i}\sigma(\mathbf{x})$:
+\[
+   \sigma_i = \frac{\int\limits_{S_i}\sigma(\mathbf{x})\varphi_i(\mathbf{x})d\mathbf{x}}{\int\limits_{S_i}\varphi_i(\mathbf{x})d\mathbf{x}}
+   \ge \frac{\int\limits_{S_i}\sigma_{\min,i}\varphi_i(\mathbf{x})d\mathbf{x}}{\int\limits_{S_i}\varphi_i(\mathbf{x})d\mathbf{x}}
+   \ge \sigma_{\min,i}.
+\]
+Therefore,
+\[
+   U_{\min,i}^n(1-c\Delta t\sigma_{\max,i}) \le
+   U_i^{L,n+1} \le
+   U_{\max,i}^n(1-c\Delta t\sigma_{\min,i}).
+\]
+Comparing this equation to Equation \eqref{loworderDMP}, then if the following is true,
+then the upper DMP bound is proved to satisfy the upper CMP bound:
+\[
+   U_{\max,i}(1-c\Delta t\sigma_{\min,i}) \le U_{\max,i}^n e^{-c\Delta t\sigma_{\min,i}}.
+\]
+Let $\zeta\equiv c\Delta t\sigma_{\min,i}\ge 0$. Then proving the above equation is
+thus equivalent to proving
+\[
+   f(\zeta)\equiv 1-\zeta-e^{-\zeta} \le 0 = f(0).
+\]
+Since $\zeta\ge 0$, proving that $f'(\zeta)\le 0$ proves that $f(\zeta)\le f(0)$, thus
+proving the above condition. $f'(\zeta)=-1+e^{-\zeta}$ is indeed nonpositive; therefore,
+the upper DMP bound is proven to satisfy the upper CMP bound.\qed
+\end{proof}
+%--------------------------------------------------------------------------------
+\begin{corollary}{Low-Order Solution Not Guaranteed to Satisfy Upper CMP Bound with Source}
+   With a source, the low-order solution $U_i^{L,n+1}$ cannot be proven to satisfy the upper bound
+   for the continuous maximum principle given by Theorem \ref{cont}:
+   \[
+      U_i^{L,n+1} \le
+      U_{\max,i}^n e^{-c\Delta t\sigma_{\min,i}} + \frac{q_{\max,i}}{\sigma_{\min,i}}(1-e^{-c\Delta t\sigma_{\min,i}})
+   \]
+\end{corollary}
+
+\begin{proof}
+With a source, the upper bound of the discrete maximum principle for the low-order solution
+proven in Theorem \ref{exloworderDMP} is the following:
+\[
+   U_i^{L,n+1}\leq
+   U_{\max,i}^n\left(1-\frac{\Delta t}{m_i}\sum\limits_j A^L_{i,j}\right) + \frac{\Delta t}{m_i}b_i.
+\]
+Using Corollary \ref{withoutsource}, the condition necessary to guarantee that
+the low-order solution satisfies the CMP with a source is the following:
+\[
+   \frac{\Delta t}{m_i}b_i \le \frac{q_{\max,i}}{\sigma_{\min,i}}(1-e^{-c\Delta t\sigma_{\min,i}}).
+\]
+Using the definition of $b_i$, the following bound applies:
+\[
+   b_i \le c q_{\max,i} m_i,
+\]
+so now the condition for guaranteeing the low-order solution to satify the CMP upper bound is
+\[
+   \frac{\Delta t}{m_i}c q_{\max,i} m_i \le
+   \frac{q_{\max,i}}{\sigma_{\min,i}}(1-e^{-c\Delta t\sigma_{\min,i}}),
+\]
+or after rearranging,
+\[
+   c\Delta t\sigma_{\min,i} \le
+   1-e^{-c\Delta t\sigma_{\min,i}}.
+\]
+Let $\zeta\equiv c\Delta t\sigma_{\min,i}\ge 0$. Thus proving the low-order solution to
+satify the CMP upper bound is equivalent to proving
+\[
+   f(\zeta)\equiv 1-\zeta-e^{-\zeta} \ge 0 = f(0),
+\]
+which is the opposite of the condition proved in Corollary \ref{withoutsource},
+and thus the statement is false, and the low-order solution cannot be
+guaranteed to satisfy the upper CMP bound.\qed
+\end{proof}

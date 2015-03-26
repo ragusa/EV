@@ -115,12 +115,12 @@ where $(\mathcal{L}[\mathbf{F}])_i = \mathcal{L}_{i,:}F_{i,:}^T
    principle given by Equation \ref{implicit_max_principle}:
    \begin{equation}
       W_i^+ \equiv \frac{1}{1+\frac{\Delta t}{m_i}A_{i,i}}\left(U_i^n
-         - \left(\frac{\Delta t}{m_i}\sum\limits_{j\ne i} A^L_{i,j}\right)U_{max,i}^{L,n+1}
+         - \left(\frac{\Delta t}{m_i}\sum\limits_{j\ne i} A^L_{i,j}\right)U_{max,i}^{L}
          + \frac{\Delta t}{m_i}b_i\right),
    \end{equation}
    \begin{equation}
       W_i^- \equiv \frac{1}{1+\frac{\Delta t}{m_i}A_{i,i}}\left(U_i^n
-         - \left(\frac{\Delta t}{m_i}\sum\limits_{j\ne i} A^L_{i,j}\right)U_{min,i}^{L,n+1}
+         - \left(\frac{\Delta t}{m_i}\sum\limits_{j\ne i} A^L_{i,j}\right)U_{min,i}^{L}
          + \frac{\Delta t}{m_i}b_i\right),
    \end{equation}
    \begin{equation}
@@ -141,7 +141,7 @@ where $(\mathcal{L}[\mathbf{F}])_i = \mathcal{L}_{i,:}F_{i,:}^T
    \]
    Taking row $i$ of the linear system given by Equation \ref{im_limited} gives
    \begin{eqnarray*}
-     (m_i + \Delta t A^L{i,i})U_i^{n+1} + \Delta t\sum\limits_{j\ne i}A^L_{i,j}U_j^{n+1}
+     (m_i + \Delta t A^L_{i,i})U_i^{n+1} + \Delta t\sum\limits_{j\ne i}A^L_{i,j}U_j^{n+1}
          - m_i U_i^n - \Delta t b_i & = & \sum\limits_j \mathcal{L}_{i,j}F_{i,j}\\
          & \leq & Q_i^+\\
          & \leq & (m_i+\Delta t A_{i,i}^L)W_i^+ + \Delta t

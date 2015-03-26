@@ -1,49 +1,38 @@
 %================================================================================
 \section{Introduction}
 %================================================================================
-The purpose of this document is to present a maximum-principle preserving
-finite element method and the corresponding maximum principle for both the
-steady-state and transient radiation transport equations,
-\begin{equation}\label{ss}
-	\mathbf{\Omega}\cdot\nabla\psi + \sigma_t\psi = q,
-\end{equation}
-and
+The radiation transport equation is the following:
 \begin{equation}\label{tr}
-	\frac{1}{c}\frac{\partial \psi}{\partial t} + \mathbf{\Omega}\cdot\nabla\psi
-      + \sigma_t\psi = q,
+	\frac{1}{c}\frac{\partial \psi}{\partial t} + \mathbf{\Omega}\cdot\nabla\psi(\mathbf{x},t)
+      + \sigma(\mathbf{x})\psi(\mathbf{x},t) = q(\mathbf{x},t).
 \end{equation}
-respectively.
-
-Here $q$ represents the total source (external+scattering). If necessary, source
-iteration can be employed to converge the angular intensities:
-\begin{equation}
-	(\mathbf{\Omega}\cdot\nabla + \sigma_t)\psi^{\ell+1} = q^\ell,
-\end{equation}
-
-Note that for implicit time stepping, we solve an equation that is similar
-to the steady-state case:
-\begin{equation}
-	(\mathbf{\Omega}\cdot\nabla + \sigma_t^\ast)\psi^{n+1} =
-      q^{n+1}+\tfrac{\psi^n}{c\Delta t},
-\end{equation}
-with $\sigma_t^\ast = \sigma_t + \tfrac{1}{c\Delta t}$. Source iteration can be applied as well if scattering is present:
-\begin{equation}
-	(\mathbf{\Omega}\cdot\nabla + \sigma_t^\ast)\psi^{n+1,\ell+1} = q^{n+1,\ell}+\tfrac{\psi^n}{c\Delta t}.
-\end{equation}
-
+Here $q(\mathbf{x},t)$ represents the total source (extraneous plus scattering).
+%If necessary, source iteration can be employed to converge the angular fluxes:
+%\begin{equation}
+	%(\mathbf{\Omega}\cdot\nabla + \sigma)\psi^{\ell+1} = q^\ell,
+%\end{equation}
+%
+%Note that for implicit time stepping, we solve an equation that is similar
+%to the steady-state case:
+%\begin{equation}
+	%(\mathbf{\Omega}\cdot\nabla + \sigma^\ast)\psi^{n+1} =
+      %q^{n+1}+\tfrac{\psi^n}{c\Delta t},
+%\end{equation}
+%with $\sigma^\ast = \sigma + \tfrac{1}{c\Delta t}$. Source iteration can be applied as well if scattering is present:
+%\begin{equation}
+	%(\mathbf{\Omega}\cdot\nabla + \sigma_t^\ast)\psi^{n+1,\ell+1} = q^{n+1,\ell}+\tfrac{\psi^n}{c\Delta t}.
+%\end{equation}
 The problem definition is completed with an incoming flux boundary condition:
 \begin{equation}
    \psi(\mathbf{x}) = \psi^{inc}(\mathbf{x})  \quad \forall \mathbf{x}\in \partial V^-,
       \quad \partial V^- = \{\mathbf{x}\in\partial V: \mathbf{\Omega}\cdot\mathbf{n}(\mathbf{x})<0\}.
 \end{equation}
-
 For transient problems, the following initial condition applies:
 \begin{equation}
    \psi(\mathbf{x},t) = \psi^0(\mathbf{x})  \quad \forall \mathbf{x}\in V.
 \end{equation}
-
 Note that
-\begin{equation}
-\sigma_t \ge 0
-\end{equation}
-with $\sigma_t=0$ occurring only in voids.
+\[
+   \sigma(\mathbf{x}) \ge 0
+\]
+with $\sigma(\mathbf{x})=0$ occurring only in voids.

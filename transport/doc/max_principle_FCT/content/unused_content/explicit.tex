@@ -7,42 +7,48 @@
 Here we seek to find a maximum principle for the transient problem, given by
 Equation \ref{tr}.
 Using explicit Euler for time stepping, the following equation relates the new and old
-time step solutions:
+time step solutions for the low-order scheme:
 \begin{equation}\label{newstep}
-   U_i^{n+1} = U_i^n - \frac{\Delta t}{m_i}\sum\limits_j U_j^n A^L_{i,j}
+   U_i^L = U_i^n - \frac{\Delta t}{m_i}\sum\limits_j U_j^n A^L_{i,j}
       + \frac{\Delta t}{m_i}b_i,
 \end{equation}
 where $\Delta t$ is the time step size, $m_i$ is the $i$th element of the \emph{lumped} mass
-matrix, i.e., $M^L_{i,i}$, $\mathbf{A^L}$ is the steady-state system matrix, and
+matrix, i.e., $M^L_{i,i}$, $\mathbf{A}^L$ is the steady-state system matrix, and
 $\mathbf{b}$ is the right-hand side.
 
 \begin{theorem}
-The solution at the new time step, $U^{n+1}_i$ satisfies the following maximum principle:
+If the CFL-like condition
+\begin{equation}\label{ex_CFL}
+   \Delta t \leq \frac{m_i}{A_{i,i}^L}\quad\forall i
+   \qquad\Longleftrightarrow\qquad
+   1 - \frac{\Delta t}{m_i}A_{i,i}^L \geq 0\quad\forall i,
+\end{equation}
+then the low-order solution at the new time step, $\mathbf{U}^L$ satisfies the following maximum principle:
 \begin{equation}\label{explicit_max_principle}
-   U_{min,i}^n\left(1-\frac{\Delta t}{m_i}\sum\limits_j A^L_{i,j}\right)
-      + \frac{\Delta t}{m_i}b_i
-   \le U_i^{n+1} \le
-   U_{max,i}^n\left(1-\frac{\Delta t}{m_i}\sum\limits_j A^L_{i,j}\right)
+   W_i^-\leq U_i^L\leq W_i^+\quad\forall i,
+\end{equation}
+where
+\begin{equation}\label{ex_bounds}
+   W_i^\pm\equiv U_{\substack{\max\\\min},i}^n\left(1-\frac{\Delta t}{m_i}\sum\limits_j A^L_{i,j}\right)
       + \frac{\Delta t}{m_i}b_i,
 \end{equation}
-where $U_{min,i}^n = \min\limits_{j\in \mathcal{I}(S_i)}U_j^n$,
-$U_{max,i}^n = \max\limits_{j\in \mathcal{I}(S_i)}U_j^n$,
+where $U_{\substack{\max\\\min},i}^n = \substack{\max\\\min\limits_{j\in \mathcal{I}(S_i)}}U_j^n$,
 and $\mathcal{I}(S_i)$ is the set of indices of degrees of freedom in the
 support of degree of freedom $i$.
 \end{theorem}
 \begin{proof}
 Rearranging Equation \ref{newstep},
 \[
-   U_i^{n+1} = \left(1-\frac{\Delta t}{m_i}A^L_{i,i}\right)U_i^n - \frac{\Delta t}{m_i}
+   U_i^L = \left(1-\frac{\Delta t}{m_i}A^L_{i,i}\right)U_i^n - \frac{\Delta t}{m_i}
       \sum\limits_{j\ne i} U_j^n A^L_{i,j} + \frac{\Delta t}{m_i}b_i,
 \]
-The CFL condition gives that $1-\frac{\Delta t}{m_i}A^L_{i,i} \ge 0$, and by
+The CFL-like condition in Equation \ref{ex_CFL} gives that $1-\frac{\Delta t}{m_i}A^L_{i,i} \ge 0$, and by
 Lemma \ref{offdiagonalnegative}, it is known that the off-diagonal
 elements $A^L_{i,j}, j\ne i$, are non-positive. Thus, the following inequality is
 able to be applied:
 \[
-   U_i^{n+1} \le
-   U_{max,i}^n\left(1-\frac{\Delta t}{m_i}\sum\limits_j A^L_{i,j}\right)
+   U_i^L \le
+   U_{\max,i}^n\left(1-\frac{\Delta t}{m_i}\sum\limits_j A^L_{i,j}\right)
       + \frac{\Delta t}{m_i}b_i,
 \]
 and similarly for the lower bound.\qed
