@@ -12,6 +12,9 @@
 
 use strict;
 
+# option to crop pdf
+my $croppdf = 1;
+
 # check for correct number of input arguments
 if ($#ARGV != 0) {
    die "USAGE: plot <sol|conv>
@@ -102,7 +105,9 @@ system("sleep 1");
 my $output_file = "../plots/$rootname"."_$problem_ID"."_$time_integrator_string.pdf";
 
 # crop pdf
-system("pdfcrop $output_file $output_file");
+if ($croppdf) {
+   system("pdfcrop $output_file $output_file");
+}
 
 # view output
 system("evince $output_file");
