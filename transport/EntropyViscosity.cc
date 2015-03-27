@@ -17,12 +17,13 @@ EntropyViscosity<dim>::EntropyViscosity(
    const double          &domain_volume,
    const TemporalDiscretization temporal_discretization) :
 
+      Viscosity<dim>(n_cells,fe.dofs_per_cell,dof_handler),
       fe(&fe),
       flux(0),
-      n_cells(n_cells),
-      dof_handler(&dof_handler),
+//      n_cells(n_cells),
+//      dof_handler(&dof_handler),
       n_dofs(dof_handler.n_dofs()),
-      dofs_per_cell(fe.dofs_per_cell),
+//      dofs_per_cell(fe.dofs_per_cell),
       faces_per_cell(GeometryInfo<dim>::faces_per_cell),
       cell_quadrature(cell_quadrature),
       face_quadrature(face_quadrature),
@@ -67,9 +68,9 @@ void EntropyViscosity<dim>::compute_normalization_constant(const Vector<double> 
    double domain_integral_entropy = 0.0;
 
    // loop over cells
-   typename DoFHandler<dim>::active_cell_iterator cell = (*dof_handler).begin_active(),
-                                                  endc = (*dof_handler).end();
-   for (cell = (*dof_handler).begin_active(); cell != endc; ++cell) {
+   typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler->begin_active(),
+                                                  endc = this->dof_handler->end();
+   for (cell = this->dof_handler->begin_active(); cell != endc; ++cell) {
       // reinitialize FE values
       fe_values.reinit(cell);
       // get solution values
@@ -92,7 +93,7 @@ void EntropyViscosity<dim>::compute_normalization_constant(const Vector<double> 
    normalization_constant = 0.0;
 
    // loop over cells
-   for (cell = (*dof_handler).begin_active(); cell != endc; ++cell) {
+   for (cell = this->dof_handler->begin_active(); cell != endc; ++cell) {
       // reinitialize FE values
       fe_values.reinit(cell);
       // get old values
@@ -175,11 +176,11 @@ Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<dou
       update_values | update_gradients | update_JxW_values | update_normal_vectors);
 
    // cell iterator
-   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler->begin_active(),
-                                                  endc = dof_handler->end();
+   typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler->begin_active(),
+                                                  endc = this->dof_handler->end();
    // loop over cells
    unsigned int i_cell = 0;
-   for (cell = dof_handler->begin_active(); cell != endc; ++cell, ++i_cell)
+   for (cell = this->dof_handler->begin_active(); cell != endc; ++cell, ++i_cell)
    {
       // reinitialize FE values
       fe_values.reinit(cell);

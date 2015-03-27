@@ -15,12 +15,14 @@
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_q.h>
 
+#include "Viscosity.h"
+
 using namespace dealii;
 
 /** \brief Class for computing entropy viscosity for a transport problem
  */
 template<int dim>
-class EntropyViscosity {
+class EntropyViscosity : public Viscosity<dim> {
    public:
       // temporal discretization type for entropy residual
       enum TemporalDiscretization {FE, BE, CN, BDF2};
@@ -56,10 +58,10 @@ class EntropyViscosity {
       // mesh and dof data
       const FESystem<dim> *fe;
       const FEValuesExtractors::Scalar flux;
-      const unsigned int n_cells;
-      const DoFHandler<dim> *dof_handler;
+//      const unsigned int n_cells;
+//      const DoFHandler<dim> *dof_handler;
       const unsigned int n_dofs;
-      const unsigned int dofs_per_cell;
+//      const unsigned int dofs_per_cell;
       const unsigned int faces_per_cell;
 
       // quadrature data
@@ -87,6 +89,7 @@ class EntropyViscosity {
       // viscosity vectors
       Vector<double> entropy_viscosity;
 
+      // temporal discretization for entropy residual
       TemporalDiscretization temporal_discretization;
 
       // coefficients for entropy residual
