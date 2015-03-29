@@ -58,10 +58,7 @@ class EntropyViscosity : public Viscosity<dim> {
       // mesh and dof data
       const FESystem<dim> *fe;
       const FEValuesExtractors::Scalar flux;
-//      const unsigned int n_cells;
-//      const DoFHandler<dim> *dof_handler;
       const unsigned int n_dofs;
-//      const unsigned int dofs_per_cell;
       const unsigned int faces_per_cell;
 
       // quadrature data

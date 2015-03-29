@@ -366,12 +366,14 @@ void TransportProblem<dim>::setup_system()
       high_order_diffusion_matrix.reinit(constrained_sparsity_pattern);
       
    // reinitialize auxiliary matrices
+/*
    CompressedSparsityPattern compressed_unconstrained_sparsity_pattern(n_dofs);
    DoFTools::make_sparsity_pattern(dof_handler, compressed_unconstrained_sparsity_pattern);
    unconstrained_sparsity_pattern.copy_from(compressed_unconstrained_sparsity_pattern);
    viscous_bilinear_forms            .reinit(unconstrained_sparsity_pattern);
    // compute viscous bilinear forms
    compute_viscous_bilinear_forms();
+*/
 
    // reinitialize solution vector, system matrix, and rhs
    old_solution.reinit(n_dofs);
@@ -395,6 +397,7 @@ void TransportProblem<dim>::setup_system()
    if (not source_time_dependent)
       assemble_ss_rhs(0.0);
       
+/*
    // compute low-order viscosity
    compute_low_order_viscosity();
    // compute low-order diffusion matrix
@@ -412,6 +415,7 @@ void TransportProblem<dim>::setup_system()
    // compute low-order steady-state matrix
    low_order_ss_matrix.copy_from(inviscid_ss_matrix);
    low_order_ss_matrix.add(1.0,low_order_diffusion_matrix);
+*/
 
    // enforce CFL condition on nominal dt size
    if (!parameters.is_steady_state)
@@ -472,6 +476,7 @@ void TransportProblem<dim>::assemble_mass_matrices()
  *            B_{i,j} = \sum_{K\subset S_{i,j}}b_K(\varphi_i,\varphi_j)
  *         \f]
  */
+/*
 template <int dim>
 void TransportProblem<dim>::compute_viscous_bilinear_forms()
 {
@@ -509,6 +514,7 @@ void TransportProblem<dim>::compute_viscous_bilinear_forms()
       }
    }
 }
+*/
 
 /** \brief Assemble the inviscid system matrix. The inviscid steady-state matrix
  *         is independent of the solution and independent of time and thus needs
@@ -641,6 +647,7 @@ void TransportProblem<dim>::assemble_ss_rhs(const double &t)
 
 /** \brief Computes a graph-Laplacian diffusion matrix.
  */
+/*
 template <int dim>
 void TransportProblem<dim>::compute_graphLaplacian_diffusion_matrix(
    const Vector<double> &viscosity,
@@ -690,9 +697,11 @@ void TransportProblem<dim>::compute_graphLaplacian_diffusion_matrix(
 
    }
 }
+*/
 
 /** \brief Computes a standard Laplacian diffusion matrix.
  */
+/*
 template <int dim>
 void TransportProblem<dim>::compute_standard_diffusion_matrix(
    const Vector<double> &viscosity,
@@ -757,6 +766,7 @@ void TransportProblem<dim>::compute_standard_diffusion_matrix(
 
    }
 }
+*/
 
 /** \brief Sets the boundary indicators for each boundary face.
  *
@@ -801,6 +811,7 @@ void TransportProblem<dim>::set_boundary_indicators()
 
 /** \brief Computes the low-order viscosity for each cell.
  */
+/*
 template <int dim>
 void TransportProblem<dim>::compute_low_order_viscosity()
 {
@@ -837,6 +848,7 @@ void TransportProblem<dim>::compute_low_order_viscosity()
       }
    }
 }
+*/
 
 /** \brief run the problem
  */
@@ -933,7 +945,13 @@ void TransportProblem<dim>::run()
          std::cout << "   Nominal CFL number: " << CFL_nominal << std::endl;
       }
 
-      // create entropy viscosity object
+      // create low-order viscosity
+      LowOrderViscosity<dim> low_order_viscosity(n_cells,
+                                                 dofs_per_cell,
+                                                 dof_handler,
+                                                 inviscid_ss_matrix);
+
+      // create entropy viscosity
       EntropyViscosity<dim> EV(fe,
                                n_cells,
                                dof_handler,
@@ -1060,6 +1078,8 @@ void TransportProblem<dim>::run()
 
                   break;
                } case 2: { // high-order system with entropy viscosity
+ExcNotImplemented();
+/*
 
                   // compute EV only at beginning of time step
                   if (parameters.EV_time_discretization != EntropyViscosity<dim>::FE) {
@@ -1126,7 +1146,10 @@ void TransportProblem<dim>::run()
                   ssprk.get_new_solution(new_solution);
 
                   break;
+*/
                } case 3: { // EV FCT
+ExcNotImplemented();
+/*
                   // assert that the graph-Laplacian low-order diffusion option was used
                   Assert(parameters.low_order_diffusion_option == 1, ExcNotImplemented());
 
@@ -1186,6 +1209,7 @@ void TransportProblem<dim>::run()
                   ssprk.get_new_solution(new_solution);
 
                   break;
+*/
                } case 4: { // Galerkin FCT
                   // assert that the graph-Laplacian low-order diffusion option was used
                   Assert(parameters.low_order_diffusion_option == 1, ExcNotImplemented());
@@ -1223,7 +1247,6 @@ void TransportProblem<dim>::run()
 
                      // finish computing stage solution
                      ssprk.complete_stage_solution();
-                     
                   }
                   // retrieve the final solution
                   ssprk.get_new_solution(new_solution);
@@ -1233,7 +1256,6 @@ void TransportProblem<dim>::run()
                   Assert(false, ExcNotImplemented());
                   break;
                }
-
             }
 
             // update old solution, time, and time step size

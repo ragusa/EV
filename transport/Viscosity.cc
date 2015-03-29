@@ -44,7 +44,7 @@ void Viscosity<dim>::compute_ss_matrix(const SparseMatrix<double> &inviscid_ss_m
    ss_matrix.copy_from(inviscid_ss_matrix);
 
    // compute diffusion matrix
-   compute_diffusion_matrix();
+   compute_diffusion_matrix(diffusion_matrix);
 
    // add diffusion matrix
    ss_matrix.add(1.0, diffusion_matrix);

@@ -1,7 +1,6 @@
 #ifndef Viscosity_cc
 #define Viscosity_cc
 
-#include <deal.II/lac/constraint_matrix.h>
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/sparse_matrix.h>
@@ -23,16 +22,11 @@ class Viscosity {
                 const unsigned int      dofs_per_cell,
                 const DoFHandler<dim>  &dof_handler);
       ~Viscosity();
-      void compute_ss_matrix(const SparseMatrix<double> &inviscid_ss_matrix,
-                                   SparseMatrix<double> &ss_matrix);
+      void add_diffusion_matrix(const SparseMatrix<double> &inviscid_matrix,
+                                      SparseMatrix<double> &total_matrix);
 
    private:
-      void compute_diffusion_matrix();
-
-      SparsityPattern      sparsity_pattern;
-      SparseMatrix<double> diffusion_matrix;
-
-      ConstraintMatrix constraints;
+      void compute_diffusion_matrix(SparseMatrix<double> &diffusion_matrix);
 
    protected:
       Vector<double> viscosity;

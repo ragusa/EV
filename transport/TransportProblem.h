@@ -39,6 +39,7 @@
 #include <algorithm>
 
 #include "TransportParameters.h"
+#include "LowOrderViscosity.h"
 #include "EntropyViscosity.h"
 #include "LinearSolver.h"
 #include "SSPRKTimeIntegrator.h"
@@ -140,16 +141,16 @@ class TransportProblem {
       double minimum_cell_diameter;
 
       // low-order max-principle viscosity functions and data
-      void compute_viscous_bilinear_forms();
-      void compute_low_order_viscosity();
-      void compute_standard_diffusion_matrix(
-         const Vector<double> &viscosity,
-         SparseMatrix<double> &diffusion_matrix);
-      void compute_graphLaplacian_diffusion_matrix(
-         const Vector<double> &viscosity,
-         SparseMatrix<double> &diffusion_matrix);
-      SparsityPattern unconstrained_sparsity_pattern;
-      SparseMatrix<double> viscous_bilinear_forms;
+//      void compute_viscous_bilinear_forms();
+//      void compute_low_order_viscosity();
+//      void compute_standard_diffusion_matrix(
+//         const Vector<double> &viscosity,
+//         SparseMatrix<double> &diffusion_matrix);
+//      void compute_graphLaplacian_diffusion_matrix(
+//         const Vector<double> &viscosity,
+//         SparseMatrix<double> &diffusion_matrix);
+//      SparsityPattern unconstrained_sparsity_pattern;
+//      SparseMatrix<double> viscous_bilinear_forms;
 
       // Dirichlet boundary condition
       void get_dirichlet_nodes();
