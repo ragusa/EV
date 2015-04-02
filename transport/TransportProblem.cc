@@ -354,27 +354,17 @@ void TransportProblem<dim>::setup_system()
    constrained_sparsity_pattern.copy_from(compressed_constrained_sparsity_pattern);
 
    // reinitialize system matrix and mass matrices
-   system_matrix            .reinit(constrained_sparsity_pattern);
-   low_order_ss_matrix      .reinit(constrained_sparsity_pattern);
-   high_order_ss_matrix     .reinit(constrained_sparsity_pattern);
-   inviscid_ss_matrix       .reinit(constrained_sparsity_pattern);
-   low_order_diffusion_matrix .reinit(constrained_sparsity_pattern);
-   consistent_mass_matrix   .reinit(constrained_sparsity_pattern);
-   lumped_mass_matrix       .reinit(constrained_sparsity_pattern);
+   system_matrix             .reinit(constrained_sparsity_pattern);
+   inviscid_ss_matrix        .reinit(constrained_sparsity_pattern);
+   low_order_ss_matrix       .reinit(constrained_sparsity_pattern);
+   high_order_ss_matrix      .reinit(constrained_sparsity_pattern);
+   low_order_diffusion_matrix.reinit(constrained_sparsity_pattern);
+   consistent_mass_matrix    .reinit(constrained_sparsity_pattern);
+   lumped_mass_matrix        .reinit(constrained_sparsity_pattern);
    if ((parameters.scheme_option == 2)||(parameters.scheme_option == 3)
       ||(parameters.scheme_option == 4))
       high_order_diffusion_matrix.reinit(constrained_sparsity_pattern);
       
-   // reinitialize auxiliary matrices
-/*
-   CompressedSparsityPattern compressed_unconstrained_sparsity_pattern(n_dofs);
-   DoFTools::make_sparsity_pattern(dof_handler, compressed_unconstrained_sparsity_pattern);
-   unconstrained_sparsity_pattern.copy_from(compressed_unconstrained_sparsity_pattern);
-   viscous_bilinear_forms            .reinit(unconstrained_sparsity_pattern);
-   // compute viscous bilinear forms
-   compute_viscous_bilinear_forms();
-*/
-
    // reinitialize solution vector, system matrix, and rhs
    old_solution.reinit(n_dofs);
    older_solution.reinit(n_dofs);
@@ -384,11 +374,6 @@ void TransportProblem<dim>::setup_system()
    system_rhs  .reinit(n_dofs);
    ss_rhs      .reinit(n_dofs);
 
-   // reinitialize viscosities
-   entropy_viscosity   .reinit(n_cells);
-   low_order_viscosity .reinit(n_cells);
-   high_order_viscosity.reinit(n_cells);
-
    // assemble mass matrices
    assemble_mass_matrices();
 
@@ -396,30 +381,6 @@ void TransportProblem<dim>::setup_system()
    assemble_inviscid_ss_matrix();
    if (not source_time_dependent)
       assemble_ss_rhs(0.0);
-      
-/*
-   // compute low-order viscosity
-   compute_low_order_viscosity();
-   // compute low-order diffusion matrix
-   switch (parameters.low_order_diffusion_option) {
-      case 1: {   // graph-Laplacian
-         compute_graphLaplacian_diffusion_matrix(low_order_viscosity,low_order_diffusion_matrix);
-         break;
-      } case 2: { // standard Laplacian
-         compute_standard_diffusion_matrix(low_order_viscosity,low_order_diffusion_matrix);
-         break;
-      } default: {
-         Assert(false,ExcNotImplemented());
-      }
-   }
-   // compute low-order steady-state matrix
-   low_order_ss_matrix.copy_from(inviscid_ss_matrix);
-   low_order_ss_matrix.add(1.0,low_order_diffusion_matrix);
-*/
-
-   // enforce CFL condition on nominal dt size
-   if (!parameters.is_steady_state)
-      CFL_nominal = enforce_CFL_condition(dt_nominal);
 }
 
 /** \brief Assembles the mass matrix, either consistent or lumped.
@@ -466,55 +427,6 @@ void TransportProblem<dim>::assemble_mass_matrices()
                                    dummy_function,
                                    constraints);
 }
-
-/** \brief Computes viscous bilinear forms, to be used in the computation of
- *         maximum-principle preserving low order viscosity.
- *
- *         Each element of the resulting matrix, \f$B_{i,j}\f$ is computed as
- *         follows:
- *         \f[
- *            B_{i,j} = \sum_{K\subset S_{i,j}}b_K(\varphi_i,\varphi_j)
- *         \f]
- */
-/*
-template <int dim>
-void TransportProblem<dim>::compute_viscous_bilinear_forms()
-{
-   viscous_bilinear_forms = 0; // zero out matrix
-
-   // dofs per cell
-   unsigned int dofs_per_cell = fe.dofs_per_cell;
-
-   // local dof indices
-   std::vector<unsigned int> local_dof_indices (dofs_per_cell);
-
-   // loop over cells
-   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
-                                                  endc = dof_handler.end();
-   for (; cell != endc; ++cell) {
-      // get local dof indices
-      cell->get_dof_indices(local_dof_indices);
-
-      // query cell volume
-      double cell_volume = cell->measure();
-
-      // add local bilinear forms to global matrix
-      for (unsigned int i = 0; i < dofs_per_cell; ++i) {
-         for (unsigned int j = 0; j < dofs_per_cell; ++j) {
-            double b_cell = 0.0;
-            if (j == i) {
-               b_cell = cell_volume;
-            } else {
-               b_cell = -1.0/(dofs_per_cell-1.0)*cell_volume;
-            }
-            viscous_bilinear_forms.add(local_dof_indices[i],
-                                       local_dof_indices[j],
-                                       b_cell);
-         }
-      }
-   }
-}
-*/
 
 /** \brief Assemble the inviscid system matrix. The inviscid steady-state matrix
  *         is independent of the solution and independent of time and thus needs
@@ -645,129 +557,6 @@ void TransportProblem<dim>::assemble_ss_rhs(const double &t)
    } // end cell
 } // end assembly
 
-/** \brief Computes a graph-Laplacian diffusion matrix.
- */
-/*
-template <int dim>
-void TransportProblem<dim>::compute_graphLaplacian_diffusion_matrix(
-   const Vector<double> &viscosity,
-   SparseMatrix<double> &diffusion_matrix)
-{
-   // reset viscous matrix
-   diffusion_matrix = 0;
-
-   // cell matrix
-   FullMatrix<double> cell_matrix(dofs_per_cell, dofs_per_cell);
-
-   // FE values
-   FEValues<dim> fe_values(fe, cell_quadrature, update_gradients | update_JxW_values);
-
-   // loop over cells
-   unsigned int i_cell = 0;
-   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
-                                                  endc = dof_handler.end();
-   for (; cell != endc; ++cell, ++i_cell) {
-      // reset cell matrix to zero
-      cell_matrix = 0;
-
-      // reinitialize FE values
-      fe_values.reinit(cell);
-
-      // compute cell volume
-      double cell_volume = cell->measure();
-
-      // compute cell contribution to global system matrix
-      for (unsigned int i = 0; i < dofs_per_cell; ++i)
-         for (unsigned int j = 0; j < dofs_per_cell; ++j) {
-            double viscous_bilinear_form;
-            if (j == i)
-               viscous_bilinear_form = cell_volume;
-            else
-               viscous_bilinear_form = cell_volume/(1.0 - dofs_per_cell);
- 
-            cell_matrix(i,j) += viscosity(i_cell) * viscous_bilinear_form;
-         }
-
-      // aggregate local matrix and rhs to global matrix and rhs
-      std::vector<unsigned int> local_dof_indices(dofs_per_cell);
-      cell->get_dof_indices(local_dof_indices);
-      constraints.distribute_local_to_global(cell_matrix,
-                                             local_dof_indices,
-                                             diffusion_matrix);
-
-   }
-}
-*/
-
-/** \brief Computes a standard Laplacian diffusion matrix.
- */
-/*
-template <int dim>
-void TransportProblem<dim>::compute_standard_diffusion_matrix(
-   const Vector<double> &viscosity,
-   SparseMatrix<double> &diffusion_matrix)
-{
-   // reset viscous matrix
-   diffusion_matrix = 0;
-
-   // cell matrix
-   FullMatrix<double> cell_matrix(dofs_per_cell, dofs_per_cell);
-
-   // FE values
-   FEValues<dim> fe_values(fe, cell_quadrature, update_gradients | update_JxW_values);
-   FEFaceValues<dim> fe_face_values(fe, face_quadrature, update_values |
-      update_gradients | update_normal_vectors | update_JxW_values);
-
-   // loop over cells
-   unsigned int i_cell = 0;
-   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
-                                                  endc = dof_handler.end();
-   for (; cell != endc; ++cell, ++i_cell) {
-      // reset cell matrix to zero
-      cell_matrix = 0;
-
-      // reinitialize FE values
-      fe_values.reinit(cell);
-
-      // compute cell contributions
-      for (unsigned int q = 0; q < n_q_points_cell; ++q)
-         for (unsigned int i = 0; i < dofs_per_cell; ++i)
-            for (unsigned int j = 0; j < dofs_per_cell; ++j)
-               cell_matrix(i,j) += (
-                  viscosity(i_cell) *
-                  fe_values[flux].gradient(j, q) *
-                  fe_values[flux].gradient(i, q)
-                  ) * fe_values.JxW(q);
-
-      // loop over faces of cell
-      for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell; ++face)
-         // if face is on outflow boundary
-         if (cell->face(face)->at_boundary() && cell->face(face)->boundary_indicator() == 0) {
-            // reinitialize FE face values
-            fe_face_values.reinit(cell, face);
-
-            for (unsigned int q = 0; q < n_q_points_face; ++q)
-               for (unsigned int i = 0; i < dofs_per_cell; ++i)
-                  for (unsigned int j = 0; j < dofs_per_cell; ++j)
-                     cell_matrix(i,j) -= (
-                        viscosity(i_cell) *
-                        fe_face_values[flux].gradient(j, q) *
-                        fe_face_values[flux].value(i, q) *
-                        fe_face_values.normal_vector(q)
-                     ) * fe_face_values.JxW(q);
-         }
-
-      // aggregate local matrix and rhs to global matrix and rhs
-      std::vector<unsigned int> local_dof_indices(dofs_per_cell);
-      cell->get_dof_indices(local_dof_indices);
-      constraints.distribute_local_to_global(cell_matrix,
-                                             local_dof_indices,
-                                             diffusion_matrix);
-
-   }
-}
-*/
-
 /** \brief Sets the boundary indicators for each boundary face.
  *
  *         The Dirichlet BC is applied only to the incoming boundary, so the transport
@@ -808,47 +597,6 @@ void TransportProblem<dim>::set_boundary_indicators()
       }
    }
 }
-
-/** \brief Computes the low-order viscosity for each cell.
- */
-/*
-template <int dim>
-void TransportProblem<dim>::compute_low_order_viscosity()
-{
-   // local dof indices
-   std::vector<unsigned int> local_dof_indices (dofs_per_cell);
-
-   // loop over cells to compute low-order viscosity at each quadrature point
-   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
-                                                  endc = dof_handler.end();
-   unsigned int i_cell = 0;
-   for (; cell != endc; ++cell, ++i_cell) {
-      // get local dof indices
-      cell->get_dof_indices(local_dof_indices);
-
-      switch (parameters.low_order_diffusion_option) {
-         case 1: { // graph-Laplacian
-            // initialize to zero for max() function
-            double low_order_viscosity_cell = 0.0;
-            for (unsigned int i = 0; i < dofs_per_cell; ++i)
-               for (unsigned int j = 0; j < dofs_per_cell; ++j)
-                  if (i != j)
-                     low_order_viscosity_cell = std::max(low_order_viscosity_cell,
-                        std::max(0.0,inviscid_ss_matrix(local_dof_indices[i],local_dof_indices[j]))/
-                        (-viscous_bilinear_forms(local_dof_indices[i],local_dof_indices[j])));
-      
-            low_order_viscosity(i_cell) = low_order_viscosity_cell;
-            break;
-         } case 2: { // standard Laplacian
-            low_order_viscosity(i_cell) = 0.5 * cell->measure();
-            break;
-         } default: {
-            Assert(false,ExcNotImplemented());
-         }
-      }
-   }
-}
-*/
 
 /** \brief run the problem
  */
@@ -930,31 +678,34 @@ void TransportProblem<dim>::run()
       // refine
       refinement_handler.refine(cycle);
 
-      // setup system - distribute finite elements, reintialize matrices and vectors
+      // setup system
       setup_system();
-
-      // update dt displayed in convergence table
-      postprocessor.update_dt(dt_nominal);
 
       // print information
       std::cout << std::endl << "Cycle " << cycle << ':' << std::endl;
       std::cout << "   Number of active cells:       " << n_cells << std::endl;
       std::cout << "   Number of degrees of freedom: " << n_dofs  << std::endl;
-      if (not parameters.is_steady_state) {
-         std::cout << "   Nominal time step size: " << dt_nominal << std::endl;
-         std::cout << "   Nominal CFL number: " << CFL_nominal << std::endl;
-      }
+
+      // create linear solver object
+      LinearSolver<dim> linear_solver(parameters.linear_solver_option,
+                                      constraints,
+                                      dof_handler,
+                                      incoming_function);
 
       // create low-order viscosity
       LowOrderViscosity<dim> low_order_viscosity(n_cells,
                                                  dofs_per_cell,
                                                  dof_handler,
-                                                 inviscid_ss_matrix);
+                                                 constraints,
+                                                 inviscid_ss_matrix,
+                                                 low_order_diffusion_matrix,
+                                                 low_order_ss_matrix);
 
       // create entropy viscosity
       EntropyViscosity<dim> EV(fe,
                                n_cells,
                                dof_handler,
+                               constraints,
                                cell_quadrature,
                                face_quadrature,
                                transport_direction,
@@ -967,13 +718,8 @@ void TransportProblem<dim>::run()
                                domain_volume,
                                parameters.EV_time_discretization);
 
-      // create linear solver object
-      LinearSolver<dim> linear_solver(parameters.linear_solver_option,
-                                      constraints,
-                                      dof_handler,
-                                      incoming_function);
-
       // create FCT object
+/*
       FCT<dim> fct(dof_handler,
                    lumped_mass_matrix,
                    consistent_mass_matrix,
@@ -983,11 +729,22 @@ void TransportProblem<dim>::run()
                    n_dofs,
                    dofs_per_cell,
                    parameters.do_not_limit);
+*/
 
       // if problem is steady-state, then just do one solve; else loop over time
       if (parameters.is_steady_state) { // run steady-state problem
          solve_steady_state(linear_solver);
       } else {                          // run transient problem
+         // enforce CFL condition on nominal dt size
+         CFL_nominal = enforce_CFL_condition(dt_nominal);
+
+         // update dt displayed in convergence table
+         postprocessor.update_dt(dt_nominal);
+
+         // print dt
+         std::cout << "   Nominal time step size: " << dt_nominal << std::endl;
+         std::cout << "   Nominal CFL number: " << CFL_nominal << std::endl;
+
          // interpolate initial conditions
          initial_conditions.set_time(0.0);
          VectorTools::interpolate(dof_handler,
@@ -1025,7 +782,7 @@ void TransportProblem<dim>::run()
          unsigned int n = 1; // time step index
          while (in_transient)
          {
-            // shorten dt if new time would overshoot end time, then update t_new
+            // shorten dt if new time would overshoot end time
             double dt = dt_nominal;
             if (t_old + dt >= t_end) {
                dt = t_end - t_old;
@@ -1211,6 +968,8 @@ ExcNotImplemented();
                   break;
 */
                } case 4: { // Galerkin FCT
+ExcNotImplemented();
+/*
                   // assert that the graph-Laplacian low-order diffusion option was used
                   Assert(parameters.low_order_diffusion_option == 1, ExcNotImplemented());
 
@@ -1250,6 +1009,7 @@ ExcNotImplemented();
                   }
                   // retrieve the final solution
                   ssprk.get_new_solution(new_solution);
+*/
 
                   break;
                } default: {
@@ -1271,6 +1031,7 @@ ExcNotImplemented();
          }
 
          // report if DMP was satisfied at all time steps
+/*
          if ((parameters.scheme_option == 3)||(parameters.scheme_option == 4))
          {
             // report if local discrete maximum principle is satisfied at all time steps
@@ -1279,6 +1040,7 @@ ExcNotImplemented();
             else
                std::cout << "Local discrete maximum principle was NOT satisfied at all time steps" << std::endl;
          }
+*/
       }
 
       // evaluate errors for use in adaptive mesh refinement
@@ -1291,7 +1053,7 @@ ExcNotImplemented();
    // output grid and solution and print convergence results
    postprocessor.output_results(new_solution,dof_handler,triangulation);
    // output viscosities if they were used
-   postprocessor.output_viscosity(low_order_viscosity,entropy_viscosity,high_order_viscosity,dof_handler);
+   //postprocessor.output_viscosity(low_order_viscosity,entropy_viscosity,high_order_viscosity,dof_handler);
 }
 
 /** \brief Solves the steady-state system.
@@ -1308,28 +1070,18 @@ void TransportProblem<dim>::solve_steady_state(LinearSolver<dim> &linear_solver)
    assemble_inviscid_ss_matrix();
    assemble_ss_rhs(0.0);
    
-   // add inviscid steady-state matrix to system matrix
-   system_matrix.copy_from(inviscid_ss_matrix);
-
-   if (parameters.scheme_option == 1) // low-order scheme
-   {
-      // compute low-order viscosity
-      compute_low_order_viscosity();
-      // compute viscous matrix
-      switch (parameters.low_order_diffusion_option) {
-         case 1: {   // graph-Laplacian
-            compute_graphLaplacian_diffusion_matrix(low_order_viscosity,low_order_diffusion_matrix);
-            break;
-         } case 2: { // standard Laplacian
-            compute_standard_diffusion_matrix(low_order_viscosity,low_order_diffusion_matrix);
-            break;
-         } default: {
-            Assert(false,ExcNotImplemented());
-         }
+   switch (parameters.scheme_option) {
+      case 0: {
+         system_matrix.copy_from(inviscid_ss_matrix);
+         break;
+      } case 1: {
+         system_matrix.copy_from(low_order_ss_matrix);
+         break;
+      } default: {
+         ExcNotImplemented();
       }
-      // add low-order diffusion matrix to steady-state matrix
-      system_matrix.add(1.0, low_order_diffusion_matrix);
    }
+
    // solve the linear system: ss_matrix*new_solution = ss_rhs
    linear_solver.solve(system_matrix, ss_rhs, new_solution);
    // distribute constraints

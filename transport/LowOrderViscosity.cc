@@ -5,14 +5,15 @@ LowOrderViscosity<dim>::LowOrderViscosity(
    const unsigned int          n_cells,
    const unsigned int          dofs_per_cell,
    const DoFHandler<dim>      &dof_handler,
+   const ConstraintMatrix     &constraints,
    const SparseMatrix<double> &inviscid_matrix,
          SparseMatrix<double> &diffusion_matrix,
          SparseMatrix<double> &total_matrix) :
 
-   Viscosity<dim>(n_cells,dofs_per_cell,dof_handler)
+   Viscosity<dim>(n_cells,dofs_per_cell,dof_handler,constraints)
 {
    // create sparse matrix for viscous bilinear forms
-   CompressedSparsityPattern c_sparsity_pattern(n_dofs);
+   CompressedSparsityPattern c_sparsity_pattern(this->n_dofs);
    DoFTools::make_sparsity_pattern(dof_handler, c_sparsity_pattern);
    sparsity_pattern.copy_from(c_sparsity_pattern);
    viscous_bilinear_forms.reinit(sparsity_pattern);
@@ -21,13 +22,13 @@ LowOrderViscosity<dim>::LowOrderViscosity(
    compute_viscous_bilinear_forms();
 
    // compute low-order viscosity
-   compute_low_order_viscosity();
+   compute_low_order_viscosity(inviscid_matrix);
 
    // compute diffusion matrix
    this->compute_diffusion_matrix(diffusion_matrix);
 
    // add diffusion matrix
-   this->add_diffusion_matrix(inviscid_matrix,total_matrix);
+   this->add_diffusion_matrix(inviscid_matrix,diffusion_matrix,total_matrix);
 }
 
 /** \brief Destructor.
@@ -39,7 +40,8 @@ LowOrderViscosity<dim>::~LowOrderViscosity() {
 /** \brief Computes the low-order viscosity for each cell.
  */
 template <int dim>
-void LowOrderViscosity<dim>::compute_low_order_viscosity()
+void LowOrderViscosity<dim>::compute_low_order_viscosity(
+   const SparseMatrix<double> &inviscid_matrix)
 {
    // local dof indices
    std::vector<unsigned int> local_dof_indices (this->dofs_per_cell);
@@ -76,7 +78,7 @@ void LowOrderViscosity<dim>::compute_low_order_viscosity()
  *         \f]
  */
 template <int dim>
-void TransportProblem<dim>::compute_viscous_bilinear_forms()
+void LowOrderViscosity<dim>::compute_viscous_bilinear_forms()
 {
    viscous_bilinear_forms = 0; // zero out matrix
 

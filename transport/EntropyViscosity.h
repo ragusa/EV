@@ -5,6 +5,7 @@
 #include <deal.II/base/function_parser.h>
 
 #include <deal.II/lac/vector.h>
+#include <deal.II/lac/constraint_matrix.h>
 
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
@@ -30,6 +31,7 @@ class EntropyViscosity : public Viscosity<dim> {
       EntropyViscosity(const FESystem<dim>   &fe,
                        const unsigned int    &n_cells,
                        const DoFHandler<dim> &dof_handler,
+                       const ConstraintMatrix &constraints,
                        const QGauss<dim>     &cell_quadrature,
                        const QGauss<dim-1>   &face_quadrature,
                        const Tensor<1,dim>   &transport_direction,

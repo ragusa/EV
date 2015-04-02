@@ -5,6 +5,7 @@ EntropyViscosity<dim>::EntropyViscosity(
    const FESystem<dim>   &fe,
    const unsigned int    &n_cells,
    const DoFHandler<dim> &dof_handler,
+   const ConstraintMatrix &constraints,
    const QGauss<dim>     &cell_quadrature,
    const QGauss<dim-1>   &face_quadrature,
    const Tensor<1,dim>   &transport_direction,
@@ -17,7 +18,7 @@ EntropyViscosity<dim>::EntropyViscosity(
    const double          &domain_volume,
    const TemporalDiscretization temporal_discretization) :
 
-      Viscosity<dim>(n_cells,fe.dofs_per_cell,dof_handler),
+      Viscosity<dim>(n_cells,fe.dofs_per_cell,dof_handler,constraints),
       fe(&fe),
       flux(0),
       n_dofs(dof_handler.n_dofs()),
