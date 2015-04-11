@@ -1,4 +1,4 @@
-function D = compute_high_order_diffusion_matrix(viscE,viscL,h,periodic_BC)
+function D = compute_high_order_diffusion_matrix(viscE,viscL,dx,periodic_BC)
 
 nel = length(viscE); % number of elements
 n = nel+1;           % number of dofs
@@ -12,11 +12,17 @@ if periodic_BC
 end
 
 % build matrix
-D_cell = h*[1 -1; -1 1]; % local bilinear form
 D  = spalloc(n,n,nnz);
 for iel = 1:nel
+    % get local dof indices
+    ii = g(iel,:);
+    
+    % compute cell matrix
     viscH = min(viscL(iel),viscE(iel));
-    D(g(iel,:),g(iel,:)) = D(g(iel,:),g(iel,:)) + viscH*D_cell;
+    D_cell = dx(iel)*viscH*[1 -1; -1 1];    
+    
+    % add local contribution to global system
+    D(ii,ii) = D(ii,ii) + D_cell;
 end
 
 end

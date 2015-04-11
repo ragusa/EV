@@ -1,6 +1,17 @@
+%%
+% Description:
+%   computes Lagrangian basis functions and their first derivatives
+%   for any order finite element order
+%
+% Output:
+%   [name] [size]   [description]
+%   b      ni x nq  element (i,q) contains the values of the ith local FE
+%                   test function evaluated at quadrature point q.
+%   dbdz   ni x nq  element (i,q) contains the values of the ith local FE
+%                   test function derivative evaluated at quadrature point
+%                   q.
 function [b,dbdz] = get_lagrange_basis(uq,dofs_per_cell)
-% computes Lagrangian basis functions and their first derivatives
-%  for any order p
+% 
 
 % number of quadrature points
 nq = length(uq);

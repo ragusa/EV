@@ -1,78 +1,100 @@
-function [MC,ML,A,AL,D,b,viscL] = ...
-    build_matrices(len,nel,omega,speed,sigma,source,...
-    low_order_scheme,high_order_scheme,periodic_BC)
-% builds the mass matrices, steady state system matrix, artificial
-% dissipation matrix, and steady state rhs
+%%
+% Description:
+%   Builds the mass matrices, inviscid and low-order steady-state matrices,
+%   low-order viscosity and corresponding artificial diffusion matrix.
 %
 % MC = consistent mass matrix
 % ML = lumped mass matrix
-% K  = Kuzmin's K matrix
-% D  = Kuzmin's D matrix
-% b  = steady-state rhs
+% A  = steady-state matrix
+% D  = artificial diffusion matrix
 
-% local bilinear forms (cells are uniform)
-M_cell = [2 1;1 2]/3;               % v(i)*v(j)
-R_cell = speed*M_cell;              % c*v(i)*v(j)
-K_cell = speed*omega*[-1 1;-1 1]/2; % c*omega*v(i)*dv(j)/dx
-b_cell = speed*[1;1];               % c*v(i)
+%%
+function [MC,ML,A,AL,D,viscL] = build_matrices(...
+    nq,zq,wq,v,dvdz,Jac,x,dx,nel,n,connectivity,...
+    mu,speed,sigma,low_order_scheme,modify_for_weak_DirichletBC)
 
-h = len/nel; % cell size
-jac = h/2;   % Jacobian of transformation to reference cell
-g = [linspace(1,nel,nel)' linspace(2,nel+1,nel)']; % connectivity array
-if periodic_BC
-    g(end,:) = [g(end,1) 1];
-end
-dofs_per_cell = 2; % degrees of freedom per cell
+%--------------------------------------------------------------------------
+% Compute mass matrices and inviscid steady-state matrix
+%--------------------------------------------------------------------------
+
+% degrees of freedom per cell
+dofs_per_cell = 2;
 
 % intialize matrices
-n = nel+1; % system size
-if periodic_BC, n=nel; end
 nnz = 3*n; % max number of nonzero entries
 MC = spalloc(n,n,nnz);
 A  = spalloc(n,n,nnz);
 D  = spalloc(n,n,nnz);
-b  = zeros(n,1);
 
-% assemble consistent mass matrix and steady-state rhs
+% assemble consistent mass matrix and inviscid steady-state system matrix
 for iel = 1:nel
-    MC(g(iel,:),g(iel,:)) = MC(g(iel,:),g(iel,:)) + M_cell*jac;
-    A(g(iel,:),g(iel,:))  = A(g(iel,:),g(iel,:))  + K_cell + sigma(iel)*R_cell*jac;
-    b(g(iel,:))           = b(g(iel,:))           + b_cell*source(iel)*jac;
-end
-
-% lump mass matrix and reaction matrix
-ML = diag(sum(MC));
-
-% compute low-order viscosity if needed
-if low_order_scheme == 2 || high_order_scheme == 2
-    % compute sum of local viscous bilinear forms
-    visc_bilin_cell = h*[1 -1; -1 1];
-    visc_bilin = zeros(n,n);
-    for iel = 1:nel
-        visc_bilin(g(iel,:),g(iel,:)) = visc_bilin(g(iel,:),g(iel,:))...
-            + visc_bilin_cell;
+    % get local dof indices
+    ii = connectivity(iel,:);
+    
+    % compute quadrature point positions
+    xq = get_quadrature_point_positions(x,iel,zq);
+    
+    % assemble local matrices
+    M_cell = zeros(dofs_per_cell,dofs_per_cell);
+    A_cell = zeros(dofs_per_cell,dofs_per_cell);
+    for q = 1:nq
+        M_cell = M_cell + v(:,q) * v(:,q)' * wq(q) * Jac(iel);
+        A_cell = A_cell + mu * v(:,q) * dvdz(:,q)' * wq(q) +...
+            sigma(xq(q)) * v(:,q) * v(:,q)' * wq(q) * Jac(iel);
     end
     
-    % compute low-order viscosity
-    viscL = zeros(nel,1);
-    for iel = 1:nel
-        viscL(iel) = 0; % initialize to zero for max()
-        for i = 1:dofs_per_cell
-            for j = 1:dofs_per_cell
-                if (i ~= j)
-                    ii = g(iel,i);
-                    jj = g(iel,j);
-                    viscL(iel) = max(viscL(iel),-max(0,A(ii,jj))/visc_bilin(ii,jj));
-                end
+    % add local contributions to global system
+    MC(ii,ii) = MC(ii,ii) + M_cell;
+    A(ii,ii)  = A(ii,ii)  + A_cell;
+end
+
+% subtract inflow boundary face term if weakly imposing Dirichlet BC
+if modify_for_weak_DirichletBC
+    A(1,1) = A(1,1) + 0.5 * mu;
+end
+
+% multiply steady-state matrix by speed
+A = A*speed;
+
+% computed lumped mass matrix
+ML = diag(sum(MC));
+
+%--------------------------------------------------------------------------
+% Compute low-order viscosity
+%--------------------------------------------------------------------------
+
+% compute sum of local viscous bilinear forms
+visc_bilin_cell = [1 -1; -1 1];
+visc_bilin = zeros(n,n);
+for iel = 1:nel
+    % get local dof indices
+    ii = connectivity(iel,:);
+    
+    % add local contributions to global system
+    visc_bilin(ii,ii) = visc_bilin(ii,ii) + dx(iel)*visc_bilin_cell;
+end
+
+% compute low-order viscosity
+viscL = zeros(nel,1);
+for iel = 1:nel
+    viscL(iel) = 0; % initialize to zero for max()
+    for i = 1:dofs_per_cell
+        for j = 1:dofs_per_cell
+            if (i ~= j)
+                ii = connectivity(iel,i);
+                jj = connectivity(iel,j);
+                viscL(iel) = max(viscL(iel),-max(0,A(ii,jj))/visc_bilin(ii,jj));
             end
         end
     end
-else
-    % pass an empty container if low-order viscosity isn't needed
-    viscL = [];
 end
 
-% compute discrete upwinding operator D for low-order advection matrix
+%--------------------------------------------------------------------------
+% Compute low-order artificial diffusion matrix and low-order steady-state
+% matrix
+%--------------------------------------------------------------------------
+
+% compute low-order artificial diffusion matrix
 switch low_order_scheme
     case 1 % algebraic
         for i = 1:n
@@ -83,13 +105,17 @@ switch low_order_scheme
         end
     case 2 % graph-theoretic
         for iel = 1:nel
-            D(g(iel,:),g(iel,:)) = D(g(iel,:),g(iel,:)) + viscL(iel)*visc_bilin_cell;
+            % get local dof indices
+            ii = connectivity(iel,:);
+    
+            % add local contributions to global system
+            D(ii,ii) = D(ii,ii) + viscL(iel) * dx(iel)*visc_bilin_cell;
         end
     otherwise
         error('Invalid low order scheme chosen');
 end
 
-% compute low-order and high-order system matrices
+% compute low-order steady-state matrix
 AL = A + D;
 
 return

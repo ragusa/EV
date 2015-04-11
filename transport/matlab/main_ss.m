@@ -4,7 +4,7 @@ close all; clear; clc;
 %--------------------------------------------------------------------------
 % mesh options
 %--------------------------------------------------------------------------
-nel = 50; % number of elements
+nel = 10; % number of elements
 %--------------------------------------------------------------------------
 % method options
 %--------------------------------------------------------------------------
@@ -14,11 +14,12 @@ nel = 50; % number of elements
 %                    2 = Entropy viscosity
 %
 low_order_scheme  = 2; % low-order scheme option
-high_order_scheme = 1; % high-order scheme option
-cE = 1; % coefficient for entropy residual in entropy viscosity
-cJ = cE; % coefficient for jumps in entropy viscosity
+high_order_scheme = 2; % high-order scheme option
+cE = 1.0; % coefficient for entropy residual in entropy viscosity
+cJ = 1.0; % coefficient for jumps in entropy viscosity
 entropy       = @(u) 0.5*u.^2; % entropy function
 entropy_deriv = @(u) u;       % derivative of entropy function
+impose_DirichletBC_strongly = true; % impose Dirichlet BC strongly?
 %--------------------------------------------------------------------------
 % quadrature options
 %--------------------------------------------------------------------------
@@ -26,22 +27,18 @@ nq = 3; % number of quadrature points
 %--------------------------------------------------------------------------
 % FCT options
 %--------------------------------------------------------------------------
-% DMP_option: 1 = use original DMP
-%             2 = use new DMP
+% DMP_option: 1 = DMP
+%             2 = max/min(DMP,CMP)
 % limiting_option: 0 = set limiting coefficients to 0 (no correction)
 %                  1 = set limiting coefficients to 1 (full correction)
 %                  2 = use Zalesak's limiter
 %                  3 = use Josh's limiter
 %
-compute_FCT = true;   % option to compute FCT solution
+compute_FCT = false;   % option to compute FCT solution
 DMP_option = 2;       % DMP option
 limiting_option = 2;  % limiter option
-m_max = 30;           % maximum number of defect-correction iterations
-dc_tol = 1e-4;        % defect-correction tolerance for discrete L2 norm
-%--------------------------------------------------------------------------
-% plot options
-%--------------------------------------------------------------------------
-plot_high_order_solution  = true; % plot high-order final solution?
+m_max = 100;           % maximum number of defect-correction iterations
+dc_tol = 1e-10;        % defect-correction tolerance for discrete L2 norm
 %--------------------------------------------------------------------------
 % physics options
 %--------------------------------------------------------------------------
@@ -49,20 +46,24 @@ plot_high_order_solution  = true; % plot high-order final solution?
 %            1: void without source -> absorber without source
 %            2: void with source    -> absorber without source
 %
-problemID = 1; % problem ID (if any)
-len    = 10;   % length of domain
-omega  = 1;    % omega
-sigmaL = 0;    % sigma for left half of domain
-sigmaR = 0;    % sigma for right half of domain
-qL     = 0;    % source for left half of domain
-qR     = 0;    % source for right half of domain
+problemID = 3; % problem ID (if any)
+x_min = 0.0;   % left end of domain
+x_max = 1.0;   % right end of domain
+mu     = 1;    % cos(angle)
+sigma  = @(x) 1;   % cross section function
+source = @(x,t) 0; % source function
 inc    = 1;    % incoming flux
 speed  = 1;    % advection speed
 %--------------------------------------------------------------------------
 % output options
 %--------------------------------------------------------------------------
-save_exact_solution     = false; % option to save exact solution 
-save_low_order_solution = false; % option to save low-order solution
+plot_FCT_iterate = true; % option to plot FCT and bounds during iteration
+pausetime = 0.0; % time to pause if plotting during iteration
+plot_bounds = true; % option to plot maximum principle bounds
+save_exact_solution      = false; % option to save exact solution 
+save_low_order_solution  = false; % option to save low-order solution
+save_high_order_solution = true; % option to save high-order solution
+save_FCT_solution        = false; % option to save FCT solution
 %--------------------------------------------------------------------------
 
 %% Setup
@@ -71,73 +72,100 @@ save_low_order_solution = false; % option to save low-order solution
 switch problemID
     case 0 % custom
         % do nothing, parameters in input section are used
-    case 1 % void without source -> absorber without source
-        len    = 10;
-        omega  = 1;
-        sigmaL = 0;
-        sigmaR = 1;
-        qL     = 0;
-        qR     = 0;
-        inc    = 1;
+    case 1 % pure absorber without source
+        x_min = 0.0;
+        x_max = 1.0;
+        inc    = 1.0;
+        mu     = 1.0;
+        sigma  = @(x) 10.0;
+        source = @(x,t) 0.0;
         speed  = 1;
-    case 2 % void with source    -> absorber without source
-        len    = 10;
-        omega  = 1;
-        sigmaL = 0;
-        sigmaR = 1;
-        qL     = 1;
-        qR     = 0;
-        inc    = 1;
+        exact_solution_known = true;
+        exact = @(x) exp(-10*x);
+    case 2 % void without source -> absorber without source
+        x_min = 0.0;
+        x_max = 1.0;
+        inc    = 1.0;
+        mu     = 1.0;
+        sigma  = @(x) 10.0*(x >= 0.5);
+        source = @(x,t) 0.0;
         speed  = 1;
+        exact_solution_known = true;
+        exact = @(x) (x<0.5) + (x>=0.5).*(exp(-10*(x-0.5)));
+    case 3 % void with source -> absorber without source
+        x_min = 0.0;
+        x_max = 1.0;
+        inc    = 0.0;
+        mu     = 1.0;
+        sigma  = @(x) 10.0*(x >= 0.5);
+        source = @(x,t) 1.0*(x < 0.5);
+        speed  = 1;
+        exact_solution_known = true;
+        exact = @(x) x.*(x<0.5) + 0.5*exp(-10*(x-0.5)).*(x>=0.5);
+    case 4
+        x_min = 0.0;
+        x_max = 1.0;
+        inc    = 0.0;
+        mu     = 1.0;
+        sigma  = @(x) 10.0;
+        source = @(x,t) 1.0*(x < 0.5);
+        speed  = 1;
+        exact_solution_known = false;
+        exact = @(x) x.*(x<0.5) + 0.5*exp(-10*(x-0.5)).*(x>=0.5);
+    case 5 % MMS-1
+        x_min = 0.0;
+        x_max = 1.0;
+        inc    = 1.0;
+        mu     = 1.0;
+        sigma  = @(x) 1.0;
+        source = @(x,t) pi*cos(pi*x)+sin(pi*x)+1;
+        speed  = 1;
+        exact_solution_known = true;
+        exact = @(x,t) sin(pi*x)+1;
     otherwise
         error('Invalid problem ID chosen');
 end
 
 % compute mesh quantities
-n_dof = nel + 1;              % number of dofs
-x = linspace(0,len,nel+1)';   % mesh points
-dx_cell = diff(x);            % element sizes
-dx = dx_cell(1);              % element size assuming uniform mesh
+n_dof = nel + 1;                  % number of dofs
+x = linspace(x_min,x_max,nel+1)'; % mesh points
+dx = diff(x);                     % element sizes
 
 % get quadrature points and weights and evaluate basis functions
 [zq,wq]  = get_GL_quadrature(nq);
 [v,dvdz] = get_lagrange_basis(zq,2); 
-Jac = 0.5*dx_cell; % Jacobians of reference cell transformations
+Jac = 0.5*dx; % Jacobians of reference cell transformations
 
 %% Material properties
 
-% compute sigma and source in each cell
-x_center = linspace(0.5*dx(1),len-0.5*dx(1),nel)'; % cell center positions
-x_mid = len/2;                             % center of domain
-sigma  = (x_center < x_mid)*sigmaL + (x_center >= x_mid)*sigmaR;
-source = (x_center < x_mid)*qL     + (x_center >= x_mid)*qR;
-
 % compute min and max sigma and source in the support of i
-sigma_min = zeros(n_dof,1);
-sigma_max = zeros(n_dof,1);
-q_min = zeros(n_dof,1);
-q_max = zeros(n_dof,1);
-for i = 1:n_dof
-    i1 = max(i-1,1);
-    i2 = min(i,nel);
-    sigma_min(i) = min(sigma(i1:i2));
-    sigma_max(i) = max(sigma(i1:i2));
-    q_min(i)     = min(source(i1:i2));
-    q_max(i)     = max(source(i1:i2));
-end
+sigma_min  = 1e15*ones(n_dof,1);
+sigma_max  = zeros(n_dof,1);
+source_min = 1e15*ones(n_dof,1);
+source_max = zeros(n_dof,1);
 
 %% Assembly
 
-% build matrices
-[MC,ML,A,AL,DL,b,viscL] = ...
-    build_matrices(len,nel,omega,speed,sigma,source,...
-    low_order_scheme,high_order_scheme,false);
+% create connectivity array
+connectivity = [linspace(1,nel,nel)' linspace(2,nel+1,nel)'];
+
+% assemble mass matrices, inviscid and low-order steady-state matrices,
+% low-order viscosity and corresponding artificial diffusion matrix
+[MC,ML,A,AL,DL,viscL] = build_matrices(...
+    nq,zq,wq,v,dvdz,Jac,x,dx,nel,n_dof,connectivity,...
+    mu,speed,sigma,low_order_scheme,~impose_DirichletBC_strongly);
+
+% assemble steady-state rhs at time 0
+b = assemble_ss_rhs(nq,zq,wq,v,Jac,x,nel,n_dof,connectivity,...
+    source,mu,speed,0,inc,~impose_DirichletBC_strongly);
 
 % compute sytem matrices and rhs and modify for Dirichlet BC
 AL_mod = AL;
-AL_mod(1,:)=0; AL_mod(1,1)=1;
 b_mod = b;
-b_mod(1) = inc;
+if (impose_DirichletBC_strongly)
+    AL_mod(1,:)=0; AL_mod(1,1)=1;
+    b_mod(1) = inc;
+end
 
 %% Low-order Solution
 
@@ -152,8 +180,9 @@ uH = uL;
 for iter = 1:m_max
     % compute high-order diffusion matrix
     if (high_order_scheme == 2) % Entropy viscosity
-        viscE = compute_entropy_viscosity_ss(...
-            uH,x,omega,sigma,source,v,dvdz,wq,Jac,cE,cJ,entropy,entropy_deriv);
+        viscE = compute_entropy_viscosity(...
+            uH,uH,x,mu,sigma,source,1.0,...
+            v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,false);
         DH = compute_high_order_diffusion_matrix(viscE,viscL,dx,false);
     else
         DH = spalloc(n_dof,n_dof,3*n_dof);
@@ -161,7 +190,10 @@ for iter = 1:m_max
     
     % compute high-order matrices
     AH = A + DH;
-    AH_mod = AH; AH_mod(1,:)=0; AH_mod(1,1)=1;
+    AH_mod = AH;
+    if (impose_DirichletBC_strongly)
+        AH_mod(1,:)=0; AH_mod(1,1)=1;
+    end
     
     % compute residual
     res = b_mod - AH_mod*uH;
@@ -177,29 +209,46 @@ for iter = 1:m_max
     uH = uH + AH_mod \ res;
 end
 
+% report if the solution did not converge
+if (~converged)
+    error('\t\tHigh-order Solution did not converge in %i iterations\n',m_max);
+end
+
 %% FCT Solution
 
 if (compute_FCT)
     fprintf('\tComputing FCT solution...\n');
-    uFCT = uL;
+            
+    % compute flux correction matrix
+    F = flux_correction_matrix_ss(uH,DL-DH);
     
+    uFCT = uL;
     converged = 0; % convergence flag
     for iter = 1:m_max
         % FCT solve
         %----------------
         % compute max principle bounds
-        switch DMP_option
-            case 1 % original DMP
-                [Wplus,Wminus] = compute_DMP_ss(uFCT,AL_mod,b_mod,inc);
-            case 2 % new DMP
-                [Wplus,Wminus] = compute_CMP_ss(uFCT,sigma_min,sigma_max,q_min,q_max,0,inc);
-            otherwise
-                error('Invalid DMP option');
+        [Wplus,Wminus] = compute_DMP_ss(uFCT,AL_mod,b_mod,inc);
+        if DMP_option == 2
+            [WplusCMP,WminusCMP] = compute_CMP_ss(uFCT,sigma_min,...
+                    sigma_max,source_min,source_max,0,inc);
+            Wplus = max(Wplus,WplusCMP);
+            Wminus = min(Wminus,WminusCMP);
         end
         [Qplus,Qminus] = compute_Q_ss(uFCT,Wplus,Wminus,AL_mod,b_mod);
         
-        % compute flux correction matrix
-        F = flux_correction_matrix_ss(uH,DL-DH);
+        % plot iterate of FCT solution
+        if (plot_FCT_iterate)
+            clf;
+            hold on;
+            plot(x,uH,'b-+');
+            plot(x,uFCT,'g-x');
+            plot(x,Wminus,'k--');
+            plot(x,Wplus,'k--');
+            hold off;
+            legend('High-order',['FCT,l=',num2str(iter)],['W-,l=',num2str(iter)],['W+,l=',num2str(iter)]);
+            pause(pausetime);
+        end
         
         % compute limiting coefficients
         switch limiting_option
@@ -216,7 +265,9 @@ if (compute_FCT)
         end
         % compute correction rhs and modify for Dirichlet BC
         rhs = b + flim;
-        rhs(1) = inc;
+        if (impose_DirichletBC_strongly)
+            rhs(1) = inc;
+        end
         % compute residual
         res = rhs - AL_mod*uFCT;
         % test convergence
@@ -232,7 +283,7 @@ if (compute_FCT)
     end
     
     if (~converged)
-        error('\t\tSolution did not converge in %i iterations\n',m_max);
+        error('\t\tFCT Solution did not converge in %i iterations\n',m_max);
     end
 end
     
@@ -241,43 +292,75 @@ end
 figure(1); clf; hold on;
 
 % plot exact solution
-xx = linspace(0,len,1000);
-u_exact = exact_solution_ss(xx,sigmaL,sigmaR,qL,qR,inc,len);
-plot(xx,u_exact,'k');
-legend_entries = char('Exact');
+if (exact_solution_known)
+    xx = linspace(x_min,x_max,1000);
+    u_exact = exact(xx);
+    plot(xx,u_exact,'k');
+    legend_entries = char('Exact');
+end
 
 % plot low-order solution
 plot(x,uL,'r-s');
-if (exist('legend_entries','var'))
+if (exact_solution_known)
     legend_entries = char(legend_entries,'Low-order');
 else
     legend_entries = char('Low-order');
 end
 
 % plot high-order solution
-if (plot_high_order_solution)
-    plot(x,uH,'b-+');
-    legend_entries = char(legend_entries,'High-order');
-end
+plot(x,uH,'b-+');
+legend_entries = char(legend_entries,'High-order');
 
 if (compute_FCT)
     % plot FCT solution
     plot(x,uFCT,'g-x');
-    switch limiting_option
-        case 0 % Full limiter
-            limiter_string = 'Full limiter';
-        case 1 % No limiter
-            limiter_string = 'No limiter';
-        case 2 % Zalesak limiter
-            limiter_string = 'Zalesak limiter';
-        case 3 % Josh limiter
-            limiter_string = 'Josh limiter';
-        otherwise
-            error('Invalid limiting option');
+    legend_entries = char(legend_entries,'FCT');
+    
+    % plot bounds
+    if (plot_bounds)
+        plot(x,Wminus,'k--');
+        plot(x,Wplus,'k--');
+        legend_entries = char(legend_entries,'W-','W+');
     end
-    FCT_legend_string = ['FCT, ',limiter_string];
-    legend_entries = char(legend_entries,FCT_legend_string);
 end
 
 % legend
 legend(legend_entries,'Location','Best');
+
+%% Output
+
+% save exact solution
+if (save_exact_solution)
+    exact_file = 'output/uexact.csv';
+    csvwrite(exact_file,[xx,u_exact]);
+end
+
+% save low-order solution
+if (save_low_order_solution)
+    low_order_file = ['output/uL_ss.csv'];
+    csvwrite(low_order_file,[x,uL]);
+end
+
+% determine string to be appended for high-order scheme
+switch high_order_scheme
+    case 1
+        high_order_string = 'Gal';
+    case 2
+        high_order_string = 'EV';
+    otherwise
+        error('Invalid high-order scheme chosen');
+end
+
+% save high-order solution
+if (save_high_order_solution)
+    high_order_file = ['output/uH_',high_order_string,'_ss.csv'];
+    csvwrite(high_order_file,[x,uH]);
+end
+
+% save FCT solution
+if (save_FCT_solution)
+    if (compute_FCT)
+        FCT_file = ['output/uFCT_',high_order_string,'_ss.csv'];
+        csvwrite(FCT_file,[x,uFCT]);
+    end
+end

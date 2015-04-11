@@ -3,11 +3,13 @@ function viscE = compute_entropy_viscosity(...
     v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,periodic_BC)
 
 n = length(u_old); % number of dofs
-nel = n-1;         % number of elements
+
 if periodic_BC
-    nel = n;
+    nel = n;  % number of elements
+else
+    nel = n-1;
 end
-nq = length(zq);   % number of quadrature points
+
 g = [linspace(1,nel,nel)' linspace(2,nel+1,nel)']; % connectivity array
 if periodic_BC
     g(end,:) = [ g(end,1) 1 ];
@@ -66,7 +68,7 @@ for iel = 1:nel
     % evaluate new and old solution at quadrature points
     u_new_local_nodes = u_new(g(iel,:));
     u_old_local_nodes = u_old(g(iel,:));
-    u_new_local     = v' * u_new_local_nodes;
+    u_new_local = v' * u_new_local_nodes;
     u_old_local = v' * u_old_local_nodes;
     dudx_new_local  = dvdz' * u_new(g(iel,:)) / Jac(iel);
     % evaluate entropy and derivative
@@ -74,10 +76,15 @@ for iel = 1:nel
     E_old = entropy(u_old_local);
     dEdu_new = entropy_deriv(u_new_local);
     dEdx_new = dEdu_new.*dudx_new_local;
+    % compute quadrature point positions
+    xq = get_quadrature_point_positions(x,iel,zq);
+    % evaluate cross section and source at quadrature points
+    sigma_q  = sigma(xq);
+    source_q = source(xq);
     
     % compute maximum entropy residual at quadrature points
     R = (E_new-E_old)/dt + mu*dEdx_new +...
-        dEdu_new.*(sigma(iel)*u_new_local - source(iel));
+        dEdu_new.*(sigma_q.*u_new_local - source_q);
     R_max = max(abs(R));
     
     % compute max jump

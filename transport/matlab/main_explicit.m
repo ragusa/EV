@@ -4,7 +4,7 @@ close all; clear; clc;
 %--------------------------------------------------------------------------
 % mesh options
 %--------------------------------------------------------------------------
-nel = 32; % number of elements
+nel = 10; % number of elements
 %--------------------------------------------------------------------------
 % method options
 %--------------------------------------------------------------------------
@@ -15,10 +15,11 @@ nel = 32; % number of elements
 %
 low_order_scheme  = 2; % low-order scheme option
 high_order_scheme = 2; % high-order scheme option
-cE = 1; % coefficient for entropy residual in entropy viscosity
-cJ = 0; % coefficient for jumps in entropy viscosity
-entropy       = @(u) 0.5*u.^2;%log(abs(u-u.^2));% % entropy function
-entropy_deriv = @(u) u;%(1-2*u)./(u-u.^2);       % derivative of entropy function
+cE = 1.0; % coefficient for entropy residual in entropy viscosity
+cJ = 1.0; % coefficient for jumps in entropy viscosity
+entropy       = @(u) 0.5*u.^2; % entropy function
+entropy_deriv = @(u) u;        % derivative of entropy function
+impose_DirichletBC_strongly = true; % impose Dirichlet BC strongly?
 %--------------------------------------------------------------------------
 % quadrature options
 %--------------------------------------------------------------------------
@@ -30,55 +31,50 @@ nq = 3; % number of quadrature points
 %                  2 = SSPRK(3,3) (Shu-Osher)
 %
 temporal_scheme = 1; % temporal discretization scheme
-CFL = 0.9;       % CFL number
+CFL = 0.8;       % CFL number
 ss_tol = 1.0e-5; % steady-state tolerance
-n_max = 1000;    % maximum number of time steps
-t_max = 2.0;    % max time to run
+t_end = 1.0;    % max time to run
 %--------------------------------------------------------------------------
 % FCT options
 %--------------------------------------------------------------------------
 % DMP_option: 1 = use DMP
-%             2 = use CMP
+%             2 = max/min(DMP,CMP)
 % limiting_option: 0 = set limiting coefficients to 0 (no correction)
 %                  1 = set limiting coefficients to 1 (full correction)
 %                  2 = use Zalesak's limiter
 %                  3 = use Josh's limiter
 %
-DMP_option = 1;       % DMP option
+DMP_option = 2;       % DMP option
 limiting_option = 2;  % limiter option
 %--------------------------------------------------------------------------
 % plot options
 %--------------------------------------------------------------------------
-compute_low_order  = false; % compute and plot low-order solution?
+compute_low_order  = true; % compute and plot low-order solution?
 compute_high_order = true; % compute and plot high-order solution?
 compute_FCT        = false; % compute and plot FCT solution?
 plot_viscosity     = false; % plot viscosities?
 plot_low_order_transient  = false; % plot low-order transient?
-plot_high_order_transient = false; % plot high-order transient?
+plot_high_order_transient = true; % plot high-order transient?
 plot_FCT_transient        = false; % plot FCT transient?
 pausetime = 0.1;                   % time to pause for transient plots
 %--------------------------------------------------------------------------
 % physics options
 %--------------------------------------------------------------------------
 % problemID: 0: custom - use parameters below
-%            1: void without source -> absorber without source
-%            2: void with source    -> absorber without source
-%            3: linear advection with periodic BC and exponential and
-%               square pulse IC
-%            4: linear advection with periodic BC and square pulse IC
+%            1: pure absorber without source
+%            2: void without source -> absorber without source
 % IC_option: 0: zero
 %            1: exponential pulse
 %            2: exponential and square pulse
 %
-problemID = 1; % problem ID (if any)
-periodic_BC = true; % option for periodic BC; otherwise Dirichlet
+problemID = 3; % problem ID (if any)
+periodic_BC = false; % option for periodic BC; otherwise Dirichlet
 IC_option = 0; % initial solution option
-len    = 10;    % length of domain
-omega  = 1;    % omega
-sigmaL = 1;    % sigma for left half of domain
-sigmaR = 1;    % sigma for right half of domain
-qL     = 1;    % source for left half of domain
-qR     = 0;    % source for right half of domain
+x_min = 0.0;   % left end of domain
+x_max = 1.0;   % right end of domain
+mu     = 1;    % cos(angle)
+sigma  = @(x) 1;   % cross section function
+source = @(x,t) 0; % source function
 inc    = 0;    % incoming flux
 speed  = 1;    % advection speed
 %--------------------------------------------------------------------------
@@ -86,7 +82,7 @@ speed  = 1;    % advection speed
 %--------------------------------------------------------------------------
 save_exact_solution      = false; % option to save exact solution 
 save_low_order_solution  = false; % option to save low-order solution
-save_high_order_solution = true; % option to save high-order solution
+save_high_order_solution = false; % option to save high-order solution
 save_FCT_solution        = false; % option to save FCT solution
 %-------------------------------------------------------------------------
 
@@ -96,67 +92,71 @@ save_FCT_solution        = false; % option to save FCT solution
 switch problemID
     case 0 % custom
         % do nothing, parameters in input section are used
-    case 1 % void without source -> absorber without source
+    case 1 % pure absorber without source
+        x_min = 0.0;
+        x_max = 1.0;
         periodic_BC = false;
-        IC_option = 0;
-        len    = 10;
-        omega  = 1;
-        sigmaL = 0;
-        sigmaR = 1;
-        qL     = 0;
-        qR     = 0;
-        inc    = 1;
+        inc    = 1.0;
+        mu     = 1.0;
+        sigma  = @(x) 10.0;
+        source = @(x,t) 0.0;
         speed  = 1;
-    case 2 % void with source    -> absorber without source
+        IC_option = 0;
+        exact_solution_known = true;
+        exact = @(x,t) (t>=x).*exp(-10*x);
+    case 2 % void without source -> absorber without source
+        x_min = 0.0;
+        x_max = 1.0;
         periodic_BC = false;
+        inc    = 1.0;
+        mu     = 1.0;
+        sigma  = @(x) 10.0*(x >= 0.5);
+        source = @(x,t) 0.0;
+        speed  = 1;
         IC_option = 0;
-        len    = 10;
-        omega  = 1;
-        sigmaL = 0;
-        sigmaR = 1;
-        qL     = 1;
-        qR     = 0;
-        inc    = 1;
+        exact_solution_known = true;
+        exact = @(x,t) (t>=x).*((x<0.5) + (x>=0.5).*(exp(-10*(x-0.5))));
+    case 3 % void with source -> absorber without source
+        x_min = 0.0;
+        x_max = 1.0;
+        periodic_BC = false;
+        inc    = 0.0;
+        mu     = 1.0;
+        sigma  = @(x) 10.0*(x >= 0.5);
+        source = @(x,t) 1.0*(x < 0.5);
         speed  = 1;
-    case 3 % linear advection with exponential and square pulse IC
-        periodic_BC = true;
-        IC_option = 2;
-        len    = 1;
-        omega  = 1;
-        sigmaL = 0;
-        sigmaR = 0;
-        qL     = 0;
-        qR     = 0;
-        inc    = 0;
+        exact_solution_known = true;
+        exact = @(x,t) x.*(x<0.5) + 0.5*exp(-10*(x-0.5)).*(x>=0.5);
+    case 5 % MMS-1
+        x_min = 0.0;
+        x_max = 1.0;
+        periodic_BC = false;
+        inc    = 0.0;
+        mu     = 1.0;
+        sigma  = @(x) 1.0;
+        source = @(x,t) sin(pi*x)+pi*t*cos(pi*x)+t*sin(pi*x);
         speed  = 1;
-    case 4 % linear advection with square pulse IC
-        periodic_BC = true;
-        IC_option = 3;
-        len    = 1;
-        omega  = 1;
-        sigmaL = 0;
-        sigmaR = 0;
-        qL     = 0;
-        qR     = 0;
-        inc    = 0;
-        speed  = 1;
+        IC_option = 0;
+        exact_solution_known = true;
+        exact = @(x,t) t*sin(pi*x);
     otherwise
         error('Invalid problem ID chosen');
 end
 
 % compute mesh quantities
-n_dof = nel + 1;              % number of dofs
+% number of dofs
 if periodic_BC
     n_dof = nel;
+else
+    n_dof = nel + 1;
 end
-x = linspace(0,len,nel+1)';   % mesh points
-dx_cell = diff(x);            % element sizes
-dx = dx_cell(1);              % element size assuming uniform mesh
+
+% mesh
+x = linspace(x_min,x_max,nel+1)'; % positions of dofs/cell vertices
+dx = diff(x);                     % element sizes
 if periodic_BC
     x(end)=[];
 end
-% force theta to zero because this is an explicit code
-theta = 0;
 
 % set initial conditions function and compute initial solution
 switch IC_option
@@ -177,50 +177,57 @@ u0 = IC(x);
 % get quadrature points and weights and evaluate basis functions
 [zq,wq]  = get_GL_quadrature(nq);
 [v,dvdz] = get_lagrange_basis(zq,2); 
-Jac = 0.5*dx_cell; % Jacobians of reference cell transformations
+Jac = 0.5*dx; % Jacobians of reference cell transformations
 
 %% Material properties
 
-% compute sigma and source in each cell
-x_center = linspace(0.5*dx_cell(1),len-0.5*dx_cell(1),nel)'; % cell center positions
-x_mid = len/2;                             % center of domain
-sigma  = (x_center < x_mid)*sigmaL + (x_center >= x_mid)*sigmaR;
-source = (x_center < x_mid)*qL     + (x_center >= x_mid)*qR;
-
 % compute min and max sigma and source in the support of i
-sigma_min = zeros(n_dof,1);
-sigma_max = zeros(n_dof,1);
-q_min = zeros(n_dof,1);
-q_max = zeros(n_dof,1);
-for i = 1:n_dof
-    i1 = max(i-1,1);
-    i2 = min(i,nel);
-    sigma_min(i) = min(sigma(i1:i2));
-    sigma_max(i) = max(sigma(i1:i2));
-    q_min(i)     = min(source(i1:i2));
-    q_max(i)     = max(source(i1:i2));
-end
-
-% compute min and max sigma and source in the support of i
-sigma_upwind_min = zeros(n_dof,1);
-sigma_upwind_max = zeros(n_dof,1);
-q_upwind_min = zeros(n_dof,1);
-q_upwind_max = zeros(n_dof,1);
-for i = 1:n_dof
-    i1 = max(i-1,1);
-    i2 = i1;
-    sigma_upwind_min(i) = min(sigma(i1:i2));
-    sigma_upwind_max(i) = max(sigma(i1:i2));
-    q_upwind_min(i)     = min(source(i1:i2));
-    q_upwind_max(i)     = max(source(i1:i2));
+sigma_min  = 1e15*ones(n_dof,1);
+sigma_max  = zeros(n_dof,1);
+source_min = 1e15*ones(n_dof,1);
+source_max = zeros(n_dof,1);
+for iel = 1:nel
+    % compute quadrature point positions
+    xq = get_quadrature_point_positions(x,iel,zq);
+    
+    % compute cross section and source at each quadrature point
+    sigma_cell = sigma(xq);
+    source_cell = source(xq,0);
+    
+    % compute max and min on cell
+    sigma_cell_min = min(sigma_cell);
+    sigma_cell_max = max(sigma_cell);
+    source_cell_min = min(source_cell);
+    source_cell_max = max(source_cell);
+    
+    % update max/min for each dof on cell
+    sigma_min(iel:iel+1) = min(sigma_min(iel:iel+1),sigma_cell_min);
+    sigma_max(iel:iel+1) = min(sigma_max(iel:iel+1),sigma_cell_max);
+    source_min(iel:iel+1) = min(source_min(iel:iel+1),source_cell_min);
+    source_max(iel:iel+1) = min(source_max(iel:iel+1),source_cell_max);
 end
 
 %% Assembly
 
-% build matrices
-[MC,ML,A,AL,DL,b,viscL] = ...
-    build_matrices(len,nel,omega,speed,sigma,source,...
-    low_order_scheme,high_order_scheme,periodic_BC);
+% create connectivity array
+connectivity = [linspace(1,nel,nel)' linspace(2,nel+1,nel)'];
+if periodic_BC
+    connectivity(end,:) = [connectivity(end,1) 1];
+end
+
+% determine if linear system needs to be modified for Dirichlet BC
+modify_for_weak_DirichletBC = ~periodic_BC && ~impose_DirichletBC_strongly;
+modify_for_strong_DirichletBC = ~periodic_BC && impose_DirichletBC_strongly;
+
+% assemble mass matrices, inviscid and low-order steady-state matrices,
+% low-order viscosity and corresponding artificial diffusion matrix
+[MC,ML,A,AL,DL,viscL] = build_matrices(...
+    nq,zq,wq,v,dvdz,Jac,x,dx,nel,n_dof,connectivity,...
+    mu,speed,sigma,low_order_scheme,modify_for_weak_DirichletBC);
+
+% assemble steady-state rhs at time 0
+b = assemble_ss_rhs(nq,zq,wq,v,Jac,x,nel,n_dof,connectivity,...
+    source,mu,speed,0,inc,modify_for_weak_DirichletBC);
 
 % check that speed is nonzero; otherwise, infinite dt will be computed
 if (speed == 0)
@@ -236,9 +243,9 @@ end
 dtCFL = CFL / max_speed_dx;
 
 % compute transient sytem matrices and modify for Dirichlet BC
-ALtr = ML + dtCFL*theta*AL;
+ALtr = ML;
 ALtr_mod = ALtr;
-if ~periodic_BC
+if modify_for_strong_DirichletBC
     ALtr_mod(1,:)=0; ALtr_mod(1,1)=1;
 end
 
@@ -248,36 +255,53 @@ if (compute_low_order)
     fprintf('\nComputing low-order solution...\n\n');
     u_old = u0;
     t = 0;
+    time_step = 0;
     reached_end_of_transient = false;
-    for time_step = 1:n_max
+    while (~reached_end_of_transient)
+        % advance time step index
+        time_step = time_step+1;
+        
         % shorten time step if necessary
-        if (t+dtCFL >= t_max)
-            dt = t_max - t;
+        if (t+dtCFL >= t_end)
+            dt = t_end - t;
             reached_end_of_transient = true;
         else
             dt = dtCFL;
-            ALtr = ML + dt*theta*AL;
+            ALtr = ML;
             ALtr_mod = ALtr;
-            if ~periodic_BC
+            if modify_for_strong_DirichletBC
                 ALtr_mod(1,:)=0; ALtr_mod(1,1)=1;
             end
             reached_end_of_transient = false;
         end
         fprintf('Time step %i: t = %f->%f',time_step,t,t+dt);
         
+        % perform step
         switch temporal_scheme
             case 1 % explicit Euler
-                uL = low_order_step(u_old,AL,ALtr_mod,ML,b,dt,theta,inc,periodic_BC);
+                b = assemble_ss_rhs(nq,zq,wq,v,Jac,x,nel,n_dof,connectivity,...
+                    source,mu,speed,t,inc,modify_for_weak_DirichletBC);
+                uL = low_order_step(u_old,AL,ALtr_mod,ML,b,dt,0,inc,...
+                    modify_for_strong_DirichletBC);
             case 2 % SSP3
                 % stage 1
                 u_old_stage = u_old;
-                uL_stage = low_order_step(u_old_stage,AL,ALtr_mod,ML,b,dt,theta,inc,periodic_BC);
+                b = assemble_ss_rhs(nq,zq,wq,v,Jac,x,nel,n_dof,connectivity,...
+                    source,mu,speed,t,inc,modify_for_weak_DirichletBC);
+                uL_stage = low_order_step(u_old_stage,AL,ALtr_mod,ML,b,...
+                    dt,0,inc,modify_for_strong_DirichletBC);
                 % stage 2
                 u_old_stage = uL_stage;
-                uL_stage = low_order_step(u_old_stage,AL,ALtr_mod,ML,b,dt,theta,inc,periodic_BC);
+                b = assemble_ss_rhs(nq,zq,wq,v,Jac,x,nel,n_dof,connectivity,...
+                    source,mu,speed,t+dt,inc,modify_for_weak_DirichletBC);
+                uL_stage = low_order_step(u_old_stage,AL,ALtr_mod,ML,b,...
+                    dt,0,inc,modify_for_strong_DirichletBC);
                 % stage 3
                 u_old_stage = 0.75*u_old + 0.25*uL_stage;
-                uL_stage = low_order_step(u_old_stage,AL,ALtr_mod,ML,b,dt,theta,inc,periodic_BC);
+                b = assemble_ss_rhs(nq,zq,wq,v,Jac,x,nel,n_dof,connectivity,...
+                    source,mu,speed,t+0.5*dt,inc,modify_for_weak_DirichletBC);
+                uL_stage = low_order_step(u_old_stage,AL,ALtr_mod,ML,b,...
+                    dt,0,inc,modify_for_strong_DirichletBC);
                 % final combination
                 uL = 1/3*u_old + 2/3*uL_stage;
             otherwise
@@ -287,8 +311,8 @@ if (compute_low_order)
         % test steady-state convergence
         ss_err = norm(uL-u_old,2);
         fprintf(' norm(u_new - u_old) = %e\n',ss_err);
-        finished = ss_err < ss_tol || reached_end_of_transient;
-        if (finished)
+        reached_steady_state = ss_err < ss_tol;
+        if (reached_steady_state)
             break;
         end
         
@@ -315,12 +339,16 @@ if (compute_high_order)
     u_old   = u0;
     u_older = u0;
     t = 0;
+    time_step = 0;
     dt_old = dtCFL;
     reached_end_of_transient = false;
-    for time_step = 1:n_max
+    while (~reached_end_of_transient)
+        % advance time step index
+        time_step = time_step+1;
+        
         % shorten time step if necessary
-        if (t+dtCFL >= t_max)
-            dt = t_max - t;
+        if (t+dtCFL >= t_end)
+            dt = t_end - t;
             reached_end_of_transient = true;
         else
             dt = dtCFL;
@@ -330,28 +358,36 @@ if (compute_high_order)
         
         switch temporal_scheme
             case 1 % explicit Euler
+                b = assemble_ss_rhs(nq,zq,wq,v,Jac,x,nel,n_dof,connectivity,...
+                    source,mu,speed,t,inc,modify_for_weak_DirichletBC);
                 [uH,DH] = high_order_step(u_older,u_old,viscL,dx,...
-                    x,omega,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
-                    A,b,MC,theta,time_step,high_order_scheme,periodic_BC);
+                    x,mu,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
+                    A,b,MC,0,time_step,high_order_scheme,periodic_BC,impose_DirichletBC_strongly);
             case 2 % SSP3
                 % stage 1
                 u_old_stage = u_old;
                 u_older_stage = u_older;
+                b = assemble_ss_rhs(nq,zq,wq,v,Jac,x,nel,n_dof,connectivity,...
+                    source,mu,speed,t,inc,modify_for_weak_DirichletBC);
                 [uH_stage,DH] = high_order_step(u_older_stage,u_old_stage,viscL,dx,...
-                    x,omega,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
-                    A,b,MC,theta,time_step,high_order_scheme,periodic_BC);
+                    x,mu,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
+                    A,b,MC,0,time_step,high_order_scheme,periodic_BC,impose_DirichletBC_strongly);
                 % stage 2
                 u_old_stage = uH_stage;
                 u_older_stage = u_older;
+                b = assemble_ss_rhs(nq,zq,wq,v,Jac,x,nel,n_dof,connectivity,...
+                    source,mu,speed,t+dt,inc,modify_for_weak_DirichletBC);
                 [uH_stage,DH] = high_order_step(u_older_stage,u_old_stage,viscL,dx,...
-                    x,omega,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
-                    A,b,MC,theta,time_step,high_order_scheme,periodic_BC);
+                    x,mu,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
+                    A,b,MC,0,time_step,high_order_scheme,periodic_BC,impose_DirichletBC_strongly);
                 % stage 3
                 u_old_stage = 0.75*u_old + 0.25*uH_stage;
                 u_older_stage = u_older;
+                b = assemble_ss_rhs(nq,zq,wq,v,Jac,x,nel,n_dof,connectivity,...
+                    source,mu,speed,t+0.5*dt,inc,modify_for_weak_DirichletBC);
                 [uH_stage,DH] = high_order_step(u_older_stage,u_old_stage,viscL,dx,...
-                    x,omega,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
-                    A,b,MC,theta,time_step,high_order_scheme,periodic_BC);
+                    x,mu,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
+                    A,b,MC,0,time_step,high_order_scheme,periodic_BC,impose_DirichletBC_strongly);
                 % final combination
                 uH = 1/3*u_old + 2/3*uH_stage;
             otherwise
@@ -361,14 +397,15 @@ if (compute_high_order)
         % test steady-state convergence
         ss_err = norm(uH-u_old,2);
         fprintf(' norm(u_new - u_old) = %e\n',ss_err);
-        finished = ss_err < ss_tol || reached_end_of_transient;
-        if (finished)
+        reached_steady_state = ss_err < ss_tol;
+        if (reached_steady_state)
             break;
         end
         
         % plot
         if (plot_high_order_transient)
             plot(x,uH);
+            axis([-inf inf -inf 0.5]);
             legend('High-order');
             pause(pausetime);
         end
@@ -391,47 +428,76 @@ if (compute_FCT)
     u_old   = u0;
     u_older = u0;
     t = 0;
+    time_step = 0;
     dt_old = dtCFL;
-    for time_step = 1:n_max
+    reached_end_of_transient = false;
+    while (~reached_end_of_transient)
+        % advance time step index
+        time_step = time_step+1;
+        
+        % shorten time step if necessary
+        if (t+dtCFL >= t_end)
+            dt = t_end - t;
+            reached_end_of_transient = true;
+        else
+            dt = dtCFL;
+            reached_end_of_transient = false;
+        end
         fprintf('Time step %i: t = %f->%f\n',time_step,t,t+dt);
         
         switch temporal_scheme
             case 1 % explicit Euler
                 % perform high-order step
+                b = assemble_ss_rhs(nq,zq,wq,v,Jac,x,nel,n_dof,connectivity,...
+                    source,mu,speed,t,inc,modify_for_weak_DirichletBC);
                 [uH,DH] = high_order_step(u_older,u_old,viscL,dx,...
-                    x,omega,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
-                    A,b,MC,theta,time_step,high_order_scheme,periodic_BC);
+                    x,mu,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
+                    A,b,MC,0,time_step,high_order_scheme,periodic_BC,impose_DirichletBC_strongly);
 
                 % perform FCT step
-                uFCT = FCT_step_explicit(u_old,uH,dt,ML,MC,AL,DH,DL,b,inc,speed,...
-                    sigma_min,sigma_max,q_min,q_max,DMP_option,limiting_option,periodic_BC);
+                uFCT = FCT_step_explicit(u_old,uH,dt,...
+                    ML,MC,AL,DH,DL,b,inc,speed,sigma_min,sigma_max,...
+                    source_min,source_max,DMP_option,limiting_option,...
+                    periodic_BC,impose_DirichletBC_strongly);
             case 2 % SSP3
                 % stage 1
                 u_old_stage = u_old;
                 u_older_stage = u_older;
+                b = assemble_ss_rhs(nq,zq,wq,v,Jac,x,nel,n_dof,connectivity,...
+                    source,mu,speed,t,inc,modify_for_weak_DirichletBC);
                 [uH_stage,DH] = high_order_step(u_older_stage,u_old_stage,viscL,dx,...
-                    x,omega,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
-                    A,b,MC,theta,time_step,high_order_scheme,periodic_BC);
-                uFCT_stage = FCT_step_explicit(u_old_stage,uH_stage,dt,ML,MC,AL,DH,DL,b,inc,speed,...
-                    sigma_min,sigma_max,q_min,q_max,DMP_option,limiting_option,periodic_BC);
+                    x,mu,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
+                    A,b,MC,0,time_step,high_order_scheme,periodic_BC,impose_DirichletBC_strongly);
+                uFCT_stage = FCT_step_explicit(u_old_stage,uH_stage,dt,...
+                    ML,MC,AL,DH,DL,b,inc,speed,sigma_min,sigma_max,...
+                    source_min,source_max,DMP_option,limiting_option,...
+                    periodic_BC,impose_DirichletBC_strongly);
                 
                 % stage 2
                 u_old_stage = uFCT_stage;
                 u_older_stage = u_older;
+                b = assemble_ss_rhs(nq,zq,wq,v,Jac,x,nel,n_dof,connectivity,...
+                    source,mu,speed,t+dt,inc,modify_for_weak_DirichletBC);
                 [uH_stage,DH] = high_order_step(u_older_stage,u_old_stage,viscL,dx,...
-                    x,omega,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
-                    A,b,MC,theta,time_step,high_order_scheme,periodic_BC);
-                uFCT_stage = FCT_step_explicit(u_old_stage,uH_stage,dt,ML,MC,AL,DH,DL,b,inc,speed,...
-                    sigma_min,sigma_max,q_min,q_max,DMP_option,limiting_option,periodic_BC);
+                    x,mu,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
+                    A,b,MC,0,time_step,high_order_scheme,periodic_BC,impose_DirichletBC_strongly);
+                uFCT_stage = FCT_step_explicit(u_old_stage,uH_stage,dt,...
+                    ML,MC,AL,DH,DL,b,inc,speed,sigma_min,sigma_max,...
+                    source_min,source_max,DMP_option,limiting_option,...
+                    periodic_BC,impose_DirichletBC_strongly);
                 
                 % stage 3
                 u_old_stage = 0.75*u_old + 0.25*uFCT_stage;
                 u_older_stage = u_older;
+                b = assemble_ss_rhs(nq,zq,wq,v,Jac,x,nel,n_dof,connectivity,...
+                    source,mu,speed,t+0.5*dt,inc,modify_for_weak_DirichletBC);
                 [uH_stage,DH] = high_order_step(u_older_stage,u_old_stage,viscL,dx,...
-                    x,omega,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
-                    A,b,MC,theta,time_step,high_order_scheme,periodic_BC);
-                uFCT_stage = FCT_step_explicit(u_old_stage,uH_stage,dt,ML,MC,AL,DH,DL,b,inc,speed,...
-                    sigma_min,sigma_max,q_min,q_max,DMP_option,limiting_option,periodic_BC);
+                    x,mu,sigma,source,inc,dt,dt_old,v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,...
+                    A,b,MC,0,time_step,high_order_scheme,periodic_BC,impose_DirichletBC_strongly);
+                uFCT_stage = FCT_step_explicit(u_old_stage,uH_stage,dt,...
+                    ML,MC,AL,DH,DL,b,inc,speed,sigma_min,sigma_max,...
+                    source_min,source_max,DMP_option,limiting_option,...
+                    periodic_BC,impose_DirichletBC_strongly);
                 
                 % final combination
                 uFCT = 1/3*u_old + 2/3*uFCT_stage;
@@ -442,8 +508,8 @@ if (compute_FCT)
         % test steady-state convergence
         ss_err = norm(uFCT-u_old,2);
         fprintf('\tnorm(u_new - u_old) = %e\n',ss_err);
-        finished = ss_err < ss_tol || t >= t_max;
-        if (finished)
+        reached_steady_state = ss_err < ss_tol;
+        if (reached_steady_state)
             break;
         end
         
@@ -467,15 +533,21 @@ end
 figure(1); clf; hold on;
 
 % plot exact solution
-xx = linspace(0,len,1000)';
-u_exact = exact_solution(xx,t+dt,IC,speed,sigmaL,sigmaR,qL,qR,inc,len,periodic_BC)';
-plot(xx,u_exact,'k-');
-legend_entries = char('Exact');
+if (exact_solution_known)
+    xx = linspace(x_min,x_max,1000)';
+    u_exact = exact(xx,t_end);
+    plot(xx,u_exact,'k-');
+    legend_entries = char('Exact');
+end
 
 % plot low-order solution
 if (compute_low_order)
     plot(x,uL_final,'r-s');
-    legend_entries = char(legend_entries,'Low-order');
+    if (exact_solution_known)
+        legend_entries = char(legend_entries,'Low-order');
+    else
+        legend_entries = char('Low-order');
+    end
 end
 
 % plot high-order solution
