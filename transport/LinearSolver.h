@@ -26,7 +26,7 @@ class LinearSolver {
       void solve(SparseMatrix<double> &A,
                  Vector<double>       &b,
                  Vector<double>       &x,
-                 const double          t);
+                 const double          t = 0);
 
    private:
       void apply_Dirichlet_BC(SparseMatrix<double> &A,

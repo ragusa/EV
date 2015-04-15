@@ -28,7 +28,7 @@ template<int dim>
 void LinearSolver<dim>::solve(SparseMatrix<double> &A,
                               Vector<double>       &b,
                               Vector<double>       &x,
-                              const double          t = 0)
+                              const double          t)
 {
    // apply Dirichlet BC
    apply_Dirichlet_BC(A,b,x,t);
