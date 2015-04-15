@@ -716,10 +716,13 @@ void TransportProblem<dim>::run()
                                parameters.entropy_residual_coefficient,
                                parameters.jump_coefficient,
                                domain_volume,
-                               parameters.EV_time_discretization);
+                               parameters.EV_time_discretization,
+                               low_order_viscosity,
+                               inviscid_ss_matrix,
+                               high_order_diffusion_matrix,
+                               high_order_ss_matrix);
 
       // create FCT object
-/*
       FCT<dim> fct(dof_handler,
                    lumped_mass_matrix,
                    consistent_mass_matrix,
@@ -729,7 +732,6 @@ void TransportProblem<dim>::run()
                    n_dofs,
                    dofs_per_cell,
                    parameters.do_not_limit);
-*/
 
       // if problem is steady-state, then just do one solve; else loop over time
       if (parameters.is_steady_state) { // run steady-state problem
@@ -835,27 +837,16 @@ void TransportProblem<dim>::run()
 
                   break;
                } case 2: { // high-order system with entropy viscosity
-ExcNotImplemented();
-/*
-
                   // compute EV only at beginning of time step
                   if (parameters.EV_time_discretization != EntropyViscosity<dim>::FE) {
                      // recompute high-order steady-state matrix
-                     entropy_viscosity = EV.compute_entropy_viscosity(
+                     EV.recompute_high_order_ss_matrix(
                         old_solution,
                         older_solution,
                         oldest_solution,
                         old_dt,
                         older_dt,
                         t_old);
-                     for (unsigned int i_cell = 0; i_cell < n_cells; ++i_cell)
-                        high_order_viscosity(i_cell) = std::min(
-                           entropy_viscosity(i_cell),
-                           low_order_viscosity(i_cell));
-                     compute_graphLaplacian_diffusion_matrix(
-                        high_order_viscosity,high_order_diffusion_matrix);
-                     high_order_ss_matrix.copy_from(inviscid_ss_matrix);
-                     high_order_ss_matrix.add(1.0,high_order_diffusion_matrix);
                   }
 
                   for (unsigned int i = 0; i < ssprk.n_stages; ++i)
@@ -879,21 +870,13 @@ ExcNotImplemented();
                         ssprk.get_stage_solution(i,old_stage_solution);
    
                         // recompute high-order steady-state matrix
-                        entropy_viscosity = EV.compute_entropy_viscosity(
+                        EV.recompute_high_order_ss_matrix(
                            new_solution,
                            old_stage_solution,
                            old_solution, // not used; supply arbitrary argument
                            dt,
                            old_dt,       // not used; supply arbitrary argument
                            t_stage);
-                        for (unsigned int i_cell = 0; i_cell < n_cells; ++i_cell)
-                           high_order_viscosity(i_cell) = std::min(
-                              entropy_viscosity(i_cell),
-                              low_order_viscosity(i_cell));
-                        compute_graphLaplacian_diffusion_matrix(
-                           high_order_viscosity,high_order_diffusion_matrix);
-                        high_order_ss_matrix.copy_from(inviscid_ss_matrix);
-                        high_order_ss_matrix.add(1.0,high_order_diffusion_matrix);
                      }
 
                      // advance by an SSPRK step
@@ -903,13 +886,7 @@ ExcNotImplemented();
                   ssprk.get_new_solution(new_solution);
 
                   break;
-*/
                } case 3: { // EV FCT
-ExcNotImplemented();
-/*
-                  // assert that the graph-Laplacian low-order diffusion option was used
-                  Assert(parameters.low_order_diffusion_option == 1, ExcNotImplemented());
-
                   for (unsigned int i = 0; i < ssprk.n_stages; ++i)
                   {
                      // get stage time
@@ -930,12 +907,13 @@ ExcNotImplemented();
                      ssprk.get_stage_solution(i,old_stage_solution);
 
                      // recompute high-order steady-state matrix
-                     entropy_viscosity = EV.compute_entropy_viscosity(new_solution,old_stage_solution,old_solution,dt,old_dt,t_stage);
-                     for (unsigned int i_cell = 0; i_cell < n_cells; ++i_cell)
-                        high_order_viscosity(i_cell) = std::min(entropy_viscosity(i_cell),low_order_viscosity(i_cell));
-                     compute_graphLaplacian_diffusion_matrix(high_order_viscosity,high_order_diffusion_matrix);
-                     high_order_ss_matrix.copy_from(inviscid_ss_matrix);
-                     high_order_ss_matrix.add(1.0,high_order_diffusion_matrix);
+                     EV.recompute_high_order_ss_matrix(
+                        new_solution,
+                        old_stage_solution,
+                        old_solution,
+                        dt,
+                        old_dt,
+                        t_stage);
 
                      // advance by an SSPRK step
                      ssprk.step(consistent_mass_matrix,high_order_ss_matrix,ss_rhs,false);
@@ -966,13 +944,7 @@ ExcNotImplemented();
                   ssprk.get_new_solution(new_solution);
 
                   break;
-*/
                } case 4: { // Galerkin FCT
-ExcNotImplemented();
-/*
-                  // assert that the graph-Laplacian low-order diffusion option was used
-                  Assert(parameters.low_order_diffusion_option == 1, ExcNotImplemented());
-
                   for (unsigned int i = 0; i < ssprk.n_stages; ++i)
                   {
                      // get stage time
@@ -1009,7 +981,6 @@ ExcNotImplemented();
                   }
                   // retrieve the final solution
                   ssprk.get_new_solution(new_solution);
-*/
 
                   break;
                } default: {

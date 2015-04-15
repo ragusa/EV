@@ -18,8 +18,7 @@ set CFL limit = 1.0
 set Time integrator option = SSP3 # <FE|SSP2|SSP3>
 
 # artificial viscosity options
-set Scheme option = 2 # 0 = Galerkin, 1 = low-order, 2 = EV, 3 = EV+FCT, 4 = Galerkin+FCT
-set Low order diffusion option = 1 # 1 = graph-Laplacian, 2 = standard Laplacian
+set Scheme option = 4 # 0 = Galerkin, 1 = low-order, 2 = EV, 3 = EV+FCT, 4 = Galerkin+FCT
 
 # entropy viscosity options
 set Entropy string = 0.5*u*u

@@ -6,6 +6,7 @@
 
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/constraint_matrix.h>
+#include <deal.II/lac/sparse_matrix.h>
 
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
@@ -17,6 +18,7 @@
 #include <deal.II/fe/fe_q.h>
 
 #include "Viscosity.h"
+#include "LowOrderViscosity.h"
 
 using namespace dealii;
 
@@ -42,20 +44,31 @@ class EntropyViscosity : public Viscosity<dim> {
                        const double          &entropy_residual_coefficient,
                        const double          &jump_coefficient,
                        const double          &domain_volume,
-                       const TemporalDiscretization temporal_discretization);
+                       const TemporalDiscretization temporal_discretization,
+                       const LowOrderViscosity<dim> &low_order_viscosity,
+                       const SparseMatrix<double> &inviscid_matrix,
+                             SparseMatrix<double> &diffusion_matrix,
+                             SparseMatrix<double> &total_matrix);
 
       ~EntropyViscosity();
 
-      Vector<double> compute_entropy_viscosity(const Vector<double> &old_solution,
-                                               const Vector<double> &older_solution,
-                                               const Vector<double> &oldest_solution,
-                                               const double         &old_dt,
-                                               const double         &older_dt,
-                                               const double         &time);
+      void recompute_high_order_ss_matrix(const Vector<double> &old_solution,
+                                          const Vector<double> &older_solution,
+                                          const Vector<double> &oldest_solution,
+                                          const double         &old_dt,
+                                          const double         &older_dt,
+                                          const double         &time);
 
    private:
+      void compute_entropy_viscosity(const Vector<double> &old_solution,
+                                     const Vector<double> &older_solution,
+                                     const Vector<double> &oldest_solution,
+                                     const double         &old_dt,
+                                     const double         &older_dt,
+                                     const double         &time);
       void compute_normalization_constant(const Vector<double> &old_solution);
-      void compute_temporal_discretization_constants(const double old_dt, const double older_dt);
+      void compute_temporal_discretization_constants(const double old_dt,
+                                                     const double older_dt);
 
       // mesh and dof data
       const FESystem<dim> *fe;
@@ -97,6 +110,14 @@ class EntropyViscosity : public Viscosity<dim> {
       double a_oldest;
       double b_old;
       double b_older;
+
+      // low-order viscosity
+      const LowOrderViscosity<dim> * const low_order_viscosity;
+
+      // matrices
+      const SparseMatrix<double> * const inviscid_matrix;
+            SparseMatrix<double> * const diffusion_matrix;
+            SparseMatrix<double> * const total_matrix;
 };
 
 #include "EntropyViscosity.cc"

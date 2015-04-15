@@ -28,6 +28,7 @@ class Viscosity {
       void add_diffusion_matrix(const SparseMatrix<double> &inviscid_matrix,
                                       SparseMatrix<double> &diffusion_matrix,
                                       SparseMatrix<double> &total_matrix);
+      double get_viscosity_value(const unsigned int i) const;
 
    protected:
 

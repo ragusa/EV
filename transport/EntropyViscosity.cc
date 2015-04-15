@@ -16,7 +16,11 @@ EntropyViscosity<dim>::EntropyViscosity(
    const double          &entropy_residual_coefficient,
    const double          &jump_coefficient,
    const double          &domain_volume,
-   const TemporalDiscretization temporal_discretization) :
+   const TemporalDiscretization temporal_discretization,
+   const LowOrderViscosity<dim> &low_order_viscosity,
+   const SparseMatrix<double> &inviscid_matrix,
+         SparseMatrix<double> &diffusion_matrix,
+         SparseMatrix<double> &total_matrix) :
 
       Viscosity<dim>(n_cells,fe.dofs_per_cell,dof_handler,constraints),
       fe(&fe),
@@ -36,7 +40,12 @@ EntropyViscosity<dim>::EntropyViscosity(
       jump_coefficient(jump_coefficient),
       domain_volume(domain_volume),
       entropy_viscosity(n_cells),
-      temporal_discretization(temporal_discretization)
+      temporal_discretization(temporal_discretization),
+      low_order_viscosity(&low_order_viscosity),
+      inviscid_matrix(&inviscid_matrix),
+      diffusion_matrix(&diffusion_matrix),
+      total_matrix(&total_matrix)
+      
 {
    // initialize entropy function
    std::map<std::string,double> constants;
@@ -48,6 +57,33 @@ EntropyViscosity<dim>::EntropyViscosity(
  */
 template<int dim>
 EntropyViscosity<dim>::~EntropyViscosity() {
+}
+
+/** \brief recomputes the high-order steady-state matrix
+ */
+template <int dim>
+void EntropyViscosity<dim>::recompute_high_order_ss_matrix(
+   const Vector<double> &old_solution,
+   const Vector<double> &older_solution,
+   const Vector<double> &oldest_solution,
+   const double         &old_dt,
+   const double         &older_dt,
+   const double         &time)
+{
+   // recompute entropy viscosity
+   compute_entropy_viscosity(
+      old_solution,
+      older_solution,
+      oldest_solution,
+      old_dt,
+      older_dt,
+      time);
+
+   // compute diffusion matrix
+   this->compute_diffusion_matrix(*diffusion_matrix);
+
+   // add diffusion matrix
+   this->add_diffusion_matrix(*inviscid_matrix,*diffusion_matrix,*total_matrix);
 }
 
 /** \brief computes the domain-averaged entropy and the max entropy
@@ -117,12 +153,13 @@ void EntropyViscosity<dim>::compute_normalization_constant(const Vector<double> 
 /** \brief Computes the entropy viscosity for each cell.
  */
 template <int dim>
-Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<double> &old_solution,
-                                                                const Vector<double> &older_solution,
-                                                                const Vector<double> &oldest_solution,
-                                                                const double         &old_dt,
-                                                                const double         &older_dt,
-                                                                const double         &time)
+void EntropyViscosity<dim>::compute_entropy_viscosity(
+   const Vector<double> &old_solution,
+   const Vector<double> &older_solution,
+   const Vector<double> &oldest_solution,
+   const double         &old_dt,
+   const double         &older_dt,
+   const double         &time)
 {
    // compute the temporal discretization constants used in entropy residual
    compute_temporal_discretization_constants(old_dt,older_dt);
@@ -276,11 +313,16 @@ Vector<double> EntropyViscosity<dim>::compute_entropy_viscosity(const Vector<dou
    
       // compute entropy viscosity in cell
       //----------------------------------------------------------------------------
-      entropy_viscosity(i_cell) = (entropy_residual_coefficient * max_entropy_residual
+      double entropy_viscosity_cell = (entropy_residual_coefficient * max_entropy_residual
          + jump_coefficient * max_jump_in_cell) / normalization_constant;
-   }
+      
+      // get low-order viscosity for cell
+      double low_order_viscosity_cell = low_order_viscosity->get_viscosity_value(i_cell);
 
-   return entropy_viscosity;
+      // compute high-order viscosity
+      this->viscosity(i_cell) = std::min(entropy_viscosity_cell,
+                                         low_order_viscosity_cell);
+   }
 }
 
 

@@ -78,3 +78,11 @@ void Viscosity<dim>::compute_diffusion_matrix(SparseMatrix<double> &diffusion_ma
 
    }
 }
+
+/** \brief Gets a single viscosity value associated with a cell.
+ */
+template <int dim>
+double Viscosity<dim>::get_viscosity_value(const unsigned int i) const
+{
+   return viscosity(i);
+}
