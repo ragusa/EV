@@ -15,7 +15,8 @@ TransportProblem<dim>::TransportProblem(const TransportParameters<dim> &paramete
       n_q_points_face(face_quadrature.size()),
       transport_direction(0.0),
       has_exact_solution(false),
-      domain_volume(0.0)
+      domain_volume(0.0),
+      timer(std::cout,TimerOutput::summary,TimerOutput::wall_times)
 {
 }
 
@@ -31,6 +32,9 @@ TransportProblem<dim>::~TransportProblem() {
 template<int dim>
 void TransportProblem<dim>::initialize_system()
 {
+   // timer
+   TimerOutput::Scope t_initialize(timer,"initialize");
+
    // process problem ID
    process_problem_ID();
 
@@ -321,6 +325,9 @@ void TransportProblem<dim>::process_problem_ID()
 template<int dim>
 void TransportProblem<dim>::setup_system()
 {
+   // timer
+   TimerOutput::Scope t_setup(timer,"setup");
+
    // distribute dofs
    dof_handler.distribute_dofs(fe);
    // get number of dofs
@@ -388,12 +395,17 @@ void TransportProblem<dim>::setup_system()
 template <int dim>
 void TransportProblem<dim>::assemble_mass_matrices()
 {
+   // timer
+   TimerOutput::Scope t_assemble_mass(timer,"assemble mass matrices");
+
    // assemble lumped mass matrix
    //----------------------------
    FEValues<dim> fe_values (fe, cell_quadrature, update_values | update_JxW_values);
 
    std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
-   FullMatrix<double> local_mass (dofs_per_cell, dofs_per_cell);
+
+   FullMatrix<double> local_mass_consistent(dofs_per_cell, dofs_per_cell);
+   FullMatrix<double> local_mass_lumped    (dofs_per_cell, dofs_per_cell);
 
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
@@ -402,30 +414,30 @@ void TransportProblem<dim>::assemble_mass_matrices()
       fe_values.reinit(cell);
       cell->get_dof_indices(local_dof_indices);
 
-      local_mass = 0.0;
+      local_mass_consistent = 0.0;
+      local_mass_lumped     = 0.0;
 
       // compute local contribution
       for (unsigned int q = 0; q < n_q_points_cell; ++q)
          for (unsigned int i = 0; i < dofs_per_cell; ++i)
             for (unsigned int j = 0; j < dofs_per_cell; ++j)
             {
-               local_mass(i,i) +=  fe_values.shape_value(i,q)
-                                  *fe_values.shape_value(j,q)
-                                  *fe_values.JxW(q);
+               local_mass_consistent(i,j) +=  fe_values.shape_value(i,q)
+                                              *fe_values.shape_value(j,q)
+                                              *fe_values.JxW(q);
+               local_mass_lumped(i,i) +=  fe_values.shape_value(i,q)
+                                          *fe_values.shape_value(j,q)
+                                          *fe_values.JxW(q);
             }
 
-      // add to global mass matrix with contraints
-      constraints.distribute_local_to_global (local_mass, local_dof_indices, lumped_mass_matrix);
+      // add to global mass matrices with contraints
+      constraints.distribute_local_to_global(local_mass_consistent,
+                                             local_dof_indices,
+                                             consistent_mass_matrix);
+      constraints.distribute_local_to_global(local_mass_lumped,
+                                             local_dof_indices,
+                                             lumped_mass_matrix);
    }
-
-   // assemble consistent mass matrix
-   //----------------------------
-   Function<dim> *dummy_function = 0;
-   MatrixTools::create_mass_matrix(dof_handler,
-                                   cell_quadrature,
-                                   consistent_mass_matrix,
-                                   dummy_function,
-                                   constraints);
 }
 
 /** \brief Assemble the inviscid system matrix. The inviscid steady-state matrix
@@ -435,6 +447,9 @@ void TransportProblem<dim>::assemble_mass_matrices()
 template<int dim>
 void TransportProblem<dim>::assemble_inviscid_ss_matrix()
 {
+   // timer
+   TimerOutput::Scope t_assemblematrix(timer,"assemble ss matrix");
+
    inviscid_ss_matrix = 0;
 
    // FE values, for assembly terms
@@ -506,6 +521,9 @@ void TransportProblem<dim>::assemble_inviscid_ss_matrix()
 template<int dim>
 void TransportProblem<dim>::assemble_ss_rhs(const double &t)
 {
+   // timer
+   TimerOutput::Scope t_assemblerhs(timer,"assemble ss rhs");
+
    // reset steady-state rhs
    ss_rhs = 0;
 
@@ -1000,31 +1018,29 @@ void TransportProblem<dim>::run()
             // increment time step index
             n++;
          }
-
-         // report if DMP was satisfied at all time steps
-/*
-         if ((parameters.scheme_option == 3)||(parameters.scheme_option == 4))
-         {
-            // report if local discrete maximum principle is satisfied at all time steps
-            if (fct.check_DMP_satisfied())
-               std::cout << "Local discrete maximum principle was satisfied at all time steps" << std::endl;
-            else
-               std::cout << "Local discrete maximum principle was NOT satisfied at all time steps" << std::endl;
-         }
-*/
       }
 
-      // evaluate errors for use in adaptive mesh refinement
-      if (has_exact_solution) postprocessor.evaluate_error(new_solution,
-                                                           dof_handler,
-                                                           triangulation,
-                                                           cycle);
+      // evaluate errors for convergence study
+      {
+         // timer
+         TimerOutput::Scope t_evaluateerror(timer,"evaluate error");
+
+         if (has_exact_solution) postprocessor.evaluate_error(new_solution,
+                                                              dof_handler,
+                                                              triangulation,
+                                                              cycle);
+      }
    }
 
-   // output grid and solution and print convergence results
-   postprocessor.output_results(new_solution,dof_handler,triangulation);
-   // output viscosities if they were used
-   //postprocessor.output_viscosity(low_order_viscosity,entropy_viscosity,high_order_viscosity,dof_handler);
+   {
+      // timer
+      TimerOutput::Scope t_output(timer,"output");
+
+      // output grid and solution and print convergence results
+      postprocessor.output_results(new_solution,dof_handler,triangulation);
+      // output viscosities if they were used
+      //postprocessor.output_viscosity(low_order_viscosity,entropy_viscosity,high_order_viscosity,dof_handler);
+   }
 }
 
 /** \brief Solves the steady-state system.
@@ -1053,10 +1069,15 @@ void TransportProblem<dim>::solve_steady_state(LinearSolver<dim> &linear_solver)
       }
    }
 
-   // solve the linear system: ss_matrix*new_solution = ss_rhs
-   linear_solver.solve(system_matrix, ss_rhs, new_solution);
-   // distribute constraints
-   constraints.distribute(new_solution);
+   {
+      // timer
+      TimerOutput::Scope t_solve(timer,"solve");
+      
+      // solve the linear system: ss_matrix*new_solution = ss_rhs
+      linear_solver.solve(system_matrix, ss_rhs, new_solution);
+      // distribute constraints
+      constraints.distribute(new_solution);
+   }
 }
 
 /** \brief Checks that the CFL condition is satisfied; If not, adjusts time step size.

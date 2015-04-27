@@ -88,8 +88,8 @@ class EntropyViscosity : public Viscosity<dim> {
       FunctionParser<dim> *source_function;
 
       // entropy viscosity functions and data
-      FunctionParser<dim> entropy_function;
-      FunctionParser<dim> entropy_derivative_function;
+      FunctionParser<1> entropy_function;
+      FunctionParser<1> entropy_derivative_function;
       std::string entropy_string;
       std::string entropy_derivative_string;
       double entropy_residual_coefficient;

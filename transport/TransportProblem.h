@@ -6,6 +6,7 @@
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/function_parser.h>
 #include <deal.II/base/tensor_function.h>
+#include <deal.II/base/timer.h>
 
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/full_matrix.h>
@@ -144,6 +145,9 @@ class TransportProblem {
       // Dirichlet boundary condition
       void get_dirichlet_nodes();
       std::vector<unsigned int> dirichlet_nodes;
+
+      // timer
+      TimerOutput timer;
 };
 
 #include "TransportProblem.cc"

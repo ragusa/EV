@@ -3,7 +3,7 @@
               \frac{\partial\psi}{\partial t} 
               + \mathbf{\omega}\cdot\nabla\psi
               + \sigma_t \psi
-              = S
+              = q
            \f]
  */
 
@@ -15,16 +15,16 @@
 
 using namespace dealii;
 
-const unsigned int dim = 1; // number of spatial dimensions
+const unsigned int dim = 2; // number of spatial dimensions
 
 /** \brief reads input file and then runs problem
  */
 int main(int argc, char ** argv) {
    try {
-      dealii::deallog.depth_console(0);
+      deallog.depth_console(0);
 
       // get input parameters
-      dealii::ParameterHandler parameter_handler;
+      ParameterHandler parameter_handler;
       TransportParameters<dim> parameters;
       parameters.declare_parameters(parameter_handler);
       parameter_handler.read_input("input");

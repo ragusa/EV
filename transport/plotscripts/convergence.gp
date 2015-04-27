@@ -4,9 +4,9 @@
 #           is_ss=<is steady state?>' convergence.gp
 
 # Reference slopes
-slope1 = 0.25
-slope2 = 0.50
-slope3 = 0.75
+slope1 = 1.00
+slope2 = 2.00
+slope3 = 3.00
 
 # Convergence mode; 1 = space, 2 = time
 conv_mode = 1
