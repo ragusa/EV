@@ -1,0 +1,48 @@
+Neutron transport using deal.II
+===============================
+
+SOURCE FILES:
+-------------
+
+transport_parallel.cc        Main file, parallel version
+transport_serial.cc          Main file, serial version
+TransportParameters.h
+TransportParameters.cc
+TransportProblemParallel.h
+TransportProblemParallel.cc
+
+OTHER FILES:
+-------------
+
+input           example input file; other input files may be used
+CMakeLists.txt  cmake file to create Makefile
+
+COMPILING:
+----------
+
+Note that deal.II must be installed with options of interfaces
+with PETSc and p4est. Path to deal.II installation is stored
+in environment variable $DEAL_II_DIR.
+
+1. Run cmake:
+   $> cmake .
+2. Set mode, either "debug":
+   $> make debug
+   or "release":
+   $> make release
+3. Run make:
+   $> make
+
+RUNNING:
+--------
+
+To run the serial program transport_serial:
+
+$> transport_serial <input_file>
+
+where input_file is the name of the input file to be used.
+To run the parallel program transport_parallel:
+
+$> mpirun -np <n_proc> transport_parallel <input_file>
+
+where n_proc is the number of processors.

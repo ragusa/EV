@@ -1,0 +1,21 @@
+# problem options
+# 1 = pure absorber
+# 2 = void-to-absorber
+# 3 = void
+# 4 = source in left half
+set Problem ID = 1
+
+# refinement options
+set Use adaptive refinement = false
+set Initial refinement level = 4
+set Number of refinement cycles = 3
+
+# finite element options
+set Finite element degree = 1
+set Number of quadrature points = 3
+
+# linear solver options
+set Linear solver option = 1
+
+# output options
+set Output solution = true
