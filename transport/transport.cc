@@ -15,7 +15,7 @@
 
 using namespace dealii;
 
-const unsigned int dim = 2; // number of spatial dimensions
+const unsigned int dim = 1; // number of spatial dimensions
 
 /** \brief reads input file and then runs problem
  */

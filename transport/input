@@ -8,7 +8,7 @@
 # 8 = source in left half
 # 9 = MMS-4
 # 10 = MMS-5
-set Problem ID = 2
+set Problem ID = 3
 
 # transient options
 set Is steady state = true
@@ -18,7 +18,7 @@ set CFL limit = 1.0
 set Time integrator option = SSP3 # <FE|SSP2|SSP3>
 
 # artificial viscosity options
-set Scheme option = 0 # 0 = Galerkin, 1 = low-order, 2 = EV, 3 = EV+FCT, 4 = Galerkin+FCT
+set Scheme option = 1 # 0 = Galerkin, 1 = low-order, 2 = EV, 3 = EV+FCT, 4 = Galerkin+FCT
 
 # entropy viscosity options
 set Entropy string = 0.5*u*u
@@ -32,7 +32,7 @@ set Do not limit = false
 set Refinement mode = space # <space|time>
 set Time refinement factor = 0.5
 set Use adaptive refinement = false
-set Initial refinement level = 5
+set Initial refinement level = 3
 set Number of refinement cycles = 1
 
 # finite element options

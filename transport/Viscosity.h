@@ -12,6 +12,8 @@
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_tools.h>
 
+#include <deal.II/numerics/data_out.h>
+
 using namespace dealii;
 
 /** \brief Class for a general cell-based artificial viscosity.
@@ -29,6 +31,7 @@ class Viscosity {
                                       SparseMatrix<double> &diffusion_matrix,
                                       SparseMatrix<double> &total_matrix);
       double get_viscosity_value(const unsigned int i) const;
+      void output_viscosity(const std::string output_file) const;
 
    protected:
 
