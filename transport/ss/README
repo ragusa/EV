@@ -14,8 +14,17 @@ TransportProblemParallel.cc
 OTHER FILES:
 -------------
 
-input           example input file; other input files may be used
+input_r##       input file for refinement level ##
 CMakeLists.txt  cmake file to create Makefile
+*.vtu, *.pvtu   output files, can be loaded using visit
+
+PYTHON SCRIPTS:
+---------------
+
+njobs.py    shows how many of your jobs are currently in queue
+summary.py  shows which runs have been made, and how many
+run.py      submits a single job
+runmult.py  submits multiple of the same job
 
 COMPILING:
 ----------

@@ -122,45 +122,6 @@ void TransportProblem<dim>::process_problem_ID()
          exact_solution_string = "source/sigma + (incoming - source/sigma)*exp(-sigma*(x-x_min))";
 
          break;
-      } case 2: { // void to absorber
-         Assert(dim < 3,ExcNotImplemented());
-
-         x_min = 0.0;
-         x_max = 1.0;
-
-         incoming_string = "1";
-         function_parser_constants["incoming"]  = 1.0;
-
-         cross_section_string = "if(x<x_mid, 0, 10)";
-         function_parser_constants["sigma"]  = 10.0;
-
-         source_string = "0";
-         function_parser_constants["source"] = 0.0;
-
-         has_exact_solution = true;
-         if (dim == 1)      // 1-D
-            exact_solution_string = "if(x<x_mid, incoming, exp(-sigma*(x-x_mid)))";
-         else if (dim == 2) // 2-D
-            exact_solution_string = "if(y<x_mid, incoming, if(x<x_mid, incoming, exp(-sigma*(x-x_mid))))";
-         else
-            Assert(false,ExcNotImplemented());
-
-         break;
-      } case 3: { // void
-         Assert(dim == 1,ExcNotImplemented());
-
-         x_min = 0.0;
-         x_max = 1.0;
-         cross_section_string = "0";
-         source_string = "0";
-
-         incoming_string = "1";
-         function_parser_constants["incoming"]  = 1.0;
-
-         has_exact_solution = true;
-         exact_solution_string = "1.0";
-
-         break;
       } default: {
          Assert(false,ExcNotImplemented());
          break;

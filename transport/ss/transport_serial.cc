@@ -17,18 +17,9 @@ const unsigned int dim = 2; // number of spatial dimensions
  */
 int main(int argc, char ** argv) {
    try {
-      // initialize and finalize MPI
-      Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
-
-      // print number of MPI processes
-      unsigned int n_processes = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
-      ConditionalOStream pcout(std::cout,
-         (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0));
-      pcout << "Running with " << n_processes << " MPI processes" << std::endl;
-
       // check that input file was supplied as command-line argument
       if (argc != 2) {
-         pcout << "Usage: transport <input_file>" << std::endl;
+         std::cout << "Usage: transport <input_file>" << std::endl;
          std::exit(EXIT_FAILURE);
       }
       // get input file name

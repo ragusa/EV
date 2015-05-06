@@ -1,14 +1,11 @@
 # problem options
 # 1 = pure absorber
-# 2 = void-to-absorber
-# 3 = void
-# 4 = source in left half
 set Problem ID = 1
 
 # refinement options
 set Use adaptive refinement = false
-set Initial refinement level = 4
-set Number of refinement cycles = 3
+set Initial refinement level = 5
+set Number of refinement cycles = 1
 
 # finite element options
 set Finite element degree = 1

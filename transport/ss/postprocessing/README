@@ -1,0 +1,30 @@
+Neutron transport using deal.II, post-processing
+================================================
+
+PYTHON SCRIPTS:
+---------------
+
+postprocessing.py  reads the output files in ../output to compute mean, std, and N for
+                   each experiment; results are then stored in results.out
+speedup.py         reads results.out and creates speedup plot data
+strong.py          reads results.out and creates strong scaling plot data
+timing.py          reads results.out and creates timing plots data
+
+GNUPLOT SCRIPTS:
+----------------
+
+speedup.gp            speedup plot data
+strong.gp             strong scaling plot data
+timing_initialize.gp  timing plot data, initialize section
+timing_setup.gp       timing plot data, setup section
+timing_assemble.gp    timing plot data, assemble section
+timing_solve.gp       timing plot data, solve section
+timing_output.gp      timing plot data, output section
+
+OTHER FILES:
+------------
+
+*.gpl        Gnuplot plot data
+*.pdf        plots
+results.out  processed data
+

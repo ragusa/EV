@@ -2,10 +2,12 @@
 #define TransportProblem_cc
 
 #include <deal.II/lac/generic_linear_algebra.h>
+/*
 namespace LA
 {
    using namespace dealii::LinearAlgebraPETSc;
 }
+*/
 
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/function.h>
@@ -13,24 +15,29 @@ namespace LA
 #include <deal.II/base/function_parser.h>
 #include <deal.II/base/tensor_function.h>
 #include <deal.II/base/timer.h>
-#include <deal.II/base/utilities.h>           // query MPI process info
-#include <deal.II/base/conditional_ostream.h> // parallel cout
-#include <deal.II/base/index_set.h>           // subset of indices for process
+//#include <deal.II/base/utilities.h>           // query MPI process info
+//#include <deal.II/base/conditional_ostream.h> // parallel cout
+//#include <deal.II/base/index_set.h>           // subset of indices for process
 
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/sparse_direct.h>
 #include <deal.II/lac/constraint_matrix.h>
-#include <deal.II/lac/sparsity_tools.h>           // distribute_sparsity_pattern
+//#include <deal.II/lac/sparsity_tools.h>           // distribute_sparsity_pattern
 #include <deal.II/lac/compressed_simple_sparsity_pattern.h>
+#include <deal.II/lac/solver_cg.h>
+#include <deal.II/lac/solver_bicgstab.h>
+#include <deal.II/lac/solver_richardson.h>
+/*
 #include <deal.II/lac/petsc_parallel_sparse_matrix.h>
 #include <deal.II/lac/petsc_parallel_vector.h>
 #include <deal.II/lac/petsc_solver.h>
 #include <deal.II/lac/petsc_precondition.h>
+*/
 
-#include <deal.II/distributed/tria.h>            // distributed triangulation
-#include <deal.II/distributed/grid_refinement.h> // distributed grid refinement
+//#include <deal.II/distributed/tria.h>            // distributed triangulation
+//#include <deal.II/distributed/grid_refinement.h> // distributed grid refinement
 
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/grid_generator.h>
@@ -80,17 +87,12 @@ class TransportProblem {
       void process_problem_ID();
       void output_solution();
 
-      // MPI communicator
-      MPI_Comm mpi_communicator;
-
       // input parameters
       const TransportParameters<dim> &parameters;
 
       // mesh and dof data
-      parallel::distributed::Triangulation<dim> triangulation;
+      Triangulation<dim> triangulation;
       DoFHandler<dim> dof_handler;
-      IndexSet locally_owned_dofs;
-      IndexSet locally_relevant_dofs;
       unsigned int n_cells;
       unsigned int n_dofs;
       const unsigned int degree;
@@ -107,11 +109,11 @@ class TransportProblem {
       // sparse matrices, sparsity patterns, and constraints
       ConstraintMatrix constraints;
       SparsityPattern constrained_sparsity_pattern;
-      LA::MPI::SparseMatrix system_matrix;
+      SparseMatrix<double> system_matrix;
 
       // vectors for solutions and right hand sides
-      LA::MPI::Vector solution;
-      LA::MPI::Vector system_rhs;
+      Vector<double> solution;
+      Vector<double> system_rhs;
 
       // physics data
       std::map<std::string,double> function_parser_constants;
@@ -128,9 +130,6 @@ class TransportProblem {
       double x_min;
       double x_max;
       double domain_volume;
-
-      // parallel output
-      ConditionalOStream pcout;
 
       // timer
       TimerOutput computing_timer;
