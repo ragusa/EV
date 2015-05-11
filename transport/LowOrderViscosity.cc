@@ -10,7 +10,8 @@ LowOrderViscosity<dim>::LowOrderViscosity(
          SparseMatrix<double> &diffusion_matrix,
          SparseMatrix<double> &total_matrix) :
 
-   Viscosity<dim>(n_cells,dofs_per_cell,dof_handler,constraints)
+   Viscosity<dim>(n_cells,dofs_per_cell,dof_handler,constraints)//,
+   //dof_handler(&dof_handler)
 {
    // create sparse matrix for viscous bilinear forms
    CompressedSparsityPattern c_sparsity_pattern(this->n_dofs);
@@ -29,6 +30,12 @@ LowOrderViscosity<dim>::LowOrderViscosity(
 
    // add diffusion matrix
    this->add_diffusion_matrix(inviscid_matrix,diffusion_matrix,total_matrix);
+
+/*
+   // allocate memory for vectors
+   solution_min.reinit(dof_handler.n_dofs());
+   solution_max.reinit(dof_handler.n_dofs());
+*/
 }
 
 /** \brief Destructor.
@@ -111,3 +118,90 @@ void LowOrderViscosity<dim>::compute_viscous_bilinear_forms()
       }
    }
 }
+
+/** \brief Computes min and max quantities for max principle
+ */
+/*
+template <int dim>
+void LowOrderViscosity<dim>::compute_bounds(const Vector<double>       &old_solution,
+                                            const SparseMatrix<double> &low_order_ss_matrix,
+                                            const Vector<double>       &ss_rhs,
+                                            const double               &dt)
+{
+   for (unsigned int i = 0; i < n_dofs; ++i)
+   {
+      solution_max(i) = old_solution(i);
+      solution_min(i) = old_solution(i);
+   }
+
+   // loop over cells
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler->begin_active(),
+                                                  endc = dof_handler->end();
+   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
+   for (; cell != endc; ++cell) {
+      // get local dof indices
+      cell->get_dof_indices(local_dof_indices);
+
+      // find min and max values on cell
+      double max_cell = old_solution(local_dof_indices[0]);
+      double min_cell = old_solution(local_dof_indices[0]);
+      for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+         double value_j = old_solution(local_dof_indices[j]);
+         max_cell = std::max(max_cell, value_j);
+         min_cell = std::min(min_cell, value_j);
+      }
+
+      // update the max and min values of neighborhood of each dof
+      for (unsigned int j = 0; j < dofs_per_cell; ++j) {
+         unsigned int i = local_dof_indices[j]; // global index
+         solution_max(i) = std::max(solution_max(i), max_cell);
+         solution_min(i) = std::min(solution_min(i), min_cell);
+      }
+   }
+
+   // At this point, the min/max values of the old solution in the support
+   // of test function i are stored in solution_min(i) and solution_max(i).
+   // Now these values are multiplied by (1-dt/m(i))*sum_j(A(i,j)) and
+   // added to dt/m(i)*b(i).
+
+   // compute the upper and lower bounds for the maximum principle
+   for (unsigned int i = 0; i < n_dofs; ++i)
+   {
+      // compute sum of A_ij over row i
+      // get nonzero entries of row i of A
+      std::vector<double>       row_values;
+      std::vector<unsigned int> row_indices;
+      unsigned int              n_col;
+      get_matrix_row(low_order_ss_matrix,
+                     i,
+                     row_values,
+                     row_indices,
+                     n_col);
+      // add nonzero entries to get the row sum
+      double row_sum = 0.0;
+      for (unsigned int k = 0; k < n_col; ++k)
+         row_sum += row_values[k];
+      
+      // compute the max and min values for the maximum principle
+      solution_max(i) = solution_max(i)*(1.0 - dt/(*lumped_mass_matrix)(i,i)*row_sum)
+         + dt/(*lumped_mass_matrix)(i,i)*ss_rhs(i);
+      solution_min(i) = solution_min(i)*(1.0 - dt/(*lumped_mass_matrix)(i,i)*row_sum)
+         + dt/(*lumped_mass_matrix)(i,i)*ss_rhs(i);
+   }
+}
+*/
+
+/** \brief Outputs bounds to files.
+ */
+/*
+template<int dim>
+void LowOrderViscosity<dim>::output_bounds(const PostProcessor<dim> &postprocessor) const
+{
+   postprocessor.output_solution(solution_min,
+                                 *dof_handler,
+                                 "DMPmin");
+   postprocessor.output_solution(solution_max,
+                                 *dof_handler,
+                                 "DMPmax");
+}
+*/

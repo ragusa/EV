@@ -545,3 +545,16 @@ bool FCT<dim>::check_DMP_satisfied()
 {
    return DMP_satisfied_at_all_steps;
 }
+
+/** \brief Outputs bounds to files.
+ */
+template<int dim>
+void FCT<dim>::output_bounds(const PostProcessor<dim> &postprocessor) const
+{
+   postprocessor.output_solution(solution_min,
+                                 *dof_handler,
+                                 "DMPmin");
+   postprocessor.output_solution(solution_max,
+                                 *dof_handler,
+                                 "DMPmax");
+}

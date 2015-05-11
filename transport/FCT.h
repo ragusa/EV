@@ -5,6 +5,7 @@
 #include <deal.II/lac/vector.h>
 
 #include "LinearSolver.h"
+#include "PostProcessor.h"
 
 using namespace dealii;
 
@@ -33,6 +34,7 @@ class FCT {
                             const SparseMatrix<double> &low_order_diffusion_matrix,
                             const SparseMatrix<double> &high_order_diffusion_matrix);
       bool check_DMP_satisfied();
+      void output_bounds(const PostProcessor<dim> &postprocessor) const;
 
    private:
       void compute_bounds(const Vector<double>       &old_solution,
@@ -71,8 +73,6 @@ class FCT {
       const SparseMatrix<double> *consistent_mass_matrix;
       SparsityPattern sparsity_pattern;
       SparseMatrix<double> flux_correction_matrix;
-      Vector<double> min_bound;
-      Vector<double> max_bound;
       Vector<double> solution_min;
       Vector<double> solution_max;
 

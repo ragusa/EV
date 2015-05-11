@@ -1019,6 +1019,20 @@ void TransportProblem<dim>::run()
                                                            dof_handler,
                                                            triangulation,
                                                            cycle);
+
+      if (parameters.output_DMP_bounds)
+      {
+         if (parameters.scheme_option == 1)
+         {
+/*
+            low_order_viscosity.compute_bounds(old_solution,low_order_ss_matrix,ss_rhs,dt);
+            low_order_viscosity.output_bounds(postprocessor);
+*/
+         } else if (parameters.scheme_option == 3) {
+            fct.output_bounds(postprocessor);
+         }
+      }
+
    }
 
    // output grid and solution and print convergence results
