@@ -11,6 +11,10 @@ SET(TARGET_SRC
   # You can specify additional files here!
   )
 
+# add option to prevent c++11 standard error
+SET(GNUXX_FLAGS "-std=c++0x")
+add_definitions(${GNUXX_FLAGS})
+
 # Usually, you will not need to modify anything beyond this point...
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8)
