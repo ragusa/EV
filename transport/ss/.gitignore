@@ -1,0 +1,12 @@
+CMakeCache.txt
+CMakeFiles
+Makefile
+cmake_install.cmake
+transport_parallel
+transport_serial
+tags
+*.asv
+*.pvtu
+*.vtu
+input_r*
+output

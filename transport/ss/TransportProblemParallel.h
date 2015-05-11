@@ -1,18 +1,36 @@
 #ifndef TransportProblem_cc
 #define TransportProblem_cc
 
+#include <deal.II/lac/generic_linear_algebra.h>
+namespace LA
+{
+   using namespace dealii::LinearAlgebraPETSc;
+}
+
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/function.h>
 #include <deal.II/base/logstream.h>
 #include <deal.II/base/function_parser.h>
 #include <deal.II/base/tensor_function.h>
 #include <deal.II/base/timer.h>
+#include <deal.II/base/utilities.h>           // query MPI process info
+#include <deal.II/base/conditional_ostream.h> // parallel cout
+#include <deal.II/base/index_set.h>           // subset of indices for process
 
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/sparse_direct.h>
 #include <deal.II/lac/constraint_matrix.h>
+#include <deal.II/lac/sparsity_tools.h>           // distribute_sparsity_pattern
+#include <deal.II/lac/compressed_simple_sparsity_pattern.h>
+#include <deal.II/lac/petsc_parallel_sparse_matrix.h>
+#include <deal.II/lac/petsc_parallel_vector.h>
+#include <deal.II/lac/petsc_solver.h>
+#include <deal.II/lac/petsc_precondition.h>
+
+#include <deal.II/distributed/tria.h>            // distributed triangulation
+#include <deal.II/distributed/grid_refinement.h> // distributed grid refinement
 
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/grid_generator.h>
@@ -32,6 +50,7 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/error_estimator.h>
+#include <deal.II/numerics/data_out.h>
 
 #include <fstream>
 #include <iostream>
@@ -40,17 +59,9 @@
 #include <algorithm>
 
 #include "TransportParameters.h"
-#include "LowOrderViscosity.h"
-#include "EntropyViscosity.h"
-#include "LinearSolver.h"
-#include "SSPRKTimeIntegrator.h"
-#include "PostProcessor.h"
-#include "FCT.h"
 
 using namespace dealii;
 
-/** \brief Class for defining a transport problem
- */
 template<int dim>
 class TransportProblem {
    public:
@@ -59,29 +70,33 @@ class TransportProblem {
       void run();
 
    private:
-      // main functions
+      // functions
       void initialize_system();
       void setup_system();
-      void assemble_mass_matrices();
-      void assemble_inviscid_ss_matrix();
-      void assemble_ss_rhs(const double &t);
-      void solve_steady_state(LinearSolver<dim> &linear_solver);
+      void assemble_system();
+      void solve();
       void refine_grid();
+      void set_boundary_indicators();
+      void process_problem_ID();
+      void output_solution();
+
+      // MPI communicator
+      MPI_Comm mpi_communicator;
 
       // input parameters
       const TransportParameters<dim> &parameters;
 
       // mesh and dof data
-      Triangulation<dim> triangulation;
-      unsigned int n_cells;
+      parallel::distributed::Triangulation<dim> triangulation;
       DoFHandler<dim> dof_handler;
+      IndexSet locally_owned_dofs;
+      IndexSet locally_relevant_dofs;
+      unsigned int n_cells;
       unsigned int n_dofs;
       const unsigned int degree;
-      const FESystem<dim> fe;
-      const FEValuesExtractors::Scalar flux;
+      const FE_Q<dim> fe;
       const unsigned int dofs_per_cell;
       const unsigned int faces_per_cell;
-      void set_boundary_indicators();
 
       // quadrature data
       const QGauss<dim>   cell_quadrature;
@@ -92,63 +107,34 @@ class TransportProblem {
       // sparse matrices, sparsity patterns, and constraints
       ConstraintMatrix constraints;
       SparsityPattern constrained_sparsity_pattern;
-      SparseMatrix<double> system_matrix;
-      SparseMatrix<double> low_order_ss_matrix;
-      SparseMatrix<double> high_order_ss_matrix;
-      SparseMatrix<double> inviscid_ss_matrix;
-      SparseMatrix<double> low_order_diffusion_matrix;
-      SparseMatrix<double> high_order_diffusion_matrix;
-      SparseMatrix<double> consistent_mass_matrix;
-      SparseMatrix<double> lumped_mass_matrix;
+      LA::MPI::SparseMatrix system_matrix;
 
       // vectors for solutions and right hand sides
-      Vector<double> new_solution;
-      Vector<double> old_solution;
-      Vector<double> older_solution;
-      Vector<double> oldest_solution;
-      Vector<double> old_stage_solution;
-      Vector<double> system_rhs;
-      Vector<double> ss_rhs;
-
-/*
-      // viscosity vectors
-      Vector<double> entropy_viscosity;
-      Vector<double> high_order_viscosity;
-*/
+      LA::MPI::Vector solution;
+      LA::MPI::Vector system_rhs;
 
       // physics data
-      void process_problem_ID();
       std::map<std::string,double> function_parser_constants;
       Tensor<1,dim> transport_direction;
-      FunctionParser<dim> initial_conditions;
       FunctionParser<dim> exact_solution_function;
       FunctionParser<dim> source_function;
       FunctionParser<dim> cross_section_function;
       FunctionParser<dim> incoming_function;
-      std::string initial_conditions_string;
       std::string exact_solution_string;
       std::string source_string;
       std::string cross_section_string;
       std::string incoming_string;
       bool has_exact_solution;
-      bool source_time_dependent;
       double x_min;
       double x_max;
       double domain_volume;
 
-      // time functions and data
-      double dt_nominal;
-      double CFL_nominal;
-      double enforce_CFL_condition(double &dt);
-      double minimum_cell_diameter;
-
-      // Dirichlet boundary condition
-      void get_dirichlet_nodes();
-      std::vector<unsigned int> dirichlet_nodes;
+      // parallel output
+      ConditionalOStream pcout;
 
       // timer
-      TimerOutput timer;
+      TimerOutput computing_timer;
 };
 
-#include "TransportProblem.cc"
+#include "TransportProblemParallel.cc"
 #endif

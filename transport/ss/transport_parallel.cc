@@ -1,33 +1,47 @@
-/** \brief solves the radiative transfer equation:
-           \f[
-              \frac{\partial\psi}{\partial t} 
-              + \mathbf{\omega}\cdot\nabla\psi
-              + \sigma_t \psi
-              = q
-           \f]
- */
-
 #include <sstream>
 #include <cstdlib>
-#include <deal.II/base/parameter_handler.h>
-#include "TransportParameters.h"
-#include "TransportProblem.h"
+
+#include <deal.II/base/parameter_handler.h>   // parameter handler
+#include <deal.II/base/utilities.h>           // MPI query
+#include <deal.II/base/logstream.h>           // deallog
+#include <deal.II/base/conditional_ostream.h> // parallel cout
+
+#include "TransportParameters.h"      // transport problem parameters class
+#include "TransportProblemParallel.h" // parallel transport problem class
 
 using namespace dealii;
 
-const unsigned int dim = 1; // number of spatial dimensions
+const unsigned int dim = 2; // number of spatial dimensions
 
 /** \brief reads input file and then runs problem
  */
 int main(int argc, char ** argv) {
    try {
+      // initialize and finalize MPI
+      Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
+
+      // print number of MPI processes
+      unsigned int n_processes = Utilities::MPI::n_mpi_processes(MPI_COMM_WORLD);
+      ConditionalOStream pcout(std::cout,
+         (Utilities::MPI::this_mpi_process(MPI_COMM_WORLD) == 0));
+      pcout << "Running with " << n_processes << " MPI processes" << std::endl;
+
+      // check that input file was supplied as command-line argument
+      if (argc != 2) {
+         pcout << "Usage: transport <input_file>" << std::endl;
+         std::exit(EXIT_FAILURE);
+      }
+      // get input file name
+      std::string input_file = argv[1];
+
+      // set log depth
       deallog.depth_console(0);
 
       // get input parameters
       ParameterHandler parameter_handler;
       TransportParameters<dim> parameters;
       parameters.declare_parameters(parameter_handler);
-      parameter_handler.read_input("input");
+      parameter_handler.read_input(input_file);
       parameters.get_parameters(parameter_handler);
 
       // run problem

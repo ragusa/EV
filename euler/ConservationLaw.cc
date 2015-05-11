@@ -169,6 +169,19 @@ void ConservationLaw<dim>::initialize_system()
    std::map<std::string,double> constants;
    constants["pi"] = numbers::PI;
 
+   // create string of variables to be used in function parser objects
+   std::string variables;
+   if (dim == 1)
+      variables = "x";
+   else if (dim == 2)
+      variables = "x,y";
+   else if (dim == 3)
+      variables = "x,y,z";
+   else
+      Assert(false,ExcInvalidState());
+   // add t for time-dependent function parser objects
+   std::string time_dependent_variables = variables + ",t";
+
    // initialize Dirichlet boundary functions if needed
    if (at_least_one_dirichlet_BC && !(use_exact_solution_as_BC))
    {
@@ -176,34 +189,24 @@ void ConservationLaw<dim>::initialize_system()
       for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
       {
          dirichlet_function[boundary] = new FunctionParser<dim>(n_components);
-         dirichlet_function[boundary]->initialize(FunctionParser<dim>::default_variable_names(),
-                                                    dirichlet_function_strings[boundary],
-                                                    constants,
-                                                    true);
+         dirichlet_function[boundary]->initialize(time_dependent_variables,
+                                                  dirichlet_function_strings[boundary],
+                                                  constants,
+                                                  true);
       }
    }
 
    // initialize exact solution function if there is one
    if (has_exact_solution)
    {
-      std::string variables;
-      if (dim == 1)
-         variables = "x,t";
-      else if (dim == 2)
-         variables = "x,y,t";
-      else if (dim == 3)
-         variables = "x,y,z,t";
-      else
-         Assert(false,ExcInvalidState());
-
-      exact_solution_function.initialize(variables,
+      exact_solution_function.initialize(time_dependent_variables,
                                          exact_solution_strings,
                                          constants,
                                          true);
    }
 
    // initialize initial conditions function
-   initial_conditions_function.initialize(FunctionParser<dim>::default_variable_names(),
+   initial_conditions_function.initialize(variables,
                                           initial_conditions_strings,
                                           constants,
                                           false);

@@ -86,3 +86,22 @@ double Viscosity<dim>::get_viscosity_value(const unsigned int i) const
 {
    return viscosity(i);
 }
+
+/** \brief Outputs viscosities to file.
+ */
+template<int dim>
+void Viscosity<dim>::output_viscosity(const std::string output_file) const
+{
+   // add viscosities to data out object
+   DataOut<dim> visc_out;
+   visc_out.attach_dof_handler(*dof_handler);
+   visc_out.add_data_vector(viscosity, "Viscosity", DataOut<dim>::type_cell_data);
+
+   // create output filestream
+   std::ofstream viscosity_outstream(output_file.c_str());
+
+   // build patches and write to file
+   visc_out.build_patches();
+   if (dim == 1) visc_out.write_gnuplot(viscosity_outstream);
+   else          visc_out.write_vtk    (viscosity_outstream);
+}
