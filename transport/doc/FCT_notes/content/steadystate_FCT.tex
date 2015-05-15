@@ -1,0 +1,33 @@
+%================================================================================
+\section{FCT Schemes}
+%================================================================================
+%--------------------------------------------------------------------------------
+\subsection{Steady-State FCT Scheme}
+%--------------------------------------------------------------------------------
+In this section, the general FCT scheme for the steady-state case is presented.
+The flux correction vector $\mathbf{f}$ is defined such that:
+\begin{equation}\label{ss_f}
+   \mathbf{A}^L\mathbf{U}^H = \mathbf{b} + \mathbf{f}.
+\end{equation}
+Decomposing the correction flux into $\mathbf{F}$ and applying a limiter
+$\mathcal{L}$ gives
+\begin{equation}\label{FCT_limited_ss}
+   \mathbf{A}^L\mathbf{U}
+      = \mathbf{b} + \mathcal{L}[\mathbf{F}].
+\end{equation}
+where $(\mathcal{L}[\mathbf{F}])_i = \mathcal{L}_{i,:}F_{i,:}^T
+= \sum\limits_j \mathcal{L}_{i,j}F_{i,j}$ and $\mathbf{U}$
+is the FCT solution.  The limiter $\mathcal{L}$ is
+defined in Section \ref{L}.
+
+Combining Equations \eqref{ss_f} and \eqref{steadystate_high}
+gives the definition of $\mathbf{f}$:
+\begin{equation}
+   \mathbf{f} \equiv \left(\mathbf{D}^L-\mathbf{D}^H\right)\mathbf{U}^H.
+\end{equation}
+Since $\mathbf{D}^L-\mathbf{D}^H(t)$ is symmetric
+and features zero row and column sums, a valid decomposition for $\mathbf{f}$,
+called $\mathbf{F}$, is
+\begin{equation}
+   F_{i,j} = \left(D_{i,j}^L-D_{i,j}^H\right)\left(U_j^H - U_i^H\right).
+\end{equation}

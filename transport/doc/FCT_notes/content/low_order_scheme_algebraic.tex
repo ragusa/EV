@@ -5,36 +5,34 @@ In this section, an algebraic approach is taken to develop a low-order scheme,
 which is based on a low-order artificial diffusion matrix:
 %--------------------------------------------------------------------------------
 \begin{definition}{Low-Order Artificial Diffusion Matrix}
-   The low-order artificial diffusion matrix $\mathbf{D}$ is
+   The low-order artificial diffusion matrix $\mathbf{D}^L$ is defined as
    \begin{equation}
-      D_{i,j} \equiv \left\{\begin{array}{c c}
+      D_{i,j}^L \equiv \left\{\begin{array}{c c}
          -\max(0,A_{i,j},A_{j,i}) & j\ne i\\
          -\sum\limits_{j\ne i} D_{i,j} & j = i
       \end{array}\right.
    \end{equation}
+   where $\mathbf{A}$ is the inviscid steady-state system matrix given by
+   Equation \eqref{Aij}.
 \end{definition}
 %--------------------------------------------------------------------------------
-The low-order system matrix is then defined as the sum of the Galerkin system
-matrix $\mathbf{A}$ and the low-order artificial diffusion matrix $\mathbf{D}$:
+The low-order system matrix is then defined as the sum of the inviscid
+steady-state system matrix $\mathbf{A}$ and the low-order artificial diffusion
+matrix $\mathbf{D}^L$:
 %--------------------------------------------------------------------------------
-\begin{definition}{Low-Order System Matrix}
-   The low-order system matrix is
+\begin{definition}{Low-Order Steady-State System Matrix}
+   The low-order steady-state system matrix is
    \begin{equation}\label{systemmatrixdef}
-      \mathbf{A}^L \equiv \mathbf{A} + \mathbf{D}.
+      \mathbf{A}^L \equiv \mathbf{A} + \mathbf{D}^L.
    \end{equation}
 \end{definition}
 %--------------------------------------------------------------------------------
 The low-order semidiscrete scheme is the following:
 \begin{equation}\label{semidiscretelow}
-   \mathbf{M}^L\frac{d\mathbf{U}^L}{dt}+\mathbf{A}^L \mathbf{U}^L(t) = \mathbf{b},
+   \mathbf{M}^L\frac{d\mathbf{U}^L}{dt}+\mathbf{A}^L \mathbf{U}^L(t) = \mathbf{b}(t),
 \end{equation}
-where $\mathbf{M}^L$ is the lumped mass matrix and $\mathbf{U}^L$ is the low-order
-solution. With explicit Euler time-stepping, the low-order semidiscrete scheme becomes
-\begin{equation}\label{loworderexplicit}
-   \mathbf{M}_L\frac{\mathbf{U}^{L,n+1}-\mathbf{U}^n}{\Delta t}
-      +\mathbf{A}^L\mathbf{U}^n = \mathbf{b},
-\end{equation}
-where $\mathbf{U}^{L,n+1}$ is the low-order solution at time $t^{n+1}$.
+where $\mathbf{M}^L$ is the lumped mass matrix and $\mathbf{U}^L(t)$ is the low-order
+solution.
 %--------------------------------------------------------------------------------
 \subsubsection{M-Matrix Property of the Steady-State System Matrix}
 %================================================================================
@@ -44,23 +42,23 @@ allows a discrete maximum principle for the low-order solution to be proven in
 Section \ref{DMP}.
 %--------------------------------------------------------------------------------
 \begin{lemma}[label={offdiagonalnegative}]{Non-Positivity of Off-Diagonal Matrix Entries}
-   The off-diagonal elements of the low-order system matrix are non-positive:
-   $A^L_{i,j}\le 0, j\ne i$.
+   The off-diagonal elements of the low-order steady-state system matrix
+   are non-positive: $A^L_{i,j}\le 0, j\ne i$.
 \end{lemma}
 \begin{proof}
 From Equation \eqref{systemmatrixdef}
 \begin{eqnarray*}
-	A^L_{i,j} & = & A_{i,j} + D_{i,j}\\
+	A^L_{i,j} & = & A_{i,j} + D_{i,j}^L\\
              & = & A_{i,j} - \max(0,A_{i,j},A_{j,i})
 \end{eqnarray*}
 The non-positivity of the off-diagonal coefficients is proven by examining the three possible
 outputs of the $\max()$ function:
 
 \begin{tabular}{l l}
-   case $D_{i,j}=0$:        & $A^L_{i,j} = A_{i,j} \leq 0$ because
-      $D_{i,j}=0\geq A_{i,j}$.\\
-   case $D_{i,j}=-A_{i,j}$: & $A^L_{i,j} = 0$.\\
-   case $D_{i,j}=-A_{j,i}$: & $A^L_{i,j} = A_{i,j} - A_{j,i} \leq 0$ because
+   case $D_{i,j}^L=0$:        & $A^L_{i,j} = A_{i,j} \leq 0$ because
+      $D_{i,j}^L=0\geq A_{i,j}$.\\
+   case $D_{i,j}^L=-A_{i,j}$: & $A^L_{i,j} = 0$.\\
+   case $D_{i,j}^L=-A_{j,i}$: & $A^L_{i,j} = A_{i,j} - A_{j,i} \leq 0$ because
       $A_{j,i} \geq A_{i,j}$.\qed
 \end{tabular}
 \end{proof}
@@ -69,17 +67,17 @@ outputs of the $\max()$ function:
    The diagonal elements of the linear system matrix are non-negative: $A^L_{i,i}\ge 0$.
 \end{lemma}
 \begin{proof}
-The diagonal elements  of the low-order system matrix are
+The diagonal elements  of the low-order steady-state system matrix are
 \[
 	A^L_{i,i} = c\int\limits_{S_{i}}\nabla\cdot
    \frac{\mathbf{\Omega}\varphi_i^2(\mathbf{x})}{2} d\mathbf{x} 
       + c\int\limits_{S_{i}}\sigma(\mathbf{x})\varphi_i(\mathbf{x})d\mathbf{x}
-      + D_{i,i}.
+      + D_{i,i}^L.
 \]
 To prove that $A^L_{i,i}$ is non-negative, it is sufficient to prove that
 each term in the above expression is non-negative. The non-negativity of
 the interaction term and viscous term are obvious ($\sigma(\mathbf{x}) \ge 0$,
-$D_{i,i}\geq 0$), but
+$D_{i,i}^L\geq 0$), but
 the non-negativity of the divergence term is not necessarily obvious. On the interior of
 the domain, the divergence term gives zero contribution because the divergence integral may
 be transformed into a surface integral $\int\limits_{\partial S_{i}}
@@ -105,7 +103,7 @@ Using the fact that $\sum\limits_j\varphi_j(\mathbf{x})=1$,
 	\sum\limits_j A^L_{i,j} & = & \sum\limits_j c\int\limits_{S_{ij}}
       \left(\mathbf{\Omega}\cdot\nabla\varphi_j(\mathbf{x}) +
 		\sigma(\mathbf{x})\varphi_j(\mathbf{x})\right)\varphi_i(\mathbf{x}) d\mathbf{x} +
-		D_{i,i} + \sum\limits_{j\neq i}D_{i,j}\\
+		D_{i,i}^L + \sum\limits_{j\neq i}D_{i,j}^L\\
 		& = & c\int\limits_{S_{i}}\left(\mathbf{\Omega}\cdot
          \nabla\sum\limits_j\varphi_j(\mathbf{x}) +
          \sigma(\mathbf{x})\sum\limits_j\varphi_j(\mathbf{x})\right)

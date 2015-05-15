@@ -20,7 +20,7 @@ with basis function $\varphi_i(\mathbf{x})$ gives
 where $S_i$ is the support of $\varphi_i(\mathbf{x})$.
 This yields a linear system
 \begin{equation}\label{semidiscrete}
-   \mathbf{M}^C\frac{d\mathbf{U}}{dt}+\mathbf{A} \mathbf{U}(t) = \mathbf{b},
+   \mathbf{M}^C\frac{d\mathbf{U}}{dt}+\mathbf{A} \mathbf{U}(t) = \mathbf{b}(t),
 \end{equation}
 where $\mathbf{A}$ is the steady-state system matrix and $\mathbf{U}$ is the
 Galerkin solution. The elements of $\mathbf{A}$ are
@@ -30,14 +30,18 @@ Galerkin solution. The elements of $\mathbf{A}$ are
 		\sigma(\mathbf{x})\varphi_j(\mathbf{x})\right)\varphi_i(\mathbf{x}) d\mathbf{x},
 \end{equation}
 where $S_{i,j}$ is the dual support of $\varphi_i(\mathbf{x})$ and $\varphi_j(\mathbf{x})$.
-The elements of $\mathbf{b}$ are
+The elements of $\mathbf{b}(t)$ are
 \begin{equation}
-	b_i \equiv c\int\limits_{S_i} q(\mathbf{x},t)\varphi_i(\mathbf{x}) d\mathbf{x}.
+	b_i(t) \equiv c\int\limits_{S_i} q(\mathbf{x},t)\varphi_i(\mathbf{x}) d\mathbf{x}.
 \end{equation}
 $\mathbf{M}^C$ is the consistent mass matrix, which has the entries
 \begin{equation}\label{massmatrix}
 	m_{i,j} \equiv \int\limits_{S_{i,j}}
    \varphi_j(\mathbf{x})\varphi_i(\mathbf{x}) d\mathbf{x}.
+\end{equation}
+Similarly, for the steady-state case, the linear system is
+\begin{equation}
+  \mathbf{A}\mathbf{U} = \mathbf{b}.
 \end{equation}
 %================================================================================
 \subsection{Temporal Discretization}
@@ -49,11 +53,12 @@ $\Delta t\equiv t^{n+1}-t^n$, the semi-discrete equation given by Equation
 \eqref{semidiscrete} is discretized using the explicit Euler:
 \begin{equation}\label{exgalerkin}
    \mathbf{M}^C\frac{\mathbf{U}^{n+1}-\mathbf{U}^n}{\Delta t}
-     + \mathbf{A}\mathbf{U}^n = \mathbf{b},
+     + \mathbf{A}\mathbf{U}^n = \mathbf{b}^n,
 \end{equation}
 where $\mathbf{U}^{n+1}$ is the Galerkin solution at time $t^{n+1}$.
 %================================================================================
-\subsubsection{Strong Stability-Preserving Runge Kutta Methods}\label{ssprk}
+\subsubsection{Strong Stability-Preserving Explicit Runge Kutta Methods}
+\label{ssprk}
 %================================================================================
 Strong Stability-Preserving Runge Kutta (SSPRK) methods are a class of multistage
 Runge Kutta methods that offer high-order accuracy while preserving stability.
@@ -94,5 +99,17 @@ scheme), has the following coefficients:
    \qquad\beta = \left[\begin{array}{c}1\\\frac{1}{4}\\\frac{2}{3}\end{array}\right]
    \qquad c = \left[\begin{array}{c}0\\1\\\frac{1}{2}\end{array}\right].
 \end{equation}
+%================================================================================
+\subsubsection{$\theta$-Scheme}\label{theta}
+%================================================================================
+Discretizing Equation \eqref{semidiscrete} with the $\theta$ scheme gives
+\begin{equation}\label{thetagalerkin}
+  \mathbf{M}^C\frac{\mathbf{U}^{n+1}-\mathbf{U}^n}{\Delta t}
+  + (1-\theta)\mathbf{A}\mathbf{U}^n + \theta\mathbf{A}\mathbf{U}^{n+1}
+  = (1-\theta)\mathbf{b}^n + \theta\mathbf{b}^{n+1}.
+\end{equation}
+Note that $\theta=0$ corresponds to the explicit Euler method,
+$\theta=1$ corresponds to the implicit Euler method, and $\theta=\frac{1}{2}$
+corresponds to the Crank-Nicolson method.
 
 %================================================================================

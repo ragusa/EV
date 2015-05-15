@@ -1,0 +1,68 @@
+%--------------------------------------------------------------------------------
+\subsection{Limiting Coefficients}\label{L}
+%--------------------------------------------------------------------------------
+\begin{theorem}{Discrete Maximum Principle-Satisfying Limiting Coefficients}
+   Suppose that that a discrete maximum principle $W_i^+\le U_i^{n+1}\le W_i^-$
+   corresponds to the following inequality for the limited correction fluxes:
+   \begin{equation}
+      Q_i^-\le\sum\limits_j \mathcal{L}_{i,j}F_{i,j}\le Q_i^+,
+   \end{equation}
+   where $Q_i^\pm$ are bounds that depend on the temporal discretization. Then,
+   the following limiter coefficient definitions satisfy the discrete maximum
+   principle:
+   \begin{equation}\label{P_defs}
+      P_i^+ \equiv \sum\limits_j\max(0,F_{i,j}) \qquad
+      P_i^- \equiv \sum\limits_j\min(0,F_{i,j}),
+   \end{equation}
+   \begin{equation}\label{R_defs}
+      R_i^\pm \equiv\left\{
+         \begin{array}{l l}
+            1                                          & P_i^\pm = 0\\
+            \min\left(1,\frac{Q_i^\pm}{P_i^\pm}\right) & P_i^\pm \ne 0
+         \end{array}
+         \right.,
+   \end{equation}
+   \begin{equation}\label{L_defs}
+      \mathcal{L}_{i,j} \equiv\left\{
+         \begin{array}{l l}
+            \min(R_i^+,R_j^-) & F_{i,j} \geq 0\\
+            \min(R_i^-,R_j^+) & F_{i,j} < 0
+         \end{array}
+         \right..
+   \end{equation}  
+\end{theorem}
+
+\begin{proof}
+   First, note some properties of the above definitions:
+   \begin{gather*}
+      P_i^+ \geq 0, \qquad P_i^- \leq 0,\\
+      Q_i^+ \geq 0, \qquad Q_i^- \leq 0,\\
+      0 \leq R_i^\pm \leq 1,\\
+      0 \leq \mathcal{L}_{i,j} \leq 1.
+   \end{gather*}
+   The proof will be given for the upper bound.
+   \[
+      \sum\limits_j \mathcal{L}_{i,j}F_{i,j}
+         \leq \sum\limits_{j:F_{i,j}\geq 0} \mathcal{L}_{i,j}F_{i,j}
+         = \sum\limits_{j:F_{i,j}\geq 0} \min(R_i^+,R_j^-)F_{i,j}
+         \leq \sum\limits_{j:F_{i,j}\geq 0} R_i^+ F_{i,j}
+   \]
+   For the case $P_i^+ = 0$,
+   \[
+      \sum\limits_{j:F_{i,j}\geq 0} R_i^+ F_{i,j} = 0 \leq Q_i^+
+   \]
+   For the case $P_i^+ \ne 0$,
+   \[
+      \sum\limits_{j:F_{i,j}\geq 0} R_i^+ F_{i,j}
+      \leq \sum\limits_{j:F_{i,j}\geq 0}\frac{Q_i^+}{P_i^+} F_{i,j}
+      = \frac{Q_i^+}{P_i^+} \sum\limits_{j:F_{i,j}\geq 0} F_{i,j}
+      = \frac{Q_i^+}{P_i^+} \sum\limits_{j:F_{i,j}\geq 0} \max(0,F_{i,j})
+      = Q_i^+
+   \]
+   Thus,
+   \[
+      \sum\limits_j \mathcal{L}_{i,j}F_{i,j} \leq Q_i^+
+   \]
+   The lower bound is proved similarly.
+   \qed
+\end{proof}

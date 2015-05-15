@@ -1,0 +1,65 @@
+%--------------------------------------------------------------------------------
+\subsection{Transient FCT Scheme}
+%--------------------------------------------------------------------------------
+In this section, the general FCT scheme for the transient case is presented.
+The flux correction vector $\mathbf{f}(t)$ is defined such that:
+\begin{equation}\label{semidiscrete_f}
+   \mathbf{M}^L\frac{d\mathbf{U}^{H}}{dt}
+      + \mathbf{A}^L\mathbf{U}^H(t)
+      = \mathbf{b}(t) + \mathbf{f}(t).
+\end{equation}
+Decomposing the correction flux into $\mathbf{F}(t)$ and applying a limiter
+$\mathcal{L}$ gives
+\begin{equation}\label{semidiscrete_limited}
+   \mathbf{M}^L\frac{d\mathbf{U}}{dt}
+      + \mathbf{A}^L\mathbf{U}(t)
+      = \mathbf{b}(t) + \mathcal{L}[\mathbf{F}(t)].
+\end{equation}
+where $(\mathcal{L}[\mathbf{F}(t)])_i = \mathcal{L}_{i,:}F_{i,:}^T
+= \sum\limits_j \mathcal{L}_{i,j}F_{i,j}$ and $\mathbf{U}(t)$
+is the FCT solution.  The limiter $\mathcal{L}$ is
+defined in Section \ref{L}.
+%--------------------------------------------------------------------------------
+%\begin{proposition}{Discrete $L^\infty$ Norm Stability}
+   %Schemes that satisfy the bounds given in Definition \ref{FCTbounds} are
+   %stable in the discrete $L^\infty$ norm.
+%\end{proposition}
+%
+%\begin{proof}
+   %Let $k$ be the index corresponding to the degree of freedom for which
+   %the maximum discrete value is obtained, i.e.,
+   %\[
+      %U_k^{n+1}\equiv\max\limits_j U_j^{n+1}=\|\mathbf{U}^{n+1}\|_\infty.
+   %\]
+   %Starting with the upper bound given by Definition \ref{FCTbounds},
+   %\[
+      %\|\mathbf{U}^{n+1}\|_\infty = U_k^{n+1} \le
+      %U_{\max,k}^n e^{-c\Delta t\sigma_{\min,k}} \le
+      %U_{\max,k}^n \le
+      %\max\limits_j U_j^n = \|\mathbf{U}^{n}\|_\infty.
+   %\]
+   %Applying this inequality recursively shows that the solution is bounded
+   %by the initial data $\mathbf{U}^0$:
+   %\[
+      %\|\mathbf{U}^{n+1}\|_\infty\le
+      %\|\mathbf{U}^{n}\|_\infty\le
+      %\|\mathbf{U}^{n-1}\|_\infty\le\ldots\le
+      %\|\mathbf{U}^{0}\|_\infty.\qed
+   %\]
+%\end{proof}
+%--------------------------------------------------------------------------------
+Combining Equations \eqref{semidiscrete_f} and \eqref{semidiscrete_high}
+gives the definition of $\mathbf{f}(t)$:
+\begin{equation}\label{gtf}
+   \mathbf{f}(t) \equiv -\left(\mathbf{M}^C-\mathbf{M}^L\right)
+   \frac{d\mathbf{U}^H}{dt}
+      +\left(\mathbf{D}^L-\mathbf{D}^H(t)\right)\mathbf{U}^H(t).
+\end{equation}
+Since $\mathbf{M}^C-\mathbf{M}^L$ and $\mathbf{D}^L-\mathbf{D}^H(t)$ are symmetric
+and feature zero row and column sums, a valid decomposition for $\mathbf{f}(t)$,
+called $\mathbf{F}(t)$, is
+\begin{equation}
+   F_{i,j}(t) = -m_{i,j}\left(\frac{dU_j^H}{dt} - \frac{dU_i^H}{dt}\right)
+   + \left(D_{i,j}^L-D_{i,j}^H(t)\right)\left(U_j^H(t) - U_i^H(t)\right),
+\end{equation}
+where $m_{i,j}$ is the $i,j$th element of the consistent mass matrix.

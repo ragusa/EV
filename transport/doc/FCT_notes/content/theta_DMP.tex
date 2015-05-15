@@ -1,0 +1,60 @@
+\subsubsection{$\theta$-Scheme}
+%--------------------------------------------------------------------------------
+\begin{theorem}{$\theta$-Scheme Discrete Maximum Principle}
+If the CFL-like condition
+\begin{equation}\label{theta_CFL}
+   \Delta t \leq \frac{m_i}{(1-\theta)A_{i,i}^L}\quad\forall i
+   \qquad\Longleftrightarrow\qquad
+   1 - \frac{(1-\theta)\Delta t}{m_i}A_{i,i}^L \geq 0\quad\forall i
+\end{equation}
+is satisfied, then the low-order solution  obtained using the $\theta$-scheme
+satisfies the following discrete maximum principle:
+\begin{equation}\label{theta_max_principle}
+   W_i^-\leq U_i^{L,n+1}\leq W_i^+\quad\forall i,
+\end{equation}
+where
+\begin{equation}\label{theta_W}
+   W_i^\pm \equiv \frac{1}{1+\frac{\theta\Delta t}{m_i}A_{i,i}^L}
+     \left[\left(1 - \frac{(1-\theta)
+     \Delta t}{m_i}\sum\limits_j A_{i,j}^L\right)U_{\substack{\max\\\min},i}^n
+    -\frac{\theta\Delta t}{m_i}\sum\limits_{j\ne i}A_{i,j}^L
+     U_{\substack{\max\\\min},i}^{L,n+1}
+    +\frac{\Delta t}{m_i}\left((1-\theta)b_i^n + \theta b_i^{n+1}\right)\right],
+\end{equation}
+where $U_{\substack{\max\\\min},i}^n = \substack{\max\\\min\limits_{j\in
+\mathcal{I}(S_i)}}U_j^n$,
+$U_{\substack{\max\\\min},i}^{L,n+1} = \substack{\max\\\min\limits_{j\in
+\mathcal{I}(S_i)}}U_j^{L,n+1}$,
+and $\mathcal{I}(S_i)$ is the set of indices of degrees of freedom in the
+support of degree of freedom $i$.
+\end{theorem}
+\begin{proof}
+Evaluating row $i$ of Equation \eqref{semidiscretelow} with the $\theta$-scheme,
+\[
+  m_i\frac{U_i^{L,n+1}-U_i^n}{\Delta t}+\sum\limits_j A_{i,j}^L \left((1-\theta) U_j^n
+  + \theta U_j^{L,n+1}\right) = (1-\theta)b_i^n + \theta b_i^{n+1},
+\]
+and rearranging,
+\[
+   U_i^{L,n+1} = \frac{1}{1+\frac{\theta\Delta t}{m_i}A_{i,i}^L}
+     \left[\left(1 - \frac{(1-\theta)\Delta t}{m_i}A_{i,i}^L\right)U_i^n
+    -\frac{\Delta t}{m_i}\sum\limits_{j\ne i}A_{i,j}^L
+     \left(\theta U_j^{L,n+1}
+    +(1-\theta) U_j^n\right)
+    +\frac{\Delta t}{m_i}\left((1-\theta)b_i^n + \theta b_i^{n+1}\right)\right].
+\]
+By Lemma \ref{offdiagonalnegative}, it is known that the off-diagonal
+elements $A^L_{i,j}, j\ne i$, are non-positive, and by Equation \ref{theta_CFL}
+the term $1 - \frac{(1-\theta)\Delta t}{m_i}A_{i,i}^L$ is non-negative.
+Thus, the following inequality is able to be applied:
+\[
+   U_i^L \le
+     \frac{1}{1+\frac{\theta\Delta t}{m_i}A_{i,i}^L}
+     \left[\left(1 - \frac{(1-\theta)
+     \Delta t}{m_i}\sum\limits_j A_{i,j}^L\right)U_{\max,i}^n
+    -\frac{\theta\Delta t}{m_i}\sum\limits_{j\ne i}A_{i,j}^L
+     U_{\max,i}^{L,n+1}
+    +\frac{\Delta t}{m_i}\left((1-\theta)b_i^n + \theta b_i^{n+1}\right)\right],
+\]
+and similarly for the lower bound.\qed
+\end{proof}

@@ -31,28 +31,30 @@ The low-order viscosity is defined as follows:
    dual-support of test functions $\varphi_i$ and $\varphi_j$.
 \end{definition}
 %--------------------------------------------------------------------------------
-Adding a viscous bilinear form to the Galerkin scheme given in Equation
-\eqref{exgalerkin} gives the linear system
-\begin{equation}
-   \mathbf{M}_L\frac{\mathbf{U}^{L,n+1}-\mathbf{U}^n}{\Delta t}
-      +\mathbf{A}^L\mathbf{U}^n = \mathbf{b},
-\end{equation}
-where $\mathbf{U}^{L,n+1}$ is the low-order solution at time $t^{n+1}$, and
-$\mathbf{A}^L$ is the low-order steady-state matrix, which is the Galerkin
-steady-state matrix $\mathbf{A}$ plus a low-order artificial diffusion matrix
-$\mathbf{D}^L$:
-\begin{equation}\label{loworderssmatrix}
-   \mathbf{A}^L = \mathbf{A} + \mathbf{D}^L,
-\end{equation}
-where $\mathbf{D}^L$ is defined as follows:
-\begin{equation}\label{loworderD}
-   D^L_{i,j} = \sum\limits_{K\subset S_{i,j}}\nu_K^L b_K(\varphi_j,\varphi_i).
-\end{equation}
+\begin{definition}{Low-Order Artificial Diffusion Matrix}
+   The low-order artificial diffusion matrix $\mathbf{D}^L$ is defined as
+   \begin{equation}\label{loworderdiffusionGT}
+      D_{i,j}^L \equiv \sum\limits_{K\subset S_{i,j}}\nu_K^L b_K(\varphi_j,\varphi_i).
+   \end{equation}
+\end{definition}
+%--------------------------------------------------------------------------------
+The low-order system matrix is then defined as the sum of the inviscid
+steady-state system matrix $\mathbf{A}$ and the low-order artificial diffusion
+matrix $\mathbf{D}^L$:
+%--------------------------------------------------------------------------------
+\begin{definition}{Low-Order Steady-State System Matrix}
+   The low-order steady-state system matrix is
+   \begin{equation}\label{loworderssmatrixGT}
+      \mathbf{A}^L \equiv \mathbf{A} + \mathbf{D}^L.
+   \end{equation}
+\end{definition}
+%--------------------------------------------------------------------------------
+The low-order semidiscrete scheme is again given by Equation \eqref{semidiscretelow}.
 %--------------------------------------------------------------------------------
 \subsubsection{M-Matrix Property of the Steady-State System Matrix}
 %================================================================================
 In this section, it will be shown that the low-order steady-state
-system matrix defined in Equation \eqref{loworderssmatrix} is an M-matrix, which
+system matrix defined in Equation \eqref{loworderssmatrixGT} is an M-matrix, which
 allows a discrete maximum principle for the low-order solution to be proven in
 Section \ref{DMP}.
 %--------------------------------------------------------------------------------
@@ -63,9 +65,9 @@ Section \ref{DMP}.
 
 \begin{proof}
 This proof begins by bounding the term
-$D_{i,j}=\sum\limits_{K\subset S_{i,j}}\nu_K^L b_K(\varphi_j, \varphi_i)$:
+$D_{i,j}^L=\sum\limits_{K\subset S_{i,j}}\nu_K^L b_K(\varphi_j, \varphi_i)$:
 \begin{eqnarray*}
-   D_{i,j}=\sum\limits_{K\subset S_{i,j}}\nu_K^L b_K(\varphi_j, \varphi_i)
+   D_{i,j}^L=\sum\limits_{K\subset S_{i,j}}\nu_K^L b_K(\varphi_j, \varphi_i)
    & = & \sum\limits_{K\subset S_{i,j}} \max\limits_{k\ne \ell\in \mathcal{I}(K)}
       \frac{\max(0,A_{k,\ell})}
 		{-\sum\limits_{T\subset S_{k,\ell}} b_T(\varphi_{\ell}, \varphi_k)}
@@ -78,7 +80,7 @@ $D_{i,j}=\sum\limits_{K\subset S_{i,j}}\nu_K^L b_K(\varphi_j, \varphi_i)$:
    & = & -\max(0,A_{i,j})\\
    & \le & -A_{i,j}
 \end{eqnarray*}
-From Equations \eqref{loworderssmatrix} and \eqref{loworderD},
+From Equations \eqref{loworderssmatrixGT} and \eqref{loworderdiffusionGT},
 \begin{eqnarray*}
 	A^L_{i,j} & = & A_{i,j} + D_{i,j}^L\\
    A^L_{i,j} & \le & A_{i,j} - A_{i,j}\\

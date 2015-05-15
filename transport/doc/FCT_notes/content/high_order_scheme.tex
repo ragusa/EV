@@ -1,5 +1,26 @@
 \section{High-Order Schemes}
 %================================================================================
+\subsection{General High-Order Scheme}
+%================================================================================
+In general, a high-order scheme is of the form
+\begin{equation}\label{semidiscrete_high}
+   \mathbf{M}^C\frac{d\mathbf{U}^{H}}{dt}
+      + \mathbf{A}^H(t)\mathbf{U}^H(t)
+      = \mathbf{b}(t),
+\end{equation}
+or in the steady-state case,
+\begin{equation}\label{steadystate_high}
+   \mathbf{A}^H\mathbf{U}^H = \mathbf{b},
+\end{equation}
+where the high-order steady-state system matrix $\mathbf{A}^H(t)$ is
+defined as the sum of the inviscid steady-state matrix $\mathbf{A}$
+and a high-order artificial diffusion matrix $\mathbf{D}^H(t)$:
+\begin{equation}
+   \mathbf{A}^H(t) = \mathbf{A} + \mathbf{D}^H(t).
+\end{equation}
+If the Galerkin scheme given in Section \ref{galerkindef} is to be
+used as the high order scheme, then $\mathbf{D}^H(t)$ is zero.
+%================================================================================
 \subsection{Graph-Theoretic High-Order Scheme}\label{gthighorder}
 %================================================================================
 To construct a high-order scheme, the concept of entropy viscosity is used in
@@ -15,16 +36,13 @@ where the entropy viscosity is defined as
       + c_J\max\limits_{F\in\partial K}J_F(u_h^n)}
       {\|E(u_h^n)-\bar{E}(u_h^n)\|_{L^\infty(\Omega)}}.
 \end{equation}
-The entropy functional is defined as
-\begin{equation}
-   E(u) = \frac{1}{2}u^2,
-\end{equation}
-so the entropy residual $R_K^n(u_h^n,u_h^{n-1})$ is the following:
+The entropy is defined to be some convex function of $u$ such as $E(u)=\frac{1}{2}u^2$.
+The entropy residual $R_K^n(u_h^n,u_h^{n-1})$ is the following:
 \begin{equation}
     R_K^n(u_h^n,u_h^{n-1}) = \left\|\frac{E(u_h^n)-E(u_h^{n-1})}{\Delta t^n}
-      + u_h^n\mathbf{\Omega}\cdot\nabla u_h^n
-      + \sigma (u_h^n)^2
-      - q u_h^n\right\|_{L^\infty(K)},
+      + E'(u_h^n)\left[\mathbf{\Omega}\cdot\nabla u_h^n
+      + \sigma u_h^n
+      - q\right]\right\|_{L^\infty(K)},
 \end{equation}
 where the $L^\infty(K)$ norm is approximated as the maximum of the norm operand evaluated
 at each quadrature point on $K$.
@@ -46,8 +64,8 @@ where $\cdot|_K$ denotes the computation of $\cdot$ from $K$, and $\cdot|_{K'}$
 denotes the computation of $\cdot$ from the neighbor $K'$ sharing the face $F$.
 
 The high-order counterpart of the low-order artificial diffusion matrix defined
-in Equation \eqref{loworderD} uses the high-order viscosity $\nu_K^{H,n}$ instead
-of the low-order viscosity:
+in Equation \eqref{loworderdiffusionGT} uses the high-order viscosity $\nu_K^{H,n}$
+instead of the low-order viscosity:
 \begin{equation}
    D^{H,n}_{i,j} = \sum\limits_{K\subset S_{i,j}}\nu_K^{H,n} b_K(\varphi_j,\varphi_i).
 \end{equation}

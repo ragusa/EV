@@ -1,0 +1,154 @@
+%================================================================================
+\subsection{FCT}
+%================================================================================
+%================================================================================
+\subsubsection{The Implicit System}
+%================================================================================
+Without strongly imposing Dirichlet boundary conditions, the high-order system is
+\begin{equation}\label{im_high}
+   \mathbf{A}^{tr,H}\mathbf{U}^H
+      = \mathbf{M}_C\mathbf{U}^n + \Delta t\mathbf{b} \equiv \mathbf{b}^H,
+\end{equation}
+where $\mathbf{A}^{tr,H} \equiv \mathbf{M}_C-\Delta t\mathbf{K}$.
+Strongly imposing Dirichlet boundary conditions on Equation \ref{im_high}
+gives
+\begin{equation}\label{im_highD}
+   \tilde{\mathbf{A}}^{tr,H}\mathbf{U}^H
+      = \tilde{\mathbf{b}}^H.
+\end{equation}
+The low-order system corresponding to Equation \ref{im_high} is
+\begin{equation}\label{im_low}
+   (\mathbf{M}_L-\Delta t(\mathbf{K}+\mathbf{D}))\mathbf{U}^L
+      = \mathbf{M}_L\mathbf{U}^n + \Delta t\mathbf{b}.
+\end{equation}
+Note that the solution to this low-order system
+is not computed in this Dr. Kuzmin's flux correction algorithm given in Section
+\ref{im_kuzmin}; instead, this low-order system is just used
+to define the correction step.
+%--------------------------------------------------------------------------------
+\subsubsection{Kuzmin's Implicit Flux Correction Algorithm}\label{im_kuzmin}
+%--------------------------------------------------------------------------------
+The flux correction vector $\mathbf{f}$ is defined such that:
+\begin{equation}\label{im_kuzminfc}
+   \mathbf{A}^{tr,F}\mathbf{U}^H
+      = \mathbf{M}_L\mathbf{U}^n + \Delta t\mathbf{b} + \mathbf{f} \equiv \mathbf{b}^F,
+\end{equation}
+where $\mathbf{A}^{tr,F} \equiv \mathbf{M}_L-\Delta t(\mathbf{K}+\mathbf{D})$.
+Subtracting Equation \ref{im_high} from \ref{im_kuzminfc} gives the definition of
+$\mathbf{f}$:
+\begin{equation}\label{im_kuzminFdef}
+   \mathbf{f} \equiv -(\mathbf{M}_C-\mathbf{M}_L)\Delta\mathbf{U}^H
+      -\Delta t\mathbf{D}\mathbf{U}^H,
+\end{equation}
+where $\Delta\mathbf{U}^H = \mathbf{U}^H - \mathbf{U}^n$. Since
+$\mathbf{M}_C-\mathbf{M}_L$ and $\mathbf{D}$ are symmetric
+and feature zero row and column sums, a valid decomposition for $\mathbf{f}$,
+called $\mathbf{F}$, is
+\begin{equation}
+   F_{i,j} = -m_{i,j}(\Delta U^H_j - \Delta U^H_i) - \Delta t D_{i,j}(U^H_j - U^H_i)
+\end{equation}
+where $m_{i,j}$ is the $i,j$th element of the consistent mass matrix.
+Applying a limiter to Equation \ref{im_kuzminfc} gives
+\begin{equation}\label{im_limited}
+   \mathbf{A}^{tr,F}\mathbf{U}^{n+1}
+      = \mathbf{M}_L\mathbf{U}^n + \Delta t\mathbf{b} + \mathcal{L}[\mathbf{F}],
+\end{equation}
+where $(\mathcal{L}[\mathbf{F}])_i = \mathcal{L}_{i,:}F_{i,:}^T
+= \sum\limits_j \mathcal{L}_{i,j}F_{i,j}$ and $\mathbf{U}^{n+1}$ is the FCT solution.
+
+\begin{lemma}
+   Suppose that with strongly imposed Dirichlet boundary conditions, the
+   correction step is defined such that the Dirichlet boundary conditions
+   are strongly imposed on Equation \ref{im_kuzminfc}:
+   \begin{equation}\label{im_kuzminfcD}
+      \tilde{\mathbf{A}}^{tr,F}\hat{\mathbf{U}}^H
+         = \tilde{\mathbf{b}}^F,
+   \end{equation}
+   and the definition for
+   the flux correction vector $\mathbf{f}$ from
+   Equation \ref{im_kuzminFdef} is used without modification. Then the solution
+   to this correction step, $\hat{\mathbf{U}}^H$, will yield the
+   correct high-order solution $\mathbf{U}^H$ given by Equation \ref{im_highD}.
+\end{lemma}
+\begin{proof}
+   For $i\in\mathcal{D}$, $\hat{U}^H_i = U^H_i = g_i$. For $i\notin\mathcal{D}$,
+   we take the $i$th equation of the linear system given by Equation \ref{im_kuzminfcD}:
+   \begin{equation}\label{i_eq}
+      (\mathbf{A}^{tr,F}\hat{\mathbf{U}}^H)_i
+         = m_i U^n_i + \Delta t b_i - (\mathbf{M}_C\Delta\mathbf{U}^H)_i
+         + m_i(U^H_i-U^n_i) - \Delta t(\mathbf{D}\mathbf{U}^H)_i.
+   \end{equation}
+   Examining the $i$th equation of the linear system given by Equation \ref{im_highD}
+   and solving for $\Delta t b_i$ gives
+   \begin{equation}
+      \Delta t b_i = (\mathbf{M}_C\Delta\mathbf{U}^H)_i
+         - \Delta t(\mathbf{K}\mathbf{U}^H)_i.
+   \end{equation}
+   Substituting this back into Equation \ref{i_eq} gives
+   \begin{eqnarray}
+      (\mathbf{A}^{tr,F}\hat{\mathbf{U}}^H)_i
+         & = & m_i U^H_i - \Delta t(\mathbf{K}\mathbf{U}^H)_i -
+            \Delta t(\mathbf{D}\mathbf{U}^H)_i.\\
+         & = & \left((\mathbf{M}_L - \Delta t(\mathbf{K}+\mathbf{D}))\mathbf{U}^H\right)_i\\
+         & = &(\mathbf{A}^{tr,F}\mathbf{U}^H)_i.
+   \end{eqnarray}
+   The system of equations
+   \begin{equation}
+      \left\{
+         \begin{array}{l l}
+            \hat{U}^H_i = U^H_i & i\in\mathcal{D}\\
+            (\mathbf{A}^{tr,F}\hat{\mathbf{U}}^H)_i = (\mathbf{A}^{tr,F}\mathbf{U}^H)_i
+               & i\notin\mathcal{D}
+         \end{array}
+      \right.
+   \end{equation}
+   determines that $\hat{\mathbf{U}}^H$ is uniquely equal to $\mathbf{U}^H$.
+   \qed
+\end{proof}
+%================================================================================
+\subsubsection{Deriving the Limiting Coefficients}
+%================================================================================
+\begin{lemma}
+   The definitions given by Equations \ref{P_defs}, \ref{R_defs}, and \ref{L_defs},
+   and the following definitions yield maximum-principle preserving limiting coefficients,
+   where $W_i^\pm$ are defined to be to be upper and lower bounds of the maximum
+   principle given by Equation \ref{implicit_max_principle}:
+   \begin{equation}
+      W_i^+ \equiv \frac{1}{1+\frac{\Delta t}{m_i}A_{i,i}}\left(U_i^n
+         - \left(\frac{\Delta t}{m_i}\sum\limits_{j\ne i} A^L_{i,j}\right)U_{max,i}^{L}
+         + \frac{\Delta t}{m_i}b_i\right),
+   \end{equation}
+   \begin{equation}
+      W_i^- \equiv \frac{1}{1+\frac{\Delta t}{m_i}A_{i,i}}\left(U_i^n
+         - \left(\frac{\Delta t}{m_i}\sum\limits_{j\ne i} A^L_{i,j}\right)U_{min,i}^{L}
+         + \frac{\Delta t}{m_i}b_i\right),
+   \end{equation}
+   \begin{equation}
+      Q_i^\pm \equiv (m_i+\Delta t A_{i,i}^L)W_i^\pm + \Delta t
+         \sum\limits_{j\ne i} A_{i,j}^L U_j^{n+1} - m_i U_i^n
+         - \Delta t b_i,
+   \end{equation}
+\end{lemma}
+
+\begin{proof}
+   The properties given in the proof for Lemma \ref{ss_coef} for $P_i^\pm$,
+   $Q_i^\pm$, $R_i^\pm$, and $\mathcal{L}_{i,j}$ hold with these definitions
+   of $W_i^\pm$ and $Q_i^\pm$.
+   The proof will be given for the upper bound. 
+   As in the proof of Lemma \ref{ss_coef}, the following inequality is found:
+   \[
+      \sum\limits_j \mathcal{L}_{i,j}F_{i,j} \leq Q_i^+
+   \]
+   Taking row $i$ of the linear system given by Equation \ref{im_limited} gives
+   \begin{eqnarray*}
+     (m_i + \Delta t A^L_{i,i})U_i^{n+1} + \Delta t\sum\limits_{j\ne i}A^L_{i,j}U_j^{n+1}
+         - m_i U_i^n - \Delta t b_i & = & \sum\limits_j \mathcal{L}_{i,j}F_{i,j}\\
+         & \leq & Q_i^+\\
+         & \leq & (m_i+\Delta t A_{i,i}^L)W_i^+ + \Delta t
+         \sum\limits_{j\ne i} A_{i,j}^L U_j^{n+1} - m_i U_i^n
+         - \Delta t b_i\\
+      U_i^{n+1} & \leq & W_i^+ 
+   \end{eqnarray*}
+   The lower bound is proved similarly.
+   \qed
+\end{proof}
