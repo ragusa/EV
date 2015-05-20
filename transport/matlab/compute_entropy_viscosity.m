@@ -1,19 +1,34 @@
 function viscE = compute_entropy_viscosity(...
-    u_old,u_new,x,mu,sigma,source,dt,...
-    v,dvdz,zq,wq,Jac,cE,cJ,entropy,entropy_deriv,periodic_BC)
+    u_old,u_new,dt,mesh,phys,quadrature,ev,dof_handler)
 
-n = length(u_old); % number of dofs
+% unpack quadrature
+zq   = quadrature.zq;
+wq   = quadrature.wq;
+v    = quadrature.v;
+dvdz = quadrature.dvdz;
+Jac  = quadrature.Jac;
 
-if periodic_BC
-    nel = n;  % number of elements
-else
-    nel = n-1;
-end
+% unpack physics
+mu     = phys.mu;
+sigma  = phys.sigma;
+source = phys.source;
+speed  = phys.speed;
+periodic_BC = phys.periodic_BC;
 
-g = [linspace(1,nel,nel)' linspace(2,nel+1,nel)']; % connectivity array
-if periodic_BC
-    g(end,:) = [ g(end,1) 1 ];
-end
+% unpack mesh
+x   = mesh.x;
+nel = mesh.n_cell;
+
+% unpack dof handler
+n_dof = dof_handler.n_dof;
+g     = dof_handler.connectivity;
+
+% unpack entropy viscosity
+cE            = ev.cE;
+cJ            = ev.cJ;
+entropy       = ev.entropy;
+entropy_deriv = ev.entropy_deriv;
+
 
 % compute domain average of entropy
 E_integral = 0;
@@ -34,25 +49,26 @@ for iel = 1:nel
 end
 
 % compute entropy jumps
-n_faces=n;
-jump = zeros(n_faces,1);
+n_face = n_dof;
+jump = zeros(n_face,1);
 
-for f = 1:n_faces % loop over interior faces
-    if ~periodic_BC
-        if f==1 || f==n_faces
-            continue
-        else % interior face when Dirchlet
-            iL = f-1;   % left  cell index
-            iR = f; % right cell index
+for f = 1:n_face % loop over interior faces
+    if periodic_BC
+        if f == 1
+            iL = nel; % left  cell index
+            iR = f;   % right cell index
+        else
+            iL = f-1; % left  cell index
+            iR = f;   % right cell index
         end
     else
-        if f==1 
-            iL = nel;   % left  cell index
-            iR = f; % right cell index
-        else % interior face when Dirchlet
-            iL = f-1;   % left  cell index
-            iR = f; % right cell index
-        end        
+        if f == 1 || f == n_face
+            % jumps on exterior faces considered zero
+            continue
+        else
+            iL = f-1; % left  cell index
+            iR = f;   % right cell index
+        end
     end
     uF = u_new(g(iL,2)); % solution on face
     dudx_L = dvdz' * u_new(g(iL,:)) / Jac(iL);
@@ -83,16 +99,14 @@ for iel = 1:nel
     source_q = source(xq);
     
     % compute maximum entropy residual at quadrature points
-    R = (E_new-E_old)/dt + mu*dEdx_new +...
+    R = (E_new-E_old)/(speed*dt) + mu*dEdx_new +...
         dEdu_new.*(sigma_q.*u_new_local - source_q);
     R_max = max(abs(R));
     
     % compute max jump
-    iel_next = iel+1;
-    if periodic_BC && iel==nel
-        iel_next=1;
-    end
-    jump_max = max(jump(iel),jump(iel_next));
+    faceL = g(iel,1);
+    faceR = g(iel,2);
+    jump_max = max(jump(faceL),jump(faceR));
     
     % compute entropy viscosity
     viscE(iel) = (cE*R_max + cJ*jump_max)/ E_dev_max;

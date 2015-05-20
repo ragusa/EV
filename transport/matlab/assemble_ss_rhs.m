@@ -11,11 +11,32 @@
 %
 
 %%
-function b = assemble_ss_rhs(nq,zq,wq,v,Jac,x,nel,n,connectivity,...
-    source,mu,speed,t,inc,modify_for_weak_DirichletBC)
+function b = assemble_ss_rhs(t,quadrature,mesh,dof_handler,phys,...
+    modify_for_weak_DirichletBC)
 
-% degrees of freedom per cell
-dofs_per_cell = 2;
+% unpack quadrature
+nq   = quadrature.nq;
+zq   = quadrature.zq;
+wq   = quadrature.wq;
+v    = quadrature.v;
+Jac  = quadrature.Jac;
+
+% unpack physics
+mu     = phys.mu;
+source = phys.source;
+speed  = phys.speed;
+inc    = phys.inc;
+
+% unpack mesh
+x   = mesh.x;
+nel = mesh.n_cell;
+
+% unpack dof handler
+n = dof_handler.n_dof;
+g = dof_handler.connectivity;
+dofs_per_cell = dof_handler.dofs_per_cell;
+
+
 
 % intialize
 b  = zeros(n,1);
@@ -23,7 +44,7 @@ b  = zeros(n,1);
 % assemble consistent mass matrix and steady-state rhs
 for iel = 1:nel
     % get local dof indices
-    ii = connectivity(iel,:);
+    ii = g(iel,:);
     
     % compute quadrature point positions
     xq = get_quadrature_point_positions(x,iel,zq);

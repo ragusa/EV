@@ -21,8 +21,8 @@ du = uH - u_old;
 F = zeros(n,n);
 for i = 1:n
     for j = 1:n
-        F(i,j) = -MC(i,j)*(du(j) - du(i)) ...
-            + dt*(DL(i,j)-DH(i,j))*(theta*(uH(j)-uH(i)) + (1-theta)*(u_old(j)-u_old(i)));
+        F(i,j) = -MC(i,j)*(du(j) - du(i))/dt ...
+            + (DL(i,j)-DH(i,j))*(theta*(uH(j)-uH(i)) + (1-theta)*(u_old(j)-u_old(i)));
     end
 end
 

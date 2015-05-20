@@ -1,35 +1,57 @@
 %%
 % Description:
 %   Builds the mass matrices, inviscid and low-order steady-state matrices,
-%   low-order viscosity and corresponding artificial diffusion matrix.
+%   low-order viscosity, and corresponding low-order diffusion matrix.
 %
-% MC = consistent mass matrix
-% ML = lumped mass matrix
-% A  = steady-state matrix
-% D  = artificial diffusion matrix
+% MC    = consistent mass matrix
+% ML    = lumped     mass matrix
+% A     = inviscid  steady-state matrix
+% AL    = low-order steady-state matrix
+% D     = low-order diffusion matrix
+% viscL = low-order viscosity
 
 %%
 function [MC,ML,A,AL,D,viscL] = build_matrices(...
-    nq,zq,wq,v,dvdz,Jac,x,dx,nel,n,connectivity,...
-    mu,speed,sigma,low_order_scheme,modify_for_weak_DirichletBC)
+    quadrature,mesh,dof_handler,phys,...
+    low_order_scheme,modify_for_weak_DirichletBC)
+
+% unpack quadrature
+nq   = quadrature.nq;
+zq   = quadrature.zq;
+wq   = quadrature.wq;
+v    = quadrature.v;
+dvdz = quadrature.dvdz;
+Jac  = quadrature.Jac;
+
+% unpack physics
+mu    = phys.mu;
+sigma = phys.sigma;
+speed = phys.speed;
+
+% unpack mesh
+x   = mesh.x;
+dx  = mesh.dx;
+nel = mesh.n_cell;
+
+% unpack dof handler
+n = dof_handler.n_dof;
+g = dof_handler.connectivity;
+dofs_per_cell = dof_handler.dofs_per_cell;
 
 %--------------------------------------------------------------------------
 % Compute mass matrices and inviscid steady-state matrix
 %--------------------------------------------------------------------------
 
-% degrees of freedom per cell
-dofs_per_cell = 2;
-
 % intialize matrices
 nnz = 3*n; % max number of nonzero entries
 MC = spalloc(n,n,nnz);
 A  = spalloc(n,n,nnz);
-D  = spalloc(n,n,nnz);
+
 
 % assemble consistent mass matrix and inviscid steady-state system matrix
 for iel = 1:nel
     % get local dof indices
-    ii = connectivity(iel,:);
+    ii = g(iel,:);
     
     % compute quadrature point positions
     xq = get_quadrature_point_positions(x,iel,zq);
@@ -68,7 +90,7 @@ visc_bilin_cell = [1 -1; -1 1];
 visc_bilin = zeros(n,n);
 for iel = 1:nel
     % get local dof indices
-    ii = connectivity(iel,:);
+    ii = g(iel,:);
     
     % add local contributions to global system
     visc_bilin(ii,ii) = visc_bilin(ii,ii) + dx(iel)*visc_bilin_cell;
@@ -81,8 +103,8 @@ for iel = 1:nel
     for i = 1:dofs_per_cell
         for j = 1:dofs_per_cell
             if (i ~= j)
-                ii = connectivity(iel,i);
-                jj = connectivity(iel,j);
+                ii = g(iel,i);
+                jj = g(iel,j);
                 viscL(iel) = max(viscL(iel),-max(0,A(ii,jj))/visc_bilin(ii,jj));
             end
         end
@@ -97,6 +119,7 @@ end
 % compute low-order artificial diffusion matrix
 switch low_order_scheme
     case 1 % algebraic
+        D  = spalloc(n,n,nnz);
         for i = 1:n
             for j = 1:n
                 D(i,j) = -max([0,A(i,j),A(j,i)]);
@@ -104,13 +127,7 @@ switch low_order_scheme
             D(i,i) = -(sum(D(i,1:i-1))+sum(D(i,i+1:n)));
         end
     case 2 % graph-theoretic
-        for iel = 1:nel
-            % get local dof indices
-            ii = connectivity(iel,:);
-    
-            % add local contributions to global system
-            D(ii,ii) = D(ii,ii) + viscL(iel) * dx(iel)*visc_bilin_cell;
-        end
+        D = compute_diffusion_matrix(viscL,mesh.dx,dof_handler);
     otherwise
         error('Invalid low order scheme chosen');
 end

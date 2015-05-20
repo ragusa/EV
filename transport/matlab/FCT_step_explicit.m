@@ -1,6 +1,6 @@
 function uFCT = FCT_step_explicit(u_old,uH,dt,ML,MC,AL,DH,DL,b,inc,speed,...
     sigma_min,sigma_max,q_min,q_max,DMP_option,limiting_option,...
-    periodic_BC,impose_DirichletBC_strongly)
+    periodic_BC,modify_for_strong_DirichletBC)
 
 % size of system
 n_dof = length(u_old);
@@ -14,12 +14,15 @@ if (DMP_option == 2) % max/min(DMP,CMP)
     Wminus = min(Wminus,WminusCMP);
 end
 
+% theta = 0 for explicit
+theta = 0;
+
 % compute limited flux bounds
 [Qplus,Qminus] = compute_Q(...
-    u_old,u_old,ML,Wplus,Wminus,AL,b,dt,0);
+    u_old,u_old,ML,Wplus,Wminus,AL,b,dt,theta);
 
 % compute flux corrections
-F = flux_correction_matrix(u_old,uH,dt,DH,DL,MC,0);
+F = flux_correction_matrix(u_old,uH,dt,DH,DL,MC,theta);
 
 % compute limited fluxes
 switch limiting_option
@@ -35,14 +38,15 @@ switch limiting_option
         error('Invalid limiting option');
 end
 
-% compute FCT solution
-rhs = (ML - dt*AL)*u_old + dt*b + flim;
+% create system matrix and rhs
 ML_mod = ML;
-% modify matrix and rhs if Dirichlet BC are used
-if ~periodic_BC && impose_DirichletBC_strongly
-    rhs(1) = inc;
+rhs = (ML - dt*AL)*u_old + dt*(b + flim);
+if modify_for_strong_DirichletBC
     ML_mod(1,:)=0; ML_mod(1,1)=1;
+    rhs(1) = inc;
 end
+
+% compute FCT solution
 uFCT = ML_mod \ rhs;
 
 end
