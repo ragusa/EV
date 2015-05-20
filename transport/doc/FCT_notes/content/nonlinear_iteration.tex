@@ -1,0 +1,141 @@
+\section{Nonlinear Iteration}
+%================================================================================
+\subsection{Steady-State High-Order Scheme}
+%--------------------------------------------------------------------------------
+The high-order steady-state scheme
+\begin{equation}
+   \A^H\U = \b
+\end{equation}
+is in general nonlinear since the high-order steady-state matrix is
+$\A^H = \A + \D^H$, where $\D^H$ may be a function of the solution, as
+it is in the case of the entropy viscosity high-order scheme.
+This section presents a defect correction scheme to solve this
+nonlinear system iteratively.
+
+If the system is modified to strongly impose Dirichlet
+boundary conditions, let it be denoted by
+\begin{equation}
+   \tilde{\A}^H\U = \tilde{\b} \eqc
+\end{equation}
+where the tildes denote modification to the vector and matrix.
+Each new iterate of the solution is computed as
+\begin{equation}
+   \U^{(k+1)} = \U^{(k)} + \alpha\Delta\U^{(k+1)} \eqc
+\end{equation}
+where
+\begin{equation}
+   \Delta\U^{(k+1)} = [\tilde{\A}^{H,(k)}]^{-1}\r^{(k)} \eqc
+\end{equation}
+and the steady-state residual as is defined as
+\begin{equation}\label{ssres_ss}
+   \r^{(k)} = \tilde{\b} - \tilde{\A}^{H,(k)}\U^{(k)} \eqc
+\end{equation}
+and $\alpha$ is a relaxation parameter. Typically, $\alpha\le 1$,
+and if $\alpha=1$, then this scheme is equivalent to fixed point iteration.
+
+%--------------------------------------------------------------------------------
+\subsection{Theta High-Order Scheme}
+%--------------------------------------------------------------------------------
+The high order theta scheme is the following:
+\begin{equation}
+   \M^C\frac{\U^{n+1}-\U^n}{\dt} + (1-\theta)\A^{H,n}\U^n
+   + \theta\A^{H,n+1}\U^{n+1} = (1-\theta)\b^n + \theta\b^{n+1} \eqp
+\end{equation}
+Rearranging gives
+\begin{equation}\label{thetahigh_unmod}
+   \M^C\U^{n+1} = \M^C\U^n + (1-\theta)\dt\r^n + \theta\dt\r^{n+1} \eqc
+\end{equation}
+where here the steady-state residual is defined as
+\begin{equation}
+   \r^n = \b^n - \A^{H,n}\U^n \eqp
+\end{equation}
+Note that this differs from the definition given by Equation \eqref{ssres_ss},
+where the residual uses the strongly Dirichlet-modified system matrix and right
+hand side. Denoting the right hand side of Equation \eqref{thetahigh_unmod} as
+\begin{equation}
+   \s = \M^C\U^n + (1-\theta)\dt\r^n + \theta\dt\r^{n+1}
+\end{equation}
+and modifying for Dirichlet boundary conditions gives
+\begin{equation}
+   \tilde{\M}^C\U^{n+1} = \tilde{\s}.
+\end{equation}
+This system is nonlinear, so defect correction is used to iteratively
+compute the solution:
+\begin{equation}
+   \U^{n+1,(k+1)} = \U^{n+1,(k)} + \alpha\Delta\U^{n+1,(k+1)} \eqc
+\end{equation}
+where the change in solution is computed as
+\begin{equation}
+   \Delta\U^{n+1,(k+1)} = [\tilde{M}^C]^{-1}\tilde{\s}^{(k)} - \U^{n+1,(k)} \eqc
+\end{equation}
+and again, $\alpha$ is a relaxation parameter.
+
+%--------------------------------------------------------------------------------
+\subsection{Steady-State FCT Scheme}
+%--------------------------------------------------------------------------------
+The steady-state FCT scheme, given by Equation \eqref{FCT_limited_ss}, is
+\begin{equation}
+   \A^L\U = \b + \L[\F] \equiv \b^F \eqp
+\end{equation}
+The first step is to perform a nonlinear solve to get the high-order
+solution $\U^H$, since the flux corrections $\F$ depend on the high-order
+solution. The FCT step is also nonlinear since the limiting coefficients
+are nonlinear, so a defect correction scheme is used, which will
+now be described.
+Strongly imposing Dirichlet boundary conditions,
+\begin{equation}
+   \tilde{\A}^L\U = \tilde{\b}^F \eqp
+\end{equation}
+Defining the steady-state residual as
+\begin{equation}
+   \r^{(k)} = \tilde{\b}^{F,(k)} - \tilde{\A}^{L}\U^{(k)} \eqc
+\end{equation}
+updates to the solution are computed as
+\begin{equation}
+   \Delta\U^{(k+1)} = [\tilde{\A}^{L,(k)}]^{-1}\r^{(k)} \eqp
+\end{equation}
+The update is performed with a relaxation parameter $\alpha$:
+\begin{equation}
+   \U^{(k+1)} = \U^{(k)} + \alpha\Delta\U^{(k+1)} \eqp
+\end{equation}
+
+%--------------------------------------------------------------------------------
+\subsection{Theta FCT Scheme}
+%--------------------------------------------------------------------------------
+Discretizing Equation \eqref{semidiscrete_limited} using the theta scheme
+given in Section \ref{theta} gives
+\begin{equation}
+   \M^L\frac{\U^{n+1}-\U^n}{\dt^{n+1}} + (1-\theta)\A^L\U^{n}
+   + \theta\A^{L,n+1}\U^{n+1} = (1-\theta)\b^n + \theta\b^{n+1}
+   + (1-\theta)\L^n\cdot\F^n + \theta\L^{n+1}\cdot\F^{n+1} \eqp
+\end{equation}
+Rearranging gives
+\begin{equation}\label{thetaFCT_unmod}
+   \M^L\U^{n+1} = \M^L\U^n + (1-\theta)\dt\r^n + \theta\dt\r^{n+1} \eqc
+\end{equation}
+where here the steady-state residual is defined as
+\begin{equation}
+   \r^n = \b^n + \L^n\cdot\F^n - \A^L\U^n \eqp
+\end{equation}
+Note that this differs from the definition given by Equation \eqref{ssres_ss},
+where the residual uses the strongly Dirichlet-modified system matrix and right
+hand side. Denoting the right hand side of Equation \eqref{thetaFCT_unmod} as
+\begin{equation}
+   \s = \M^L\U^n + (1-\theta)\dt\r^n + \theta\dt\r^{n+1}
+\end{equation}
+and modifying for Dirichlet boundary conditions gives
+\begin{equation}
+   \tilde{\M}^L\U^{n+1} = \tilde{\s}.
+\end{equation}
+This system is nonlinear, so defect correction is used to iteratively
+compute the solution:
+\begin{equation}
+   \U^{n+1,(k+1)} = \U^{n+1,(k)} + \alpha\Delta\U^{n+1,(k+1)} \eqc
+\end{equation}
+where the change in solution is computed as
+\begin{equation}
+   \Delta\U^{n+1,(k+1)} = [\tilde{M}^L]^{-1}\tilde{\s}^{(k)} - \U^{n+1,(k)} \eqc
+\end{equation}
+and again, $\alpha$ is a relaxation parameter.
+
+

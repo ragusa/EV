@@ -36,10 +36,11 @@ where the entropy viscosity is defined as
       + c_J\max\limits_{F\in\partial K}J_F(u_h^n)}
       {\|E(u_h^n)-\bar{E}(u_h^n)\|_{L^\infty(\Omega)}}.
 \end{equation}
-The entropy is defined to be some convex function of $u$ such as $E(u)=\frac{1}{2}u^2$.
-The entropy residual $R_K^n(u_h^n,u_h^{n-1})$ is the following:
+The entropy is defined to be some convex function of $u$ such as
+$E(u)=\frac{1}{2}u^2$. The entropy residual $R_K^n(u_h^n,u_h^{n-1})$ is the
+following:
 \begin{equation}
-    R_K^n(u_h^n,u_h^{n-1}) = \left\|\frac{E(u_h^n)-E(u_h^{n-1})}{\Delta t^n}
+    R_K^n(u_h^n,u_h^{n-1}) = \left\|\frac{1}{c}\frac{E(u_h^n)-E(u_h^{n-1})}{\Delta t^n}
       + E'(u_h^n)\left[\mathbf{\Omega}\cdot\nabla u_h^n
       + \sigma u_h^n
       - q\right]\right\|_{L^\infty(K)},
