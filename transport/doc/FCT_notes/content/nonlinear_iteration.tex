@@ -38,14 +38,16 @@ and if $\alpha=1$, then this scheme is equivalent to fixed point iteration.
 %--------------------------------------------------------------------------------
 The high order theta scheme is the following:
 \begin{equation}
-   \M^C\frac{\U^{n+1}-\U^n}{\dt} + (1-\theta)\A^{H,n}\U^n
+   \M^C\frac{\U^{n+1}-\U^n}{\dt^{n+1}} + (1-\theta)\A^{H,n}\U^n
    + \theta\A^{H,n+1}\U^{n+1} = (1-\theta)\b^n + \theta\b^{n+1} \eqp
 \end{equation}
 Rearranging gives
 \begin{equation}\label{thetahigh_unmod}
-   \M^C\U^{n+1} = \M^C\U^n + (1-\theta)\dt\r^n + \theta\dt\r^{n+1} \eqc
+   \B\U^{n+1} = \M^C\U^n
+   + (1-\theta)\dt^{n+1}\r^n + \theta\dt^{n+1}\b^{n+1} \eqc
 \end{equation}
-where here the steady-state residual is defined as
+where $\B\equiv \M^C+\theta\dt^{n+1}\A^{H,n+1}$, and the steady-state
+residual is defined as
 \begin{equation}
    \r^n = \b^n - \A^{H,n}\U^n \eqp
 \end{equation}
@@ -53,11 +55,11 @@ Note that this differs from the definition given by Equation \eqref{ssres_ss},
 where the residual uses the strongly Dirichlet-modified system matrix and right
 hand side. Denoting the right hand side of Equation \eqref{thetahigh_unmod} as
 \begin{equation}
-   \s = \M^C\U^n + (1-\theta)\dt\r^n + \theta\dt\r^{n+1}
+   \s = \M^C\U^n + (1-\theta)\dt^{n+1}\r^n + \theta\dt^{n+1}\b^{n+1}
 \end{equation}
 and modifying for Dirichlet boundary conditions gives
 \begin{equation}
-   \tilde{\M}^C\U^{n+1} = \tilde{\s}.
+   \tilde{\B}^C\U^{n+1} = \tilde{\s}.
 \end{equation}
 This system is nonlinear, so defect correction is used to iteratively
 compute the solution:
@@ -66,7 +68,7 @@ compute the solution:
 \end{equation}
 where the change in solution is computed as
 \begin{equation}
-   \Delta\U^{n+1,(k+1)} = [\tilde{M}^C]^{-1}\tilde{\s}^{(k)} - \U^{n+1,(k)} \eqc
+   \Delta\U^{n+1,(k+1)} = [\tilde{B}^{(s)}]^{-1}\tilde{\s} - \U^{n+1,(k)} \eqc
 \end{equation}
 and again, $\alpha$ is a relaxation parameter.
 
@@ -75,7 +77,7 @@ and again, $\alpha$ is a relaxation parameter.
 %--------------------------------------------------------------------------------
 The steady-state FCT scheme, given by Equation \eqref{FCT_limited_ss}, is
 \begin{equation}
-   \A^L\U = \b + \L[\F] \equiv \b^F \eqp
+   \A^L\U = \b + \LF \equiv \b^F \eqp
 \end{equation}
 The first step is to perform a nonlinear solve to get the high-order
 solution $\U^H$, since the flux corrections $\F$ depend on the high-order
@@ -106,26 +108,28 @@ Discretizing Equation \eqref{semidiscrete_limited} using the theta scheme
 given in Section \ref{theta} gives
 \begin{equation}
    \M^L\frac{\U^{n+1}-\U^n}{\dt^{n+1}} + (1-\theta)\A^L\U^{n}
-   + \theta\A^{L,n+1}\U^{n+1} = (1-\theta)\b^n + \theta\b^{n+1}
-   + (1-\theta)\L^n\cdot\F^n + \theta\L^{n+1}\cdot\F^{n+1} \eqp
+   + \theta\A^L\U^{n+1} = (1-\theta)\b^n + \theta\b^{n+1}
+   + \LF \eqp
 \end{equation}
 Rearranging gives
 \begin{equation}\label{thetaFCT_unmod}
-   \M^L\U^{n+1} = \M^L\U^n + (1-\theta)\dt\r^n + \theta\dt\r^{n+1} \eqc
+   \B\U^{n+1} = \M^L\U^n + (1-\theta)\dt^{n+1}\r^n + \theta\dt^{n+1}\b^{n+1}
+   + \dt^{n+1}\LF \eqc
 \end{equation}
-where here the steady-state residual is defined as
+where $\B\equiv \M^L + \theta\dt^{n+1}\A^L$, and the steady-state residual
+is defined as
 \begin{equation}
-   \r^n = \b^n + \L^n\cdot\F^n - \A^L\U^n \eqp
+   \r^n = \b^n - \A^L\U^n \eqp
 \end{equation}
 Note that this differs from the definition given by Equation \eqref{ssres_ss},
 where the residual uses the strongly Dirichlet-modified system matrix and right
 hand side. Denoting the right hand side of Equation \eqref{thetaFCT_unmod} as
 \begin{equation}
-   \s = \M^L\U^n + (1-\theta)\dt\r^n + \theta\dt\r^{n+1}
+   \s = \M^L\U^n + (1-\theta)\dt^{n+1}\r^n + \theta\dt^{n+1}\b^{n+1} + \dt^{n+1}\LF
 \end{equation}
 and modifying for Dirichlet boundary conditions gives
 \begin{equation}
-   \tilde{\M}^L\U^{n+1} = \tilde{\s}.
+   \tilde{\B}\U^{n+1} = \tilde{\s}.
 \end{equation}
 This system is nonlinear, so defect correction is used to iteratively
 compute the solution:
@@ -134,7 +138,7 @@ compute the solution:
 \end{equation}
 where the change in solution is computed as
 \begin{equation}
-   \Delta\U^{n+1,(k+1)} = [\tilde{M}^L]^{-1}\tilde{\s}^{(k)} - \U^{n+1,(k)} \eqc
+   \Delta\U^{n+1,(k+1)} = [\tilde{\B}]^{-1}\tilde{\s}^{(k)} - \U^{n+1,(k)} \eqc
 \end{equation}
 and again, $\alpha$ is a relaxation parameter.
 

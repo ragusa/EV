@@ -1,4 +1,4 @@
-function [Wplus,Wminus] = compute_max_principle_bounds_new(u,sigma_min,sigma_max,q_min,q_max,s,inc)
+function [Wplus,Wminus] = compute_CMP_ss(u,sigma_min,sigma_max,q_min,q_max,s,inc)
 
 % size of system
 n = length(u);

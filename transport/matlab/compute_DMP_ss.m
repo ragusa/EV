@@ -1,4 +1,4 @@
-function [Wplus,Wminus] = compute_max_principle_bounds(u,AL,b,inc)
+function [Wplus,Wminus] = compute_DMP_ss(u,AL,b,inc)
 
 n = length(u);
 

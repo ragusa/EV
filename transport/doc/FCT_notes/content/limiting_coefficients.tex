@@ -5,7 +5,7 @@
    Suppose that that a discrete maximum principle $W_i^+\le U_i^{n+1}\le W_i^-$
    corresponds to the following inequality for the limited correction fluxes:
    \begin{equation}
-      Q_i^-\le\sum\limits_j \mathcal{L}_{i,j}F_{i,j}\le Q_i^+,
+      Q_i^- \le \sumj L\ij F\ij \le Q_i^+,
    \end{equation}
    where $Q_i^\pm$ are bounds that depend on the temporal discretization. Then,
    the following limiter coefficient definitions satisfy the discrete maximum
@@ -23,7 +23,7 @@
          \right.,
    \end{equation}
    \begin{equation}\label{L_defs}
-      \mathcal{L}_{i,j} \equiv\left\{
+      L_{i,j} \equiv\left\{
          \begin{array}{l l}
             \min(R_i^+,R_j^-) & F_{i,j} \geq 0\\
             \min(R_i^-,R_j^+) & F_{i,j} < 0
@@ -38,12 +38,12 @@
       P_i^+ \geq 0, \qquad P_i^- \leq 0,\\
       Q_i^+ \geq 0, \qquad Q_i^- \leq 0,\\
       0 \leq R_i^\pm \leq 1,\\
-      0 \leq \mathcal{L}_{i,j} \leq 1.
+      0 \leq L\ij \leq 1.
    \end{gather*}
    The proof will be given for the upper bound.
    \[
-      \sum\limits_j \mathcal{L}_{i,j}F_{i,j}
-         \leq \sum\limits_{j:F_{i,j}\geq 0} \mathcal{L}_{i,j}F_{i,j}
+      \sum\limits_j L_{i,j}F_{i,j}
+         \leq \sum\limits_{j:F_{i,j}\geq 0} L_{i,j}F_{i,j}
          = \sum\limits_{j:F_{i,j}\geq 0} \min(R_i^+,R_j^-)F_{i,j}
          \leq \sum\limits_{j:F_{i,j}\geq 0} R_i^+ F_{i,j}
    \]
@@ -61,7 +61,7 @@
    \]
    Thus,
    \[
-      \sum\limits_j \mathcal{L}_{i,j}F_{i,j} \leq Q_i^+
+      \sum\limits_j L_{i,j}F_{i,j} \leq Q_i^+
    \]
    The lower bound is proved similarly.
    \qed

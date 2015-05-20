@@ -109,5 +109,9 @@ for iel = 1:nel
     jump_max = max(jump(faceL),jump(faceR));
     
     % compute entropy viscosity
-    viscE(iel) = (cE*R_max + cJ*jump_max)/ E_dev_max;
+    if abs(E_dev_max) < 1.0e-100
+       viscE(iel) = 0.0;
+    else
+       viscE(iel) = (cE*R_max + cJ*jump_max) / E_dev_max;
+    end
 end

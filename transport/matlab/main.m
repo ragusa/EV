@@ -11,8 +11,8 @@ quadrature.nq = 3;                  % number of quadrature points per cell
 % spatial method options
 %--------------------------------------------------------------------------
 compute_low_order  = false; % compute and plot low-order solution?
-compute_high_order = false; % compute and plot high-order solution?
-compute_FCT        = true; % compute and plot FCT solution?
+compute_high_order = true; % compute and plot high-order solution?
+compute_FCT        = false; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
 %                   2 = graph-theoretic low-order scheme
@@ -34,12 +34,12 @@ ev.entropy_deriv = @(u) u;        % derivative of entropy function
 %                  1 = SSPRK(1,1) (Explicit Euler)
 %                  2 = SSPRK(3,3) (Shu-Osher)
 %                  3 = theta method
-temporal_scheme = 3; % temporal discretization scheme
+temporal_scheme = 0; % temporal discretization scheme
 
 theta = 1.0;     % theta parameter to use if using a theta method
-CFL = 50.0;       % CFL number
+CFL = 0.8;       % CFL number
 ss_tol = 1.0e-5; % steady-state tolerance
-t_end = 10.0;     % max time to run
+t_end = 1.0;     % max time to run
 %--------------------------------------------------------------------------
 % FCT options
 %--------------------------------------------------------------------------
@@ -81,7 +81,7 @@ source_is_time_dependent = false; % is source time-dependent?
 %--------------------------------------------------------------------------
 max_iter = 100;           % maximum number of nonlinear solver iterations
 nonlin_tol = 1e-10;       % nonlinear solver tolerance for discrete L2 norm
-relaxation_parameter = 1.0; % relaxation parameter for iteration
+relaxation_parameter = 0.7; % relaxation parameter for iteration
 %--------------------------------------------------------------------------
 % plot options
 %--------------------------------------------------------------------------
@@ -90,6 +90,7 @@ plot_low_order_transient  = false; % plot low-order transient?
 plot_high_order_transient = false; % plot high-order transient?
 plot_FCT_transient        = false; % plot FCT transient?
 pausetime = 0.1;                   % time to pause for transient plots
+legend_location           = 'NorthEast'; % location of plot legend
 %--------------------------------------------------------------------------
 % output options
 %--------------------------------------------------------------------------
@@ -388,7 +389,7 @@ if (compute_low_order)
             % plot
             if (plot_low_order_transient)
                 plot(mesh.x,uL);
-                legend('Low-order','Location','Best');
+                legend('Low-order','Location',legend_location);
                 axis([mesh.x_min mesh.x_max 0 1]);
                 pause(pausetime);
             end
@@ -759,7 +760,7 @@ if (compute_FCT)
             % plot
             if (plot_FCT_transient)
                 plot(mesh.x,uFCT,'g');
-                legend('FCT','Location','Best');
+                legend('FCT','Location',legend_location);
                 pause(pausetime);
             end
             
@@ -821,7 +822,7 @@ if (compute_FCT)
 end
 
 % legend
-legend(legend_entries,'Location','Best');
+legend(legend_entries,'Location',legend_location);
 
 %% Plot viscosity
 
@@ -844,7 +845,7 @@ if (plot_viscosity)
     end
     
     % legend
-    legend(legend_entries,'Location','Best');
+    legend(legend_entries,'Location',legend_location);
 end
 
 %% Output

@@ -8,7 +8,7 @@
     \mathbf{M}^L\frac{\mathbf{U}^{n+1}-\mathbf{U}^n}{\Delta t}
     + (1-\theta)\mathbf{A}^L\mathbf{U}^n + \theta\mathbf{A}^L\mathbf{U}^{n+1}
     = (1-\theta)\mathbf{b}^n + \theta\mathbf{b}^{n+1}
-    + \mathcal{L}[\mathbf{F}],
+    + \LF \eqc
   \end{equation}
   the following limited flux bounds $Q_i^\pm$ correspond to the discrete
    maximum principle $W_i^+\le U_i^{n+1}\le W_i^-$:
@@ -29,11 +29,11 @@
       + \theta\sum\limits_j A_{i,j}^L U_j^{n+1}
       = (1-\theta)b_i^n
       + \theta b_i^{n+1}
-      + \sum\limits_j\mathcal{L}_{i,j}F_{i,j}.
+      + \sum\limits_j L_{i,j}F_{i,j}.
    \]
-   Solving for $\sum\limits_j\mathcal{L}_{i,j}F_{i,j}$ gives
+   Solving for $\sum\limits_j L_{i,j}F_{i,j}$ gives
    \[
-      \sum\limits_j\mathcal{L}_{i,j}F_{i,j} =
+      \sum\limits_j L_{i,j}F_{i,j} =
       m_i\frac{U_i^{n+1}-U_i^n}{\Delta t}
       + (1-\theta)\sum\limits_j A_{i,j}^L U_j^n
       + \theta\sum\limits_j A_{i,j}^L U_j^{n+1}
@@ -65,6 +65,6 @@
    \end{multline*}
    which by substituting equations above gives
    \[
-      Q_i^-\le\sum\limits_j \mathcal{L}_{i,j}F_{i,j}\le Q_i^+.\qed
+      Q_i^-\le\sum\limits_j L_{i,j}F_{i,j}\le Q_i^+.\qed
    \]
 \end{proof}
