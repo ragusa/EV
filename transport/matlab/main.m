@@ -11,8 +11,8 @@ quadrature.nq = 3;                  % number of quadrature points per cell
 % spatial method options
 %--------------------------------------------------------------------------
 compute_low_order  = false; % compute and plot low-order solution?
-compute_high_order = true; % compute and plot high-order solution?
-compute_FCT        = false; % compute and plot FCT solution?
+compute_high_order = false; % compute and plot high-order solution?
+compute_FCT        = true; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
 %                   2 = graph-theoretic low-order scheme
@@ -34,7 +34,7 @@ ev.entropy_deriv = @(u) u;        % derivative of entropy function
 %                  1 = SSPRK(1,1) (Explicit Euler)
 %                  2 = SSPRK(3,3) (Shu-Osher)
 %                  3 = theta method
-temporal_scheme = 0; % temporal discretization scheme
+temporal_scheme = 2; % temporal discretization scheme
 
 theta = 1.0;     % theta parameter to use if using a theta method
 CFL = 0.8;       % CFL number
@@ -60,7 +60,7 @@ limiting_option = 2;
 %            2: void without source -> absorber without source
 %            3: void with    source -> absorber without source
 %            5: MMS-1
-problemID = 2;
+problemID = 3;
 
 % IC_option: 0: zero
 %            1: exponential pulse
@@ -97,7 +97,7 @@ legend_location           = 'NorthEast'; % location of plot legend
 save_exact_solution      = false; % option to save exact solution 
 save_low_order_solution  = false; % option to save low-order solution
 save_high_order_solution = false; % option to save high-order solution
-save_FCT_solution        = false; % option to save FCT solution
+save_FCT_solution        = true; % option to save FCT solution
 %-------------------------------------------------------------------------
 
 %% Define Problem
@@ -882,7 +882,7 @@ end
 if (save_low_order_solution)
     if (compute_low_order)
         low_order_file = ['output/uL_',time_string,'.txt'];
-        dlmwrite(low_order_file,[x,uL_final],' ');
+        dlmwrite(low_order_file,[mesh.x,uL_final],' ');
     end
 end
 
@@ -900,7 +900,7 @@ end
 if (save_high_order_solution)
     if (compute_high_order)
         high_order_file = ['output/uH_',high_order_string,'_',time_string,'.txt'];
-        dlmwrite(high_order_file,[x,uH_final],' ');
+        dlmwrite(high_order_file,[mesh.x,uH_final],' ');
     end
 end
 
@@ -908,6 +908,6 @@ end
 if (save_FCT_solution)
     if (compute_FCT)
         FCT_file = ['output/uFCT_',high_order_string,'_',time_string,'.txt'];
-        dlmwrite(FCT_file,[x,uFCT],' ');
+        dlmwrite(FCT_file,[mesh.x,uFCT],' ');
     end
 end
