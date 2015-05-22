@@ -1,0 +1,16 @@
+Dissertation files
+=====================
+
+Main file:
+=====================
+
+dissertation.tex
+
+
+Directories:
+=====================
+
+/chapters  contains .tex file for each chapter
+/content   contains .tex files for different content, inputted into chapter
+           .tex files.
+/figures   contains figures used in dissertation

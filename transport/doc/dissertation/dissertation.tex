@@ -1,0 +1,87 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%
+%  New template code for TAMU Theses and Dissertations starting Fall 2012.  
+%  For more info about this template or the 
+%  TAMU LaTeX User's Group, see http://www.howdy.me/.
+%
+%  Author: Wendy Lynn Turner 
+%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[12pt]{report}
+\usepackage[letterpaper]{geometry}
+\geometry{verbose,tmargin=1.25in,bmargin=1.25in,lmargin=1.4in,rmargin=1.15in}
+ \usepackage[doublespacing]{setspace}
+ \usepackage{tocloft}
+ \usepackage[rm, tiny,center, compact]{titlesec}
+ \usepackage{indentfirst}
+ \usepackage{etoolbox}
+\usepackage{tocvsec2}
+ \usepackage[titletoc]{appendix}
+ \usepackage{appendix}
+ \usepackage{tamuconfig}
+\usepackage{rotating}
+
+% Added to fix issues with pdf searching in some versions of LaTeX
+%\usepackage[T1]{fontenc}\usepackage{lmodern}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Hyperref setup below.  You should be able to get away with using uncommenting just the first line.
+%\usepackage[hidelinks]{hyperref}
+
+% if \usepackage[hidelinks]{hyperref} doesn't work try this.
+% \usepackage{hyperref}  % Hidelinks is an option that removes link visiability.  TAMU Thesis Offices prefers to not see the links. But often doesn't work.  
+% 
+% \hypersetup{
+%     colorlinks=true,
+%     linkcolor=black,
+%     citecolor=black,
+%     filecolor=black,
+%     urlcolor=black,
+% }
+%%%%%%%  End of hyperref setup.  One of these two options should work, but my motto with hyperref is when in doubt, comment it out!
+%%%%%%%%%  This hopefully fixes the problem with vertical spacing of section headings at the top of the page..
+% \preto\section{%
+% \ifnum\value{section}>0\addtocontents{toc}{\vskip-6pt}\fi
+% }
+% \preto\subsection{%
+% \ifnum\value{subsection}=0\addtocontents{toc}{\vskip-6pt}\fi
+% \ifnum\value{subsection}>0\addtocontents{toc}{\vskip-6pt}\fi
+% } 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\renewcommand{\tamumanuscripttitle}{Solution of the Transport Equation Using
+   Entropy Viscosity and the Flux-Corrected Transport Algorithm}
+\renewcommand{\tamupapertype}{Dissertation}
+\renewcommand{\tamufullname}{Joshua Edmund Hansel}
+\renewcommand{\tamudegree}{Doctor of Philosophy}
+\renewcommand{\tamuchairone}{Jean Ragusa}
+\renewcommand{\tamumemberone}{Marvin Adams}
+\newcommand{\tamumembertwo}{Jim Morel}
+\newcommand{\tamumemberthree}{Jean-Luc Guermond}
+\renewcommand{\tamudepthead}{Yassin Hassan}
+\renewcommand{\tamugradmonth}{May}
+\renewcommand{\tamugradyear}{2016}
+\renewcommand{\tamudepartment}{Nuclear Engineering}
+
+
+\include{titlepage}
+\include{abstract}
+\include{dedication}
+\include{acknowledgements}
+\include{nomenclature}
+\include{lists}
+
+\include{chapters/chapter1}
+\include{chapters/chapter2}
+\include{chapters/chapter3}
+
+\let\oldbibitem\bibitem
+\renewcommand{\bibitem}{\setlength{\itemsep}{0pt}\oldbibitem}
+\include{bibliography}
+\include{appendices}
+
+
+\end{document}
