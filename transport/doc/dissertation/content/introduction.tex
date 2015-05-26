@@ -1,6 +1,31 @@
 %================================================================================
 \section{Introduction}
 %================================================================================
+The solution of conservation law equations such as the neutron transport
+equation represents a number of unique challenges; in the vicinity of strong
+gradients and discontinuities, numerical solutions are prone to spurious
+oscillations that may generate unphysical values. For example, physically
+non-negative quantities such as scalar flux or angular flux may have negative
+numerical solution values if care is not taken in the numerical scheme.
+These negativities are not only undesirable because they are physically
+incorrect, but also because their presence in a simulation or analysis
+can cause drastic consequences due to the assumption of non-negativity;
+for instance, properties dependent on this quantity may be computed
+to be highly unphysical values, which then propagate further into
+a simulation. These inaccuracies can lead to poor conclusions being drawn
+from a simulation and thus lead to poor decisions being made by the analysts.
+
+These issues of spurious oscillations and negativities are a well-known
+phenomenon, and attempts to address these issues have taken a number
+of different approaches for different discretization schemes.
+
+
+
+
+
+%--------------------------------------------------------------------------------
+\subsection{Problem Formulation}
+%--------------------------------------------------------------------------------
 The radiation transport equation is the following:
 \begin{equation}\label{tr}
 	\frac{1}{c}\frac{\partial \psi}{\partial t} + \mathbf{\Omega}\cdot\nabla\psi(\mathbf{x},t)
