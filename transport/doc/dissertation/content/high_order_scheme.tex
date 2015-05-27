@@ -1,25 +1,55 @@
 \section{High-Order Schemes}
 %================================================================================
-\subsection{General High-Order Scheme}
+\subsection{High-Order Semidiscrete Scheme}
 %================================================================================
 In general, a high-order scheme is of the form
-\begin{equation}\label{semidiscrete_high}
-   \mathbf{M}^C\frac{d\mathbf{U}^{H}}{dt}
-      + \mathbf{A}^H(t)\mathbf{U}^H(t)
-      = \mathbf{b}(t),
+\begin{equation}\label{high_semidiscrete}
+   \M^C\frac{d\U^{H}}{dt} + \A^H(t)\U^H(t) = \b(t) \eqc
 \end{equation}
 or in the steady-state case,
-\begin{equation}\label{steadystate_high}
-   \mathbf{A}^H\mathbf{U}^H = \mathbf{b},
+\begin{equation}\label{high_ss}
+   \A^H\U^H = \b \eqc
 \end{equation}
-where the high-order steady-state system matrix $\mathbf{A}^H(t)$ is
-defined as the sum of the inviscid steady-state matrix $\mathbf{A}$
-and a high-order artificial diffusion matrix $\mathbf{D}^H(t)$:
+where the high-order steady-state system matrix $\A^H(t)$ is
+defined as the sum of the inviscid steady-state matrix $\A$
+and a high-order artificial diffusion matrix $\D^H(t)$:
 \begin{equation}
-   \mathbf{A}^H(t) = \mathbf{A} + \mathbf{D}^H(t).
+   \A^H(t) = \A + \D^H(t) \eqp
 \end{equation}
 If the Galerkin scheme given in Section \ref{galerkindef} is to be
-used as the high order scheme, then $\mathbf{D}^H(t)$ is zero.
+used as the high order scheme, then $\D^H(t)$ is zero.
+%--------------------------------------------------------------------------------
+\subsection{High-Order Explicit Euler Scheme}
+%--------------------------------------------------------------------------------
+The high-order explicit Euler scheme is the following:
+\begin{equation}\label{high_FE}
+   \M^C\frac{\U^{H}-\U^n}{\dt^{n+1}} + \A^{H,n}\U^n = \b^n \eqc
+\end{equation}
+where the high-order steady-state system matrix $\A^{H,n}$ is
+defined as the sum of the inviscid steady-state matrix $\A$
+and a high-order artificial diffusion matrix $\D^{H,n}$:
+\begin{equation}
+   \A^{H,n} = \A + \D^{H,n} \eqp
+\end{equation}
+If the Galerkin scheme given in Section \ref{galerkindef} is to be
+used as the high order scheme, then $\D^{H,n}$ is zero.
+%--------------------------------------------------------------------------------
+\subsection{High-Order Theta Scheme}
+%--------------------------------------------------------------------------------
+The high-order $\theta$ scheme is the following:
+\begin{equation}\label{high_theta}
+  \M^C\frac{\U^H-\U^n}{\dt}
+  + (1-\theta)\A^{H,n}\U^n + \theta\A^{H,n+1}\U^H
+  = (1-\theta)\b^n + \theta\b^{n+1}.
+\end{equation}
+where the high-order steady-state system matrix $\A^{H,n}$ is
+defined as the sum of the inviscid steady-state matrix $\A$
+and a high-order artificial diffusion matrix $\D^{H,n}$:
+\begin{equation}
+   \A^{H,n} = \A + \D^{H,n} \eqp
+\end{equation}
+If the Galerkin scheme given in Section \ref{galerkindef} is to be
+used as the high order scheme, then $\D^{H,n}$ is zero.
 %================================================================================
 \subsection{Graph-Theoretic High-Order Scheme}\label{gthighorder}
 %================================================================================
@@ -71,14 +101,14 @@ instead of the low-order viscosity:
    D^{H,n}_{i,j} = \sum\limits_{K\subset S_{i,j}}\nu_K^{H,n} b_K(\varphi_j,\varphi_i).
 \end{equation}
 Similarly to the low-order scheme, a high-order steady-state system matrix is
-defined to be the sum of the Galerkin steady-state system matrix $\mathbf{A}$ and the
-high-order artificial diffusion matrix $\mathbf{D}^{H,n}$:
+defined to be the sum of the Galerkin steady-state system matrix $\A$ and the
+high-order artificial diffusion matrix $\D^{H,n}$:
 \begin{equation}
-   \mathbf{A}^{H,n} = \mathbf{A} + \mathbf{D}^{H,n},
+   \A^{H,n} = \A + \D^{H,n},
 \end{equation}
 and the high order scheme is the following:
 \begin{equation}\label{gthighorderscheme}
-   \mathbf{M}_C\frac{\mathbf{U}^{H,n+1}-\mathbf{U}^n}{\Delta t}
-      +\mathbf{A}^{H,n}\mathbf{U}^n = \mathbf{b},
+   \M_C\frac{\U^{H,n+1}-\U^n}{\Delta t}
+      +\A^{H,n}\U^n = \b,
 \end{equation}
-where $\mathbf{U}^{H,n+1}$ is the high-order solution at time $t^{n+1}$.
+where $\U^{H,n+1}$ is the high-order solution at time $t^{n+1}$.

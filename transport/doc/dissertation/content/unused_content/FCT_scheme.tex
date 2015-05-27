@@ -1,30 +1,27 @@
+%================================================================================
 \section{FCT Schemes}
 %================================================================================
 In this section, two FCT schemes are presented, which
 differ in the low-order and high-order schemes used, and thus the
-correction flux $\mathbf{f}$ and its decomposition $\mathbf{F}$.
+correction flux $\f$ and its decomposition $\F$.
 The equations that follow, Equations \eqref{ex_kuzminfc} and
 \eqref{ex_limited}, represent the FCT schemes in general, and
 Sections \ref{algebraicFCT} and \ref{gtFCT} give the two FCT
 schemes by completing the scheme given in Equation \eqref{ex_limited}
-with the definition of $\mathbf{F}$. The limiter $\mathcal{L}$ is
+with the definition of $\F$. The limiter $\L$ is
 defined in Section \ref{L}.
 
-The flux correction vector $\mathbf{f}$ is defined such that:
+The flux correction vector $\f$ is defined such that:
 \begin{equation}\label{ex_kuzminfc}
-   \mathbf{M}_L\frac{\mathbf{U}^{H,n+1}-\mathbf{U}^n}{\Delta t}
-      + \mathbf{A}^L\mathbf{U}^n
-      = \mathbf{b} + \mathbf{f}.
+   \M_L\frac{\U^{H,n+1}-\U^n}{\dt} + \A^L\U^n = \b + \f.
 \end{equation}
-Decomposing the correction flux into $\mathbf{F}$ and applying a limiter
-$\mathcal{L}$ gives
+Decomposing the correction flux into $\F$ and applying a limiter
+$\L$ gives
 \begin{equation}\label{ex_limited}
-   \mathbf{M}_L\frac{\mathbf{U}^{n+1}-\mathbf{U}^n}{\Delta t}
-      + \mathbf{A}^L\mathbf{U}^n
-      = \mathbf{b} + \mathcal{L}[\mathbf{F}],
+   \M_L\frac{\U^{n+1}-\U^n}{\dt} + \A^L\U^n = \b + \LF \eqc
 \end{equation}
-where $(\mathcal{L}[\mathbf{F}])_i = \mathcal{L}_{i,:}F_{i,:}^T
-= \sum\limits_j \mathcal{L}_{i,j}F_{i,j}$ and $\mathbf{U}^{n+1}$
+where $(\LF)_i = L_{i,:}F_{i,:}^T
+= \sum\limits_j L_{i,j}F_{i,j}$ and $\U^{n+1}$
 is the FCT solution.
 
 Both FCT schemes have the same expression for the discrete maximum principle (DMP)
@@ -54,22 +51,22 @@ sections, the FCT DMP bounds are presented here:
    Let $k$ be the index corresponding to the degree of freedom for which
    the maximum discrete value is obtained, i.e.,
    \[
-      U_k^{n+1}\equiv\max\limits_j U_j^{n+1}=\|\mathbf{U}^{n+1}\|_\infty.
+      U_k^{n+1}\equiv\max\limits_j U_j^{n+1}=\|\U^{n+1}\|_\infty.
    \]
    Starting with the upper bound given by Definition \ref{FCTbounds},
    \[
-      \|\mathbf{U}^{n+1}\|_\infty = U_k^{n+1} \le
+      \|\U^{n+1}\|_\infty = U_k^{n+1} \le
       U_{\max,k}^n e^{-c\Delta t\sigma_{\min,k}} \le
       U_{\max,k}^n \le
-      \max\limits_j U_j^n = \|\mathbf{U}^{n}\|_\infty.
+      \max\limits_j U_j^n = \|\U^{n}\|_\infty.
    \]
    Applying this inequality recursively shows that the solution is bounded
-   by the initial data $\mathbf{U}^0$:
+   by the initial data $\U^0$:
    \[
-      \|\mathbf{U}^{n+1}\|_\infty\le
-      \|\mathbf{U}^{n}\|_\infty\le
-      \|\mathbf{U}^{n-1}\|_\infty\le\ldots\le
-      \|\mathbf{U}^{0}\|_\infty.\qed
+      \|\U^{n+1}\|_\infty\le
+      \|\U^{n}\|_\infty\le
+      \|\U^{n-1}\|_\infty\le\ldots\le
+      \|\U^{0}\|_\infty.\qed
    \]
 \end{proof}
 %--------------------------------------------------------------------------------
@@ -78,16 +75,16 @@ sections, the FCT DMP bounds are presented here:
 In this section, an FCT scheme is defined using the ``algebraic'' low-order
 scheme, given in Section \ref{algebraicloworder}, in conjunction with the
 Galerkin scheme, given in Section \ref{galerkindef}, which serves as the
-high-order scheme. Combining Equations \eqref{exgalerkin} and
-\eqref{ex_kuzminfc} gives the definition of $\mathbf{f}$:
+high-order scheme. Combining Equations \eqref{galerkin_FE} and
+\eqref{ex_kuzminfc} gives the definition of $\f$:
 \begin{equation}\label{ex_kuzminFdef}
-   \mathbf{f} \equiv -(\mathbf{M}_C-\mathbf{M}_L)\mathbf{\dot{U}}^{H,n+1}
-      +\mathbf{D}\mathbf{U}^n,
+   \f \equiv -(\M_C-\M_L)\mathbf{\dot{U}}^{H,n+1}
+      +\D\U^n,
 \end{equation}
-where $\mathbf{\dot{U}}^{H,n+1} \equiv (\mathbf{U}^{H,n+1} - \mathbf{U}^n)/\Delta t$.
-Since $\mathbf{M}_C-\mathbf{M}_L$ and $\mathbf{D}$ are symmetric
-and feature zero row and column sums, a valid decomposition for $\mathbf{f}$,
-called $\mathbf{F}$, is
+where $\mathbf{\dot{U}}^{H,n+1} \equiv (\U^{H,n+1} - \U^n)/\Delta t$.
+Since $\M_C-\M_L$ and $\D$ are symmetric
+and feature zero row and column sums, a valid decomposition for $\f$,
+called $\F$, is
 \begin{equation}
    F_{i,j} = -m_{i,j}(\dot{U}^{H,n+1}_j - \dot{U}^{H,n+1}_i)
    + D_{i,j}(U^n_j - U^n_i)
@@ -100,15 +97,14 @@ In this section, an FCT scheme is defined using the ``graph-theoretic'' low-orde
 scheme, given in Section \ref{gtloworder}, in conjunction with the
 high-order scheme given in Section \ref{gthighorder}, which serves as the
 high-order scheme. Combining Equations \eqref{gthighorderscheme} and
-\eqref{ex_kuzminfc} gives the definition of $\mathbf{f}$:
+\eqref{ex_kuzminfc} gives the definition of $\f$:
 \begin{equation}\label{gtf}
-   \mathbf{f} \equiv -(\mathbf{M}_C-\mathbf{M}_L)\mathbf{\dot{U}}^{H,n+1}
-      +(\mathbf{D}^L-\mathbf{D}^H)\mathbf{U}^n,
+   \f \equiv -(\M_C-\M_L)\dot{\U}^{H,n+1} + (\D^L-\D^H)\U^n \eqc
 \end{equation}
-where $\mathbf{\dot{U}}^{H,n+1} \equiv (\mathbf{U}^{H,n+1} - \mathbf{U}^n)/\Delta t$.
-Since $\mathbf{M}_C-\mathbf{M}_L$ and $\mathbf{D}^L-\mathbf{D}^H$ are symmetric
-and feature zero row and column sums, a valid decomposition for $\mathbf{f}$,
-called $\mathbf{F}$, is
+where $\dot{\U}^{H,n+1} \equiv (\U^{H,n+1} - \U^n)/\Delta t$.
+Since $\M_C-\M_L$ and $\D^L-\D^H$ are symmetric
+and feature zero row and column sums, a valid decomposition for $\f$,
+called $\F$, is
 \begin{equation}
    F_{i,j} = -m_{i,j}(\dot{U}^{H,n+1}_j - \dot{U}^{H,n+1}_i)
    + (D_{i,j}^L-D_{i,j}^H)(U^n_j - U^n_i),
@@ -120,36 +116,36 @@ where $m_{i,j}$ is the $i,j$th element of the consistent mass matrix.
    %correction step is defined such that the Dirichlet boundary conditions
    %are strongly imposed on Equation \eqref{ex_kuzminfc}:
    %\begin{equation}\label{ex_kuzminfcD}
-      %\tilde{\mathbf{M}}_L\hat{\mathbf{U}}^H
-         %= \tilde{\mathbf{b}}^F,
+      %\tilde{\M}_L\hat{\U}^H
+         %= \tilde{\b}^F,
    %\end{equation}
    %and the definition for
-   %the flux correction vector $\mathbf{f}$ from
+   %the flux correction vector $\f$ from
    %Equation \eqref{ex_kuzminFdef} is used without modification. Then the solution
-   %to this correction step, $\hat{\mathbf{U}}^H$, will yield the
-   %correct high-order solution $\mathbf{U}^H$ given by Equation \eqref{highD}.
+   %to this correction step, $\hat{\U}^H$, will yield the
+   %correct high-order solution $\U^H$ given by Equation \eqref{highD}.
 %\end{lemma}
 %\begin{proof}
    %For $i\in\mathcal{D}$, $\hat{U}^H_i = U^H_i = g_i$. For $i\notin\mathcal{D}$,
    %we take the $i$th equation of the linear system given by Equation \eqref{ex_kuzminfcD}:
    %\begin{equation}\label{ex_i_eq}
       %m_i\hat{U}^H_i
-         %= m_i U^n_i - \Delta t((\mathbf{K}^H - \mathbf{D} + \mathbf{R}^L)\mathbf{U}^n)_i
-         %+ \Delta t b_i - (\mathbf{M}_C\Delta\mathbf{U}^H)_i
-         %+ m_i(U^H_i-U^n_i) - \Delta t(\mathbf{D}\mathbf{U}^n)_i - \Delta t(\mathbf{R}^H\mathbf{U}^n)_i.
+         %= m_i U^n_i - \Delta t((\mathbf{K}^H - \D + \mathbf{R}^L)\U^n)_i
+         %+ \Delta t b_i - (\M_C\Delta\U^H)_i
+         %+ m_i(U^H_i-U^n_i) - \Delta t(\D\U^n)_i - \Delta t(\mathbf{R}^H\U^n)_i.
    %\end{equation}
    %Examining the $i$th equation of the linear system given by Equation \eqref{highD}
    %and solving for $\Delta t b_i$ gives
    %\begin{equation}
-      %\Delta t b_i = (\mathbf{M}_C\Delta\mathbf{U}^H)_i
-         %+ \Delta t((\mathbf{K}^H + \mathbf{R}^H)\mathbf{U}^n)_i.
+      %\Delta t b_i = (\M_C\Delta\U^H)_i
+         %+ \Delta t((\mathbf{K}^H + \mathbf{R}^H)\U^n)_i.
    %\end{equation}
    %Substituting this back into Equation \eqref{ex_i_eq} gives
    %\begin{eqnarray}
       %m_i\hat{U}^H_i & = & m_i U^H_i\\
       %\hat{U}^H_i & = & U^H_i
    %\end{eqnarray}
-   %Therefore, $\hat{\mathbf{U}}^H = \mathbf{U}^H$.
+   %Therefore, $\hat{\U}^H = \U^H$.
    %\qed
 %\end{proof}
 %--------------------------------------------------------------------------------
@@ -159,7 +155,7 @@ where $m_{i,j}$ is the $i,j$th element of the consistent mass matrix.
    Suppose that that a discrete maximum principle $W_i^+\le U_i^{n+1}\le W_i^-$
    corresponds to the following inequality for the limited correction fluxes:
    \begin{equation}
-      Q_i^-\le\sum\limits_j \mathcal{L}_{i,j}F_{i,j}\le Q_i^+,
+      Q_i^-\le\sum\limits_j L_{i,j}F_{i,j}\le Q_i^+,
    \end{equation}
    where $Q_i^\pm$ are bounds that depend on the temporal discretization. Then,
    the following limiter coefficient definitions satisfy the discrete maximum
@@ -177,7 +173,7 @@ where $m_{i,j}$ is the $i,j$th element of the consistent mass matrix.
          \right.,
    \end{equation}
    \begin{equation}\label{L_defs}
-      \mathcal{L}_{i,j} \equiv\left\{
+      L_{i,j} \equiv\left\{
          \begin{array}{l l}
             \min(R_i^+,R_j^-) & F_{i,j} \geq 0\\
             \min(R_i^-,R_j^+) & F_{i,j} < 0
@@ -192,12 +188,12 @@ where $m_{i,j}$ is the $i,j$th element of the consistent mass matrix.
       P_i^+ \geq 0, \qquad P_i^- \leq 0,\\
       Q_i^+ \geq 0, \qquad Q_i^- \leq 0,\\
       0 \leq R_i^\pm \leq 1,\\
-      0 \leq \mathcal{L}_{i,j} \leq 1.
+      0 \leq L_{i,j} \leq 1.
    \end{gather*}
    The proof will be given for the upper bound.
    \[
-      \sum\limits_j \mathcal{L}_{i,j}F_{i,j}
-         \leq \sum\limits_{j:F_{i,j}\geq 0} \mathcal{L}_{i,j}F_{i,j}
+      \sum\limits_j L_{i,j}F_{i,j}
+         \leq \sum\limits_{j:F_{i,j}\geq 0} L_{i,j}F_{i,j}
          = \sum\limits_{j:F_{i,j}\geq 0} \min(R_i^+,R_j^-)F_{i,j}
          \leq \sum\limits_{j:F_{i,j}\geq 0} R_i^+ F_{i,j}
    \]
@@ -215,7 +211,7 @@ where $m_{i,j}$ is the $i,j$th element of the consistent mass matrix.
    \]
    Thus,
    \[
-      \sum\limits_j \mathcal{L}_{i,j}F_{i,j} \leq Q_i^+
+      \sum\limits_j L_{i,j}F_{i,j} \leq Q_i^+
    \]
    The lower bound is proved similarly.
    \qed
@@ -226,9 +222,9 @@ where $m_{i,j}$ is the $i,j$th element of the consistent mass matrix.
 \begin{theorem}{Discrete Maximum Principle-Satisfying Limited Flux Bounds}
    Using the FCT scheme
    \begin{equation}\label{FCTscheme}
-      \mathbf{M}_L\frac{\mathbf{U}^{n+1}-\mathbf{U}^n}{\Delta t}
-         + \mathbf{A}^L\mathbf{U}^n
-         = \mathbf{b} + \mathcal{L}[\mathbf{F}],
+      \M_L\frac{\U^{n+1}-\U^n}{\Delta t}
+         + \A^L\U^n
+         = \b + \LF \eqc
    \end{equation}
    the following limited flux bounds $Q_i^\pm$ correspond to the discrete
    maximum principle $W_i^+\le U_i^{n+1}\le W_i^-$:
@@ -243,11 +239,11 @@ where $m_{i,j}$ is the $i,j$th element of the consistent mass matrix.
    \[
       m_i\frac{U_i^{n+1}-U_i^n}{\Delta t}
       + \sum\limits_j A_{i,j}^L U_j^n
-      = b_i + \sum\limits_j\mathcal{L}_{i,j}F_{i,j}.
+      = b_i + \sum\limits_jL_{i,j}F_{i,j}.
    \]
-   Solving for $\sum\limits_j\mathcal{L}_{i,j}F_{i,j}$ gives
+   Solving for $\sum\limits_jL_{i,j}F_{i,j}$ gives
    \[
-      \sum\limits_j\mathcal{L}_{i,j}F_{i,j} =
+      \sum\limits_jL_{i,j}F_{i,j} =
       m_i\frac{U_i^{n+1}-U_i^n}{\Delta t}
       + \sum\limits_j A_{i,j}^L U_j^n
       - b_i.
@@ -271,7 +267,7 @@ where $m_{i,j}$ is the $i,j$th element of the consistent mass matrix.
    \]
    which by substituting equations above gives
    \[
-      Q_i^-\le\sum\limits_j \mathcal{L}_{i,j}F_{i,j}\le Q_i^+.\qed
+      Q_i^-\le\sum\limits_j L_{i,j}F_{i,j}\le Q_i^+.\qed
    \]
 \end{proof}
 %--------------------------------------------------------------------------------
@@ -287,23 +283,23 @@ where $m_{i,j}$ is the $i,j$th element of the consistent mass matrix.
 %
 %\begin{proof}
    %The properties given in the proof for Lemma \ref{ss_coef} for $P_i^\pm$,
-   %$Q_i^\pm$, $R_i^\pm$, and $\mathcal{L}_{i,j}$ hold with these definitions
+   %$Q_i^\pm$, $R_i^\pm$, and $L_{i,j}$ hold with these definitions
    %of $W_i^\pm$ and $Q_i^\pm$.
    %The proof will be given for the upper bound. 
    %Taking row $i$ of the linear system given by Equation \eqref{ex_limited} gives
    %\begin{gather*}
       %m_i U_i^{n+1} = m_i U_i^n - \Delta t\sum\limits_j A_{i,j}^L U_j^n + \Delta t b_i
-         %+ \sum\limits_j \mathcal{L}_{i,j}F_{i,j}\\
+         %+ \sum\limits_j L_{i,j}F_{i,j}\\
       %m_i U_i^{n+1} - m_i U_i^n + \Delta t\sum\limits_j A_{i,j}^L U_j^n - \Delta t b_i
-         %= \sum\limits_j \mathcal{L}_{i,j}F_{i,j}
+         %= \sum\limits_j L_{i,j}F_{i,j}
    %\end{gather*}
    %As in the proof of Lemma \ref{ss_coef}, the following inequality is found:
    %\[
-      %\sum\limits_j \mathcal{L}_{i,j}F_{i,j} \leq Q_i^+
+      %\sum\limits_j L_{i,j}F_{i,j} \leq Q_i^+
    %\]
    %\begin{eqnarray*}
       %m_i U_i^{n+1} - m_i U_i^n + \Delta t\sum\limits_j A_{i,j}^L U_j^n - \Delta t b_i
-      %& = & \sum\limits_j \mathcal{L}_{i,j}F_{i,j}\\
+      %& = & \sum\limits_j L_{i,j}F_{i,j}\\
       %m_i U_i^{n+1} - m_i U_i^n + \Delta t\sum\limits_j A_{i,j}^L U_j^n - \Delta t b_i
       %& \leq & Q_i^+\\
       %m_i U_i^{n+1} - m_i U_i^n + \Delta t\sum\limits_j A_{i,j}^L U_j^n - \Delta t b_i

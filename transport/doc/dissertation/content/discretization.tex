@@ -5,43 +5,43 @@
 The continuous Galerkin finite element method is used for spatial discretization.
 The numerical solution is thus
 \begin{equation}
-   \psi(\mathbf{x},t) = \sum\limits_{j=1}^N U_j(t) \varphi_j(\mathbf{x}),
+   \psi(\x,t) = \sum\limits_{j=1}^N U_j(t) \varphi_j(\x),
 \end{equation}
 where $N$ is the number of degrees of freedom in the finite element expansion,
-$U_j(t)$ are nodal solution values at time $t$, and $\varphi_j(\mathbf{x})$
+$U_j(t)$ are nodal solution values at time $t$, and $\varphi_j(\x)$
 are linear basis functions. Multiplying Equation \eqref{tr} by $c$ and testing
-with basis function $\varphi_i(\mathbf{x})$ gives
+with basis function $\varphi_i(\x)$ gives
 \begin{equation}
-   \int\limits_{S_i}\frac{\partial \psi}{\partial t}\varphi_i(\mathbf{x}) d\mathbf{x}
-      + c\int\limits_{S_i}\left(\mathbf{\Omega}\cdot\nabla\psi(\mathbf{x},t)
-      + \sigma(\mathbf{x})\psi(\mathbf{x},t)\right)\varphi_i(\mathbf{x}) d\mathbf{x}
-      = c\int\limits_{S_i} q(\mathbf{x},t) \varphi_i(\mathbf{x}) d\mathbf{x},
+   \int\limits_{S_i}\frac{\partial \psi}{\partial t}\varphi_i(\x) d\x
+      + c\int\limits_{S_i}\left(\mathbf{\Omega}\cdot\nabla\psi(\x,t)
+      + \sigma(\x)\psi(\x,t)\right)\varphi_i(\x) d\x
+      = c\int\limits_{S_i} q(\x,t) \varphi_i(\x) d\x,
 \end{equation}
-where $S_i$ is the support of $\varphi_i(\mathbf{x})$.
+where $S_i$ is the support of $\varphi_i(\x)$.
 This yields a linear system
 \begin{equation}\label{semidiscrete}
-   \mathbf{M}^C\frac{d\mathbf{U}}{dt}+\mathbf{A} \mathbf{U}(t) = \mathbf{b}(t),
+   \M^C\frac{d\U}{dt}+\A \U(t) = \b(t),
 \end{equation}
-where $\mathbf{A}$ is the steady-state system matrix and $\mathbf{U}$ is the
-Galerkin solution. The elements of $\mathbf{A}$ are
+where $\A$ is the steady-state system matrix and $\U$ is the
+Galerkin solution. The elements of $\A$ are
 \begin{equation}\label{Aij}
 	A_{i,j} \equiv c\int\limits_{S_{i,j}}\left(
-      \mathbf{\Omega}\cdot\nabla\varphi_j(\mathbf{x}) +
-		\sigma(\mathbf{x})\varphi_j(\mathbf{x})\right)\varphi_i(\mathbf{x}) d\mathbf{x},
+      \mathbf{\Omega}\cdot\nabla\varphi_j(\x) +
+		\sigma(\x)\varphi_j(\x)\right)\varphi_i(\x) d\x,
 \end{equation}
-where $S_{i,j}$ is the dual support of $\varphi_i(\mathbf{x})$ and $\varphi_j(\mathbf{x})$.
-The elements of $\mathbf{b}(t)$ are
+where $S_{i,j}$ is the dual support of $\varphi_i(\x)$ and $\varphi_j(\x)$.
+The elements of $\b(t)$ are
 \begin{equation}
-	b_i(t) \equiv c\int\limits_{S_i} q(\mathbf{x},t)\varphi_i(\mathbf{x}) d\mathbf{x}.
+	b_i(t) \equiv c\int\limits_{S_i} q(\x,t)\varphi_i(\x) d\x.
 \end{equation}
-$\mathbf{M}^C$ is the consistent mass matrix, which has the entries
+$\M^C$ is the consistent mass matrix, which has the entries
 \begin{equation}\label{massmatrix}
 	m_{i,j} \equiv \int\limits_{S_{i,j}}
-   \varphi_j(\mathbf{x})\varphi_i(\mathbf{x}) d\mathbf{x}.
+   \varphi_j(\x)\varphi_i(\x) d\x.
 \end{equation}
 Similarly, for the steady-state case, the linear system is
 \begin{equation}
-  \mathbf{A}\mathbf{U} = \mathbf{b}.
+  \A\U = \b.
 \end{equation}
 %================================================================================
 \subsection{Temporal Discretization}
@@ -51,11 +51,10 @@ Similarly, for the steady-state case, the linear system is
 Considering a time step from time $t^n$ to time $t^{n+1}$ with time step size
 $\Delta t\equiv t^{n+1}-t^n$, the semi-discrete equation given by Equation
 \eqref{semidiscrete} is discretized using the explicit Euler:
-\begin{equation}\label{exgalerkin}
-   \mathbf{M}^C\frac{\mathbf{U}^{n+1}-\mathbf{U}^n}{\Delta t}
-     + \mathbf{A}\mathbf{U}^n = \mathbf{b}^n,
+\begin{equation}\label{galerkin_FE}
+   \M^C\frac{\U^{n+1}-\U^n}{\dt} + \A\U^n = \b^n,
 \end{equation}
-where $\mathbf{U}^{n+1}$ is the Galerkin solution at time $t^{n+1}$.
+where $\U^{n+1}$ is the Galerkin solution at time $t^{n+1}$.
 %================================================================================
 \subsubsection{Strong Stability-Preserving Explicit Runge Kutta Methods}
 \label{ssprk}
@@ -64,26 +63,26 @@ Strong Stability-Preserving Runge Kutta (SSPRK) methods are a class of multistag
 Runge Kutta methods that offer high-order accuracy while preserving stability.
 The subset of SSPRK methods considered in this research conform to the
 following form for a given time step $t^n\rightarrow t^{n+1}$,
-where $\hat{\mathbf{U}}^i$ denotes the $i$th stage solution:
+where $\hat{\U}^i$ denotes the $i$th stage solution:
 \begin{equation}
-   \hat{\mathbf{U}}^i = \alpha_i\hat{\mathbf{U}}^0
-   + \beta_i\,\mbox{step}(\hat{\mathbf{U}}^{i-1},t^n+c_i\Delta t),
+   \hat{\U}^i = \alpha_i\hat{\U}^0
+   + \beta_i\,\mbox{step}(\hat{\U}^{i-1},t^n+c_i\Delta t),
 \end{equation}
-where $\Delta t=t^{n+1}-t^n$, $\hat{\mathbf{U}}^0=\mathbf{U}^n$,
-and $\mbox{step}(\mathbf{U},t)$
-is a function that returns the solution $\mathbf{U}^{new}$ to the linear system
+where $\Delta t=t^{n+1}-t^n$, $\hat{\U}^0=\U^n$,
+and $\mbox{step}(\U,t)$
+is a function that returns the solution $\U^{new}$ to the linear system
 \begin{equation}
-   \mathbf{M}\mathbf{U}^{new} = \mathbf{M}\mathbf{U}
-   + \Delta t(\mathbf{b}(t) - \mathbf{A}(t)\mathbf{U}),
+   \M\U^{new} = \M\U
+   + \Delta t(\b(t) - \A(t)\U),
 \end{equation}
-where $\mathbf{M}$ is the mass matrix, $\mathbf{b}(t)$ is the steady-state
-right hand side vector, and $\mathbf{A}(t)$ is the steady-state matrix.
+where $\M$ is the mass matrix, $\b(t)$ is the steady-state
+right hand side vector, and $\A(t)$ is the steady-state matrix.
 Therefore the function performs a time step that is similar to an
 explicit Euler step, except that the steady-state residual is not
-necessarily evaluated at time $t^n$. The new solution $\mathbf{U}^{n+1}$
+necessarily evaluated at time $t^n$. The new solution $\U^{n+1}$
 is the final stage solution:
 \begin{equation}
-   \mathbf{U}^{n+1} = \hat{\mathbf{U}}^s,
+   \U^{n+1} = \hat{\U}^s,
 \end{equation}
 where $s$ is the number of stages for the scheme.
 
@@ -100,13 +99,13 @@ scheme), has the following coefficients:
    \qquad c = \left[\begin{array}{c}0\\1\\\frac{1}{2}\end{array}\right].
 \end{equation}
 %================================================================================
-\subsubsection{$\theta$-Scheme}\label{theta}
+\subsubsection{Theta Scheme}\label{theta}
 %================================================================================
 Discretizing Equation \eqref{semidiscrete} with the $\theta$ scheme gives
-\begin{equation}\label{thetagalerkin}
-  \mathbf{M}^C\frac{\mathbf{U}^{n+1}-\mathbf{U}^n}{\Delta t}
-  + (1-\theta)\mathbf{A}\mathbf{U}^n + \theta\mathbf{A}\mathbf{U}^{n+1}
-  = (1-\theta)\mathbf{b}^n + \theta\mathbf{b}^{n+1}.
+\begin{equation}\label{galerkin_theta}
+  \M^C\frac{\U^{n+1}-\U^n}{\dt}
+  + (1-\theta)\A\U^n + \theta\A\U^{n+1}
+  = (1-\theta)\b^n + \theta\b^{n+1}.
 \end{equation}
 Note that $\theta=0$ corresponds to the explicit Euler method,
 $\theta=1$ corresponds to the implicit Euler method, and $\theta=\frac{1}{2}$

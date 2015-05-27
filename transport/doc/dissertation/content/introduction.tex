@@ -18,29 +18,3 @@ from a simulation and thus lead to poor decisions being made by the analysts.
 These issues of spurious oscillations and negativities are a well-known
 phenomenon, and attempts to address these issues have taken a number
 of different approaches for different discretization schemes.
-
-
-
-
-
-%--------------------------------------------------------------------------------
-\subsection{Problem Formulation}
-%--------------------------------------------------------------------------------
-The radiation transport equation is the following:
-\begin{equation}\label{tr}
-	\frac{1}{c}\frac{\partial \psi}{\partial t} + \mathbf{\Omega}\cdot\nabla\psi(\mathbf{x},t)
-      + \sigma(\mathbf{x})\psi(\mathbf{x},t) = q(\mathbf{x},t),
-\end{equation}
-where $\psi(\mathbf{x},t)$ is the angular flux at position $\mathbf{x}$ and time
-$t$ in direction $\mathbf{\Omega}$, $c$ is the transport speed, $\sigma(\mathbf{x})$
-is the \emph{macroscopic} cross-section, and $q(\mathbf{x},t)$ is the
-total source (extraneous plus scattering).
-The problem definition is completed with an incoming flux boundary condition:
-\begin{equation}
-   \psi(\mathbf{x}) = \psi^{inc}(\mathbf{x})  \quad \forall \mathbf{x}\in \partial V^-,
-      \quad \partial V^- = \{\mathbf{x}\in\partial V: \mathbf{\Omega}\cdot\mathbf{n}(\mathbf{x})<0\}.
-\end{equation}
-For transient problems, the following initial condition applies:
-\begin{equation}
-   \psi(\mathbf{x},t) = \psi^0(\mathbf{x})  \quad \forall \mathbf{x}\in V.
-\end{equation}

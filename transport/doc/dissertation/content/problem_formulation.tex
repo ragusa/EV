@@ -1,0 +1,22 @@
+%--------------------------------------------------------------------------------
+\section{Problem Formulation}
+%--------------------------------------------------------------------------------
+The radiation transport equation is the following:
+\begin{equation}\label{tr}
+  \frac{1}{c}\ppt{\psi} + \mathbf{\Omega}\cdot\nabla\psi(\x,t)
+  + \sigma(\x)\psi(\x,t) = q(\x,t),
+\end{equation}
+where $\psi(\x,t)$ is the angular flux at position $\x$ and time
+$t$ in direction $\mathbf{\Omega}$, $c$ is the transport speed, $\sigma(\x)$
+is the \emph{macroscopic} cross-section, and $q(\x,t)$ is the
+total source (extraneous plus scattering).
+The problem definition is completed with an incoming flux boundary condition:
+\begin{equation}
+   \psi(\x) = \psi^{inc}(\x)  \quad \forall \x\in \partial V^-,
+     \quad \partial V^- = \{\x\in\partial V:
+     \mathbf{\Omega}\cdot\mathbf{n}(\x)<0\}.
+\end{equation}
+For transient problems, the following initial condition applies:
+\begin{equation}
+   \psi(\x,t) = \psi^0(\x)  \quad \forall \x\in V.
+\end{equation}
