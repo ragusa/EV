@@ -38,9 +38,6 @@ void TransportProblem<dim>::initialize_system()
    // process problem ID
    process_problem_ID();
 
-   // decide that transport direction is the unit x vector
-   transport_direction[0] = 1.0;
-
    // determine function variables based on dimension;
    // this is to be used in initialization of function parser objects
    std::string variables;
@@ -119,6 +116,8 @@ void TransportProblem<dim>::process_problem_ID()
          x_min = 0.0;
          x_max = 1.0;
 
+         transport_direction[0] = 1.0;
+
          incoming_string = "1";
          function_parser_constants["incoming"]  = 1.0;
 
@@ -146,10 +145,15 @@ void TransportProblem<dim>::process_problem_ID()
          x_min = 0.0;
          x_max = 1.0;
 
+         transport_direction[0] = 1.0;
+
          incoming_string = "1";
          function_parser_constants["incoming"]  = 1.0;
 
-         cross_section_string = "if(x<x_mid, 0, 10)";
+         if (dim == 1)
+            cross_section_string = "if(x<x_mid, 0, 10)";
+         else
+            cross_section_string = "if(x>=x_mid, if(y>=x_mid, 10, 0), 0)";
          function_parser_constants["sigma"]  = 10.0;
 
          source_time_dependent = false;
@@ -179,6 +183,9 @@ void TransportProblem<dim>::process_problem_ID()
 
          x_min = 0.0;
          x_max = 1.0;
+
+         transport_direction[0] = 1.0;
+
          cross_section_string = "0";
          source_string = "0";
          source_time_dependent = false;
@@ -199,6 +206,8 @@ void TransportProblem<dim>::process_problem_ID()
          x_min = 0.0;
          x_max = 1.0;
 
+         transport_direction[0] = 1.0;
+
          incoming_string = "0";
 
          cross_section_string = "1.0";
@@ -217,10 +226,12 @@ void TransportProblem<dim>::process_problem_ID()
          break;
       } case 6: { // MMS-2
          Assert(dim == 1,ExcNotImplemented()); // assume 1-D
-         Assert(not parameters.is_steady_state,ExcNotImplemented()); // assume not steady-state
+         Assert(!parameters.is_steady_state,ExcNotImplemented()); // assume not steady-state
 
          x_min = 0.0;
          x_max = 1.0;
+
+         transport_direction[0] = 1.0;
 
          incoming_string = "0";
 
@@ -233,10 +244,12 @@ void TransportProblem<dim>::process_problem_ID()
          break;
       } case 7: { // MMS-3
          Assert(dim == 1,ExcNotImplemented()); // assume 1-D
-         Assert(not parameters.is_steady_state,ExcNotImplemented()); // assume not steady-state
+         Assert(!parameters.is_steady_state,ExcNotImplemented()); // assume not steady-state
 
          x_min = 0.0;
          x_max = 1.0;
+
+         transport_direction[0] = 1.0;
 
          incoming_string = "0";
 
@@ -248,11 +261,13 @@ void TransportProblem<dim>::process_problem_ID()
          initial_conditions_string = exact_solution_string;
          break;
       } case 8: { // source in left half
-         Assert(!parameters.is_steady_state,ExcNotImplemented());
-         Assert(dim < 2,ExcNotImplemented());
+         Assert(dim == 1,ExcNotImplemented()); // assume 1-D
+         Assert(!parameters.is_steady_state,ExcNotImplemented()); // assume not steady-state
 
          x_min = 0.0;
          x_max = 1.0;
+
+         transport_direction[0] = 1.0;
 
          function_parser_constants["speed"] = 1.0;
 
@@ -275,10 +290,12 @@ void TransportProblem<dim>::process_problem_ID()
          break;
       } case 9: { // MMS-4
          Assert(dim == 1,ExcNotImplemented()); // assume 1-D
-         Assert(not parameters.is_steady_state,ExcNotImplemented()); // assume not steady-state
+         Assert(!parameters.is_steady_state,ExcNotImplemented()); // assume not steady-state
 
          x_min = 0.0;
          x_max = 1.0;
+
+         transport_direction[0] = 1.0;
 
          incoming_string = "0";
 
@@ -294,6 +311,8 @@ void TransportProblem<dim>::process_problem_ID()
 
          x_min = 0.0;
          x_max = 1.0;
+
+         transport_direction[0] = 1.0;
 
          if (parameters.is_steady_state) {
             incoming_string = "1";

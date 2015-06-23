@@ -8,14 +8,14 @@ subsection problem
    # 8 = source in left half
    # 9 = MMS-4
    # 10 = MMS-5
-   set Problem ID = 3
+   set Problem ID = 2
 end
 
 subsection time
    set Is steady state = false
-   set End time = 0.3
+   set End time = 1.0
    set Time step size = 1.0
-   set CFL limit = 1.0
+   set CFL limit = 0.5
    set Time integrator option = SSP3 # <FE|SSP2|SSP3>
 end
 
@@ -59,7 +59,7 @@ end
 
 subsection output
    set Output mesh = false
-   set Output exact solution = true
+   set Output exact solution = false
    set Output initial solution = false 
    set Output DMP bounds = true
    set Save convergence results = true
