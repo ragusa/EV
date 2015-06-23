@@ -32,11 +32,11 @@ where $m\ij$ is the $i,j$th element of the consistent mass matrix.
 In this section, the explicit Euler FCT scheme is presented.
 The flux correction vector $\f$ is defined such that
 \begin{equation}\label{fdef_FE}
-   \M^L\frac{\U^{H}-\U^n}{\dt^{n+1}} + \A^L\U^{H,n} = \b^n + \f \eqp
+   \M^L\frac{\U^{H}-\U^n}{\dt^{n+1}} + \A^L\U^{n} = \b^n + \f \eqp
 \end{equation}
 Decomposing the correction flux into $\F$ and applying a limiter $\L$ gives
 \begin{equation}\label{limited_FE}
-   \M^L\frac{\U^{H}-\U^n}{\dt^{n+1}} + \A^L\U^{H,n} = \b^n + \LF \eqc
+   \M^L\frac{\U^{n+1}-\U^n}{\dt^{n+1}} + \A^L\U^{n} = \b^n + \LF \eqc
 \end{equation}
 where $(\LF)_i = L_{i,:}F_{i,:}^T = \sumj L\ij F\ij$
 and $\U^{n+1}$ is the FCT solution. The limiter $\L$ is
@@ -68,8 +68,8 @@ The flux correction vector $\f$ is defined such that
 \end{equation}
 Decomposing the correction flux into $\F$ and applying a limiter $\L$ gives
 \begin{equation}\label{limited_theta}
-  \M^L\frac{\U^H-\U^n}{\dt}
-  + (1-\theta)\A^L\U^n + \theta\A^L\U^H
+  \M^L\frac{\U^{n+1}-\U^n}{\dt}
+  + (1-\theta)\A^L\U^n + \theta\A^L\U^{n+1}
   = (1-\theta)\b^n + \theta\b^{n+1} + \LF \eqp
 \end{equation}
 where $(\LF)_i = L_{i,:}F_{i,:}^T = \sumj L\ij F\ij$

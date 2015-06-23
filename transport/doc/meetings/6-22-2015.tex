@@ -1,16 +1,63 @@
 \section*{6-22-2015}
-The following items were requested for the next meeting:
-\begin{itemize}
-  \item obtain multidimensional results for explicit FCT
-  \item compare symmetric limiter with upwind limiter
-  \item determine if converged steady-state results match transient results
-  \item determine how to evaluate analytic DMP bounds in multidimensional problems
-  \item compare time step size computed from $1-\frac{\dt}{m_i}A^L_{i,i}$ to
-    that obtained by examining the eigenvalues of $(\M^L)^{-1}\A^L$
-  \item in the void-to-absorber problem, ramp the source from zero instead of
-    instantaneously adding the source
-  \item determine if Kuzmin's implicit bounds are equal to our implicit bounds
-\end{itemize}
+
+The following goals were outlined for the next meeting:
+\begin{enumerate}
+
+\item \textbf{Obtain multidimensional results for explicit FCT}.
+In progress.
+
+\item \textbf{Compare symmetric limiter with upwind limiter}.
+The symmetric limiting coefficients have the following definition:
+\begin{equation}
+  L\ij = \left\{\begin{array}{l l}
+    \min\{R_i^+,R_j^-\}, & F\ij > 0 \\
+    \min\{R_i^-,R_j^+\}, & F\ij < 0
+  \end{array}\right.,
+\end{equation}
+while the upwind-biased limiting coefficients have the following definition:
+\begin{equation}
+  L\ij = \left\{\begin{array}{l l}
+    R_k^+, & F\ij > 0 \\
+    R_k^-, & F\ij < 0
+  \end{array}\right.,
+\end{equation}
+where $k$ is the upwind node of $i$ and $j$. It is noted here that, unlike
+the symmetric limiting coefficients, the upwind-biased limiting coefficients
+do not necessarily satisfy the discrete maximum principle. This is disproved
+here by a counterexample. Recall that the discrete maximum principle is satisfied when
+$Q_i^-\le \sum_j L\ij F\ij\le Q_i^+$. Suppose a node $i$ has a single
+neighboring node $i-1$, and that this neighbor is upwind of $i$. For example, this is
+the case for a 1-D domain on the outflow boundary. Thus there is a single
+correction flux $F_{i,i-1}$: $\sum_j L\ij F\ij=L_{i,i-1} F_{i,i-1}$. Now
+suppose that without limitation, this correction flux would exceed the
+upper bound $Q_i^+$, i.e., $F_{i,i-1}>Q_i^+$. Suppose further that
+$P_{i-1}^+\leq Q_{i-1}^+$. Then,
+\[
+  \sum\limits_j L\ij F\ij=
+  L_{i,i-1} F_{i,i-1}=
+  R_{i-1}^+ F_{i,i-1}=
+  \min\left\{1,\frac{Q_{i-1}^+}{P_{i-1}^+}\right\} F_{i,i-1}=
+  F_{i,i-1}>
+  Q_i^+,
+\]
+which violates the DMP condition.
+
+\item \textbf{Determine if converged steady-state results match transient results}.
+In progress.
+
+\item \textbf{Determine how to evaluate analytic DMP bounds in multidimensional problems}.
+In progress.
+  \item \textbf{Compare time step size computed from $1-\frac{\dt}{m_i}A^L_{i,i}$ to
+        that obtained by examining the eigenvalues of $(\M^L)^{-1}\A^L$}.
+        In progress.
+  \item \textbf{In the source-void-to-absorber problem, ramp the source from zero instead of
+        instantaneously adding the source}.
+        In progress.
+  \item \textbf{Determine if Kuzmin's implicit bounds are equal to our implicit bounds}.
+        In progress.
+  \item \textbf{Evaluate the benefit of Kuzmin's ``prelimiting'' step}.
+        In progress.
+\end{enumerate}
 
 The following suggestions were made:
 \begin{itemize}
