@@ -1,0 +1,34 @@
+\section*{6-23-2015}
+
+The following items were requested:
+\begin{enumerate}
+
+\item \textbf{Determine why Kuzmin needs defect correction if his limiting
+coefficients are explicit}.
+While answering the question of whether Kuzmin's implicit discrete maximum
+principle bounds were equivalent to ours, the question arose of why Kuzmin
+would need defect correction when his $Q_i^\pm$ are explicitly computed,
+since the resulting system is linear.
+
+\item \textbf{Try a near-void instead of an actual void in the
+source-void-to-absorber test problem}.
+The physical solution for the source-void-to-absorber problem is linear
+in the void, followed by exponential decay. It was considered
+suspicious that the numerical solution in this region without 
+artificial dissipation results in spurious oscillations, so
+it was suggested to try using very small $\sigma$ in this
+region instead of $\sigma=0$.
+
+\item \textbf{Try a three-region problem}.
+It is desirable to see the solution for a problem with three
+different saturation values $q/\sigma$.
+
+\item \textbf{Try a two-region problem with equal saturation values
+but different values for $q$ and $\sigma$}.
+If the saturation value of $q/\sigma$ is reached in the first
+region, one would like to ensure that if the second region has
+the same saturation value $q/\sigma$, but different values of
+$q$ and $\sigma$, then there should be no numerical artifacts at
+the interface between the two regions.
+
+\end{enumerate}

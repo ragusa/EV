@@ -1,6 +1,6 @@
 \section*{6-22-2015}
 
-The following goals were outlined for the next meeting:
+The following items were requested:
 \begin{enumerate}
 
 \item \textbf{Obtain multidimensional results for explicit FCT}.
@@ -40,23 +40,117 @@ $P_{i-1}^+\leq Q_{i-1}^+$. Then,
   F_{i,i-1}>
   Q_i^+,
 \]
-which violates the DMP condition.
+which violates the DMP condition. However, this limiting coefficient has
+yet to be tested for its effectiveness in practice.
 
 \item \textbf{Determine if converged steady-state results match transient results}.
 In progress.
 
 \item \textbf{Determine how to evaluate analytic DMP bounds in multidimensional problems}.
 In progress.
-  \item \textbf{Compare time step size computed from $1-\frac{\dt}{m_i}A^L_{i,i}$ to
-        that obtained by examining the eigenvalues of $(\M^L)^{-1}\A^L$}.
-        In progress.
-  \item \textbf{In the source-void-to-absorber problem, ramp the source from zero instead of
-        instantaneously adding the source}.
-        In progress.
-  \item \textbf{Determine if Kuzmin's implicit bounds are equal to our implicit bounds}.
-        In progress.
-  \item \textbf{Evaluate the benefit of Kuzmin's ``prelimiting'' step}.
-        In progress.
+
+\item \textbf{Compare time step size computed from $\dt\leq\frac{m_i}{A^L_{i,i}}$ to
+that obtained by examining the eigenvalues of $(\M^L)^{-1}\A^L$}.
+The condition $\dt\leq\frac{m_i}{A^L_{i,i}}$ results from the need to prove
+positivity of the low-order system matrix diagonal entries. The suggested approach
+of using the eigenvalues of $(\M^L)^{-1}\A^L$ is unclear. For a general scalar conservation
+law
+\[
+  u_t + \f(u)_x = 0,
+\]
+the equation may be expressed using chain rule:
+\[
+  u_t + \frac{d\f}{du}u_x = 0,
+\]
+where $\frac{d\f}{du}$ is the characteristic speed\cite{toro}. In the case of a
+discrete FEM system
+\[
+  \M\U_t + \A(\U)\U_x = 0,
+\]
+the characteristic speeds would indeed be given by the eigenvalues of $\M^{-1}\A(\U)$.
+However, this equation does not correspond to the system in question:
+\[
+  \M\U_t + \B(\U)\U = 0,
+\]
+and thus the suggestion is unclear. Expressing the system in question in the
+quasilinear form with the spatial derivative, i.e., expressing $\B(\U)\U$
+as $\A(\U)\U_x$, is complicated by the presence of a reaction term and an
+artificial diffusion term. For instance, the governing equation would be
+\[
+  u_t + \mathbf{v}u_x + \sigma u = (\nu u_x)_x,
+\]
+which in conservative form gives
+\[
+  \f(u) = \mathbf{v}u + \int\sigma u dx - \nu u_x,
+\]
+and thus computing $\f'(u)$ is unclear.
+
+An alternative approach to computing a valid time step size for the high-order
+scheme is therefore suggested here, at least in regards to the presence of the
+reaction term, not the viscosity term: the presence of a reaction term should only decrease
+the flux speed, a conservative time step size could be computed by ignoring
+the reaction term. Of course, when entropy viscosity is used, the flux speed
+is increased and thus the same reasoning cannot be applied. In general, a CFL-satisfying
+time step size can be computed by satisfying the following condition:
+\[
+  \dt^{n+1}\leq\frac{h_{min}}{s_{max}^n},
+\]
+where $h_{min}$ is the smallest element diameter in the mesh, and $s_{max}^n$ is the
+largest flux speed computed in the domain. Calling $s^{void}$ the flux speed
+computed when ignoring the reaction term, the following is true, as discussed
+before: $s^{void}\geq s$. Thus the usage of this flux yields a conservative
+time step estimate:
+\[
+  \dt^{n+1}\leq\frac{h_{min}}{s_{max}^{void,n}}\leq\frac{h_{min}}{s_{max}^{n}}.
+\]
+
+\item \textbf{In the source-void-to-absorber problem, ramp the source from zero instead of
+instantaneously adding the source}.
+In progress.
+
+\item \textbf{Determine if Kuzmin's implicit bounds are equivalent to our implicit bounds}.
+In \cite{kuzmin_FCT}, Kuzmin defines the limited flux bounds as
+\[
+  Q_i^\pm=m_i\substack{\max_j\\\min_j}\substack{\max\\\min}
+    \left\{0,\tilde{U_j}-\tilde{U_i}\right\},
+\]
+where $\tilde{\U}$ is the ``auxiliary'' solution, given by Equations (75) and (69)
+in \cite{kuzmin_FCT}, which together give, in our notation (and adding a source term),
+\[
+  \M^L\frac{\tilde{\U}-\U^n}{(1-\theta)\dt} + \A^L\U^n = \b^n.
+\]
+This auxiliary solution can thus be interpreted as the low-order solution at time
+$t^{n+1-\theta}$, or alternatively may be viewed as the ``explicit portion'' of
+a low-order time step; for explicit Euler, this is the entire time step and thus
+$\tilde{\U}=\U^{L,n+1}$, while for implicit Euler, this includes none of the step
+and thus $\tilde{\U}=\U^{n}$. Thus the question of whether Kuzmin's implicit bounds are
+equivalent to ours is immediately answered: \emph{they are not equivalent} because
+our implicit bounds are implicit with the new solution, while Kuzmin's are
+explicit.
+
+\item \textbf{Evaluate the benefit of Kuzmin's ``prelimiting'' step}.
+Equation (84) of \cite{kuzmin_FCT} gives Kuzmin's prelimiting step:
+\[
+  F\ij := 0 \qquad \mbox{if}\quad F\ij \left(\tilde{U}_i-\tilde{U}_j\right)\leq 0,
+\]
+
+The prelimiting step has not yet been re-implemented.
+
+\item \textbf{For the defect correction scheme, try damping viscosity updates}.
+The implicit scheme is nonlinear and thus requires some iteration; the defect
+correction technique was used. It was noted that difficulties were noted in
+iteratively computing the entropy viscosity solution because entropy viscosity
+was oscillating between two states on each iteration. Thus a damping coefficient
+$\lambda$ was applied to solution updates:
+\[
+  \U^{H,n+1,(k+1)} = \U^{H,n+1,(k)} + \lambda\Delta\U^{H,n+1,(k+1)}.
+\]
+This was found to give some success but still showed difficulties for some
+problems. It was thus suggested to try instead dampening only the entropy viscosity updates:
+\[
+  \nu^{E,n+1,(k+1)} = \nu^{E,n+1,(k)} + \lambda\Delta\nu^{E,n+1,(k+1)}.
+\]
+
 \end{enumerate}
 
 The following suggestions were made:
