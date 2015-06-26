@@ -1,34 +1,49 @@
 \section*{6-23-2015}
 
-The following items were requested:
 \begin{enumerate}
-
-\item \textbf{Determine why Kuzmin needs defect correction if his limiting
-coefficients are explicit}.
+%--------------------------------------------------------------------------------
+\completeitem{Determine why Kuzmin needs defect correction if his limiting
+coefficients are explicit.}
 While answering the question of whether Kuzmin's implicit discrete maximum
 principle bounds were equivalent to ours, the question arose of why Kuzmin
 would need defect correction when his $Q_i^\pm$ are explicitly computed,
 since the resulting system is linear.
 
-\item \textbf{Try a near-void instead of an actual void in the
-source-void-to-absorber test problem}.
+In Section 6.1 of \cite{kuzmin_FCT}, Kuzmin mentions that the system
+matrices may depend on the solution if the velocity field does
+but that for brevity, the dependence of the solution on the
+matrices would be omitted. He then goes to introduce the defect correction
+scheme to resolve the nonlinearities in the governing equation and/or
+discretization procedure.
+
+In addition, in Section 6.2 of \cite{kuzmin_FCT}, Kuzmin states
+that artificial diffusion is proportional to time step size while
+the amount of acceptable antidiffusion depends solely on the
+local extrema of the auxiliary solution $\tilde{u}$. Thus, a
+smaller percentage of the available antidiffusion is accepted
+as the CFL number increases. He then proposes an iterative
+procedure to circumvent this problem. This has not yet been tested.
+%--------------------------------------------------------------------------------
+\incompleteitem{Try a near-void instead of an actual void in the
+source-void-to-absorber test problem.}
+
 The physical solution for the source-void-to-absorber problem is linear
 in the void, followed by exponential decay. It was considered
 suspicious that the numerical solution in this region without 
 artificial dissipation results in spurious oscillations, so
 it was suggested to try using very small $\sigma$ in this
 region instead of $\sigma=0$.
-
-\item \textbf{Try a three-region problem}.
+%--------------------------------------------------------------------------------
+\incompleteitem{Try a three-region problem.}
 It is desirable to see the solution for a problem with three
 different saturation values $q/\sigma$.
-
-\item \textbf{Try a two-region problem with equal saturation values
-but different values for $q$ and $\sigma$}.
+%--------------------------------------------------------------------------------
+\incompleteitem{Try a two-region problem with equal saturation values
+but different values for $q$ and $\sigma$.}
 If the saturation value of $q/\sigma$ is reached in the first
 region, one would like to ensure that if the second region has
 the same saturation value $q/\sigma$, but different values of
 $q$ and $\sigma$, then there should be no numerical artifacts at
 the interface between the two regions.
-
+%--------------------------------------------------------------------------------
 \end{enumerate}

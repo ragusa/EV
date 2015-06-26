@@ -1,12 +1,13 @@
 \section*{6-22-2015}
 
-The following items were requested:
 \begin{enumerate}
+%--------------------------------------------------------------------------------
+\incompleteitem{Obtain multidimensional results for explicit FCT.}
 
-\item \textbf{Obtain multidimensional results for explicit FCT}.
 In progress.
+%--------------------------------------------------------------------------------
+\incompleteitem{Compare symmetric limiter with upwind limiter.}
 
-\item \textbf{Compare symmetric limiter with upwind limiter}.
 The symmetric limiting coefficients have the following definition:
 \begin{equation}
   L\ij = \left\{\begin{array}{l l}
@@ -42,15 +43,18 @@ $P_{i-1}^+\leq Q_{i-1}^+$. Then,
 \]
 which violates the DMP condition. However, this limiting coefficient has
 yet to be tested for its effectiveness in practice.
+%--------------------------------------------------------------------------------
+\incompleteitem{Determine if converged steady-state results match transient results.}
 
-\item \textbf{Determine if converged steady-state results match transient results}.
 In progress.
+%--------------------------------------------------------------------------------
+\incompleteitem{Determine how to evaluate analytic DMP bounds in multidimensional problems.}
 
-\item \textbf{Determine how to evaluate analytic DMP bounds in multidimensional problems}.
 In progress.
+%--------------------------------------------------------------------------------
+\incompleteitem{Compare time step size computed from $\dt\leq\frac{m_i}{A^L_{i,i}}$ to
+that obtained by examining the eigenvalues of $(\M^L)^{-1}\A^L$.}
 
-\item \textbf{Compare time step size computed from $\dt\leq\frac{m_i}{A^L_{i,i}}$ to
-that obtained by examining the eigenvalues of $(\M^L)^{-1}\A^L$}.
 The condition $\dt\leq\frac{m_i}{A^L_{i,i}}$ results from the need to prove
 positivity of the low-order system matrix diagonal entries. The suggested approach
 of using the eigenvalues of $(\M^L)^{-1}\A^L$ is unclear. For a general scalar conservation
@@ -62,7 +66,7 @@ the equation may be expressed using chain rule:
 \[
   u_t + \frac{d\f}{du}u_x = 0,
 \]
-where $\frac{d\f}{du}$ is the characteristic speed\cite{toro}. In the case of a
+where $\frac{d\f}{du}$ is the characteristic speed \cite{toro}. In the case of a
 discrete FEM system
 \[
   \M\U_t + \A(\U)\U_x = 0,
@@ -103,12 +107,14 @@ time step estimate:
 \[
   \dt^{n+1}\leq\frac{h_{min}}{s_{max}^{void,n}}\leq\frac{h_{min}}{s_{max}^{n}}.
 \]
+%--------------------------------------------------------------------------------
+\incompleteitem{In the source-void-to-absorber problem, ramp the source from zero instead of
+instantaneously adding the source.}
 
-\item \textbf{In the source-void-to-absorber problem, ramp the source from zero instead of
-instantaneously adding the source}.
 In progress.
+%--------------------------------------------------------------------------------
+\completeitem{Determine if Kuzmin's implicit bounds are equivalent to our implicit bounds.}
 
-\item \textbf{Determine if Kuzmin's implicit bounds are equivalent to our implicit bounds}.
 In \cite{kuzmin_FCT}, Kuzmin defines the limited flux bounds as
 \[
   Q_i^\pm=m_i\substack{\max_j\\\min_j}\substack{\max\\\min}
@@ -128,15 +134,23 @@ equivalent to ours is immediately answered: \emph{they are not equivalent} becau
 our implicit bounds are implicit with the new solution, while Kuzmin's are
 explicit.
 
-\item \textbf{Evaluate the benefit of Kuzmin's ``prelimiting'' step}.
+It should be noted that at least in \cite{kuzmin_FCT}, Kuzmin's objective
+appears to be to satisfy the positivity constraint given by Equation (83)
+in \cite{kuzmin_FCT}, unlike our objective, which is to satisfy a discrete
+maximum principle, which happens to have a lower bound greater than or
+equal to zero.
+%--------------------------------------------------------------------------------
+\incompleteitem{Evaluate the benefit of Kuzmin's ``prelimiting'' step.}
+
 Equation (84) of \cite{kuzmin_FCT} gives Kuzmin's prelimiting step:
 \[
   F\ij := 0 \qquad \mbox{if}\quad F\ij \left(\tilde{U}_i-\tilde{U}_j\right)\leq 0,
 \]
 
 The prelimiting step has not yet been re-implemented.
+%--------------------------------------------------------------------------------
+\incompleteitem{For the defect correction scheme, try damping viscosity updates.}
 
-\item \textbf{For the defect correction scheme, try damping viscosity updates}.
 The implicit scheme is nonlinear and thus requires some iteration; the defect
 correction technique was used. It was noted that difficulties were noted in
 iteratively computing the entropy viscosity solution because entropy viscosity
@@ -150,11 +164,5 @@ problems. It was thus suggested to try instead dampening only the entropy viscos
 \[
   \nu^{E,n+1,(k+1)} = \nu^{E,n+1,(k)} + \lambda\Delta\nu^{E,n+1,(k+1)}.
 \]
-
+%--------------------------------------------------------------------------------
 \end{enumerate}
-
-The following suggestions were made:
-\begin{itemize}
-  \item archive all results found, with code version number and descriptions of run parameters
-  \item create a test suite to determine if code updates break the code
-\end{itemize}

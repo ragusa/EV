@@ -4,6 +4,8 @@
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/vector.h>
 
+#include <deal.II/dofs/dof_accessor.h>
+
 #include "LinearSolver.h"
 #include "PostProcessor.h"
 

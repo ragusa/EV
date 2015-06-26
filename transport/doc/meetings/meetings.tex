@@ -1,6 +1,10 @@
 \documentclass{article}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
 \usepackage{amsmath}
+\usepackage{soul}
 
+%\setlength{\parskip}{\baselineskip}
 \setlength{\parindent}{0in}
 \setlength{\evensidemargin}{0in}
 \setlength{\oddsidemargin}{0in}
@@ -9,7 +13,33 @@
 
 \input{../dissertation/content/newcommands}
 
+% define colors
+\colorlet{darkgreen}{green!90!black}
+\colorlet{lightgreen}{green!10}
+\colorlet{darkred}{red!90!black}
+\colorlet{lightred}{red!10}
+
+% define a color box commands
+\newcommand{\completeitem}[1]{
+  \item {\sethlcolor{lightgreen}{\color{darkgreen}\textbf{\hl{#1}}}}
+}
+\newcommand{\incompleteitem}[1]{
+  %\par
+  %\begin{tcolorbox}[colframe=darkred,colback=lightred,
+  %  boxrule=0.5pt,boxsep=0pt,left=6pt,right=6pt,top=6pt,bottom=6pt,
+  %  tcbox raise base]
+  %  #1
+  %\end{tcolorbox}
+  \item {\sethlcolor{lightred}{\color{darkred}\textbf{\hl{#1}}}}
+}
+
+% begin document
 \begin{document}
+Legend:
+\begin{itemize}
+  \completeitem{Complete item}
+  \incompleteitem{Incomplete item}
+\end{itemize}
 \input{6-22-2015}
 \input{6-23-2015}
 \bibliographystyle{plain}

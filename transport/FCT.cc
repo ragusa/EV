@@ -218,14 +218,16 @@ void FCT<dim>::compute_steady_state_bounds(
 }
 
 /** \brief Assembles the flux correction matrix.
+ *
  *  \param [in] dt current time step size
  */
 template <int dim>
-void FCT<dim>::compute_flux_corrections(const Vector<double>       &high_order_solution,
-                                        const Vector<double>       &old_solution,
-                                        const double               &dt,
-                                        const SparseMatrix<double> &low_order_diffusion_matrix,
-                                        const SparseMatrix<double> &high_order_diffusion_matrix)
+void FCT<dim>::compute_flux_corrections(
+   const Vector<double>       &high_order_solution,
+   const Vector<double>       &old_solution,
+   const double               &dt,
+   const SparseMatrix<double> &low_order_diffusion_matrix,
+   const SparseMatrix<double> &high_order_diffusion_matrix)
 {
    // reset flux correction matrix to zero 
    flux_correction_matrix = 0;
@@ -233,6 +235,9 @@ void FCT<dim>::compute_flux_corrections(const Vector<double>       &high_order_s
    // compute time derivate of high-order solution
    tmp_vector = 0;
    tmp_vector.add(1.0/dt,high_order_solution,-1.0/dt,old_solution);
+
+   // currently 1D is hardcoded here
+   Assert(dim < 2,ExcNotImplemented());
 
    // loop over rows
    for (unsigned int i = 0; i < n_dofs; ++i)
