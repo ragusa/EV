@@ -761,6 +761,7 @@ void TransportProblem<dim>::run()
 
       // create FCT object
       FCT<dim> fct(dof_handler,
+                   triangulation,
                    lumped_mass_matrix,
                    consistent_mass_matrix,
                    linear_solver,

@@ -44,7 +44,7 @@ subsection refinement
    set Refinement mode = space # <space|time>
    set Time refinement factor = 0.5
    set Use adaptive refinement = false
-   set Initial refinement level = 5
+   set Initial refinement level = 1
    set Number of refinement cycles = 1
 end
 

@@ -5,6 +5,7 @@
 #include <deal.II/lac/vector.h>
 
 #include <deal.II/dofs/dof_accessor.h>
+#include <deal.II/grid/tria.h>
 
 #include "LinearSolver.h"
 #include "PostProcessor.h"
@@ -18,6 +19,7 @@ class FCT {
    public:
       FCT(
          const DoFHandler<dim>      &dof_handler,
+         Triangulation<dim>         &triangulation,
          const SparseMatrix<double> &lumped_mass_matrix,
          const SparseMatrix<double> &consistent_mass_matrix,
          const LinearSolver<dim>    &linear_solver,
@@ -70,6 +72,7 @@ class FCT {
                                          const double               &dt);
 
       const DoFHandler<dim> *dof_handler;
+      Triangulation<dim> * const triangulation;
 
       const SparseMatrix<double> *lumped_mass_matrix;
       const SparseMatrix<double> *consistent_mass_matrix;

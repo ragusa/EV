@@ -1,6 +1,7 @@
 template<int dim>
 FCT<dim>::FCT(
    const DoFHandler<dim>      &dof_handler,
+   Triangulation<dim>         &triangulation,
    const SparseMatrix<double> &lumped_mass_matrix,
    const SparseMatrix<double> &consistent_mass_matrix,
    const LinearSolver<dim>    &linear_solver,
@@ -10,6 +11,7 @@ FCT<dim>::FCT(
    const unsigned int         &dofs_per_cell,
    const bool                 &do_not_limit):
    dof_handler(&dof_handler),
+   triangulation(&triangulation),
    lumped_mass_matrix(&lumped_mass_matrix),
    consistent_mass_matrix(&consistent_mass_matrix),
    linear_solver(linear_solver),
@@ -236,9 +238,51 @@ void FCT<dim>::compute_flux_corrections(
    tmp_vector = 0;
    tmp_vector.add(1.0/dt,high_order_solution,-1.0/dt,old_solution);
 
-   // currently 1D is hardcoded here
-   Assert(dim < 2,ExcNotImplemented());
+   // cell iterator
+   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler->begin_active(),
+                                                  endc = dof_handler->end();
 
+   // reset line flags
+   triangulation->clear_user_flags_line();
+/*
+   for (cell = dof_handler.begin_active(); cell != endc; ++cell)
+      for (unsigned int line = 0; line < GeometryInfo<dim>::lines_per_cell; ++line)
+         if (cell->line(line)->at_boundary())
+            cell->line(line)->set_boundary_indicator(0);
+*/
+
+/*
+   // FE face values
+   FEFaceValues<dim> fe_face_values(fe, face_quadrature, update_normal_vectors);
+*/
+   // loop over cells
+   unsigned int i_cell = 0;
+   unsigned int i_line = 0;
+   for (cell = dof_handler->begin_active(); cell != endc; ++cell, ++i_cell) {
+      // loop over lines of cell
+      for (unsigned int line = 0; line < GeometryInfo<dim>::lines_per_cell; ++line, ++i_line) {
+         if (!cell->line(line)->user_flag_set()) {
+            cell->line(line)->set_user_flag();
+            std::cout << "cell " << i_cell << ", line " << i_line << std::endl;
+         }
+/*
+            // reinitialize FE face values
+            fe_face_values.reinit(cell, face);
+            // determine if the transport flux is incoming through this face;
+            //  it isn't necessary to loop over all face quadrature points because
+            //  the transport direction and normal vector are the same at each
+            //  quadrature point; therefore, quadrature point 0 is arbitrarily chosen
+            double small = -1.0e-12;
+            if (fe_face_values.normal_vector(0) * transport_direction < small) {
+               // mark boundary as incoming flux boundary: indicator 1
+               cell->face(face)->set_boundary_indicator(1);
+            }
+*/
+      }
+   }
+   std::exit(0);
+
+/*
    // loop over rows
    for (unsigned int i = 0; i < n_dofs; ++i)
    {
@@ -255,6 +299,7 @@ void FCT<dim>::compute_flux_corrections(
          flux_correction_matrix.set(i,j,Fij);
       }
    }
+*/
 }
 
 /** \brief Computes the limiting coefficient vectors \f$R^+\f$ and \f$R^-\f$,
