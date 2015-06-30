@@ -75,9 +75,11 @@ void PostProcessor<dim>::output_results(const Vector<double>     &solution,
       // create fine mesh on which to interpolate exact solution function
       Triangulation<dim> fine_triangulation;
       fine_triangulation.copy_triangulation(triangulation);
-      // define "fine" triangulation to be of refinement level 10, so refine
+      // define "fine" triangulation to be of refinement level 7, so refine
       // if refinement level is below this
-      if (final_refinement_level < 10) fine_triangulation.refine_global(10-final_refinement_level);
+      unsigned int fine_level = 7;
+      if (final_refinement_level < fine_level) fine_triangulation.refine_global(
+         fine_level-final_refinement_level);
       // create dof handler for fine mesh
       DoFHandler<dim> fine_dof_handler(fine_triangulation);
       fine_dof_handler.distribute_dofs(*fe);

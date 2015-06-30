@@ -244,17 +244,10 @@ void FCT<dim>::compute_flux_corrections(
 
    // reset line flags
    triangulation->clear_user_flags_line();
-/*
-   for (cell = dof_handler.begin_active(); cell != endc; ++cell)
-      for (unsigned int line = 0; line < GeometryInfo<dim>::lines_per_cell; ++line)
-         if (cell->line(line)->at_boundary())
-            cell->line(line)->set_boundary_indicator(0);
-*/
 
-/*
-   // FE face values
-   FEFaceValues<dim> fe_face_values(fe, face_quadrature, update_normal_vectors);
-*/
+   // dof indices for a line
+   std::vector<unsigned int> local_dof_indices(2);
+
    // loop over cells
    unsigned int i_cell = 0;
    unsigned int i_line = 0;
@@ -262,25 +255,26 @@ void FCT<dim>::compute_flux_corrections(
       // loop over lines of cell
       for (unsigned int line = 0; line < GeometryInfo<dim>::lines_per_cell; ++line, ++i_line) {
          if (!cell->line(line)->user_flag_set()) {
+
+            // mark line so that the same flux isn't recomputed
             cell->line(line)->set_user_flag();
-            std::cout << "cell " << i_cell << ", line " << i_line << std::endl;
+
+            // get dof indices on line
+            cell->line(line)->get_dof_indices(local_dof_indices);
+            unsigned int i = local_dof_indices[0];
+            unsigned int j = local_dof_indices[1];
+
+            // compute flux
+            double Fij = -(*consistent_mass_matrix)(i,j)*(tmp_vector(j)-tmp_vector(i)) +
+               (low_order_diffusion_matrix(i,j)-high_order_diffusion_matrix(i,j)) *
+               (old_solution(j) - old_solution(i));
+
+            // store flux
+            flux_correction_matrix.set(i,j, Fij);
+            flux_correction_matrix.set(j,i,-Fij);
          }
-/*
-            // reinitialize FE face values
-            fe_face_values.reinit(cell, face);
-            // determine if the transport flux is incoming through this face;
-            //  it isn't necessary to loop over all face quadrature points because
-            //  the transport direction and normal vector are the same at each
-            //  quadrature point; therefore, quadrature point 0 is arbitrarily chosen
-            double small = -1.0e-12;
-            if (fe_face_values.normal_vector(0) * transport_direction < small) {
-               // mark boundary as incoming flux boundary: indicator 1
-               cell->face(face)->set_boundary_indicator(1);
-            }
-*/
       }
    }
-   std::exit(0);
 
 /*
    // loop over rows
