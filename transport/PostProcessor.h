@@ -31,7 +31,7 @@ class PostProcessor {
          const bool               &output_exact_solution,
          const bool               &save_convergence_results,
          const bool               &has_exact_solution,
-         Function<dim>            &exact_solution_function,
+         const std::shared_ptr<Function<dim> > &exact_solution_function,
          const double             &time,
          const double             &dt_nominal,
          const bool               &is_steady_state,
@@ -71,7 +71,7 @@ class PostProcessor {
       const bool save_convergence_results;
 
       const bool    has_exact_solution;
-      Function<dim> *exact_solution_function;
+      std::shared_ptr<Function<dim> > exact_solution_function;
 
       const double time;
       double       dt_nominal;

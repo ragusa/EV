@@ -110,18 +110,12 @@ class TransportProblem {
       Vector<double> system_rhs;
       Vector<double> ss_rhs;
 
-/*
-      // viscosity vectors
-      Vector<double> entropy_viscosity;
-      Vector<double> high_order_viscosity;
-*/
-
       // physics data
       void process_problem_ID();
       std::map<std::string,double> function_parser_constants;
       Tensor<1,dim> transport_direction;
       FunctionParser<dim> initial_conditions;
-      FunctionParser<dim> exact_solution_function;
+      std::shared_ptr<Function<dim> > exact_solution_function;
       FunctionParser<dim> source_function;
       FunctionParser<dim> cross_section_function;
       FunctionParser<dim> incoming_function;
@@ -130,6 +124,7 @@ class TransportProblem {
       std::string source_string;
       std::string cross_section_string;
       std::string incoming_string;
+      unsigned int exact_solution_option;
       bool has_exact_solution;
       bool source_time_dependent;
       double x_min;

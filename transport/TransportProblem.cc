@@ -14,6 +14,7 @@ TransportProblem<dim>::TransportProblem(const TransportParameters<dim> &paramete
       n_q_points_cell(cell_quadrature.size()),
       n_q_points_face(face_quadrature.size()),
       transport_direction(0.0),
+      exact_solution_option(0),
       has_exact_solution(false),
       domain_volume(0.0),
       timer(std::cout,TimerOutput::summary,TimerOutput::wall_times)
@@ -62,11 +63,22 @@ void TransportProblem<dim>::initialize_system()
    function_parser_constants["x_max"]    = x_max;
 
    // initialize exact solution function
-   if (has_exact_solution)
-      exact_solution_function.initialize(variables,
-                                         exact_solution_string,
-                                         function_parser_constants,
-                                         time_dependent);
+   if (has_exact_solution) {
+      if (exact_solution_option == 0) {
+         // if exact solution function is given by function parser string,
+         // then create a function parser object and initialize it
+         std::shared_ptr<FunctionParser<dim> > exact_solution_function_parser
+            = std::make_shared<FunctionParser<dim> >();
+         exact_solution_function_parser->initialize(variables,
+                                                    exact_solution_string,
+                                                    function_parser_constants,
+                                                    time_dependent);
+   
+         // point base class shared pointer to derived class function object
+         exact_solution_function = exact_solution_function_parser;
+      } else {
+      }
+   }
 
    // initialize initial conditions function
    if (!parameters.is_steady_state)
