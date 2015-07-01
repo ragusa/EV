@@ -8,7 +8,8 @@ subsection problem
    # 8 = source in left half
    # 9 = MMS-4
    # 10 = MMS-5
-   set Problem ID = 2
+   # 11 = skew void-to-absorber
+   set Problem ID = 11
 end
 
 subsection time
@@ -25,7 +26,7 @@ subsection scheme
    # 2 = EV
    # 3 = EV+FCT
    # 4 = Galerkin+FCT
-   set Scheme option = 0
+   set Scheme option = 4
 end
 
 subsection entropy viscosity

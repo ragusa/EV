@@ -14,7 +14,7 @@ TransportProblem<dim>::TransportProblem(const TransportParameters<dim> &paramete
       n_q_points_cell(cell_quadrature.size()),
       n_q_points_face(face_quadrature.size()),
       transport_direction(0.0),
-      exact_solution_option(0),
+      exact_solution_option(ExactSolutionOption::none),
       has_exact_solution(false),
       domain_volume(0.0),
       timer(std::cout,TimerOutput::summary,TimerOutput::wall_times)
@@ -62,21 +62,34 @@ void TransportProblem<dim>::initialize_system()
    function_parser_constants["x_mid"]    = x_min + 0.5*(x_max-x_min);
    function_parser_constants["x_max"]    = x_max;
 
+   // set flag for problem having exact solution
+   has_exact_solution = exact_solution_option != ExactSolutionOption::none;
+
    // initialize exact solution function
    if (has_exact_solution) {
-      if (exact_solution_option == 0) {
+      if (exact_solution_option == ExactSolutionOption::parser) {
          // if exact solution function is given by function parser string,
          // then create a function parser object and initialize it
-         std::shared_ptr<FunctionParser<dim> > exact_solution_function_parser
+         std::shared_ptr<FunctionParser<dim> > exact_solution_function_derived
             = std::make_shared<FunctionParser<dim> >();
-         exact_solution_function_parser->initialize(variables,
-                                                    exact_solution_string,
-                                                    function_parser_constants,
-                                                    time_dependent);
+         exact_solution_function_derived->initialize(variables,
+                                                     exact_solution_string,
+                                                     function_parser_constants,
+                                                     time_dependent);
    
          // point base class shared pointer to derived class function object
-         exact_solution_function = exact_solution_function_parser;
+         exact_solution_function = exact_solution_function_derived;
+      } else if (exact_solution_option == 
+         ExactSolutionOption::skew_void_to_absorber) {
+
+         // create SkewVoidToAbsorberExactSolution object
+         std::shared_ptr<SkewVoidToAbsorberExactSolution<dim> >
+            exact_solution_function_derived = std::make_shared<SkewVoidToAbsorberExactSolution<dim> >();
+
+         // point base class shared pointer to derived class function object
+         exact_solution_function = exact_solution_function_derived;
       } else {
+         ExcInvalidState();
       }
    }
 
@@ -140,13 +153,12 @@ void TransportProblem<dim>::process_problem_ID()
          source_string = "0";
          function_parser_constants["source"] = 0.0;
 
-         if (parameters.is_steady_state) {
-            has_exact_solution = true;
+         exact_solution_option = ExactSolutionOption::parser;
+
+         if (parameters.is_steady_state)
             exact_solution_string = "source/sigma + (incoming - source/sigma)*exp(-sigma*(x-x_min))";
-         } else {
-            has_exact_solution = true;
+         else
             exact_solution_string = "if(x<=t,source/sigma + (incoming - source/sigma)*exp(-sigma*(x-x_min)),0)";
-         }
 
          initial_conditions_string = "0";
 
@@ -175,7 +187,8 @@ void TransportProblem<dim>::process_problem_ID()
          source_string = "0";
          function_parser_constants["source"] = 0.0;
 
-         has_exact_solution = true;
+         exact_solution_option = ExactSolutionOption::parser;
+
          if (parameters.is_steady_state) { // steady-state
             if (dim == 1)      // 1-D
                exact_solution_string = "if(x>=x_mid,"
@@ -217,7 +230,8 @@ void TransportProblem<dim>::process_problem_ID()
          incoming_string = "1";
          function_parser_constants["incoming"]  = 1.0;
 
-         has_exact_solution = true;
+         exact_solution_option = ExactSolutionOption::parser;
+
          if (parameters.is_steady_state)
             exact_solution_string = "1.0";
          else
@@ -235,7 +249,9 @@ void TransportProblem<dim>::process_problem_ID()
          incoming_string = "0";
 
          cross_section_string = "1.0";
-         has_exact_solution = true;
+
+         exact_solution_option = ExactSolutionOption::parser;
+
          // use different MS for steady-state vs. transient problem
          if (parameters.is_steady_state) {
             exact_solution_string = "sin(pi*x)"; // assume omega_x = 1 and c = 1
@@ -260,11 +276,15 @@ void TransportProblem<dim>::process_problem_ID()
          incoming_string = "0";
 
          cross_section_string = "1";
-         has_exact_solution = true;
+
+         exact_solution_option = ExactSolutionOption::parser;
          exact_solution_string = "x*exp(-t)"; // assume omega_x = 1 and c = 1
+
          source_string = "-x*exp(-t) + exp(-t) + x*exp(-t)";
          source_time_dependent = true;
+
          initial_conditions_string = exact_solution_string;
+
          break;
       } case 7: { // MMS-3
          Assert(dim == 1,ExcNotImplemented()); // assume 1-D
@@ -278,11 +298,15 @@ void TransportProblem<dim>::process_problem_ID()
          incoming_string = "0";
 
          cross_section_string = "1";
-         has_exact_solution = true;
+
+         exact_solution_option = ExactSolutionOption::parser;
          exact_solution_string = "exp(-t)*sin(pi*x)"; // assume omega_x = 1 and c = 1
+
          source_string = "-exp(-t)*sin(pi*x) + pi*exp(-t)*cos(pi*x) + exp(-t)*sin(pi*x)";
          source_time_dependent = true;
+
          initial_conditions_string = exact_solution_string;
+
          break;
       } case 8: { // source in left half
          Assert(dim == 1,ExcNotImplemented()); // assume 1-D
@@ -305,12 +329,13 @@ void TransportProblem<dim>::process_problem_ID()
          source_string = "if (x<x_mid,10,0)";
          function_parser_constants["source"] = 10.0;
 
-         has_exact_solution = true;
+         exact_solution_option = ExactSolutionOption::parser;
          exact_solution_string = (std::string)"source/sigma*(1-exp(-sigma*" +
             "max(0,min(x,x_mid)-max(x-speed*t,0))))" +
             "*exp(-sigma*max(0,min(x,x_max)-max(x-speed*t,x_mid)))";
 
          initial_conditions_string = "0";
+
          break;
       } case 9: { // MMS-4
          Assert(dim == 1,ExcNotImplemented()); // assume 1-D
@@ -324,11 +349,15 @@ void TransportProblem<dim>::process_problem_ID()
          incoming_string = "0";
 
          cross_section_string = "1";
-         has_exact_solution = true;
+
+         exact_solution_option = ExactSolutionOption::parser;
          exact_solution_string = "x*t"; // assume omega_x = 1 and c = 1
+
          source_string = "x + t + x*t";
          source_time_dependent = true;
+
          initial_conditions_string = exact_solution_string;
+
          break;
       } case 10: { // MMS-5
          Assert(dim == 1,ExcNotImplemented()); // assume 1-D
@@ -338,22 +367,60 @@ void TransportProblem<dim>::process_problem_ID()
 
          transport_direction[0] = 1.0;
 
+         cross_section_string = "1";
+
+         exact_solution_option = ExactSolutionOption::parser;
+
          if (parameters.is_steady_state) {
             incoming_string = "1";
-            cross_section_string = "1";
-            has_exact_solution = true;
             exact_solution_string = "1"; // assume omega_x = 1 and c = 1
             source_string = "1";
             source_time_dependent = false;
          } else {
             incoming_string = "t";
-            cross_section_string = "1";
-            has_exact_solution = true;
             exact_solution_string = "t"; // assume omega_x = 1 and c = 1
             source_string = "1 + t";
             source_time_dependent = true;
             initial_conditions_string = exact_solution_string;
          }
+
+         break;
+      } case 11: { // skew void-to-absorber
+
+         x_min = 0.0;
+         x_max = 1.0;
+
+         transport_direction[0] = 1.0/sqrt(2.0);
+         if (dim >= 2)
+            transport_direction[1] = 1.0/sqrt(3.0);
+         if (dim >= 3)
+            transport_direction[2] = 1.0/sqrt(6.0);
+
+         incoming_string = "1";
+         function_parser_constants["incoming"]  = 1.0;
+
+         if (dim == 1)      // 1-D
+            cross_section_string = "if(x<x_mid, 0, sigma)";
+         else if (dim == 2) // 2-D
+            cross_section_string = "if(x>=x_mid, if(y>=x_mid, sigma, 0), 0)";
+         else               // 3-D
+            cross_section_string = "if(x>=x_mid, if(y>=x_mid, if(z>=x_mid,"
+               "sigma, 0), 0), 0)";
+         function_parser_constants["sigma"]  = 10.0;
+
+         source_time_dependent = false;
+         source_string = "0";
+         function_parser_constants["source"] = 0.0;
+
+         exact_solution_option = ExactSolutionOption::skew_void_to_absorber;
+
+         // for now, assume no steady-state, but this would be easy to implement
+         // by using the existing transient exact solution class and just using
+         // t=large
+         Assert(parameters.is_steady_state == false, ExcNotImplemented(
+            "No steady-state exact solution available for the chosen problem."));
+
+         initial_conditions_string = "0";
 
          break;
       } default: {

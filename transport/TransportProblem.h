@@ -46,6 +46,7 @@
 #include "SSPRKTimeIntegrator.h"
 #include "PostProcessor.h"
 #include "FCT.h"
+#include "ExactSolutions.h"
 
 using namespace dealii;
 
@@ -124,7 +125,7 @@ class TransportProblem {
       std::string source_string;
       std::string cross_section_string;
       std::string incoming_string;
-      unsigned int exact_solution_option;
+      ExactSolutionOption exact_solution_option;
       bool has_exact_solution;
       bool source_time_dependent;
       double x_min;
