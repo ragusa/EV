@@ -1,10 +1,22 @@
 \section{Void-to-Absorber Problem}
 
-\subsection{Purpose}
-
-\subsection{Problem Description}
-
-\subsection{Results}
+%-------------------------------------------------------------------------------
+\begin{table}[h]\caption{Void-to-Absorber Test Problem Run Parameters}
+\label{tab:void_to_absorber_run_parameters}
+\centering
+\begin{tabular}{l l}\toprule
+\emph{Parameter} & \emph{Value}\\\midrule
+Number of Cells & $N_{cell} = 2^5 \times 2^5 = 1024$\\
+End Time & $t = 1$\\
+CFL Number & $\nu = 0.5$\\
+Time Integrator & SSPRK33\\\midrule
+Entropy Function & $E(u) = \frac{1}{2}u^2$\\
+Entropy Residual Coefficient & $c_E = 0.1$\\
+Entropy Jump Coefficient & $c_J = 0.1$\\
+Entropy Time Integrator & BE\\
+\bottomrule\end{tabular}
+\end{table}
+%-------------------------------------------------------------------------------
 \begin{figure}[h]
    \centering
    \begin{subfigure}{0.3\textwidth}
@@ -31,11 +43,8 @@
       \includegraphics[width=\textwidth]{void_to_absorber/EVFCT.png}
       \caption{Entropy Viscosity with FCT}
    \end{subfigure}
-   \caption{Comparison of Solutions}
+   \caption{Comparison of Solutions for Void-to-Absorber Test Problem}
 \end{figure}
-
-\subsection{Conclusion}
-
+%-------------------------------------------------------------------------------
 \subsection{Code and Version}
-
-Version: eb86b4b97520531f7b13cee45d1514f9edfd2273
+Deal.ii code, git commit hash eb86b4b97520531f7b13cee45d1514f9edfd2273
