@@ -6,7 +6,7 @@ PostProcessor<dim>::PostProcessor(
    const bool          &output_exact_solution,
    const bool          &save_convergence_results,
    const bool          &has_exact_solution,
-   FunctionParser<dim> &exact_solution_function,
+   Function<dim>       &exact_solution_function,
    const double        &time,
    const double        &dt_nominal,
    const bool          &is_steady_state,

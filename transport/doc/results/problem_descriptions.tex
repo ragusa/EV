@@ -1,0 +1,135 @@
+\section{Test Problem Descriptions}
+In this section, the test problem suite is described. These descriptions
+include the domain, initial conditions, boundary conditions, and other
+physical parameters.
+%================================================================================
+\subsection{Void-to-Absorber}\label{sec:void_to_absorber}
+This problem examines the angular flux travelling in the $+x$ direction,
+starting in a void and reaching a strong absorber region.
+Table \ref{tab:void_to_absorber} summarizes the test parameters.
+
+\begin{table}[h]\caption{Void-to-Absorber Test Problem Summary}
+\label{tab:void_to_absorber}
+\centering
+\begin{tabular}{l l}\toprule
+\emph{Parameter} & \emph{Value}\\\midrule
+Domain & $\mathcal{D} = (0,1)^d$\\
+End time & $t_{end} = 1$\\
+Initial Conditions & $u_0(\x)=0$\\
+Boundary Conditions & $u(\x,t)=1,\quad \x\in\partial\mathcal{D}^-,\quad t>0,
+   \quad\partial\mathcal{D}^-=\{\x\in\partial\mathcal{D}:\mathbf{n}(\x)
+   \cdot\mathbf{\Omega}<0\}$\\
+Direction & $\mathbf{\Omega} = \mathbf{e}_x$\\
+Cross Section & $\sigma(\x)=\left\{\begin{array}{c l}
+   10, & \x\in(\frac{1}{2},1)^d\\
+   0,  & \mbox{otherwise}\end{array}\right.$\\
+Source & $q(\x,t)=0$\\
+Speed & $v=1$\\
+Exact Solution & $u(\x,t)=\left\{\begin{array}{l l}
+   \left\{\begin{array}{l l}
+      e^{-10(x-\frac{1}{2})}, & x\ge\frac{1}{2}, y\ge\frac{1}{2}, z\ge\frac{1}{2}\\
+      1,                      & \mbox{otherwise}
+   \end{array}\right., & x-t<0\\
+   0, & \mbox{otherwise}
+   \end{array}\right.$ \\
+\bottomrule\end{tabular}
+\end{table}
+%================================================================================
+\subsection{Skew Void-to-Absorber}
+This problem is a more general case of the test problem described in
+Section \ref{sec:void_to_absorber} in which the transport direction is
+not necessarily the $+x$ direction but instead is any direction for which
+$\Omega_i\ge 0,\forall i$.
+Table \ref{tab:void_to_absorber_skew} summarizes the test parameters,
+where the definition of $s$ is given below.
+
+\begin{table}[h]\caption{Skew Void-to-Absorber Test Problem Summary}
+\label{tab:void_to_absorber_skew}
+\centering
+\begin{tabular}{l l}\toprule
+\emph{Parameter} & \emph{Value}\\\midrule
+Domain & $\mathcal{D} = (0,1)^d$\\
+End time & $t_{end} = 1$\\
+Initial Conditions & $u_0(\x)=0$\\
+Boundary Conditions & $u(\x,t)=1,\quad \x\in\partial\mathcal{D}^-,\quad t>0,
+   \quad\partial\mathcal{D}^-=\{\x\in\partial\mathcal{D}:\mathbf{n}(\x)
+   \cdot\mathbf{\Omega}<0\}$\\
+Direction & $\mathbf{\Omega} = [\frac{1}{2},\frac{1}{3},\frac{1}{6}]$\\
+Cross Section & $\sigma(\x)=\left\{\begin{array}{c l}
+   10, & \x\in(\frac{1}{2},1)^d\\
+   0,  & \mbox{otherwise}\end{array}\right.$\\
+Source & $q(\x,t)=0$\\
+Speed & $v=1$\\
+Exact Solution & $u(\x,t)=\left\{\begin{array}{l l}
+   \left\{\begin{array}{l l}
+      e^{-10s}, & x\ge\frac{1}{2}, y\ge\frac{1}{2}, z\ge\frac{1}{2}\\
+      1,        & \mbox{otherwise}
+   \end{array}\right., & \x-\mathbf{\Omega}t\notin\mathcal{D}\\
+   0, & \mbox{otherwise}
+   \end{array}\right.$ \\
+\bottomrule\end{tabular}
+\end{table}
+
+The condition $\x-\mathbf{\Omega}t\notin\mathcal{D}$ is equivalent to the
+following condition:
+\[
+   \x-\mathbf{\Omega}t\notin\mathcal{D} \Rightarrow
+   \exists i: x_i-\Omega_i t < 0,
+\]
+where $i$ denotes a coordinate direction index $x$, $y$, or $z$.
+The distance travelled in the absorber region, $s$, is computed
+by first determining which plane segment of the absorber region
+through which the line $\x-\mathbf{\Omega}t$ passes; the coordinate
+direction normal to this plane is denoted by $i$ and the other
+two by $j$ and $k$. This is determined as follows:
+\[
+   i: \frac{x_i-\frac{1}{2}}{\Omega_i} = \min\limits_j\left(
+      \frac{x_j-\frac{1}{2}}{\Omega_j}\right).
+\]
+Then, $s$ is computed as follows:
+\[
+   s=\sqrt{s_i^2 + s_j^2 + s_k^2}, \quad
+   s_i=x_i-\frac{1}{2}, \quad
+   s_j=\frac{\Omega_j}{\Omega_i}s_i, \quad
+   s_k=\frac{\Omega_k}{\Omega_i}s_i.
+\]
+%================================================================================
+\subsection{Three-Region}\label{sec:three_region}
+This is a 1-D problem that consists of a domain with 3 regions of differing
+saturation values $\frac{q}{\sigma}$. This is used to test both reaction
+terms and source terms.
+Table \ref{tab:three_region} summarizes the test parameters.
+
+\begin{table}[h]\caption{Three-Region Test Problem Summary}
+\label{tab:three_region}
+\centering
+\begin{tabular}{l l}\toprule
+\emph{Parameter} & \emph{Value}\\\midrule
+Domain & $\mathcal{D} = (0,1)$\\
+End time & $t_{end} = 1$\\
+Initial Conditions & $u_0(\x)=0$\\
+Boundary Conditions & $u(\x,t)=1,\quad \x\in\partial\mathcal{D}^-,\quad t>0,
+   \quad\partial\mathcal{D}^-=\{\x\in\partial\mathcal{D}:\mathbf{n}(\x)
+   \cdot\mathbf{\Omega}<0\}$\\
+Direction & $\mathbf{\Omega} = \mathbf{e}_x$\\
+Cross Section & $\sigma(\x)=\left\{\begin{array}{c l}
+   1,  & x \leq 0.3\\
+   10, & 0.3 < x \leq 0.6\\
+   5,  & x > 0.6
+   \end{array}\right.$\\
+Source & $q(\x,t)=\left\{\begin{array}{c l}
+   1,  & x \leq 0.3\\
+   5,  & 0.3 < x \leq 0.6\\
+   10, & x > 0.6
+   \end{array}\right.$\\
+Speed & $v=1$\\
+Exact Solution & $u(\x,t)=\left\{\begin{array}{l l}
+   \left\{\begin{array}{l l}
+      e^{-10(x-\frac{1}{2})}, & x\ge\frac{1}{2}, y\ge\frac{1}{2}, z\ge\frac{1}{2}\\
+      1,                      & \mbox{otherwise}
+   \end{array}\right., & x-t<0\\
+   0, & \mbox{otherwise}
+   \end{array}\right.$ \\
+\bottomrule\end{tabular}
+\end{table}
+%================================================================================

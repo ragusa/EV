@@ -139,7 +139,7 @@ void TransportProblem<dim>::process_problem_ID()
          initial_conditions_string = "0";
 
          break;
-      } case 2: { // void to absorber
+      } case 2: { // void-to-absorber
          Assert(dim < 3,ExcNotImplemented());
 
          x_min = 0.0;
@@ -150,10 +150,13 @@ void TransportProblem<dim>::process_problem_ID()
          incoming_string = "1";
          function_parser_constants["incoming"]  = 1.0;
 
-         if (dim == 1)
-            cross_section_string = "if(x<x_mid, 0, 10)";
-         else
-            cross_section_string = "if(x>=x_mid, if(y>=x_mid, 10, 0), 0)";
+         if (dim == 1)      // 1-D
+            cross_section_string = "if(x<x_mid, 0, sigma)";
+         else if (dim == 2) // 2-D
+            cross_section_string = "if(x>=x_mid, if(y>=x_mid, sigma, 0), 0)";
+         else               // 3-D
+            cross_section_string = "if(x>=x_mid, if(y>=x_mid, if(z>=x_mid,"
+               "sigma, 0), 0), 0)";
          function_parser_constants["sigma"]  = 10.0;
 
          source_time_dependent = false;
@@ -163,18 +166,27 @@ void TransportProblem<dim>::process_problem_ID()
          has_exact_solution = true;
          if (parameters.is_steady_state) { // steady-state
             if (dim == 1)      // 1-D
-               exact_solution_string = "if(x<x_mid, incoming, exp(-sigma*(x-x_mid)))";
+               exact_solution_string = "if(x>=x_mid,"
+                  "incoming*exp(-sigma*(x-x_mid)), incoming)";
             else if (dim == 2) // 2-D
-               exact_solution_string = "if(y<x_mid, incoming, if(x<x_mid, incoming, exp(-sigma*(x-x_mid))))";
-            else
-               Assert(false,ExcNotImplemented());
-         } else {                          // transient
+               exact_solution_string = "if(x>=x_mid, if(y>=y_mid,"
+                  "incoming*exp(-sigma*(x-x_mid)), incoming), incoming)";
+            else               // 3-D
+               exact_solution_string = "if(x>=x_mid, if(y>=y_mid, if(z>=x_mid,"
+                  "incoming*exp(-sigma*(x-x_mid)), incoming), incoming),"
+                  "incoming)";
+         } else { // transient
             if (dim == 1)      // 1-D
-               exact_solution_string = "if(x-t<x_min, if(x<x_mid, incoming, exp(-sigma*(x-x_mid))), 0)";
+               exact_solution_string = "if(x-t<x_min, if(x>=x_mid,"
+                  "incoming*exp(-sigma*(x-x_mid)), incoming), 0)";
             else if (dim == 2) // 2-D
-               exact_solution_string = "if(x-t<x_min, if(y<x_mid, incoming, if(x<x_mid, incoming, exp(-sigma*(x-x_mid)))), 0)";
-            else
-               Assert(false,ExcNotImplemented());
+               exact_solution_string = "if(x-t<x_min, if(x>=x_mid,"
+                  "if(y>=x_mid, incoming*exp(-sigma*(x-x_mid)), incoming),"
+                  "incoming), 0)";
+            else               // 3-D
+               exact_solution_string = "if(x-t<x_min, if(x>=x_mid,"
+                  "if(y>=x_mid, if(z>=x_mid, incoming*exp(-sigma*(x-x_mid)),"
+                  "incoming), incoming), incoming), 0)";
          }
          initial_conditions_string = "0";
          break;
