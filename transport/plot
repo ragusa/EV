@@ -78,7 +78,7 @@ if ($is_ss) { # steady-state
    } elsif ($time_integrator eq "SSP3") {
       $time_integrator_string = "SSPRK33";
    } else {
-      die "Invalid time integrator option.\n";
+      die "Invalid time integrator option: $time_integrator\n";
    }
 }
 
@@ -119,12 +119,13 @@ sub check_for_strings() {
 
    # split line
    chomp($line);
-   my @line_fields = split /\s+=\s+/, $line;
+   my @line_fields = split /\s*=\s*/, $line;
 
    # loop over search strings
    for (my $i = 0; $i <= $#search_strings; $i++) {
       # check if lhs of field equals search string
-      if ($line_fields[0] eq $search_strings[$i]) {
+      my $key = $line_fields[0]; $key =~ s/^\s*//;
+      if ($key eq $search_strings[$i]) {
          # extract value and flag it as found
          my @fields = split /\s+/, $line_fields[1];
          $values[$i] = $fields[0];

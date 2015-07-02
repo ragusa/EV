@@ -12,6 +12,7 @@ PostProcessor<dim>::PostProcessor(
    const bool          &is_steady_state,
    const typename RefinementHandler<dim>::RefinementMode &refinement_mode,
    const unsigned int  &final_refinement_level,
+   const unsigned int  &exact_solution_refinement_level,
    const FESystem<dim> &fe,
    const std::string   &output_dir,
    const std::string   &appendage_string,
@@ -28,6 +29,7 @@ PostProcessor<dim>::PostProcessor(
    is_steady_state(is_steady_state),
    refinement_mode(refinement_mode),
    final_refinement_level(final_refinement_level),
+   exact_solution_refinement_level(exact_solution_refinement_level),
    fe(&fe),
    output_dir(output_dir),
    appendage_string(appendage_string),
@@ -75,11 +77,9 @@ void PostProcessor<dim>::output_results(const Vector<double>     &solution,
       // create fine mesh on which to interpolate exact solution function
       Triangulation<dim> fine_triangulation;
       fine_triangulation.copy_triangulation(triangulation);
-      // define "fine" triangulation to be of refinement level 7, so refine
-      // if refinement level is below this
-      unsigned int fine_level = 7;
-      if (final_refinement_level < fine_level) fine_triangulation.refine_global(
-         fine_level-final_refinement_level);
+      if (final_refinement_level < exact_solution_refinement_level)
+         fine_triangulation.refine_global(
+         exact_solution_refinement_level-final_refinement_level);
       // create dof handler for fine mesh
       DoFHandler<dim> fine_dof_handler(fine_triangulation);
       fine_dof_handler.distribute_dofs(*fe);

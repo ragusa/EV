@@ -440,7 +440,7 @@ void TransportProblem<dim>::process_problem_ID()
       } case 12: { // 3-region
 
          // for now, assume 1-D
-         Assert(dim == 1, ExcNotImplemented("3-region problem is 1-D for now.");
+         Assert(dim == 1, ExcNotImplemented("3-region problem is 1-D for now."));
 
          x_min = 0.0;
          x_max = 1.0;
@@ -450,16 +450,18 @@ void TransportProblem<dim>::process_problem_ID()
          incoming_string = "1";
          function_parser_constants["incoming"]  = 1.0;
 
-         cross_section_string = "if(x<=x1, sigma1, if(x<=x2, sigma2, sigma3))";
-         function_parser_constants["sigma1"] = 10.0;
-         function_parser_constants["sigma2"] = 10.0;
-         function_parser_constants["sigma3"] = 10.0;
+         cross_section_string = "if(x<=x1, sigma0, if(x<=x2, sigma1, sigma2))";
+         function_parser_constants["sigma0"] = 1.0;
+         function_parser_constants["sigma1"] = 40.0;
+         function_parser_constants["sigma2"] = 20.0;
+         function_parser_constants["x1"] = 0.3;
+         function_parser_constants["x2"] = 0.6;
 
          source_time_dependent = false;
-         source_string = "if(x<=x1, q1, if(x<=x2, q2, q3))";
-         function_parser_constants["q1"] = 10.0;
-         function_parser_constants["q2"] = 10.0;
-         function_parser_constants["q3"] = 10.0;
+         source_string = "if(x<=x1, q0, if(x<=x2, q1, q2))";
+         function_parser_constants["q0"] = 1.0;
+         function_parser_constants["q1"] = 5.0;
+         function_parser_constants["q2"] = 20.0;
 
          exact_solution_option = ExactSolutionOption::three_region;
 
@@ -805,11 +807,11 @@ void TransportProblem<dim>::run()
    // determine viscosity string
    std::string viscosity_string;
    switch (parameters.scheme_option) {
-      case 0: {viscosity_string = "galerkin";   break;}
-      case 1: {viscosity_string = "low_order";  break;}
-      case 2: {viscosity_string = "high_order"; break;}
-      case 3: {viscosity_string = "EVFCT";      break;}
-      case 4: {viscosity_string = "GalFCT";     break;}
+      case 0: {viscosity_string = "Gal";    break;}
+      case 1: {viscosity_string = "low";    break;}
+      case 2: {viscosity_string = "EV";     break;}
+      case 3: {viscosity_string = "EVFCT";  break;}
+      case 4: {viscosity_string = "GalFCT"; break;}
       default: {ExcNotImplemented();}
    }
 
@@ -835,6 +837,7 @@ void TransportProblem<dim>::run()
                                     parameters.is_steady_state,
                                     parameters.refinement_mode,
                                     final_refinement_level,
+                                    parameters.exact_solution_refinement_level,
                                     fe,
                                     output_dir,
                                     appendage_ss.str(),

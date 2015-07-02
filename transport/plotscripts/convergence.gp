@@ -12,9 +12,9 @@ slope3 = 3.00
 conv_mode = 1
 
 # list of possible input files to plot and their corresponding titles
-file_galerkin = "convergence_".problem_ID."_galerkin_".timeintegrator
-file_low      = "convergence_".problem_ID."_low_order_".timeintegrator
-file_high     = "convergence_".problem_ID."_high_order_".timeintegrator
+file_galerkin = "convergence_".problem_ID."_Gal_".timeintegrator
+file_low      = "convergence_".problem_ID."_low_".timeintegrator
+file_high     = "convergence_".problem_ID."_EV_".timeintegrator
 file_EVFCT    = "convergence_".problem_ID."_EVFCT_"     .timeintegrator
 file_GalFCT   = "convergence_".problem_ID."_GalFCT_"    .timeintegrator
 file_list = file_galerkin." ".\
@@ -24,7 +24,7 @@ file_list = file_galerkin." ".\
             file_GalFCT
 title_list = "Galerkin\
               Low-Order\
-              High-Order\
+              EV\
               EV-FCT\
               Galerkin-FCT"
 linetypes = "1 1 1 1 1"

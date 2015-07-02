@@ -9,7 +9,8 @@ subsection problem
    # 9 = MMS-4
    # 10 = MMS-5
    # 11 = skew void-to-absorber
-   set Problem ID = 2
+   # 12 = 3-region
+   set Problem ID = 12
 end
 
 subsection time
@@ -17,7 +18,7 @@ subsection time
    set End time = 1.0
    set Time step size = 1.0
    set CFL limit = 0.5
-   set Time integrator option = FE # <FE|SSP2|SSP3>
+   set Time integrator option = SSP3 # <FE|SSP2|SSP3>
 end
 
 subsection scheme
@@ -61,6 +62,7 @@ end
 subsection output
    set Output mesh = false
    set Output exact solution = true
+   set Exact solution refinement level = 7
    set Output initial solution = false 
    set Output DMP bounds = true
    set Save convergence results = true

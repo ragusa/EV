@@ -5,9 +5,9 @@
 # list of possible input files to plot and their corresponding titles
 file_initial  = "solution_".problem_ID."_initial"
 file_exact    = "solution_".problem_ID."_exact"
-file_galerkin = "solution_".problem_ID."_galerkin_".timeintegrator
-file_low      = "solution_".problem_ID."_low_order_".timeintegrator
-file_high     = "solution_".problem_ID."_high_order_".timeintegrator
+file_galerkin = "solution_".problem_ID."_Gal_".timeintegrator
+file_low      = "solution_".problem_ID."_low_".timeintegrator
+file_high     = "solution_".problem_ID."_EV_".timeintegrator
 file_EVFCT    = "solution_".problem_ID."_EVFCT_"     .timeintegrator
 file_GalFCT   = "solution_".problem_ID."_GalFCT_"    .timeintegrator
 file_DMPmin   = "DMPmin"
@@ -25,7 +25,7 @@ title_list = "Initial\
               Exact\
               Galerkin\
               Low-Order\
-              High-Order\
+              EV\
               EV-FCT\
               Galerkin-FCT\
               DMP-min\

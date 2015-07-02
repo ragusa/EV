@@ -39,6 +39,7 @@ class TransportParameters {
     double end_time; // end time if transient problem is run
     double time_step_size; // time step size if transient problem is run
     bool output_exact_solution; // option to output exact solution
+    unsigned int exact_solution_refinement_level; // refinement level exact solution
     bool output_initial_solution; // option to output initial solution
     bool output_DMP_bounds; // option to output DMP bounds
     double CFL_limit; // upper bound for the CFL number

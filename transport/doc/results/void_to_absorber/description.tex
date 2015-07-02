@@ -20,7 +20,7 @@ Note that all numerical schemes except the Galerkin scheme involve some
 dissipation; this can be seen at the outgoing (right) boundary of the void
 region, where there is a solution gradient despite the lack of
 absorption. This is because the simulation was run to $t=1$, and the transport
-speed is $v=1$, so the wave front should be located at the right
+speed is $c=1$, so the wave front should be located at the right
 boundary of the domain since the domain width is equal to 1;
 the diffusivity at the right boundary is due to artificial diffusion
 along the wave front.
@@ -90,14 +90,21 @@ Entropy Time Integrator & BE\\
       \includegraphics[width=\textwidth]{void_to_absorber/EVFCT.png}
       \caption{Entropy Viscosity with FCT}
    \end{subfigure}
-   \caption{Comparison of Solutions for Void-to-Absorber Test Problem}
+   \caption{Comparison of Solutions for 2-D Void-to-Absorber Test Problem}
    \label{fig:void_to_absorber_2D}
 \end{figure}
 %-------------------------------------------------------------------------------
 \begin{figure}[h]
    \centering
-   \includegraphics[width=0.5\textwidth]{void_to_absorber/Gal_3D.png}
-   \caption{3D Galerkin Solution for the Void-to-Absorber Test Problem}
+   \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\textwidth]{void_to_absorber/Gal_3D.png}
+      \caption{Galerkin}
+   \end{subfigure}
+   \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\textwidth]{void_to_absorber/GalFCT_3D.png}
+      \caption{Galerkin with FCT}
+   \end{subfigure}
+   \caption{Comparison of Solutions for the 3-D Void-to-Absorber Test Problem}
    \label{fig:void_to_absorber_3D}
 \end{figure}
 %-------------------------------------------------------------------------------

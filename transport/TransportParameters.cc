@@ -22,6 +22,7 @@ TransportParameters<dim>::TransportParameters() :
       end_time(1.0),
       time_step_size(0.001),
       output_exact_solution(false),
+      exact_solution_refinement_level(5),
       output_initial_solution(false),
       output_DMP_bounds(false),
       CFL_limit(0.5),
@@ -125,6 +126,8 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler &prm)
             "Option to output meshes as .eps files");
       prm.declare_entry("Output exact solution", "false", Patterns::Bool(),
             "Option to output exact solution");
+      prm.declare_entry("Exact solution refinement level", "5", Patterns::Integer(),
+            "Refinement level for exact solution");
       prm.declare_entry("Output initial solution", "false", Patterns::Bool(),
             "Option to output initial solution");
       prm.declare_entry("Output DMP bounds", "false", Patterns::Bool(),
@@ -244,6 +247,8 @@ void TransportParameters<dim>::get_parameters(ParameterHandler &prm) {
    {
       output_meshes = prm.get_bool("Output mesh");
       output_exact_solution = prm.get_bool("Output exact solution");
+      exact_solution_refinement_level =
+         prm.get_integer("Exact solution refinement level");
       output_initial_solution = prm.get_bool("Output initial solution");
       output_DMP_bounds = prm.get_bool("Output DMP bounds");
       save_convergence_results = prm.get_bool("Save convergence results");

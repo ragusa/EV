@@ -37,6 +37,7 @@ class PostProcessor {
          const bool               &is_steady_state,
          const typename RefinementHandler<dim>::RefinementMode &refinement_mode,
          const unsigned int       &final_refinement_level,
+         const unsigned int       &exact_solution_refinement_level,
          const FESystem<dim>      &fe,
          const std::string        &output_dir,
          const std::string        &appendage_string,
@@ -79,6 +80,7 @@ class PostProcessor {
 
       const typename RefinementHandler<dim>::RefinementMode refinement_mode;
       const unsigned int final_refinement_level;
+      const unsigned int exact_solution_refinement_level;
 
       const FESystem<dim> *fe;
 
