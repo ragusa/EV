@@ -5,7 +5,7 @@
 
 using namespace dealii;
 
-enum ExactSolutionOption {none, parser, skew_void_to_absorber};
+enum ExactSolutionOption {none, parser, skew_void_to_absorber, three_region};
 
 template<int dim>
 class SkewVoidToAbsorberExactSolution : public Function<dim> {

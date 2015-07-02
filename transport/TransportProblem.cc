@@ -67,9 +67,9 @@ void TransportProblem<dim>::initialize_system()
 
    // initialize exact solution function
    if (has_exact_solution) {
-      if (exact_solution_option == ExactSolutionOption::parser) {
-         // if exact solution function is given by function parser string,
-         // then create a function parser object and initialize it
+      if (exact_solution_option == ExactSolutionOption::parser) { // function parser
+
+         // create and initialize function parser
          std::shared_ptr<FunctionParser<dim> > exact_solution_function_derived
             = std::make_shared<FunctionParser<dim> >();
          exact_solution_function_derived->initialize(variables,
@@ -79,15 +79,29 @@ void TransportProblem<dim>::initialize_system()
    
          // point base class shared pointer to derived class function object
          exact_solution_function = exact_solution_function_derived;
+
       } else if (exact_solution_option == 
-         ExactSolutionOption::skew_void_to_absorber) {
+         ExactSolutionOption::skew_void_to_absorber) { // skew void-to-absorber
 
          // create SkewVoidToAbsorberExactSolution object
          std::shared_ptr<SkewVoidToAbsorberExactSolution<dim> >
-            exact_solution_function_derived = std::make_shared<SkewVoidToAbsorberExactSolution<dim> >();
+            exact_solution_function_derived =
+            std::make_shared<SkewVoidToAbsorberExactSolution<dim> >();
 
          // point base class shared pointer to derived class function object
          exact_solution_function = exact_solution_function_derived;
+
+      } else if (exact_solution_option == 
+         ExactSolutionOption::three_region) {
+
+         // create ThreeRegionExactSolution object
+         std::shared_ptr<ThreeRegionExactSolution<dim> >
+            exact_solution_function_derived =
+            std::make_shared<ThreeRegionExactSolution<dim> >();
+
+         // point base class shared pointer to derived class function object
+         exact_solution_function = exact_solution_function_derived;
+
       } else {
          ExcInvalidState();
       }
@@ -413,6 +427,41 @@ void TransportProblem<dim>::process_problem_ID()
          function_parser_constants["source"] = 0.0;
 
          exact_solution_option = ExactSolutionOption::skew_void_to_absorber;
+
+         // for now, assume no steady-state, but this would be easy to implement
+         // by using the existing transient exact solution class and just using
+         // t=large
+         Assert(parameters.is_steady_state == false, ExcNotImplemented(
+            "No steady-state exact solution available for the chosen problem."));
+
+         initial_conditions_string = "0";
+
+         break;
+      } case 12: { // 3-region
+
+         // for now, assume 1-D
+         Assert(dim == 1, ExcNotImplemented("3-region problem is 1-D for now.");
+
+         x_min = 0.0;
+         x_max = 1.0;
+
+         transport_direction[0] = 1.0;
+
+         incoming_string = "1";
+         function_parser_constants["incoming"]  = 1.0;
+
+         cross_section_string = "if(x<=x1, sigma1, if(x<=x2, sigma2, sigma3))";
+         function_parser_constants["sigma1"] = 10.0;
+         function_parser_constants["sigma2"] = 10.0;
+         function_parser_constants["sigma3"] = 10.0;
+
+         source_time_dependent = false;
+         source_string = "if(x<=x1, q1, if(x<=x2, q2, q3))";
+         function_parser_constants["q1"] = 10.0;
+         function_parser_constants["q2"] = 10.0;
+         function_parser_constants["q3"] = 10.0;
+
+         exact_solution_option = ExactSolutionOption::three_region;
 
          // for now, assume no steady-state, but this would be easy to implement
          // by using the existing transient exact solution class and just using

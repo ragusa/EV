@@ -1,5 +1,52 @@
-\section{Void-to-Absorber Problem}
+\section{Void-to-Absorber Test Problem}
 
+In this section, results are presented for the void-to-absorber test problem
+described in Section \ref{sec:void_to_absorber}.
+Table \ref{tab:void_to_absorber_run_parameters} shows the run parameters used
+to obtain these results, and Figures \ref{fig:void_to_absorber_2D}
+and \ref{fig:void_to_absorber_3D} show 2-D and 3-D results for this
+problem, respectively.
+
+From the 2-D results, one can see that the unmodified Galerkin scheme
+generates significant oscillations perpindicular to the transport
+direction, even below the absorber region. The oscillations are
+particularly severe along the lower edge of the absorber region,
+where particles/photons are travelling parallel to the absorber;
+this edge has a sharper gradient in the solution than the left
+edge of the absorber region due to the lack of attenuation in
+this direction, which is present for the left edge.
+
+Note that all numerical schemes except the Galerkin scheme involve some
+dissipation; this can be seen at the outgoing (right) boundary of the void
+region, where there is a solution gradient despite the lack of
+absorption. This is because the simulation was run to $t=1$, and the transport
+speed is $v=1$, so the wave front should be located at the right
+boundary of the domain since the domain width is equal to 1;
+the diffusivity at the right boundary is due to artificial diffusion
+along the wave front.
+For steady-state computations, where there is no transient and
+thus no wave front, one would not see this diffusivity
+at the right boundary.
+
+One can visually compare the width
+of the diffusive region to infer the diffusivity of each
+numerical scheme. For example, one can see that the low-order
+solution is a bit more diffusive than the high-order schemes
+and FCT schemes.
+Note that SSPRK33 was used obtain these results, which
+adds some dissipation as well. The use of FE instead, for example,
+makes the Galerkin solution unstable, and oscillations completely
+destroy the solution, so FE results are not included here.
+The entropy viscosity (EV) solution, while better behaved than the
+Galerkin solution still contains some spurious oscillations,
+though smaller in magnitude. Both the Galerkin-FCT and EV-FCT
+solutions show a lack of oscillations and less diffusivity than the low-order
+solution.
+
+The 3-D results are included here to show a proof of principle
+that the FCT algorithm used is not restricted to 1-D or 2-D.
+Due to the computational work and time required for 3-D simulations,
+most analyses will use 1-D or 2-D results.
 %-------------------------------------------------------------------------------
 \begin{table}[h]\caption{Void-to-Absorber Test Problem Run Parameters}
 \label{tab:void_to_absorber_run_parameters}
@@ -44,6 +91,14 @@ Entropy Time Integrator & BE\\
       \caption{Entropy Viscosity with FCT}
    \end{subfigure}
    \caption{Comparison of Solutions for Void-to-Absorber Test Problem}
+   \label{fig:void_to_absorber_2D}
+\end{figure}
+%-------------------------------------------------------------------------------
+\begin{figure}[h]
+   \centering
+   \includegraphics[width=0.5\textwidth]{void_to_absorber/Gal_3D.png}
+   \caption{3D Galerkin Solution for the Void-to-Absorber Test Problem}
+   \label{fig:void_to_absorber_3D}
 \end{figure}
 %-------------------------------------------------------------------------------
 \subsection{Code and Version}

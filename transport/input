@@ -9,7 +9,7 @@ subsection problem
    # 9 = MMS-4
    # 10 = MMS-5
    # 11 = skew void-to-absorber
-   set Problem ID = 11
+   set Problem ID = 2
 end
 
 subsection time
@@ -17,7 +17,7 @@ subsection time
    set End time = 1.0
    set Time step size = 1.0
    set CFL limit = 0.5
-   set Time integrator option = SSP3 # <FE|SSP2|SSP3>
+   set Time integrator option = FE # <FE|SSP2|SSP3>
 end
 
 subsection scheme
