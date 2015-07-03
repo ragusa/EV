@@ -23,8 +23,8 @@ low_order_scheme  = 2;
 high_order_scheme = 2;
 
 % entropy viscosity options:
-ev.cE = 1.0; % coefficient for entropy residual in entropy viscosity
-ev.cJ = 1.0; % coefficient for jumps in entropy viscosity
+ev.cE = 0.1; % coefficient for entropy residual in entropy viscosity
+ev.cJ = 0.1; % coefficient for jumps in entropy viscosity
 ev.entropy       = @(u) 0.5*u.^2; % entropy function
 ev.entropy_deriv = @(u) u;        % derivative of entropy function
 %--------------------------------------------------------------------------
@@ -60,7 +60,7 @@ limiting_option = 2;
 %            2: void without source -> absorber without source
 %            3: void with    source -> absorber without source
 %            5: MMS-1
-problemID = 3;
+problemID = 2;
 
 % IC_option: 0: zero
 %            1: exponential pulse
@@ -97,7 +97,7 @@ legend_location           = 'NorthEast'; % location of plot legend
 save_exact_solution      = false; % option to save exact solution 
 save_low_order_solution  = false; % option to save low-order solution
 save_high_order_solution = false; % option to save high-order solution
-save_FCT_solution        = true; % option to save FCT solution
+save_FCT_solution        = false; % option to save FCT solution
 %-------------------------------------------------------------------------
 
 %% Define Problem
