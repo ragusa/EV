@@ -234,7 +234,7 @@ void FCT<dim>::compute_flux_corrections(
    // reset flux correction matrix to zero 
    flux_correction_matrix = 0;
 
-   // compute time derivate of high-order solution
+   // compute time derivative of high-order solution
    tmp_vector = 0;
    tmp_vector.add(1.0/dt,high_order_solution,-1.0/dt,old_solution);
 
@@ -275,25 +275,6 @@ void FCT<dim>::compute_flux_corrections(
          }
       }
    }
-
-/*
-   // loop over rows
-   for (unsigned int i = 0; i < n_dofs; ++i)
-   {
-      // get min and max neighbor indices
-      unsigned int jmin = std::max<unsigned int>(i-1,0);
-      unsigned int jmax = std::min(i+1,n_dofs-1);
-
-      // loop over nonzero entries in row i
-      for (unsigned int j = jmin; j <= jmax; ++j)
-      {
-         double Fij = -(*consistent_mass_matrix)(i,j)*(tmp_vector(j)-tmp_vector(i)) +
-            (low_order_diffusion_matrix(i,j)-high_order_diffusion_matrix(i,j)) *
-            (old_solution(j) - old_solution(i));
-         flux_correction_matrix.set(i,j,Fij);
-      }
-   }
-*/
 }
 
 /** \brief Computes the limiting coefficient vectors \f$R^+\f$ and \f$R^-\f$,
