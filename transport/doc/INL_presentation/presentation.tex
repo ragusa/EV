@@ -31,19 +31,20 @@
 }
 
 \usepackage{multicol}
-\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
-\newcommand{\x}{\mathbf{x}}
-\newcommand{\xt}{(\x,t)}
-\renewcommand{\ij}{_{i,j}}
-\newcommand{\U}{\mathbf{U}}
-\newcommand{\M}{\mathbf{M}}
-\newcommand{\A}{\mathbf{A}}
-\newcommand{\D}{\mathbf{D}}
-\newcommand{\F}{\mathbf{F}}
-\renewcommand{\L}{\mathcal{L}}
-\newcommand{\f}{\mathbf{f}}
-\renewcommand{\b}{\mathbf{b}}
-\newcommand{\dt}{\Delta t}
+\input{../dissertation/content/newcommands}
+%\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
+%\newcommand{\x}{\mathbf{x}}
+%\newcommand{\xt}{(\x,t)}
+%\renewcommand{\ij}{_{i,j}}
+%\newcommand{\U}{\mathbf{U}}
+%\newcommand{\M}{\mathbf{M}}
+%\newcommand{\A}{\mathbf{A}}
+%\newcommand{\D}{\mathbf{D}}
+%\newcommand{\F}{\mathbf{F}}
+%\renewcommand{\L}{\mathcal{L}}
+%\newcommand{\f}{\mathbf{f}}
+%\renewcommand{\b}{\mathbf{b}}
+%\newcommand{\dt}{\Delta t}
 
 \title[]{A Positivity-Preserving Flux-Corrected Transport Scheme
 Using Continuous Finite Elements} 
@@ -73,6 +74,68 @@ Using Continuous Finite Elements}
 }
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
+\subsection{My Background}
+\begin{frame}
+\frametitle{My Background}
+
+\begin{itemize}
+   \item Currently PhD nuclear engineering student at Texas A\&M University.
+   \item For MS, worked on preconditioning techniques for subchannel methods with JFNK.
+   \item After MS, implemented entropy-based artificial viscosity for Euler equations using
+      the \texttt{deal.II} finite element library.
+   \item Currently implementing entropy viscosity (EV) + flux-corrected transport (FCT)
+      for transport equations, such as neutron transport equation.
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Objectives}
+\begin{frame}
+\frametitle{Objectives}
+
+\begin{itemize}
+   \item The objectives of this research are the following:
+   \begin{itemize}
+      \item \textbf{Accurately solve conservation law problems} using the
+         continuous finite element method (CFEM).
+      \begin{itemize}
+         \item Scheme to be presented is 2nd order-accurate in space (for smooth problems).
+      \end{itemize}
+      \item \textbf{Prevent spurious oscillations}.
+      \begin{itemize}
+         \item Scheme to be presented is not proven to completely immune to any spurious
+            oscillations but shows good results in practice.
+      \end{itemize}
+      \item \textbf{Prevent negativities} for physically non-negative quantities.
+      \begin{itemize}
+         \item Scheme to be presented is guaranteed to be positivity-preserving.
+      \end{itemize}
+   \end{itemize}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Outline}
+\begin{frame}
+\frametitle{Outline}
+
+\begin{itemize}
+   \item Presentation of scheme for simple case: linear scalar transport conservation law
+   \begin{itemize}
+      \item Explicit time discretizations
+      \item Implicit time discretizations
+      \item Steady-state
+   \end{itemize}
+   \item Extension of scheme to more complex cases:
+   \begin{itemize}
+      \item \emph{linear} scalar conservation laws $\rightarrow$ \emph{nonlinear} scalar conservation laws
+      \item \emph{scalar} conservation laws $\rightarrow$ conservation law \emph{systems}
+   \end{itemize}
+   \item Possible implementation in MOOSE
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Motivation}
 \begin{frame}
 \frametitle{Motivation}
@@ -80,38 +143,38 @@ Using Continuous Finite Elements}
 \begin{itemize}
    \item Numerical solution of transport equation prone to spurious oscillations
    and negativities in regions of discontinuities and sharp gradients:
-   \begin{center}
-      \includegraphics[width=0.7\textwidth]{./figures/advection_Galerkin.pdf}
-   \end{center}
+   %\begin{center}
+   %   \includegraphics[width=0.7\textwidth]{./figures/advection_Galerkin.pdf}
+   %\end{center}
 \end{itemize}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Objective and Plan}
-\begin{frame}
-\frametitle{Objective and Plan}
-
-\begin{itemize}
-   \item The \textbf{Objective} is to obtain a solution to the transport equation that
-      \begin{itemize}
-         \item uses CFEM - not a traditional discretization for transport,
-            but recent efforts have used CFEM for shock hydrodynamics
-         \item is non-negative
-         \item is free of spurious oscillations
-         \item has high-order accuracy (2nd order)
-      \end{itemize}
-   \item The \textbf{Plan} is the following:
-   \begin{itemize}
-      \item Use a low-order, monotone, non-negative scheme in conjunction with
-      a high-order scheme via the flux-corrected transport (FCT) algorithm
-      to produce a high-order, non-negative scheme
-      \begin{itemize}
-         \item monotonicity not guaranteed but demonstrated for most cases
-      \end{itemize}
-   \end{itemize}
-\end{itemize}
-
-\end{frame}
+%\subsection{Objective and Plan}
+%\begin{frame}
+%\frametitle{Objective and Plan}
+%
+%\begin{itemize}
+%   \item The \textbf{Objective} is to obtain a solution to the transport equation that
+%      \begin{itemize}
+%         \item uses CFEM - not a traditional discretization for transport,
+%            but recent efforts have used CFEM for shock hydrodynamics
+%         \item is non-negative
+%         \item is free of spurious oscillations
+%         \item has high-order accuracy (2nd order)
+%      \end{itemize}
+%   \item The \textbf{Plan} is the following:
+%   \begin{itemize}
+%      \item Use a low-order, monotone, non-negative scheme in conjunction with
+%      a high-order scheme via the flux-corrected transport (FCT) algorithm
+%      to produce a high-order, non-negative scheme
+%      \begin{itemize}
+%         \item monotonicity not guaranteed but demonstrated for most cases
+%      \end{itemize}
+%   \end{itemize}
+%\end{itemize}
+%
+%\end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Methodology}
 \subsection{Problem Formulation}
@@ -210,7 +273,7 @@ Using Continuous Finite Elements}
       \item monotonicity
       \item non-negativity
       \item satisfaction of a discrete maximum principle (DMP):
-      \begin{equation}\label{eq:dmp}
+      \begin{equation}
          W_i^-(\U^n)\leq
          U_i^{L,n+1}\leq
          W_i^+(\U^n)\qquad\forall i
@@ -230,7 +293,7 @@ Using Continuous Finite Elements}
 \frametitle{Low-Order Scheme}
 \framesubtitle{Results Example}
 
-\includegraphics[width=\textwidth]{./figures/advection_low_order.pdf}
+%\includegraphics[width=\textwidth]{./figures/advection_low_order.pdf}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -285,7 +348,7 @@ Using Continuous Finite Elements}
 \frametitle{High-Order Scheme}
 \framesubtitle{Results Example}
 
-\includegraphics[width=\textwidth]{./figures/advection_high_order.pdf}
+%\includegraphics[width=\textwidth]{./figures/advection_high_order.pdf}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -340,7 +403,7 @@ Using Continuous Finite Elements}
       \M^L\frac{\U^{n+1}-\U^n}{\dt} + \A^L\U^n = \b + \L[\F]
    \end{equation}
    \item The limiter $\L$ enforces the discrete maximum principle:
-   \begin{equation}\label{eq:dmp}
+   \begin{equation}
          W_i^-(\U^n)\leq
          U_i^{n+1}\leq
          W_i^+(\U^n)\qquad\forall i
@@ -388,7 +451,7 @@ Using Continuous Finite Elements}
 \frametitle{Flux Corrected Transport (FCT) Scheme}
 \framesubtitle{Results Example}
 
-\includegraphics[width=\textwidth]{./figures/advection_FCT.pdf}
+%\includegraphics[width=\textwidth]{./figures/advection_FCT.pdf}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -397,7 +460,7 @@ Using Continuous Finite Elements}
 \frametitle{Results}
 \framesubtitle{Source Problem Results}
 
-\includegraphics[width=\textwidth]{./figures/solutions_source_FE.pdf}
+%\includegraphics[width=\textwidth]{./figures/solutions_source_FE.pdf}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -405,7 +468,7 @@ Using Continuous Finite Elements}
 \frametitle{Results}
 \framesubtitle{Smooth Problem Convergence Results (Using FE)}
 
-\includegraphics[width=\textwidth]{./figures/convergence_smooth_FE.pdf}
+%\includegraphics[width=\textwidth]{./figures/convergence_smooth_FE.pdf}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -413,7 +476,7 @@ Using Continuous Finite Elements}
 \frametitle{Results}
 \framesubtitle{Non-smooth Problem Convergence Results (Using SSPRK33)}
 
-\includegraphics[width=\textwidth]{./figures/convergence_absorber_SSPRK33.pdf}
+%\includegraphics[width=\textwidth]{./figures/convergence_absorber_SSPRK33.pdf}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -447,9 +510,9 @@ Using Continuous Finite Elements}
    \item This material is based upon work supported under an Integrated University Program Graduate Fellowship.
 \end{itemize}
 
-	\begin{center}
-		\includegraphics[width=0.4\textwidth]{./figures/NEUP_Final_Logo_Version-09.jpg}
-	\end{center}
+\begin{center}
+   \includegraphics[width=0.4\textwidth]{./figures/NEUP_Final_Logo_Version-09.jpg}
+\end{center}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{document}
