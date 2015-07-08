@@ -63,7 +63,7 @@ do for [i=1:words(file_list)] {
 set terminal postscript enhanced color
 output_file = "../plots/solutions_".problem_ID."_".timeintegrator.".pdf"
 set output '| ps2pdf - '.output_file
-set ylabel "Angular Flux"
+set ylabel "Solution"
 set xlabel "x"
 set key top right
 

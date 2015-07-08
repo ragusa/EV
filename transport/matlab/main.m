@@ -20,7 +20,7 @@ low_order_scheme  = 2;
 
 % high_order_scheme: 1 = Galerkin
 %                    2 = Entropy viscosity
-high_order_scheme = 2;
+high_order_scheme = 1;
 
 % entropy viscosity options:
 ev.cE = 0.1; % coefficient for entropy residual in entropy viscosity
@@ -34,18 +34,18 @@ ev.entropy_deriv = @(u) u;        % derivative of entropy function
 %                  1 = SSPRK(1,1) (Explicit Euler)
 %                  2 = SSPRK(3,3) (Shu-Osher)
 %                  3 = theta method
-temporal_scheme = 2; % temporal discretization scheme
+temporal_scheme = 1; % temporal discretization scheme
 
 theta = 1.0;     % theta parameter to use if using a theta method
 CFL = 0.8;       % CFL number
 ss_tol = 1.0e-5; % steady-state tolerance
-t_end = 1.0;     % max time to run
+t_end = 10.0;     % max time to run
 %--------------------------------------------------------------------------
 % FCT options
 %--------------------------------------------------------------------------
 % DMP option: 1 = low-order DMP
 %             2 = max/min(low-order DMP, analytic DMP)
-DMP_option = 2;
+DMP_option = 1;
 
 % limiter option: 0 = All 0 (no correction; low-order)
 %                 1 = All 1 (full correction; high-order)
@@ -88,7 +88,7 @@ relaxation_parameter = 0.7; % relaxation parameter for iteration
 plot_viscosity            = false; % plot viscosities?
 plot_low_order_transient  = false; % plot low-order transient?
 plot_high_order_transient = false; % plot high-order transient?
-plot_FCT_transient        = false; % plot FCT transient?
+plot_FCT_transient        = true; % plot FCT transient?
 pausetime = 0.1;                   % time to pause for transient plots
 legend_location           = 'NorthEast'; % location of plot legend
 %--------------------------------------------------------------------------
