@@ -8,10 +8,10 @@
 \setbeamercolor{frametitle}{fg=white,bg=red!50!black}
 \setbeamercolor{sidebar}{bg=black!20}
 \setbeamercolor{logo}{bg=red!30!black}
-\setbeamercolor{section in sidebar}{fg=white}            %color of the active section
-\setbeamercolor{section in sidebar shaded}{fg=black!50}     %color of the inactive section
-\setbeamercolor{subsection in sidebar}{fg=white}         %color of the active subsection
-\setbeamercolor{subsection in sidebar shaded}{fg=black!40}  %color of the inactive subsection
+\setbeamercolor{section in sidebar}{fg=white}              % active section
+\setbeamercolor{section in sidebar shaded}{fg=black!50}    % inactive section
+\setbeamercolor{subsection in sidebar}{fg=white}           % active subsection
+\setbeamercolor{subsection in sidebar shaded}{fg=black!40} % inactive subsection
 \setbeamercolor{title}{fg=white,bg=red!50!black}
 \setbeamercolor{itemize item}{fg=red!50!black}
 \setbeamercolor{itemize subitem}{fg=red!50!black}
@@ -32,19 +32,6 @@
 
 \usepackage{multicol}
 \input{../dissertation/content/newcommands}
-%\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
-%\newcommand{\x}{\mathbf{x}}
-%\newcommand{\xt}{(\x,t)}
-%\renewcommand{\ij}{_{i,j}}
-%\newcommand{\U}{\mathbf{U}}
-%\newcommand{\M}{\mathbf{M}}
-%\newcommand{\A}{\mathbf{A}}
-%\newcommand{\D}{\mathbf{D}}
-%\newcommand{\F}{\mathbf{F}}
-%\renewcommand{\L}{\mathcal{L}}
-%\newcommand{\f}{\mathbf{f}}
-%\renewcommand{\b}{\mathbf{b}}
-%\newcommand{\dt}{\Delta t}
 
 \title[]{A Positivity-Preserving Flux-Corrected Transport Scheme
 Using Continuous Finite Elements} 
@@ -60,7 +47,7 @@ Using Continuous Finite Elements}
 \logo{\includegraphics[height=0.1\textwidth]{./figures/TAMU-Logo-white.png}}
 
 \begin{document}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 {
 \setbeamercolor{background canvas}{bg=black!10}
 \begin{frame}[plain]
@@ -72,23 +59,38 @@ Using Continuous Finite Elements}
    \titlepage
 \end{frame}
 }
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
-\subsection{My Background}
+\subsection{Presenter Background}
 \begin{frame}
-\frametitle{My Background}
+\frametitle{Presenter Background}
 
 \begin{itemize}
    \item Currently PhD nuclear engineering student at Texas A\&M University.
-   \item For MS, worked on preconditioning techniques for subchannel methods with JFNK.
-   \item After MS, implemented entropy-based artificial viscosity for Euler equations using
-      the \texttt{deal.II} finite element library.
-   \item Currently implementing entropy viscosity (EV) + flux-corrected transport (FCT)
-      for transport equations, such as neutron transport equation.
+   \item For MS, worked on preconditioning techniques for subchannel methods with
+      JFNK.
+   \item After MS, implemented entropy-based artificial viscosity for Euler
+      equations using the \texttt{deal.II} finite element library.
+   \item Currently implementing entropy viscosity (EV) + flux-corrected transport
+      (FCT) for transport equations, such as neutron transport equation.
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Motivation}
+\begin{frame}
+\frametitle{Motivation}
+
+\begin{itemize}
+   \item Weak solutions to conservation law problems using standard CFEM
+      are not unique and thus are prone to unphysical oscillations:
+   \begin{center}
+      \includegraphics[width=0.7\textwidth]{./figures/advection_Galerkin.pdf}
+   \end{center}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Objectives}
 \begin{frame}
 \frametitle{Objectives}
@@ -99,12 +101,13 @@ Using Continuous Finite Elements}
       \item \textbf{Accurately solve conservation law problems} using the
          continuous finite element method (CFEM).
       \begin{itemize}
-         \item Scheme to be presented is 2nd order-accurate in space (for smooth problems).
+         \item Scheme to be presented is 2nd order-accurate in space (for smooth
+            problems).
       \end{itemize}
       \item \textbf{Prevent spurious oscillations}.
       \begin{itemize}
-         \item Scheme to be presented is not proven to completely immune to any spurious
-            oscillations but shows good results in practice.
+	 \item Scheme to be presented is not proven to completely immune to any
+            spurious oscillations but shows good results in practice.
       \end{itemize}
       \item \textbf{Prevent negativities} for physically non-negative quantities.
       \begin{itemize}
@@ -114,13 +117,14 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Outline}
 \begin{frame}
 \frametitle{Outline}
 
 \begin{itemize}
-   \item Presentation of scheme for simple case: linear scalar transport conservation law
+   \item Presentation of scheme for simple case: linear scalar transport
+      conservation law
    \begin{itemize}
       \item Explicit time discretizations
       \item Implicit time discretizations
@@ -128,94 +132,52 @@ Using Continuous Finite Elements}
    \end{itemize}
    \item Extension of scheme to more complex cases:
    \begin{itemize}
-      \item \emph{linear} scalar conservation laws $\rightarrow$ \emph{nonlinear} scalar conservation laws
-      \item \emph{scalar} conservation laws $\rightarrow$ conservation law \emph{systems}
+      \item \emph{linear} scalar conservation laws $\rightarrow$ \emph{nonlinear}
+         scalar conservation laws
+      \item \emph{scalar} conservation laws $\rightarrow$ conservation law
+         \emph{systems}
    \end{itemize}
    \item Possible implementation in MOOSE
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Motivation}
-\begin{frame}
-\frametitle{Motivation}
-
-\begin{itemize}
-   \item Numerical solution of transport equation prone to spurious oscillations
-   and negativities in regions of discontinuities and sharp gradients:
-   %\begin{center}
-   %   \includegraphics[width=0.7\textwidth]{./figures/advection_Galerkin.pdf}
-   %\end{center}
-\end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\subsection{Objective and Plan}
-%\begin{frame}
-%\frametitle{Objective and Plan}
-%
-%\begin{itemize}
-%   \item The \textbf{Objective} is to obtain a solution to the transport equation that
-%      \begin{itemize}
-%         \item uses CFEM - not a traditional discretization for transport,
-%            but recent efforts have used CFEM for shock hydrodynamics
-%         \item is non-negative
-%         \item is free of spurious oscillations
-%         \item has high-order accuracy (2nd order)
-%      \end{itemize}
-%   \item The \textbf{Plan} is the following:
-%   \begin{itemize}
-%      \item Use a low-order, monotone, non-negative scheme in conjunction with
-%      a high-order scheme via the flux-corrected transport (FCT) algorithm
-%      to produce a high-order, non-negative scheme
-%      \begin{itemize}
-%         \item monotonicity not guaranteed but demonstrated for most cases
-%      \end{itemize}
-%   \end{itemize}
-%\end{itemize}
-%
-%\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Methodology}
 \subsection{Problem Formulation}
 \begin{frame}
 \frametitle{Problem Formulation}
 
 \begin{itemize}
-   \item Model transport equation:
-   \begin{align}\label{eq:tr}
-      &\frac{1}{v}\pd{\psi}{t} + \mathbf{\Omega}\cdot\nabla \psi\xt
-      + \Sigma(\x)\psi\xt = q\xt\\
-      &\Sigma(\x)\ge 0,\qquad q\xt\ge 0\nonumber
+   \item Scalar linear conservation law model:
+   \begin{align}
+      &\pd{u}{t} + \nabla\cdot(\mathbf{v}u\xt)
+      + \sigma(\x)u\xt = q\xt\\
+      &\sigma(\x)\ge 0,\qquad q\xt\ge 0\nonumber
    \end{align}
-   \item Define problem:
+   \item Define problem by providing initial conditions and some boundary
+      condition, such as Dirichlet:
    \begin{equation}
-      \psi(\x,0) = \psi^0(\x) \quad \forall \x\in \mathcal{D}
+      u(\x,0) = u^0(\x) \quad \forall \x\in \mathcal{D}
    \end{equation}
    \begin{equation}
-      \psi\xt = \psi^{inc}(\x) \quad \forall \x\in \partial \mathcal{D}^{inc}
+      u\xt = u^{inc}(\x) \quad \forall \x\in \partial \mathcal{D}^{inc}
    \end{equation}
    \item CFEM solution:
    \begin{equation}
-      \psi_h\xt = \sum\limits_{j=1}^N U_j(t) \varphi_j(\x),
+      u_h\xt = \sum\limits_{j=1}^N U_j(t) \varphi_j(\x),
       \quad \varphi_j(\x)\in P^1_h
    \end{equation}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Temporal Discretization}
 \begin{frame}
 \frametitle{Temporal Discretization}
 
 \begin{itemize}
-   \item Fully explicit temporal schemes used here:
-   \begin{itemize}
-      \item Forward Euler (FE)
-      \item Explicit Strong Stability Preserving Runge-Kutta methods,
-         which can be expressed as a number of FE steps
-   \end{itemize}
-   \item Forward Euler scheme:
+   \item Simplest time discretization is forward Euler (FE), which gives the
+      discrete system
    \begin{equation}\label{eq:exgalerkin}
       \M^C\frac{\U^{n+1}-\U^n}{\dt} + \A\U^n = \b^n
    \end{equation}
@@ -223,37 +185,95 @@ Using Continuous Finite Elements}
       M\ij^C \equiv \int\limits_{S\ij}\varphi_i(\x) \varphi_j(\x) d\x
    \end{equation}
    \begin{equation}
-      A\ij \equiv v\int\limits_{S\ij}\left(
-      \mathbf{\Omega}\cdot\nabla\varphi_j(\x) +
-		\Sigma(\x)\varphi_j(\x)\right)\varphi_i(\x) d\x
+      A\ij \equiv \int\limits_{S\ij}\left(
+      \nabla\cdot(\mathbf{v}\varphi_j(\x)) +
+		\sigma(\x)\varphi_j(\x)\right)\varphi_i(\x) d\x
    \end{equation}
    \begin{equation}
-      b_i^n \equiv v\int\limits_{S_i} q(\x,t^n)\varphi_i(\x) d\x
+      b_i^n \equiv \int\limits_{S_i} q(\x,t^n)\varphi_i(\x) d\x
    \end{equation}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{FCT Scheme Overview}
+\begin{frame}
+\frametitle{Flux Corrected Transport (FCT) Scheme}
+\framesubtitle{Introduction}
+
+\begin{itemize}
+   \item Initially developed in 1973 for finite difference discretizations of
+      transport/conservation law problems and recently applied to finite element
+      method.
+   \item Works by adding conservative fluxes to satisfy physical bounds on the
+      solution.
+   \item Employs a high-order scheme and a low-order, monotone scheme.
+   \item Defines a \emph{correction}, or \emph{antidiffusion}, flux, which
+      when added to the low-order scheme, produces the high-order scheme
+      solution.
+   \item Limits this correction flux to enforce the physical bounds imposed.
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Low-Order Scheme}
 \begin{frame}
 \frametitle{Low-Order Scheme}
 \framesubtitle{Definition}
 
 \begin{itemize}
-   \item Lump mass matrix and add artificial viscosity:
-   \begin{equation}\label{eq:loworderscheme}
+   \item To get the low-order scheme, one does the following:
+   \begin{itemize}
+      \item Lumps the mass matrix: $\M^C \rightarrow \M^L$.
+      \item Adds a low-order diffusion operator: $\A \rightarrow \A+\D^L$.
+   \end{itemize}
+   \item This gives the following, where $\U^{L,n+1}$ is the low-order solution:
+   \begin{equation}
       \M^L\frac{\U^{L,n+1}-\U^n}{\dt} + (\A + \D^L)\U^n = \b^n
    \end{equation}
-   \begin{equation}\label{eq:loworderD}
+   \item The diffusion matrix $\D^L$ is assembled elementwise, where $K$
+      denotes an element, using a local bilinear form $b_K$ and a
+      local low-order viscosity $\nu_K^L$:
+   \begin{equation}
       D\ij^L = \sum\limits_{K\subset S\ij}\nu_K^L b_K(\varphi_j,\varphi_i)
    \end{equation}
-   \begin{equation}\label{eq:bilinearform}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Low-Order Scheme}
+\framesubtitle{Local Bilinear Form}
+
+\begin{itemize}
+   \item The local bilinear form is defined as follows, where $|K|$ denotes
+      the volume of element $K$, $\mathcal{I}(K)$ is the set of indices
+      corresponding to degrees of freedom with nonempty support on $K$, and
+      $n_K$ is the cardinality of this set.
+   \begin{equation}
       b_K(\varphi_j, \varphi_i) \equiv \left\{\begin{array}{l l}
          -\frac{1}{n_K - 1}|K| & i\ne j, \quad i,j\in \mathcal{I}(K)\\
          |K|                   & i = j,  \quad i,j\in \mathcal{I}(K)\\
          0                     & i\notin\mathcal{I}(K)\,|\, j\notin\mathcal{I}(K)
       \end{array}\right.
    \end{equation}
+   \item Some properties that result from this definition:
+   \begin{equation}
+      \sum\limits_j b_K(\varphi_j, \varphi_i) = 0
+   \end{equation}
+   \begin{equation}
+      b_K(\varphi_i, \varphi_i) > 0
+   \end{equation}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Low-Order Scheme}
+\framesubtitle{Low-Order Viscosity}
+
+\begin{itemize}
+   \item The low-order viscosity is defined as
    \begin{equation}
       \nu_K^L \equiv \max\limits_{i\ne j\in \mathcal{I}(K)}\frac{\max(0,A\ij)}
       {-\sum\limits_{T\subset S\ij} b_T(\varphi_j, \varphi_i)}
@@ -261,7 +281,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Low-Order Scheme}
 \framesubtitle{Properties}
@@ -284,19 +304,19 @@ Using Continuous Finite Elements}
          + \frac{\Delta t}{m_i}b_i^n
       \end{equation}
    \end{itemize}
-   \item Undesirable consequence: first-order accuracy
+   \item However, this low-order scheme is only first-order accurate.
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Low-Order Scheme}
 \framesubtitle{Results Example}
 
-%\includegraphics[width=\textwidth]{./figures/advection_low_order.pdf}
+\includegraphics[width=\textwidth]{./figures/advection_low_order.pdf}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{High-Order Scheme}
 \begin{frame}
 \frametitle{High-Order Scheme}
@@ -318,7 +338,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{High-Order Scheme}
 \framesubtitle{Entropy Viscosity Definition}
@@ -343,7 +363,7 @@ Using Continuous Finite Elements}
 \end{itemize}
    
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{High-Order Scheme}
 \framesubtitle{Results Example}
@@ -351,24 +371,7 @@ Using Continuous Finite Elements}
 %\includegraphics[width=\textwidth]{./figures/advection_high_order.pdf}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{FCT Scheme}
-\begin{frame}
-\frametitle{Flux Corrected Transport (FCT) Scheme}
-\framesubtitle{Introduction}
-
-\begin{itemize}
-   \item Initially developed in 1973 for finite difference discretizations of
-      transport/conservation law problems and recently applied to finite element method
-   \item Works by adding conservative fluxes to satisfy physical bounds on the solution
-   \item Employs low-order scheme and high-order scheme
-   \item Defines a \emph{correction}, or \emph{antidiffusion}, flux, which
-      when added to the low-order scheme, produces the high-order scheme
-   \item Limits this correction flux to enforce the physical bounds imposed
-\end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Flux Corrected Transport (FCT) Scheme}
 \framesubtitle{Correction Flux Definition}
@@ -387,7 +390,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Flux Corrected Transport (FCT) Scheme}
 \framesubtitle{FCT Overview}
@@ -411,7 +414,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Flux Corrected Transport (FCT) Scheme}
 \framesubtitle{Limiting Coefficient Definition}
@@ -446,7 +449,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Flux Corrected Transport (FCT) Scheme}
 \framesubtitle{Results Example}
@@ -454,7 +457,7 @@ Using Continuous Finite Elements}
 %\includegraphics[width=\textwidth]{./figures/advection_FCT.pdf}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results}
 \begin{frame}
 \frametitle{Results}
@@ -463,7 +466,7 @@ Using Continuous Finite Elements}
 %\includegraphics[width=\textwidth]{./figures/solutions_source_FE.pdf}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Results}
 \framesubtitle{Smooth Problem Convergence Results (Using FE)}
@@ -471,7 +474,7 @@ Using Continuous Finite Elements}
 %\includegraphics[width=\textwidth]{./figures/convergence_smooth_FE.pdf}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Results}
 \framesubtitle{Non-smooth Problem Convergence Results (Using SSPRK33)}
@@ -479,7 +482,7 @@ Using Continuous Finite Elements}
 %\includegraphics[width=\textwidth]{./figures/convergence_absorber_SSPRK33.pdf}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusions}
 \begin{frame}
 \frametitle{Conclusions}
@@ -497,22 +500,24 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Acknowledgments}
 
 \begin{itemize}
    \item Dr. Jean Ragusa, my advisor
-   \item Dr. Jean-Luc Guermond, our collaborator and pioneer of the entropy-based artificial viscosity method
+   \item Dr. Jean-Luc Guermond, our collaborator and pioneer of the entropy-based
+      artificial viscosity method
    \item Dr. Dmitri Kuzmin, an expert in FCT
 \end{itemize}
 \begin{itemize}
-   \item This material is based upon work supported under an Integrated University Program Graduate Fellowship.
+   \item This material is based upon work supported under an Integrated University
+      Program Graduate Fellowship.
 \end{itemize}
 
 \begin{center}
    \includegraphics[width=0.4\textwidth]{./figures/NEUP_Final_Logo_Version-09.jpg}
 \end{center}
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{document}
