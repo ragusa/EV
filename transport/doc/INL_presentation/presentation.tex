@@ -1,18 +1,33 @@
 \documentclass{beamer}
-\useoutertheme[right]{sidebar}
+\usepackage{multicol}  % for multiple columns
+\usepackage{etoolbox}  % for toggles
+\input{../dissertation/content/newcommands} % macros file
+
+% create toggle for print-friendly mode (no colored heading and sidebar)
+\newtoggle{PRINTMODE}
+\toggletrue{PRINTMODE} %\toggletrue or \togglefalse
+
+% add sidebar if not in print mode
+\iftoggle{PRINTMODE}{}{
+   \useoutertheme[right]{sidebar}
+}
 \setbeamertemplate{items}[square]
 \setbeamertemplate{navigation symbols}{}
 
-%\setbeamertemplate{footline}[frame number]
-
-\setbeamercolor{frametitle}{fg=white,bg=red!50!black}
+% make headers black on white if in print mode, colored otherwise
+\iftoggle{PRINTMODE}{
+   \setbeamercolor{title}{fg=black,bg=white}
+   \setbeamercolor{frametitle}{fg=black,bg=white}
+}{
+   \setbeamercolor{title}{fg=white,bg=red!50!black}
+   \setbeamercolor{frametitle}{fg=white,bg=red!50!black}
+}
 \setbeamercolor{sidebar}{bg=black!20}
 \setbeamercolor{logo}{bg=red!30!black}
 \setbeamercolor{section in sidebar}{fg=white}              % active section
 \setbeamercolor{section in sidebar shaded}{fg=black!50}    % inactive section
 \setbeamercolor{subsection in sidebar}{fg=white}           % active subsection
 \setbeamercolor{subsection in sidebar shaded}{fg=black!40} % inactive subsection
-\setbeamercolor{title}{fg=white,bg=red!50!black}
 \setbeamercolor{itemize item}{fg=red!50!black}
 \setbeamercolor{itemize subitem}{fg=red!50!black}
 \setbeamercolor{itemize subsubitem}{fg=red!50!black}
@@ -20,6 +35,7 @@
 %\setbeamercolor{institute}{fg=white}
 %\setbeamercolor{date}{fg=white}
 
+% custom sidebar with slide numbers
 \setbeamertemplate{sidebar right}
 {
   \insertverticalnavigation{\swidth}
@@ -30,9 +46,7 @@
   \vskip3pt
 }
 
-\usepackage{multicol}
-\input{../dissertation/content/newcommands}
-
+% title, author, date, etc.
 \title[]{A Positivity-Preserving Flux-Corrected Transport Scheme
 Using Continuous Finite Elements} 
 \author[]{Joshua E. Hansel\inst{1} \and Jean C. Ragusa\inst{1}
@@ -47,19 +61,24 @@ Using Continuous Finite Elements}
 \logo{\includegraphics[height=0.1\textwidth]{./figures/TAMU-Logo-white.png}}
 
 \begin{document}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-{
-\setbeamercolor{background canvas}{bg=black!10}
-\begin{frame}[plain]
-   % remove space reserved for sidebar
-   \advance\textwidth1.5cm
-   \hsize\textwidth
-   \columnwidth\textwidth
-	
-   \titlepage
-\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\iftoggle{PRINTMODE}{
+   \begin{frame}[plain]
+      \titlepage
+   \end{frame}
+}{
+   % remove space reserved for sidebar on title page
+   {
+   \begin{frame}[plain]
+      \advance\textwidth1.5cm
+      \hsize\textwidth
+      \columnwidth\textwidth
+   	
+      \titlepage
+   \end{frame}
+   }
 }
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 \subsection{Presenter Background}
 \begin{frame}
@@ -76,7 +95,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Motivation}
 \begin{frame}
 \frametitle{Motivation}
@@ -90,7 +109,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Objectives}
 \begin{frame}
 \frametitle{Objectives}
@@ -117,7 +136,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Outline}
 \begin{frame}
 \frametitle{Outline}
@@ -141,7 +160,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Methodology}
 \subsection{Problem Formulation}
 \begin{frame}
@@ -170,7 +189,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Time Discretization}
 \begin{frame}
 \frametitle{Time Discretization}
@@ -195,7 +214,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{FCT Scheme Overview}
 \begin{frame}
 \frametitle{Flux Corrected Transport (FCT) Scheme}
@@ -215,7 +234,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Low-Order Scheme}
 \begin{frame}
 \frametitle{Low-Order Scheme}
@@ -240,7 +259,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Low-Order Scheme}
 \framesubtitle{Local Bilinear Form}
@@ -267,7 +286,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Low-Order Scheme}
 \framesubtitle{Low-Order Viscosity}
@@ -289,7 +308,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Low-Order Scheme}
 \framesubtitle{Discrete Maximum Principle}
@@ -320,7 +339,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Low-Order Scheme}
 \framesubtitle{Results Example}
@@ -328,7 +347,7 @@ Using Continuous Finite Elements}
 \includegraphics[width=\textwidth]{./figures/advection_low_order.pdf}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{High-Order Scheme}
 \begin{frame}
 \frametitle{Entropy Viscosity Scheme}
@@ -354,7 +373,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Entropy Viscosity Scheme}
 \framesubtitle{Entropy Viscosity Definition}
@@ -386,7 +405,7 @@ Using Continuous Finite Elements}
 \end{itemize}
    
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Entropy Viscosity Scheme}
 \framesubtitle{High-Order Scheme}
@@ -412,7 +431,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{High-Order Scheme}
 \framesubtitle{Results Example}
@@ -420,7 +439,7 @@ Using Continuous Finite Elements}
 \includegraphics[width=\textwidth]{./figures/advection_high_order.pdf}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{FCT Scheme}
 \begin{frame}
 \frametitle{Flux Corrected Transport (FCT) Scheme}
@@ -448,7 +467,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Flux Corrected Transport (FCT) Scheme}
 \framesubtitle{FCT Overview}
@@ -476,7 +495,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Flux Corrected Transport (FCT) Scheme}
 \framesubtitle{Limiting Coefficients Introduction}
@@ -502,7 +521,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Flux Corrected Transport (FCT) Scheme}
 \framesubtitle{Limiting Coefficients Definition}
@@ -526,7 +545,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Flux Corrected Transport (FCT) Scheme}
 \framesubtitle{Limiting Coefficients Definition (Cont.)}
@@ -552,7 +571,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Flux Corrected Transport (FCT) Scheme}
 \framesubtitle{Limiting Coefficients Definition (Cont.)}
@@ -573,7 +592,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Extensions}
 \subsection{Implicit}
 \begin{frame}
@@ -597,12 +616,13 @@ Using Continuous Finite Elements}
            U_{\substack{\max\\\min},i}^n\right.\\\left.
           -\frac{\theta\Delta t}{m_i}\sum\limits_{j\ne i}A_{i,j}^L
            U_{\substack{\max\\\min},i}^{L,n+1}
-          +\frac{\Delta t}{m_i}\left((1-\theta)b_i^n + \theta b_i^{n+1}\right)\right]
+          +\frac{\Delta t}{m_i}\left((1-\theta)b_i^n
+          + \theta b_i^{n+1}\right)\right]
       \end{multline}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Implicit Time Discretization}
 \framesubtitle{}
@@ -621,7 +641,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Nonlinear Conservation Laws}
 \begin{frame}
 \frametitle{Nonlinear Conservation Laws}
@@ -647,7 +667,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Flux Corrected Transport (FCT) Scheme}
 \framesubtitle{Results Example}
@@ -655,7 +675,7 @@ Using Continuous Finite Elements}
 \includegraphics[width=\textwidth]{./figures/advection_FCT.pdf}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results}
 \begin{frame}
 \frametitle{Results}
@@ -664,7 +684,7 @@ Using Continuous Finite Elements}
 \includegraphics[width=\textwidth]{./figures/solutions_source_FE.pdf}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Results}
 \framesubtitle{Smooth Problem Convergence Results (Using FE)}
@@ -672,7 +692,7 @@ Using Continuous Finite Elements}
 \includegraphics[width=\textwidth]{./figures/convergence_smooth_FE.pdf}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Results}
 \framesubtitle{Non-smooth Problem Convergence Results (Using SSPRK33)}
@@ -680,7 +700,7 @@ Using Continuous Finite Elements}
 \includegraphics[width=\textwidth]{./figures/convergence_absorber_SSPRK33.pdf}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusions}
 \begin{frame}
 \frametitle{Conclusions}
@@ -700,7 +720,7 @@ Using Continuous Finite Elements}
 \end{itemize}
 
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Acknowledgments}
 
@@ -719,5 +739,5 @@ Using Continuous Finite Elements}
    \includegraphics[width=0.4\textwidth]{./figures/NEUP_Final_Logo_Version-09.jpg}
 \end{center}
 \end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{document}

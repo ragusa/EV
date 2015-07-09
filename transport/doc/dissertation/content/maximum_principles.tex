@@ -1,8 +1,21 @@
-\section{Maximum Principles}
+\section{Analytic Discrete Maximum Principles}
+In this section, analytic discrete maximum principles (DMPs) are derived
+for the case of the scalar conservation law, given by Equation
+\eqref{eq:cons_law} having a constant, linear flux $\mathbf{g}(u)$, i.e.,
+$\mathbf{g}(u) = \v u$ with $\nabla\cdot(\v u) = \v\cdot\nabla u$,
+where $\v$ is the constant velocity field. This analysis is valid for
+radiation transport, where the constant velocity field is $\v=v\O$, with
+$v$ being the radiation speed ($c$ for photon transport).
+
+The analytic DMPs are derived using the method of characteristics, whereby
+paths in the $x-t$ plane are found along which the governing PDE is an ODE.
+This is simple for the case of constant linear transport because in this case
+the characteristics are constant.
+
 %================================================================================
-\subsection{Integral Form of the Time-Dependent Transport Equation}
+\subsection{Integral Form of the Time-Dependent Radiation Transport Equation}
 %================================================================================
-\begin{theorem}{Exact Solution to Time-Dependent Transport Equation}
+\begin{theorem}{Integral Form of the Time-Dependent Radiation Transport Equation}
    An implicit solution to the initial value problem
    \begin{equation}\label{PDE}
       \frac{\partial \psi}{\partial t} + c\mathbf{\Omega}\cdot\nabla\psi(\mathbf{x},t)
@@ -20,7 +33,7 @@
 \end{theorem}
 
 \begin{proof}
-   This proof will proceed by using the Method of Characteristics. The position
+   This proof will proceed by using the method of characteristics. The position
    $\mathbf{x}$ will be regarded as a function of time: $\mathbf{x}=\mathbf{x}(t)$.
    The characteristic $\mathbf{x}(t)$ is the solution of the following initial value problem:
    \[
@@ -79,9 +92,9 @@
    \]
 \end{proof}
 %--------------------------------------------------------------------------------
-\subsection{Integral Form of the Steady-State Transport Equation}
+\subsection{Integral Form of the Steady-State Radiation Transport Equation}
 %================================================================================
-\begin{theorem}{Exact Solution to Steady-State Transport Equation}
+\begin{theorem}{Integral Form of the Steady-State Radiation Transport Equation}
    An implicit solution to the equation
    \begin{equation}\label{PDEss}
       \mathbf{\Omega}\cdot\nabla\psi(\mathbf{x})
@@ -98,7 +111,7 @@
 \end{theorem}
 
 \begin{proof}
-   This proof will proceed by using the Method of Characteristics. The position
+   This proof will proceed by using the method of characteristics. The position
    $\mathbf{x}$ will be regarded as a function of position $s$ along the line
    with direction $\mathbf{\Omega}$ that passes through $\mathbf{x}$:
    \[

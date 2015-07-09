@@ -1,22 +1,43 @@
 %--------------------------------------------------------------------------------
 \section{Problem Formulation}
 %--------------------------------------------------------------------------------
-The radiation transport equation is the following:
-\begin{equation}\label{tr}
-  \frac{1}{c}\ppt{\psi} + \mathbf{\Omega}\cdot\nabla\psi(\x,t)
-  + \sigma(\x)\psi(\x,t) = q(\x,t),
+The main focus of this research is on radiation transport;
+however, most of the analysis performed is valid
+for any general conservation law of the following form:
+\begin{equation}\label{eq:cons_law}
+   \pd{u}{t} + \nabla\cdot\g(u) + \sigma\xt u\xt = q\xt \eqc
 \end{equation}
-where $\psi(\x,t)$ is the angular flux at position $\x$ and time
-$t$ in direction $\mathbf{\Omega}$, $c$ is the transport speed, $\sigma(\x)$
-is the \emph{macroscopic} cross-section, and $q(\x,t)$ is the
+where $u\xt$ is a general scalar conserved quantity at position $\x$
+and time $t$, $\g(u)$ is a general flux function,
+$\sigma\xt$ is a reaction term, and $q\xt$ is a source
+term. This notation will be used throughout this document to keep
+the analysis as general as possible; radiation transport notation
+will only be adopted when assumptions are needed. This is often the case when
+the assumption of a constant, linear flux function $\g(u)$ is needed.
+In this case, the constant velocity field is denoted by $\v$: $\g(u)=\v u$.
+
+For radiation transport, the conservation law equation is the following:
+\begin{equation}\label{eq:rad_transport}
+  \frac{1}{v}\ppt{\psi} + \O\cdot\nabla\psi(\x,t)
+  + \Sigma(\x)\psi(\x,t) = Q(\x,t) \eqc
+\end{equation}
+where $\psi(\x,t)$ is the angular flux in direction $\O$,
+$v$ is the transport speed, $\Sigma(\x)$
+is the macroscopic cross-section, and $Q(\x,t)$ is the
 total source (extraneous plus scattering).
-The problem definition is completed with an incoming flux boundary condition:
+
+To complete the problem formulation, one must provide boundary
+conditions and, for transient problems, intitial conditions:
 \begin{equation}
-   \psi(\x) = \psi^{inc}(\x)  \quad \forall \x\in \partial V^-,
-     \quad \partial V^- = \{\x\in\partial V:
-     \mathbf{\Omega}\cdot\mathbf{n}(\x)<0\}.
+   u(\x,t) = u^0(\x)  \quad \forall \x\in\dom \eqp
 \end{equation}
-For transient problems, the following initial condition applies:
+Boundary conditions will depend on the chosen conservation law and
+the particular problem. 
+For radiation transport, and any conservation law for which the velocity field
+is constant, a well-posed problem can be completed with an incoming flux
+boundary condition:
 \begin{equation}
-   \psi(\x,t) = \psi^0(\x)  \quad \forall \x\in V.
+   u\xt = u^{inc}\xt  \quad \forall \x\in \partial\dom^-,
+     \quad \partial\dom^- = \{\x\in\partial\dom:
+     \v\cdot\mathbf{n}(\x)<0\} \eqp
 \end{equation}

@@ -1,29 +1,33 @@
-\newcommand{\pr}[1]{\left(#1\right)}
-\newcommand{\tab}{\hspace*{0.5cm}}
-\newcommand{\eqp}{\,.}
-\newcommand{\eqc}{\,,}
+\newcommand{\x}{\mathbf{x}}   % x vector
+\newcommand{\xt}{(\x,t)}      % (x,t)
+\newcommand{\dt}{\Delta t}    % time step size
+\newcommand{\dom}{\mathcal{D}} % domain
+\newcommand{\g}{\mathbf{g}}   % conservation law flux
+\newcommand{\U}{\mathbf{U}}   % solution vector
+\newcommand{\A}{\mathbf{A}}   % steady-state matrix
+\newcommand{\B}{\mathbf{B}}   % lhs matrix
+\newcommand{\D}{\mathbf{D}}   % diffusion matrix
+\newcommand{\M}{\mathbf{M}}   % mass matrix
+\renewcommand{\b}{\mathbf{b}} % rhs vector
+\renewcommand{\r}{\mathbf{r}} % steady-state residual vector
+\newcommand{\s}{\mathbf{s}}   % transient rhs vector
+\renewcommand{\v}{\mathbf{v}} % velocity field
+\renewcommand{\O}{\mathbf{\Omega}} % transport direction
+\newcommand{\f}{\mathbf{f}}   % antidiffusive flux vector
+\newcommand{\F}{\mathbf{F}}   % antidiffusive flux matrix
+\renewcommand{\L}{\mathbf{L}} % limiting coefficient matrix
+\newcommand{\LF}{\L\cdot\F}   % limited flux sum vector
 
-\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}}
-\newcommand{\U}{\mathbf{U}}
-\newcommand{\A}{\mathbf{A}}
-\newcommand{\B}{\mathbf{B}}
-\newcommand{\D}{\mathbf{D}}
-\newcommand{\M}{\mathbf{M}}
-\newcommand{\F}{\mathbf{F}}
-\renewcommand{\L}{\mathbf{L}}
-\renewcommand{\b}{\mathbf{b}}
-\renewcommand{\r}{\mathbf{r}}
-\newcommand{\x}{\mathbf{x}}
-\newcommand{\xt}{(\x,t)}
-\newcommand{\f}{\mathbf{f}}
-\newcommand{\s}{\mathbf{s}}
-\newcommand{\dt}{\Delta t}
+\renewcommand{\ij}{_{i,j}} % _{i,j}
+\newcommand{\sumj}{\sum\limits_j}            % sum over all j
+\newcommand{\sumjnoti}{\sum\limits_{j\ne i}} % sum over all j not i
 
-\newcommand{\ddt}[1]{\frac{d#1}{dt}}
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}} % partial derivative
+\newcommand{\ddt}[1]{\frac{d#1}{dt}} % ordinary derivative w.r.t. time
 \newcommand{\ppt}[1]{\frac{\partial #1}{\partial t}}
 
-\renewcommand{\ij}{_{i,j}}
-\newcommand{\sumj}{\sum\limits_j}
-\newcommand{\sumjnoti}{\sum\limits_{j\ne i}}
+\newcommand{\pr}[1]{\left(#1\right)} % parentheses
+\newcommand{\tab}{\hspace*{0.5cm}}   % tab for verbatim evironments
 
-\newcommand{\LF}{\L\cdot\F}
+\newcommand{\eqp}{\,.} % equation period
+\newcommand{\eqc}{\,,} % equation comma
