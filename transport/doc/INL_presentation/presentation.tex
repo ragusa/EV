@@ -106,7 +106,7 @@ Using Continuous Finite Elements}
       \end{itemize}
       \item \textbf{Prevent spurious oscillations}.
       \begin{itemize}
-	 \item Scheme to be presented is not proven to completely immune to any
+	 \item Scheme to be presented is not proven to be completely immune to any
             spurious oscillations but shows good results in practice.
       \end{itemize}
       \item \textbf{Prevent negativities} for physically non-negative quantities.
@@ -171,14 +171,14 @@ Using Continuous Finite Elements}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Temporal Discretization}
+\subsection{Time Discretization}
 \begin{frame}
-\frametitle{Temporal Discretization}
+\frametitle{Time Discretization}
 
 \begin{itemize}
    \item Simplest time discretization is forward Euler (FE), which gives the
       discrete system
-   \begin{equation}\label{eq:exgalerkin}
+   \begin{equation}
       \M^C\frac{\U^{n+1}-\U^n}{\dt} + \A\U^n = \b^n
    \end{equation}
    \begin{equation}
@@ -186,7 +186,7 @@ Using Continuous Finite Elements}
    \end{equation}
    \begin{equation}
       A\ij \equiv \int\limits_{S\ij}\left(
-      \nabla\cdot(\mathbf{v}\varphi_j(\x)) +
+      \mathbf{v}\cdot\nabla\varphi_j(\x) +
 		\sigma(\x)\varphi_j(\x)\right)\varphi_i(\x) d\x
    \end{equation}
    \begin{equation}
@@ -300,12 +300,12 @@ Using Continuous Finite Elements}
       where $U^n_{\substack{\max\\\min},i} =
       \substack{\max\\\min\limits_{j\in\mathcal{I}(S_i)}}U^n_j$:
       \begin{equation}
-         W_i^-(\U^n)\leq
+         W_i^-\leq
          U_i^{L,n+1}\leq
-         W_i^+(\U^n)\qquad\forall i
+         W_i^+\qquad\forall i
       \end{equation}
       \begin{equation}
-         W_i^\pm(\U^n) \equiv U_{\substack{\max\\\min},i}^n\left(1-\frac{\dt}{m_i}
+         W_i^\pm \equiv U_{\substack{\max\\\min},i}^n\left(1-\frac{\dt}{m_i}
          \sum\limits_j A\ij^L\right)
          + \frac{\Delta t}{m_i}b_i^n
       \end{equation}
@@ -341,10 +341,10 @@ Using Continuous Finite Elements}
    \item To converge to the entropy solution, one must ensure that an entropy
       inequality is satisfied:
       \begin{equation}
-         R(u) \equiv \pd{\eta(u)}{t} + \nabla\cdot\mathbf{G}(u) \leq 0
+         R(u) \equiv \pd{\eta(u)}{t} + \nabla\cdot\mathbf{f}^\eta(u) \leq 0
       \end{equation}
       for any convex entropy $\eta(u)$ and corresponding entropy flux
-      $\mathbf{G}(u)$.
+      $\mathbf{f}^\eta(u)$.
    \item This \emph{entropy residual} $R(u)$ measures entropy production;
       where it is positive, the inequality is violated, so the residual
       should be decreased somehow.
@@ -459,9 +459,9 @@ Using Continuous Finite Elements}
    \item The chosen bounds take the form of the DMP satisfied by the
       low-order scheme:
       \begin{equation}
-         W_i^-(\U^n)\leq
+         W_i^-\leq
          U_i^{n+1}\leq
-         W_i^+(\U^n)\qquad\forall i
+         W_i^+\qquad\forall i
       \end{equation}
    \item This is achieved by applying a limiting coefficient $L\ij$ to each
       internodal flux $F\ij$:
@@ -574,6 +574,80 @@ Using Continuous Finite Elements}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Extensions}
+\subsection{Implicit}
+\begin{frame}
+\frametitle{Implicit Time Discretization}
+\framesubtitle{}
+
+\begin{itemize}
+   \item For the implicit case, for instance a general $\theta$ scheme, the
+      discrete system is the following:
+      \begin{equation}
+        \M^C\frac{\U^{n+1}-\U^n}{\dt}
+        + (1-\theta)\A\U^n + \theta\A\U^{n+1}
+        = (1-\theta)\b^n + \theta\b^{n+1}
+      \end{equation}
+   \item For this discretization, the corresponding low-order scheme
+      has the following DMP, which in general is not explicit:
+      \begin{multline}
+         W_i^\pm \equiv \frac{1}{1+\frac{\theta\Delta t}{m_i}A_{i,i}^L}
+           \left[\left(1 - \frac{(1-\theta)
+           \Delta t}{m_i}\sum\limits_j A_{i,j}^L\right)
+           U_{\substack{\max\\\min},i}^n\right.\\\left.
+          -\frac{\theta\Delta t}{m_i}\sum\limits_{j\ne i}A_{i,j}^L
+           U_{\substack{\max\\\min},i}^{L,n+1}
+          +\frac{\Delta t}{m_i}\left((1-\theta)b_i^n + \theta b_i^{n+1}\right)\right]
+      \end{multline}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Implicit Time Discretization}
+\framesubtitle{}
+
+\begin{itemize}
+   \item Because $W_i^\pm$ is in general not explicit, the limiting coefficients
+      are also not explicit. Thus, all implicit FCT schemes require some form
+      of iteration.
+      \begin{itemize}
+         \item In practice, it has been found that a simple fixed point iteration
+            scheme is effective in resolving these nonlinearities.
+      \end{itemize}
+   \item Note that for the entropy viscosity scheme, it is suggested to treat
+      the entropy viscosity explicitly to avoid \emph{entropy oscillations},
+      which arise due to the entropy profile adapting at each iteration.
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Nonlinear Conservation Laws}
+\begin{frame}
+\frametitle{Nonlinear Conservation Laws}
+\framesubtitle{}
+
+\begin{itemize}
+   \item In the nonlinear case, the model conservation law equation is
+      \begin{equation}
+         \pd{u}{t} + \nabla\cdot\mathbf{g}(u) + \sigma u\xt = q\xt
+      \end{equation}
+   \item The nonlinear discrete system may be expressed in a quasilinear form:
+      \begin{equation}
+         \M^C\frac{\U^{n+1}-\U^n}{\dt} + \A(u_h^n)\U^n = \b^n
+      \end{equation}
+      where
+      \begin{equation}
+         A\ij(u) \equiv \int\limits_{S\ij}\left(
+            \mathbf{g}'(u)\cdot\nabla\varphi_j(\x) +
+            \sigma(\x)\varphi_j(\x)\right)\varphi_i(\x) d\x
+      \end{equation}
+   \item Now the low-order diffusion matrix also depends on the solution
+      and must be computed each time step: $\D^L\rightarrow\D^{L,n}$.
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Flux Corrected Transport (FCT) Scheme}
 \framesubtitle{Results Example}
@@ -611,6 +685,19 @@ Using Continuous Finite Elements}
 \begin{frame}
 \frametitle{Conclusions}
 
+\begin{itemize}
+   \item The CFEM scheme presented for solving conservation law problems is
+   \begin{itemize}
+      \item 2nd-order-accurate
+      \item Positivity-preserving
+      \item Monotone
+      \item Discrete-maximum-principle preserving
+      \item Valid in an arbitrary number of dimensions
+      \item Valid for general meshes
+   \end{itemize}
+   \item Results were shown for the explicit, scalar, linear case. More results
+      are in progress.
+\end{itemize}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
