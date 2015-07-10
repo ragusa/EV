@@ -67,12 +67,15 @@ Section \ref{DMP}.
 This proof begins by bounding the term
 $D_{i,j}^L=\sum\limits_{K\subset S_{i,j}}\nu_K^L b_K(\varphi_j, \varphi_i)$:
 \begin{eqnarray*}
-   D_{i,j}^L=\sum\limits_{K\subset S_{i,j}}\nu_K^L b_K(\varphi_j, \varphi_i)
-   & = & \sum\limits_{K\subset S_{i,j}} \max\limits_{k\ne \ell\in \mathcal{I}(K)}
-      \frac{\max(0,A_{k,\ell})}
-		{-\sum\limits_{T\subset S_{k,\ell}} b_T(\varphi_{\ell}, \varphi_k)}
-      b_K(\varphi_j,\varphi_i)\\
-   & \le & \sum\limits_{K\subset S_{i,j}} \frac{\max(0,A_{i,j})}
+   D_{i,j}^L=\sumKSij\nu_K^L b_K(\varphi_j, \varphi_i)
+   & = & \sumKSij\max\limits_{k\ne \ell\in \mathcal{I}(K)}
+      \pr{\frac{\max(0,A_{k,\ell})}
+		{-\sum\limits_{T\subset S_{k,\ell}} b_T(\varphi_{\ell}, \varphi_k)}}
+      b_K(\varphi_j,\varphi_i)
+\end{eqnarray*}
+Since $b_K(\varphi_j, \varphi_i) < 0$ for $j\ne i$ and $y_i \leq \max_j y_j$,
+\begin{eqnarray*}
+   D\ij & \le & \sum\limits_{K\subset S_{i,j}} \frac{\max(0,A_{i,j})}
 		{-\sum\limits_{T\subset S_{i,j}} b_T(\varphi_j, \varphi_i)}b_K(\varphi_j,\varphi_i)\\
    & =   & -\max(0,A_{i,j}) \frac{\sum\limits_{K\subset S_{i,j}}
       b_K(\varphi_j,\varphi_i)}
@@ -95,10 +98,10 @@ From Equations \eqref{loworderssmatrixGT} and \eqref{loworderdiffusionGT},
 \begin{proof}
 The diagonal elements of the low-order system matrix are
 \[
-	A^L_{i,i} = c\int\limits_{S_{i}}\nabla\cdot
-   \frac{\mathbf{\Omega}\varphi_i^2(\mathbf{x})}{2} d\mathbf{x} 
-      + c\int\limits_{S_{i}}\sigma(\mathbf{x})\varphi_i(\mathbf{x})d\mathbf{x} +
-		\sum\limits_{K\subset S_{i}}\nu_K^L b_K(\varphi_i, \varphi_i).
+   A^L_{i,i} = \intSi\nabla\cdot
+   \frac{\v\varphi_i^2(\x)}{2} dV
+      + \intSi\sigma(\x)\varphi_i^2(\x)dV
+      + \sumKSi\nu_K^L b_K(\varphi_i, \varphi_i).
 \]
 To prove that $A^L_{i,i}$ is non-negative, it is sufficient to prove that
 each term in the above expression is non-negative. The non-negativity of
@@ -106,17 +109,16 @@ the interaction term and viscous term are obvious ($\sigma \ge 0,
 \, \nu_K^L\ge 0, \, b_K(\varphi_i, \varphi_i)>0$), but
 the non-negativity of the divergence term is not necessarily obvious. On the interior of
 the domain, the divergence term gives zero contribution because the divergence integral may
-be transformed into a surface integral $\int\limits_{\partial S_{i}}
-\mathbf{\Omega}\cdot\mathbf{n}\frac{\varphi_i^2}{2} d\mathbf{x}$
+be transformed into a surface integral $\int_{S_i}\v\cdot\mathbf{n}\frac{\varphi_i^2}{2} dV$
 via the divergence theorem; one can then recognize that
-the basis function $\varphi_i$ evaluates to zero on the boundary of its support $S_{i}$.\\
-On the outflow boundary of the domain, the term $\mathbf{\Omega}\cdot\mathbf{n}
-\frac{\varphi_i^2}{2}$ is positive because $\mathbf{\Omega}\cdot\mathbf{n} >0$
+the basis function $\varphi_i$ evaluates to zero on the boundary of its support $S_{i}$.
+On the outflow boundary of the domain, the term $\v\cdot\mathbf{n}
+\frac{\varphi_i^2}{2}$ is positive because $\v\cdot\mathbf{n} >0$
 for an outflow boundary. This quantity is of course negative for the inflow boundary,
 but a Dirichlet boundary condition is strongly imposed on the incoming boundary, so
 for degrees of freedom $i$ on the incoming boundary, $A^L_{i,i}$ will be set equal
 to some positive value such as 1 with a corresponding incoming value
-accounted for in the right hand side $\mathbf{b}$ of the linear system.\qed
+accounted for in the right hand side $\b$ of the linear system.\qed
 \end{proof}
 %--------------------------------------------------------------------------------
 \begin{lemma}{Non-Negativity of Row Sums}
@@ -124,20 +126,19 @@ accounted for in the right hand side $\mathbf{b}$ of the linear system.\qed
 \end{lemma}
 
 \begin{proof}
-Using the fact that $\sum\limits_j\varphi_j(\mathbf{x})=1$ and
+Using the fact that $\sum\limits_j\varphi_j(\x)=1$ and
 $\sum\limits_j b_K(\varphi_j,\varphi_i)=0$,
 \begin{eqnarray*}
-	\sum\limits_j A^L_{i,j} & = & \sum\limits_j c\int\limits_{S_{ij}}
-      \left(\mathbf{\Omega}\cdot\nabla\varphi_j(\mathbf{x}) +
-		\sigma(\mathbf{x})\varphi_j(\mathbf{x})\right)\varphi_i(\mathbf{x}) d\mathbf{x} +
-		\sum\limits_j\sum\limits_{K\subset S_{ij}}\nu_K^L b_K(\varphi_j, \varphi_i)\\
-		& = & c\int\limits_{S_{i}}\left(\mathbf{\Omega}\cdot
-         \nabla\sum\limits_j\varphi_j(\mathbf{x}) +
-         \sigma(\mathbf{x})\sum\limits_j\varphi_j(\mathbf{x})\right)
-         \varphi_i(\mathbf{x}) d\mathbf{x}\\
-		\label{gtrowsum} & = & c\int\limits_{S_{i}}\sigma(\mathbf{x})
-         \varphi_i(\mathbf{x}) d\mathbf{x}\\
-		&\ge& 0.\qed
+   \sumj A^L_{i,j} & = & \sumj \intSij
+      \left(\v\cdot\nabla\varphi_j(\x) +
+      \sigma(\x)\varphi_j(\x)\right)\varphi_i(\x) dV +
+      \sumj\sumKSij\nu_K^L b_K(\varphi_j, \varphi_i)\\
+   & = & \intSi\left(\v\cdot
+      \nabla\sumj\varphi_j(\x) +
+      \sigma(\x)\sumj\varphi_j(\x)\right)
+      \varphi_i(\x) dV\\
+   \label{gtrowsum} & = & \intSi\sigma(\x)\varphi_i(\x) dV\\
+   &\ge& 0.\qed
 \end{eqnarray*}
 \end{proof}
 %--------------------------------------------------------------------------------

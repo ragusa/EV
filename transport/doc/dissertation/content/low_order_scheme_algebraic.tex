@@ -69,48 +69,45 @@ outputs of the $\max()$ function:
 \begin{proof}
 The diagonal elements  of the low-order steady-state system matrix are
 \[
-	A^L_{i,i} = c\int\limits_{S_{i}}\nabla\cdot
-   \frac{\mathbf{\Omega}\varphi_i^2(\mathbf{x})}{2} d\mathbf{x} 
-      + c\int\limits_{S_{i}}\sigma(\mathbf{x})\varphi_i(\mathbf{x})d\mathbf{x}
+A^L_{i,i} = \int\limits_{S_{i}}\nabla\cdot
+   \frac{\v\varphi_i^2(\x)}{2} dV
+      + \int\limits_{S_{i}}\sigma(\x)\varphi_i^2(\x)dV
       + D_{i,i}^L.
 \]
 To prove that $A^L_{i,i}$ is non-negative, it is sufficient to prove that
 each term in the above expression is non-negative. The non-negativity of
-the interaction term and viscous term are obvious ($\sigma(\mathbf{x}) \ge 0$,
+the interaction term and viscous term are obvious ($\sigma(\x) \ge 0$,
 $D_{i,i}^L\geq 0$), but
 the non-negativity of the divergence term is not necessarily obvious. On the interior of
 the domain, the divergence term gives zero contribution because the divergence integral may
-be transformed into a surface integral $\int\limits_{\partial S_{i}}
-\mathbf{\Omega}\cdot\mathbf{n}\frac{\varphi_i^2}{2} d\mathbf{x}$
+be transformed into a surface integral $\int_{\partial S_{i}}
+\v\cdot\mathbf{n}\frac{\varphi_i^2}{2} dA$
 via the divergence theorem; one can then recognize that
-the basis function $\varphi_i$ evaluates to zero on the boundary of its support $S_{i}$.\\
-On the outflow boundary of the domain, the term $\mathbf{\Omega}\cdot\mathbf{n}
-\frac{\varphi_i^2}{2}$ is positive because $\mathbf{\Omega}\cdot\mathbf{n} >0$
+the basis function $\varphi_i$ evaluates to zero on the boundary of its support $S_{i}$.
+On the outflow boundary of the domain, the term $\v\cdot\mathbf{n}
+\frac{\varphi_i^2}{2}$ is positive because $\v\cdot\mathbf{n} >0$
 for an outflow boundary. This quantity is of course negative for the inflow boundary,
 but a Dirichlet boundary condition is strongly imposed on the incoming boundary, so
 for degrees of freedom $i$ on the incoming boundary, $A^L_{i,i}$ will be set equal
 to some positive value such as 1 with a corresponding incoming value
-accounted for in the right hand side $\mathbf{b}$ of the linear system.\qed
+accounted for in the right hand side $\b$ of the linear system.\qed
 \end{proof}
 %--------------------------------------------------------------------------------
 \begin{lemma}{Non-Negativity of Row Sum}
-   The sum of all elements in a row $i$ is non-negative: $\sum\limits_j A^L_{i,j} \ge 0$.
+   The sum of all elements in a row $i$ is non-negative: $\sumj A^L_{i,j} \ge 0$.
 \end{lemma}
 
 \begin{proof}
-Using the fact that $\sum\limits_j\varphi_j(\mathbf{x})=1$,
+Using the fact that $\sumj\varphi_j(\x)=1$,
 \begin{eqnarray*}
-	\sum\limits_j A^L_{i,j} & = & \sum\limits_j c\int\limits_{S_{ij}}
-      \left(\mathbf{\Omega}\cdot\nabla\varphi_j(\mathbf{x}) +
-		\sigma(\mathbf{x})\varphi_j(\mathbf{x})\right)\varphi_i(\mathbf{x}) d\mathbf{x} +
-		D_{i,i}^L + \sum\limits_{j\neq i}D_{i,j}^L\\
-		& = & c\int\limits_{S_{i}}\left(\mathbf{\Omega}\cdot
-         \nabla\sum\limits_j\varphi_j(\mathbf{x}) +
-         \sigma(\mathbf{x})\sum\limits_j\varphi_j(\mathbf{x})\right)
-         \varphi_i(\mathbf{x}) d\mathbf{x}\\
-		\label{rowsum} & = & c\int\limits_{S_{i}}\sigma(\mathbf{x})
-         \varphi_i(\mathbf{x}) d\mathbf{x}\\
-		&\ge& 0.\qed
+   \sumj A^L_{i,j} & = & \sumj\intSij
+      \left(\v\cdot\nabla\varphi_j(\x) +
+      \sigma(\x)\varphi_j(\x)\right)\varphi_i(\x) dV +
+      D_{i,i}^L + \sum\limits_{j\neq i}D_{i,j}^L\\
+   & = & \intSi\left(\v\cdot\nabla\sumj\varphi_j(\x) +
+      \sigma(\x)\sumj\varphi_j(\x)\right)\varphi_i(\x) dV\\
+   \label{rowsum} & = & \intSi\sigma(\x)\varphi_i(\x) dV\\
+   &\ge& 0.\qed
 \end{eqnarray*}
 \end{proof}
 %--------------------------------------------------------------------------------

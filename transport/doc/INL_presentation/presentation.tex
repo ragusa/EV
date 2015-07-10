@@ -1,11 +1,12 @@
 \documentclass{beamer}
 \usepackage{multicol}  % for multiple columns
 \usepackage{etoolbox}  % for toggles
+\usepackage{subcaption}
 \input{../dissertation/content/newcommands} % macros file
 
 % create toggle for print-friendly mode (no colored heading and sidebar)
 \newtoggle{PRINTMODE}
-\toggletrue{PRINTMODE} %\toggletrue or \togglefalse
+\togglefalse{PRINTMODE} %\toggletrue or \togglefalse
 
 % add sidebar if not in print mode
 \iftoggle{PRINTMODE}{}{
@@ -143,20 +144,23 @@ Using Continuous Finite Elements}
 
 \begin{itemize}
    \item Presentation of scheme for simple case: linear scalar transport
-      conservation law
+      conservation law using explicit time discretizations
    \begin{itemize}
-      \item Explicit time discretizations
-      \item Implicit time discretizations
-      \item Steady-state
+      \item Problem formulation
+      \item Monotone low-order scheme
+      \item High-order entropy viscosity scheme
+      \item FCT scheme
    \end{itemize}
    \item Extension of scheme to more complex cases:
    \begin{itemize}
-      \item \emph{linear} scalar conservation laws $\rightarrow$ \emph{nonlinear}
-         scalar conservation laws
-      \item \emph{scalar} conservation laws $\rightarrow$ conservation law
-         \emph{systems}
+      \item Implicit time discretizations
+      \item nonlinear scalar conservation laws
+      %\item \emph{scalar} conservation laws $\rightarrow$ conservation law
+      %   \emph{systems}
    \end{itemize}
-   \item Possible implementation in MOOSE
+   \item Results for linear conservation law problems
+   \item Conclusions
+   %\item Possible implementation in MOOSE
 \end{itemize}
 
 \end{frame}
@@ -677,9 +681,10 @@ Using Continuous Finite Elements}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results}
+\section{Explicit Results}
 \begin{frame}
 \frametitle{Results}
-\framesubtitle{Source Problem Results}
+\framesubtitle{1-D Source Problem Results}
 
 \includegraphics[width=\textwidth]{./figures/solutions_source_FE.pdf}
 
@@ -687,7 +692,58 @@ Using Continuous Finite Elements}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Results}
-\framesubtitle{Smooth Problem Convergence Results (Using FE)}
+\framesubtitle{2-D Void-to-Absorber Problem Results}
+
+\begin{figure}[h]
+   \centering
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]{./figures/exact.png}
+      \caption{Exact}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]{./figures/Gal.png}
+      \caption{Galerkin}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]{./figures/GalFCT.png}
+      \caption{Galerkin-FCT}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]{./figures/low.png}
+      \caption{Low-order}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]{./figures/EV.png}
+      \caption{EV}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]{./figures/EVFCT.png}
+      \caption{EV-FCT}
+   \end{subfigure}
+\end{figure}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Results}
+\framesubtitle{3-D Void-to-Absorber Problem Results}
+
+\begin{figure}[h]
+   \centering
+   \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\textwidth]{./figures/Gal_3D.png}
+      \caption{Galerkin}
+   \end{subfigure}
+   \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\textwidth]{./figures/GalFCT_3D.png}
+      \caption{Galerkin-FCT}
+   \end{subfigure}
+\end{figure}
+
+\end{frame}
+\begin{frame}
+\frametitle{Results}
+\framesubtitle{1-D Smooth Problem Convergence Results (Using FE)}
 
 \includegraphics[width=\textwidth]{./figures/convergence_smooth_FE.pdf}
 
@@ -695,7 +751,7 @@ Using Continuous Finite Elements}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Results}
-\framesubtitle{Non-smooth Problem Convergence Results (Using SSPRK33)}
+\framesubtitle{1-D Non-smooth Problem Convergence Results (Using SSPRK33)}
 
 \includegraphics[width=\textwidth]{./figures/convergence_absorber_SSPRK33.pdf}
 
