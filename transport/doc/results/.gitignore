@@ -3,4 +3,6 @@
 *.fdb_latexmk
 *.fls
 *.log
+*.bbl
+*.blg
 results.pdf

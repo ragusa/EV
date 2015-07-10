@@ -4,7 +4,7 @@ close all; clear; clc;
 %--------------------------------------------------------------------------
 % finite element options
 %--------------------------------------------------------------------------
-mesh.n_cell = 50;                   % number of elements
+mesh.n_cell = 32;                   % number of elements
 impose_DirichletBC_strongly = true; % impose Dirichlet BC strongly?
 quadrature.nq = 3;                  % number of quadrature points per cell
 %--------------------------------------------------------------------------
@@ -34,12 +34,12 @@ ev.entropy_deriv = @(u) u;        % derivative of entropy function
 %                  1 = SSPRK(1,1) (Explicit Euler)
 %                  2 = SSPRK(3,3) (Shu-Osher)
 %                  3 = theta method
-temporal_scheme = 1; % temporal discretization scheme
+temporal_scheme = 3; % temporal discretization scheme
 
 theta = 1.0;     % theta parameter to use if using a theta method
 CFL = 0.8;       % CFL number
 ss_tol = 1.0e-5; % steady-state tolerance
-t_end = 10.0;     % max time to run
+t_end = 0.75;     % max time to run
 %--------------------------------------------------------------------------
 % FCT options
 %--------------------------------------------------------------------------
@@ -52,6 +52,9 @@ DMP_option = 1;
 %                 2 = Zalesak limiter
 %                 3 = Josh limiter
 limiting_option = 2;
+
+% prelimit correction fluxes: 0 = do not prelimit, 1 = prelimit
+prelimit = 0;
 %--------------------------------------------------------------------------
 % physics options
 %--------------------------------------------------------------------------
@@ -81,7 +84,7 @@ source_is_time_dependent = false; % is source time-dependent?
 %--------------------------------------------------------------------------
 max_iter = 100;           % maximum number of nonlinear solver iterations
 nonlin_tol = 1e-10;       % nonlinear solver tolerance for discrete L2 norm
-relaxation_parameter = 0.7; % relaxation parameter for iteration
+relaxation_parameter = 1.0; % relaxation parameter for iteration
 %--------------------------------------------------------------------------
 % plot options
 %--------------------------------------------------------------------------
@@ -89,15 +92,15 @@ plot_viscosity            = false; % plot viscosities?
 plot_low_order_transient  = false; % plot low-order transient?
 plot_high_order_transient = false; % plot high-order transient?
 plot_FCT_transient        = true; % plot FCT transient?
-pausetime = 0.1;                   % time to pause for transient plots
+pausetime = 0.01;                   % time to pause for transient plots
 legend_location           = 'NorthEast'; % location of plot legend
 %--------------------------------------------------------------------------
 % output options
 %--------------------------------------------------------------------------
-save_exact_solution      = false; % option to save exact solution 
+save_exact_solution      = true; % option to save exact solution 
 save_low_order_solution  = false; % option to save low-order solution
 save_high_order_solution = false; % option to save high-order solution
-save_FCT_solution        = false; % option to save FCT solution
+save_FCT_solution        = true; % option to save FCT solution
 %-------------------------------------------------------------------------
 
 %% Define Problem
@@ -546,6 +549,11 @@ if (compute_FCT)
         
         % compute low-order solution
         uL = AL_mod \ b_mod;
+
+        % prelimit flux corrections if user specified
+        if (prelimit)
+            F = prelimit_fluxes(F,uL);
+        end
         
         % initialize solution iterate
         uFCT = uL;
@@ -625,7 +633,7 @@ if (compute_FCT)
                     uFCT = FCT_step_explicit(u_old,uH,dt,...
                         ML,MC,AL,DH,DL,b,phys.inc,phys.speed,sigma_min,sigma_max,...
                         source_min,source_max,DMP_option,limiting_option,...
-                        phys.periodic_BC,modify_for_strong_DirichletBC);
+                        phys.periodic_BC,modify_for_strong_DirichletBC,prelimit);
                 case 2 % SSP3
                     % stage 1
                     u_old_stage = u_old;
@@ -640,7 +648,7 @@ if (compute_FCT)
                     uFCT_stage = FCT_step_explicit(u_old_stage,uH_stage,dt,...
                         ML,MC,AL,DH,DL,b,phys.inc,phys.speed,sigma_min,sigma_max,...
                         source_min,source_max,DMP_option,limiting_option,...
-                        phys.periodic_BC,modify_for_strong_DirichletBC);
+                        phys.periodic_BC,modify_for_strong_DirichletBC,prelimit);
                     
                    % stage 2
                     u_old_stage = uFCT_stage;
@@ -655,7 +663,7 @@ if (compute_FCT)
                     uFCT_stage = FCT_step_explicit(u_old_stage,uH_stage,dt,...
                         ML,MC,AL,DH,DL,b,phys.inc,phys.speed,sigma_min,sigma_max,...
                         source_min,source_max,DMP_option,limiting_option,...
-                        phys.periodic_BC,modify_for_strong_DirichletBC);
+                        phys.periodic_BC,modify_for_strong_DirichletBC,prelimit);
                     
                     % stage 3
                     u_old_stage = 0.75*u_old + 0.25*uFCT_stage;
@@ -670,7 +678,7 @@ if (compute_FCT)
                     uFCT_stage = FCT_step_explicit(u_old_stage,uH_stage,dt,...
                         ML,MC,AL,DH,DL,b,phys.inc,phys.speed,sigma_min,sigma_max,...
                         source_min,source_max,DMP_option,limiting_option,...
-                        phys.periodic_BC,modify_for_strong_DirichletBC);
+                        phys.periodic_BC,modify_for_strong_DirichletBC,prelimit);
                     
                     % final combination
                     uFCT = 1/3*u_old + 2/3*uFCT_stage;

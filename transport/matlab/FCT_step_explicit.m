@@ -1,6 +1,6 @@
 function uFCT = FCT_step_explicit(u_old,uH,dt,ML,MC,AL,DH,DL,b,inc,speed,...
     sigma_min,sigma_max,q_min,q_max,DMP_option,limiting_option,...
-    periodic_BC,modify_for_strong_DirichletBC)
+    periodic_BC,modify_for_strong_DirichletBC,prelimit)
 
 % size of system
 n_dof = length(u_old);
@@ -24,6 +24,16 @@ theta = 0;
 % compute flux corrections
 F = flux_correction_matrix(u_old,uH,dt,DH,DL,MC,theta);
 
+% prelimit flux corrections if user specified
+if (prelimit)
+    % compute low-order solution
+    uL = compute_low_order_solution_theta(u_old,AL,...
+        ML,b,dt,0,inc,modify_for_strong_DirichletBC);
+
+    % prelimit fluxes
+    F = prelimit_fluxes(F,uL);
+end
+        
 % compute limited fluxes
 switch limiting_option
     case 0 % no correction
