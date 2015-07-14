@@ -29,6 +29,7 @@
 \setbeamercolor{section in sidebar shaded}{fg=black!50}    % inactive section
 \setbeamercolor{subsection in sidebar}{fg=white}           % active subsection
 \setbeamercolor{subsection in sidebar shaded}{fg=black!40} % inactive subsection
+\setbeamercolor{item projected}{bg=red!50!black,fg=white}
 \setbeamercolor{itemize item}{fg=red!50!black}
 \setbeamercolor{itemize subitem}{fg=red!50!black}
 \setbeamercolor{itemize subsubitem}{fg=red!50!black}
@@ -158,6 +159,7 @@ Using Continuous Finite Elements}
       %\item \emph{scalar} conservation laws $\rightarrow$ conservation law
       %   \emph{systems}
    \end{itemize}
+   \item Implementation
    \item Results for linear conservation law problems
    \item Conclusions
    %\item Possible implementation in MOOSE
@@ -668,6 +670,81 @@ Using Continuous Finite Elements}
       \end{equation}
    \item Now the low-order diffusion matrix also depends on the solution
       and must be computed each time step: $\D^L\rightarrow\D^{L,n}$.
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+\begin{frame}
+\frametitle{Implementation}
+\framesubtitle{FCT Implementation Overview}
+
+\begin{itemize}
+   \item Summary of steps necessary for FCT scheme:
+      \begin{enumerate}
+         \item Assemble $\M^C$, $\M^L$, $\A$, $\D^L$, $\D^{H,n}$ (if using EV), $\b$
+         \item Compute high-order solution $\U^{H,n+1}$
+         \item Compute antidiffusive fluxes $F\ij,\quad\forall j\ne i
+            \in\mathcal{I}(S_i)$
+         \item Compute DMP bounds $W_i^\pm$
+            \begin{itemize}
+               \item Need to compute $U_{\substack{\max\\\min},i}$
+            \end{itemize}
+         \item Compute limiting coefficients $L\ij$
+         \item Solve FCT system:
+            \begin{equation}
+               \M^L\frac{\U^{n+1}-\U^n}{\dt} + \A^L\U^n = \b + \L\cdot\F
+            \end{equation}
+      \end{enumerate}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+\begin{frame}
+\frametitle{Implementation}
+\framesubtitle{Determining Overlapping Supports}
+
+\begin{itemize}
+   \item Most steps standard, but some steps require algebraic operations
+      not typical in FEM computations.
+   \item Need to be able to determine $j\in\mathcal{I}(S_i)$.
+      Some approaches:
+      \begin{itemize}
+         \item If sparse matrix class provides function to extract
+            a row's entries and corresponding indices, this indicates
+            $j\in\mathcal{I}(S_i)$. For instance, do this with $\M^C$.
+         \item Since linear FEM, know that only adjacent, i.e., ``connected''
+            nodes can share support:
+            \[i \mbox{adjacent} j\Rightarrow j\in\mathcal{I}(S_i),\quad
+               i\in\mathcal{I}(S_j)\]
+            \item Thus one can loop over these ``edges'', i.e., pairs of nodes
+            \item This is particularly useful for computing $F\ij$, since it
+               is skew symmetric
+      \end{itemize}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Implementation}
+\begin{frame}
+\frametitle{Implementation}
+\framesubtitle{Nonlinear Schemes}
+
+\begin{itemize}
+   \item When the time discretization is not explicit, the discrete maximum
+      principle is implicit, and thus the FCT scheme is nonlinear.
+   \item The following is a basic fixed-point-type iteration FCT scheme:
+      \begin{enumerate}
+         \item If conservation law is nonlinear, re-assemble as necessary:
+            \begin{enumerate}
+               \item Compute steady-state matrix $\A(\U^{n+1,(k)})$.
+               \item Compute low-order diffusion matrix $\D^L(\U^{n+1,(k)})$.
+            \end{enumerate}
+         \item Compute limiting coefficients using previous iteration of
+            solution: $\L(\U^{n+1,(k)})$.
+         \item Compute new solution $\U^{n+1,(k+1)}$.
+      \end{enumerate}
 \end{itemize}
 
 \end{frame}

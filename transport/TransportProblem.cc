@@ -81,26 +81,9 @@ void TransportProblem<dim>::initialize_system()
          exact_solution_function = exact_solution_function_derived;
 
       } else if (exact_solution_option == 
-         ExactSolutionOption::skew_void_to_absorber) { // skew void-to-absorber
+         ExactSolutionOption::multi_region) { // multi-region
 
-         // create SkewVoidToAbsorberExactSolution object
-         std::shared_ptr<SkewVoidToAbsorberExactSolution<dim> >
-            exact_solution_function_derived =
-            std::make_shared<SkewVoidToAbsorberExactSolution<dim> >();
-
-         // point base class shared pointer to derived class function object
-         exact_solution_function = exact_solution_function_derived;
-
-      } else if (exact_solution_option == 
-         ExactSolutionOption::three_region) {
-
-         // create ThreeRegionExactSolution object
-         std::shared_ptr<ThreeRegionExactSolution<dim> >
-            exact_solution_function_derived =
-            std::make_shared<ThreeRegionExactSolution<dim> >();
-
-         // point base class shared pointer to derived class function object
-         exact_solution_function = exact_solution_function_derived;
+         // do nothing
 
       } else {
          ExcInvalidState();
@@ -426,13 +409,36 @@ void TransportProblem<dim>::process_problem_ID()
          source_string = "0";
          function_parser_constants["source"] = 0.0;
 
-         exact_solution_option = ExactSolutionOption::skew_void_to_absorber;
-
          // for now, assume no steady-state, but this would be easy to implement
          // by using the existing transient exact solution class and just using
          // t=large
          Assert(parameters.is_steady_state == false, ExcNotImplemented(
             "No steady-state exact solution available for the chosen problem."));
+
+         // create exact solution function constructor arguments
+         const std::vector<double> interface_positions = {0.5};
+         const std::vector<double> region_sources = {0.0,0.0};
+         const std::vector<double> region_sigmas = {0.0,10.0};
+         const std::vector<double> direction({
+            1.0/sqrt(2.0),
+            1.0/sqrt(3.0),
+            1.0/sqrt(6.0)
+         });
+         const double incoming = 1.0;
+         exact_solution_option = ExactSolutionOption::multi_region;
+
+         // create MultiRegionExactSolution object
+         std::shared_ptr<MultiRegionExactSolution<dim> >
+            exact_solution_function_derived =
+            std::make_shared<MultiRegionExactSolution<dim> >(
+               interface_positions,
+               region_sources,
+               region_sigmas,
+               direction,
+               incoming
+               );
+         // point base class shared pointer to derived class function object
+         exact_solution_function = exact_solution_function_derived;
 
          initial_conditions_string = "0";
 
@@ -463,7 +469,26 @@ void TransportProblem<dim>::process_problem_ID()
          function_parser_constants["q1"] = 5.0;
          function_parser_constants["q2"] = 20.0;
 
-         exact_solution_option = ExactSolutionOption::three_region;
+         // create exact solution function constructor arguments
+         const std::vector<double> interface_positions = {0.3,0.6};
+         const std::vector<double> region_sources = {1.0,5.0,20.0};
+         const std::vector<double> region_sigmas = {1.0,40.0,20.0};
+         const std::vector<double> direction({1.0,0.0,0.0});
+         const double incoming = 1.0;
+         exact_solution_option = ExactSolutionOption::multi_region;
+
+         // create MultiRegionExactSolution object
+         std::shared_ptr<MultiRegionExactSolution<dim> >
+            exact_solution_function_derived =
+            std::make_shared<MultiRegionExactSolution<dim> >(
+               interface_positions,
+               region_sources,
+               region_sigmas,
+               direction,
+               incoming
+               );
+         // point base class shared pointer to derived class function object
+         exact_solution_function = exact_solution_function_derived;
 
          // for now, assume no steady-state, but this would be easy to implement
          // by using the existing transient exact solution class and just using

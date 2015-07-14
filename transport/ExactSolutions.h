@@ -5,44 +5,42 @@
 
 using namespace dealii;
 
-enum ExactSolutionOption {none, parser, skew_void_to_absorber, three_region};
-
-/** Exact solution function class for the skew void-to-absorber test problem.
- */
-template<int dim>
-class SkewVoidToAbsorberExactSolution : public Function<dim> {
-   public:
-      SkewVoidToAbsorberExactSolution();
-
-      double value(const Point<dim>   &p,
-                   const unsigned int component = 0) const override;
-
-   private:
-      double computeDistanceTravelledInAbsorber(
-         const Point<dim> &p) const;
-
-      const std::vector<double> transport_direction;
-      const double sigma;
-      const double incoming;
+/** Enumeration for type of exact solution */
+enum ExactSolutionOption
+{
+  none,
+  parser,
+  multi_region
 };
 
-/** Exact solution function class for the 3-region test problem.
+/** Exact solution function class for the multi-region unit hypercube
+ *  test problem.
  */
 template<int dim>
-class ThreeRegionExactSolution : public Function<dim> {
+class MultiRegionExactSolution : public Function<dim> {
    public:
-      ThreeRegionExactSolution();
+      MultiRegionExactSolution(
+        const std::vector<double> &interface_positions,
+        const std::vector<double> &source,
+        const std::vector<double> &sigma,
+        const std::vector<double> &direction,
+        const double              &incoming
+      );
 
       double value(const Point<dim>   &p,
                    const unsigned int component = 0) const override;
 
    private:
+
+      double computeDistanceTravelledInRegion(
+         const Point<dim> &p,
+         const double     &r) const;
 
       /** number of regions */
       const unsigned int Nr;
 
-      /** x-points between each region, including left and right endpoints */
-      const std::vector<double> xi;
+      /** "radii" between each region, including boundary radii */
+      std::vector<double> ri;
 
       /** cross sections for each region */
       const std::vector<double> sigma;
@@ -53,10 +51,12 @@ class ThreeRegionExactSolution : public Function<dim> {
       /** transport speed */
       const double c;
 
+      /** transport direction */
+      const std::vector<double> direction;
+
       /** incoming flux value */
       const double incoming;
 };
 
-#include "SkewVoidToAbsorberExactSolution.cc"
-#include "ThreeRegionExactSolution.cc"
+#include "MultiRegionExactSolution.cc"
 #endif

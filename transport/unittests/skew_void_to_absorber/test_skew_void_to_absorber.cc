@@ -1,7 +1,4 @@
 #include <iostream>
-//#include <fstream>
-//#include <sstream>
-//#include <cstdlib>
 #include "../../ExactSolutions.h"
 
 using namespace dealii;
@@ -11,8 +8,25 @@ const unsigned int dim = 2; // number of spatial dimensions
 int main(int argc, char ** argv) {
    try {
 
+      // create necessary constructor arguments
+      const std::vector<double> interface_positions = {0.5};
+      const std::vector<double> region_sources = {0.0,0.0};
+      const std::vector<double> region_sigmas = {0.0,10.0};
+      const std::vector<double> direction({
+         1.0/sqrt(2.0),
+         1.0/sqrt(3.0),
+         1.0/sqrt(6.0)
+      });
+      const double incoming = 1.0;
+
       // compute exact solution from function
-      SkewVoidToAbsorberExactSolution<dim> exact_solution;
+      MultiRegionExactSolution<dim> exact_solution(
+        interface_positions,
+        region_sources,
+        region_sigmas,
+        direction,
+        incoming
+      );
       exact_solution.set_time(100.0);
       Point<dim> x(0.9,0.6);
       double function_value = exact_solution.value(x);

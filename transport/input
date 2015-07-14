@@ -10,12 +10,12 @@ subsection problem
    # 10 = MMS-5
    # 11 = skew void-to-absorber
    # 12 = 3-region
-   set Problem ID = 3
+   set Problem ID = 12
 end
 
 subsection time
    set Is steady state = false
-   set End time = 0.3
+   set End time = 1.0
    set Time step size = 1.0
    set CFL limit = 0.5
    set Time integrator option = SSP3 # <FE|SSP2|SSP3>
@@ -27,7 +27,7 @@ subsection scheme
    # 2 = EV
    # 3 = EV+FCT
    # 4 = Galerkin+FCT
-   set Scheme option = 1
+   set Scheme option = 0
 end
 
 subsection entropy viscosity
