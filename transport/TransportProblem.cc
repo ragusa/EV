@@ -499,6 +499,127 @@ void TransportProblem<dim>::process_problem_ID()
          initial_conditions_string = "0";
 
          break;
+      } case 13: { // source-in-void to absorber
+
+         // create exact solution function constructor arguments
+         const std::vector<double> interface_positions = {0.5};
+         const std::vector<double> region_sources = {1.0,0.0};
+         const std::vector<double> region_sigmas = {0.0,10.0};
+         const std::vector<double> direction({1.0,0.0,0.0});
+         const double incoming = 0.0;
+
+         x_min = 0.0;
+         x_max = 1.0;
+
+         for (unsigned int d = 0; d < dim; ++d)
+           transport_direction[d] = direction[d];
+
+         incoming_string = "incoming";
+         function_parser_constants["incoming"] = incoming;
+
+         function_parser_constants["x1"] = interface_positions[0];
+
+         cross_section_string = "if(x<=x1 || y<=x1, sigma0, sigma1)";
+         function_parser_constants["sigma0"] = region_sigmas[0];
+         function_parser_constants["sigma1"] = region_sigmas[1];
+
+         source_time_dependent = false;
+         source_string = "if(x<=x1 || y<=x1, q0, q1)";
+         function_parser_constants["q0"] = region_sources[0];
+         function_parser_constants["q1"] = region_sources[1];
+
+         // create MultiRegionExactSolution object
+         exact_solution_option = ExactSolutionOption::multi_region;
+         std::shared_ptr<MultiRegionExactSolution<dim> >
+            exact_solution_function_derived =
+            std::make_shared<MultiRegionExactSolution<dim> >(
+               interface_positions,
+               region_sources,
+               region_sigmas,
+               direction,
+               incoming
+               );
+         // point base class shared pointer to derived class function object
+         exact_solution_function = exact_solution_function_derived;
+
+         // for now, assume no steady-state, but this would be easy to implement
+         // by using the existing transient exact solution class and just using
+         // t=large
+         Assert(parameters.is_steady_state == false, ExcNotImplemented(
+            "No steady-state exact solution available for the chosen problem."));
+
+         initial_conditions_string = "0";
+
+         break;
+      } case 14: { // multi-region
+
+         const std::vector<double> interface_positions = {0.2,0.4,0.6,0.8};
+         const std::vector<double> region_sources = {0.0, 0.0,10.0,10.0,5.0};
+         const std::vector<double> region_sigmas  = {0.0,10.0, 0.0,10.0,5.0};
+         const std::vector<double> direction({
+           1.0/sqrt(2.0),
+           1.0/sqrt(3.0),
+           1.0/sqrt(6.0)});
+         const double incoming = 1.0;
+
+         x_min = 0.0;
+         x_max = 1.0;
+
+         for (unsigned int d = 0; d < dim; ++d)
+           transport_direction[d] = direction[d];
+
+         incoming_string = "incoming";
+         function_parser_constants["incoming"] = incoming;
+
+         function_parser_constants["x1"] = interface_positions[0];
+         function_parser_constants["x2"] = interface_positions[1];
+         function_parser_constants["x3"] = interface_positions[2];
+         function_parser_constants["x4"] = interface_positions[3];
+         function_parser_constants["sigma0"] = region_sigmas[0];
+         function_parser_constants["sigma1"] = region_sigmas[1];
+         function_parser_constants["sigma2"] = region_sigmas[2];
+         function_parser_constants["sigma3"] = region_sigmas[3];
+         function_parser_constants["sigma4"] = region_sigmas[4];
+         function_parser_constants["q0"] = region_sources[0];
+         function_parser_constants["q1"] = region_sources[1];
+         function_parser_constants["q2"] = region_sources[2];
+         function_parser_constants["q3"] = region_sources[3];
+         function_parser_constants["q4"] = region_sources[4];
+
+         cross_section_string = "if(x<=x1 || y<=x1, sigma0, if(x<=x2 || y<=x2,"
+           " sigma1, if(x<=x3 || y<=x3, sigma2, if(x<=x4 || y<=x4,"
+           " sigma3, sigma4))))";
+
+         source_time_dependent = false;
+         source_string = "if(x<=x1 || y<=x1, q0, if(x<=x2 || y<=x2,"
+           " q1, if(x<=x3 || y<=x3, q2, if(x<=x4 || y<=x4,"
+           " q3, q4))))";
+
+         // create exact solution function constructor arguments
+         exact_solution_option = ExactSolutionOption::multi_region;
+
+         // create MultiRegionExactSolution object
+         std::shared_ptr<MultiRegionExactSolution<dim> >
+            exact_solution_function_derived =
+            std::make_shared<MultiRegionExactSolution<dim> >(
+               interface_positions,
+               region_sources,
+               region_sigmas,
+               direction,
+               incoming
+               );
+         // point base class shared pointer to derived class function object
+         exact_solution_function = exact_solution_function_derived;
+
+         // for now, assume no steady-state, but this would be easy to implement
+         // by using the existing transient exact solution class and just using
+         // t=large
+         Assert(parameters.is_steady_state == false, ExcNotImplemented(
+            "No steady-state exact solution available for the chosen problem."));
+
+         initial_conditions_string = "0";
+
+         break;
       } default: {
          Assert(false,ExcNotImplemented());
          break;
@@ -1218,6 +1339,16 @@ void TransportProblem<dim>::run()
                                                               triangulation,
                                                               cycle);
       }
+
+      // if FCT was used and user specified, then output DMP bounds
+      if (parameters.output_DMP_bounds)
+      {
+         if (parameters.scheme_option == 3) // EV-FCT
+            fct.output_bounds(postprocessor,"EV");
+         else if (parameters.scheme_option == 4) // Gal-FCT
+            fct.output_bounds(postprocessor,"Gal");
+      }
+
    }
 
    {

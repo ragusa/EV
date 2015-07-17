@@ -38,7 +38,10 @@ class FCT {
                             const SparseMatrix<double> &low_order_diffusion_matrix,
                             const SparseMatrix<double> &high_order_diffusion_matrix);
       bool check_DMP_satisfied();
-      void output_bounds(const PostProcessor<dim> &postprocessor) const;
+      void output_bounds(
+         const PostProcessor<dim> &postprocessor,
+         const std::string &high_order_method_string
+      ) const;
 
    private:
       void compute_bounds(const Vector<double>       &old_solution,

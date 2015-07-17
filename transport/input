@@ -10,7 +10,9 @@ subsection problem
    # 10 = MMS-5
    # 11 = skew void-to-absorber
    # 12 = 3-region
-   set Problem ID = 12
+   # 13 = source-in-void to absorber
+   # 14 = 5-region
+   set Problem ID = 13
 end
 
 subsection time
@@ -33,8 +35,8 @@ end
 subsection entropy viscosity
    set Entropy string = 0.5*u*u
    set Entropy derivative string = u
-   set Entropy residual coefficient = 1.0e-1
-   set Jump coefficient = 1.0e-1
+   set Entropy residual coefficient = 1.0e0
+   set Jump coefficient = 1.0e0
    set EV temporal discretization = BE # <FE|BE|CN|BDF2>
 end
 

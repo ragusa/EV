@@ -574,12 +574,24 @@ bool FCT<dim>::check_DMP_satisfied()
 /** \brief Outputs bounds to files.
  */
 template<int dim>
-void FCT<dim>::output_bounds(const PostProcessor<dim> &postprocessor) const
+void FCT<dim>::output_bounds(
+   const PostProcessor<dim> &postprocessor,
+   const std::string &high_order_method_string
+) const
 {
+   // create the strings for the output files
+   std::stringstream DMP_min_ss;
+   std::stringstream DMP_max_ss;
+   DMP_min_ss << "DMPmin_" << high_order_method_string << "FCT";
+   DMP_max_ss << "DMPmax_" << high_order_method_string << "FCT";
+   std::string DMP_min_string = DMP_min_ss.str();
+   std::string DMP_max_string = DMP_max_ss.str();
+
+   // use a method from the post-processor class to output the bounds
    postprocessor.output_solution(solution_min,
                                  *dof_handler,
-                                 "DMPmin");
+                                 DMP_min_string);
    postprocessor.output_solution(solution_max,
                                  *dof_handler,
-                                 "DMPmax");
+                                 DMP_max_string);
 }

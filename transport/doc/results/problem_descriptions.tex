@@ -19,54 +19,31 @@ category can be fully described by:
   \item the cross sections in each region, $\sigma_0,\ldots,\sigma_{N_r-1}$,
 \end{itemize}
 
-
-
-
-\begin{table}[h]\caption{Multi-Region Unit Hypercube Test Problem Summary}
-\label{tab:multi_region}
-\centering
-\begin{tabular}{l l}\toprule
-\emph{Parameter} & \emph{Value}\\\midrule
-Domain & $\mathcal{D} = (0,1)^d$\\
-Boundary Conditions & $u(\x,t)=u_{inc},\quad \x\in\partial\mathcal{D}^-,\quad t>0,$\\
-   & $\partial\mathcal{D}^-=\{\x\in\partial\mathcal{D}:\mathbf{n}(\x)
-     \cdot\mathbf{\Omega}<0\}$\\
-Cross Section & $\sigma(\x)=\left\{\begin{array}{c l}
-   \sigma_0, & x\in[x_0,x_1]\\
-   \sigma_1, & x\in(x_1,x_2]\\
-   \sigma_2, & x\in(x_2,x_3]
-   \end{array}\right.,\quad
-   \left[\begin{array}{c}\sigma_0\\\sigma_1\\\sigma_2\end{array}\right] =
-      \left[\begin{array}{c}1\\40\\20\end{array}\right]$\\
-   & $\left[\begin{array}{c}x_0\\x_1\\x_2\\x_3\end{array}\right] =
-      \left[\begin{array}{c}0\\0.3\\0.6\\1\end{array}\right]$\\
-Source & $q(\x,t)=\left\{\begin{array}{c l}
-   q_0, & x\in[x_0,x_1]\\
-   q_1, & x\in(x_1,x_2]\\
-   q_2, & x\in(x_2,x_3]
-   \end{array}\right.,\quad
-   \left[\begin{array}{c}q_0\\q_1\\q_2\end{array}\right] =
-      \left[\begin{array}{c}1\\5\\20\end{array}\right]$\\
-Speed & $c=1$\\
-Exact Solution & $u(\x,t) = u_b + u_q$\\
-   & $u_b=\tilde{u_0}(x-ct)e^{-\tau},
+Exact Solution
+\[
+  u(\x,t) = u_b + u_q \eqc
+\]
+\[
+  u_b=\tilde{u_0}(x-ct)e^{-\tau},
         \quad N_r=3,\quad
-        \tau = \sum\limits_{i=0}^{N_r-1} \sigma_i s_i,$\\
-   & $\tilde{u_0}(x) = \left\{\begin{array}{l l}
+        \tau = \sum\limits_{i=0}^{N_r-1} \sigma_i s_i \eqc
+\]
+\[
+  \tilde{u_0}(x) = \left\{\begin{array}{l l}
         u_{inc}, & x<x_0\\
         0,       & x\geq 0
-     \end{array}\right.$,\\
-   & $u_q=\sum\limits_{i=0}^{N_r-1}u_{q,i}e^{-\tau_i},\quad
-        \tau_i = \sum\limits_{j=i+1}^{N_r-1} \sigma_j s_j,$\\
-   & $u_{q,i} = \left\{\begin{array}{l l}
+     \end{array}\right. \eqc
+\]
+\[
+  u_q=\sum\limits_{i=0}^{N_r-1}u_{q,i}e^{-\tau_i},\quad
+        \tau_i = \sum\limits_{j=i+1}^{N_r-1} \sigma_j s_j \eqc
+\]
+\[
+  u_{q,i} = \left\{\begin{array}{l l}
         \frac{q_i}{\sigma_i}\left(1-e^{-\sigma_i s_i}\right), & \sigma_i\neq 0\\
         q_i s_i, & \sigma_i = 0
-        \end{array}\right.$,\\
-   & $s_i = \max(s^+_i-s^-_i,0),\quad
-     s^+_i = \min(x,x_{i+1}),\quad
-     s^-_i = \max(x-ct,x_i)$ \\
-\bottomrule\end{tabular}
-\end{table}
+        \end{array}\right. \eqc
+\]
 %================================================================================
 \subsection{Void-to-Absorber}\label{sec:void_to_absorber}
 This problem examines the angular flux travelling in the $+x$ direction,

@@ -2,6 +2,8 @@
 \usepackage{multicol}  % for multiple columns
 \usepackage{etoolbox}  % for toggles
 \usepackage{subcaption}
+%\usepackage{fancyvrb}
+\usepackage{listings} % for colored verbatim
 \input{../dissertation/content/newcommands} % macros file
 
 % create toggle for print-friendly mode (no colored heading and sidebar)
@@ -330,9 +332,10 @@ Using Continuous Finite Elements}
          W_i^+\qquad\forall i
       \end{equation}
       \begin{equation}
-         W_i^\pm \equiv U_{\substack{\max\\\min},i}^n\left(1-\frac{\dt}{m_i}
+         W_i^\pm \equiv U_{\substack{\max\\\min},i}^n\left(
+         1-\frac{\dt}{M_{i,i}^L}
          \sum\limits_j A\ij^L\right)
-         + \frac{\Delta t}{m_i}b_i^n
+         + \frac{\Delta t}{M_{i,i}^L}b_i^n
       \end{equation}
    \item For example, when there is no reaction term or source term, this reduces
       to the following DMP, which implies the scheme is local extremum
@@ -513,7 +516,7 @@ Using Continuous Finite Elements}
       \end{equation}
       where $Q_i^\pm$ has the following definition:
       \begin{equation}
-         Q_i^\pm \equiv m_i\frac{W_i^\pm-U_i^n}{\Delta t}
+         Q_i^\pm \equiv M_{i,i}^L\frac{W_i^\pm-U_i^n}{\Delta t}
          + \sum\limits_j A_{i,j}^L U_j^n - b_i
       \end{equation}
    \item The classic Zalesak limiting strategy starts by separating the
@@ -599,6 +602,14 @@ Using Continuous Finite Elements}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Flux Corrected Transport (FCT) Scheme}
+\framesubtitle{Results Example}
+
+\includegraphics[width=\textwidth]{./figures/advection_FCT.pdf}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Extensions}
 \subsection{Implicit}
 \begin{frame}
@@ -616,13 +627,13 @@ Using Continuous Finite Elements}
    \item For this discretization, the corresponding low-order scheme
       has the following DMP, which in general is not explicit:
       \begin{multline}
-         W_i^\pm \equiv \frac{1}{1+\frac{\theta\Delta t}{m_i}A_{i,i}^L}
+         W_i^\pm \equiv \frac{1}{1+\frac{\theta\Delta t}{M_{i,i}^L}A_{i,i}^L}
            \left[\left(1 - \frac{(1-\theta)
-           \Delta t}{m_i}\sum\limits_j A_{i,j}^L\right)
+           \Delta t}{M_{i,i}^L}\sum\limits_j A_{i,j}^L\right)
            U_{\substack{\max\\\min},i}^n\right.\\\left.
-          -\frac{\theta\Delta t}{m_i}\sum\limits_{j\ne i}A_{i,j}^L
+          -\frac{\theta\Delta t}{M_{i,i}^L}\sum\limits_{j\ne i}A_{i,j}^L
            U_{\substack{\max\\\min},i}^{L,n+1}
-          +\frac{\Delta t}{m_i}\left((1-\theta)b_i^n
+          +\frac{\Delta t}{M_{i,i}^L}\left((1-\theta)b_i^n
           + \theta b_i^{n+1}\right)\right]
       \end{multline}
 \end{itemize}
@@ -700,7 +711,6 @@ Using Continuous Finite Elements}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Implementation}
 \begin{frame}
 \frametitle{Implementation}
 \framesubtitle{Determining Overlapping Supports}
@@ -716,7 +726,7 @@ Using Continuous Finite Elements}
             $j\in\mathcal{I}(S_i)$. For instance, do this with $\M^C$.
          \item Since linear FEM, know that only adjacent, i.e., ``connected''
             nodes can share support:
-            \[i \mbox{adjacent} j\Rightarrow j\in\mathcal{I}(S_i),\quad
+            \[i \mbox{ adjacent } j\Rightarrow j\in\mathcal{I}(S_i),\quad
                i\in\mathcal{I}(S_j)\]
             \item Thus one can loop over these ``edges'', i.e., pairs of nodes
             \item This is particularly useful for computing $F\ij$, since it
@@ -726,7 +736,38 @@ Using Continuous Finite Elements}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Implementation}
+\begin{frame}[fragile=singleslide]
+\frametitle{Implementation}
+\framesubtitle{Example: Performing Algebraic (Non-Elementwise) Operations}
+
+\begin{itemize}
+   \item The objective is obtain the nonzero entries in a row $i$ of a
+     sparse matrix $A$.
+\end{itemize}
+
+\lstset{basicstyle=\small\ttfamily,language=C++,frame=single,
+  keywordstyle=\color{red}\ttfamily,
+  commentstyle=\color{blue}\ttfamily}
+\begin{lstlisting}
+// get iterators for beginning and end of row
+SparseMatrixIterator it     = A.begin(i);
+                     it_end = A.end(i);
+
+// compute number of nonzero entries in row
+n_nonzero_entries = it_end - it;
+row_values .resize(n_nonzero_entries);
+row_indices.resize(n_nonzero_entries);
+
+// loop over nonzero entries in row
+for (int k = 0; it != it_end; ++it, ++k)
+{
+  row_values[k]  = it->value();  // get A(i,j)
+  row_indices[k] = it->column(); // get j
+}
+\end{lstlisting}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Implementation}
 \framesubtitle{Nonlinear Schemes}
@@ -749,16 +790,7 @@ Using Continuous Finite Elements}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Flux Corrected Transport (FCT) Scheme}
-\framesubtitle{Results Example}
-
-\includegraphics[width=\textwidth]{./figures/advection_FCT.pdf}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Results}
-\section{Explicit Results}
 \begin{frame}
 \frametitle{Results}
 \framesubtitle{1-D Source Problem Results}
@@ -818,6 +850,77 @@ Using Continuous Finite Elements}
 \end{figure}
 
 \end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Results}
+\framesubtitle{2-D Skew Void-to-Absorber Problem Results}
+
+\begin{figure}[h]
+   \centering
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]{./figures/skew_exact.png}
+      \caption{Exact}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]{./figures/skew_Gal.png}
+      \caption{Galerkin}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]{./figures/skew_GalFCT.png}
+      \caption{Galerkin-FCT}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]{./figures/skew_low.png}
+      \caption{Low-order}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]{./figures/skew_EV.png}
+      \caption{EV}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]{./figures/skew_EVFCT.png}
+      \caption{EV-FCT}
+   \end{subfigure}
+\end{figure}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Results}
+\framesubtitle{Galerkin-FCT Vs. EV-FCT}
+
+\includegraphics[width=\textwidth]{./figures/sourcevoid_FCT_comparison.pdf}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Results}
+\framesubtitle{Galerkin-FCT Vs. EV-FCT (Cont.)}
+
+\begin{itemize}
+  \item KPP Rotating Wave problem results, taken from\\
+    {\small
+    \emph{A Second-Order Maximum Principle Preserving
+      Lagrange Finite Element Technique for Nonlinear
+      Scalar Conservation Equations} by Jean-Luc Guermond, et. al.
+      \cite{guermond_secondorder}
+    }
+\end{itemize}
+
+\begin{figure}[h]
+   \centering
+   \begin{subfigure}{0.4\textwidth}
+      \includegraphics[width=\textwidth]{./figures/Gal-FCT_rotation.png}
+      \caption{Galerkin-FCT}
+   \end{subfigure}
+   \begin{subfigure}{0.4\textwidth}
+      \includegraphics[width=\textwidth]{./figures/EV-FCT_rotation.png}
+      \caption{EV-FCT}
+   \end{subfigure}
+\end{figure}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Results}
 \framesubtitle{1-D Smooth Problem Convergence Results (Using FE)}
@@ -871,6 +974,14 @@ Using Continuous Finite Elements}
 \begin{center}
    \includegraphics[width=0.4\textwidth]{./figures/NEUP_Final_Logo_Version-09.jpg}
 \end{center}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{References}
+
+\bibliographystyle{plain}
+\bibliography{../dissertation/references}
+
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{document}
