@@ -5,4 +5,5 @@
 *.log
 *.bbl
 *.blg
+*.toc
 results.pdf

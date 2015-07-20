@@ -10,6 +10,8 @@ file_low      = "solution_".problem_ID."_low_".timeintegrator
 file_high     = "solution_".problem_ID."_EV_".timeintegrator
 file_EVFCT    = "solution_".problem_ID."_EVFCT_"     .timeintegrator
 file_GalFCT   = "solution_".problem_ID."_GalFCT_"    .timeintegrator
+file_LowDMPmin = "DMPmin_Low"
+file_LowDMPmax = "DMPmax_Low"
 file_GalFCTDMPmin = "DMPmin_GalFCT"
 file_GalFCTDMPmax = "DMPmax_GalFCT"
 file_EVFCTDMPmin  = "DMPmin_EVFCT"
@@ -21,6 +23,8 @@ file_list = file_initial." ".\
             file_high." ".\
             file_EVFCT." ".\
             file_GalFCT." ".\
+            file_LowDMPmin." ".\
+            file_LowDMPmax." ".\
             file_GalFCTDMPmin." ".\
             file_GalFCTDMPmax." ".\
             file_EVFCTDMPmin." ".\
@@ -32,13 +36,15 @@ title_list = "Initial\
               EV\
               EV-FCT\
               Galerkin-FCT\
+              DMP-min\
+              DMP-max\
               DMP-min-Gal-FCT\
               DMP-max-Gal-FCT\
               DMP-min-EV-FCT\
               DMP-max-EV-FCT"
-linetypes = "1 1 1 1 1 1 1 2 2 4 4"
-linecolors = "7 -1 1 2 3 4 5 -1 -1 -1 -1"
-symboltypes = "-1 -2 1 2 3 4 6 -2 -2 -2 -2"
+linetypes = "1 1 1 1 1 1 1 2 2 2 2 4 4"
+linecolors = "7 -1 1 2 3 4 5 -1 -1 -1 -1 -1 -1"
+symboltypes = "-1 -2 1 2 3 4 6 -2 -2 -2 -2 -2 -2"
 
 # define is_missing(x) function for determining if an input file exists
 outdir = "../output/problem_".problem_ID."/"

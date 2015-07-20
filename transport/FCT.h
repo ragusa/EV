@@ -40,14 +40,14 @@ class FCT {
       bool check_DMP_satisfied();
       void output_bounds(
          const PostProcessor<dim> &postprocessor,
-         const std::string &high_order_method_string
+         const std::string &description_string
       ) const;
-
-   private:
       void compute_bounds(const Vector<double>       &old_solution,
                           const SparseMatrix<double> &low_order_ss_matrix,
                           const Vector<double>       &ss_rhs,
                           const double               &dt);
+
+   private:
       void compute_steady_state_bounds(
          const Vector<double>       &old_solution,
          const SparseMatrix<double> &low_order_ss_matrix,

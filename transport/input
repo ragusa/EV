@@ -12,7 +12,8 @@ subsection problem
    # 12 = 3-region
    # 13 = source-in-void to absorber
    # 14 = 5-region
-   set Problem ID = 13
+   # 15 = 2-region saturation
+   set Problem ID = 15
 end
 
 subsection time
@@ -29,7 +30,7 @@ subsection scheme
    # 2 = EV
    # 3 = EV+FCT
    # 4 = Galerkin+FCT
-   set Scheme option = 0
+   set Scheme option = 3
 end
 
 subsection entropy viscosity

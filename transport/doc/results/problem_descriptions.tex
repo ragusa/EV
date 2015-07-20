@@ -189,6 +189,43 @@ Exact Solution & $u(\x,t) = u_b + u_q$\\
 \bottomrule\end{tabular}
 \end{table}
 %================================================================================
+\subsection{Saturation Value Test}\label{sec:saturation}
+This is a 1-D problem that consists of a domain with 2 regions of equal
+saturation values $\frac{q}{\sigma}$, but with significantly individual values
+of $\sigma$ and $q$ individually. The exact solution should show no
+evidence of the interface between the two regions.
+Table \ref{tab:saturation} summarizes the test parameters.
+
+\begin{table}[h]\caption{Saturation Value Test Problem Summary}
+\label{tab:saturation}
+\centering
+\begin{tabular}{l l}\toprule
+\emph{Parameter} & \emph{Value}\\\midrule
+Domain & $\mathcal{D} = (0,1)$\\
+Initial Conditions & $u_0(\x)=0$\\
+Boundary Conditions & $u(\x,t)=u_{inc}=1,\quad \x\in\partial\mathcal{D}^-,\quad t>0,$\\
+   & $\partial\mathcal{D}^-=\{\x\in\partial\mathcal{D}:\mathbf{n}(\x)
+     \cdot\mathbf{\Omega}<0\}$\\
+Direction & $\mathbf{\Omega} = \mathbf{e}_x$\\
+Cross Section & $\sigma(\x)=\left\{\begin{array}{c l}
+   \sigma_0, & x\in[x_0,x_1]\\
+   \sigma_1, & x\in(x_1,x_2]
+   \end{array}\right.,\quad
+   \left[\begin{array}{c}\sigma_0\\\sigma_1\end{array}\right] =
+      \left[\begin{array}{c}1\\1\times 10^5\end{array}\right]$\\
+   & $\left[\begin{array}{c}x_0\\x_1\\x_2\end{array}\right] =
+      \left[\begin{array}{c}0\\0.5\\1\end{array}\right]$\\
+Source & $q(\x,t)=\left\{\begin{array}{c l}
+   q_0, & x\in[x_0,x_1]\\
+   q_1, & x\in(x_1,x_2]
+   \end{array}\right.,\quad
+   \left[\begin{array}{c}q_0\\q_1\end{array}\right] =
+      \left[\begin{array}{c}1\\1\times 10^5\end{array}\right]$\\
+Speed & $c=1$\\
+Exact Solution & $u(x,t) = 1$ \\
+\bottomrule\end{tabular}
+\end{table}
+%================================================================================
 \subsection{1-D Steady-State Sinusoidal MMS Problem}\label{sec:mms_sin_ss}
 $x\in(0,\frac{\pi}{4})$
 
