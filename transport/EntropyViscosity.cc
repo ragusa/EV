@@ -1,4 +1,8 @@
-/** \brief constructor
+/**
+ * Constructor.
+ *
+ * @param[in] fe finite element object
+ *
  */
 template<int dim>
 EntropyViscosity<dim>::EntropyViscosity(
@@ -53,13 +57,15 @@ EntropyViscosity<dim>::EntropyViscosity(
    entropy_derivative_function.initialize("u",entropy_derivative_string,constants,false);
 }
 
-/** \brief destructor
+/**
+ * Destructor.
  */
 template<int dim>
 EntropyViscosity<dim>::~EntropyViscosity() {
 }
 
-/** \brief recomputes the high-order steady-state matrix
+/**
+ * Recomputes the high-order steady-state matrix.
  */
 template <int dim>
 void EntropyViscosity<dim>::recompute_high_order_ss_matrix(
@@ -261,7 +267,8 @@ void EntropyViscosity<dim>::compute_entropy_viscosity(
       // determine maximum entropy residual in cell
       double max_entropy_residual = 0.0;
       for (unsigned int q = 0; q < n_q_points_cell; ++q) {
-         max_entropy_residual  = std::max(max_entropy_residual,  std::abs(entropy_residual_values[q]));
+         //max_entropy_residual  = std::max(max_entropy_residual,  std::abs(entropy_residual_values[q]));
+         max_entropy_residual  = std::max(max_entropy_residual,  std::max(0.0,entropy_residual_values[q]));
       }
    
       // compute max jump in cell

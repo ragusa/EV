@@ -1,0 +1,31 @@
+\section*{7-21-2015}
+
+I met with Dr. Ragusa, and John Peterson and David Andrs of the MOOSE team
+to discuss the possibility of implementing our FCT scheme in MOOSE. John
+outlined the main challenges of implementation to be the following:
+\begin{itemize}
+  \item MOOSE currently can store only \emph{one} matrix, whereas the FCT
+     algorithm, as it is currently formulated, requires the storage of
+     several matrices.
+  \item MOOSE currently can only do one solve instead of the two solves
+     per time step required by FCT (the first for the high-order solution
+     and the second for the FCT solution).
+\end{itemize}
+It was suggested that perhaps the FCT algorithm may be formulated to
+allow matrix entries to be used on-the-fly and thus not stored. The
+possibility of creating ``auxiliary'' matrices to be used was expressed.
+Other concerns that were discussed include the end project goal:
+\begin{itemize}
+  \item What is the goal to be completed by the end of my anticipated
+     graduation/disseration (May 2016)?
+  \item Is the end goal to be able to apply FCT to general conservation
+     law \emph{systems} or just general \emph{scalar} conservation laws?
+  \item Is the end goal to have these abilities in MOOSE or to have
+     this capability somewhere (such as in \texttt{deal.II})?
+\end{itemize}
+It was suggested that if the end goal is to apply FCT to \emph{systems}
+that we should develop the theory for systems first and perhaps even
+write the systems code in \texttt{deal.II} since MOOSE currently
+lacks the ability to use FCT in its current formulation. Also it was
+suggested that it would be advantageous to write this \texttt{deal.II}
+code in parallel to expose any parallelization challenges.

@@ -1,5 +1,5 @@
-/** \file Burgers.cc
- *  \brief Provides the function definitions for the Burgers class.
+/**
+ * Provides the function definitions for the Burgers class.
  */
 
 /** \brief Constructor for the Burgers class.

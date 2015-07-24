@@ -1,10 +1,16 @@
-/* \brief Constructor.
+/**
+ * Constructor.
+ *
+ * @param[in] n_cells number of cells
+ * @param[in] dofs_per_cell number of dofs in each cell
+ * @param[in] dof_handler dof handler object
+ * @param[in] constraints constraints object
  */
 template <int dim>
-Viscosity<dim>::Viscosity(const unsigned int      n_cells,
-                          const unsigned int      dofs_per_cell,
-                          const DoFHandler<dim>  &dof_handler,
-                          const ConstraintMatrix &constraints) :
+Viscosity<dim>::Viscosity(const unsigned int       n_cells,
+                          const unsigned int       dofs_per_cell,
+                          const DoFHandler<dim>  & dof_handler,
+                          const ConstraintMatrix & constraints) :
    viscosity(n_cells),
    n_cells(n_cells),
    n_dofs(dof_handler.n_dofs()),
@@ -14,19 +20,26 @@ Viscosity<dim>::Viscosity(const unsigned int      n_cells,
 {
 }
 
-/* \brief Destructor.
+/**
+ * Destructor.
  */
 template <int dim>
 Viscosity<dim>::~Viscosity()
 {
 }
 
-/* \brief Computes a steady-state matrix with diffusion.
+/**
+ * Adds a diffusion matrix to an inviscid matrix.
+ *
+ * @param[in] inviscid_matrix inviscid matrix
+ * @param[in] diffusion_matrix viscous matrix
+ * @param[out] total_matrix inviscid matrix plus viscous matrix
  */
 template <int dim>
-void Viscosity<dim>::add_diffusion_matrix(const SparseMatrix<double> &inviscid_matrix,
-                                                SparseMatrix<double> &diffusion_matrix,
-                                                SparseMatrix<double> &total_matrix)
+void Viscosity<dim>::add_diffusion_matrix(
+  const SparseMatrix<double> & inviscid_matrix,
+  SparseMatrix<double>       & diffusion_matrix,
+  SparseMatrix<double>       & total_matrix)
 {
    // copy inviscid component of steady-state matrix
    total_matrix.copy_from(inviscid_matrix);
@@ -35,10 +48,14 @@ void Viscosity<dim>::add_diffusion_matrix(const SparseMatrix<double> &inviscid_m
    total_matrix.add(1.0, diffusion_matrix);
 }
 
-/** \brief Computes a graph-Laplacian diffusion matrix.
+/**
+ * Computes a graph-theoretic diffusion matrix.
+ *
+ * @param[out] diffusion_matrix viscous matrix to be computed
  */
 template <int dim>
-void Viscosity<dim>::compute_diffusion_matrix(SparseMatrix<double> &diffusion_matrix)
+void Viscosity<dim>::compute_diffusion_matrix(
+  SparseMatrix<double> &diffusion_matrix)
 {
    // reset diffusion matrix
    diffusion_matrix = 0;
@@ -79,7 +96,10 @@ void Viscosity<dim>::compute_diffusion_matrix(SparseMatrix<double> &diffusion_ma
    }
 }
 
-/** \brief Gets a single viscosity value associated with a cell.
+/**
+ * Gets a single viscosity value associated with a cell.
+ *
+ * @param[in] i cell index
  */
 template <int dim>
 double Viscosity<dim>::get_viscosity_value(const unsigned int i) const
@@ -87,7 +107,10 @@ double Viscosity<dim>::get_viscosity_value(const unsigned int i) const
    return viscosity(i);
 }
 
-/** \brief Outputs viscosities to file.
+/**
+ * Outputs viscosities to file.
+ *
+ * @param[in] output_file name of output file
  */
 template<int dim>
 void Viscosity<dim>::output_viscosity(const std::string output_file) const

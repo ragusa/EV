@@ -13,24 +13,24 @@ subsection problem
    # 13 = source-in-void to absorber
    # 14 = 5-region
    # 15 = 2-region saturation
-   set Problem ID = 15
+   set Problem ID = 3
 end
 
 subsection time
    set Is steady state = false
-   set End time = 1.0
+   set End time = 0.3
    set Time step size = 1.0
    set CFL limit = 0.5
    set Time integrator option = SSP3 # <FE|SSP2|SSP3>
 end
 
-subsection scheme
+subsection viscosity
    # 0 = Galerkin
    # 1 = low-order
    # 2 = EV
    # 3 = EV+FCT
    # 4 = Galerkin+FCT
-   set Scheme option = 3
+   set Viscosity option = 2
 end
 
 subsection entropy viscosity
@@ -43,7 +43,7 @@ end
 
 subsection fct
    set Do not limit = false
-   set Prelimit = false
+   #set Prelimit = false
 end
 
 subsection refinement
@@ -68,6 +68,6 @@ subsection output
    set Output exact solution = true
    set Exact solution refinement level = 7
    set Output initial solution = false 
-   set Output DMP bounds = true
-   set Save convergence results = true
+   set Output DMP bounds = false
+   set Save convergence results = false
 end

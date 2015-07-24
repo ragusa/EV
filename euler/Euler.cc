@@ -584,13 +584,14 @@ void Euler<dim>::compute_ss_jacobian()
 /** \brief Computes velocity at each quadrature point in cell.
  */
 template <int dim>
-void Euler<dim>::compute_velocity(      std::vector<Tensor<1,dim> > &velocity,
+void Euler<dim>::compute_velocity(
+   std::vector<Tensor<1,dim> > &velocity,
    const std::vector<double>         &density,
    const std::vector<Tensor<1,dim> > &momentum) const
-   {
+{
    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
       velocity[q] = momentum[q] / density[q];
-   }
+}
 
 /** \brief Computes internal energy at each quadrature point in cell.
  */
@@ -819,7 +820,9 @@ void Euler<dim>::compute_entropy_face(const Vector<double> &solution,
       entropy[q] = density[q]/(gamma - 1.0)*std::log(pressure[q]/std::pow(density[q],gamma));
    }
 
-/**  brief Computes divergence of entropy flux at each quadrature point in cell
+/**
+ * Computes divergence of entropy flux at each quadrature point in cell.
+ *
  *  \param solution solution
  *  \param fe_values FEValues object
  *  \param divergence divergence of entropy flux at each quadrature point in cell

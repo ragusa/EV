@@ -11,7 +11,7 @@ TransportParameters<dim>::TransportParameters() :
       n_refinement_cycles(5),
       initial_refinement_level(2),
       linear_solver_option(1),
-      scheme_option(0),
+      viscosity_option(0),
       entropy_string("0.5*u*u"),
       entropy_derivative_string("u"),
       entropy_residual_coefficient(1.0),
@@ -95,11 +95,11 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler &prm)
    }
    prm.leave_subsection();
 
-   // scheme parameters
-   prm.enter_subsection("scheme");
+   // viscosity parameters
+   prm.enter_subsection("viscosity");
    {
-      prm.declare_entry("Scheme option", "0", Patterns::Integer(),
-            "Option for scheme to be used");
+      prm.declare_entry("Viscosity option", "0", Patterns::Integer(),
+            "Option for viscosity to be used");
    }
    prm.leave_subsection();
 
@@ -212,10 +212,10 @@ void TransportParameters<dim>::get_parameters(ParameterHandler &prm) {
    }
    prm.leave_subsection();
 
-   // scheme parameters
-   prm.enter_subsection("scheme");
+   // viscosity parameters
+   prm.enter_subsection("viscosity");
    {
-      scheme_option = prm.get_integer("Scheme option");
+      viscosity_option = prm.get_integer("Viscosity option");
    }
    prm.leave_subsection();
 

@@ -25,12 +25,12 @@ virtual std::vector<Tensor<1,dim> > evaluate(
   const std::vector<double> & U,
   const std::vector<double> & x) const = 0;
 
-/** Evaluates conservation law flux derivative at a number of points. */
+/** Evaluates conservation law flux derivative at a number of points */
 virtual std::vector<Tensor<1,dim> > evaluate_derivative(
   const std::vector<double> & U,
   const std::vector<double> & x) const = 0;
 
-/** flag for the conservation law flux being linear w.r.t. the solution. */
+/** flag for the conservation law flux being linear with respect to the solution. */
 const bool is_linear;
 
 };

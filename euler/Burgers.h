@@ -1,35 +1,30 @@
-/** \file Burgers.h
- *  \brief Provides the header for the Burgers class.
+/**
+ * Provides the header for the Burgers class.
  */
 #ifndef Burgers_h
 #define Burgers_h
 
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_accessor.h>
-
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
 #include <deal.II/grid/grid_in.h>
-
 #include <deal.II/numerics/data_component_interpretation.h>
-
 #include <deal.II/fe/mapping.h>
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/fe/fe_values_extractors.h>
-
 #include <deal.II/lac/vector.h>
-
 #include "ConservationLaw.h"
 #include "BurgersParameters.h"
 
-/** \class Burgers
- *  \brief Provides the necessary functions for Burgers' equation.
+/**
+ * Provides the necessary functions for the Burgers equation.
  *
- *         This class extends the ConservationLaw class to viscous
- *         Burgers' equation:
- *         \f[
- *           u_t + u u_x = \nu u_{xx}
- *         \f]
+ * This class extends the ConservationLaw class to viscous
+ * Burgers' equation:
+ * \f[
+ *   u_t + u u_x = \nu u_{xx}
+ * \f]
  */
 template <int dim>
 class Burgers : public ConservationLaw<dim>

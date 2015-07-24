@@ -3,20 +3,21 @@
 
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/vector.h>
-
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/grid/tria.h>
-
 #include "LinearSolver.h"
 #include "PostProcessor.h"
 
 using namespace dealii;
 
-/** \brief FCT Class.
+/**
+ * Class for performing FCT.
  */
 template<int dim>
-class FCT {
+class FCT
+{
    public:
+
       FCT(
          const DoFHandler<dim>      &dof_handler,
          Triangulation<dim>         &triangulation,
@@ -48,6 +49,7 @@ class FCT {
                           const double               &dt);
 
    private:
+
       void compute_steady_state_bounds(
          const Vector<double>       &old_solution,
          const SparseMatrix<double> &low_order_ss_matrix,

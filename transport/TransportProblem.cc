@@ -1,4 +1,7 @@
-/** \brief constructor for TransportProblem class
+/**
+ * Constructor.
+ *
+ * @param[in] parameters input parameters
  */
 template<int dim>
 TransportProblem<dim>::TransportProblem(const TransportParameters<dim> &parameters) :
@@ -21,14 +24,16 @@ TransportProblem<dim>::TransportProblem(const TransportParameters<dim> &paramete
 {
 }
 
-/** \brief destructor for TransportProblem class
+/**
+ * Destructor.
  */
 template<int dim>
 TransportProblem<dim>::~TransportProblem() {
    dof_handler.clear();
 }
 
-/** \brief initialize system
+/**
+ * Initializes system.
  */
 template<int dim>
 void TransportProblem<dim>::initialize_system()
@@ -125,7 +130,8 @@ void TransportProblem<dim>::initialize_system()
    dt_nominal = parameters.time_step_size;
 }
 
-/** \brief process problem ID
+/**
+ * Processes problem ID.
  */
 template<int dim>
 void TransportProblem<dim>::process_problem_ID()
@@ -412,8 +418,9 @@ void TransportProblem<dim>::process_problem_ID()
          // for now, assume no steady-state, but this would be easy to implement
          // by using the existing transient exact solution class and just using
          // t=large
-         Assert(parameters.is_steady_state == false, ExcNotImplemented(
-            "No steady-state exact solution available for the chosen problem."));
+         //Assert(parameters.is_steady_state == false, ExcNotImplemented(
+         //   "No steady-state exact solution available for the chosen problem."));
+         Assert(parameters.is_steady_state == false, ExcNotImplemented());
 
          // create exact solution function constructor arguments
          const std::vector<double> interface_positions = {0.5};
@@ -446,7 +453,8 @@ void TransportProblem<dim>::process_problem_ID()
       } case 12: { // 3-region
 
          // for now, assume 1-D
-         Assert(dim == 1, ExcNotImplemented("3-region problem is 1-D for now."));
+         //Assert(dim == 1, ExcNotImplemented("3-region problem is 1-D for now."));
+         Assert(dim == 1, ExcNotImplemented());
 
          x_min = 0.0;
          x_max = 1.0;
@@ -493,8 +501,9 @@ void TransportProblem<dim>::process_problem_ID()
          // for now, assume no steady-state, but this would be easy to implement
          // by using the existing transient exact solution class and just using
          // t=large
-         Assert(parameters.is_steady_state == false, ExcNotImplemented(
-            "No steady-state exact solution available for the chosen problem."));
+         //Assert(parameters.is_steady_state == false, ExcNotImplemented(
+         //   "No steady-state exact solution available for the chosen problem."));
+         Assert(parameters.is_steady_state == false, ExcNotImplemented());
 
          initial_conditions_string = "0";
 
@@ -545,8 +554,9 @@ void TransportProblem<dim>::process_problem_ID()
          // for now, assume no steady-state, but this would be easy to implement
          // by using the existing transient exact solution class and just using
          // t=large
-         Assert(parameters.is_steady_state == false, ExcNotImplemented(
-            "No steady-state exact solution available for the chosen problem."));
+         //Assert(parameters.is_steady_state == false, ExcNotImplemented(
+         //   "No steady-state exact solution available for the chosen problem."));
+         Assert(parameters.is_steady_state == false, ExcNotImplemented());
 
          initial_conditions_string = "0";
 
@@ -614,15 +624,17 @@ void TransportProblem<dim>::process_problem_ID()
          // for now, assume no steady-state, but this would be easy to implement
          // by using the existing transient exact solution class and just using
          // t=large
-         Assert(parameters.is_steady_state == false, ExcNotImplemented(
-            "No steady-state exact solution available for the chosen problem."));
+         //Assert(parameters.is_steady_state == false, ExcNotImplemented(
+         //   "No steady-state exact solution available for the chosen problem."));
+         Assert(parameters.is_steady_state == false, ExcNotImplemented());
 
          initial_conditions_string = "0";
 
          break;
       } case 15: { // 2-region saturation
 
-         Assert(dim == 1, ExcNotImplemented("Only 1-D implemented for this problem"));
+         //Assert(dim == 1, ExcNotImplemented("Only 1-D implemented for this problem"));
+         Assert(dim == 1, ExcNotImplemented());
 
          const std::vector<double> interface_positions = {0.5};
          const std::vector<double> region_sources = {1.0,1.0e5};
@@ -669,8 +681,9 @@ void TransportProblem<dim>::process_problem_ID()
          // for now, assume no steady-state, but this would be easy to implement
          // by using the existing transient exact solution class and just using
          // t=large
-         Assert(parameters.is_steady_state == false, ExcNotImplemented(
-            "No steady-state exact solution available for the chosen problem."));
+         //Assert(parameters.is_steady_state == false, ExcNotImplemented(
+         //   "No steady-state exact solution available for the chosen problem."));
+         Assert(parameters.is_steady_state == false, ExcNotImplemented());
 
          initial_conditions_string = "0";
 
@@ -682,7 +695,8 @@ void TransportProblem<dim>::process_problem_ID()
    }
 }
 
-/** \brief set up the problem before assembly of the linear system
+/**
+ * Sets up the problem before assembly of the linear system.
  */
 template<int dim>
 void TransportProblem<dim>::setup_system()
@@ -730,8 +744,8 @@ void TransportProblem<dim>::setup_system()
    low_order_diffusion_matrix.reinit(constrained_sparsity_pattern);
    consistent_mass_matrix    .reinit(constrained_sparsity_pattern);
    lumped_mass_matrix        .reinit(constrained_sparsity_pattern);
-   if ((parameters.scheme_option == 2)||(parameters.scheme_option == 3)
-      ||(parameters.scheme_option == 4))
+   if ((parameters.viscosity_option == 2)||(parameters.viscosity_option == 3)
+      ||(parameters.viscosity_option == 4))
       high_order_diffusion_matrix.reinit(constrained_sparsity_pattern);
       
    // reinitialize solution vector, system matrix, and rhs
@@ -752,7 +766,8 @@ void TransportProblem<dim>::setup_system()
       assemble_ss_rhs(0.0);
 }
 
-/** \brief Assembles the mass matrix, either consistent or lumped.
+/**
+ * Assembles the consistent and lumped mass matrices.
  */
 template <int dim>
 void TransportProblem<dim>::assemble_mass_matrices()
@@ -802,9 +817,8 @@ void TransportProblem<dim>::assemble_mass_matrices()
    }
 }
 
-/** \brief Assemble the inviscid system matrix. The inviscid steady-state matrix
- *         is independent of the solution and independent of time and thus needs
- *         to be called only once per level of mesh refinement.
+/**
+ * Assembles the inviscid system matrix.
  */
 template<int dim>
 void TransportProblem<dim>::assemble_inviscid_ss_matrix()
@@ -878,7 +892,10 @@ void TransportProblem<dim>::assemble_inviscid_ss_matrix()
    } // end cell
 } // end assembly
 
-/** \brief Assemble the steady-state rhs.
+/**
+ * Assembles the steady-state rhs.
+ *
+ * @param[in] t time at which to evaluate rhs
  */
 template<int dim>
 void TransportProblem<dim>::assemble_ss_rhs(const double &t)
@@ -937,10 +954,11 @@ void TransportProblem<dim>::assemble_ss_rhs(const double &t)
    } // end cell
 } // end assembly
 
-/** \brief Sets the boundary indicators for each boundary face.
+/**
+ * Sets the boundary indicators for each boundary face.
  *
- *         The Dirichlet BC is applied only to the incoming boundary, so the transport
- *         direction is compared against the normal vector of the face.
+ * The Dirichlet BC is applied only to the incoming boundary, so the transport
+ * direction is compared against the normal vector of the face.
  */
 template <int dim>
 void TransportProblem<dim>::set_boundary_indicators()
@@ -978,7 +996,8 @@ void TransportProblem<dim>::set_boundary_indicators()
    }
 }
 
-/** \brief run the problem
+/**
+ * Runs the problem.
  */
 template<int dim>
 void TransportProblem<dim>::run()
@@ -1007,7 +1026,7 @@ void TransportProblem<dim>::run()
 
    // determine viscosity string
    std::string viscosity_string;
-   switch (parameters.scheme_option) {
+   switch (parameters.viscosity_option) {
       case 0: {viscosity_string = "Gal";    break;}
       case 1: {viscosity_string = "low";    break;}
       case 2: {viscosity_string = "EV";     break;}
@@ -1028,22 +1047,23 @@ void TransportProblem<dim>::run()
    // create post-processor object
    unsigned int final_refinement_level = parameters.initial_refinement_level
       + parameters.n_refinement_cycles - 1;
-   PostProcessor<dim> postprocessor(parameters.output_meshes,
-                                    parameters.output_exact_solution,
-                                    parameters.save_convergence_results,
-                                    has_exact_solution,
-                                    exact_solution_function,
-                                    parameters.end_time,
-                                    dt_nominal,
-                                    parameters.is_steady_state,
-                                    parameters.refinement_mode,
-                                    final_refinement_level,
-                                    parameters.exact_solution_refinement_level,
-                                    fe,
-                                    output_dir,
-                                    appendage_ss.str(),
-                                    filename_exact_ss.str(),
-                                    cell_quadrature);
+   PostProcessor<dim> postprocessor(
+     parameters.output_meshes,
+     parameters.output_exact_solution,
+     parameters.save_convergence_results,
+     has_exact_solution,
+     exact_solution_function,
+     parameters.end_time,
+     dt_nominal,
+     parameters.is_steady_state,
+     parameters.refinement_mode,
+     final_refinement_level,
+     parameters.exact_solution_refinement_level,
+     fe,
+     output_dir,
+     appendage_ss.str(),
+     filename_exact_ss.str(),
+     cell_quadrature);
 
    // create refinement handler object
    RefinementHandler<dim> refinement_handler(triangulation,
@@ -1179,7 +1199,7 @@ void TransportProblem<dim>::run()
             // initialize SSPRK time step
             ssprk.initialize_time_step(old_solution,dt);
 
-            switch (parameters.scheme_option)
+            switch (parameters.viscosity_option)
             {
                case 0: { // unmodified Galerkin scheme
 
@@ -1388,12 +1408,12 @@ void TransportProblem<dim>::run()
          if (cycle == parameters.n_refinement_cycles-1)
             if (parameters.output_DMP_bounds)
             {
-               if (parameters.scheme_option == 1) { // low-order
+               if (parameters.viscosity_option == 1) { // low-order
                   fct.compute_bounds(old_solution,low_order_ss_matrix,ss_rhs,dt);
                   fct.output_bounds(postprocessor,"Low");
-               } else if (parameters.scheme_option == 3) // EV-FCT
+               } else if (parameters.viscosity_option == 3) // EV-FCT
                   fct.output_bounds(postprocessor,"EVFCT");
-               else if (parameters.scheme_option == 4) // Gal-FCT
+               else if (parameters.viscosity_option == 4) // Gal-FCT
                   fct.output_bounds(postprocessor,"GalFCT");
             }
       }
@@ -1422,21 +1442,24 @@ void TransportProblem<dim>::run()
    }
 }
 
-/** \brief Solves the steady-state system.
+/**
+ * Solves the steady-state system.
+ *
+ * @param[in] linear_solver linear solver object
  */
 template<int dim>
 void TransportProblem<dim>::solve_steady_state(LinearSolver<dim> &linear_solver)
 {
    // entropy viscosity and FCT not yet implemented in steady-state
-   Assert(parameters.scheme_option != 2, ExcNotImplemented());
-   Assert(parameters.scheme_option != 3, ExcNotImplemented());
-   Assert(parameters.scheme_option != 4, ExcNotImplemented());
+   Assert(parameters.viscosity_option != 2, ExcNotImplemented());
+   Assert(parameters.viscosity_option != 3, ExcNotImplemented());
+   Assert(parameters.viscosity_option != 4, ExcNotImplemented());
 
    // compute inviscid system matrix and steady-state right hand side (ss_rhs)
    assemble_inviscid_ss_matrix();
    assemble_ss_rhs(0.0);
    
-   switch (parameters.scheme_option) {
+   switch (parameters.viscosity_option) {
       case 0: {
          system_matrix.copy_from(inviscid_ss_matrix);
          break;
@@ -1448,7 +1471,7 @@ void TransportProblem<dim>::solve_steady_state(LinearSolver<dim> &linear_solver)
       }
    }
 
-   {
+   { // timer block
       // timer
       TimerOutput::Scope t_solve(timer,"solve");
       
@@ -1459,11 +1482,14 @@ void TransportProblem<dim>::solve_steady_state(LinearSolver<dim> &linear_solver)
    }
 }
 
-/** \brief Checks that the CFL condition is satisfied; If not, adjusts time step size.
-    \param [in,out] dt time step size for current time step
+/**
+ * Checks CFL condition and adjusts time step size as necessary.
+ *
+ * @param[in,out] dt time step size for current time step
+ * @return CFL number for this time step
  */
 template <int dim>
-double TransportProblem<dim>::enforce_CFL_condition(double &dt)
+double TransportProblem<dim>::enforce_CFL_condition(double & dt)
 {
    // CFL is dt*speed/dx
    double max_speed_dx = 0.0; // max(speed/dx); max over all i of A(i,i)/mL(i,i)
@@ -1485,8 +1511,11 @@ double TransportProblem<dim>::enforce_CFL_condition(double &dt)
    return adjusted_CFL;
 }
 
-/** \brief Gets a list of dofs subject to Dirichlet boundary conditions.
- *         This is necessary because max principle checks are not applied to these nodes.
+/**
+ * Gets a list of dofs subject to Dirichlet boundary conditions.
+ *
+ * Max principle checks are not valid for Dirichlet nodes, so these nodes
+ * must be excluded from limiting and DMP checks.
  */
 template <int dim>
 void TransportProblem<dim>::get_dirichlet_nodes()

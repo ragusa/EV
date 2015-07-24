@@ -22,11 +22,14 @@
 
 using namespace dealii;
 
-/** \brief Class for computing entropy viscosity for a transport problem
+/**
+ * Class for computing entropy viscosity for a transport problem.
  */
 template<int dim>
-class EntropyViscosity : public Viscosity<dim> {
+class EntropyViscosity : public Viscosity<dim>
+{
    public:
+
       // temporal discretization type for entropy residual
       enum TemporalDiscretization {FE, BE, CN, BDF2};
 
@@ -60,6 +63,7 @@ class EntropyViscosity : public Viscosity<dim> {
                                           const double         &time);
 
    private:
+
       void compute_entropy_viscosity(const Vector<double> &old_solution,
                                      const Vector<double> &older_solution,
                                      const Vector<double> &oldest_solution,

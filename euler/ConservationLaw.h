@@ -1,5 +1,5 @@
-/** \file ConservationLaw.h
- *  \brief Provides the header for the ConservationLaw class.
+/**
+ * Provides the header for the ConservationLaw class.
  */
 #ifndef ConservationLaw_h
 #define ConservationLaw_h
@@ -44,16 +44,16 @@
 
 using namespace dealii;
 
-/** \class ConservationLaw
- *  \brief Class providing framework for solving a general conservation law.
+/**
+ * Class providing framework for solving a general conservation law.
  *
- *  This class solves a conservation law of the form:
- *  \f[
- *    \frac{\partial\mathbf{u}}{\partial t} 
- *    + \nabla \cdot \mathbf{F}(\mathbf{u}) = \mathbf{0},
- *  \f]
- *  where \f$\vec{u}\f$ is the vector of conservation variables and \f$F(\vec{u})\f$
- *  is the flux tensor.
+ * This class solves a conservation law of the form:
+ * \f[
+ *   \frac{\partial\mathbf{u}}{\partial t} 
+ *   + \nabla \cdot \mathbf{F}(\mathbf{u}) = \mathbf{0},
+ * \f]
+ * where \f$\vec{u}\f$ is the vector of conservation variables and \f$F(\vec{u})\f$
+ * is the flux tensor.
  */
 template <int dim>
 class ConservationLaw
