@@ -24,8 +24,7 @@ if ($#ARGV != 0) {
 
 # search variables
 my @search_strings = ("set Problem ID",
-                      "set Is steady state",
-                      "set Time integrator option");
+                      "set Time discretization option");
 my @values;
 my @found_strings;
 for (my $i = 0; $i <= $#search_strings; $i++) {
@@ -35,8 +34,7 @@ for (my $i = 0; $i <= $#search_strings; $i++) {
 
 # associate variables with indices in search arrays
 my $problem_id_i = 0;
-my $ss_i = 1;
-my $time_integrator_i = 2;
+my $time_integrator_i = 1;
 
 # read input file to determine the test problem ID and time integrator
 my $input_file = "input";
@@ -57,29 +55,31 @@ for (my $i = 0; $i < $#search_strings; $i++) {
 
 # extract values
 my $problem_ID = $values[$problem_id_i];
-my $is_ss = $values[$ss_i];
 my $time_integrator = $values[$time_integrator_i];
-
-if ($is_ss eq "true") {
-   $is_ss = 1;
-} else {
-   $is_ss = 0;
-}
 
 # determine time integrator string based on time integrator option integer
 my $time_integrator_string;
-if ($is_ss) { # steady-state
-   $time_integrator_string = "ss";
-} else {      # transient
-   if ($time_integrator eq "FE") {
-      $time_integrator_string = "FE";
-   } elsif ($time_integrator eq "SSP2") {
-      $time_integrator_string = "SSPRK22";
-   } elsif ($time_integrator eq "SSP3") {
-      $time_integrator_string = "SSPRK33";
-   } else {
-      die "Invalid time integrator option: $time_integrator\n";
-   }
+my %time_disc_hash = (
+  SS => 'SS',
+  FE => 'FE',
+  CN => 'CN',
+  BE => 'BE',
+  SSP2 => 'SSPRK22',
+  SSP3 => 'SSPRK33'
+);
+if (exists($time_disc_hash{$time_integrator}))
+{
+  $time_integrator_string = $time_disc_hash{$time_integrator}
+} else {
+  die "Invalid time integrator option: $time_integrator\n";
+}
+
+# determine if steady-state
+my $is_ss;
+if ($time_integrator_string eq "SS") {
+   $is_ss = 1;
+} else {
+   $is_ss = 0;
 }
 
 # go to plotscripts directory

@@ -1,14 +1,14 @@
 /** \brief Constructor.
  */
 template<int dim>
-LinearSolver<dim>::LinearSolver(const unsigned int     &linear_solver_option,
-                                const ConstraintMatrix &constraints,
-                                const DoFHandler<dim>  &dof_handler,
-                                Function<dim>          &dirichlet_value_function) :
+LinearSolver<dim>::LinearSolver(const unsigned int     & linear_solver_option,
+                                const ConstraintMatrix & constraints,
+                                const DoFHandler<dim>  & dof_handler,
+                                Function<dim>          & dirichlet_value_function) :
    linear_solver_option(linear_solver_option),
-   constraints(constraints),
-   dof_handler(&dof_handler),
-   dirichlet_value_function(&dirichlet_value_function)
+   constraints(& constraints),
+   dof_handler(& dof_handler),
+   dirichlet_value_function(& dirichlet_value_function)
 {
 }
 
@@ -47,7 +47,7 @@ void LinearSolver<dim>::solve(SparseMatrix<double> &A,
    }
 
    // apply constraints
-   constraints.distribute(x);
+   constraints->distribute(x);
 }
 
 /** \brief Applies Dirichlet boundary conditions to a linear system A*x = b.

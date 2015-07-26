@@ -5,17 +5,25 @@
  */
 template<int dim>
 TransportProblem<dim>::TransportProblem(
-    const TransportParameters<dim> &parameters) :
-    parameters(parameters), dof_handler(triangulation), degree(parameters.degree), fe(
-        FE_Q < dim > (degree), 1), flux(0), dofs_per_cell(fe.dofs_per_cell), faces_per_cell(
-        GeometryInfo < dim > ::faces_per_cell), cell_quadrature(
-        parameters.n_quadrature_points), face_quadrature(
-        parameters.n_quadrature_points), n_q_points_cell(cell_quadrature.size()), n_q_points_face(
-        face_quadrature.size()), is_time_dependent(
-        !(parameters.time_discretization_option == TransportParameters<dim>::SS)), transport_direction(
-        0.0), exact_solution_option(ExactSolutionOption::none), has_exact_solution(
-        false), domain_volume(0.0), timer(std::cout, TimerOutput::summary,
-        TimerOutput::wall_times)
+  const TransportParameters<dim> &parameters) :
+    parameters(parameters),
+    dof_handler(triangulation),
+    degree(parameters.degree),
+    fe(FE_Q < dim > (degree), 1),
+    flux(0),
+    dofs_per_cell(fe.dofs_per_cell),
+    faces_per_cell(GeometryInfo < dim > ::faces_per_cell),
+    cell_quadrature(parameters.n_quadrature_points),
+    face_quadrature(parameters.n_quadrature_points),
+    n_q_points_cell(cell_quadrature.size()),
+    n_q_points_face(face_quadrature.size()),
+    is_time_dependent(
+      !(parameters.time_discretization_option == TransportParameters<dim>::SS)),
+    transport_direction(0.0),
+    exact_solution_option(ExactSolutionOption::none),
+    has_exact_solution(false),
+    domain_volume(0.0),
+    timer(std::cout, TimerOutput::summary, TimerOutput::wall_times)
 {
 }
 
@@ -1160,10 +1168,24 @@ void TransportProblem<dim>::run()
     // if problem is steady-state, then just do one solve; else loop over time
     if (!is_time_dependent)
     { // run steady-state problem
-      solve_steady_state(linear_solver);
+      // timer
+      TimerOutput::Scope t_solve(timer, "solve");
+
+      // create and run steady-state executioner
+      SteadyStateExecutioner<dim> executioner(parameters,
+        triangulation,
+        transport_direction,
+        cross_section_function,
+        source_function,
+        incoming_function);
+      executioner.run();
+      new_solution = executioner.getFinalSolution();
+
+      //solve_steady_state(linear_solver);
     }
+/*
     else
-    {                          // run transient problem
+    { // run transient problem
       // enforce CFL condition on nominal dt size
       CFL_nominal = enforce_CFL_condition(dt_nominal);
 
@@ -1429,22 +1451,25 @@ void TransportProblem<dim>::run()
         // increment time step index
         n++;
       }
-
-      // if last cycle and FCT was used and user specified, then output DMP bounds
-      if (cycle == parameters.n_refinement_cycles - 1)
-        if (parameters.output_DMP_bounds)
-        {
-          if (parameters.viscosity_option == 1)
-          { // low-order
-            fct.compute_bounds(old_solution, low_order_ss_matrix, ss_rhs, dt);
-            fct.output_bounds(postprocessor, "Low");
-          }
-          else if (parameters.viscosity_option == 3) // EV-FCT
-            fct.output_bounds(postprocessor, "EVFCT");
-          else if (parameters.viscosity_option == 4) // Gal-FCT
-            fct.output_bounds(postprocessor, "GalFCT");
-        }
     }
+*/
+
+/*
+    // if last cycle and FCT was used and user specified, then output DMP bounds
+    if (cycle == parameters.n_refinement_cycles - 1)
+      if (parameters.output_DMP_bounds)
+      {
+        if (parameters.viscosity_option == 1)
+        { // low-order
+          fct.compute_bounds(old_solution, low_order_ss_matrix, ss_rhs, dt);
+          fct.output_bounds(postprocessor, "Low");
+        }
+        else if (parameters.viscosity_option == 3) // EV-FCT
+          fct.output_bounds(postprocessor, "EVFCT");
+        else if (parameters.viscosity_option == 4) // Gal-FCT
+          fct.output_bounds(postprocessor, "GalFCT");
+      }
+*/
 
     // evaluate errors for convergence study
     {
@@ -1455,13 +1480,11 @@ void TransportProblem<dim>::run()
         postprocessor.evaluate_error(new_solution, dof_handler, triangulation,
             cycle);
     }
-
   }
 
   {
     // timer
     TimerOutput::Scope t_output(timer, "output");
-
     // output grid and solution and print convergence results
     postprocessor.output_results(new_solution, dof_handler, triangulation);
     // output viscosities if they were used
@@ -1504,15 +1527,10 @@ void TransportProblem<dim>::solve_steady_state(LinearSolver<dim> &linear_solver)
     }
   }
 
-  { // timer block
-    // timer
-    TimerOutput::Scope t_solve(timer, "solve");
-
-    // solve the linear system: ss_matrix*new_solution = ss_rhs
-    linear_solver.solve(system_matrix, ss_rhs, new_solution);
-    // distribute constraints
-    constraints.distribute(new_solution);
-  }
+  // solve the linear system: ss_matrix*new_solution = ss_rhs
+  linear_solver.solve(system_matrix, ss_rhs, new_solution);
+  // distribute constraints
+  constraints.distribute(new_solution);
 }
 
 /**

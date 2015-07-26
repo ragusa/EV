@@ -17,10 +17,10 @@ using namespace dealii;
 template<int dim>
 class LinearSolver {
    public:
-      LinearSolver(const unsigned int     &linear_solver_option,
-                   const ConstraintMatrix &constraints,
-                   const DoFHandler<dim>  &dof_handler,
-                   Function<dim>          &dirichlet_value_function);
+      LinearSolver(const unsigned int     & linear_solver_option,
+                   const ConstraintMatrix & constraints,
+                   const DoFHandler<dim>  & dof_handler,
+                   Function<dim>          & dirichlet_value_function);
       ~LinearSolver();
 
       void solve(SparseMatrix<double> &A,
@@ -36,9 +36,9 @@ class LinearSolver {
 
       const unsigned int linear_solver_option;
 
-      const ConstraintMatrix constraints;
+      const ConstraintMatrix * const constraints;
 
-      const DoFHandler<dim> *dof_handler;
+      const DoFHandler<dim> * const dof_handler;
 
       Function<dim> * const dirichlet_value_function;
 };

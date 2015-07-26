@@ -42,7 +42,7 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler &prm)
   prm.enter_subsection("time");
   {
     prm.declare_entry("Time discretization option", "FE",
-        Patterns::Selection("FE|SSP2|SSP3"), "Choice of temporal discretization");
+        Patterns::Selection("SS|FE|CN|BE|SSP2|SSP3"), "Choice of temporal discretization");
     prm.declare_entry("Is steady state", "true", Patterns::Bool(),
         "Boolean flag for steady-state vs. transient");
     prm.declare_entry("End time", "1.0", Patterns::Double(),

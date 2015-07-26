@@ -40,6 +40,7 @@
 #include "PostProcessor.h"
 #include "FCT.h"
 #include "ExactSolutions.h"
+#include "SteadyStateExecutioner.h"
 
 using namespace dealii;
 
