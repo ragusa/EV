@@ -8,4 +8,6 @@ latex
 tags
 *.asv
 doc/.svn
-doc/MATH676_report
+.cproject
+.project
+.settings

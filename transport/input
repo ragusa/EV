@@ -21,7 +21,7 @@ subsection time
    set End time = 0.3
    set Time step size = 1.0
    set CFL limit = 0.5
-   set Time integrator option = SSP3 # <FE|SSP2|SSP3>
+   set Time discretization option = SSP3 # <SS|FE|CN|BE|SSP2|SSP3>
 end
 
 subsection viscosity
