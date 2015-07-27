@@ -3,7 +3,6 @@
 
 #include <deal.II/base/parameter_handler.h>
 #include "RefinementHandler.h"
-#include "EntropyViscosity.h"
 
 using namespace dealii;
 
@@ -16,7 +15,7 @@ class TransportParameters
 public:
   enum TemporalDiscretization
   {
-    SS, FE, CN, BE, SSP2, SSP3
+    SS, FE, CN, BE, BDF2, SSP2, SSP3
   };
 
   TransportParameters();
@@ -39,8 +38,8 @@ public:
   double entropy_residual_coefficient; // value of entropy residual coefficient
   double jump_coefficient; // value of jump coefficient
   // temporal discretization for entropy residual
-  typename EntropyViscosity<dim>::TemporalDiscretization EV_time_discretization;
-  bool output_meshes; // option to output meshes as .eps files
+  TemporalDiscretization EV_time_discretization;
+  bool output_mesh; // option to output mesh as .eps file
   bool is_steady_state; // is the problem steady-state?
   double end_time; // end time if transient problem is run
   double time_step_size; // time step size if transient problem is run

@@ -19,6 +19,7 @@
 
 #include "Viscosity.h"
 #include "LowOrderViscosity.h"
+#include "TransportParameters.h"
 
 using namespace dealii;
 
@@ -29,9 +30,6 @@ template<int dim>
 class EntropyViscosity : public Viscosity<dim>
 {
    public:
-
-      // temporal discretization type for entropy residual
-      enum TemporalDiscretization {FE, BE, CN, BDF2};
 
       EntropyViscosity(const FESystem<dim>   &fe,
                        const unsigned int    &n_cells,
@@ -47,7 +45,7 @@ class EntropyViscosity : public Viscosity<dim>
                        const double          &entropy_residual_coefficient,
                        const double          &jump_coefficient,
                        const double          &domain_volume,
-                       const TemporalDiscretization temporal_discretization,
+                       const typename TransportParameters<dim>::TemporalDiscretization temporal_discretization,
                        const LowOrderViscosity<dim> &low_order_viscosity,
                        const SparseMatrix<double> &inviscid_matrix,
                              SparseMatrix<double> &diffusion_matrix,
@@ -106,7 +104,7 @@ class EntropyViscosity : public Viscosity<dim>
       Vector<double> entropy_viscosity;
 
       // temporal discretization for entropy residual
-      TemporalDiscretization temporal_discretization;
+      typename TransportParameters<dim>::TemporalDiscretization temporal_discretization;
 
       // coefficients for entropy residual
       double a_old;

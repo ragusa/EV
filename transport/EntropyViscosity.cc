@@ -20,7 +20,7 @@ EntropyViscosity<dim>::EntropyViscosity(
    const double          &entropy_residual_coefficient,
    const double          &jump_coefficient,
    const double          &domain_volume,
-   const TemporalDiscretization temporal_discretization,
+   const typename TransportParameters<dim>::TemporalDiscretization temporal_discretization,
    const LowOrderViscosity<dim> &low_order_viscosity,
    const SparseMatrix<double> &inviscid_matrix,
          SparseMatrix<double> &diffusion_matrix,
@@ -49,7 +49,7 @@ EntropyViscosity<dim>::EntropyViscosity(
       inviscid_matrix(&inviscid_matrix),
       diffusion_matrix(&diffusion_matrix),
       total_matrix(&total_matrix)
-      
+
 {
    // initialize entropy function
    std::map<std::string,double> constants;
@@ -232,7 +232,7 @@ void EntropyViscosity<dim>::compute_entropy_viscosity(
       fe_values[flux].get_function_values   (oldest_solution, u_oldest);
       fe_values[flux].get_function_gradients(old_solution,   dudx_old);
       fe_values[flux].get_function_gradients(older_solution, dudx_older);
-   
+
       // get cross section and source values for all quadrature points
       points = fe_values.get_quadrature_points();
       source_function       ->value_list(points,source);
@@ -270,7 +270,7 @@ void EntropyViscosity<dim>::compute_entropy_viscosity(
          //max_entropy_residual  = std::max(max_entropy_residual,  std::abs(entropy_residual_values[q]));
          max_entropy_residual  = std::max(max_entropy_residual,  std::max(0.0,entropy_residual_values[q]));
       }
-   
+
       // compute max jump in cell
       //----------------------------------------------------------------------------
       double max_jump_in_cell = 0.0;
@@ -284,16 +284,16 @@ void EntropyViscosity<dim>::compute_entropy_viscosity(
             typename DoFHandler<dim>::cell_iterator neighbor = cell->neighbor(iface);
             const unsigned int ineighbor = cell->neighbor_of_neighbor(iface);
             Assert(ineighbor < faces_per_cell, ExcInternalError());
-   
+
             fe_values_face         .reinit(cell,    iface);
             fe_values_face_neighbor.reinit(neighbor,ineighbor);
-   
+
             // get solution and gradients on face
             fe_values_face         .get_function_values   (old_solution, u_old_face);
             fe_values_face_neighbor.get_function_values   (old_solution, u_old_face_neighbor);
             fe_values_face         .get_function_gradients(old_solution, dudx_old_face);
             fe_values_face_neighbor.get_function_gradients(old_solution, dudx_old_face_neighbor);
-   
+
             // get normal vectors
             normal = fe_values_face.get_normal_vectors();
 
@@ -304,7 +304,7 @@ void EntropyViscosity<dim>::compute_entropy_viscosity(
             }
             entropy_derivative_function.value_list(u_old_face_points,         dsdu_old_face);
             entropy_derivative_function.value_list(u_old_face_points_neighbor,dsdu_old_face_neighbor);
-   
+
             // compute max jump on face
             max_jump_on_face = 0.0;
             for (unsigned int q = 0; q < n_q_points_face; ++q)
@@ -317,12 +317,12 @@ void EntropyViscosity<dim>::compute_entropy_viscosity(
          }
          max_jump_in_cell = std::max(max_jump_in_cell, max_jump_on_face);
       } // end face loop
-   
+
       // compute entropy viscosity in cell
       //----------------------------------------------------------------------------
       double entropy_viscosity_cell = (entropy_residual_coefficient * max_entropy_residual
          + jump_coefficient * max_jump_in_cell) / normalization_constant;
-      
+
       // get low-order viscosity for cell
       double low_order_viscosity_cell = low_order_viscosity->get_viscosity_value(i_cell);
 
@@ -340,28 +340,28 @@ template <int dim>
 void EntropyViscosity<dim>::compute_temporal_discretization_constants(const double old_dt, const double older_dt)
 {
    switch (temporal_discretization) {
-      case FE : {
+      case TransportParameters<dim>::TemporalDiscretization::FE : {
          a_old    =  1.0/old_dt;
          a_older  = -1.0/old_dt;
          a_oldest =  0.0;
          b_old   = 1.0;
          b_older = 0.0;
          break;
-      } case BE : {
+      } case TransportParameters<dim>::TemporalDiscretization::BE : {
          a_old    =  1.0/old_dt;
          a_older  = -1.0/old_dt;
          a_oldest =  0.0;
          b_old   = 1.0;
          b_older = 0.0;
          break;
-      } case CN : {
+      } case TransportParameters<dim>::TemporalDiscretization::CN : {
          a_old    =  1.0/old_dt;
          a_older  = -1.0/old_dt;
          a_oldest =  0.0;
          b_old   = 0.5;
          b_older = 0.5;
          break;
-      } case BDF2 : {
+      } case TransportParameters<dim>::TemporalDiscretization::BDF2 : {
          a_old    = (older_dt + 2*old_dt)/(old_dt*(older_dt + old_dt));
          a_older  = -(older_dt + old_dt)/(older_dt*old_dt);
          a_oldest = old_dt / (older_dt*(older_dt + old_dt));

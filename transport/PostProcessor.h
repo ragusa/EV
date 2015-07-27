@@ -4,91 +4,61 @@
 #include <deal.II/base/convergence_table.h>
 #include <deal.II/base/function_parser.h>
 #include <deal.II/base/quadrature_lib.h>
-
-#include <deal.II/lac/vector.h>
-
+#include <deal.II/dofs/dof_handler.h>
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/grid_out.h>
-
-#include <deal.II/dofs/dof_handler.h>
-
+#include <deal.II/lac/vector.h>
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/data_out.h>
-
 #include <sys/stat.h>
-
 #include "RefinementHandler.h"
+#include "TransportParameters.h"
 
 using namespace dealii;
 
 /** \brief Class for outputting solutions and evaluating error and convergence.
  */
 template<int dim>
-class PostProcessor {
-   public:
-      PostProcessor(
-         const bool               &output_mesh,
-         const bool               &output_exact_solution,
-         const bool               &save_convergence_results,
-         const bool               &has_exact_solution,
-         const std::shared_ptr<Function<dim> > &exact_solution_function,
-         const double             &time,
-         const double             &dt_nominal,
-         const bool               &is_steady_state,
-         const typename RefinementHandler<dim>::RefinementMode &refinement_mode,
-         const unsigned int       &final_refinement_level,
-         const unsigned int       &exact_solution_refinement_level,
-         const FESystem<dim>      &fe,
-         const std::string        &output_dir,
-         const std::string        &appendage_string,
-         const std::string        &filename_exact,
-         const QGauss<dim>        &cell_quadrature);
-      ~PostProcessor();
+class PostProcessor
+{
+public:
+  PostProcessor(const TransportParameters<dim> & parameters,
+    const bool has_exact_solution, std::shared_ptr<Function<dim> > & exact_solution_function);
+  ~PostProcessor();
 
-      void output_results(const Vector<double>     &solution,
-                          const DoFHandler<dim>    &dof_handler,
-                          const Triangulation<dim> &triangulation);
-      void output_solution(const Vector<double>  &solution,
-                           const DoFHandler<dim> &dof_handler,
-                           const std::string     &output_string) const;
-      void output_viscosity(const Vector<double>  &low_order_viscosity,
-                            const Vector<double>  &entropy_viscosity,
-                            const Vector<double>  &high_order_viscosity,
-                            const DoFHandler<dim> &dof_handler) const;
-      void evaluate_error(const Vector<double>     &solution,
-                          const DoFHandler<dim>    &dof_handler,
-                          const Triangulation<dim> &triangulation,
-                          const unsigned int       &cycle);
-      void update_dt(const double &dt);
+  void output_results(const Vector<double> &solution,
+    const DoFHandler<dim> &dof_handler, const Triangulation<dim> &triangulation);
+  void output_solution(const Vector<double> &solution,
+    const DoFHandler<dim> &dof_handler, const std::string &output_string) const;
+  void output_viscosity(const Vector<double> &low_order_viscosity,
+    const Vector<double> &entropy_viscosity,
+    const Vector<double> &high_order_viscosity,
+    const DoFHandler<dim> &dof_handler) const;
+  void evaluate_error(const Vector<double> &solution,
+    const DoFHandler<dim> &dof_handler, const Triangulation<dim> &triangulation,
+    const unsigned int &cycle);
+  void update_dt(const double &dt);
 
-   private:
-      void output_grid(const Triangulation<dim> &triangulation) const;
-      void create_directory(const std::string &dir) const;
+private:
+  void output_grid(const Triangulation<dim> &triangulation) const;
+  void create_directory(const std::string &dir) const;
 
-      ConvergenceTable convergence_table;
+  const TransportParameters<dim> parameters;
+  ConvergenceTable convergence_table;
 
-      const bool output_mesh;
-      const bool output_exact_solution;
-      const bool save_convergence_results;
+  const bool has_exact_solution;
+  std::shared_ptr<Function<dim> > exact_solution_function;
 
-      const bool    has_exact_solution;
-      std::shared_ptr<Function<dim> > exact_solution_function;
+  double dt_nominal;
+  const bool is_steady_state;
 
-      const double time;
-      double       dt_nominal;
-      const bool   is_steady_state;
+  const FESystem<dim> fe;
 
-      const typename RefinementHandler<dim>::RefinementMode refinement_mode;
-      const unsigned int final_refinement_level;
-      const unsigned int exact_solution_refinement_level;
+  std::string output_dir;
+  std::string appendage_string;
+  std::string filename_exact;
 
-      const FESystem<dim> *fe;
-
-      const std::string output_dir;
-      const std::string appendage_string;
-      const std::string filename_exact;
-
-      const QGauss<dim>   cell_quadrature;
+  const QGauss<dim> cell_quadrature;
 };
 
 #include "PostProcessor.cc"

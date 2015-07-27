@@ -8,7 +8,7 @@ TransportParameters<dim>::TransportParameters() :
         false), n_refinement_cycles(5), initial_refinement_level(2), linear_solver_option(
         1), viscosity_option(0), entropy_string("0.5*u*u"), entropy_derivative_string(
         "u"), entropy_residual_coefficient(1.0), jump_coefficient(1.0), EV_time_discretization(
-        EntropyViscosity<dim>::BE), output_meshes(false), is_steady_state(true), end_time(
+        TemporalDiscretization::BE), output_mesh(false), is_steady_state(true), end_time(
         1.0), time_step_size(0.001), output_exact_solution(false), exact_solution_refinement_level(
         5), output_initial_solution(false), output_DMP_bounds(false), CFL_limit(
         0.5), do_not_limit(false), n_quadrature_points(3), save_convergence_results(
@@ -240,19 +240,19 @@ void TransportParameters<dim>::get_parameters(ParameterHandler &prm)
         "EV temporal discretization");
     if (EV_time_discretization_string == "FE")
     {
-      EV_time_discretization = EntropyViscosity<dim>::FE;
+      EV_time_discretization = TemporalDiscretization::FE;
     }
     else if (EV_time_discretization_string == "BE")
     {
-      EV_time_discretization = EntropyViscosity<dim>::BE;
+      EV_time_discretization = TemporalDiscretization::BE;
     }
     else if (EV_time_discretization_string == "CN")
     {
-      EV_time_discretization = EntropyViscosity<dim>::CN;
+      EV_time_discretization = TemporalDiscretization::CN;
     }
     else if (EV_time_discretization_string == "BDF2")
     {
-      EV_time_discretization = EntropyViscosity<dim>::BDF2;
+      EV_time_discretization = TemporalDiscretization::BDF2;
     }
     else
     {
@@ -264,7 +264,7 @@ void TransportParameters<dim>::get_parameters(ParameterHandler &prm)
   // output parameters
   prm.enter_subsection("output");
   {
-    output_meshes = prm.get_bool("Output mesh");
+    output_mesh = prm.get_bool("Output mesh");
     output_exact_solution = prm.get_bool("Output exact solution");
     exact_solution_refinement_level = prm.get_integer(
         "Exact solution refinement level");
