@@ -6,21 +6,25 @@ Executioner<dim>::Executioner(const TransportParameters<dim> & parameters_,
   const Triangulation<dim> & triangulation_,
   const Tensor<1, dim> & transport_direction_,
   const FunctionParser<dim> & cross_section_function_,
-  FunctionParser<dim> & source_function_, Function<dim> & incoming_function_) :
+  FunctionParser<dim> & source_function_, Function<dim> & incoming_function_,
+  PostProcessor<dim> & postprocessor_) :
     parameters(parameters_),
+    triangulation(& triangulation_),
     fe(FE_Q<dim>(parameters.degree), 1),
     flux(0),
     dof_handler(triangulation_),
     dofs_per_cell(fe.dofs_per_cell),
     n_cells(triangulation_.n_active_cells()),
     cell_quadrature(parameters.n_quadrature_points),
+    face_quadrature(parameters.n_quadrature_points),
     n_q_points_cell(cell_quadrature.size()),
     linear_solver(parameters.linear_solver_option, constraints, dof_handler,
       incoming_function_),
     transport_direction(transport_direction_),
-    cross_section_function(&cross_section_function_),
-    source_function(&source_function_),
-    incoming_function(&incoming_function_)
+    cross_section_function(& cross_section_function_),
+    source_function(& source_function_),
+    incoming_function(& incoming_function_),
+    postprocessor(& postprocessor_)
 {
   // distribute dofs
   dof_handler.distribute_dofs(fe);
@@ -39,13 +43,24 @@ Executioner<dim>::Executioner(const TransportParameters<dim> & parameters_,
     compressed_constrained_sparsity_pattern, constraints, false);
   constrained_sparsity_pattern.copy_from(compressed_constrained_sparsity_pattern);
 
-  // initialize
+  // initialize sparse matrices
+  system_matrix.reinit(constrained_sparsity_pattern);
   inviscid_ss_matrix.reinit(constrained_sparsity_pattern);
   low_order_ss_matrix.reinit(constrained_sparsity_pattern);
+  high_order_ss_matrix.reinit(constrained_sparsity_pattern);
   low_order_diffusion_matrix.reinit(constrained_sparsity_pattern);
-  system_matrix.reinit(constrained_sparsity_pattern);
+  high_order_diffusion_matrix.reinit(constrained_sparsity_pattern);
+
+  // initialize vectors
+  system_rhs.reinit(n_dofs);
   ss_rhs.reinit(n_dofs);
   new_solution.reinit(n_dofs);
+
+  // set boundary indicators to distinguish incoming boundary
+  setBoundaryIndicators();
+
+  // determine Dirichlet nodes
+  getDirichletNodes();
 }
 
 /**
@@ -196,4 +211,73 @@ template<int dim>
 Vector<double> Executioner<dim>::getFinalSolution() const
 {
   return new_solution;
+}
+
+/**
+ * Sets the boundary indicators for each boundary face.
+ *
+ * The Dirichlet BC is applied only to the incoming boundary, so the transport
+ * direction is compared against the normal vector of the face.
+ */
+template<int dim>
+void Executioner<dim>::setBoundaryIndicators()
+{
+  // reset boundary indicators to zero
+  typename DoFHandler<dim>::active_cell_iterator cell =
+      dof_handler.begin_active(), endc = dof_handler.end();
+  for (cell = dof_handler.begin_active(); cell != endc; ++cell)
+    for (unsigned int face = 0; face < GeometryInfo < dim > ::faces_per_cell;
+        ++face)
+      if (cell->face(face)->at_boundary())
+        cell->face(face)->set_boundary_indicator(0);
+
+  // FE face values
+  FEFaceValues<dim> fe_face_values(fe, face_quadrature,
+    update_normal_vectors);
+  // loop over cells
+  for (cell = dof_handler.begin_active(); cell != endc; ++cell)
+  {
+    // loop over faces of cell
+    for (unsigned int face = 0; face < GeometryInfo < dim > ::faces_per_cell;
+        ++face)
+    {
+      // if face is at boundary
+      if (cell->face(face)->at_boundary())
+      {
+        // reinitialize FE face values
+        fe_face_values.reinit(cell, face);
+        // determine if the transport flux is incoming through this face;
+        //  it isn't necessary to loop over all face quadrature points because
+        //  the transport direction and normal vector are the same at each
+        //  quadrature point; therefore, quadrature point 0 is arbitrarily chosen
+        double small = -1.0e-12;
+        if (fe_face_values.normal_vector(0) * transport_direction < small)
+        {
+          // mark boundary as incoming flux boundary: indicator 1
+          cell->face(face)->set_boundary_indicator(1);
+        }
+      }
+    }
+  }
+}
+
+/**
+ * Gets a list of dofs subject to Dirichlet boundary conditions.
+ *
+ * Max principle checks are not valid for Dirichlet nodes, so these nodes
+ * must be excluded from limiting and DMP checks.
+ */
+template<int dim>
+void Executioner<dim>::getDirichletNodes()
+{
+  // get map of Dirichlet dof indices to Dirichlet values
+  std::map<unsigned int, double> boundary_values;
+  VectorTools::interpolate_boundary_values(dof_handler, 1, ZeroFunction<dim>(),
+      boundary_values);
+
+  // extract dof indices from map
+  dirichlet_nodes.clear();
+  for (std::map<unsigned int, double>::iterator it = boundary_values.begin();
+      it != boundary_values.end(); ++it)
+    dirichlet_nodes.push_back(it->first);
 }

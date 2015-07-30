@@ -2,38 +2,35 @@
 #define RefinementHandler_cc
 
 #include <deal.II/grid/tria.h>
+#include "TransportParameters.h"
 
 using namespace dealii;
 
-/** \brief Class for performing spatial/temporal refinement.
+/**
+ * Class for performing spatial/temporal refinement.
  */
 template<int dim>
-class RefinementHandler {
-   public:
+class RefinementHandler
+{
+public:
 
-      enum RefinementMode { space, time };
+  RefinementHandler(
+    const TransportParameters<dim> & parameters,
+    Triangulation<dim> & triangulation);
+  ~RefinementHandler();
 
-      RefinementHandler(
-         Triangulation<dim>   &triangulation,
-         unsigned int         &n_cells,
-         double               &dt,
-         const RefinementMode refinement_mode,
-         const bool           use_adaptive_refinement,
-         const double         time_refinement_factor);
-      ~RefinementHandler();
+  void refine(unsigned int cycle) const;
+  //double getNominalTimeStepSize() const;
 
-      void refine(unsigned int cycle) const;
+private:
 
-   private:
+  void refineGrid() const;
 
-      void refine_grid() const;
-
-      Triangulation<dim> * const triangulation;
-      unsigned int * const       n_cells;
-      double * const             dt;
-      const RefinementMode       refinement_mode;
-      const bool                 use_adaptive_refinement;
-      const double               time_refinement_factor;
+  Triangulation<dim> * const triangulation;
+  //double dt_nominal;
+  const typename TransportParameters<dim>::RefinementMode refinement_mode;
+  const bool use_adaptive_refinement;
+  const double time_refinement_factor;
 };
 
 #include "RefinementHandler.cc"

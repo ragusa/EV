@@ -30,7 +30,7 @@ subsection viscosity
    # 2 = EV
    # 3 = EV+FCT
    # 4 = Galerkin+FCT
-   set Viscosity option = 1
+   set Viscosity option = 0
 end
 
 subsection entropy viscosity

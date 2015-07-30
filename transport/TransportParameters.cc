@@ -4,7 +4,7 @@ template<int dim>
 TransportParameters<dim>::TransportParameters() :
     problem_id(1), degree(1), time_discretization_option(
         TemporalDiscretization::FE), refinement_mode(
-        RefinementHandler<dim>::space), time_refinement_factor(0.5), use_adaptive_refinement(
+        RefinementMode::space), time_refinement_factor(0.5), use_adaptive_refinement(
         false), n_refinement_cycles(5), initial_refinement_level(2), linear_solver_option(
         1), viscosity_option(0), entropy_string("0.5*u*u"), entropy_derivative_string(
         "u"), entropy_residual_coefficient(1.0), jump_coefficient(1.0), EV_time_discretization(
@@ -196,11 +196,11 @@ void TransportParameters<dim>::get_parameters(ParameterHandler &prm)
     std::string refinement_mode_string = prm.get("Refinement mode");
     if (refinement_mode_string == "space")
     {
-      refinement_mode = RefinementHandler<dim>::space;
+      refinement_mode = RefinementMode::space;
     }
     else if (refinement_mode_string == "time")
     {
-      refinement_mode = RefinementHandler<dim>::time;
+      refinement_mode = RefinementMode::time;
     }
     else
     {

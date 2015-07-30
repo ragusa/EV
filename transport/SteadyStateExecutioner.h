@@ -16,7 +16,8 @@ public:
     const Triangulation<dim> & triangulation,
     const Tensor<1, dim> & transport_direction,
     const FunctionParser<dim> & cross_section_function,
-    FunctionParser<dim> & source_function, Function<dim> & incoming_function);
+    FunctionParser<dim> & source_function, Function<dim> & incoming_function,
+    PostProcessor<dim> & postprocessor);
   ~SteadyStateExecutioner();
 
   void run() override;

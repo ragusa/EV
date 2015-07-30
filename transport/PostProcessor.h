@@ -11,17 +11,18 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/data_out.h>
 #include <sys/stat.h>
-#include "RefinementHandler.h"
 #include "TransportParameters.h"
 
 using namespace dealii;
 
-/** \brief Class for outputting solutions and evaluating error and convergence.
+/**
+ * Class for outputting solutions and evaluating error and convergence.
  */
 template<int dim>
 class PostProcessor
 {
 public:
+
   PostProcessor(const TransportParameters<dim> & parameters,
     const bool has_exact_solution, std::shared_ptr<Function<dim> > & exact_solution_function);
   ~PostProcessor();
@@ -35,15 +36,18 @@ public:
     const Vector<double> &high_order_viscosity,
     const DoFHandler<dim> &dof_handler) const;
   void evaluate_error(const Vector<double> &solution,
-    const DoFHandler<dim> &dof_handler, const Triangulation<dim> &triangulation,
-    const unsigned int &cycle);
+    const DoFHandler<dim> &dof_handler, const Triangulation<dim> &triangulation);
   void update_dt(const double &dt);
+  void setCycle(const unsigned int & cycle);
+  bool askIfLastCycle() const;
 
 private:
+
   void output_grid(const Triangulation<dim> &triangulation) const;
   void create_directory(const std::string &dir) const;
 
   const TransportParameters<dim> parameters;
+
   ConvergenceTable convergence_table;
 
   const bool has_exact_solution;
@@ -59,6 +63,9 @@ private:
   std::string filename_exact;
 
   const QGauss<dim> cell_quadrature;
+
+  unsigned int current_cycle;
+  bool is_last_cycle;
 };
 
 #include "PostProcessor.cc"

@@ -7,9 +7,10 @@ SteadyStateExecutioner<dim>::SteadyStateExecutioner(
   const Triangulation<dim> & triangulation,
   const Tensor<1, dim> & transport_direction,
   const FunctionParser<dim> & cross_section_function,
-  FunctionParser<dim> & source_function, Function<dim> & incoming_function) :
+  FunctionParser<dim> & source_function, Function<dim> & incoming_function,
+  PostProcessor<dim> & postprocessor_) :
     Executioner<dim>(parameters, triangulation, transport_direction,
-      cross_section_function, source_function, incoming_function)
+      cross_section_function, source_function, incoming_function, postprocessor_)
 {
 }
 
@@ -40,7 +41,16 @@ void SteadyStateExecutioner<dim>::run()
   {
     case 0 :
     {
+      // copy inviscid steady-state matrix to system matrix
       this->system_matrix.copy_from(this->inviscid_ss_matrix);
+
+      // solve the linear system: ss_matrix*new_solution = ss_rhs
+      this->linear_solver.solve(this->system_matrix, this->ss_rhs,
+        this->new_solution);
+
+      // distribute constraints
+      this->constraints.distribute(this->new_solution);
+
       break;
     }
     case 1 :
@@ -53,6 +63,14 @@ void SteadyStateExecutioner<dim>::run()
 
       // copy low-order steady-state matrix to system matrix
       this->system_matrix.copy_from(this->low_order_ss_matrix);
+
+      // solve the linear system: ss_matrix*new_solution = ss_rhs
+      this->linear_solver.solve(this->system_matrix, this->ss_rhs,
+        this->new_solution);
+
+      // distribute constraints
+      this->constraints.distribute(this->new_solution);
+
       break;
     }
     default :
@@ -61,10 +79,9 @@ void SteadyStateExecutioner<dim>::run()
     }
   }
 
-  // solve the linear system: ss_matrix*new_solution = ss_rhs
-  this->linear_solver.solve(this->system_matrix, this->ss_rhs,
-    this->new_solution);
+  // evaluate errors for convergence study
+  this->postprocessor->evaluate_error(this->new_solution, this->dof_handler, *this->triangulation);
 
-  // distribute constraints
-  this->constraints.distribute(this->new_solution);
+  // output grid and solution and print convergence results
+  this->postprocessor->output_results(this->new_solution, this->dof_handler, *this->triangulation);
 }

@@ -2,7 +2,6 @@
 #define TransportParameters_cc
 
 #include <deal.II/base/parameter_handler.h>
-#include "RefinementHandler.h"
 
 using namespace dealii;
 
@@ -18,6 +17,11 @@ public:
     SS, FE, CN, BE, BDF2, SSP2, SSP3
   };
 
+  enum RefinementMode
+  {
+    space, time
+  };
+
   TransportParameters();
   static void declare_parameters(ParameterHandler &prm);
   void get_parameters(ParameterHandler &prm);
@@ -26,7 +30,7 @@ public:
 
   unsigned int degree; // polynomial degree of finite elements
   TemporalDiscretization time_discretization_option;
-  typename RefinementHandler<dim>::RefinementMode refinement_mode;
+  RefinementMode refinement_mode;
   double time_refinement_factor; // reduction factor for time refinement
   bool use_adaptive_refinement; // option to use adaptive mesh refinement
   unsigned int n_refinement_cycles; // number of refinement cycles

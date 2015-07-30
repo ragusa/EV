@@ -3,14 +3,57 @@
  */
 template<int dim>
 TransientExecutioner<dim>::TransientExecutioner(
-  const TransportParameters<dim> & parameters,
-  const Triangulation<dim> & triangulation,
-  const Tensor<1, dim> & transport_direction,
-  const FunctionParser<dim> & cross_section_function,
-  FunctionParser<dim> & source_function, Function<dim> & incoming_function) :
-    Executioner<dim>(parameters, triangulation, transport_direction,
-      cross_section_function, source_function, incoming_function)
+  const TransportParameters<dim> & parameters_,
+  const Triangulation<dim> & triangulation_,
+  const Tensor<1, dim> & transport_direction_,
+  const FunctionParser<dim> & cross_section_function_,
+  FunctionParser<dim> & source_function_,
+  Function<dim> & incoming_function_,
+  FunctionParser<dim> & initial_conditions_function_,
+  PostProcessor<dim> & postprocessor_) :
+    Executioner<dim>(parameters_, triangulation_, transport_direction_,
+      cross_section_function_, source_function_, incoming_function_, postprocessor_),
+    initial_conditions_function(& initial_conditions_function_)
 {
+  // initialize mass matrices
+  consistent_mass_matrix.reinit(this->constrained_sparsity_pattern);
+  lumped_mass_matrix.reinit(this->constrained_sparsity_pattern);
+
+  // compute nominal time step size
+  dt_nominal = this->parameters.time_step_size;
+
+  // compute minimum cell diameter for CFL condition
+  typename DoFHandler<dim>::active_cell_iterator cell =
+      this->dof_handler.begin_active(), endc = this->dof_handler.end();
+  minimum_cell_diameter = cell->diameter();
+  for (; cell != endc; ++cell)
+    minimum_cell_diameter = std::min(minimum_cell_diameter, cell->diameter());
+
+  // enforce CFL condition on nominal time step size
+  double CFL_nominal = enforceCFLCondition(dt_nominal);
+
+  // interpolate initial conditions
+  initial_conditions_function->set_time(0.0);
+  VectorTools::interpolate(this->dof_handler, *initial_conditions_function, this->new_solution);
+  this->constraints.distribute(this->new_solution);
+
+  // if last cycle, output initial conditions if user requested
+  /*
+  if ((cycle == parameters.n_refinement_cycles - 1)
+      and (parameters.output_initial_solution))
+  {
+    std::stringstream IC_filename_ss;
+    IC_filename_ss << "solution_" << parameters.problem_id << "_initial";
+    postprocessor.output_solution(new_solution, dof_handler,
+        IC_filename_ss.str());
+  }
+  */
+
+  // initialize transient solution vectors
+  old_solution.reinit(n_dofs);
+  older_solution.reinit(n_dofs);
+  oldest_solution.reinit(n_dofs);
+  old_stage_solution.reinit(n_dofs);
 }
 
 /**
@@ -27,34 +70,33 @@ TransientExecutioner<dim>::~TransientExecutioner()
 template<int dim>
 void TransientExecutioner<dim>::run()
 {
-  // enforce CFL condition on nominal dt size
-  CFL_nominal = enforce_CFL_condition(dt_nominal);
+  // compute low-order viscosity
+  LowOrderViscosity<dim> low_order_viscosity(this->n_cells,
+    this->dofs_per_cell, this->dof_handler, this->constraints,
+    this->inviscid_ss_matrix, this->low_order_diffusion_matrix,
+    this->low_order_ss_matrix);
 
-  // update dt displayed in convergence table
-  postprocessor.update_dt(dt_nominal);
+  // create entropy viscosity
+  EntropyViscosity<dim> EV(this->fe, this->n_cells, this->dof_handler, this->constraints,
+      this->cell_quadrature, this->face_quadrature, transport_direction,
+      cross_section_function, source_function, this->parameters.entropy_string,
+      this->parameters.entropy_derivative_string,
+      this->parameters.entropy_residual_coefficient, this->parameters.jump_coefficient,
+      domain_volume, this->parameters.EV_time_discretization, low_order_viscosity,
+      this->inviscid_ss_matrix, this->high_order_diffusion_matrix, this->high_order_ss_matrix);
 
-  // print dt
-  std::cout << "   Nominal time step size: " << dt_nominal << std::endl;
-  std::cout << "   Nominal CFL number: " << CFL_nominal << std::endl;
-
-  // interpolate initial conditions
-  initial_conditions.set_time(0.0);
-  VectorTools::interpolate(dof_handler, initial_conditions, new_solution);
-  constraints.distribute(new_solution);
-
-  // if last cycle, output initial conditions if user requested
-  if ((cycle == parameters.n_refinement_cycles - 1)
-      and (parameters.output_initial_solution))
-  {
-    std::stringstream IC_filename_ss;
-    IC_filename_ss << "solution_" << parameters.problem_id << "_initial";
-    postprocessor.output_solution(new_solution, dof_handler,
-        IC_filename_ss.str());
-  }
+  // create FCT object
+  FCT<dim> fct(dof_handler, triangulation, lumped_mass_matrix,
+      consistent_mass_matrix, linear_solver, constrained_sparsity_pattern,
+      dirichlet_nodes, n_dofs, dofs_per_cell, parameters.do_not_limit);
 
   // create SSP Runge-Kutta time integrator object
-  SSPRKTimeIntegrator<dim> ssprk(parameters.time_discretization_option, n_dofs,
-      linear_solver, constrained_sparsity_pattern);
+  SSPRKTimeIntegrator<dim> ssprk(this->parameters.time_discretization_option, n_dofs,
+      linear_solver, this->constrained_sparsity_pattern);
+
+  // assemble inviscid steady-state matrix and steady-state rhs
+  this->assembleInvisicidSteadyStateMatrix();
+  this->assembleSteadyStateRHS(0.0);
 
   // time loop
   double t_new = 0.0;
@@ -71,7 +113,7 @@ void TransientExecutioner<dim>::run()
   unsigned int n = 1; // time step index
   while (in_transient)
   {
-    // shorten dt if new time would overshoot end time
+    // shorten time step size if new time would overshoot end time
     dt = dt_nominal;
     if (t_old + dt >= t_end)
     {
@@ -102,7 +144,7 @@ void TransientExecutioner<dim>::run()
           }
 
           // advance by an SSPRK step
-          ssprk.step(consistent_mass_matrix, inviscid_ss_matrix, ss_rhs,
+          ssprk.step(consistent_mass_matrix, this->inviscid_ss_matrix, this->ss_rhs,
               true);
         }
         // retrieve the final solution
@@ -166,10 +208,8 @@ void TransientExecutioner<dim>::run()
             ssprk.get_stage_solution(i, old_stage_solution);
 
             // recompute high-order steady-state matrix
-            EV.recompute_high_order_ss_matrix(new_solution,
-                old_stage_solution, old_solution, // not used; supply arbitrary argument
-                dt, old_dt,       // not used; supply arbitrary argument
-                t_stage);
+            EV.recompute_high_order_ss_matrix(new_solution, old_stage_solution,
+              old_solution, dt, old_dt, t_stage);
           }
 
           // advance by an SSPRK step
@@ -293,3 +333,77 @@ void TransientExecutioner<dim>::run()
     n++;
   }
 }
+
+/**
+ * Assembles the consistent and lumped mass matrices.
+ */
+template<int dim>
+void TransientExecutioner<dim>::assembleMassMatrices()
+{
+  FEValues < dim
+      > fe_values(fe, cell_quadrature, update_values | update_JxW_values);
+
+  std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+
+  FullMatrix<double> local_mass_consistent(dofs_per_cell, dofs_per_cell);
+  FullMatrix<double> local_mass_lumped(dofs_per_cell, dofs_per_cell);
+
+  typename DoFHandler<dim>::active_cell_iterator cell =
+      dof_handler.begin_active(), endc = dof_handler.end();
+  for (; cell != endc; ++cell)
+  {
+    fe_values.reinit(cell);
+    cell->get_dof_indices(local_dof_indices);
+
+    local_mass_consistent = 0.0;
+    local_mass_lumped = 0.0;
+
+    // compute local contribution
+    for (unsigned int q = 0; q < n_q_points_cell; ++q)
+      for (unsigned int i = 0; i < dofs_per_cell; ++i)
+        for (unsigned int j = 0; j < dofs_per_cell; ++j)
+        {
+          local_mass_consistent(i, j) += fe_values.shape_value(i, q)
+              * fe_values.shape_value(j, q) * fe_values.JxW(q);
+          local_mass_lumped(i, i) += fe_values.shape_value(i, q)
+              * fe_values.shape_value(j, q) * fe_values.JxW(q);
+        }
+
+    // add to global mass matrices with contraints
+    constraints.distribute_local_to_global(local_mass_consistent,
+        local_dof_indices, consistent_mass_matrix);
+    constraints.distribute_local_to_global(local_mass_lumped, local_dof_indices,
+        lumped_mass_matrix);
+  }
+}
+
+/**
+ * Checks CFL condition and adjusts time step size as necessary.
+ *
+ * @param[in,out] dt time step size for current time step
+ * @return CFL number for this time step
+ */
+template<int dim>
+double TransientExecutioner<dim>::enforceCFLCondition(double & dt)
+{
+  // CFL is dt*speed/dx
+  double max_speed_dx = 0.0; // max(speed/dx); max over all i of A(i,i)/mL(i,i)
+  for (unsigned int i = 0; i < n_dofs; ++i)
+    max_speed_dx = std::max(max_speed_dx,
+        std::abs(this->low_order_ss_matrix(i, i)) / lumped_mass_matrix(i, i));
+
+  // compute CFL number
+  double proposed_CFL = dt * max_speed_dx;
+
+  // if computed CFL number is greater than the set limit, then adjust dt
+  double adjusted_CFL = proposed_CFL;
+  if (proposed_CFL > parameters.CFL_limit)
+  {
+    adjusted_CFL = parameters.CFL_limit;
+    dt = adjusted_CFL / max_speed_dx;
+  }
+
+  // return adjusted CFL number
+  return adjusted_CFL;
+}
+
