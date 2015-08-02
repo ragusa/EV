@@ -24,11 +24,12 @@ class Executioner
 public:
 
   Executioner(const TransportParameters<dim> & parameters,
-    const Triangulation<dim> & triangulation,
+    Triangulation<dim> & triangulation,
     const Tensor<1, dim> & transport_direction,
     const FunctionParser<dim> & cross_section_function,
     FunctionParser<dim> & source_function,
     Function<dim> & incoming_function,
+    const double & domain_volume,
     PostProcessor<dim> & postprocessor);
   virtual ~Executioner();
 
@@ -46,7 +47,7 @@ protected:
 
   const TransportParameters<dim> parameters;
 
-  const Triangulation<dim> * const triangulation;
+  Triangulation<dim> * const triangulation;
 
   const FESystem<dim> fe;
   const FEValuesExtractors::Scalar flux;
@@ -64,6 +65,7 @@ protected:
   const FunctionParser<dim> * const cross_section_function;
   FunctionParser<dim> * const source_function;
   Function<dim> * const incoming_function;
+  const double domain_volume;
 
   ConstraintMatrix constraints;
   SparsityPattern constrained_sparsity_pattern;

@@ -77,6 +77,7 @@ private:
   bool source_time_dependent;
   double x_min;
   double x_max;
+  double domain_volume;
 
   // timer
   TimerOutput timer;

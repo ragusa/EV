@@ -3,10 +3,11 @@
  */
 template<int dim>
 Executioner<dim>::Executioner(const TransportParameters<dim> & parameters_,
-  const Triangulation<dim> & triangulation_,
+  Triangulation<dim> & triangulation_,
   const Tensor<1, dim> & transport_direction_,
   const FunctionParser<dim> & cross_section_function_,
   FunctionParser<dim> & source_function_, Function<dim> & incoming_function_,
+  const double & domain_volume_,
   PostProcessor<dim> & postprocessor_) :
     parameters(parameters_),
     triangulation(& triangulation_),
@@ -24,6 +25,7 @@ Executioner<dim>::Executioner(const TransportParameters<dim> & parameters_,
     cross_section_function(& cross_section_function_),
     source_function(& source_function_),
     incoming_function(& incoming_function_),
+    domain_volume(domain_volume_),
     postprocessor(& postprocessor_)
 {
   // distribute dofs

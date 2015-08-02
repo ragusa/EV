@@ -4,13 +4,16 @@
 template<int dim>
 SteadyStateExecutioner<dim>::SteadyStateExecutioner(
   const TransportParameters<dim> & parameters,
-  const Triangulation<dim> & triangulation,
+  Triangulation<dim> & triangulation,
   const Tensor<1, dim> & transport_direction,
   const FunctionParser<dim> & cross_section_function,
-  FunctionParser<dim> & source_function, Function<dim> & incoming_function,
+  FunctionParser<dim> & source_function,
+  Function<dim> & incoming_function,
+  const double & domain_volume_,
   PostProcessor<dim> & postprocessor_) :
     Executioner<dim>(parameters, triangulation, transport_direction,
-      cross_section_function, source_function, incoming_function, postprocessor_)
+      cross_section_function, source_function, incoming_function, domain_volume_,
+      postprocessor_)
 {
 }
 
@@ -80,8 +83,10 @@ void SteadyStateExecutioner<dim>::run()
   }
 
   // evaluate errors for convergence study
-  this->postprocessor->evaluate_error(this->new_solution, this->dof_handler, *this->triangulation);
+  this->postprocessor->evaluate_error(this->new_solution, this->dof_handler,
+    *this->triangulation);
 
   // output grid and solution and print convergence results
-  this->postprocessor->output_results(this->new_solution, this->dof_handler, *this->triangulation);
+  this->postprocessor->output_results(this->new_solution, this->dof_handler,
+    *this->triangulation);
 }
