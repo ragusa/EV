@@ -30,7 +30,7 @@
 #include "ExactSolutions.h"
 #include "RefinementHandler.h"
 #include "SteadyStateExecutioner.h"
-//#include "TransientExecutioner.h"
+#include "TransientExecutioner.h"
 
 using namespace dealii;
 

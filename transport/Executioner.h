@@ -51,6 +51,7 @@ protected:
   const FESystem<dim> fe;
   const FEValuesExtractors::Scalar flux;
   DoFHandler<dim> dof_handler;
+  unsigned int n_dofs;
   const unsigned int dofs_per_cell;
   const unsigned int n_cells;
   const QGauss<dim>   cell_quadrature;

@@ -2,6 +2,7 @@
 #define TransientExecutioner_cc
 
 #include "Executioner.h"
+#include "SSPRKTimeIntegrator.h"
 
 using namespace dealii;
 
@@ -19,7 +20,8 @@ public:
     const FunctionParser<dim> & cross_section_function,
     FunctionParser<dim> & source_function, Function<dim> & incoming_function,
     FunctionParser<dim> & initial_conditions_function,
-    PostProcessor<dim> & postprocessor);
+    PostProcessor<dim> & postprocessor,
+    const bool & source_is_time_dependent);
   ~TransientExecutioner();
 
   void run() override;
@@ -28,6 +30,9 @@ private:
 
   void assembleMassMatrices();
   double enforceCFLCondition(double & dt);
+
+  void takeGalerkinStep(SSPRKTimeIntegrator<dim> & ssprk);
+  void takeLowOrderStep(SSPRKTimeIntegrator<dim> & ssprk);
 
   SparseMatrix<double> consistent_mass_matrix;
   SparseMatrix<double> lumped_mass_matrix;
@@ -41,6 +46,8 @@ private:
   Vector<double> older_solution;
   Vector<double> oldest_solution;
   Vector<double> old_stage_solution;
+
+  const bool source_is_time_dependent;
 };
 
 #include "TransientExecutioner.cc"

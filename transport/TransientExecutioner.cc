@@ -10,10 +10,12 @@ TransientExecutioner<dim>::TransientExecutioner(
   FunctionParser<dim> & source_function_,
   Function<dim> & incoming_function_,
   FunctionParser<dim> & initial_conditions_function_,
-  PostProcessor<dim> & postprocessor_) :
+  PostProcessor<dim> & postprocessor_,
+  const bool & source_is_time_dependent_) :
     Executioner<dim>(parameters_, triangulation_, transport_direction_,
       cross_section_function_, source_function_, incoming_function_, postprocessor_),
-    initial_conditions_function(& initial_conditions_function_)
+    initial_conditions_function(& initial_conditions_function_),
+    source_is_time_dependent(source_is_time_dependent_)
 {
   // initialize mass matrices
   consistent_mass_matrix.reinit(this->constrained_sparsity_pattern);
@@ -28,9 +30,6 @@ TransientExecutioner<dim>::TransientExecutioner(
   minimum_cell_diameter = cell->diameter();
   for (; cell != endc; ++cell)
     minimum_cell_diameter = std::min(minimum_cell_diameter, cell->diameter());
-
-  // enforce CFL condition on nominal time step size
-  double CFL_nominal = enforceCFLCondition(dt_nominal);
 
   // interpolate initial conditions
   initial_conditions_function->set_time(0.0);
@@ -50,10 +49,10 @@ TransientExecutioner<dim>::TransientExecutioner(
   */
 
   // initialize transient solution vectors
-  old_solution.reinit(n_dofs);
-  older_solution.reinit(n_dofs);
-  oldest_solution.reinit(n_dofs);
-  old_stage_solution.reinit(n_dofs);
+  old_solution.reinit(this->n_dofs);
+  older_solution.reinit(this->n_dofs);
+  oldest_solution.reinit(this->n_dofs);
+  old_stage_solution.reinit(this->n_dofs);
 }
 
 /**
@@ -70,33 +69,41 @@ TransientExecutioner<dim>::~TransientExecutioner()
 template<int dim>
 void TransientExecutioner<dim>::run()
 {
+  // assemble inviscid steady-state matrix and steady-state rhs
+  this->assembleInviscidSteadyStateMatrix();
+  this->assembleSteadyStateRHS(0.0);
+
+  // assemble mass matrices
+  assembleMassMatrices();
+
   // compute low-order viscosity
   LowOrderViscosity<dim> low_order_viscosity(this->n_cells,
     this->dofs_per_cell, this->dof_handler, this->constraints,
     this->inviscid_ss_matrix, this->low_order_diffusion_matrix,
     this->low_order_ss_matrix);
 
+  // enforce CFL condition on nominal time step size
+  double CFL_nominal = enforceCFLCondition(dt_nominal);
+
   // create entropy viscosity
+  /*
   EntropyViscosity<dim> EV(this->fe, this->n_cells, this->dof_handler, this->constraints,
-      this->cell_quadrature, this->face_quadrature, transport_direction,
-      cross_section_function, source_function, this->parameters.entropy_string,
+      this->cell_quadrature, this->face_quadrature, this->transport_direction,
+      this->cross_section_function, this->source_function, this->parameters.entropy_string,
       this->parameters.entropy_derivative_string,
       this->parameters.entropy_residual_coefficient, this->parameters.jump_coefficient,
       domain_volume, this->parameters.EV_time_discretization, low_order_viscosity,
       this->inviscid_ss_matrix, this->high_order_diffusion_matrix, this->high_order_ss_matrix);
 
   // create FCT object
-  FCT<dim> fct(dof_handler, triangulation, lumped_mass_matrix,
-      consistent_mass_matrix, linear_solver, constrained_sparsity_pattern,
-      dirichlet_nodes, n_dofs, dofs_per_cell, parameters.do_not_limit);
+  FCT<dim> fct(this->dof_handler, this->triangulation, lumped_mass_matrix,
+      consistent_mass_matrix, this->linear_solver, this->constrained_sparsity_pattern,
+      dirichlet_nodes, this->n_dofs, this->dofs_per_cell, this->parameters.do_not_limit);
+      */
 
   // create SSP Runge-Kutta time integrator object
-  SSPRKTimeIntegrator<dim> ssprk(this->parameters.time_discretization_option, n_dofs,
-      linear_solver, this->constrained_sparsity_pattern);
-
-  // assemble inviscid steady-state matrix and steady-state rhs
-  this->assembleInvisicidSteadyStateMatrix();
-  this->assembleSteadyStateRHS(0.0);
+  SSPRKTimeIntegrator<dim> ssprk(this->parameters.time_discretization_option, this->n_dofs,
+      this->linear_solver, this->constrained_sparsity_pattern);
 
   // time loop
   double t_new = 0.0;
@@ -104,12 +111,12 @@ void TransientExecutioner<dim>::run()
   double dt = dt_nominal;
   double old_dt = dt_nominal;
   double older_dt = dt_nominal;
-  old_solution = new_solution;
-  older_solution = new_solution;
-  oldest_solution = new_solution;
-  const double t_end = parameters.end_time;
+  old_solution = this->new_solution;
+  older_solution = this->new_solution;
+  oldest_solution = this->new_solution;
+  const double t_end = this->parameters.end_time;
   bool in_transient = true;
-  Vector<double> tmp_vector(n_dofs);
+  Vector<double> tmp_vector(this->n_dofs);
   unsigned int n = 1; // time step index
   while (in_transient)
   {
@@ -127,53 +134,23 @@ void TransientExecutioner<dim>::run()
     // initialize SSPRK time step
     ssprk.initialize_time_step(old_solution, dt);
 
-    switch (parameters.viscosity_option)
+    switch (this->parameters.viscosity_option)
     {
       case 0 :
       { // unmodified Galerkin scheme
 
-        for (unsigned int i = 0; i < ssprk.n_stages; ++i)
-        {
-          // get stage time
-          double t_stage = ssprk.get_stage_time();
-
-          // recompute steady-state rhs if it is time-dependent
-          if (source_time_dependent)
-          {
-            assemble_ss_rhs(t_stage);
-          }
-
-          // advance by an SSPRK step
-          ssprk.step(consistent_mass_matrix, this->inviscid_ss_matrix, this->ss_rhs,
-              true);
-        }
-        // retrieve the final solution
-        ssprk.get_new_solution(new_solution);
+        takeGalerkinStep(ssprk);
 
         break;
       }
       case 1 :
       { // solve low-order system
 
-        for (unsigned int i = 0; i < ssprk.n_stages; ++i)
-        {
-          // get stage time
-          double t_stage = ssprk.get_stage_time();
-
-          // recompute steady-state rhs if it is time-dependent
-          if (source_time_dependent)
-          {
-            assemble_ss_rhs(t_stage);
-          }
-
-          // advance by an SSPRK step
-          ssprk.step(lumped_mass_matrix, low_order_ss_matrix, ss_rhs, true);
-        }
-        // retrieve the final solution
-        ssprk.get_new_solution(new_solution);
+        takeLowOrderStep(ssprk);
 
         break;
       }
+      /*
       case 2 :
       { // high-order system with entropy viscosity
         // compute EV only at beginning of time step
@@ -314,6 +291,7 @@ void TransientExecutioner<dim>::run()
 
         break;
       }
+      */
       default :
       {
         Assert(false, ExcNotImplemented());
@@ -324,7 +302,7 @@ void TransientExecutioner<dim>::run()
     // update old solution, time, and time step size
     oldest_solution = older_solution;
     older_solution = old_solution;
-    old_solution = new_solution;
+    old_solution = this->new_solution;
     older_dt = old_dt;
     old_dt = dt;
     t_old = t_new;
@@ -332,6 +310,12 @@ void TransientExecutioner<dim>::run()
     // increment time step index
     n++;
   }
+
+  // evaluate errors for convergence study
+  this->postprocessor->evaluate_error(this->new_solution, this->dof_handler, *this->triangulation);
+
+  // output grid and solution and print convergence results
+  this->postprocessor->output_results(this->new_solution, this->dof_handler, *this->triangulation);
 }
 
 /**
@@ -341,15 +325,15 @@ template<int dim>
 void TransientExecutioner<dim>::assembleMassMatrices()
 {
   FEValues < dim
-      > fe_values(fe, cell_quadrature, update_values | update_JxW_values);
+      > fe_values(this->fe, this->cell_quadrature, update_values | update_JxW_values);
 
-  std::vector<types::global_dof_index> local_dof_indices(dofs_per_cell);
+  std::vector<types::global_dof_index> local_dof_indices(this->dofs_per_cell);
 
-  FullMatrix<double> local_mass_consistent(dofs_per_cell, dofs_per_cell);
-  FullMatrix<double> local_mass_lumped(dofs_per_cell, dofs_per_cell);
+  FullMatrix<double> local_mass_consistent(this->dofs_per_cell, this->dofs_per_cell);
+  FullMatrix<double> local_mass_lumped(this->dofs_per_cell, this->dofs_per_cell);
 
   typename DoFHandler<dim>::active_cell_iterator cell =
-      dof_handler.begin_active(), endc = dof_handler.end();
+      this->dof_handler.begin_active(), endc = this->dof_handler.end();
   for (; cell != endc; ++cell)
   {
     fe_values.reinit(cell);
@@ -359,9 +343,9 @@ void TransientExecutioner<dim>::assembleMassMatrices()
     local_mass_lumped = 0.0;
 
     // compute local contribution
-    for (unsigned int q = 0; q < n_q_points_cell; ++q)
-      for (unsigned int i = 0; i < dofs_per_cell; ++i)
-        for (unsigned int j = 0; j < dofs_per_cell; ++j)
+    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+      for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+        for (unsigned int j = 0; j < this->dofs_per_cell; ++j)
         {
           local_mass_consistent(i, j) += fe_values.shape_value(i, q)
               * fe_values.shape_value(j, q) * fe_values.JxW(q);
@@ -370,10 +354,10 @@ void TransientExecutioner<dim>::assembleMassMatrices()
         }
 
     // add to global mass matrices with contraints
-    constraints.distribute_local_to_global(local_mass_consistent,
+    this->constraints.distribute_local_to_global(local_mass_consistent,
         local_dof_indices, consistent_mass_matrix);
-    constraints.distribute_local_to_global(local_mass_lumped, local_dof_indices,
-        lumped_mass_matrix);
+    this->constraints.distribute_local_to_global(local_mass_lumped,
+        local_dof_indices, lumped_mass_matrix);
   }
 }
 
@@ -388,7 +372,7 @@ double TransientExecutioner<dim>::enforceCFLCondition(double & dt)
 {
   // CFL is dt*speed/dx
   double max_speed_dx = 0.0; // max(speed/dx); max over all i of A(i,i)/mL(i,i)
-  for (unsigned int i = 0; i < n_dofs; ++i)
+  for (unsigned int i = 0; i < this->n_dofs; ++i)
     max_speed_dx = std::max(max_speed_dx,
         std::abs(this->low_order_ss_matrix(i, i)) / lumped_mass_matrix(i, i));
 
@@ -397,9 +381,9 @@ double TransientExecutioner<dim>::enforceCFLCondition(double & dt)
 
   // if computed CFL number is greater than the set limit, then adjust dt
   double adjusted_CFL = proposed_CFL;
-  if (proposed_CFL > parameters.CFL_limit)
+  if (proposed_CFL > this->parameters.CFL_limit)
   {
-    adjusted_CFL = parameters.CFL_limit;
+    adjusted_CFL = this->parameters.CFL_limit;
     dt = adjusted_CFL / max_speed_dx;
   }
 
@@ -407,3 +391,52 @@ double TransientExecutioner<dim>::enforceCFLCondition(double & dt)
   return adjusted_CFL;
 }
 
+/**
+ * Takes time step with the Galerkin (no viscosity) method.
+ */
+template<int dim>
+void TransientExecutioner<dim>::takeGalerkinStep(SSPRKTimeIntegrator<dim> & ssprk)
+{
+  for (unsigned int i = 0; i < ssprk.n_stages; ++i)
+  {
+    // get stage time
+    double t_stage = ssprk.get_stage_time();
+
+    // recompute steady-state rhs if it is time-dependent
+    if (source_is_time_dependent)
+    {
+      this->assembleSteadyStateRHS(t_stage);
+    }
+
+    // advance by an SSPRK step
+    ssprk.step(consistent_mass_matrix, this->inviscid_ss_matrix, this->ss_rhs,
+        true);
+  }
+  // retrieve the final solution
+  ssprk.get_new_solution(this->new_solution);
+}
+
+/**
+ * Takes time step with the low-order viscosity method.
+ */
+template<int dim>
+void TransientExecutioner<dim>::takeLowOrderStep(SSPRKTimeIntegrator<dim> & ssprk)
+{
+  for (unsigned int i = 0; i < ssprk.n_stages; ++i)
+  {
+    // get stage time
+    double t_stage = ssprk.get_stage_time();
+
+    // recompute steady-state rhs if it is time-dependent
+    if (source_is_time_dependent)
+    {
+      this->assembleSteadyStateRHS(t_stage);
+    }
+
+    // advance by an SSPRK step
+    ssprk.step(lumped_mass_matrix, this->low_order_ss_matrix, this->ss_rhs,
+        true);
+  }
+  // retrieve the final solution
+  ssprk.get_new_solution(this->new_solution);
+}

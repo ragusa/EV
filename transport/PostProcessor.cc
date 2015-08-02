@@ -239,37 +239,40 @@ template<int dim>
 void PostProcessor<dim>::output_solution(const Vector<double> &solution,
   const DoFHandler<dim> &dof_handler, const std::string &output_string) const
 {
-  // create output directory if it doesn't exist
-  create_directory("output");
-
-  // create output subdirectory if it doesn't exist
-  create_directory(output_dir);
-
-  // create DataOut object for solution
-  DataOut < dim > data_out;
-  data_out.attach_dof_handler(dof_handler);
-  data_out.add_data_vector(solution, "flux");
-  data_out.build_patches();
-
-  // create output filename for solution
-  std::string filename_extension;
-  if (dim == 1)
-    filename_extension = ".gpl";
-  else
-    filename_extension = ".vtk";
-
-  std::stringstream filename_ss;
-  filename_ss << output_dir << output_string << filename_extension;
-  std::string filename = filename_ss.str();
-
-  // create output filestream for exact solution
-  std::ofstream output_filestream(filename.c_str());
-  output_filestream.precision(15);
-  // write file
-  if (dim == 1)
-    data_out.write_gnuplot(output_filestream);
-  else
-    data_out.write_vtk(output_filestream);
+  if (is_last_cycle)
+  {
+    // create output directory if it doesn't exist
+    create_directory("output");
+  
+    // create output subdirectory if it doesn't exist
+    create_directory(output_dir);
+  
+    // create DataOut object for solution
+    DataOut < dim > data_out;
+    data_out.attach_dof_handler(dof_handler);
+    data_out.add_data_vector(solution, "flux");
+    data_out.build_patches();
+  
+    // create output filename for solution
+    std::string filename_extension;
+    if (dim == 1)
+      filename_extension = ".gpl";
+    else
+      filename_extension = ".vtk";
+  
+    std::stringstream filename_ss;
+    filename_ss << output_dir << output_string << filename_extension;
+    std::string filename = filename_ss.str();
+  
+    // create output filestream for exact solution
+    std::ofstream output_filestream(filename.c_str());
+    output_filestream.precision(15);
+    // write file
+    if (dim == 1)
+      data_out.write_gnuplot(output_filestream);
+    else
+      data_out.write_vtk(output_filestream);
+  }
 }
 
 /** \brief Outputs viscosities to file.

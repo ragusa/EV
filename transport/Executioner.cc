@@ -29,6 +29,9 @@ Executioner<dim>::Executioner(const TransportParameters<dim> & parameters_,
   // distribute dofs
   dof_handler.distribute_dofs(fe);
 
+  // set number of dofs
+  n_dofs = dof_handler.n_dofs();
+
   // get number of dofs
   const unsigned int n_dofs = dof_handler.n_dofs();
 

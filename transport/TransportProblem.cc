@@ -724,7 +724,7 @@ void TransportProblem<dim>::run()
       // create and run transient executioner
       TransientExecutioner<dim> executioner(parameters, triangulation,
         transport_direction, cross_section_function, source_function,
-        incoming_function, initial_conditions, postprocessor);
+        incoming_function, initial_conditions, postprocessor, source_time_dependent);
       executioner.run();
     }
     else
@@ -738,22 +738,5 @@ void TransportProblem<dim>::run()
         incoming_function, postprocessor);
       executioner.run();
     }
-
-    /*
-    // if last cycle and FCT was used and user specified, then output DMP bounds
-    if (cycle == parameters.n_refinement_cycles - 1)
-      if (parameters.output_DMP_bounds)
-      {
-        if (parameters.viscosity_option == 1)
-        { // low-order
-          fct.compute_bounds(old_solution, low_order_ss_matrix, ss_rhs, dt);
-          fct.output_bounds(postprocessor, "Low");
-        }
-        else if (parameters.viscosity_option == 3) // EV-FCT
-          fct.output_bounds(postprocessor, "EVFCT");
-        else if (parameters.viscosity_option == 4) // Gal-FCT
-          fct.output_bounds(postprocessor, "GalFCT");
-      }
-*/
   } // end refinement cycle loop
 }
