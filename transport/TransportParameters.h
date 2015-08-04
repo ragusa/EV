@@ -36,6 +36,8 @@ public:
   unsigned int n_refinement_cycles; // number of refinement cycles
   unsigned int initial_refinement_level; // initial level of refinement
   unsigned int linear_solver_option; // linear solver option
+  unsigned int nonlinear_solver_option; // nonlinear solver option
+  unsigned int nonlinear_tolerance; // nonlinear solver tolerance
   unsigned int viscosity_option; // option for viscosity used
   std::string entropy_string; // string for entropy function
   std::string entropy_derivative_string; // string for entropy derivative function
