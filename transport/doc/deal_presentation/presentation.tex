@@ -61,7 +61,7 @@
    \and
    \inst{2}Department of Mathematics\\
    Texas A\&M University}
-\date[Summer 2015]{deal.II Workshop, Summer 2015}
+\date[Summer 2015]{\texttt{deal.II} Workshop, Summer 2015}
 \logo{\includegraphics[height=0.1\textwidth]{./figures/TAMU-Logo-white.png}}
 
 \begin{document}
@@ -89,8 +89,8 @@
 \frametitle{Motivation}
 
 \begin{itemize}
-   \item Weak solutions to conservation law problems using standard CFEM
-      are not unique and thus are prone to unphysical oscillations:
+   \item Weak solutions to conservation law problems in general are not
+      unique; thus solution via CFEM prone to unphysical oscillations:
    \begin{center}
       \includegraphics[width=0.7\textwidth]{./figures/advection_Galerkin.pdf}
    \end{center}
@@ -103,7 +103,7 @@
 \frametitle{Objectives}
 
 \begin{itemize}
-   \item The objectives of this research are the following:
+   \item The objectives of the research are the following:
    \begin{itemize}
       \item \textbf{Accurately solve conservation law problems} using the
          continuous finite element method (CFEM).
@@ -125,30 +125,40 @@
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Previous Work}
+\begin{frame}
+\frametitle{Previous Work}
+
+\begin{itemize}
+  \item Guermond has addressed these objectives for general nonlinear scalar
+    conservation laws using explicit temporal discretizations:
+    \[
+      \pd{u}{t} + \nabla\cdot\mathbf{f}(u) = 0
+    \]
+  \item We extend these techniques to include a reaction term and source term
+    and to use implicit and steady-state temporal discretizations:
+    \[
+      \pd{u}{t} + \nabla\cdot\mathbf{f}(u) + \sigma u = q
+    \]
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Outline}
 \begin{frame}
 \frametitle{Outline}
 
 \begin{itemize}
-   \item Presentation of scheme for simple case: linear scalar transport
-      conservation law using explicit time discretizations
+   \item Presentation of scheme for simple case:
    \begin{itemize}
       \item Problem formulation
       \item Monotone low-order scheme
       \item High-order entropy viscosity scheme
       \item FCT scheme
    \end{itemize}
-   \item Extension of scheme to more complex cases:
-   \begin{itemize}
-      \item Implicit time discretizations
-      \item nonlinear scalar conservation laws
-      %\item \emph{scalar} conservation laws $\rightarrow$ conservation law
-      %   \emph{systems}
-   \end{itemize}
-   \item Implementation
-   \item Results for linear conservation law problems
+   \item Results
+   \item Implementation in \texttt{deal.II}
    \item Conclusions
-   %\item Possible implementation in MOOSE
 \end{itemize}
 
 \end{frame}
@@ -491,60 +501,18 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Flux Corrected Transport (FCT) Scheme}
-\framesubtitle{Limiting Coefficients Introduction}
-
-\begin{itemize}
-   \item The enforced bounds can be rearranged to bound the limited flux sums:
-      \begin{equation}
-         Q^-_i \leq \sum\limits_j L\ij F\ij \leq Q^+_i
-      \end{equation}
-      where $Q_i^\pm$ has the following definition:
-      \begin{equation}
-         Q_i^\pm \equiv M_{i,i}^L\frac{W_i^\pm-U_i^n}{\Delta t}
-         + \sum\limits_j A_{i,j}^L U_j^n - b_i
-      \end{equation}
-   \item The classic Zalesak limiting strategy starts by separating the
-      negative and positive fluxes:
-      \begin{equation}
-         Q^-_i \leq \sum\limits_{j:F\ij<0} L\ij F\ij +
-            \sum\limits_{j:F\ij>0} L\ij F\ij\leq Q^+_i
-      \end{equation}
-      The positive fluxes risk violating $Q_i^+$, and the negative fluxes risk
-      violating $Q_i^-$.
-\end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Flux Corrected Transport (FCT) Scheme}
 \framesubtitle{Limiting Coefficients Definition}
 
 \begin{itemize}
-   \item Zalesak's limiting coefficients assume that
-      all positive fluxes into a node $i$ have the same limiting coefficient
-      $L^+_i$ and similarly, negative fluxes have the same limiting coefficient
-      $L^-_i$:
+   \item The enforced bounds can be rearranged to bound the limited flux sums
+      with bounds which we call $Q_i^\pm$:
       \begin{equation}
-         Q^-_i \leq L^-_i F^-_i + L^+_i F^+_i \leq Q^+_i
+         Q^-_i \leq \sum\limits_j L\ij F\ij \leq Q^+_i
       \end{equation}
-      where
       \begin{equation}
          F_i^- \equiv \sum\limits_{j:F\ij<0} F\ij \qquad
          F_i^+ \equiv \sum\limits_{j:F\ij>0} F\ij
       \end{equation}
-   \item As a conservative bound for $L^+_i$, contributions from negative fluxes
-      are ignored (pretending $L_i^-=0$), giving $L^+_i \leq \frac{Q_i^+}{F_i^+}$
-      and similarly for $L^-_i$ and the lower bound.
-\end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Flux Corrected Transport (FCT) Scheme}
-\framesubtitle{Limiting Coefficients Definition (Cont.)}
-
-\begin{itemize}
-   \item Then, recalling that limiting coefficients are not greater than unity:
       \begin{equation}
          L_i^\pm \equiv\left\{
             \begin{array}{l l}
@@ -553,27 +521,6 @@
             \end{array}
             \right.
       \end{equation}
-   \item However, to limit fluxes conservatively, limited correction fluxes must
-      be equal and opposite:
-      \begin{equation}
-         L\ij F\ij = -L_{j,i} F_{j,i}
-      \end{equation}
-      Since $F\ij$ happens to be skew symmetric ($F_{j,i}=-F\ij$) due to the
-      chosen flux decomposition, the limiting coefficients must be symmetric:
-      $L_{j,i} = L\ij$.
-\end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Flux Corrected Transport (FCT) Scheme}
-\framesubtitle{Limiting Coefficients Definition (Cont.)}
-
-\begin{itemize}
-   \item Thus when deciding the limiting coefficient $L\ij$ for a flux $F\ij$, 
-      one must not only consider the bounds for $i$ but also the bounds for $j$.
-      Specifically, a positive flux $F\ij$ risks violating $Q_i^+$ and $Q_j^-$.
-      Putting everything together,
       \begin{equation}
          L\ij \equiv\left\{
             \begin{array}{l l}
@@ -594,78 +541,62 @@
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Extensions}
-\subsection{Implicit}
+\section{Results}
 \begin{frame}
-\frametitle{Implicit Time Discretization}
-\framesubtitle{}
+\frametitle{Results}
+\framesubtitle{1-D Source Problem Results}
 
-\begin{itemize}
-   \item For the implicit case, for instance a general $\theta$ scheme, the
-      discrete system is the following:
-      \begin{equation}
-        \M^C\frac{\U^{n+1}-\U^n}{\dt}
-        + (1-\theta)\A\U^n + \theta\A\U^{n+1}
-        = (1-\theta)\b^n + \theta\b^{n+1}
-      \end{equation}
-   \item For this discretization, the corresponding low-order scheme
-      has the following DMP, which in general is not explicit:
-      \begin{multline}
-         W_i^\pm \equiv \frac{1}{1+\frac{\theta\Delta t}{M_{i,i}^L}A_{i,i}^L}
-           \left[\left(1 - \frac{(1-\theta)
-           \Delta t}{M_{i,i}^L}\sum\limits_j A_{i,j}^L\right)
-           U_{\substack{\max\\\min},i}^n\right.\\\left.
-          -\frac{\theta\Delta t}{M_{i,i}^L}\sum\limits_{j\ne i}A_{i,j}^L
-           U_{\substack{\max\\\min},i}^{L,n+1}
-          +\frac{\Delta t}{M_{i,i}^L}\left((1-\theta)b_i^n
-          + \theta b_i^{n+1}\right)\right]
-      \end{multline}
-\end{itemize}
+\includegraphics[width=\textwidth]{./figures/solutions_source_FE.pdf}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Implicit Time Discretization}
-\framesubtitle{}
+\frametitle{Results}
+\framesubtitle{2-D Void-to-Absorber Problem Results}
 
-\begin{itemize}
-   \item Because $W_i^\pm$ is in general not explicit, the limiting coefficients
-      are also not explicit. Thus, all implicit FCT schemes require some form
-      of iteration.
-      \begin{itemize}
-         \item In practice, it has been found that a simple fixed point iteration
-            scheme is effective in resolving these nonlinearities.
-      \end{itemize}
-   \item Note that for the entropy viscosity scheme, it is suggested to treat
-      the entropy viscosity explicitly to avoid \emph{entropy oscillations},
-      which arise due to the entropy profile adapting at each iteration.
-\end{itemize}
+\begin{figure}[h]
+   \centering
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]{./figures/exact.png}
+      \caption{Exact}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]{./figures/Gal.png}
+      \caption{Galerkin}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]{./figures/GalFCT.png}
+      \caption{Galerkin-FCT}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]{./figures/low.png}
+      \caption{Low-order}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]{./figures/EV.png}
+      \caption{EV}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]{./figures/EVFCT.png}
+      \caption{EV-FCT}
+   \end{subfigure}
+\end{figure}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Nonlinear Conservation Laws}
 \begin{frame}
-\frametitle{Nonlinear Conservation Laws}
-\framesubtitle{}
+\frametitle{Results}
+\framesubtitle{1-D Smooth Problem Convergence Results (Using FE)}
 
-\begin{itemize}
-   \item In the nonlinear case, the model conservation law equation is
-      \begin{equation}
-         \pd{u}{t} + \nabla\cdot\mathbf{g}(u) + \sigma u\xt = q\xt
-      \end{equation}
-   \item The nonlinear discrete system may be expressed in a quasilinear form:
-      \begin{equation}
-         \M^C\frac{\U^{n+1}-\U^n}{\dt} + \A(u_h^n)\U^n = \b^n
-      \end{equation}
-      where
-      \begin{equation}
-         A\ij(u) \equiv \int\limits_{S\ij}\left(
-            \mathbf{g}'(u)\cdot\nabla\varphi_j(\x) +
-            \sigma(\x)\varphi_j(\x)\right)\varphi_i(\x) d\x
-      \end{equation}
-   \item Now the low-order diffusion matrix also depends on the solution
-      and must be computed each time step: $\D^L\rightarrow\D^{L,n}$.
-\end{itemize}
+\includegraphics[width=\textwidth]{./figures/convergence_smooth_FE.pdf}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Results}
+\framesubtitle{1-D Non-smooth Problem Convergence Results (Using SSPRK33)}
+
+\includegraphics[width=\textwidth]{./figures/convergence_absorber_SSPRK33.pdf}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -752,175 +683,6 @@ for (int k = 0; it != it_end; ++it, ++k)
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Implementation}
-\framesubtitle{Nonlinear Schemes}
-
-\begin{itemize}
-   \item When the time discretization is not explicit, the discrete maximum
-      principle is implicit, and thus the FCT scheme is nonlinear.
-   \item The following is a basic fixed-point-type iteration FCT scheme:
-      \begin{enumerate}
-         \item If conservation law is nonlinear, re-assemble as necessary:
-            \begin{enumerate}
-               \item Compute steady-state matrix $\A(\U^{n+1,(k)})$.
-               \item Compute low-order diffusion matrix $\D^L(\U^{n+1,(k)})$.
-            \end{enumerate}
-         \item Compute limiting coefficients using previous iteration of
-            solution: $\L(\U^{n+1,(k)})$.
-         \item Compute new solution $\U^{n+1,(k+1)}$.
-      \end{enumerate}
-\end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Results}
-\begin{frame}
-\frametitle{Results}
-\framesubtitle{1-D Source Problem Results}
-
-\includegraphics[width=\textwidth]{./figures/solutions_source_FE.pdf}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Results}
-\framesubtitle{2-D Void-to-Absorber Problem Results}
-
-\begin{figure}[h]
-   \centering
-   \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/exact.png}
-      \caption{Exact}
-   \end{subfigure}
-   \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/Gal.png}
-      \caption{Galerkin}
-   \end{subfigure}
-   \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/GalFCT.png}
-      \caption{Galerkin-FCT}
-   \end{subfigure}
-   \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/low.png}
-      \caption{Low-order}
-   \end{subfigure}
-   \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/EV.png}
-      \caption{EV}
-   \end{subfigure}
-   \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/EVFCT.png}
-      \caption{EV-FCT}
-   \end{subfigure}
-\end{figure}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Results}
-\framesubtitle{3-D Void-to-Absorber Problem Results}
-
-\begin{figure}[h]
-   \centering
-   \begin{subfigure}{0.45\textwidth}
-      \includegraphics[width=\textwidth]{./figures/Gal_3D.png}
-      \caption{Galerkin}
-   \end{subfigure}
-   \begin{subfigure}{0.45\textwidth}
-      \includegraphics[width=\textwidth]{./figures/GalFCT_3D.png}
-      \caption{Galerkin-FCT}
-   \end{subfigure}
-\end{figure}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Results}
-\framesubtitle{2-D Skew Void-to-Absorber Problem Results}
-
-\begin{figure}[h]
-   \centering
-   \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/skew_exact.png}
-      \caption{Exact}
-   \end{subfigure}
-   \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/skew_Gal.png}
-      \caption{Galerkin}
-   \end{subfigure}
-   \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/skew_GalFCT.png}
-      \caption{Galerkin-FCT}
-   \end{subfigure}
-   \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/skew_low.png}
-      \caption{Low-order}
-   \end{subfigure}
-   \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/skew_EV.png}
-      \caption{EV}
-   \end{subfigure}
-   \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/skew_EVFCT.png}
-      \caption{EV-FCT}
-   \end{subfigure}
-\end{figure}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Results}
-\framesubtitle{Galerkin-FCT Vs. EV-FCT}
-
-\includegraphics[width=\textwidth]{./figures/sourcevoid_FCT_comparison.pdf}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Results}
-\framesubtitle{Galerkin-FCT Vs. EV-FCT (Cont.)}
-
-\begin{itemize}
-  \item KPP Rotating Wave problem results, taken from\\
-    {\small
-    \emph{A Second-Order Maximum Principle Preserving
-      Lagrange Finite Element Technique for Nonlinear
-      Scalar Conservation Equations} by Jean-Luc Guermond, et. al.
-      \cite{guermond_secondorder}
-    }
-\end{itemize}
-
-\begin{figure}[h]
-   \centering
-   \begin{subfigure}{0.4\textwidth}
-      \includegraphics[width=\textwidth]{./figures/Gal-FCT_rotation.png}
-      \caption{Galerkin-FCT}
-   \end{subfigure}
-   \begin{subfigure}{0.4\textwidth}
-      \includegraphics[width=\textwidth]{./figures/EV-FCT_rotation.png}
-      \caption{EV-FCT}
-   \end{subfigure}
-\end{figure}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Results}
-\framesubtitle{1-D Smooth Problem Convergence Results (Using FE)}
-
-\includegraphics[width=\textwidth]{./figures/convergence_smooth_FE.pdf}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Results}
-\framesubtitle{1-D Non-smooth Problem Convergence Results (Using SSPRK33)}
-
-\includegraphics[width=\textwidth]{./figures/convergence_absorber_SSPRK33.pdf}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusions}
 \begin{frame}
 \frametitle{Conclusions}
@@ -938,33 +700,6 @@ for (int k = 0; it != it_end; ++it, ++k)
    \item Results were shown for the explicit, scalar, linear case. More results
       are in progress.
 \end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Acknowledgments}
-
-\begin{itemize}
-   \item Dr. Jean Ragusa, my advisor
-   \item Dr. Jean-Luc Guermond, our collaborator and pioneer of the entropy-based
-      artificial viscosity method
-   \item Dr. Dmitri Kuzmin, an expert in FCT
-\end{itemize}
-\begin{itemize}
-   \item This material is based upon work supported under an Integrated University
-      Program Graduate Fellowship.
-\end{itemize}
-
-\begin{center}
-   \includegraphics[width=0.4\textwidth]{./figures/NEUP_Final_Logo_Version-09.jpg}
-\end{center}
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{References}
-
-\bibliographystyle{plain}
-\bibliography{../dissertation/references}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
