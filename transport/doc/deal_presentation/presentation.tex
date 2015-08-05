@@ -651,16 +651,25 @@
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}[fragile=singleslide]
+\begin{frame}
 \frametitle{Implementation}
-\framesubtitle{Example: Performing Algebraic (Non-Elementwise) Operations}
+\framesubtitle{\texttt{Less Common deal.II Features Used}
 
 \begin{itemize}
-   \item The objective is obtain the nonzero entries in a row $i$ of a
-     sparse matrix $A$.
+  \item \texttt{FunctionParser}
+  \item \texttt{ParameterHandler}
 \end{itemize}
 
-\lstset{basicstyle=\small\ttfamily,language=C++,frame=single,
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[fragile=singleslide]
+\frametitle{Implementation}
+\framesubtitle{Getting $\{j, A_{i,j}: A_{i,j}\ne 0\}$}
+
+\lstset{basicstyle=\small\ttfamily,
+  language=C++,
+  frame=single,
+  backgroundcolor=\color{gray}
   keywordstyle=\color{red}\ttfamily,
   commentstyle=\color{blue}\ttfamily}
 \begin{lstlisting}
@@ -692,7 +701,6 @@ for (int k = 0; it != it_end; ++it, ++k)
    \begin{itemize}
       \item 2nd-order-accurate
       \item Positivity-preserving
-      \item Monotone
       \item Discrete-maximum-principle preserving
       \item Valid in an arbitrary number of dimensions
       \item Valid for general meshes
