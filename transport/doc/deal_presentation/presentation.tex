@@ -50,6 +50,18 @@
   \vskip3pt
 }
 
+% define listings parameters
+\colorlet{backgroundGray}{black!10!blue!10}
+\colorlet{keywordRed}{red!70}
+\colorlet{commentBlue}{blue!70}
+\lstset{basicstyle=\tiny\ttfamily,
+  language=C++,
+  framerule=0pt,
+  rulecolor=\color{red},
+  backgroundcolor=\color{backgroundGray},
+  keywordstyle=\color{keywordRed}\ttfamily,
+  commentstyle=\color{commentBlue}\ttfamily}
+
 % title, author, date, etc.
 \title[]{A positivity-preserving flux-corrected transport scheme for solving
   scalar conservation law problems}
@@ -125,9 +137,28 @@
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Previous Work}
+\subsection{Outline}
 \begin{frame}
-\frametitle{Previous Work}
+\frametitle{Outline}
+
+\begin{itemize}
+   \item Presentation of scheme for simple case
+   \begin{itemize}
+      \item Problem formulation
+      \item Monotone low-order scheme
+      \item High-order entropy viscosity scheme
+      \item FCT scheme
+   \end{itemize}
+   \item Results
+   \item Conclusions
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Methodology}
+\subsection{Formulation}
+\begin{frame}
+\frametitle{Conservation Law Models}
 
 \begin{itemize}
   \item Guermond has addressed these objectives for general nonlinear scalar
@@ -135,6 +166,13 @@
     \[
       \pd{u}{t} + \nabla\cdot\mathbf{f}(u) = 0
     \]
+  \item Common examples:\\
+  \begin{center}
+  \begin{tabular}{l l}
+    $\mathbf{f}(u) = u\mathbf{v}$              & Linear advection equation\\
+    $\mathbf{f}(u) = \frac{1}{2}u^2\mathbf{v}$ & Burgers equation
+  \end{tabular}
+  \end{center}
   \item We extend these techniques to include a reaction term and source term
     and to use implicit and steady-state temporal discretizations:
     \[
@@ -144,27 +182,6 @@
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Outline}
-\begin{frame}
-\frametitle{Outline}
-
-\begin{itemize}
-   \item Presentation of scheme for simple case:
-   \begin{itemize}
-      \item Problem formulation
-      \item Monotone low-order scheme
-      \item High-order entropy viscosity scheme
-      \item FCT scheme
-   \end{itemize}
-   \item Results
-   \item Implementation in \texttt{deal.II}
-   \item Conclusions
-\end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Methodology}
-\subsection{Problem Formulation}
 \begin{frame}
 \frametitle{Problem Formulation}
 
@@ -343,6 +360,38 @@
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[fragile=singleslide]
+\frametitle{Low-Order Scheme}
+\framesubtitle{Getting Nonzero Row Entries $\{A_{i,j}: A_{i,j}\ne 0,\quad j=1\ldots N\}$}
+
+\begin{lstlisting}
+void get_matrix_row(
+  const SparseMatrix<double> &matrix,
+  const unsigned int         &i, 
+  std::vector<double>        &row_values,
+  std::vector<unsigned int>  &row_indices,
+  unsigned int               &n_col)
+{
+  // get first and one-past-end iterator for row
+  SparseMatrix<double>::const_iterator it     = matrix.begin(i);
+  SparseMatrix<double>::const_iterator it_end = matrix.end(i);
+
+  // determine number of entries in row and resize vectors accordingly
+  n_col = it_end - it;
+  row_values.resize(n_col);
+  row_indices.resize(n_col);
+
+  // loop over columns in row
+  for (unsigned int k = 0; it != it_end; ++it, ++k)
+  {
+    row_values[k]  = it->value();  // get A(i,j)
+    row_indices[k] = it->column(); // get j
+  }
+}
+\end{lstlisting}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Low-Order Scheme}
 \framesubtitle{Results Example}
@@ -468,6 +517,43 @@
       + (D\ij^L-D\ij^{H,n})\Delta_{j,i}[\U^n]
    \end{equation}
 \end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[fragile=singleslide]
+\frametitle{Flux Corrected Transport (FCT) Scheme}
+\framesubtitle{Implementation of Correction Fluxes}
+
+\[
+   F\ij = -M\ij^C\Delta_{j,i}\left[\frac{\U^{H,n+1}-\U^n}{\Delta t}\right]
+   + (D\ij^L-D\ij^{H,n})\Delta_{j,i}[\U^n]
+\]
+
+\begin{lstlisting}
+for (; cell != endc; ++cell)
+  // loop over lines of cell
+  for (int line = 0; line < GeometryInfo<dim>::lines_per_cell; ++line)
+  {   
+    if (!cell->line(line)->user_flag_set())
+    {
+      // mark line so that the same flux isn't unnecessarily recomputed
+      cell->line(line)->set_user_flag();
+
+      // get dof indices on line
+      cell->line(line)->get_dof_indices(line_dof_indices);
+      unsigned int i = line_dof_indices[0];
+      unsigned int j = line_dof_indices[1];
+
+      // compute correction flux F(i,j)
+      double Fij = -MC(i,j) * (dUdt(j) - dUdt(i))
+        + (DL(i,j) - DH(i,j)) * (U_old(j) - U_old(i));
+
+      // store flux in global sparse matrix
+      F.set(i, j,  Fij);
+      F.set(j, i, -Fij); // F(j,i) = -F(i,j)
+    }
+  }
+\end{lstlisting}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -600,95 +686,14 @@
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Implementation}
 \begin{frame}
 \frametitle{Implementation}
-\framesubtitle{FCT Implementation Overview}
-
-\begin{itemize}
-   \item Summary of steps necessary for FCT scheme:
-      \begin{enumerate}
-         \item Assemble $\M^C$, $\M^L$, $\A$, $\D^L$, $\D^{H,n}$ (if using EV), $\b$
-         \item Compute high-order solution $\U^{H,n+1}$
-         \item Compute antidiffusive fluxes $F\ij,\quad\forall j\ne i
-            \in\mathcal{I}(S_i)$
-         \item Compute DMP bounds $W_i^\pm$
-            \begin{itemize}
-               \item Need to compute $U_{\substack{\max\\\min},i}$
-            \end{itemize}
-         \item Compute limiting coefficients $L\ij$
-         \item Solve FCT system:
-            \begin{equation}
-               \M^L\frac{\U^{n+1}-\U^n}{\dt} + \A^L\U^n = \b + \L\cdot\F
-            \end{equation}
-      \end{enumerate}
-\end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Implementation}
-\framesubtitle{Determining Overlapping Supports}
-
-\begin{itemize}
-   \item Most steps standard, but some steps require algebraic operations
-      not typical in FEM computations.
-   \item Need to be able to determine $j\in\mathcal{I}(S_i)$.
-      Some approaches:
-      \begin{itemize}
-         \item If sparse matrix class provides function to extract
-            a row's entries and corresponding indices, this indicates
-            $j\in\mathcal{I}(S_i)$. For instance, do this with $\M^C$.
-         \item Since linear FEM, know that only adjacent, i.e., ``connected''
-            nodes can share support:
-            \[i \mbox{ adjacent } j\Rightarrow j\in\mathcal{I}(S_i),\quad
-               i\in\mathcal{I}(S_j)\]
-            \item Thus one can loop over these ``edges'', i.e., pairs of nodes
-            \item This is particularly useful for computing $F\ij$, since it
-               is skew symmetric
-      \end{itemize}
-\end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Implementation}
-\framesubtitle{\texttt{Less Common deal.II Features Used}
+\framesubtitle{\texttt{Less Common deal.II Features Used}}
 
 \begin{itemize}
   \item \texttt{FunctionParser}
   \item \texttt{ParameterHandler}
 \end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}[fragile=singleslide]
-\frametitle{Implementation}
-\framesubtitle{Getting $\{j, A_{i,j}: A_{i,j}\ne 0\}$}
-
-\lstset{basicstyle=\small\ttfamily,
-  language=C++,
-  frame=single,
-  backgroundcolor=\color{gray}
-  keywordstyle=\color{red}\ttfamily,
-  commentstyle=\color{blue}\ttfamily}
-\begin{lstlisting}
-// get iterators for beginning and end of row
-SparseMatrixIterator it     = A.begin(i);
-                     it_end = A.end(i);
-
-// compute number of nonzero entries in row
-n_nonzero_entries = it_end - it;
-row_values .resize(n_nonzero_entries);
-row_indices.resize(n_nonzero_entries);
-
-// loop over nonzero entries in row
-for (int k = 0; it != it_end; ++it, ++k)
-{
-  row_values[k]  = it->value();  // get A(i,j)
-  row_indices[k] = it->column(); // get j
-}
-\end{lstlisting}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -701,12 +706,15 @@ for (int k = 0; it != it_end; ++it, ++k)
    \begin{itemize}
       \item 2nd-order-accurate
       \item Positivity-preserving
+      \item Not \emph{guaranteed} monotone, but rarely not
       \item Discrete-maximum-principle preserving
       \item Valid in an arbitrary number of dimensions
       \item Valid for general meshes
    \end{itemize}
    \item Results were shown for the explicit, scalar, linear case. More results
       are in progress.
+   \item \texttt{deal.II} provides the elements and flexibility
+      necessary for an algorithm based on FCT.
 \end{itemize}
 
 \end{frame}
