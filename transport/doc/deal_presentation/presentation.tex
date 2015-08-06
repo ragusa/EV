@@ -17,14 +17,12 @@
 \setbeamertemplate{items}[square]
 \setbeamertemplate{navigation symbols}{}
 
+% define colors
+\colorlet{Maroon}{red!50!black}
+
 % make headers black on white if in print mode, colored otherwise
-\iftoggle{PRINTMODE}{
-   \setbeamercolor{title}{fg=black,bg=white}
-   \setbeamercolor{frametitle}{fg=black,bg=white}
-}{
-   \setbeamercolor{title}{fg=white,bg=red!50!black}
-   \setbeamercolor{frametitle}{fg=white,bg=red!50!black}
-}
+\setbeamercolor{title}{fg=white,bg=Maroon}
+\setbeamercolor{frametitle}{fg=white,bg=red!50!black}
 \setbeamercolor{sidebar}{bg=black!20}
 \setbeamercolor{logo}{bg=red!30!black}
 \setbeamercolor{section in sidebar}{fg=white}              % active section
@@ -60,7 +58,8 @@
   rulecolor=\color{red},
   backgroundcolor=\color{backgroundGray},
   keywordstyle=\color{keywordRed}\ttfamily,
-  commentstyle=\color{commentBlue}\ttfamily}
+  commentstyle=\color{commentBlue}\ttfamily,
+  showstringspaces=false}
 
 % title, author, date, etc.
 \title[]{A positivity-preserving flux-corrected transport scheme for solving
@@ -426,6 +425,40 @@ void get_matrix_row(
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[fragile=singleslide]
+\frametitle{Entropy Viscosity Scheme}
+\framesubtitle{User-defined Entropy Function in \texttt{deal.II}}
+
+\begin{itemize}
+  \item Below is an example of using \texttt{ParameterHandler} and
+    \texttt{FunctionParser} to let the user choose the entropy function
+    to be $\eta(u)=\frac{1}{2}u^2$:
+\end{itemize}
+The input file, ``my\_input'':
+\begin{lstlisting}
+set Entropy function = 0.5*u*u
+\end{lstlisting}
+The code:
+\begin{lstlisting}
+// create parameter handler and declare entry for entropy function
+ParameterHandler parameter_handler;
+parameter_handler.declare_entry("Entropy function", "u*u*u/3.0", // default
+  Patterns::Anything(), "String for entropy function");
+
+// read the input file and get the entropy function parameter
+parameter_handler.read_input("my_input");
+std::string entropy_string = parameter_handler.get("Entropy function");
+
+// map of user-defined function parser constants to their values
+std::map<std::string, double> constants; // here, this is kept empty
+
+// initialize the function parser
+FunctionParser<dim> entropy_function;
+entropy_function.initialize("u", entropy_string, constants);
+\end{lstlisting}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Entropy Viscosity Scheme}
 \framesubtitle{Entropy Viscosity Definition}
@@ -683,17 +716,6 @@ for (; cell != endc; ++cell)
 \framesubtitle{1-D Non-smooth Problem Convergence Results (Using SSPRK33)}
 
 \includegraphics[width=\textwidth]{./figures/convergence_absorber_SSPRK33.pdf}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Implementation}
-\framesubtitle{\texttt{Less Common deal.II Features Used}}
-
-\begin{itemize}
-  \item \texttt{FunctionParser}
-  \item \texttt{ParameterHandler}
-\end{itemize}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
