@@ -49,6 +49,9 @@ public:
 
   ~EntropyViscosity();
 
+  void recomputeHighOrderSteadyStateMatrix(
+    const Vector<double> & solution);
+
   void recompute_high_order_ss_matrix(
     const Vector<double> &old_solution,
     const Vector<double> &older_solution,

@@ -19,19 +19,26 @@ LinearSolver<dim>::~LinearSolver()
 {
 }
 
-/** \brief Solve a linear system A*x = b.
- *  \param [in] A system matrix
- *  \param [in] b system rhs
- *  \param [in,out] x system solution
+/**
+ * Solves a linear system A*x = b, with or without Dirichlet BC applied.
+ *
+ * @param[in] A  system matrix
+ * @param[in] b  system rhs
+ * @param[in,out] x  system solution
+ * @param[in] apply_dirichlet_bc  option to apply Dirichlet BC
+ * @param[in] t  time at which to evaluate Dirichlet BC function
  */
 template<int dim>
-void LinearSolver<dim>::solve(SparseMatrix<double> &A,
-                              Vector<double>       &b,
-                              Vector<double>       &x,
-                              const double          t)
+void LinearSolver<dim>::solve(
+  SparseMatrix<double> & A,
+  Vector<double>       & b,
+  Vector<double>       & x,
+  const bool           & apply_dirichlet_bc,
+  const double         & t)
 {
-   // apply Dirichlet BC
-   apply_Dirichlet_BC(A,b,x,t);
+   // apply Dirichlet BC if they apply
+   if (apply_dirichlet_bc)
+     apply_Dirichlet_BC(A,b,x,t);
 
    // solve linear system
    switch (linear_solver_option) {
@@ -50,10 +57,13 @@ void LinearSolver<dim>::solve(SparseMatrix<double> &A,
    constraints->distribute(x);
 }
 
-/** \brief Applies Dirichlet boundary conditions to a linear system A*x = b.
- *  \param [in,out] A system matrix
- *  \param [in,out] b system rhs
- *  \param [in,out] x system solution
+/**
+ * Applies Dirichlet boundary conditions to a linear system A*x = b.
+ *
+ * @param [in,out] A system matrix
+ * @param [in,out] b system rhs
+ * @param [in,out] x system solution
+ * @param [in] t  time at which Dirichlet value function is to be evaluated
  */
 template<int dim>
 void LinearSolver<dim>::apply_Dirichlet_BC(SparseMatrix<double> &A,

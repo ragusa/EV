@@ -66,6 +66,44 @@ EntropyViscosity<dim>::~EntropyViscosity()
 
 /**
  * Recomputes the high-order steady-state matrix.
+ *
+ * This version of the function is for steady-state computations.
+ * It employs the same function used to compute entropy viscosity
+ * for transient computations but supplies dummy values to time
+ * step size and time parameters to trick the function into computing
+ * the steady-state entropy residual.
+ *
+ * @param[in] solution  solution
+ */
+template<int dim>
+void EntropyViscosity<dim>::recomputeHighOrderSteadyStateMatrix(
+  const Vector<double> & solution)
+{
+  // recompute entropy viscosity
+  compute_entropy_viscosity(
+    solution,
+    solution,
+    solution,
+    1.0, // arbitrary value for time step size
+    1.0, // arbitrary value for time step size
+    0.0); // arbitrary value for time
+
+  // compute diffusion matrix
+  this->compute_diffusion_matrix(*diffusion_matrix);
+
+  // add diffusion matrix
+  this->add_diffusion_matrix(*inviscid_matrix, *diffusion_matrix, *total_matrix);
+}
+
+/**
+ * Recomputes the high-order steady-state matrix.
+ *
+ * @param[in] old_solution  old solution
+ * @param[in] older_solution  older solution
+ * @param[in] oldest_solution  oldest solution
+ * @param[in] old_dt  old time step size
+ * @param[in] older_dt  older time step size
+ * @param[in] time  time at which to evaluate entropy residual
  */
 template<int dim>
 void EntropyViscosity<dim>::recompute_high_order_ss_matrix(
@@ -77,8 +115,13 @@ void EntropyViscosity<dim>::recompute_high_order_ss_matrix(
   const double &time)
 {
   // recompute entropy viscosity
-  compute_entropy_viscosity(old_solution, older_solution, oldest_solution, old_dt,
-    older_dt, time);
+  compute_entropy_viscosity(
+    old_solution,
+    older_solution,
+    oldest_solution,
+    old_dt,
+    older_dt,
+    time);
 
   // compute diffusion matrix
   this->compute_diffusion_matrix(*diffusion_matrix);

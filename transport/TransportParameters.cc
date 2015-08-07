@@ -1,18 +1,37 @@
-/** \brief constructor
+/**
+ * Constructor.
  */
 template<int dim>
 TransportParameters<dim>::TransportParameters() :
-    problem_id(1), degree(1), time_discretization_option(
-        TemporalDiscretization::FE), refinement_mode(
-        RefinementMode::space), time_refinement_factor(0.5), use_adaptive_refinement(
-        false), n_refinement_cycles(5), initial_refinement_level(2), linear_solver_option(
-        1), viscosity_option(0), entropy_string("0.5*u*u"), entropy_derivative_string(
-        "u"), entropy_residual_coefficient(1.0), jump_coefficient(1.0), EV_time_discretization(
-        TemporalDiscretization::BE), output_mesh(false), is_steady_state(true), end_time(
-        1.0), time_step_size(0.001), output_exact_solution(false), exact_solution_refinement_level(
-        5), output_initial_solution(false), output_DMP_bounds(false), CFL_limit(
-        0.5), do_not_limit(false), n_quadrature_points(3), save_convergence_results(
-        false)
+    problem_id(1),
+    end_time(1.0),
+    time_step_size(0.001),
+    CFL_limit(0.5),
+    time_discretization_option(TemporalDiscretization::FE),
+    viscosity_option(0),
+    entropy_string("0.5*u*u"),
+    entropy_derivative_string("u"),
+    entropy_residual_coefficient(1.0),
+    jump_coefficient(1.0),
+    EV_time_discretization(TemporalDiscretization::BE),
+    do_not_limit(false),
+    refinement_mode(RefinementMode::space),
+    time_refinement_factor(0.5),
+    use_adaptive_refinement(false),
+    initial_refinement_level(2),
+    n_refinement_cycles(5),
+    degree(1),
+    n_quadrature_points(3),
+    linear_solver_option(1),
+    nonlinear_solver_option(1),
+    nonlinear_tolerance(1.0e-10),
+    nonlinear_max_iteration(100),
+    output_mesh(false),
+    output_exact_solution(false),
+    exact_solution_refinement_level(5),
+    output_initial_solution(false),
+    output_DMP_bounds(false),
+    save_convergence_results(false)
 {
 }
 
@@ -43,8 +62,6 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler &prm)
   {
     prm.declare_entry("Time discretization option", "FE",
         Patterns::Selection("SS|FE|CN|BE|SSP2|SSP3"), "Choice of temporal discretization");
-    prm.declare_entry("Is steady state", "true", Patterns::Bool(),
-        "Boolean flag for steady-state vs. transient");
     prm.declare_entry("End time", "1.0", Patterns::Double(),
         "End time if transient problem is run");
     prm.declare_entry("Time step size", "0.01", Patterns::Double(),
@@ -78,6 +95,25 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler &prm)
   }
   prm.leave_subsection();
 
+  // nonlinear solver parameters
+  prm.enter_subsection("nonlinear solver");
+  {
+    prm.declare_entry("Nonlinear solver option", "1", Patterns::Integer(),
+        "Option for nonlinear solver");
+    prm.declare_entry("Nonlinear tolerance", "1.0e-10", Patterns::Double(),
+        "Tolerance for nonlinear solver");
+    prm.declare_entry("Nonlinear max iteration", "100", Patterns::Integer(),
+        "Maximum number of iterations for nonlinear solver");
+  }
+  prm.leave_subsection();
+
+  // viscosity parameters
+  prm.enter_subsection("viscosity");
+  {
+    prm.declare_entry("Viscosity option", "0", Patterns::Integer(),
+        "Option for viscosity to be used");
+  }
+  prm.leave_subsection();
   // viscosity parameters
   prm.enter_subsection("viscosity");
   {
@@ -183,7 +219,6 @@ void TransportParameters<dim>::get_parameters(ParameterHandler &prm)
     {
       ExcNotImplemented();
     }
-    is_steady_state = prm.get_bool("Is steady state");
     end_time = prm.get_double("End time");
     time_step_size = prm.get_double("Time step size");
     CFL_limit = prm.get_double("CFL limit");
@@ -218,6 +253,15 @@ void TransportParameters<dim>::get_parameters(ParameterHandler &prm)
   prm.enter_subsection("linear solver");
   {
     linear_solver_option = prm.get_integer("Linear solver option");
+  }
+  prm.leave_subsection();
+
+  // nonlinear solver parameters
+  prm.enter_subsection("nonlinear solver");
+  {
+    nonlinear_solver_option = prm.get_integer("Nonlinear solver option");
+    nonlinear_tolerance = prm.get_double("Nonlinear tolerance");
+    nonlinear_max_iteration = prm.get_integer("Nonlinear max iteration");
   }
   prm.leave_subsection();
 

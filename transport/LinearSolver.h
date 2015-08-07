@@ -12,7 +12,8 @@
 
 using namespace dealii;
 
-/** \brief Class for solving linear systems.
+/**
+ * Class for solving linear systems.
  */
 template<int dim>
 class LinearSolver {
@@ -23,10 +24,11 @@ class LinearSolver {
                    Function<dim>          & dirichlet_value_function);
       ~LinearSolver();
 
-      void solve(SparseMatrix<double> &A,
-                 Vector<double>       &b,
-                 Vector<double>       &x,
-                 const double          t = 0);
+      void solve(SparseMatrix<double> & A,
+                 Vector<double>       & b,
+                 Vector<double>       & x,
+                 const bool           & apply_dirichlet_bc = true,
+                 const double         & t = 0);
 
    private:
       void apply_Dirichlet_BC(SparseMatrix<double> &A,

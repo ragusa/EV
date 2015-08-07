@@ -286,3 +286,37 @@ void Executioner<dim>::getDirichletNodes()
       it != boundary_values.end(); ++it)
     dirichlet_nodes.push_back(it->first);
 }
+
+/**
+ * Applies Dirichlet boundary conditions to a linear system A*x = b.
+ *
+ * @param [in,out] A system matrix
+ * @param [in,out] b system rhs
+ * @param [in,out] x system solution
+ * @param [in] t  time at which Dirichlet value function is to be evaluated
+ */
+template<int dim>
+void Executioner<dim>::applyDirichletBC(
+  SparseMatrix<double> & A,
+  Vector<double>       & b,
+  Vector<double>       & x,
+  const double         & t)
+{
+   // set time for dirichlet function
+   incoming_function->set_time(t);
+
+   // create map of dofs to boundary values to be imposed
+   std::map<unsigned int, double> boundary_values;
+   VectorTools::interpolate_boundary_values(
+     dof_handler,
+     1,
+     *dirichlet_value_function,
+     boundary_values);
+
+   // apply boundary values to system
+   MatrixTools::apply_boundary_values(
+     boundary_values,
+     A,
+     x,
+     b);
+}

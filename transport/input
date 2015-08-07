@@ -17,7 +17,6 @@ subsection problem
 end
 
 subsection time
-   set Is steady state = false
    set End time = 0.3
    set Time step size = 1.0
    set CFL limit = 0.5
@@ -43,7 +42,6 @@ end
 
 subsection fct
    set Do not limit = false
-   #set Prelimit = false
 end
 
 subsection refinement
@@ -60,12 +58,13 @@ subsection finite element
 end
 
 subsection linear solver
-   set Linear solver option = 1 # 1 = UMFPACK direct solve
+   set Linear solver option = 1   # 1 = UMFPACK direct solve
 end
 
 subsection nonlinear solver
-   set Nonlinear solver option = 1 # 1 = defect correction
+   set Nonlinear solver option = 1   # 1 = defect correction
    set Nonlinear tolerance = 1.0e-10
+   set Nonlinear max iteration = 100
 end
 
 subsection output

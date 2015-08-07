@@ -10,6 +10,7 @@
 #include <deal.II/lac/sparse_matrix.h>
 #include "EntropyViscosity.h"
 #include "FCT.h"
+#include "NonlinearSolver.h"
 #include "PostProcessor.h"
 #include "TransportParameters.h"
 
@@ -44,6 +45,11 @@ protected:
   void assembleSteadyStateRHS(const double &t);
   void setBoundaryIndicators();
   void getDirichletNodes();
+  void applyDirichletBC(
+    SparseMatrix<double> & A,
+    Vector<double>       & b,
+    Vector<double>       & x,
+    const double         & t = 0.0);
 
   const TransportParameters<dim> parameters;
 
