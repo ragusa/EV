@@ -65,8 +65,9 @@ public:
 
   // nonlinear solver options
   unsigned int nonlinear_solver_option; // nonlinear solver option
-  unsigned int nonlinear_tolerance; // nonlinear solver tolerance
+  double nonlinear_tolerance; // nonlinear solver tolerance
   unsigned int nonlinear_max_iteration; // maximum iteration
+  double relaxation_factor; // relaxation factor for nonlinear solution updates
 
   // output options
   bool output_mesh; // option to output mesh as .eps file

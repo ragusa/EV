@@ -28,6 +28,8 @@ public:
   bool checkConvergence(const Vector<double> & new_solution);
   Vector<double> getSolution() const;
 
+  const double relaxation_factor;
+
 private:
 
   /** exception for reaching the maximum iteration */

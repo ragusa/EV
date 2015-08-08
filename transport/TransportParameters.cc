@@ -26,6 +26,7 @@ TransportParameters<dim>::TransportParameters() :
     nonlinear_solver_option(1),
     nonlinear_tolerance(1.0e-10),
     nonlinear_max_iteration(100),
+    relaxation_factor(1.0),
     output_mesh(false),
     output_exact_solution(false),
     exact_solution_refinement_level(5),
@@ -104,6 +105,8 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler &prm)
         "Tolerance for nonlinear solver");
     prm.declare_entry("Nonlinear max iteration", "100", Patterns::Integer(),
         "Maximum number of iterations for nonlinear solver");
+    prm.declare_entry("Relaxation factor", "1.0", Patterns::Double(),
+        "Relaxation factor for nonlinear solver updates");
   }
   prm.leave_subsection();
 
@@ -262,6 +265,7 @@ void TransportParameters<dim>::get_parameters(ParameterHandler &prm)
     nonlinear_solver_option = prm.get_integer("Nonlinear solver option");
     nonlinear_tolerance = prm.get_double("Nonlinear tolerance");
     nonlinear_max_iteration = prm.get_integer("Nonlinear max iteration");
+    relaxation_factor = prm.get_double("Relaxation factor");
   }
   prm.leave_subsection();
 

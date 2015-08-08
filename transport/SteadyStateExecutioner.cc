@@ -32,7 +32,6 @@ template<int dim>
 void SteadyStateExecutioner<dim>::run()
 {
   // entropy viscosity and FCT not yet implemented in steady-state
-  Assert(this->parameters.viscosity_option != 2, ExcNotImplemented());
   Assert(this->parameters.viscosity_option != 3, ExcNotImplemented());
   Assert(this->parameters.viscosity_option != 4, ExcNotImplemented());
 
@@ -95,15 +94,16 @@ void SteadyStateExecutioner<dim>::run()
       NonlinearSolver<dim> nonlinear_solver(
         this->parameters,
         this->constraints,
-        *this->dof_handler,
-        *this->incoming_function);
+        this->dof_handler,
+        *(this->incoming_function));
 
       // initialize guess for nonlinear solver
       this->new_solution = 0.0;
       nonlinear_solver.reset(this->new_solution);
 
       // begin iteration
-      Vector<double> solution_change;
+      Vector<double> solution_change(this->n_dofs);
+      Vector<double> tmp(this->n_dofs);
       bool converged = false;
       while (!converged)
       {
@@ -114,19 +114,19 @@ void SteadyStateExecutioner<dim>::run()
         entropy_viscosity.recomputeHighOrderSteadyStateMatrix(
           this->new_solution);
 
-        // create system matrix
+        // create system matrix and rhs
         this->system_matrix.copy_from(this->high_order_ss_matrix);
+        this->system_rhs = this->ss_rhs;
 
         // apply Dirichlet BC
         this->applyDirichletBC(
           this->system_matrix,
-          this->ss_rhs,
+          this->system_rhs,
           this->new_solution);
 
         // create system rhs
-        this->system_matrix.vmult(this->system_rhs, this->new_solution);
-        this->system_rhs *= -1.0;
-        this->system_rhs.add(1.0, this->ss_rhs);
+        this->system_matrix.vmult(tmp, this->new_solution);
+        this->system_rhs.add(-1.0, tmp);
 
         // update solution
         this->linear_solver.solve(
@@ -134,15 +134,13 @@ void SteadyStateExecutioner<dim>::run()
           this->system_rhs,
           solution_change,
           false);
-        this->new_solution.add(1.0, solution_change);
+        this->new_solution.add(nonlinear_solver.relaxation_factor,
+          solution_change);
         this->constraints.distribute(this->new_solution);
 
         // check convergence
         converged = nonlinear_solver.checkConvergence(this->new_solution);
       }
-
-      // retrieve solution
-      this->new_solution = nonlinear_solver.getSolution();
 
       break;
     }

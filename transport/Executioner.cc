@@ -310,7 +310,7 @@ void Executioner<dim>::applyDirichletBC(
    VectorTools::interpolate_boundary_values(
      dof_handler,
      1,
-     *dirichlet_value_function,
+     *incoming_function,
      boundary_values);
 
    // apply boundary values to system

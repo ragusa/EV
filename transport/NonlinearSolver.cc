@@ -13,8 +13,9 @@ NonlinearSolver<dim>::NonlinearSolver(
   const ConstraintMatrix         & constraints_,
   const DoFHandler<dim>          & dof_handler_,
   Function<dim>                  & dirichlet_value_function_) :
+    relaxation_factor(parameters_.relaxation_factor),
     nonlinear_tolerance(parameters_.nonlinear_tolerance),
-    iteration_max(parameters_.nonlinear_iteration_max),
+    iteration_max(parameters_.nonlinear_max_iteration),
     constraints(constraints_),
     dof_handler(dof_handler_),
     dirichlet_value_function(dirichlet_value_function_),
@@ -62,17 +63,19 @@ bool NonlinearSolver<dim>::checkConvergence(const Vector<double> & new_solution)
   std::cout << "Iter " << iteration_number << ": err = " <<
     nonlinear_err << std::endl;
 
+  // keep new solution as next iteration's previous iterate
+  solution = new_solution;
+
   // determine if error is within the nonlinear tolerance
   if (nonlinear_err < nonlinear_tolerance)
+  {
     return true;
+  }
   else
   {
     // check if max iteration has been reached
-    if (iteration_number == iteration_max)
-      ExcMaxIterationReached(iteration_max);
-
-    // keep new solution as next iteration's previous iterate
-    solution = new_solution;
+    AssertThrow(iteration_number < iteration_max,
+      ExcMaxIterationReached(iteration_max));
 
     return false;
   }
