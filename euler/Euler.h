@@ -53,6 +53,7 @@ class Euler : public ConservationLaw<dim>
     void define_problem();
     void output_solution(double time);
 
+    void compute_ss_residual(Vector<double> &solution) override;
     void compute_cell_ss_residual(FEValues<dim> &fe_values,
                                   const typename DoFHandler<dim>::active_cell_iterator &cell,
                                   Vector<double> &cell_residual);

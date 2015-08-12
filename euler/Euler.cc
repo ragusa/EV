@@ -256,6 +256,38 @@ void Euler<dim>::define_problem()
    }
 }
 
+template <int dim>
+void Euler<dim>::compute_ss_residual(Vector<double> &f)
+{
+   // reset vector
+   f = 0.0;
+
+   // NOTE: may need to add more update flags in this constructor
+   FEValues<dim> fe_values(this->fe, this->cell_quadrature, update_values | update_gradients | update_JxW_values);
+
+   Vector<double> cell_residual(this->dofs_per_cell);
+   std::vector<unsigned int> local_dof_indices (this->dofs_per_cell);
+
+   // loop over cells
+   typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler.begin_active(),
+                                                  endc = this->dof_handler.end();
+   for (; cell!=endc; ++cell)
+   {
+      // reset cell residual
+      cell_residual = 0;
+
+      // reinitialize fe values for cell
+      fe_values.reinit(cell);
+   
+      // compute local residual
+      compute_cell_ss_residual(fe_values, cell, cell_residual);
+
+      // aggregate local residual into global residual
+      cell->get_dof_indices(local_dof_indices);
+      this->constraints.distribute_local_to_global(cell_residual, local_dof_indices, f);
+   } // end cell loop
+}
+
 /** \brief Computes the contribution of the steady-state residual
  *         from the current cell.
  *  \param [in] fe_values FEValues object
@@ -266,7 +298,7 @@ template <int dim>
 void Euler<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
                                           const typename DoFHandler<dim>::active_cell_iterator &cell,
                                           Vector<double> &cell_residual)
-   {
+{
    // reinitialize fe values for cell
    fe_values.reinit(cell);
 
@@ -370,7 +402,7 @@ void Euler<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
                (energy_flux + energy_viscous_flux)
          ) * fe_values.JxW(q));
    }
-   }
+}
 
 /** \brief Computes the contribution of the steady-state residual
  *         from the faces of the current cell.
