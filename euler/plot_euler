@@ -22,4 +22,7 @@ then
 fi
 gnuplot ../plotscripts/energy.gp
 
+sleep 1
+evince density.pdf
+
 cd ..

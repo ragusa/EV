@@ -7,6 +7,9 @@ subsection quadrature
 end
 
 subsection problem
+   # options are: 0: 1-D shock tube
+   #              1: 1-D modified shock tube
+   #              2: 2-D Noh problem
    set problem id = 0
 end
 
@@ -15,7 +18,7 @@ subsection numerics
 end
 
 subsection refinement
-   set initial refinement level = 5
+   set initial refinement level = 7
    set refinement cycles = 1
    set refinement fraction = 0.3
    set coarsening fraction = 0.03
@@ -26,11 +29,11 @@ subsection time
    set time step size method = cfl_condition
    set final time = 0.25 
    set time step size = 0.0001
-   set cfl = 0.10
+   set cfl = 0.50
 end
 
 subsection artificial viscosity
-   # options are <none|constant|first_order_1|first_order_2|entropy>
+   # options are <none|constant|old_first_order|max_principle|entropy>
    set viscosity type = old_first_order
    set constant viscosity value = 0.005
    set first order viscosity coefficient = 0.1

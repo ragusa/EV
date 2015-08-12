@@ -7,12 +7,13 @@
  */
 template <int dim>
 Euler<dim>::Euler(const EulerParameters<dim> &params):
-ConservationLaw<dim>(params),
-euler_parameters(params),
-density_extractor(0),
-momentum_extractor(1),
-energy_extractor(1+dim)
-{} 
+  ConservationLaw<dim>(params),
+  euler_parameters(params),
+  density_extractor(0),
+  momentum_extractor(1),
+  energy_extractor(1+dim)
+{
+} 
 
 /** \brief Returns the names of each component.
  *  \return vector of names of each component
@@ -60,15 +61,19 @@ void Euler<dim>::define_problem()
 {
    switch (euler_parameters.problem_id)
    {
-      case 0: // 1-D Shock tube problem
+      case 0: // 1-D Sod shock tube problem
       {
          Assert(dim==1,ExcImpossibleInDim(dim));
+
+         // create domain
          double domain_start = 0;
          double domain_width = 1.0;
          this->domain_volume = std::pow(domain_width,dim);
          GridGenerator::hyper_cube(this->triangulation, domain_start, domain_start + domain_width);
+
          // only 1 type of BC: zero Dirichlet
          this->n_boundaries = 1;
+
          // set all boundary indicators to zero
          typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin(),
             endc = this->triangulation.end();
@@ -83,7 +88,9 @@ void Euler<dim>::define_problem()
          this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet; // density has Dirichlet BC
          this->boundary_types[0][1] = ConservationLaw<dim>::dirichlet; // x-momentum has Dirichlet BC
          this->boundary_types[0][2] = ConservationLaw<dim>::dirichlet; // energy has Dirichlet BC
+
          // set function strings to be parsed for dirichlet boundary condition functions
+         this->use_exact_solution_as_BC = false;
          this->dirichlet_function_strings.resize(this->n_boundaries);
          for (unsigned int boundary = 0; boundary < this->n_boundaries; ++boundary) {
             this->dirichlet_function_strings[boundary].resize(this->n_components);
@@ -91,26 +98,33 @@ void Euler<dim>::define_problem()
             this->dirichlet_function_strings[boundary][1] = "0";                   // BC for x-momentum
             this->dirichlet_function_strings[boundary][2] = "if(x<0.5,2.5,0.25)";  // BC for energy
          }
-         this->use_exact_solution_as_BC = false;
-         // initial conditions
-         this->initial_conditions_strings[0] = "if(x<0.5,1.0,0.125)"; // IC for density
-         this->initial_conditions_strings[1] = "0";                   // IC for x-momentum
-         this->initial_conditions_strings[2] = "if(x<0.5,2.5,0.25)";  // IC for energy
-         // exact solution
+
+         // initial conditions for each solution component
+         this->initial_conditions_strings[0] = "if(x<0.5,1.0,0.125)";
+         this->initial_conditions_strings[1] = "0";
+         this->initial_conditions_strings[2] = "if(x<0.5,2.5,0.25)";
+
+         // no exact solution coded, although a Riemann solver could be implemented
          this->has_exact_solution = false;
+
          // physical constants
          gamma = 1.4;
+
          break;
       }
       case 1: // 1-D Leblanc tube problem
       {
          Assert(dim==1,ExcImpossibleInDim(dim));
+
+         // create domain
          double domain_start = 0;
          double domain_width = 1.0;
          this->domain_volume = std::pow(domain_width,dim);
          GridGenerator::hyper_cube(this->triangulation, domain_start, domain_start + domain_width);
+
          // only 1 type of BC: zero Dirichlet
          this->n_boundaries = 1;
+
          // set all boundary indicators to zero
          typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin(),
             endc = this->triangulation.end();
@@ -125,7 +139,9 @@ void Euler<dim>::define_problem()
          this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet; // density has Dirichlet BC
          this->boundary_types[0][1] = ConservationLaw<dim>::dirichlet; // x-momentum has Dirichlet BC
          this->boundary_types[0][2] = ConservationLaw<dim>::dirichlet; // energy has Dirichlet BC
+
          // set function strings to be parsed for dirichlet boundary condition functions
+         this->use_exact_solution_as_BC = false;
          this->dirichlet_function_strings.resize(this->n_boundaries);
          for (unsigned int boundary = 0; boundary < this->n_boundaries; ++boundary) {
             this->dirichlet_function_strings[boundary].resize(this->n_components);
@@ -133,27 +149,35 @@ void Euler<dim>::define_problem()
             this->dirichlet_function_strings[boundary][1] = "0";                     // BC for x-momentum
             this->dirichlet_function_strings[boundary][2] = "if(x<0.5,0.1,1.0e-10)"; // BC for energy
          }
-         this->use_exact_solution_as_BC = false;
+
          // initial conditions
          this->initial_conditions_strings[0] = "if(x<0.5,1.0,0.001)";   // IC for density
          this->initial_conditions_strings[1] = "0";                     // IC for x-momentum
          this->initial_conditions_strings[2] = "if(x<0.5,0.1,1.0e-10)"; // IC for energy
+
          // exact solution
          this->has_exact_solution = false;
+
          // physical constants
          gamma = 5.0/3.0;
+
          break;
       }
       case 2: // 2-D Noh Problem
       {
+         // this is a 2-D problem
          Assert(dim==2,ExcImpossibleInDim(dim));
+
+         // create domain
          this->domain_volume = 1.0; // domain is the unit hypercube, so domain volume is 1^dim
          GridIn<dim> input_grid;
          input_grid.attach_triangulation(this->triangulation);
          std::ifstream input_file("mesh/unit_square.msh");
          input_grid.read_msh(input_file);
+
          // four boundaries: each side of unit square
          this->n_boundaries = 4;
+
          // set boundary indicators
          double small_number = 1.0e-15;
          typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin(),
@@ -232,11 +256,13 @@ void Euler<dim>::define_problem()
             }
          }
          this->use_exact_solution_as_BC = false;
-         // initial conditions
-         this->initial_conditions_strings[0] = "1";                     // IC for density
-         this->initial_conditions_strings[1] = "-x/sqrt(x^2+y^2)";      // IC for x-momentum
-         this->initial_conditions_strings[2] = "-y/sqrt(x^2+y^2)";      // IC for x-momentum
-         this->initial_conditions_strings[3] = "1e-9/(5.0/3.0-1)+0.5";  // IC for energy
+
+         // initial conditions for each solution component
+         this->initial_conditions_strings[0] = "1";
+         this->initial_conditions_strings[1] = "if(x==0,0,-x/sqrt(x^2+y^2))";
+         this->initial_conditions_strings[2] = "if(y==0,0,-y/sqrt(x^2+y^2))";
+         this->initial_conditions_strings[3] = "1e-9/(5.0/3.0-1)+0.5";
+
          // exact solution
          this->has_exact_solution = true;
          this->exact_solution_strings[0] = "if(sqrt(x^2+y^2)<t/3.0,16,1)"; // density
@@ -244,8 +270,10 @@ void Euler<dim>::define_problem()
          this->exact_solution_strings[2] = "if(sqrt(x^2+y^2)<t/3.0,0,-y/sqrt(x^2+y^2))"; // my
          this->exact_solution_strings[3] = "if(sqrt(x^2+y^2)<t/3.0,16.0/3.0/(5.0/3.0-1),";
          this->exact_solution_strings[3] += "1e-9/(5.0/3.0-1)+0.5)"; // energy
+
          // physical constants
          gamma = 5.0/3.0;
+
          break;
       }
       default:
@@ -333,10 +361,11 @@ void Euler<dim>::compute_cell_ss_residual(FEValues<dim> &fe_values,
    compute_temperature_cell     (temperature, internal_energy);
    compute_pressure_cell        (pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
 
-   // loop over quadrature points
+   // check that density is nonzero
    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
    {
-      Assert(density[q] > 1e-30,ExcDivideByZero());
+      //std::cout << density[q] << std::endl;
+      Assert(density[q] > 1.0e-30, ExcDivideByZero());
    }
 
    // create identity tensor
@@ -740,9 +769,6 @@ void Euler<dim>::compute_speed_of_sound(      std::vector<double> &speed_of_soun
 template <int dim>
 void Euler<dim>::update_flux_speeds()
 {
-   // This has only been implemented for 1-D: how do I compute eigenvalues for multi-D?
-   Assert(dim == 1,ExcNotImplemented());
-
    FEValues<dim> fe_values(this->fe, this->cell_quadrature, update_values);
    std::vector<double>         density  (this->n_q_points_cell);
    std::vector<Tensor<1,dim> > momentum (this->n_q_points_cell);
@@ -765,11 +791,13 @@ void Euler<dim>::update_flux_speeds()
    for (; cell != endc; ++cell)
    {
       fe_values.reinit(cell);
-      fe_values[density_extractor].get_function_values (this->new_solution, density);
+      fe_values[density_extractor] .get_function_values(this->new_solution, density);
       fe_values[momentum_extractor].get_function_values(this->new_solution, momentum);
-      fe_values[energy_extractor].get_function_values(this->new_solution, energy);
+      fe_values[energy_extractor]  .get_function_values(this->new_solution, energy);
+
       // compute velocity
       compute_velocity(velocity, density, momentum);
+
       // compute speed of sound
       compute_internal_energy_cell (internal_energy, density, momentum, energy);
       compute_temperature_cell     (temperature, internal_energy);

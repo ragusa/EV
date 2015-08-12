@@ -1,5 +1,5 @@
 /** \brief Constructor for ConservationLaw class.
- *  \param params conservation law parameters
+ *  \param[in] params conservation law parameters
  */
 template <int dim>
 ConservationLaw<dim>::ConservationLaw(const ConservationLawParameters<dim> &params):
@@ -27,15 +27,6 @@ ConservationLaw<dim>::ConservationLaw(const ConservationLawParameters<dim> &para
 template <int dim>
 ConservationLaw<dim>::~ConservationLaw()
 {
-   // release dynamically allocated memory for FunctionParser objects
-   // for some reason, this release of memory causes a segmentation fault;
-   // for the meantime it will be commented out, even though this will cause
-   // a small memory leak
-   /*
-   for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
-      delete dirichlet_function[boundary];
-   */
-
 }
 
 /** \brief Runs the entire program.
@@ -66,13 +57,13 @@ void ConservationLaw<dim>::run()
       setup_system();
 
       std::cout << std::endl;
-      std::cout << "Cycle " << cycle+1 << " of " << conservation_law_parameters.n_cycle << ":" << std::endl;;
-      std::cout << "Number of active cells: ";
-      std::cout << triangulation.n_active_cells();
-      std::cout << std::endl;
+      std::cout << "Cycle " << cycle+1 << " of " << conservation_law_parameters.n_cycle << ":" << std::endl;
+      std::cout << "Number of active cells: " << triangulation.n_active_cells() << std::endl;
 
       // interpolate the initial conditions to the grid
       VectorTools::interpolate(dof_handler,initial_conditions_function,new_solution);
+      std::cout << "before apply Dirichlet BC" << std::endl;
+      check_nan();
       // apply Dirichlet BC to initial solution or guess
       apply_Dirichlet_BC(0.0);
       // distribute hanging node contraints to initial solution
@@ -139,7 +130,6 @@ void ConservationLaw<dim>::run()
       std::cout << std::endl;
       convergence_table.write_text(std::cout);
    }
-
 }
 
 /** \brief Initially sets up system. Called only once.
@@ -317,7 +307,7 @@ void ConservationLaw<dim>::initialize_runge_kutta()
          break;
    }
 
-   // allocate vectors for steady-state residual evaluations
+   // allocate stage vectors for steady-state residual evaluations
    rk.f.resize(rk.s);
 
    // test to see if last row of A matrix is the same as the b vector;
@@ -385,7 +375,6 @@ void ConservationLaw<dim>::setup_system ()
    // clear and distribute dofs
    dof_handler.clear();
    dof_handler.distribute_dofs(fe);
-   // get number of dofs
    n_dofs = dof_handler.n_dofs();
    std::cout << "Number of degrees of freedom: " << n_dofs << std::endl;
 
@@ -404,8 +393,9 @@ void ConservationLaw<dim>::setup_system ()
       for (unsigned int component = 0; component < n_components; ++component)
          if (boundary_types[boundary][component] == dirichlet)
          {
-            std::vector<bool> component_mask(n_components, false);
-            component_mask[component] = true;
+            // specify to impose Dirichlet BC for all components of solution
+            std::vector<bool> component_mask(n_components, true);
+
             if (use_exact_solution_as_BC)
             {
                exact_solution_function.set_time(0.0);
@@ -561,7 +551,7 @@ void ConservationLaw<dim>::assemble_mass_matrix()
  *
  *         This function applies Dirichlet boundary conditions
  *         using the interpolate_boundary_values() tool.
- *  \param [in] time current time; Dirichlet BC may be time-dependent such as for
+ *  \param[in] time current time; Dirichlet BC may be time-dependent such as for
  *              the 2-D Burgers test problem.
  */
 template <int dim>
@@ -721,7 +711,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
    unsigned int next_time_step_output = conservation_law_parameters.output_period;
    double t_end = conservation_law_parameters.final_time;
    bool in_transient = true;
-   bool max_principle_satisfied = true;
+   bool DMP_satisfied = true;
    while (in_transient)
    {
       // update max speed for use in CFL computation
@@ -747,11 +737,8 @@ void ConservationLaw<dim>::solve_runge_kutta()
          dt = t_end - old_time;
          in_transient = false;
       }
-      // compute CFL number
-      double cfl = compute_cfl_number(dt);
 
-      std::cout << "   time step " << n << ": t = " << old_time << "-> " << old_time+dt;
-      std::cout << ", CFL number = " << cfl << std::endl;
+      std::cout << "   time step " << n << ": t = " << old_time+dt << std::endl;
 
       update_viscosities(dt);
 
@@ -838,7 +825,6 @@ void ConservationLaw<dim>::solve_runge_kutta()
          }
       }
 
-
       /** Now we compute the solution using the computed \f$\mathbf{f}_i\f$:
        *  \f[
        *    \mathbf{M}\mathbf{y}_{n+1}=\mathbf{M}\mathbf{y}_n + h\sum\limits^s_{i=1}b_i \mathbf{f}_i
@@ -902,19 +888,27 @@ void ConservationLaw<dim>::solve_runge_kutta()
       // check that there are no NaNs in solution
       check_nan();
 
-      // check that local discrete maximum principle is satisfied at all time steps
-      bool max_principle_satisfied_this_time_step = check_local_discrete_max_principle(n);
-      max_principle_satisfied = max_principle_satisfied and max_principle_satisfied_this_time_step;
+      // check that DMP is satisfied at all time steps
+      if (conservation_law_parameters.viscosity_type ==
+        ConservationLawParameters<dim>::max_principle)
+      {
+        bool DMP_satisfied_this_time_step = check_DMP(n);
+        DMP_satisfied = DMP_satisfied and DMP_satisfied_this_time_step;
+      }
 
       // compute error for adaptive mesh refinement
       compute_error_for_refinement();
 
    }// end of time loop
 
-   if (max_principle_satisfied)
-      std::cout << "Local discrete maximum principle was satisfied at all time steps" << std::endl;
-   else
-      std::cout << "Local discrete maximum principle was NOT satisfied at all time steps" << std::endl;
+   if (conservation_law_parameters.viscosity_type ==
+     ConservationLawParameters<dim>::max_principle)
+   {
+     if (DMP_satisfied)
+        std::cout << "DMP was satisfied at all time steps" << std::endl;
+     else
+        std::cout << "DMP was NOT satisfied at all time steps" << std::endl;
+   }
 
 }
 
@@ -1503,23 +1497,23 @@ void ConservationLaw<dim>::get_matrix_row(const SparseMatrix<double> &matrix,
  *  \param [in] n time step index, used for reporting violations
  */
 template<int dim>
-bool ConservationLaw<dim>::check_local_discrete_max_principle(const unsigned int &n) const
+bool ConservationLaw<dim>::check_DMP(const unsigned int &n) const
 {
    // check that each dof value is bounded by its neighbors
-   bool local_max_principle_satisfied = true;
+   bool DMP_satisfied = true;
    for (unsigned int i = 0; i < n_dofs; ++i) {
       // check if dof is a Dirichlet node or not - if it is, don't check max principle
       if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) == dirichlet_nodes.end())
       {
          double value_i = new_solution(i);
          if (value_i < min_values(i)) {
-            local_max_principle_satisfied = false;
+            DMP_satisfied = false;
             std::cout << "Max principle violated at time step " << n
                << " with dof " << i << ": "
                << value_i << " < " << min_values(i) << std::endl;
          }
          if (value_i > max_values(i)) {
-            local_max_principle_satisfied = false;
+            DMP_satisfied = false;
             std::cout << "Max principle violated at time step " << n
                << " with dof " << i << ": "
                << value_i << " > " << max_values(i) << std::endl;
@@ -1527,7 +1521,7 @@ bool ConservationLaw<dim>::check_local_discrete_max_principle(const unsigned int
       }
    }
    
-   return local_max_principle_satisfied;
+   return DMP_satisfied;
 }
 
 /** \brief Computes min and max quantities for max principle
@@ -1591,7 +1585,7 @@ void ConservationLaw<dim>::get_dirichlet_nodes()
             // get boundary values map using interpolate_boundary_values function
             VectorTools::interpolate_boundary_values (dof_handler,
                                                       boundary,
-                                                      ZeroFunction<dim>(),
+                                                      ZeroFunction<dim>(n_components),
                                                       boundary_values,
                                                       component_mask);
 

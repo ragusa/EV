@@ -119,7 +119,7 @@ class ConservationLaw
 
     // checking functions
     void check_nan();
-    bool check_local_discrete_max_principle(const unsigned int &n) const;
+    bool check_DMP(const unsigned int &n) const;
     void compute_max_principle_quantities();
     Vector<double> min_values;
     Vector<double> max_values;
