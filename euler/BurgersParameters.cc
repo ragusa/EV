@@ -3,15 +3,14 @@
  */
 using namespace dealii;
 
-/** \fn BurgersParameters<dim>::BurgersParameters()
- *  \brief Constructor for the BurgersParameters class
+/**
+ * \brief Constructor for the BurgersParameters class
  */
 template<int dim>
 BurgersParameters<dim>::BurgersParameters()
 {}
 
 /**
- * \fn    BurgersParameters<dim>::declare_burgers_parameters(ParameterHandler &parameter_handler)
  * \brief defines input parameters
  * \param parameter_handler parameter handler for the Burgers class
  */
@@ -34,14 +33,12 @@ void BurgersParameters<dim>::declare_burgers_parameters(
 }
 
 /**
- * \fn    BurgersParameters<dim>::get_burgers_parameters(ParameterHandler &parameter_handler)
  * \brief gets input parameters from parameter handler
  * \param parameter_handler parameter handler for the Burgers class
  */
 template<int dim>
 void BurgersParameters<dim>::get_burgers_parameters(
   ParameterHandler &parameter_handler)
-
 {
    // get conservation law parameters
    this->get_conservation_law_parameters(parameter_handler);

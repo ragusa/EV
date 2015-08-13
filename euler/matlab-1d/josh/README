@@ -1,0 +1,7 @@
+This directory contain's Josh's version of the file euler_1d_v1.m,
+which makes it compatible with Octave and add's Sod shock tube test
+problem.
+
+Apparently 'clear all' causes an error if running this script because
+it clears its function definitions, so the functions in the script
+are not recognized.

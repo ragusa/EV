@@ -3,7 +3,7 @@
 ##
 
 # Set the name of the project and target:
-SET(TARGET "euler_driver")
+SET(TARGET "burgers")
 
 # Declare all source files the target consists of:
 SET(TARGET_SRC

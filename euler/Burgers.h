@@ -47,6 +47,8 @@ class Burgers : public ConservationLaw<dim>
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
        get_component_interpretations();
 
+    void assemble_lumped_mass_matrix() override;
+
     void define_problem();
     void output_solution(double time);
 

@@ -76,6 +76,8 @@ class ConservationLaw
     void solve_runge_kutta();
     void compute_error(const unsigned int cycle);
 
+    virtual void assemble_lumped_mass_matrix() = 0;
+
     virtual void update_flux_speeds() = 0;
     double compute_dt_from_cfl_condition();
     double compute_cfl_number(const double &dt) const;

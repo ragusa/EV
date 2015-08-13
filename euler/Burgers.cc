@@ -52,6 +52,7 @@ void Burgers<dim>::define_problem()
       case 0: // 1-D, Dirichlet boundary conditions, sin(2*pi*x)
       {
          Assert(dim==1,ExcImpossibleInDim(dim));
+
          double domain_start = 0;
          double domain_width = 1.0;
          this->domain_volume = std::pow(domain_width,dim);
@@ -82,6 +83,7 @@ void Burgers<dim>::define_problem()
       case 1: // 1-D Riemann problem, shock wave (u_left > u_right)
       {
          Assert(dim==1,ExcImpossibleInDim(dim));
+
          double domain_start = -1.0;
          double domain_width = 2.0;
          this->domain_volume = std::pow(domain_width,dim);
@@ -113,6 +115,7 @@ void Burgers<dim>::define_problem()
       case 2: // 1-D Riemann problem, rarefaction wave (u_left < u_right)
       {
          Assert(dim==1,ExcImpossibleInDim(dim));
+
          double domain_start = -1.0;
          double domain_width = 2.0;
          this->domain_volume = std::pow(domain_width,dim);
@@ -144,6 +147,7 @@ void Burgers<dim>::define_problem()
       case 3: // Guermond 2-d test problem
       {
          Assert(dim==2,ExcImpossibleInDim(dim));
+
          this->domain_volume = 1.0; // domain is the unit hypercube, so domain volume is 1^dim
          GridIn<dim> input_grid;
          input_grid.attach_triangulation(this->triangulation);
@@ -191,6 +195,43 @@ void Burgers<dim>::define_problem()
       default:
          Assert(false,ExcNotImplemented());
          break;
+   }
+}
+
+/**
+ * \brief Assembles the lumped mass matrix.
+ */
+template <int dim>
+void Burgers<dim>::assemble_lumped_mass_matrix()
+{
+   FEValues<dim> fe_values (this->fe, this->cell_quadrature,
+     update_values | update_JxW_values);
+
+   std::vector<types::global_dof_index> local_dof_indices (this->dofs_per_cell);
+   FullMatrix<double> local_mass (this->dofs_per_cell, this->dofs_per_cell);
+
+   typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler.begin_active(),
+                                                  endc = this->dof_handler.end();
+   for (; cell != endc; ++cell)
+   {
+      fe_values.reinit(cell);
+      cell->get_dof_indices(local_dof_indices);
+
+      local_mass = 0.0;
+
+      // compute local contribution
+      for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+         for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+            for (unsigned int j = 0; j < this->dofs_per_cell; ++j)
+            {
+               local_mass(i,i) += fe_values[velocity_extractor].value(i,q)
+                                  *fe_values[velocity_extractor].value(j,q)
+                                  *fe_values.JxW(q);
+            }
+
+      // add to global mass matrix with contraints
+      this->constraints.distribute_local_to_global (local_mass,
+        local_dof_indices, this->lumped_mass_matrix);
    }
 }
 

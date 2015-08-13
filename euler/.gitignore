@@ -2,8 +2,8 @@ CMakeCache.txt
 CMakeFiles
 Makefile
 cmake_install.cmake
-euler_driver
-burgers_driver
+euler
+burgers
 html
 latex
 rm_out

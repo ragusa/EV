@@ -60,17 +60,14 @@ void ConservationLaw<dim>::run()
       std::cout << "Cycle " << cycle+1 << " of " << conservation_law_parameters.n_cycle << ":" << std::endl;
       std::cout << "Number of active cells: " << triangulation.n_active_cells() << std::endl;
 
-      // interpolate the initial conditions to the grid
+      // interpolate the initial conditions to the grid, and apply constraints
       VectorTools::interpolate(dof_handler,initial_conditions_function,new_solution);
-      std::cout << "before apply Dirichlet BC" << std::endl;
-      check_nan();
-      // apply Dirichlet BC to initial solution or guess
       apply_Dirichlet_BC(0.0);
-      // distribute hanging node contraints to initial solution
       constraints.distribute(new_solution);
 
       // set old solution to the current solution
       old_solution = new_solution;
+
       // output initial solution
       if (in_final_cycle)
          output_solution(0.0);
@@ -169,6 +166,7 @@ void ConservationLaw<dim>::initialize_system()
       variables = "x,y,z";
    else
       Assert(false,ExcInvalidState());
+
    // add t for time-dependent function parser objects
    std::string time_dependent_variables = variables + ",t";
 
@@ -495,33 +493,7 @@ void ConservationLaw<dim>::assemble_mass_matrix()
 {
    // assemble lumped mass matrix
    //----------------------------
-   FEValues<dim> fe_values (fe, cell_quadrature, update_values | update_JxW_values);
-
-   std::vector<types::global_dof_index> local_dof_indices (dofs_per_cell);
-   FullMatrix<double> local_mass (dofs_per_cell, dofs_per_cell);
-
-   typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
-                                                  endc = dof_handler.end();
-   for (; cell != endc; ++cell)
-   {
-      fe_values.reinit(cell);
-      cell->get_dof_indices(local_dof_indices);
-
-      local_mass = 0.0;
-
-      // compute local contribution
-      for (unsigned int q = 0; q < n_q_points_cell; ++q)
-         for (unsigned int i = 0; i < dofs_per_cell; ++i)
-            for (unsigned int j = 0; j < dofs_per_cell; ++j)
-            {
-               local_mass(i,i) +=  fe_values.shape_value(i,q)
-                                  *fe_values.shape_value(j,q)
-                                  *fe_values.JxW(q);
-            }
-
-      // add to global mass matrix with contraints
-      constraints.distribute_local_to_global (local_mass, local_dof_indices, lumped_mass_matrix);
-   }
+   assemble_lumped_mass_matrix();
 
    // assemble consistent mass matrix
    //----------------------------
@@ -551,6 +523,7 @@ void ConservationLaw<dim>::assemble_mass_matrix()
  *
  *         This function applies Dirichlet boundary conditions
  *         using the interpolate_boundary_values() tool.
+ *
  *  \param[in] time current time; Dirichlet BC may be time-dependent such as for
  *              the 2-D Burgers test problem.
  */
@@ -689,19 +662,21 @@ void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_
 
 /** \brief Solves transient using a Runge-Kutta scheme.
  *
- *         This function contains the transient loop and solves the
- *         transient using explicit Runge-Kutta:
- *         \f[
- *           \mathbf{M} \mathbf{y}_{n+1} = \mathbf{M} \mathbf{y}_n + h\sum\limits^s_{i=1}b_i \mathbf{f}_i
- *         \f]
- *         where
- *         \f[
- *           \mathbf{f}_i = \mathbf{f}(t_n + c_i h, \mathbf{Y}_i)
- *         \f]
- *         and \f$\mathbf{Y}_i\f$ is computed from the linear solve
- *         \f[
- *           \mathbf{M} \mathbf{Y}_i = \mathbf{M} \mathbf{y}_n + h\sum\limits^{i-1}_{j=1}a_{i,j} \mathbf{f}_i
- *         \f]
+ * This function contains the transient loop and solves the
+ * transient using explicit Runge-Kutta:
+ * \f[
+ *   \mathbf{M} \mathbf{y}^{n+1} = \mathbf{M} \mathbf{y}^n
+     + \Delta t\sum\limits^s_{i=1}b_i \mathbf{f}_i
+ * \f]
+ * where
+ * \f[
+ *   \mathbf{f}_i = \mathbf{f}(t^n + c_i \Delta t, \mathbf{Y}_i)
+ * \f]
+ * and \f$\mathbf{Y}_i\f$ is computed from the linear solve
+ * \f[
+ *   \mathbf{M} \mathbf{Y}_i = \mathbf{M} \mathbf{y}^n
+     + \Delta t\sum\limits^{i-1}_{j=1}a_{i,j} \mathbf{f}_i
+ * \f]
  */
 template <int dim>
 void ConservationLaw<dim>::solve_runge_kutta()

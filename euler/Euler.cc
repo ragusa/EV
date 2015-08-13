@@ -3,7 +3,7 @@
  */
 
 /** \brief Constructor for the Euler class.
- *  \param params Euler equation parameters
+ *  \param[in] params Euler equation parameters
  */
 template <int dim>
 Euler<dim>::Euler(const EulerParameters<dim> &params):
@@ -35,6 +35,7 @@ std::vector<std::string> Euler<dim>::get_component_names ()
  *  This function returns the interpretation of each component,
  *  i.e., whether each component is a scalar or a component of
  *  a vector.
+ *
  *  \return data component interpretations
  */
 template <int dim>
@@ -290,7 +291,6 @@ void Euler<dim>::compute_ss_residual(Vector<double> &f)
    // reset vector
    f = 0.0;
 
-   // NOTE: may need to add more update flags in this constructor
    FEValues<dim> fe_values(this->fe, this->cell_quadrature, update_values
      | update_gradients | update_JxW_values);
    FEFaceValues<dim> fe_face_values(this->fe, this->face_quadrature, update_values
@@ -333,17 +333,14 @@ void Euler<dim>::compute_cell_ss_residual(
    // reinitialize fe values for cell
    fe_values.reinit(cell);
 
-   // get solution values and gradients
-   std::vector<double>         density          (this->n_q_points_cell);
-   //std::vector<Tensor<1,dim> > density_gradient (this->n_q_points_cell);
-   std::vector<Tensor<1,dim> > momentum         (this->n_q_points_cell);
-   //std::vector<Tensor<2,dim> > momentum_gradient(this->n_q_points_cell);
-   //std::vector<SymmetricTensor<2,dim> > momentum_symmetric_gradient(
-   //  this->n_q_points_cell);
-   //std::vector<double>         momentum_divergence (this->n_q_points_cell);
-   std::vector<double>         energy           (this->n_q_points_cell);
-   //std::vector<Tensor<1,dim> > energy_gradient  (this->n_q_points_cell);
 /*
+   // get solution values and gradients
+   std::vector<Tensor<1,dim> > density_gradient (this->n_q_points_cell);
+   std::vector<Tensor<2,dim> > momentum_gradient(this->n_q_points_cell);
+   std::vector<SymmetricTensor<2,dim> > momentum_symmetric_gradient(
+     this->n_q_points_cell);
+   std::vector<double>         momentum_divergence (this->n_q_points_cell);
+   std::vector<Tensor<1,dim> > energy_gradient  (this->n_q_points_cell);
    std::vector<double>         internal_energy  (this->n_q_points_cell);
    std::vector<double>         temperature      (this->n_q_points_cell);
    std::vector<Tensor<1,dim> > velocity         (this->n_q_points_cell);
@@ -351,29 +348,18 @@ void Euler<dim>::compute_cell_ss_residual(
    std::vector<double>         dpdrho           (this->n_q_points_cell);
    std::vector<double>         dpdmx            (this->n_q_points_cell);
    std::vector<double>         dpdE             (this->n_q_points_cell);
-*/
-   fe_values[density_extractor].get_function_values    (this->new_solution, density);
-   //fe_values[density_extractor].get_function_gradients (this->new_solution, density_gradient);
-   fe_values[momentum_extractor].get_function_values   (this->new_solution, momentum);
-   //fe_values[momentum_extractor].get_function_gradients(this->new_solution, momentum_gradient);
-   //fe_values[momentum_extractor].get_function_symmetric_gradients (this->new_solution, momentum_symmetric_gradient);
-   //fe_values[momentum_extractor].get_function_divergences (this->new_solution, momentum_divergence);
-   fe_values[energy_extractor].get_function_values     (this->new_solution, energy);
-   //fe_values[energy_extractor].get_function_gradients  (this->new_solution, energy_gradient);
+   fe_values[density_extractor].get_function_gradients (this->new_solution, density_gradient);
+   fe_values[momentum_extractor].get_function_gradients(this->new_solution, momentum_gradient);
+   fe_values[momentum_extractor].get_function_symmetric_gradients (this->new_solution, momentum_symmetric_gradient);
+   fe_values[momentum_extractor].get_function_divergences (this->new_solution, momentum_divergence);
+   fe_values[energy_extractor].get_function_gradients  (this->new_solution, energy_gradient);
 
    // compute velocity and thermodynamic properties
-/*
    compute_velocity             (density, momentum, velocity);
    compute_internal_energy_cell (internal_energy, density, momentum, energy);
    compute_temperature_cell     (temperature, internal_energy);
    compute_pressure_cell        (pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
-*/
 
-   // check that density is nonzero
-   for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-      Assert(density[q] > 1.0e-30, ExcDivideByZero());
-
-/*
    // create identity tensor
    SymmetricTensor<2,dim> identity_tensor = unit_symmetric_tensor<dim>();
 
@@ -383,18 +369,26 @@ void Euler<dim>::compute_cell_ss_residual(
    Tensor<2,dim> momentum_times_density_gradient;
 */
 
+   // get solution values
+   std::vector<double>         density (this->n_q_points_cell);
+   std::vector<Tensor<1,dim> > momentum(this->n_q_points_cell);
+   std::vector<double>         energy  (this->n_q_points_cell);
+   fe_values[density_extractor] .get_function_values(this->new_solution, density);
+   fe_values[momentum_extractor].get_function_values(this->new_solution, momentum);
+   fe_values[energy_extractor]  .get_function_values(this->new_solution, energy);
+
    // compute inviscid fluxes
-   std::vector<Tensor<1,dim> > density_flux (this->n_q_points_cell);
-   std::vector<Tensor<2,dim> > momentum_flux(this->n_q_points_cell);
-   std::vector<Tensor<1,dim> > energy_flux  (this->n_q_points_cell);
+   std::vector<Tensor<1,dim> > density_inviscid_flux (this->n_q_points_cell);
+   std::vector<Tensor<2,dim> > momentum_inviscid_flux(this->n_q_points_cell);
+   std::vector<Tensor<1,dim> > energy_inviscid_flux  (this->n_q_points_cell);
    compute_inviscid_fluxes(density, momentum, energy,
-     density_flux, momentum_flux, energy_flux);
+     density_inviscid_flux, momentum_inviscid_flux, energy_inviscid_flux);
 
    // loop over quadrature points
    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
    {
-      // compute symmetric gradient of velocity (only able to query symmetric gradient of momentum)
 /*
+      // compute symmetric gradient of velocity (only able to query symmetric gradient of momentum)
       Tensor<2,dim> aux2;
       outer_product(aux2,momentum[q],density_gradient[q]);
       Tensor<2,dim> velocity_symmetric_gradient = (momentum_gradient[q]*density[q] -aux2)/(density[q]*density[q]);
@@ -427,22 +421,22 @@ void Euler<dim>::compute_cell_ss_residual(
       for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
          // sum up terms into cell residual
          cell_residual(i) += ((
+            // density
             fe_values[density_extractor].gradient(i,q) *
-            //(density_flux + density_viscous_flux)
-            density_flux[q]
+            density_inviscid_flux[q]
+            // momentum
             + double_contract(fe_values[momentum_extractor].gradient(i,q),
-            //(momentum_flux + momentum_viscous_flux))
-            momentum_flux[q])
+            momentum_inviscid_flux[q])
+            // energy
             + fe_values[energy_extractor].gradient(i,q) *
-            //(energy_flux + energy_viscous_flux)
-            energy_flux[q]
+            energy_inviscid_flux[q]
          ) * fe_values.JxW(q));
    }
 
    // resize flux vectors for face computations
-   density_flux .resize(this->n_q_points_face);
-   momentum_flux.resize(this->n_q_points_face);
-   energy_flux  .resize(this->n_q_points_face);
+   density_inviscid_flux .resize(this->n_q_points_face);
+   momentum_inviscid_flux.resize(this->n_q_points_face);
+   energy_inviscid_flux  .resize(this->n_q_points_face);
 
    // loop over faces
    for (unsigned int face = 0; face < this->faces_per_cell; ++face)
@@ -456,13 +450,16 @@ void Euler<dim>::compute_cell_ss_residual(
         std::vector<double>         density (this->n_q_points_face);
         std::vector<Tensor<1,dim> > momentum(this->n_q_points_face);
         std::vector<double>         energy  (this->n_q_points_face);
-        fe_face_values[density_extractor].get_function_values (this->new_solution, density);
-        fe_face_values[momentum_extractor].get_function_values(this->new_solution, momentum);
-        fe_face_values[energy_extractor].get_function_values  (this->new_solution, energy);
+        fe_face_values[density_extractor].get_function_values (
+          this->new_solution, density);
+        fe_face_values[momentum_extractor].get_function_values(
+          this->new_solution, momentum);
+        fe_face_values[energy_extractor].get_function_values  (
+          this->new_solution, energy);
 
         // compute inviscid fluxes
         compute_inviscid_fluxes(density, momentum, energy,
-          density_flux, momentum_flux, energy_flux);
+          density_inviscid_flux, momentum_inviscid_flux, energy_inviscid_flux);
 /*
          std::vector<Tensor<1, dim> > solution_gradients_face(this->n_q_points_face);
          fe_face_values[velocity].get_function_gradients   (this->new_solution,solution_gradients_face);
@@ -505,16 +502,18 @@ void Euler<dim>::compute_cell_ss_residual(
          for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
             // loop over quadrature points
             for (unsigned int q = 0; q < this->n_q_points_face; ++q)
-               cell_residual(i) += (/*fe_face_values[velocity].value(i,q)
-                 * viscosity_face(q)
-                 * solution_gradients_face[q]
-                 * fe_face_values.normal_vector(q)*/
-                 - (fe_face_values[density_extractor].value(i,q)  * density_flux[q]
-                  + fe_face_values[momentum_extractor].value(i,q) * momentum_flux[q]
-                  + fe_face_values[energy_extractor].value(i,q)   * energy_flux[q]
-                 ) * fe_face_values.normal_vector(q)
-                 )
-                 * fe_face_values.JxW(q);
+               cell_residual(i) -= (
+                 // density
+                 fe_face_values[density_extractor].value(i,q)
+                 * density_inviscid_flux[q]
+                 // momentum
+                 + fe_face_values[momentum_extractor].value(i,q)
+                 * momentum_inviscid_flux[q]
+                 // energy
+                 + fe_face_values[energy_extractor].value(i,q)
+                 * energy_inviscid_flux[q]
+                 // normal vector and JxW
+                 ) * fe_face_values.normal_vector(q) * fe_face_values.JxW(q);
       }
    }
 }

@@ -7,7 +7,10 @@ subsection quadrature
 end
 
 subsection problem
-   set problem id = 2
+   # options are: 0: 1-D shock tube
+   #              1: 1-D Leblanc shock tube
+   #              2: 2-D Noh problem
+   set problem id = 0
 end
 
 subsection numerics
@@ -15,7 +18,7 @@ subsection numerics
 end
 
 subsection refinement
-   set initial refinement level = 5
+   set initial refinement level = 2
    set refinement cycles = 1
    set refinement fraction = 0.3
    set coarsening fraction = 0.03
@@ -23,15 +26,15 @@ end
 
 subsection time
    # options are <constant_dt|cfl_condition>
-   set time step size method = cfl_condition
-   set final time = 0.25 
+   set time step size method = constant_dt
+   set final time = 0.0001
    set time step size = 0.0001
-   set cfl = 0.10
+   set cfl = 0.50
 end
 
 subsection artificial viscosity
-   # options are <none|constant|first_order_1|first_order_2|entropy>
-   set viscosity type = first_order_1
+   # options are <none|constant|old_first_order|max_principle|entropy>
+   set viscosity type = none
    set constant viscosity value = 0.005
    set first order viscosity coefficient = 0.1
    set entropy viscosity coefficient = 5.0
@@ -43,7 +46,7 @@ subsection temporal integration
    # options are <runge_kutta>
    set temporal integrator = runge_kutta
    # options are <erk1|erk2|erk3|erk4|sdirk22>
-   set runge kutta method = erk2
+   set runge kutta method = erk1
 end
 
 # this section is not yet applicable
@@ -67,7 +70,6 @@ end
 
 subsection output
    set output period = 0
-   set output mass matrix = false
+   set output mass matrix = true
    set output viscosity = false
-   set output exact solution = true
 end
