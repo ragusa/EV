@@ -763,12 +763,12 @@ void ConservationLaw<dim>::solve_runge_kutta()
              *
              */
             system_rhs = 0.0;
-            consistent_mass_matrix.vmult(system_rhs, old_solution);
+            lumped_mass_matrix.vmult(system_rhs, old_solution);
             for (int j = 0; j < i; ++j)
                system_rhs.add(dt * rk.a[i][j] , rk.f[j]);
 
             // solve system M*Y_i = RHS
-            linear_solve(consistent_mass_matrix, system_rhs, new_solution);
+            linear_solve(lumped_mass_matrix, system_rhs, new_solution);
 
             // ordinarily, Dirichlet BC need not be reapplied, but in general,
             // the Dirichlet BC can be time-dependent
@@ -853,10 +853,10 @@ void ConservationLaw<dim>::solve_runge_kutta()
       {
          // solve M*y^{n+1} = M*y^n + dt*sum_{i=1}^s(b_i*f_i)
          system_rhs = 0.0;
-         consistent_mass_matrix.vmult(system_rhs, old_solution);
+         lumped_mass_matrix.vmult(system_rhs, old_solution);
          for (int i = 0; i < rk.s; ++i)
             system_rhs.add(dt * rk.b[i], rk.f[i]);
-         linear_solve(consistent_mass_matrix, system_rhs, new_solution);
+         linear_solve(lumped_mass_matrix, system_rhs, new_solution);
 
          // apply Dirichlet constraints
          apply_Dirichlet_BC(current_time);
