@@ -748,26 +748,37 @@ void ConservationLaw<dim>::solve_runge_kutta()
       old_solution = new_solution;
 
       // solve here
-      /** First, compute each \f$\mathbf{f}_i\f$: */
+      // compute each f_i
       for (int i = 0; i < rk.s; ++i)
       {
          std::cout << "      stage " << i+1 << " of " << rk.s << std::endl;
          // compute stage time
          current_time = old_time + rk.c[i]*dt;
 
-         /** compute intermediate solution \f$\mathbf{Y}_i\f$: */
-         if (rk.is_explicit)
+         if (rk.is_explicit) // explicit Runge-Kutta
          {
+            /* compute RHS of
+             *
+             * M*Y_i = M*y^n + sum_{j=1}^{i-1} dt*a_{i,j}*f_j
+             *
+             */
             system_rhs = 0.0;
-            lumped_mass_matrix.vmult(system_rhs, old_solution);
+            consistent_mass_matrix.vmult(system_rhs, old_solution);
             for (int j = 0; j < i; ++j)
                system_rhs.add(dt * rk.a[i][j] , rk.f[j]);
-            linear_solve(lumped_mass_matrix, system_rhs, new_solution);
-            // ordinarily, Dirichlet BC need not be reapplied, but in this case, the Dirichlet BC can be time-dependent
+
+            // solve system M*Y_i = RHS
+            linear_solve(consistent_mass_matrix, system_rhs, new_solution);
+
+            // ordinarily, Dirichlet BC need not be reapplied, but in general,
+            // the Dirichlet BC can be time-dependent
             apply_Dirichlet_BC(current_time);
+
             // distribute hanging node constraints
             constraints.distribute(new_solution);
-         } else {
+
+         } else { // implicit Runge-Kutta
+
             Assert(false,ExcNotImplemented());
 /*
             // Newton solve
@@ -825,10 +836,9 @@ void ConservationLaw<dim>::solve_runge_kutta()
          }
       }
 
-      /** Now we compute the solution using the computed \f$\mathbf{f}_i\f$:
-       *  \f[
-       *    \mathbf{M}\mathbf{y}_{n+1}=\mathbf{M}\mathbf{y}_n + h\sum\limits^s_{i=1}b_i \mathbf{f}_i
-       *  \f]
+      /* compute the solution using the computed f_i's:
+       *
+       * M*y^{n+1} = M*y^n + dt*sum_{i=1}^s(b_i*f_i)
        */    
       // if the next time step solution was already computed in the last stage, then
       // there is no need to perform the linear combination of f's. Plus, since f[0]
@@ -841,14 +851,16 @@ void ConservationLaw<dim>::solve_runge_kutta()
       }
       else
       {
-         // solve M*y_new = F, where F = M*y_old + dt*sum(b[i]*f[i]);
+         // solve M*y^{n+1} = M*y^n + dt*sum_{i=1}^s(b_i*f_i)
          system_rhs = 0.0;
-         lumped_mass_matrix.vmult(system_rhs, old_solution);
+         consistent_mass_matrix.vmult(system_rhs, old_solution);
          for (int i = 0; i < rk.s; ++i)
             system_rhs.add(dt * rk.b[i], rk.f[i]);
-         linear_solve(lumped_mass_matrix, system_rhs, new_solution);
+         linear_solve(consistent_mass_matrix, system_rhs, new_solution);
+
          // apply Dirichlet constraints
          apply_Dirichlet_BC(current_time);
+
          // distribute hanging node constraints
          constraints.distribute(new_solution);
 
