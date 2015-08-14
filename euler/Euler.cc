@@ -285,6 +285,48 @@ void Euler<dim>::define_problem()
    }
 }
 
+/**
+ * \brief Assembles the lumped mass matrix.
+ */
+template <int dim>
+void Euler<dim>::assemble_lumped_mass_matrix()
+{
+   FEValues<dim> fe_values (this->fe, this->cell_quadrature,
+     update_values | update_JxW_values);
+
+   std::vector<types::global_dof_index> local_dof_indices (this->dofs_per_cell);
+   FullMatrix<double> local_mass (this->dofs_per_cell, this->dofs_per_cell);
+
+   typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler.begin_active(),
+                                                  endc = this->dof_handler.end();
+   for (; cell != endc; ++cell)
+   {
+      fe_values.reinit(cell);
+      cell->get_dof_indices(local_dof_indices);
+
+      local_mass = 0.0;
+
+      // compute local contribution
+      for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+         for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+            for (unsigned int j = 0; j < this->dofs_per_cell; ++j)
+            {
+               local_mass(i,i) += (
+                 fe_values[density_extractor].value(i,q)
+                 * fe_values[density_extractor].value(j,q)
+                 + fe_values[momentum_extractor].value(i,q)
+                 * fe_values[momentum_extractor].value(j,q)
+                 + fe_values[energy_extractor].value(i,q)
+                 * fe_values[energy_extractor].value(j,q)
+                 ) * fe_values.JxW(q);
+            }
+
+      // add to global mass matrix with contraints
+      this->constraints.distribute_local_to_global (local_mass,
+        local_dof_indices, this->lumped_mass_matrix);
+   }
+}
+
 template <int dim>
 void Euler<dim>::compute_ss_residual(Vector<double> &f)
 {
@@ -333,42 +375,6 @@ void Euler<dim>::compute_cell_ss_residual(
    // reinitialize fe values for cell
    fe_values.reinit(cell);
 
-/*
-   // get solution values and gradients
-   std::vector<Tensor<1,dim> > density_gradient (this->n_q_points_cell);
-   std::vector<Tensor<2,dim> > momentum_gradient(this->n_q_points_cell);
-   std::vector<SymmetricTensor<2,dim> > momentum_symmetric_gradient(
-     this->n_q_points_cell);
-   std::vector<double>         momentum_divergence (this->n_q_points_cell);
-   std::vector<Tensor<1,dim> > energy_gradient  (this->n_q_points_cell);
-   std::vector<double>         internal_energy  (this->n_q_points_cell);
-   std::vector<double>         temperature      (this->n_q_points_cell);
-   std::vector<Tensor<1,dim> > velocity         (this->n_q_points_cell);
-   std::vector<double>         pressure         (this->n_q_points_cell);
-   std::vector<double>         dpdrho           (this->n_q_points_cell);
-   std::vector<double>         dpdmx            (this->n_q_points_cell);
-   std::vector<double>         dpdE             (this->n_q_points_cell);
-   fe_values[density_extractor].get_function_gradients (this->new_solution, density_gradient);
-   fe_values[momentum_extractor].get_function_gradients(this->new_solution, momentum_gradient);
-   fe_values[momentum_extractor].get_function_symmetric_gradients (this->new_solution, momentum_symmetric_gradient);
-   fe_values[momentum_extractor].get_function_divergences (this->new_solution, momentum_divergence);
-   fe_values[energy_extractor].get_function_gradients  (this->new_solution, energy_gradient);
-
-   // compute velocity and thermodynamic properties
-   compute_velocity             (density, momentum, velocity);
-   compute_internal_energy_cell (internal_energy, density, momentum, energy);
-   compute_temperature_cell     (temperature, internal_energy);
-   compute_pressure_cell        (pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
-
-   // create identity tensor
-   SymmetricTensor<2,dim> identity_tensor = unit_symmetric_tensor<dim>();
-
-   // allocate memory for intermediate tensors
-   Tensor<2,dim> velocity_times_momentum;
-   Tensor<2,dim> density_viscous_flux_times_velocity;
-   Tensor<2,dim> momentum_times_density_gradient;
-*/
-
    // get solution values
    std::vector<double>         density (this->n_q_points_cell);
    std::vector<Tensor<1,dim> > momentum(this->n_q_points_cell);
@@ -377,6 +383,23 @@ void Euler<dim>::compute_cell_ss_residual(
    fe_values[momentum_extractor].get_function_values(this->new_solution, momentum);
    fe_values[energy_extractor]  .get_function_values(this->new_solution, energy);
 
+   // get solution gradients
+   std::vector<Tensor<1,dim> > density_gradient (this->n_q_points_cell);
+   std::vector<Tensor<2,dim> > momentum_gradient(this->n_q_points_cell);
+   std::vector<Tensor<1,dim> > energy_gradient  (this->n_q_points_cell);
+   fe_values[density_extractor].get_function_gradients (this->new_solution, density_gradient);
+   fe_values[momentum_extractor].get_function_gradients(this->new_solution, momentum_gradient);
+   fe_values[energy_extractor].get_function_gradients  (this->new_solution, energy_gradient);
+
+   // get momentum divergences
+   std::vector<double> momentum_divergence(this->n_q_points_cell);
+   fe_values[momentum_extractor].get_function_divergences(this->new_solution, momentum_divergence);
+
+   // get viscosity values on cell
+   std::vector<double> viscosity(this->n_q_points_cell);
+   for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+     viscosity[q] = this->viscosity_cell_q[cell](q);
+
    // compute inviscid fluxes
    std::vector<Tensor<1,dim> > density_inviscid_flux (this->n_q_points_cell);
    std::vector<Tensor<2,dim> > momentum_inviscid_flux(this->n_q_points_cell);
@@ -384,52 +407,30 @@ void Euler<dim>::compute_cell_ss_residual(
    compute_inviscid_fluxes(density, momentum, energy,
      density_inviscid_flux, momentum_inviscid_flux, energy_inviscid_flux);
 
+   // compute viscous fluxes
+   std::vector<Tensor<1,dim> > density_viscous_flux (this->n_q_points_cell);
+   std::vector<Tensor<2,dim> > momentum_viscous_flux(this->n_q_points_cell);
+   std::vector<Tensor<1,dim> > energy_viscous_flux  (this->n_q_points_cell);
+   compute_viscous_fluxes(viscosity, density, momentum, energy,
+     density_gradient, momentum_gradient, energy_gradient, momentum_divergence,
+     density_viscous_flux, momentum_viscous_flux, energy_viscous_flux);
+
    // loop over quadrature points
    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
    {
-/*
-      // compute symmetric gradient of velocity (only able to query symmetric gradient of momentum)
-      Tensor<2,dim> aux2;
-      outer_product(aux2,momentum[q],density_gradient[q]);
-      Tensor<2,dim> velocity_symmetric_gradient = (momentum_gradient[q]*density[q] -aux2)/(density[q]*density[q]);
-
-      // compute viscous fluxes
-      double nu = this->viscosity_cell_q[cell](q);
-      Tensor<1,dim> density_viscous_flux = -nu*density_gradient[q];
-
-      outer_product(density_viscous_flux_times_velocity, density_viscous_flux, velocity[q]);
-      Tensor<2,dim> momentum_viscous_flux = -nu*density[q]*velocity_symmetric_gradient
-         + density_viscous_flux_times_velocity;
-
-      double kappa = nu; //euler_parameters.prandtl / (gamma - 1.0) * mu;
-      double sp = -pressure[q]/(temperature[q]*density[q]*density[q]);
-      double se = 1.0/temperature[q];
-      outer_product(momentum_times_density_gradient, momentum[q], density_gradient[q]);
-      double velocity_divergence = (momentum_divergence[q]*density[q] - momentum[q]*density_gradient[q])/(density[q]*density[q]);
-      Tensor<1,dim> pressure_gradient = (gamma - 1.0)*(energy_gradient[q]
-        - velocity_divergence * momentum[q] - 0.5*velocity[q]*velocity[q]*density_gradient[q]);
-      Tensor<1,dim> internal_energy_gradient = (pressure_gradient*density[q]
-        - pressure[q]*density_gradient[q]) / ((gamma - 1.0)*density[q]*density[q]);
-      Tensor<1,dim> l_flux = (nu - kappa)*density[q]*sp/se*density_gradient[q]
-        - nu * internal_energy[q] * density_gradient[q]
-        - kappa * density[q] * internal_energy_gradient;
-      Tensor<1,dim> h_flux = l_flux - 0.5*velocity[q]*velocity[q]*density_viscous_flux;
-      Tensor<1,dim> energy_viscous_flux = h_flux + momentum_viscous_flux * velocity[q];
-*/
-
       // loop over test functions
       for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
          // sum up terms into cell residual
          cell_residual(i) += ((
             // density
             fe_values[density_extractor].gradient(i,q) *
-            density_inviscid_flux[q]
+            (density_inviscid_flux[q] + density_viscous_flux[q])
             // momentum
             + double_contract(fe_values[momentum_extractor].gradient(i,q),
-            momentum_inviscid_flux[q])
+            momentum_inviscid_flux[q] + momentum_viscous_flux[q])
             // energy
             + fe_values[energy_extractor].gradient(i,q) *
-            energy_inviscid_flux[q]
+            (energy_inviscid_flux[q] + energy_viscous_flux[q])
          ) * fe_values.JxW(q));
    }
 
@@ -460,6 +461,7 @@ void Euler<dim>::compute_cell_ss_residual(
         // compute inviscid fluxes
         compute_inviscid_fluxes(density, momentum, energy,
           density_inviscid_flux, momentum_inviscid_flux, energy_inviscid_flux);
+
 /*
          std::vector<Tensor<1, dim> > solution_gradients_face(this->n_q_points_face);
          fe_face_values[velocity].get_function_gradients   (this->new_solution,solution_gradients_face);
@@ -516,6 +518,73 @@ void Euler<dim>::compute_cell_ss_residual(
                  ) * fe_face_values.normal_vector(q) * fe_face_values.JxW(q);
       }
    }
+}
+
+/**
+ * \brief Computes the viscous fluxes.
+ */
+template <int dim>
+void Euler<dim>::compute_viscous_fluxes(
+  const std::vector<double>         & viscosity,
+  const std::vector<double>         & density,
+  const std::vector<Tensor<1,dim> > & momentum,
+  const std::vector<double>         & energy,
+  const std::vector<Tensor<1,dim> > & density_gradient,
+  const std::vector<Tensor<2,dim> > & momentum_gradient,
+  const std::vector<Tensor<1,dim> > & energy_gradient,
+  const std::vector<double>         & momentum_divergence,
+  std::vector<Tensor<1,dim> >       & density_viscous_flux,
+  std::vector<Tensor<2,dim> >       & momentum_viscous_flux,
+  std::vector<Tensor<1,dim> >       & energy_viscous_flux
+  ) const
+{
+  // get number of vector elements
+  const unsigned int n = density.size();
+
+  // compute auxiliary quantities
+  std::vector<Tensor<1,dim> > velocity(n);
+  std::vector<double>         pressure(n);
+  std::vector<double>         internal_energy(n);
+  std::vector<double>         temperature(n);
+  compute_velocity(density, momentum, velocity);
+  compute_pressure(density, momentum, energy, pressure);
+  compute_internal_energy(density, momentum, energy, internal_energy);
+  compute_temperature(internal_energy, temperature);
+
+  // loop over vector elements
+  for (unsigned int q = 0; q < n; ++q)
+  {
+    // density viscous flux
+    double nu = viscosity[q];
+    density_viscous_flux[q] = -nu*density_gradient[q];
+  
+    // momentum viscous flux
+    Tensor<2,dim> density_viscous_flux_times_velocity;
+    outer_product(density_viscous_flux_times_velocity, density_viscous_flux[q],
+      velocity[q]);
+    Tensor<2,dim> momentum_times_density_gradient;
+    outer_product(momentum_times_density_gradient, momentum[q], density_gradient[q]);
+    Tensor<2,dim> velocity_symmetric_gradient = (momentum_gradient[q]*density[q]
+      - momentum_times_density_gradient)/(density[q]*density[q]);
+    momentum_viscous_flux[q] = -nu*density[q]*velocity_symmetric_gradient
+      + density_viscous_flux_times_velocity;
+  
+    // energy viscous flux
+    double kappa = nu;
+    double sp = -pressure[q]/(temperature[q]*density[q]*density[q]);
+    double se = 1.0/temperature[q];
+    double velocity_divergence = (momentum_divergence[q]*density[q]
+      - momentum[q]*density_gradient[q])/(density[q]*density[q]);
+    Tensor<1,dim> pressure_gradient = (gamma - 1.0)*(energy_gradient[q]
+      - velocity_divergence * momentum[q] - 0.5*velocity[q]*velocity[q]*density_gradient[q]);
+    Tensor<1,dim> internal_energy_gradient = (pressure_gradient*density[q]
+      - pressure[q]*density_gradient[q]) / ((gamma - 1.0)*density[q]*density[q]);
+    Tensor<1,dim> l_flux = (nu - kappa)*density[q]*sp/se*density_gradient[q]
+      - nu * internal_energy[q] * density_gradient[q]
+      - kappa * density[q] * internal_energy_gradient;
+    Tensor<1,dim> h_flux = l_flux - 0.5*velocity[q]*velocity[q]*density_viscous_flux[q];
+    energy_viscous_flux[q] = h_flux + momentum_viscous_flux[q] * velocity[q];
+  }
 }
 
 /** \brief Computes the contribution of the steady-state residual
@@ -789,6 +858,23 @@ void Euler<dim>::compute_velocity(
     velocity[q] = momentum[q] / density[q];
 }
 
+/**
+ * \brief Computes a vector of internal energy values.
+ */
+template <int dim>
+void Euler<dim>::compute_internal_energy(      
+  const std::vector<double>         & density,
+  const std::vector<Tensor<1,dim> > & momentum,
+  const std::vector<double>         & energy,
+  std::vector<double>               & internal_energy) const
+{
+  const unsigned int n = density.size();
+
+  for (unsigned int q = 0; q < n; ++q)
+    internal_energy[q] = (energy[q] - 0.5*momentum[q]*momentum[q]/density[q])
+      / density[q];
+}
+
 /** \brief Computes internal energy at each quadrature point in cell.
  */
 template <int dim>
@@ -811,6 +897,23 @@ void Euler<dim>::compute_internal_energy_face(      std::vector<double>         
 {
    for (unsigned int q = 0; q < this->n_q_points_face; ++q)
       internal_energy[q] = (energy[q] - 0.5*momentum[q]*momentum[q]/density[q]) / density[q];
+}
+
+/**
+ * \brief Computes a vector of temperature values.
+ *
+ * \param[in] internal_energy internal energy
+ * \param[in] temperature temperature
+ */
+template <int dim>
+void Euler<dim>::compute_temperature(
+  const std::vector<double> & internal_energy,
+  std::vector<double>       & temperature) const
+{
+  const unsigned int n = internal_energy.size();
+  
+  for (unsigned int q = 0; q < n; ++q)
+    temperature[q] = (gamma - 1.0)*internal_energy[q];
 }
 
 /** \brief Computes temperature at each quadrature point in cell.

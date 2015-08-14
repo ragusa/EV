@@ -75,6 +75,19 @@ private:
     std::vector<Tensor<2,dim> > & momentum_flux,
     std::vector<Tensor<1,dim> > & energy_flux
     ) const;
+  void compute_viscous_fluxes(
+    const std::vector<double>         & viscosity,
+    const std::vector<double>         & density,
+    const std::vector<Tensor<1,dim> > & momentum,
+    const std::vector<double>         & energy,
+    const std::vector<Tensor<1,dim> > & density_gradient,
+    const std::vector<Tensor<2,dim> > & momentum_gradient,
+    const std::vector<Tensor<1,dim> > & energy_gradient,
+    const std::vector<double>         & momentum_divergence,
+    std::vector<Tensor<1,dim> >       & density_viscous_flux,
+    std::vector<Tensor<2,dim> >       & momentum_viscous_flux,
+    std::vector<Tensor<1,dim> >       & energy_viscous_flux
+    ) const;
   void update_flux_speeds();
   void compute_entropy (const Vector<double> &solution,
                         FEValues<dim>        &fe_values,
@@ -89,6 +102,11 @@ private:
     const std::vector<double>         & density,
     const std::vector<Tensor<1,dim> > & momentum,
     std::vector<Tensor<1,dim> >       & velocity) const;
+  void compute_internal_energy(
+    const std::vector<double>         & density,
+    const std::vector<Tensor<1,dim> > & momentum,
+    const std::vector<double>         & energy,
+    std::vector<double>               & internal_energy) const;
   void compute_internal_energy_cell(      std::vector<double>         &internal_energy,
                                     const std::vector<double>         &density,
                                     const std::vector<Tensor<1,dim> > &momentum,
@@ -97,6 +115,9 @@ private:
                                     const std::vector<double>         &density,
                                     const std::vector<Tensor<1,dim> > &momentum,
                                     const std::vector<double>         &energy) const;
+  void compute_temperature(
+    const std::vector<double> &internal_energy,
+    std::vector<double> &temperature) const;
   void compute_temperature_cell(      std::vector<double> &temperature,
                                 const std::vector<double> &internal_energy) const;
   void compute_temperature_face(      std::vector<double> &temperature,
@@ -123,6 +144,8 @@ private:
   void compute_speed_of_sound(      std::vector<double> &speed_of_sound,
                               const std::vector<double> &density,
                               const std::vector<double> &pressure) const;
+
+  void assemble_lumped_mass_matrix() override;
 
   double gamma; // gas constant
 };
