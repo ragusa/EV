@@ -1,0 +1,143 @@
+Evaluating row $i$ of Eqn.~\ref{eq:loworderscheme} and rearranging,
+
+\[
+   U_i^{L,n+1} = U_i^n - \frac{\Delta t}{m_i}\sum\limits_j U_j^n A^L_{i,j}
+      + \frac{\Delta t}{m_i}b_i,
+\]
+
+\noindent
+where $m_i$ is the $i$th element of the lumped mass matrix.
+Rearranging this equation,
+
+\[
+   U_i^{L,n+1} = \left(1-\frac{\Delta t}{m_i}A^L_{i,i}\right)U_i^n - \frac{\Delta t}{m_i}
+      \sum\limits_{j\ne i} U_j^n A^L_{i,j} + \frac{\Delta t}{m_i}b_i.
+\]
+
+\noindent
+First it will be proved that the off-diagonal elements of the low-order steady
+state matrix $\mathbf{A}^L = \mathbf{A} + \mathbf{D}^L$ are non-positive.
+Bounding $D_{i,j}^L=\sum\limits_{K\subset S_{i,j}}\nu_K^L b_K(\varphi_j, \varphi_i)$
+for $j \ne i$:
+
+\begin{eqnarray*}
+   D_{i,j}=\sum\limits_{K\subset S_{i,j}}\nu_K^L b_K(\varphi_j, \varphi_i)
+   & = & \sum\limits_{K\subset S_{i,j}} \max\limits_{k\ne \ell\in \mathcal{I}(K)}
+      \frac{\max(0,A_{k,\ell})}
+		{-\sum\limits_{T\subset S_{k,\ell}} b_T(\varphi_{\ell}, \varphi_k)}
+      b_K(\varphi_j,\varphi_i)\\
+   & \le & \sum\limits_{K\subset S_{i,j}} \frac{\max(0,A_{i,j})}
+		{-\sum\limits_{T\subset S_{i,j}} b_T(\varphi_j, \varphi_i)}b_K(\varphi_j,\varphi_i)\\
+   & =   & -\max(0,A_{i,j}) \frac{\sum\limits_{K\subset S_{i,j}}
+      b_K(\varphi_j,\varphi_i)}
+		{\sum\limits_{T\subset S_{i,j}} b_T(\varphi_j, \varphi_i)}\\   
+   & = & -\max(0,A_{i,j})\\
+   & \le & -A_{i,j}
+\end{eqnarray*}
+
+\noindent
+Thus for $j \ne i$ (i.e., the off-diagonal elements), 
+\begin{eqnarray*}
+	A^L_{i,j} & = & A_{i,j} + D_{i,j}^L\\
+   A^L_{i,j} & \le & A_{i,j} - A_{i,j}\\
+   A^L_{i,j} & \le & 0.
+\end{eqnarray*}
+
+\noindent
+Given that the CFL condition $\Delta t \leq \frac{m_i}{A_{i,i}^L}$ is satisfied,
+which corresponds to $1-\frac{\Delta t}{m_i}A^L_{i,i} \ge 0$, and since the off-diagonal
+elements of $\mathbf{A}^L$, are non-positive. Thus, the following inequality is
+able to be applied:
+
+\[
+   U_i^{L,n+1} \le
+   U_{\max,i}^n\left(1-\frac{\Delta t}{m_i}\sum\limits_j A^L_{i,j}\right)
+      + \frac{\Delta t}{m_i}b_i,
+\]
+
+\noindent
+and similarly for the lower bound.
+
+%---------------------------------------------------------------------
+\section{Proof that the FCT Scheme Satisfies the Discrete Maximum Principle}
+\label{ap:fct_dmp}
+
+To prove that the FCT scheme satisfies the discrete maximum principle bounds,
+first the limited antidiffusion flux $\sum\limits_j \alpha_{i,j}F_{i,j}$
+will be shown to be bounded. Note some properties of definitions given in Eqns. \ref{eq:P_defs},
+\ref{eq:Q_defs}, \ref{eq:R_defs}, and \ref{eq:L_defs}:
+
+\begin{gather*}
+   P_i^+ \geq 0, \qquad P_i^- \leq 0,\\
+   Q_i^+ \geq 0, \qquad Q_i^- \leq 0,\\
+   0 \leq R_i^\pm \leq 1,\\
+   0 \leq \alpha_{i,j} \leq 1.
+\end{gather*}
+
+\noindent
+Now it is shown that the limited antidiffusion flux $\sum\limits_j \alpha_{i,j}F_{i,j}$ is bounded by the $Q_i^\pm$:
+
+\[
+   \sum\limits_j \alpha_{i,j}F_{i,j}
+      \leq \sum\limits_{j:F_{i,j}\geq 0} \alpha_{i,j}F_{i,j}
+      = \sum\limits_{j:F_{i,j}\geq 0} \min(R_i^+,R_j^-)F_{i,j}
+      \leq \sum\limits_{j:F_{i,j}\geq 0} R_i^+ F_{i,j}.
+\]
+
+\noindent
+For the case $P_i^+ = 0$,
+
+\[
+   \sum\limits_{j:F_{i,j}\geq 0} R_i^+ F_{i,j} = 0 \leq Q_i^+
+\]
+
+\noindent
+For the case $P_i^+ \ne 0$,
+
+\[
+   \sum\limits_{j:F_{i,j}\geq 0} R_i^+ F_{i,j}
+   \leq \sum\limits_{j:F_{i,j}\geq 0}\frac{Q_i^+}{P_i^+} F_{i,j}
+   = \frac{Q_i^+}{P_i^+} \sum\limits_{j:F_{i,j}\geq 0} F_{i,j}
+   = \frac{Q_i^+}{P_i^+} \sum\limits_{j:F_{i,j}\geq 0} \max(0,F_{i,j})
+   = Q_i^+.
+\]
+
+\noindent
+Thus,
+
+\[
+   \sum\limits_j \alpha_{i,j}F_{i,j} \leq Q_i^+.
+\]
+
+\noindent
+From Eqn.~\ref{eq:FCTscheme}, the limited antidiffusion flux is expressed as
+
+\[
+   \sum\limits_j\alpha_{i,j}F_{i,j} =
+   m_i\frac{U_i^{n+1}-U_i^n}{\Delta t}
+   + \sum\limits_j A_{i,j}^L U_j^n
+   - b_i.
+\]
+
+\noindent
+Using the bound for $\sum\limits_j\alpha_{i,j}F_{i,j}$ and the definition
+of $Q_i^\pm$ given in Eqn. \ref{eq:Q_defs},
+
+\[
+m_i\frac{W_i^- -U_i^n}{\Delta t}
+   + \sum\limits_j A_{i,j}^L U_j^n
+   - b_i
+\le m_i\frac{U_i^{n+1}-U_i^n}{\Delta t}
+   + \sum\limits_j A_{i,j}^L U_j^n
+   - b_i
+\le m_i\frac{W_i^+ -U_i^n}{\Delta t}
+   + \sum\limits_j A_{i,j}^L U_j^n
+   - b_i,
+\]
+
+\noindent
+Rearranging, the discrete maximum principle is proved:
+
+\[
+   W_i^-\le U_i^{n+1}\le W_i^+.
+\]

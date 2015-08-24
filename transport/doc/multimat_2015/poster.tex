@@ -1,0 +1,72 @@
+\documentclass[14pt, a0paper, landscape, margin=0mm, innermargin=15mm,
+   blockverticalspace=15mm, colspace=15mm, subcolspace=8mm]{tikzposter}
+\usepackage[T1]{fontenc}
+\usepackage{amssymb}
+\usepackage{float}
+\usepackage[backend=bibtex]{biblatex}
+\addbibresource{references.bib}
+\setlength{\tabcolsep}{2em}
+
+% title, author, and institution
+\title{\fontsize{25pt}{1em} An Explicit, Positive CFEM Scheme Based on FCT}
+\author{\begin{tabular}{c c c}
+  Jean C. Ragusa       & Jean-Luc Guermond      & Joshua E. Hansel\\
+  jean.ragusa@tamu.edu & guermond@math.tamu.edu & joshhansel@tamu.edu\\
+  Texas A\&M University & Texas A\&M University & Texas A\&M University
+\end{tabular}}
+
+\definebackgroundstyle{mybackground}{
+  \node[at=(current page.center)] at (0,0) {\includegraphics[height=\textheight]{figures/blue_gradient.png}};
+}
+
+% theme and style and colors
+\usetheme{Autumn} % Default, Rays, Basic, Simple, Envelope, Wave, Board, Autumn, and Desert
+\usebackgroundstyle{mybackground} % Default, Rays, VerticalGradation, BottomVerticalGradation, Empty
+\usecolorstyle[colorOne=blue,colorTwo=black!10!blue!20,colorThree=blue!90!black]{Russia} % Default, Australia, Britain, Sweden, Spain, Russia, Denmark, Germany
+\usetitlestyle{Empty} % Default, Basic, Envelope, Wave, VerticalShading, Filled, Empty
+\useblockstyle{Slide} % Default, Basic, Minimal, Envelope, Corner, Slide, TornOut
+
+% document
+\begin{document}\maketitle
+\begin{columns}
+
+% FIRST COLUMN
+\column{0.25}
+  \block{Introduction}{
+    \setlength{\parskip}{\baselineskip}
+    \vspace{-\parskip}
+    \input{content/introduction}
+  }
+  \block{Methodology}{
+    \setlength{\parskip}{\baselineskip}
+    \vspace{-\parskip}
+    \input{content/methodology}
+  }
+
+% SECOND COLUMN
+\column{0.25}
+
+% THIRD COLUMN
+\column{0.25}
+
+% FOURTH COLUMN
+\column{0.25}
+  \block{Results}{
+    \setlength{\parskip}{\baselineskip}
+    \vspace{-\parskip}
+    \input{content/results}
+  }
+  \block{Conclusions}{
+    \input{content/conclusions}
+  }
+  \block{References}{
+    \begin{center}
+      \mbox{}\vspace{-\baselineskip}
+      \printbibliography[heading=none]
+    \end{center}
+  }
+
+
+
+\end{columns}
+\end{document}

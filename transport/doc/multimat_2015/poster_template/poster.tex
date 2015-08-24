@@ -1,0 +1,31 @@
+\documentclass[25pt, a0paper, landscape, margin=0mm, innermargin=15mm,
+   blockverticalspace=15mm, colspace=15mm, subcolspace=8mm]{tikzposter}
+\title{Using tikzposter}
+\author{Pascal Richter, Elena Botoeva, Richard Barnard, \& Dirk Surmann}
+\institute{}
+\usetheme{Autumn} % Default, Rays, Basic, Simple, Envelope, Wave, Board, Autumn, and Desert
+%\usecolorpalette{GreenGrayViolet} % Default, BlueGrayOrange, GreenGrayViolet, PurpleGrayBlue, BrownBlueOrange
+%\usecolorstyle[colorPalette=BrownBlueOrange]{Germany} % Default, Australia, Britain, Sweden, Spain, Russia, Denmark, Germany
+\usecolorstyle[colorOne=blue,colorTwo=blue!50,colorThree=green]{Russia} % Default, Australia, Britain, Sweden, Spain, Russia, Denmark, Germany
+\usetitlestyle{Wave} % Default, Basic, Envelope, Wave, VerticalShading, Filled, Empty
+\useblockstyle{Slide} % Default, Basic, Minimal, Envelope, Corner, Slide, TornOut
+\begin{document}\maketitle
+\begin{columns}
+\column{0.55}
+  \block{Creating the document}{The document...}
+  \note[targetoffsetx=-.05\textwidth,targetoffsety=9.5cm,innersep=.4cm,angle=-45,connection]{...}
+  \block{The title matter}{The title...}
+  \block{Blocks}{Blocks are...}
+  \note[targetoffsetx=24cm, targetoffsety=-9cm,rotate=1,angle=270,radius=8cm,width=.75\textwidth,innersep=.4cm]{You can...}
+\column{0.45}
+  \block{Columns}{By default,...}
+  \begin{subcolumns}
+    \subcolumn{.45}
+      \block{Subcolumns}{If you...}
+    \subcolumn{.5}
+      \block{}{An example...}
+  \end{subcolumns}
+  \block[titlewidthscale=.8,bodywidthscale=.9,titleoffsety=9.5mm,bodyoffsety=9mm]{Changing the Poster’s Appearance}{If the default...}
+\end{columns}
+\block[titleoffsety=-1cm,bodyoffsety=-1cm]{Sample document}{This poster...}
+\end{document}
