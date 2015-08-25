@@ -1,0 +1,47 @@
+The high-order scheme is based on the concept of entropy
+viscosity introduced by Guermond~\cite{guermond_ev}, which by itself
+is not guaranteed to be monotonicity-preserving or positivity-preserving;
+however, when used as a component of the flux-corrected transport scheme,
+the resulting scheme is positivity-preserving
+and satisfies a discrete maximum principle. Alternatively, one could use
+the inviscid Galerkin scheme given in Eqn.~\ref{eq:exgalerkin} as
+the high-order scheme component in the flux-corrected transport algorithm,
+as has been done in the past for FEM-FCT~\cite{kuzmin_book}; however,
+in practice it has been found that the FCT solution may still
+contain small oscillations and effects that deteriorate the quality of the solution.
+The high-order scheme has the form
+
+\begin{equation}\label{eq:highorderscheme}
+   \mathbf{M}^C\frac{\mathbf{U}^{H,n+1}-\mathbf{U}^n}{\Delta t}
+      +\left(\mathbf{A}+\mathbf{D}^{H,n}\right)\mathbf{U}^n = \mathbf{b},
+\end{equation}
+
+where the high-order diffusion operator is computed in the same manner
+as its low-order counterpart, but instead, using a high-order viscosity
+which uses an entropy viscosity bounded by the low-order viscosity:
+$\nu^{H,n}_K = \min(\nu^{L}_K,\nu^{E,n}_K)$. To compute the entropy
+viscosity, 
+one first decides upon a convex entropy functional $E(u)$ such as $E(u)=\frac{1}{2}u^2$.
+The entropy viscosity is designed to add viscosity in regions of entropy
+production, such as in shocks or steep gradients, and avoid adding
+viscosity elsewhere. This is achieved by computing the entropy viscosity
+with an entropy residual:
+
+\begin{equation}
+   \nu^{E,n}_K = \frac{c_E R_K^n(u_h^n,u_h^{n-1})
+      + c_J\max\limits_{F\in\partial K}J_F(u_h^n)}
+      {\|E(u_h^n)-\bar{E}(u_h^n)\|_{L^\infty(\mathcal{D})}},
+\end{equation}
+
+where $R_K^n(u_h^n,u_h^{n-1})$ is the entropy residual, $J_F(u_h^n)$
+is the jump in entropy flux across face $F$ of cell $K$, $\bar{E}(u_h^n)$ is the average
+entropy over the domain, and $c_E$ and $c_J$ are tunable normalization
+parameters, usually $\sim 1$.
+The entropy residual evaluated with explicit Euler is the following:
+
+\begin{equation}
+    R_K^n(u_h^n,u_h^{n-1}) = \left\|\frac{E(u_h^n)-E(u_h^{n-1})}{\Delta t^n}
+      + \left.\frac{dE}{du}\right|_{u_h^n}\left[\mathbf{\Omega}\cdot\nabla u_h^n
+      + \sigma u_h^n
+      - q \right]\right\|_{L^\infty(K)}.
+\end{equation}

@@ -1,6 +1,6 @@
 *.aux
 *.log
-*.pdf
+poster.pdf
 *-blx.bib
 *.xml
 *.blg

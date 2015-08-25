@@ -1,0 +1,57 @@
+A monotonicity-preserving, positivity-preserving low-order scheme
+is defined by lumping the mass matrix and adding a low-order diffusion
+operator:
+
+\begin{equation}\label{eq:loworderscheme}
+   \mathbf{M}^L\frac{\mathbf{U}^{L,n+1}-\mathbf{U}^n}{\Delta t}
+      +\left(\mathbf{A}+\mathbf{D}^L\right)\mathbf{U}^n = \mathbf{b},
+\end{equation}
+
+where the diffusion matrix entries are computed using a local low-order
+viscosity and viscous bilinear form:
+
+\begin{equation}\label{eq:loworderD}
+   D^L_{i,j} = \sum\limits_{K\subset S_{i,j}}\nu_K^L b_K(\varphi_j,\varphi_i).
+\end{equation}
+
+The local viscous bilinear form for an element $K$ takes a graph-theoretic
+approach introduced by Guermond~\cite{guermond_firstorder}:
+
+\begin{equation}\label{eq:bilinearform}
+      b_K(\varphi_j, \varphi_i) \equiv \left\{\begin{array}{l l}
+         -\frac{1}{n_K - 1}V_K & i\ne j, \quad i,j\in \mathcal{I}(K),\\
+         V_K                   & i = j,  \quad i,j\in \mathcal{I}(K),\\
+         0                     & i\notin\mathcal{I}(K) \quad | \quad j\notin\mathcal{I}(K),
+      \end{array}\right.
+\end{equation}
+
+where $V_K$ is the volume of cell $K$,
+$\mathcal{I}(K)\equiv \{j\in\{1,\ldots,N\}: |S_j\cap K|\ne 0\}$
+is the set of indices corresponding to degrees of freedom in
+the support of cell $K$, and $n_K \equiv \mbox{card}(\mathcal{I}(K))$.
+The local low-order viscosity is defined as the following:
+
+\begin{equation}
+   \nu_K^L \equiv \max\limits_{i\ne j\in \mathcal{I}(K)}\frac{\max(0,A_{i,j})}
+      {-\sum\limits_{T\subset S_{i,j}} b_T(\varphi_j, \varphi_i)},
+\end{equation}
+
+If the CFL condition $\Delta t \leq \frac{M_{i,i}^L}{A_{i,i}^L}$
+is satisfied for all $i$, then the explicit
+low-order scheme given in Eqn. \ref{eq:loworderscheme} satisfies the following
+discrete maximum principle:
+
+\begin{equation}\label{eq:dmp}
+   U_{\min,i}^n\left(1-\frac{\Delta t}{M_{i,i}^L}
+      \sum\limits_j A^L_{i,j}\right)
+      + \frac{\Delta t}{M_{i,i}^L}b_i\leq
+   U_i^{L,n+1}\leq
+   U_{\max,i}^n\left(1-\frac{\Delta t}{M_{i,i}^L}
+      \sum\limits_j A^L_{i,j}\right)
+      + \frac{\Delta t}{M_{i,i}^L}b_i\quad\forall i,
+\end{equation}
+
+where $U_{\min,i}^n = \min\limits_{j\in \mathcal{I}(S_i)}U_j^n$,
+$U_{\max,i}^n = \max\limits_{j\in \mathcal{I}(S_i)}U_j^n$
+and $\mathcal{I}(S_i)$ is the set of indices of degrees of freedom in the
+support of degree of freedom $i$.

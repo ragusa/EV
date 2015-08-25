@@ -1,0 +1,13 @@
+Testing with each FEM basis function $\varphi_i(\mathbf{x})$ gives a linear system:
+
+\begin{equation}\label{eq:semidiscrete}
+      \mathbf{M}^C\frac{d\mathbf{U}}{dt}+\mathbf{A} \mathbf{U}(t) = \mathbf{b},
+\end{equation}
+
+To discretize Eqn.~\ref{eq:semidiscrete} in time, fully explicit
+temporal discretization schemes are used, such as explicit Euler:
+
+\begin{equation}\label{eq:exgalerkin}
+   \mathbf{M}^C\frac{\mathbf{U}^{n+1}-\mathbf{U}^n}{\Delta t}
+     + \mathbf{A}\mathbf{U}^n = \mathbf{b}^n.
+\end{equation}

@@ -1,0 +1,67 @@
+The FCT scheme blends the low-order and high-order schemes
+to produce a scheme
+that is high-order, positivity-preserving, DMP-satisfying,
+and in practice, free of spurious oscillations.
+The crux of the flux-corrected transport algorithm is that
+antidiffusive fluxes are defined, which when added to the
+low-order scheme, produce the high-order scheme solution.
+These fluxes $\mathbf{F}$ are then limited to satisfy
+physical bounds imposed on the FCT solution.
+Here these bounds
+are chosen to be the bounds of the low-order scheme discrete
+maximum principle, given by Eqn.~\ref{eq:dmp}.
+Since $\mathbf{M}^C-\mathbf{M}^L$ and $\mathbf{D}^L-\mathbf{D}^H$ are symmetric
+and feature zero row and column sums, a valid decomposition for
+the antidiffusive fluxes is
+
+\begin{equation}
+   F_{i,j} = -M_{i,j}^C\left(\frac{U^{H,n+1}_j-U^n_j}{\Delta t}
+   - \frac{U^{H,n+1}_i-U^n_i}{\Delta t}\right)
+   + (D_{i,j}^L-D_{i,j}^H)(U^n_j - U^n_i).
+\end{equation}
+
+The FCT scheme is the following, where the operator
+$\mathbf{L}$ denotes the limiter operation:
+
+\begin{equation}\label{eq:FCTscheme}
+   \mathbf{M}^L\frac{\mathbf{U}^{n+1}-\mathbf{U}^n}{\Delta t}
+      + \mathbf{A}^L\mathbf{U}^n
+      = \mathbf{b} + \mathbf{L}\cdot\mathbf{F},
+\end{equation}
+
+where the notation $\mathbf{L}\cdot\mathbf{F}$ denotes row-wise dot products:
+$(\mathbf{L}\cdot\mathbf{F})_i = \sum_j L_{i,j}F_{i,j}$.
+The limiting coefficients $L_{i,j}$ are given by the multidimensional
+limiter of Zalesak~\cite{zalesak}:
+
+\begin{equation}\label{eq:P_defs}
+   F_i^+ \equiv \sum\limits_j\max(0,F_{i,j}) \qquad
+   F_i^- \equiv \sum\limits_j\min(0,F_{i,j}),
+\end{equation}
+\begin{equation}\label{eq:Q_defs}
+      Q_i^\pm \equiv M_{i,i}^L\frac{W_i^\pm-U_i^n}{\Delta t}
+      + \sum\limits_j A_{i,j}^L U_j^n - b_i,
+\end{equation}
+\begin{equation}\label{eq:R_defs}
+   L_i^\pm \equiv\left\{
+      \begin{array}{l l}
+         1                                          & F_i^\pm = 0\\
+         \min\left(1,\frac{Q_i^\pm}{P_i^\pm}\right) & F_i^\pm \ne 0
+      \end{array}
+      \right.,
+\end{equation}
+\begin{equation}\label{eq:L_defs}
+   L_{i,j} \equiv\left\{
+      \begin{array}{l l}
+         \min(L_i^+,L_j^-) & F_{i,j} \geq 0\\
+         \min(L_i^-,L_j^+) & F_{i,j} < 0
+      \end{array}
+      \right.,
+\end{equation}
+
+where $W_i^\pm$ are the upper and lower discrete maximum principle bounds
+given in Eqn.~\ref{eq:dmp}.
+Note that the symmetry of the limited coefficients $L_{i,j}=L_{j,i}$ and
+antisymmetric correction fluxes $F_{i,j}=-F_{j,i}$ make the FCT scheme conservative, since
+the FCT scheme is merely the low-order scheme plus some equal-and-opposite source
+terms.
