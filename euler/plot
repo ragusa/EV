@@ -1,96 +1,112 @@
 #!/usr/bin/env perl
 #
-# Plots solution or convergence.
+# Calls the plot_detailed plot script with command-line arguments inferred
+# from the TARGET in CMakeLists.txt and the options in the appropriate input file.
 #
-# USAGE: plot <phys> <name> <disc> <sol|conv>
-#   <phys> conservation law: burgers|euler
-#   <name> name of problem (directory in ./output)
-#   <disc> time discretization identifier: erk1|erk2|erk3|erk4|sdirk22
-#   <sol|conv> type of plot: 'sol' plots solution, 'conv' plots convergence.
+# USAGE: plot
 
 use strict;
 
-# option to crop pdf
-my $croppdf = 1;
+# read CMakeLists to determine which conservation law executable was last used
+#================================================================================
+# initialize search arrays
+my $found_TARGET = 0;
+my $TARGET;
 
-# check for correct number of input arguments
-if ($#ARGV != 3) {
-   die "USAGE: plot <phys> <name> <disc> <sol|conv>
-   <phys> conservation law: burgers|euler
-   <name> name of problem (directory in ./output)
-   <disc> time discretization identifier: ERK1|ERK2|ERK3|ERK4|SDIRK22
-   <sol|conv> type of plot: 'sol' plots solution, 'conv' plots convergence.\n";
-}
-
-# get input arguments
-my $conservation_law       = $ARGV[0];
-my $problem_name           = $ARGV[1];
-my $time_integrator_string = $ARGV[2];
-my $plot_type              = $ARGV[3];
-
-# determine if steady-state
-my $is_ss;
-if ($time_integrator_string eq "SS") {
-   $is_ss = 1;
-} else {
-   $is_ss = 0;
-}
-
-# determine which plot to make
-my $rootname;
-if ($plot_type eq "sol") {
-   $rootname = "solutions";
-} elsif ($plot_type eq "conv") {
-   $rootname = "convergence";
-} else {
-   die("Invalid command-line argument: must be \"sol\" or \"conv\"");
-}
-
-# determine the names of each component in solution
-my @components;
-my @components_filenames;
-my @components_columns;
-if ($conservation_law eq "burgers")
+# read input file for search strings
+open(CMAKELISTS, '<', "CMakeLists.txt");
+while (my $line = <CMAKELISTS>)
 {
-   @components = ("Velocity");
-   @components_filenames = ("velocity");
-   @components_columns = (2);
+  if ($line =~ /SET\(TARGET/)
+  {
+    my @TARGET_fields1 = split /\s+/, $line;
+    my @TARGET_fields2 = split /"/, $TARGET_fields1[1];
+    $TARGET = $TARGET_fields2[1];
+    $found_TARGET = 1;
+    last;
+  }
 }
-elsif ($conservation_law eq "euler")
+if (not $found_TARGET)
 {
-   @components = ("Density","Momentum","Energy");
-   @components_filenames = ("density","momentum","energy");
-   @components_columns = (2,3,4);
-}
-else
-{
-   die("Invalid conservation law");
+  die "TARGET was not found in CMakeLists.txt\n";
 }
 
-# go to plotscripts directory
-chdir "plotscripts";
+# read appropriate input file to find the necessary input parameters
+#================================================================================
 
-# loop over components
-foreach my $i (0 .. $#components)
-{
-   # call gnuplot
-   system("gnuplot -e \"problem_name='$problem_name';
-      timeintegrator='$time_integrator_string';
-      is_ss='$is_ss';
-      component='$components[$i]';
-      component_filename='$components_filenames[$i]';
-      component_column='$components_columns[$i]'\" $rootname.gp");
-   system("sleep 1");
-      
-   # name of resulting plot file
-   my $output_file = "../output/$problem_name/$components_filenames[$i]".
-      "_$time_integrator_string.pdf";
-   
-   # crop pdf
-   if ($croppdf) {
-      system("pdfcrop $output_file $output_file");
-   }
-   
-   # view output
-   system("evince $output_file");
+# search variables
+my @search_strings = ("set runge kutta method");
+my @search_values;
+my @search_flags;
+for (my $i = 0; $i <= $#search_strings; $i++) {
+  push(@search_values,"");
+  push(@search_flags,0);
 }
+
+# read input file to determine the test problem ID and time integrator
+my $in_problem_ID_section = 0;
+my %problem_names;
+my $problem_ID;
+my $problem_ID_found = 0;
+my $time_discretization;
+my $time_discretization_found = 0;
+
+open(IN, '<', "input_$TARGET") or die $!;
+while (<IN>)
+{
+  # get line
+  my $line = $_;
+
+  # remove newline character from line
+  chomp($line);
+
+  # add to problem ID hash if in problem ID section
+  if ($in_problem_ID_section)
+  {
+    # remove flag if no longer in problem ID section
+    if ($line !~ /^# \d/)
+    {
+      $in_problem_ID_section = 0;
+    }
+    # add to problem ID hash
+    else
+    {
+      my @problem_ID_fields = split /\s+/, $line;
+      $problem_names{$problem_ID_fields[1]} = $problem_ID_fields[2];
+    }
+  }
+
+  # add flag if entering problem ID section
+  if ($line =~ /# Problem IDs:/)
+  {
+    $in_problem_ID_section = 1;
+  }
+
+  # check for problem ID field
+  if ($line =~ /set problem id/)
+  {
+    my @fields = split /\s+=\s+/, $line;
+    $problem_ID = $fields[1];
+    $problem_ID_found = 1;
+  }
+
+  # check for time discretization field
+  if ($line =~ /set runge kutta method/)
+  {
+    my @fields = split /\s+=\s+/, $line;
+    $time_discretization = $fields[1];
+    $time_discretization_found = 1;
+  }
+}
+
+# check that all fields were found
+if (not($problem_ID_found and $time_discretization_found))
+{
+  die "Did not find all required input fields\n";
+}
+
+# get problem name from hash
+my $problem_name = $problem_names{$problem_ID};
+
+# call plot script
+system("plot_explicit $TARGET $problem_name $time_discretization sol");

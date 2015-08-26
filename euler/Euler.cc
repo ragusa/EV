@@ -73,7 +73,8 @@ void Euler<dim>::define_problem()
          double domain_start = 0;
          double domain_width = 1.0;
          this->domain_volume = std::pow(domain_width,dim);
-         GridGenerator::hyper_cube(this->triangulation, domain_start, domain_start + domain_width);
+         GridGenerator::hyper_cube(this->triangulation, domain_start,
+           domain_start + domain_width);
 
          // only 1 type of BC: zero Dirichlet
          this->n_boundaries = 1;
@@ -108,11 +109,30 @@ void Euler<dim>::define_problem()
          this->initial_conditions_strings[1] = "0";
          this->initial_conditions_strings[2] = "if(x<0.5,2.5,0.25)";
 
-         // no exact solution coded, although a Riemann solver could be implemented
-         this->has_exact_solution = false;
-
-         // physical constants
+         // problem parameters
+         const double rho_left = 1.0;
+         const double u_left = 0.0;
+         const double p_left = 1.0;
+         const double rho_right = 0.125;
+         const double u_right = 0.0;
+         const double p_right = 0.1;
          gamma = 1.4;
+         const double x_interface = 0.5;
+
+         this->has_exact_solution = true;
+         // create and initialize Riemann solver for exact solution
+         std::shared_ptr<EulerRiemannSolver<dim> > exact_solution_function_derived =
+           std::make_shared<EulerRiemannSolver<dim> >(
+           rho_left,
+           u_left,
+           p_left,
+           rho_right,
+           u_right,
+           p_right,
+           gamma,
+           x_interface);
+         // point base class pointer to derived class function object
+         this->exact_solution_function = exact_solution_function_derived;
 
          break;
       }

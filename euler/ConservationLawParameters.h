@@ -42,7 +42,7 @@ class ConservationLawParameters
     unsigned int exact_solution_refinement_level;
     bool save_convergence_results;
   
-    enum TemporalDiscretization { SS, erk1, erk2, erk3, erk4, sdirk22 };
+    enum TemporalDiscretization { SS, ERK1, ERK2, ERK3, ERK4, SDIRK22 };
     TemporalDiscretization time_discretization;
     enum TemporalIntegrator { runge_kutta };
     TemporalIntegrator temporal_integrator;

@@ -83,8 +83,8 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters (Parame
                          "The method used for advancing time. "
                          "Choices are <runge_kutta>.");
        prm.declare_entry("runge kutta method",
-                         "erk1",
-                         Patterns::Selection("erk1|erk2|erk3|erk4|sdirk22"),
+                         "ERK1",
+                         Patterns::Selection("ERK1|ERK2|ERK3|ERK4|SDIRK22"),
                          "Runge-Kutta method to use.");
    }
    prm.leave_subsection();
@@ -283,16 +283,16 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
           Assert(false,ExcNotImplemented());
 
        const std::string rk_choice = prm.get("runge kutta method");
-       if (rk_choice == "erk1")
-          time_discretization = erk1;
-       else if (rk_choice == "erk2")
-          time_discretization = erk2;
-       else if (rk_choice == "erk3")
-          time_discretization = erk3;
-       else if (rk_choice == "erk4")
-          time_discretization = erk4;
-       else if (rk_choice == "sdirk22")
-          time_discretization = sdirk22;
+       if (rk_choice == "ERK1")
+          time_discretization = ERK1;
+       else if (rk_choice == "ERK2")
+          time_discretization = ERK2;
+       else if (rk_choice == "ERK3")
+          time_discretization = ERK3;
+       else if (rk_choice == "ERK4")
+          time_discretization = ERK4;
+       else if (rk_choice == "SDIRK22")
+          time_discretization = SDIRK22;
        else
           Assert(false,ExcNotImplemented());
    }

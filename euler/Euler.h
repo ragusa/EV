@@ -23,6 +23,7 @@
 
 #include "ConservationLaw.h"
 #include "EulerParameters.h"
+#include "EulerRiemannSolver.h"
 
 /** \class Euler
  *  \brief Provides the necessary functions for Euler equations.

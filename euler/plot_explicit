@@ -1,0 +1,96 @@
+#!/usr/bin/env perl
+#
+# Plots solution or convergence.
+#
+# USAGE: plot_explicit <phys> <name> <disc> <sol|conv>
+#   <phys> conservation law: burgers|euler
+#   <name> name of problem (directory in ./output)
+#   <disc> time discretization identifier: erk1|erk2|erk3|erk4|sdirk22
+#   <sol|conv> type of plot: 'sol' plots solution, 'conv' plots convergence.
+
+use strict;
+
+# option to crop pdf
+my $croppdf = 1;
+
+# check for correct number of input arguments
+if ($#ARGV != 3) {
+   die "USAGE: plot <phys> <name> <disc> <sol|conv>
+   <phys> conservation law: burgers|euler
+   <name> name of problem (directory in ./output)
+   <disc> time discretization identifier: ERK1|ERK2|ERK3|ERK4|SDIRK22
+   <sol|conv> type of plot: 'sol' plots solution, 'conv' plots convergence.\n";
+}
+
+# get input arguments
+my $conservation_law       = $ARGV[0];
+my $problem_name           = $ARGV[1];
+my $time_integrator_string = $ARGV[2];
+my $plot_type              = $ARGV[3];
+
+# determine if steady-state
+my $is_ss;
+if ($time_integrator_string eq "SS") {
+   $is_ss = 1;
+} else {
+   $is_ss = 0;
+}
+
+# determine which plot to make
+my $rootname;
+if ($plot_type eq "sol") {
+   $rootname = "solutions";
+} elsif ($plot_type eq "conv") {
+   $rootname = "convergence";
+} else {
+   die("Invalid command-line argument: must be \"sol\" or \"conv\"");
+}
+
+# determine the names of each component in solution
+my @components;
+my @components_filenames;
+my @components_columns;
+if ($conservation_law eq "burgers")
+{
+   @components = ("Velocity");
+   @components_filenames = ("velocity");
+   @components_columns = (2);
+}
+elsif ($conservation_law eq "euler")
+{
+   @components = ("Density","Momentum","Energy");
+   @components_filenames = ("density","momentum","energy");
+   @components_columns = (2,3,4);
+}
+else
+{
+   die("Invalid conservation law");
+}
+
+# go to plotscripts directory
+chdir "plotscripts";
+
+# loop over components
+foreach my $i (0 .. $#components)
+{
+   # call gnuplot
+   system("gnuplot -e \"problem_name='$problem_name';
+      timeintegrator='$time_integrator_string';
+      is_ss='$is_ss';
+      component='$components[$i]';
+      component_filename='$components_filenames[$i]';
+      component_column='$components_columns[$i]'\" $rootname.gp");
+   system("sleep 1");
+      
+   # name of resulting plot file
+   my $output_file = "../output/$problem_name/$components_filenames[$i]".
+      "_$time_integrator_string.pdf";
+   
+   # crop pdf
+   if ($croppdf) {
+      system("pdfcrop $output_file $output_file");
+   }
+   
+   # view output
+   system("evince $output_file");
+}

@@ -61,7 +61,7 @@ class ConservationLaw
 {
 public:
 
-    ConservationLaw (const ConservationLawParameters<dim> &params);
+    ConservationLaw(const ConservationLawParameters<dim> &params);
     ~ConservationLaw();
     void run();
 
@@ -75,7 +75,6 @@ protected:
     void update_cell_sizes();
     void assemble_mass_matrix();
     void solve_runge_kutta();
-    void compute_error(const unsigned int cycle);
 
     virtual void assemble_lumped_mass_matrix() = 0;
 

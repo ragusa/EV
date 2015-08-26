@@ -1,16 +1,17 @@
 /**
- * Provides the function definitions for the Burgers class.
+ * \brief Provides the function definitions for the Burgers class.
  */
 
 /** \brief Constructor for the Burgers class.
- *  \param params Burgers equation parameters
+ *  \param[in] params Burgers equation parameters
  */
 template <int dim>
 Burgers<dim>::Burgers(const BurgersParameters<dim> &params):
    ConservationLaw<dim>(params),
    burgers_parameters(params),
    velocity_extractor(0)
-{} 
+{
+} 
 
 /** \brief Returns the names of each component.
  *  \return vector of names of each component
@@ -61,6 +62,7 @@ void Burgers<dim>::define_problem()
          double domain_width = 1.0;
          this->domain_volume = std::pow(domain_width,dim);
          GridGenerator::hyper_cube(this->triangulation, domain_start, domain_start + domain_width);
+
          // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
          this->n_boundaries = 1;
          typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin(),
@@ -97,6 +99,7 @@ void Burgers<dim>::define_problem()
          double domain_width = 2.0;
          this->domain_volume = std::pow(domain_width,dim);
          GridGenerator::hyper_cube(this->triangulation, domain_start, domain_start + domain_width);
+
          // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
          this->n_boundaries = 1;
          typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin(),
@@ -120,6 +123,17 @@ void Burgers<dim>::define_problem()
          this->has_exact_solution = true;
          this->exact_solution_strings[0] =  "if(x-0.5*t<0,1,0)";
 
+         // create and initialize function parser for exact solution
+         std::shared_ptr<FunctionParser<dim> > exact_solution_function_derived =
+           std::make_shared<FunctionParser<dim> >(this->parameters.n_components);
+         std::map<std::string,double> constants;
+         exact_solution_function_derived->initialize("x,t",
+                                                     this->exact_solution_strings,
+                                                     constants,
+                                                     true);
+         // point base class pointer to derived class function object
+         this->exact_solution_function = exact_solution_function_derived;
+
          break;
       }
       case 2: // 1-D Riemann problem, rarefaction wave (u_left < u_right)
@@ -134,6 +148,7 @@ void Burgers<dim>::define_problem()
          double domain_width = 2.0;
          this->domain_volume = std::pow(domain_width,dim);
          GridGenerator::hyper_cube(this->triangulation, domain_start, domain_start + domain_width);
+
          // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
          this->n_boundaries = 1;
          typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin(),
@@ -156,6 +171,17 @@ void Burgers<dim>::define_problem()
          // exact solution
          this->has_exact_solution = true;
          this->exact_solution_strings[0] = "if(t>0,if(x/t<0,0,if(x/t<1,x/t,1)),if(x<0,0,1))";
+
+         // create and initialize function parser for exact solution
+         std::shared_ptr<FunctionParser<dim> > exact_solution_function_derived =
+           std::make_shared<FunctionParser<dim> >(this->parameters.n_components);
+         std::map<std::string,double> constants;
+         exact_solution_function_derived->initialize("x,t",
+                                                     this->exact_solution_strings,
+                                                     constants,
+                                                     true);
+         // point base class pointer to derived class function object
+         this->exact_solution_function = exact_solution_function_derived;
 
          break;
       }
@@ -210,6 +236,17 @@ void Burgers<dim>::define_problem()
          this->exact_solution_strings[0] +=  "if(y>0.5-0.1*t,";
          this->exact_solution_strings[0] +=       "-1.0,0.8)";
          this->exact_solution_strings[0] +=  "))))";
+
+         // create and initialize function parser for exact solution
+         std::shared_ptr<FunctionParser<dim> > exact_solution_function_derived =
+           std::make_shared<FunctionParser<dim> >(this->parameters.n_components);
+         std::map<std::string,double> constants;
+         exact_solution_function_derived->initialize("x,y,t",
+                                                     this->exact_solution_strings,
+                                                     constants,
+                                                     true);
+         // point base class pointer to derived class function object
+         this->exact_solution_function = exact_solution_function_derived;
 
          break;
       }
@@ -278,7 +315,8 @@ void Burgers<dim>::assemble_lumped_mass_matrix()
  *           \mathbf{f_{ss}} = -(\mathbf{\psi},u u_x)_\Omega - (\mathbf{{\psi}_x},\nu u_{x})_\Omega 
  *           + (\mathbf{\psi},\nu u_{x})_{\partial\Omega}.
  *         \f]
- *  \param f steady-state residual
+ *
+ *  \param[out] f steady-state residual
  */
 template <int dim>
 void Burgers<dim>::compute_ss_residual(Vector<double> &f)
@@ -529,9 +567,9 @@ void Burgers<dim>::update_flux_speeds()
 }
 
 /** \brief Computes entropy at each quadrature point in cell
- *  \param solution solution
- *  \param fe_values FEValues object
- *  \param entropy entropy values at each quadrature point in cell
+ *  \param[in] solution solution
+ *  \param[in] fe_values FEValues object
+ *  \param[out] entropy entropy values at each quadrature point in cell
  */
 template <int dim>
 void Burgers<dim>::compute_entropy(const Vector<double> &solution,
@@ -546,9 +584,9 @@ void Burgers<dim>::compute_entropy(const Vector<double> &solution,
 }
 
 /** \brief Computes entropy at each quadrature point on face
- *  \param [in] solution solution
- *  \param [in] fe_values_face FEFaceValues object
- *  \param [out] entropy entropy values at each quadrature point on face
+ *  \param[in] solution solution
+ *  \param[in] fe_values_face FEFaceValues object
+ *  \param[out] entropy entropy values at each quadrature point on face
  */
 template <int dim>
 void Burgers<dim>::compute_entropy_face(const Vector<double> &solution,
@@ -563,9 +601,9 @@ void Burgers<dim>::compute_entropy_face(const Vector<double> &solution,
 }
 
 /** \brief Computes divergence of entropy flux at each quadrature point in cell
- *  \param solution solution
- *  \param fe_values FEValues object
- *  \param divergence_entropy_flux divergence of entropy flux at each quadrature point in cell
+ *  \param[in] solution solution
+ *  \param[in] fe_values FEValues object
+ *  \param[out] divergence_entropy_flux divergence of entropy flux at each quadrature point in cell
  */
 template <int dim>
 void Burgers<dim>::compute_divergence_entropy_flux (const Vector<double> &solution,
@@ -592,23 +630,22 @@ void Burgers<dim>::compute_divergence_entropy_flux (const Vector<double> &soluti
    }
 }
 
-/** \brief Outputs the solution to .vtk.
- *  \param [in] time the current time; used in exact solution function
+/** \brief Outputs the solution.
+ *  \param[in] time the current time; used in exact solution function
  */
 template <int dim>
-void Burgers<dim>::output_solution (double time)
+void Burgers<dim>::output_solution(double time)
 {
    DataOut<dim> data_out;
-   data_out.attach_dof_handler       (this->dof_handler);
-
-   data_out.add_data_vector (this->new_solution,
-                             this->component_names,
-                             DataOut<dim>::type_dof_data,
-                             this->component_interpretations);
-
+   data_out.attach_dof_handler(this->dof_handler);
+   data_out.add_data_vector(this->new_solution,
+                            this->component_names,
+                            DataOut<dim>::type_dof_data,
+                            this->component_interpretations);
    data_out.build_patches ();
 
    static unsigned int output_file_number = 0;
+
    if (dim == 1)
    {
       std::string filename = "output/burgers-" +
@@ -646,7 +683,7 @@ void Burgers<dim>::output_solution (double time)
                                       this->component_interpretations);
       data_out_exact.build_patches ();
 
-      // if 1-D output to gnuplot
+      // if 1-D, output to gnuplot
       if (dim == 1)
       {
          std::string filename_exact = "output/burgers_exact-" +
@@ -666,5 +703,6 @@ void Burgers<dim>::output_solution (double time)
       }
    }
 
+   // increment output file number
    ++output_file_number;
 }

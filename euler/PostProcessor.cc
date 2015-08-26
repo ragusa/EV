@@ -32,11 +32,11 @@ PostProcessor<dim>::PostProcessor(
     {ConservationLawParameters<dim>::TemporalDiscretization::SSP2,"SSPRK22"},
     {ConservationLawParameters<dim>::TemporalDiscretization::SSP3,"SSPRK33"}
 */
-    {ConservationLawParameters<dim>::TemporalDiscretization::erk1,"ERK1"},
-    {ConservationLawParameters<dim>::TemporalDiscretization::erk2,"ERK2"},
-    {ConservationLawParameters<dim>::TemporalDiscretization::erk3,"ERK3"},
-    {ConservationLawParameters<dim>::TemporalDiscretization::erk4,"ERK4"},
-    {ConservationLawParameters<dim>::TemporalDiscretization::sdirk22,"SDIRK22"}
+    {ConservationLawParameters<dim>::TemporalDiscretization::ERK1,"ERK1"},
+    {ConservationLawParameters<dim>::TemporalDiscretization::ERK2,"ERK2"},
+    {ConservationLawParameters<dim>::TemporalDiscretization::ERK3,"ERK3"},
+    {ConservationLawParameters<dim>::TemporalDiscretization::ERK4,"ERK4"},
+    {ConservationLawParameters<dim>::TemporalDiscretization::SDIRK22,"SDIRK22"}
     };
 
   // determine time discretization string

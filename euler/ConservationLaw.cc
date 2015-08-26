@@ -29,10 +29,11 @@ ConservationLaw<dim>::~ConservationLaw()
 {
 }
 
-/** \brief Runs the entire program.
+/**
+ * \brief Runs the entire program.
  *
- *         This function is the uppermost level function that
- *         calls all other functions.
+ * This function is the uppermost level function that
+ * calls all other functions.
  */
 template <int dim>
 void ConservationLaw<dim>::run()
@@ -49,14 +50,6 @@ void ConservationLaw<dim>::run()
    {
       // set cycle for post-processor
       postprocessor.setCycle(cycle);
-
-      // if in final cycle, set flag to output solution
-/*
-      if (cycle == parameters.n_refinement_cycles-1)
-         in_final_cycle = true;
-      else
-         in_final_cycle = false;
-*/
 
       // refine mesh if not the first cycle
       if (cycle > 0)
@@ -79,8 +72,8 @@ void ConservationLaw<dim>::run()
       // set old solution to the current solution
       old_solution = new_solution;
 
-/*
       // output initial solution
+/*
       if (in_final_cycle)
          output_solution(0.0);
 */
@@ -96,15 +89,6 @@ void ConservationLaw<dim>::run()
              break;
       }
 
-/*
-      // compute error for cycle
-      if (has_exact_solution) {
-         // set time of exact solution function to be final time
-         exact_solution_function->set_time(parameters.end_time);
-         // compute error
-         compute_error(cycle);
-      }
-*/
       // evaluate errors for convergence study
       postprocessor.evaluate_error(new_solution, dof_handler, triangulation);
 
@@ -137,20 +121,6 @@ void ConservationLaw<dim>::run()
       default:
          Assert(false,ExcNotImplemented());
          break;
-   }
-*/
-
-/*
-   // output convergence table
-   if (has_exact_solution)
-   {
-      // set display format for columns of convergence table
-      convergence_table.set_precision("L2", 3);
-      convergence_table.set_scientific("L2", true);
-
-      // write convergence table to console
-      std::cout << std::endl;
-      convergence_table.write_text(std::cout);
    }
 */
 }
@@ -210,6 +180,7 @@ void ConservationLaw<dim>::initialize_system()
       }
    }
 
+/*
    // initialize exact solution function if necessary
    if (has_exact_solution)
    {
@@ -224,6 +195,7 @@ void ConservationLaw<dim>::initialize_system()
       // point base class pointer to derived class function object
       exact_solution_function = exact_solution_function_derived;
    }
+*/
 
    // initialize initial conditions function
    initial_conditions_function.initialize(variables,
@@ -247,19 +219,19 @@ void ConservationLaw<dim>::initialize_runge_kutta()
    rk.s = 0;
    switch (parameters.time_discretization)
    {
-      case ConservationLawParameters<dim>::erk1:
+      case ConservationLawParameters<dim>::ERK1:
          rk.s = 1;
          break;
-      case ConservationLawParameters<dim>::erk2:
+      case ConservationLawParameters<dim>::ERK2:
          rk.s = 2;
          break;
-      case ConservationLawParameters<dim>::erk3:
+      case ConservationLawParameters<dim>::ERK3:
          rk.s = 3;
          break;
-      case ConservationLawParameters<dim>::erk4:
+      case ConservationLawParameters<dim>::ERK4:
          rk.s = 4;
          break;
-      case ConservationLawParameters<dim>::sdirk22:
+      case ConservationLawParameters<dim>::SDIRK22:
          rk.s = 2;
          break;
       default:
@@ -278,12 +250,12 @@ void ConservationLaw<dim>::initialize_runge_kutta()
    double gamma, sigma;
    switch (parameters.time_discretization)
    {
-      case ConservationLawParameters<dim>::erk1:
+      case ConservationLawParameters<dim>::ERK1:
          rk.b[0] = 1;
          rk.c[0] = 0;
          rk.is_explicit = true;
          break;
-      case ConservationLawParameters<dim>::erk2:
+      case ConservationLawParameters<dim>::ERK2:
          rk.a[1][0] = 0.5;
          rk.b[0] = 0;
          rk.b[1] = 1;
@@ -291,7 +263,7 @@ void ConservationLaw<dim>::initialize_runge_kutta()
          rk.c[1] = 0.5;
          rk.is_explicit = true;
          break;
-      case ConservationLawParameters<dim>::erk3:
+      case ConservationLawParameters<dim>::ERK3:
          rk.a[1][0] = 1.0;
          rk.a[2][0] = 0.25;
          rk.a[2][1] = 0.25;
@@ -303,7 +275,7 @@ void ConservationLaw<dim>::initialize_runge_kutta()
          rk.c[2] = 0.5;
          rk.is_explicit = true;
          break;
-      case ConservationLawParameters<dim>::erk4:
+      case ConservationLawParameters<dim>::ERK4:
          rk.a[1][0] = 0.5;
          rk.a[2][0] = 0;
          rk.a[2][1] = 0.5;
@@ -320,7 +292,7 @@ void ConservationLaw<dim>::initialize_runge_kutta()
          rk.c[3] = 1;
          rk.is_explicit = true;
          break;
-      case ConservationLawParameters<dim>::sdirk22:
+      case ConservationLawParameters<dim>::SDIRK22:
          gamma = 1.0 - 1.0/std::sqrt(2.0);
          sigma = 1.0 - gamma;
          rk.a[0][0] = gamma;
@@ -692,7 +664,8 @@ void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_
    }
 }
 
-/** \brief Solves transient using a Runge-Kutta scheme.
+/**
+ * \brief Solves transient using a Runge-Kutta scheme.
  *
  * This function contains the transient loop and solves the
  * transient using explicit Runge-Kutta:
@@ -715,7 +688,6 @@ void ConservationLaw<dim>::solve_runge_kutta()
 {
    old_time = 0.0;
    unsigned int n = 1; // time step index
-   //unsigned int next_time_step_output = parameters.output_period;
    double t_end = parameters.end_time;
    bool in_transient = true;
    bool DMP_satisfied = true;
@@ -883,29 +855,6 @@ void ConservationLaw<dim>::solve_runge_kutta()
       current_time = old_time; // used in exact solution function in output_solution
       n++;
    
-/*
-      // output solution of this time step if user has specified;
-      //  non-positive numbers for the output_period parameter specify
-      //  that solution is not to be output; only the final solution
-      //  will be output
-      if (parameters.output_period > 0)
-      {
-         if (n >= next_time_step_output)
-         {
-            if (in_final_cycle)
-               // output solution
-               output_solution(current_time);
-            // determine when next output will occur
-            next_time_step_output += parameters.output_period;
-         }
-      }
-      else
-         if (!(in_transient)) // if final time has been reached
-            if (in_final_cycle)
-               // output solution
-               output_solution(current_time);
-*/
-
       // check that there are no NaNs in solution
       check_nan();
 
@@ -922,6 +871,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
 
    }// end of time loop
 
+   // report if DMP was satisfied at all time steps
    if (parameters.viscosity_type ==
      ConservationLawParameters<dim>::max_principle)
    {
@@ -1436,37 +1386,13 @@ void ConservationLaw<dim>::compute_tr_residual(unsigned int i, double dt)
    // use solution_step to temporarily hold the quantity (y_current - y_old)
    solution_step = new_solution;
    solution_step.add(-1.0,old_solution);
+
    // store M*(y_current - y_old) in system_rhs
    lumped_mass_matrix.vmult(system_rhs,solution_step);
+
    // subtract sum{a_ij*dt*f_j}_j=1..i
    for (unsigned int j = 0; j < i; ++j)
       system_rhs.add(-rk.a[i][j]*dt, rk.f[j]);
-   
-}
-
-/** \brief Computes the error if exact solution is known
- *  \param cycle mesh refinement cycle
- */
-template <int dim>
-void ConservationLaw<dim>::compute_error(const unsigned int cycle)
-{
-   // L2 norm of error on each cell
-   Vector<double> difference_per_cell (triangulation.n_active_cells());
-   // compute L2 norm of error on each cell
-   VectorTools::integrate_difference (dof_handler,
-                                      new_solution,
-                                      *exact_solution_function,
-                                      difference_per_cell,
-                                      cell_quadrature,
-                                      VectorTools::L2_norm);
-   // compute the global L2 norm
-   double L2_error = difference_per_cell.l2_norm();
-
-   // add errors to convergence table
-   convergence_table.add_value("cycle", cycle);
-   convergence_table.add_value("cells", triangulation.n_active_cells());
-   convergence_table.add_value("dofs", n_dofs);
-   convergence_table.add_value("L2", L2_error);
 }
 
 /** \brief Checks that there are no NaNs in the solution vector
@@ -1581,8 +1507,10 @@ void ConservationLaw<dim>::compute_max_principle_quantities()
    }
 }
 
-/** \brief Gets a list of dofs subject to Dirichlet boundary conditions.
- *         This is necessary because max principle checks are not applied to these nodes.
+/**
+ * \brief Gets a list of dofs subject to Dirichlet boundary conditions.
+ *        This is necessary because max principle checks are not applied to
+ *        these nodes.
  */
 template <int dim>
 void ConservationLaw<dim>::get_dirichlet_nodes()

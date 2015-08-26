@@ -39,7 +39,6 @@ void RefinementHandler<dim>::refine(unsigned int cycle) const
       case TransportParameters<dim>::RefinementMode::time :
       { // refine time
         ExcNotImplemented();
-        //dt_nominal *= time_refinement_factor;
         break;
       }
       default :
