@@ -31,6 +31,9 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters (Parame
    // refinement parameters
    prm.enter_subsection("refinement");
    {
+      prm.declare_entry("Refinement mode", "space",
+        Patterns::Selection("space|time"), "Refinement mode (space or time)");
+
       prm.declare_entry("initial refinement level",
                         "3",
                         Patterns::Integer(),
@@ -177,6 +180,10 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters (Parame
                         "Period of time steps for outputting the solution, e.g.,"
                         " 1 would output every time step,"
                         " and 2 would output every other time step, etc.");
+      prm.declare_entry("output mesh",
+                        "true",
+                        Patterns::Bool(),
+                        "option to output the mesh to a file");
       prm.declare_entry("output mass matrix",
                         "true",
                         Patterns::Bool(),
@@ -189,6 +196,14 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters (Parame
                         "true",
                         Patterns::Bool(),
                         "option to output the exact solution if it exists");
+      prm.declare_entry("save convergence results",
+                        "true",
+                        Patterns::Bool(),
+                        "option to save convergence results to a file");
+      prm.declare_entry("exact solution refinement level",
+                        "7",
+                        Patterns::Integer(),
+                        "refinement level to be used for the exact solution");
    }
    prm.leave_subsection();
 }
@@ -220,8 +235,22 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
    // refinement parameters
    prm.enter_subsection("refinement");
    {
+      std::string refinement_mode_string = prm.get("Refinement mode");
+      if (refinement_mode_string == "space")
+      {
+        refinement_mode = RefinementMode::space;
+      }
+      else if (refinement_mode_string == "time")
+      {
+        refinement_mode = RefinementMode::time;
+      }
+      else
+      {
+        ExcNotImplemented();
+      }
+
       initial_refinement_level = prm.get_integer("initial refinement level");
-      n_cycle = prm.get_integer("refinement cycles");
+      n_refinement_cycles = prm.get_integer("refinement cycles");
       refinement_fraction = prm.get_double("refinement fraction");
       coarsening_fraction= prm.get_double("coarsening fraction");
    }
@@ -238,7 +267,7 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
       else
          Assert(false,ExcNotImplemented());
 
-      final_time = prm.get_double("final time");
+      end_time = prm.get_double("final time");
       time_step_size = prm.get_double("time step size");
       cfl = prm.get_double("cfl");
    }
@@ -255,15 +284,15 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
 
        const std::string rk_choice = prm.get("runge kutta method");
        if (rk_choice == "erk1")
-          runge_kutta_method = erk1;
+          time_discretization = erk1;
        else if (rk_choice == "erk2")
-          runge_kutta_method = erk2;
+          time_discretization = erk2;
        else if (rk_choice == "erk3")
-          runge_kutta_method = erk3;
+          time_discretization = erk3;
        else if (rk_choice == "erk4")
-          runge_kutta_method = erk4;
+          time_discretization = erk4;
        else if (rk_choice == "sdirk22")
-          runge_kutta_method = sdirk22;
+          time_discretization = sdirk22;
        else
           Assert(false,ExcNotImplemented());
    }
@@ -338,9 +367,12 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
    prm.enter_subsection("output");
    {
       output_period = prm.get_integer("output period");
+      output_mesh = prm.get_bool("output mesh");
       output_mass_matrix = prm.get_bool("output mass matrix");
       output_viscosity = prm.get_bool("output viscosity");
       output_exact_solution = prm.get_bool("output exact solution");
+      exact_solution_refinement_level = prm.get_integer("exact solution refinement level");
+      save_convergence_results = prm.get_bool("save convergence results");
    }
    prm.leave_subsection();
 }

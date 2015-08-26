@@ -40,8 +40,8 @@ std::vector<DataComponentInterpretation::DataComponentInterpretation>
    return data_component_interpretation;
 } 
 
-/** \brief Create the domain, compute volume, define initial
- *         conditions, and define boundary conditions and exact
+/** \brief Creates the domain, computes volume, defines initial
+ *         conditions, and defines boundary conditions and exact
  *         solution if it exists.
  */
 template <int dim>
@@ -53,20 +53,22 @@ void Burgers<dim>::define_problem()
       {
          Assert(dim==1,ExcImpossibleInDim(dim));
 
+         // name of problem
+         this->problem_name = "burgers_sin";
+
+         // domain
          double domain_start = 0;
          double domain_width = 1.0;
          this->domain_volume = std::pow(domain_width,dim);
          GridGenerator::hyper_cube(this->triangulation, domain_start, domain_start + domain_width);
          // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
          this->n_boundaries = 1;
-         // set all boundary indicators to zero
          typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin(),
                                                     endc = this->triangulation.end();
          for (; cell != endc; ++cell)
             for (unsigned int face = 0; face < this->faces_per_cell; ++face)
                if (cell->face(face)->at_boundary())
                   cell->face(face)->set_boundary_indicator(0);
-
          this->boundary_types.resize(this->n_boundaries);
          this->boundary_types[0].resize(this->n_components);
          this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
@@ -74,30 +76,35 @@ void Burgers<dim>::define_problem()
          this->dirichlet_function_strings[0].resize(this->n_components);
          this->dirichlet_function_strings[0][0] = "0";
          this->use_exact_solution_as_BC = false;
+
          // initial conditions
          this->initial_conditions_strings[0] = "sin(2*pi*x)";
+
          // exact solution
          this->has_exact_solution = false;
+
          break;
       }
       case 1: // 1-D Riemann problem, shock wave (u_left > u_right)
       {
          Assert(dim==1,ExcImpossibleInDim(dim));
 
+         // name of problem
+         this->problem_name = "burgers_shock";
+
+         // domain
          double domain_start = -1.0;
          double domain_width = 2.0;
          this->domain_volume = std::pow(domain_width,dim);
          GridGenerator::hyper_cube(this->triangulation, domain_start, domain_start + domain_width);
          // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
          this->n_boundaries = 1;
-         // set all boundary indicators to zero
          typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin(),
                                                     endc = this->triangulation.end();
          for (; cell != endc; ++cell)
             for (unsigned int face = 0; face < this->faces_per_cell; ++face)
                if (cell->face(face)->at_boundary())
                   cell->face(face)->set_boundary_indicator(0);
-
          this->boundary_types.resize(this->n_boundaries);
          this->boundary_types[0].resize(this->n_components);
          this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
@@ -105,31 +112,36 @@ void Burgers<dim>::define_problem()
          this->dirichlet_function_strings[0].resize(this->n_components);
          this->dirichlet_function_strings[0][0] = "if(x<0,1,0)";
          this->use_exact_solution_as_BC = false;
+
          // initial conditions
          this->initial_conditions_strings[0] = "if(x<0,1,0)";
+
          // exact solution
          this->has_exact_solution = true;
          this->exact_solution_strings[0] =  "if(x-0.5*t<0,1,0)";
+
          break;
       }
       case 2: // 1-D Riemann problem, rarefaction wave (u_left < u_right)
       {
          Assert(dim==1,ExcImpossibleInDim(dim));
 
+         // name of problem
+         this->problem_name = "burgers_rarefaction";
+
+         // domain
          double domain_start = -1.0;
          double domain_width = 2.0;
          this->domain_volume = std::pow(domain_width,dim);
          GridGenerator::hyper_cube(this->triangulation, domain_start, domain_start + domain_width);
          // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
          this->n_boundaries = 1;
-         // set all boundary indicators to zero
          typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin(),
                                                     endc = this->triangulation.end();
          for (; cell != endc; ++cell)
             for (unsigned int face = 0; face < this->faces_per_cell; ++face)
                if (cell->face(face)->at_boundary())
                   cell->face(face)->set_boundary_indicator(0);
-
          this->boundary_types.resize(this->n_boundaries);
          this->boundary_types[0].resize(this->n_components);
          this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
@@ -137,42 +149,50 @@ void Burgers<dim>::define_problem()
          this->dirichlet_function_strings[0].resize(this->n_components);
          this->dirichlet_function_strings[0][0] = "if(x<0,0,1)";
          this->use_exact_solution_as_BC = false;
+
          // initial conditions
          this->initial_conditions_strings[0] = "if(x<0,0,1)";
+
          // exact solution
          this->has_exact_solution = true;
-         this->exact_solution_strings[0] =  "if(t>0,if(x/t<0,0,if(x/t<1,x/t,1)),if(x<0,0,1))";
+         this->exact_solution_strings[0] = "if(t>0,if(x/t<0,0,if(x/t<1,x/t,1)),if(x<0,0,1))";
+
          break;
       }
       case 3: // Guermond 2-d test problem
       {
          Assert(dim==2,ExcImpossibleInDim(dim));
 
-         this->domain_volume = 1.0; // domain is the unit hypercube, so domain volume is 1^dim
+         // name of problem
+         this->problem_name = "burgers_2d";
+
+         // domain
+         this->domain_volume = 1.0;
          GridIn<dim> input_grid;
          input_grid.attach_triangulation(this->triangulation);
          std::ifstream input_file("mesh/unit_square.msh");
          input_grid.read_msh(input_file);
+
          // only 1 type of BC: Dirichlet with exact solution
          this->n_boundaries = 1;
-         // set all boundary indicators to zero
          typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin(),
                                                     endc = this->triangulation.end();
          for (; cell != endc; ++cell)
             for (unsigned int face = 0; face < this->faces_per_cell; ++face)
                if (cell->face(face)->at_boundary())
                   cell->face(face)->set_boundary_indicator(0);
-
          this->boundary_types.resize(this->n_boundaries);
          this->boundary_types[0].resize(this->n_components);
          this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
          this->use_exact_solution_as_BC = true;
+
          // initial conditions
          this->initial_conditions_strings[0] =  "if(x<0.5,";
          this->initial_conditions_strings[0] +=    "if(y>0.5,";
          this->initial_conditions_strings[0] +=       "-0.2,0.5),";
          this->initial_conditions_strings[0] +=    "if(y<0.5,";
          this->initial_conditions_strings[0] +=       "0.8,-1))";
+
          // exact solution
          this->has_exact_solution = true;
          this->exact_solution_strings[0] =  "if(x<0.5-0.6*t,";
@@ -190,11 +210,14 @@ void Burgers<dim>::define_problem()
          this->exact_solution_strings[0] +=  "if(y>0.5-0.1*t,";
          this->exact_solution_strings[0] +=       "-1.0,0.8)";
          this->exact_solution_strings[0] +=  "))))";
+
          break;
       }
       default:
+      {
          Assert(false,ExcNotImplemented());
          break;
+      }
    }
 }
 
@@ -313,7 +336,7 @@ void Burgers<dim>::compute_ss_residual(Vector<double> &f)
    //============================================================================
    // if using maximum-principle preserving artificial viscosity, add its bilinear form
    // else use the usual viscous flux contribution
-   if (this->conservation_law_parameters.viscosity_type == ConservationLawParameters<dim>::max_principle) {
+   if (this->parameters.viscosity_type == ConservationLawParameters<dim>::max_principle) {
       this->add_maximum_principle_viscosity_bilinear_form(f);
    } else {
       // loop over cells
@@ -604,13 +627,16 @@ void Burgers<dim>::output_solution (double time)
    }
 
    // output exact solution if requested
-   if (this->conservation_law_parameters.output_exact_solution and
+   if (this->parameters.output_exact_solution and
       this->has_exact_solution)
    {
       // set time in exact solution function
-      this->exact_solution_function.set_time(time);
+      this->exact_solution_function->set_time(time);
       // compute exact solution
-      VectorTools::interpolate(this->dof_handler,this->exact_solution_function,this->exact_solution);
+      VectorTools::interpolate(
+        this->dof_handler,
+        *(this->exact_solution_function),
+        this->exact_solution);
 
       DataOut<dim> data_out_exact;
       data_out_exact.attach_dof_handler (this->dof_handler);

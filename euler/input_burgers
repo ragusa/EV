@@ -67,6 +67,9 @@ end
 
 subsection output
    set output period = 0
-   set output mass matrix = true
+   set output mesh = false
+   set output mass matrix = false
    set output viscosity = false
+   set exact solution refinement level = 7
+   set save convergence results = false
 end

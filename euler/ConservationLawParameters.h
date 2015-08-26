@@ -17,28 +17,35 @@ class ConservationLawParameters
 {
   public:
 
+    /** number of components in solution */
     unsigned int n_components;
 
+    // refinement parameters
+    enum RefinementMode { space, time };
+    RefinementMode refinement_mode;
     unsigned int initial_refinement_level;
-    unsigned int n_cycle;
+    unsigned int n_refinement_cycles; /** number of refinement cycles */
     double refinement_fraction;
     double coarsening_fraction;
 
     enum TimeStepSizeMethod { constant_dt, cfl_condition };
     TimeStepSizeMethod time_step_size_method;
-    double final_time;
+    double end_time;
     double time_step_size;
     double cfl;
 
     unsigned int output_period;
+    bool output_mesh;
     bool output_mass_matrix;
     bool output_viscosity;
     bool output_exact_solution;
+    unsigned int exact_solution_refinement_level;
+    bool save_convergence_results;
   
+    enum TemporalDiscretization { SS, erk1, erk2, erk3, erk4, sdirk22 };
+    TemporalDiscretization time_discretization;
     enum TemporalIntegrator { runge_kutta };
     TemporalIntegrator temporal_integrator;
-    enum RungeKuttaMethod {erk1, erk2, erk3, erk4, sdirk22};
-    RungeKuttaMethod runge_kutta_method;
 
     enum NonlinearSolverType { newton };
     NonlinearSolverType nonlinear_solver;

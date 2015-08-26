@@ -41,6 +41,7 @@
 #include <deal.II/numerics/error_estimator.h>
 
 #include "ConservationLawParameters.h"
+#include "PostProcessor.h"
 
 using namespace dealii;
 
@@ -58,13 +59,13 @@ using namespace dealii;
 template <int dim>
 class ConservationLaw
 {
-  public:
+public:
 
     ConservationLaw (const ConservationLawParameters<dim> &params);
     ~ConservationLaw();
     void run();
 
-  protected:
+protected:
 
     void initialize_system();
     void initialize_runge_kutta();
@@ -102,22 +103,28 @@ class ConservationLaw
     void update_entropy_viscosities(const double &dt);
     void update_entropy_residuals(const double &dt);
     void update_jumps();
-    virtual void compute_entropy                 (const Vector<double> &solution,
-                                                  FEValues<dim>        &fe_values,
-                                                  Vector<double>       &entropy) const = 0;
-    virtual void compute_entropy_face            (const Vector<double> &solution,
-                                                  FEFaceValues<dim>    &fe_values_face,
-                                                  Vector<double>       &entropy) const = 0;
-    virtual void compute_divergence_entropy_flux (const Vector<double> &solution,
-                                                  FEValues<dim>        &fe_values,
-                                                  Vector<double>       &divergence) const = 0;
+    virtual void compute_entropy(
+      const Vector<double> &solution,
+      FEValues<dim>        &fe_values,
+      Vector<double>       &entropy) const = 0;
+    virtual void compute_entropy_face(
+      const Vector<double> &solution,
+      FEFaceValues<dim>    &fe_values_face,
+      Vector<double>       &entropy) const = 0;
+    virtual void compute_divergence_entropy_flux(
+      const Vector<double> &solution,
+      FEValues<dim>        &fe_values,
+      Vector<double>       &divergence) const = 0;
 
     // output functions
     virtual void output_solution(double time) = 0;
-    void output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > &map,
-                    const std::string &output_filename_base);
-    void output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, double> &map,
-                    const std::string &output_filename_base);
+    void output_map(
+      std::map<typename DoFHandler<dim>::active_cell_iterator,
+      Vector<double> > &map,
+      const std::string &output_filename_base);
+    void output_map(
+      std::map<typename DoFHandler<dim>::active_cell_iterator, double> &map,
+      const std::string &output_filename_base);
 
     // checking functions
     void check_nan();
@@ -139,14 +146,17 @@ class ConservationLaw
        get_component_interpretations() = 0;
 
     virtual void define_problem() = 0;
+    /** name of problem */
+    std::string problem_name;
 
     /** input parameters for conservation law */
-    const ConservationLawParameters<dim> conservation_law_parameters;
+    const ConservationLawParameters<dim> parameters;
     /** number of components in the system */
     const unsigned int n_components;
 
-    /** triangulation; mesh */
+    /** triangulation */
     Triangulation<dim>   triangulation;
+    /** mapping */
     const MappingQ1<dim> mapping;
 
     /** finite element system */
@@ -177,8 +187,10 @@ class ConservationLaw
     Vector<double>       new_solution;
     /** solution of previous time step */
     Vector<double>       old_solution;
-    /** exact solutuion of current time step */
+
+    /** exact solution of current time step */
     Vector<double>       exact_solution;
+
     /** solution step in Newton loop; vector for temporary storage */
     Vector<double>       solution_step;
     /** current time */
@@ -233,8 +245,8 @@ class ConservationLaw
     bool has_exact_solution;
     /** exact solution function strings for each component, which will be parsed */
     std::vector<std::string> exact_solution_strings;
-    /** exact solution functions */
-    FunctionParser<dim>      exact_solution_function;
+    /** exact solution function */
+    std::shared_ptr<Function<dim> > exact_solution_function;
     /** convergence table for errors computed in each refinement cycle **/
     ConvergenceTable convergence_table;
 

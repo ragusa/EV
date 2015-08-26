@@ -1,0 +1,78 @@
+#!/usr/bin/env perl
+
+use strict;
+
+# search variables
+my @search_strings = ("set runge kutta method");
+my @values;
+my @found_strings;
+for (my $i = 0; $i <= $#search_strings; $i++) {
+   push(@values,"");
+   push(@found_strings,0);
+}
+
+# associate variables with indices in search arrays
+my $time_integrator_i = 0;
+
+# read input file to determine the test problem ID and time integrator
+my $input_file = "input_burgers";
+open(IN, '<', $input_file) or die $!;
+my $input_line; # input file line
+my @input_line; # array of fields of input line
+while ($input_line = <IN>) {
+   &check_for_strings($input_line);
+}
+
+# check that all search strings were found
+for (my $i = 0; $i < $#search_strings; $i++) {
+   if (not $found_strings[$i]) {
+      die "Search string \"$search_strings[$i]\" could not be found in
+           input file.\n";
+   }
+} 
+
+# extract values
+my $time_integrator = $values[$time_integrator_i];
+
+# determine time integrator string based on time integrator option integer
+my $time_integrator_string;
+my %time_disc_hash = (
+  SS => 'SS',
+  FE => 'FE',
+  CN => 'CN',
+  BE => 'BE',
+  SSP2 => 'SSPRK22',
+  SSP3 => 'SSPRK33',
+  erk1 => 'ERK1',
+  erk2 => 'ERK2',
+  erk3 => 'ERK3',
+  erk4 => 'ERK4',
+  sdirk22 => 'SDIRK22'
+);
+if (exists($time_disc_hash{$time_integrator}))
+{
+  $time_integrator_string = $time_disc_hash{$time_integrator}
+} else {
+  die "Invalid time integrator option: $time_integrator\n";
+}
+#================================================================================
+sub check_for_strings() {
+   # get command-line arguments
+   my $line = $_[0];
+
+   # split line
+   chomp($line);
+   my @line_fields = split /\s*=\s*/, $line;
+
+   # loop over search strings
+   for (my $i = 0; $i <= $#search_strings; $i++) {
+      # check if lhs of field equals search string
+      my $key = $line_fields[0]; $key =~ s/^\s*//;
+      if ($key eq $search_strings[$i]) {
+         # extract value and flag it as found
+         my @fields = split /\s+/, $line_fields[1];
+         $values[$i] = $fields[0];
+         $found_strings[$i] = 1;
+      }
+   }
+}

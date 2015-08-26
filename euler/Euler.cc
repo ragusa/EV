@@ -66,6 +66,9 @@ void Euler<dim>::define_problem()
       {
          Assert(dim==1,ExcImpossibleInDim(dim));
 
+         // name of problem
+         this->problem_name = "sod_tube";
+
          // create domain
          double domain_start = 0;
          double domain_width = 1.0;
@@ -116,6 +119,9 @@ void Euler<dim>::define_problem()
       case 1: // 1-D Leblanc tube problem
       {
          Assert(dim==1,ExcImpossibleInDim(dim));
+
+         // name of problem
+         this->problem_name = "leblanc_tube";
 
          // create domain
          double domain_start = 0;
@@ -168,6 +174,9 @@ void Euler<dim>::define_problem()
       {
          // this is a 2-D problem
          Assert(dim==2,ExcImpossibleInDim(dim));
+
+         // name of problem
+         this->problem_name = "noh";
 
          // create domain
          this->domain_volume = 1.0; // domain is the unit hypercube, so domain volume is 1^dim
@@ -1279,13 +1288,13 @@ void Euler<dim>::output_solution (double time)
    }
    
    // output exact solution if requested
-   if (this->conservation_law_parameters.output_exact_solution and
+   if (this->parameters.output_exact_solution and
       this->has_exact_solution)
    {
       // set time in exact solution function
-      this->exact_solution_function.set_time(time);
+      this->exact_solution_function->set_time(time);
       // compute exact solution
-      VectorTools::interpolate(this->dof_handler,this->exact_solution_function,this->exact_solution);
+      VectorTools::interpolate(this->dof_handler,*(this->exact_solution_function),this->exact_solution);
 
       DataOut<dim> data_out_exact;
       data_out_exact.attach_dof_handler (this->dof_handler);

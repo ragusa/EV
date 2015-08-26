@@ -3,7 +3,7 @@
  */
 template <int dim>
 ConservationLaw<dim>::ConservationLaw(const ConservationLawParameters<dim> &params):
-   conservation_law_parameters(params),
+   parameters(params),
    n_components(params.n_components),
    mapping(),
    fe(FE_Q<dim>(params.degree), params.n_components),
@@ -18,7 +18,7 @@ ConservationLaw<dim>::ConservationLaw(const ConservationLawParameters<dim> &para
    initial_conditions_strings (params.n_components),
    initial_conditions_function(params.n_components),
    exact_solution_strings (params.n_components),
-   exact_solution_function(params.n_components)
+   exact_solution_function()
 {
 }
 
@@ -37,28 +37,39 @@ ConservationLaw<dim>::~ConservationLaw()
 template <int dim>
 void ConservationLaw<dim>::run()
 {
-   // initialize system; this is done once and not repeated for each refinement cycle
+   // initialize system
    initialize_system();
 
+   // create post-processor object
+   PostProcessor<dim> postprocessor(parameters, has_exact_solution,
+     exact_solution_function, problem_name);
+
    // loop over adaptive refinement cycles
-   for (unsigned int cycle = 0; cycle < conservation_law_parameters.n_cycle; ++cycle)
+   for (unsigned int cycle = 0; cycle < parameters.n_refinement_cycles; ++cycle)
    {
+      // set cycle for post-processor
+      postprocessor.setCycle(cycle);
+
       // if in final cycle, set flag to output solution
-      if (cycle == conservation_law_parameters.n_cycle-1)
+/*
+      if (cycle == parameters.n_refinement_cycles-1)
          in_final_cycle = true;
       else
          in_final_cycle = false;
+*/
 
-      // adaptively refine mesh if not the first cycle
+      // refine mesh if not the first cycle
       if (cycle > 0)
          refine_mesh();
 
       // setup system; to be applied after each refinement
       setup_system();
 
-      std::cout << std::endl;
-      std::cout << "Cycle " << cycle+1 << " of " << conservation_law_parameters.n_cycle << ":" << std::endl;
-      std::cout << "Number of active cells: " << triangulation.n_active_cells() << std::endl;
+      // print information
+      std::cout << std::endl << "Cycle " << cycle << " of " << parameters.n_refinement_cycles-1
+        << ":" << std::endl;
+      std::cout << "   Number of active cells: "
+        << triangulation.n_active_cells() << std::endl;
 
       // interpolate the initial conditions to the grid, and apply constraints
       VectorTools::interpolate(dof_handler,initial_conditions_function,new_solution);
@@ -68,12 +79,14 @@ void ConservationLaw<dim>::run()
       // set old solution to the current solution
       old_solution = new_solution;
 
+/*
       // output initial solution
       if (in_final_cycle)
          output_solution(0.0);
+*/
    
       // solve transient with selected time integrator
-      switch (conservation_law_parameters.temporal_integrator)
+      switch (parameters.temporal_integrator)
       {
          case ConservationLawParameters<dim>::runge_kutta: // Runge-Kutta
              solve_runge_kutta();
@@ -83,18 +96,26 @@ void ConservationLaw<dim>::run()
              break;
       }
 
+/*
       // compute error for cycle
       if (has_exact_solution) {
          // set time of exact solution function to be final time
-         exact_solution_function.set_time(conservation_law_parameters.final_time);
+         exact_solution_function->set_time(parameters.end_time);
          // compute error
          compute_error(cycle);
       }
+*/
+      // evaluate errors for convergence study
+      postprocessor.evaluate_error(new_solution, dof_handler, triangulation);
 
-   } // end of adaptive refinement loop; only output remains.
+      // output grid and solution and print convergence results
+      postprocessor.output_results(new_solution, dof_handler, triangulation);
 
+   } // end of refinement loop
+
+/*
    // output final viscosities if non-constant viscosity used
-   switch (conservation_law_parameters.viscosity_type)
+   switch (parameters.viscosity_type)
    {
       case ConservationLawParameters<dim>::none:
          break;
@@ -110,23 +131,28 @@ void ConservationLaw<dim>::run()
          output_map(first_order_viscosity_cell_q, "first_order_viscosity");
          output_map(entropy_viscosity_cell_q,     "entropy_viscosity");
          output_map(viscosity_cell_q,             "viscosity");
-         if (conservation_law_parameters.add_jumps)
+         if (parameters.add_jumps)
             output_map(entropy_viscosity_with_jumps_cell_q, "entropy_viscosity_with_jumps");
          break;
       default:
          Assert(false,ExcNotImplemented());
          break;
    }
+*/
 
+/*
    // output convergence table
-   if (has_exact_solution) {
+   if (has_exact_solution)
+   {
       // set display format for columns of convergence table
       convergence_table.set_precision("L2", 3);
       convergence_table.set_scientific("L2", true);
+
       // write convergence table to console
       std::cout << std::endl;
       convergence_table.write_text(std::cout);
    }
+*/
 }
 
 /** \brief Initially sets up system. Called only once.
@@ -140,7 +166,7 @@ void ConservationLaw<dim>::initialize_system()
 
    // define problem parameters and make initial triangulation
    define_problem();
-   triangulation.refine_global(conservation_law_parameters.initial_refinement_level);
+   triangulation.refine_global(parameters.initial_refinement_level);
 
    // set flag to skip computing face residuals if all BC are Dirichlet
    need_to_compute_face_residual = false;
@@ -184,13 +210,19 @@ void ConservationLaw<dim>::initialize_system()
       }
    }
 
-   // initialize exact solution function if there is one
+   // initialize exact solution function if necessary
    if (has_exact_solution)
    {
-      exact_solution_function.initialize(time_dependent_variables,
-                                         exact_solution_strings,
-                                         constants,
-                                         true);
+      // create and initialize function parser
+      std::shared_ptr<FunctionParser<dim> > exact_solution_function_derived =
+        std::make_shared<FunctionParser<dim> >(parameters.n_components);
+      exact_solution_function_derived->initialize(time_dependent_variables,
+                                                  exact_solution_strings,
+                                                  constants,
+                                                  true);
+
+      // point base class pointer to derived class function object
+      exact_solution_function = exact_solution_function_derived;
    }
 
    // initialize initial conditions function
@@ -200,7 +232,7 @@ void ConservationLaw<dim>::initialize_system()
                                           false);
 
    // initialize Runge-Kutta data if RK is being used
-   if (conservation_law_parameters.temporal_integrator ==
+   if (parameters.temporal_integrator ==
       ConservationLawParameters<dim>::runge_kutta)
       initialize_runge_kutta();
 
@@ -213,7 +245,7 @@ void ConservationLaw<dim>::initialize_runge_kutta()
 {
    // get RK parameters a, b, and c (Butcher tableau)
    rk.s = 0;
-   switch (conservation_law_parameters.runge_kutta_method)
+   switch (parameters.time_discretization)
    {
       case ConservationLawParameters<dim>::erk1:
          rk.s = 1;
@@ -244,7 +276,7 @@ void ConservationLaw<dim>::initialize_runge_kutta()
 
    // assign constants
    double gamma, sigma;
-   switch (conservation_law_parameters.runge_kutta_method)
+   switch (parameters.time_discretization)
    {
       case ConservationLawParameters<dim>::erk1:
          rk.b[0] = 1;
@@ -343,8 +375,8 @@ void ConservationLaw<dim>::refine_mesh()
 {
    GridRefinement::refine_and_coarsen_fixed_number (triangulation,
                                                     estimated_error_per_cell,
-                                                    conservation_law_parameters.refinement_fraction,
-                                                    conservation_law_parameters.coarsening_fraction);
+                                                    parameters.refinement_fraction,
+                                                    parameters.coarsening_fraction);
 
    triangulation.execute_coarsening_and_refinement();
 }
@@ -396,10 +428,10 @@ void ConservationLaw<dim>::setup_system ()
 
             if (use_exact_solution_as_BC)
             {
-               exact_solution_function.set_time(0.0);
+               exact_solution_function->set_time(0.0);
                VectorTools::interpolate_boundary_values (dof_handler,
                                                          boundary,
-                                                         exact_solution_function,
+                                                         *exact_solution_function,
                                                          constraints,
                                                          component_mask);
             } else {
@@ -428,7 +460,7 @@ void ConservationLaw<dim>::setup_system ()
 
    // if using maximum-principle preserving definition of first-order viscosity,
    // then compute bilinear forms and viscous fluxes
-   if (conservation_law_parameters.viscosity_type == ConservationLawParameters<dim>::max_principle) {
+   if (parameters.viscosity_type == ConservationLawParameters<dim>::max_principle) {
       viscous_bilinear_forms.reinit(unconstrained_sparsity_pattern);
       compute_viscous_bilinear_forms();
       viscous_fluxes.reinit(unconstrained_sparsity_pattern);
@@ -448,7 +480,7 @@ void ConservationLaw<dim>::setup_system ()
    estimated_error_per_cell .reinit(triangulation.n_active_cells());
    
    // allocate memory for steady-state residual evaluations if Runge-Kutta is used
-   if (conservation_law_parameters.temporal_integrator ==
+   if (parameters.temporal_integrator ==
       ConservationLawParameters<dim>::runge_kutta)
       for (int i = 0; i < rk.s; ++i)
          rk.f[i].reinit(n_dofs);
@@ -505,7 +537,7 @@ void ConservationLaw<dim>::assemble_mass_matrix()
                                    constraints);
 
    // output mass matrix
-   if (conservation_law_parameters.output_mass_matrix)
+   if (parameters.output_mass_matrix)
    {
       // output lumped mass matrix
       std::ofstream lumped_mass_matrix_out ("output/lumped_mass_matrix.txt");
@@ -544,10 +576,10 @@ void ConservationLaw<dim>::apply_Dirichlet_BC(const double &time)
             // fill boundary_values with boundary values
             if (use_exact_solution_as_BC)
             {
-               exact_solution_function.set_time(time);
+               exact_solution_function->set_time(time);
                VectorTools::interpolate_boundary_values (dof_handler,
                                                          boundary,
-                                                         exact_solution_function,
+                                                         *exact_solution_function,
                                                          boundary_values,
                                                          component_mask);
             } else {
@@ -683,8 +715,8 @@ void ConservationLaw<dim>::solve_runge_kutta()
 {
    old_time = 0.0;
    unsigned int n = 1; // time step index
-   unsigned int next_time_step_output = conservation_law_parameters.output_period;
-   double t_end = conservation_law_parameters.final_time;
+   //unsigned int next_time_step_output = parameters.output_period;
+   double t_end = parameters.end_time;
    bool in_transient = true;
    bool DMP_satisfied = true;
    while (in_transient)
@@ -694,10 +726,10 @@ void ConservationLaw<dim>::solve_runge_kutta()
 
       // compute dt
       double dt;
-      switch (conservation_law_parameters.time_step_size_method)
+      switch (parameters.time_step_size_method)
       {
          case ConservationLawParameters<dim>::constant_dt:
-            dt = conservation_law_parameters.time_step_size;
+            dt = parameters.time_step_size;
             break;
          case ConservationLawParameters<dim>::cfl_condition:
             dt = compute_dt_from_cfl_condition();
@@ -763,12 +795,12 @@ void ConservationLaw<dim>::solve_runge_kutta()
             // compute initial norm of transient residual - used in convergence tolerance
             double residual_norm = system_rhs.l2_norm();
             // compute nonlinear tolerance based on provided ATOL and RTOL
-            double nonlinear_tolerance = conservation_law_parameters.nonlinear_atol +
-               conservation_law_parameters.nonlinear_rtol * residual_norm;
+            double nonlinear_tolerance = parameters.nonlinear_atol +
+               parameters.nonlinear_rtol * residual_norm;
             // initialize convergence flag
             bool converged = false;
             // begin Newton loop
-            for (unsigned int iteration = 0; iteration < conservation_law_parameters.max_nonlinear_iterations; ++iteration)
+            for (unsigned int iteration = 0; iteration < parameters.max_nonlinear_iterations; ++iteration)
             {
                // compute steady-state Jacobian and store in system_matrix
                compute_ss_jacobian();
@@ -851,11 +883,12 @@ void ConservationLaw<dim>::solve_runge_kutta()
       current_time = old_time; // used in exact solution function in output_solution
       n++;
    
+/*
       // output solution of this time step if user has specified;
       //  non-positive numbers for the output_period parameter specify
       //  that solution is not to be output; only the final solution
       //  will be output
-      if (conservation_law_parameters.output_period > 0)
+      if (parameters.output_period > 0)
       {
          if (n >= next_time_step_output)
          {
@@ -863,7 +896,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
                // output solution
                output_solution(current_time);
             // determine when next output will occur
-            next_time_step_output += conservation_law_parameters.output_period;
+            next_time_step_output += parameters.output_period;
          }
       }
       else
@@ -871,12 +904,13 @@ void ConservationLaw<dim>::solve_runge_kutta()
             if (in_final_cycle)
                // output solution
                output_solution(current_time);
+*/
 
       // check that there are no NaNs in solution
       check_nan();
 
       // check that DMP is satisfied at all time steps
-      if (conservation_law_parameters.viscosity_type ==
+      if (parameters.viscosity_type ==
         ConservationLawParameters<dim>::max_principle)
       {
         bool DMP_satisfied_this_time_step = check_DMP(n);
@@ -888,7 +922,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
 
    }// end of time loop
 
-   if (conservation_law_parameters.viscosity_type ==
+   if (parameters.viscosity_type ==
      ConservationLawParameters<dim>::max_principle)
    {
      if (DMP_satisfied)
@@ -914,7 +948,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
 template <int dim>
 double ConservationLaw<dim>::compute_dt_from_cfl_condition()
 {
-   return conservation_law_parameters.cfl * minimum_cell_diameter / max_flux_speed;
+   return parameters.cfl * minimum_cell_diameter / max_flux_speed;
 }
 
 /** \brief Computes the CFL number.
@@ -989,7 +1023,7 @@ void ConservationLaw<dim>::linear_solve (const SparseMatrix<double> &A,
                                          const Vector<double>       &b,
                                                Vector<double>       &x)
 {
-   switch (conservation_law_parameters.linear_solver)
+   switch (parameters.linear_solver)
    {
       case ConservationLawParameters<dim>::direct:
       {
@@ -1005,8 +1039,8 @@ void ConservationLaw<dim>::linear_solve (const SparseMatrix<double> &A,
       }
       case ConservationLawParameters<dim>::cg:
       {
-         SolverControl solver_control (conservation_law_parameters.max_linear_iterations,
-                                       conservation_law_parameters.linear_atol);
+         SolverControl solver_control (parameters.max_linear_iterations,
+                                       parameters.linear_atol);
          SolverCG<> solver(solver_control);
          
          PreconditionSSOR<> preconditioner;
@@ -1032,7 +1066,7 @@ void ConservationLaw<dim>::linear_solve (const SparseMatrix<double> &A,
 template <int dim>
 void ConservationLaw<dim>::update_viscosities(const double &dt)
 {
-   switch (conservation_law_parameters.viscosity_type)
+   switch (parameters.viscosity_type)
    {
       // no viscosity
       case ConservationLawParameters<dim>::none:
@@ -1048,7 +1082,7 @@ void ConservationLaw<dim>::update_viscosities(const double &dt)
       case ConservationLawParameters<dim>::constant:
       {
          Vector<double> const_visc(n_q_points_cell);
-         const_visc.add(conservation_law_parameters.constant_viscosity_value);
+         const_visc.add(parameters.constant_viscosity_value);
          typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                         endc = dof_handler.end();
          for (; cell != endc; ++cell)
@@ -1077,7 +1111,7 @@ void ConservationLaw<dim>::update_viscosities(const double &dt)
 
          typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                         endc = dof_handler.end();
-         if (conservation_law_parameters.add_jumps)
+         if (parameters.add_jumps)
             for (; cell != endc; ++cell)
                for (unsigned int q = 0; q < n_q_points_cell; ++q)
                   viscosity_cell_q[cell](q) = std::min(first_order_viscosity_cell_q[cell](q),
@@ -1103,7 +1137,7 @@ void ConservationLaw<dim>::update_viscosities(const double &dt)
 template <int dim>
 void ConservationLaw<dim>::update_old_first_order_viscosity()
 {
-   double c_max = conservation_law_parameters.first_order_viscosity_coef;
+   double c_max = parameters.first_order_viscosity_coef;
 
    // loop over cells to compute first order viscosity at each quadrature point
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
@@ -1248,12 +1282,12 @@ void ConservationLaw<dim>::update_entropy_viscosities(const double &dt)
    update_entropy_residuals(dt);
 
    // compute entropy viscosity
-   double c_s = conservation_law_parameters.entropy_viscosity_coef;
-   double c_j = conservation_law_parameters.jump_coef;
+   double c_s = parameters.entropy_viscosity_coef;
+   double c_j = parameters.jump_coef;
 
    typename DoFHandler<dim>::active_cell_iterator cell = dof_handler.begin_active(),
                                                   endc = dof_handler.end();
-   if (conservation_law_parameters.add_jumps)
+   if (parameters.add_jumps)
    {
       // update jumps
       update_jumps();
@@ -1421,7 +1455,7 @@ void ConservationLaw<dim>::compute_error(const unsigned int cycle)
    // compute L2 norm of error on each cell
    VectorTools::integrate_difference (dof_handler,
                                       new_solution,
-                                      exact_solution_function,
+                                      *exact_solution_function,
                                       difference_per_cell,
                                       cell_quadrature,
                                       VectorTools::L2_norm);

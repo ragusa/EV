@@ -1,0 +1,26 @@
+Solving conservation law problems with entropy viscosity and FCT
+
+To run:
+=================================================================================
+1. edit TARGET in CMakeLists.txt to correspond to the conservation law
+   for which you wish to run, e.g., "burgers" or "euler".
+
+2. run cmake:
+
+   cmake -DDEAL_II_DIR=~/bin/deal.II .
+
+   Replace ~/bin/deal.II with the appropriate path if deal.II is not installed
+   there.
+
+3. run make:
+
+   make
+
+4. edit the input file corresponding to the conservation law for which you
+   wish to run, e.g., "input_burgers" or "input_euler".
+
+5. run the executable created by make, e.g., "burgers" or "euler".
+
+
+To plot 1-D results:
+=================================================================================
