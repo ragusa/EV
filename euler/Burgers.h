@@ -25,7 +25,20 @@
  *   \frac{\partial u}{\partial t}
  *   + \nabla\cdot\left(\frac{1}{2}u^2\mathbf{v}\right) = 0 ,
  * \f]
+ * or
+ * \f[
+ *   \frac{\partial u}{\partial t}
+ *   + u\mathbf{v}\cdot\nabla u = 0 ,
+ * \f]
  * where \f$\mathbf{v}\f$ is a constant velocity field:
+ * \f[
+ *   \mathbf{v} = \left[\begin{array}{c}1\end{array}\right]
+ *   \qquad \mbox{(1-D)}
+ * \f]
+ * \f[
+ *   \mathbf{v} = \left[\begin{array}{c}1\\1\end{array}\right]
+ *   \qquad \mbox{(2-D)}
+ * \f]
  * \f[
  *   \mathbf{v} = \left[\begin{array}{c}1\\1\\1\end{array}\right]
  *   \qquad \mbox{(3-D)}
@@ -41,8 +54,6 @@ public:
 private:
 
     BurgersParameters<dim> burgers_parameters;
-
-    static const unsigned int n_burgers_components = 1;
 
     const FEValuesExtractors::Scalar velocity_extractor;
 

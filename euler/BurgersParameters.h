@@ -21,10 +21,9 @@ class BurgersParameters : public ConservationLawParameters<dim>
   public:
     BurgersParameters();
 
-    static void declare_burgers_parameters (ParameterHandler &parameter_handler);
-           void get_burgers_parameters     (ParameterHandler &parameter_handler);
+    static void declare_burgers_parameters(ParameterHandler &parameter_handler);
 
-    static const int n_burgers_components = 1;
+    void get_burgers_parameters(ParameterHandler &parameter_handler);
 
     unsigned int problem_id;
 };

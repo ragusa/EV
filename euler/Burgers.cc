@@ -284,36 +284,14 @@ void Burgers<dim>::assemble_lumped_mass_matrix()
    }
 }
 
-/** \brief Computes the steady-state residual.
- *
- *         This function computes the steady-state residual \f$\mathbf{f_{ss}}\f$ for the conservation law
- *         \f[
- *           \frac{\partial\mathbf{u}}{\partial t} 
- *           + \nabla \cdot \mathbf{f}(\mathbf{u}) = \mathbf{g}(\mathbf{u}),
- *         \f]
- *         which for component \f$i\f$ is
- *         \f[
- *           \mathbf{f_{ss}} = (\mathbf{\psi}, -\nabla \cdot \mathbf{f}(\mathbf{u}) + \mathbf{g}(\mathbf{u}))_\Omega.
- *         \f]
- *         For vicous Burgers' equation, this is the following:
- *         \f[
- *           \mathbf{f_{ss}} = -(\mathbf{\psi},u u_x)_\Omega + (\mathbf{\psi},\nu u_{xx})_\Omega .
- *         \f]
- *         After integration by parts, this is
- *         \f[
- *           \mathbf{f_{ss}} = -(\mathbf{\psi},u u_x)_\Omega - (\mathbf{{\psi}_x},\nu u_{x})_\Omega 
- *           + (\mathbf{\psi},\nu u_{x})_{\partial\Omega}.
- *         \f]
- *
- *  \param[out] f steady-state residual
- */
 template <int dim>
 void Burgers<dim>::compute_ss_residual(Vector<double> &f)
 {
    // reset vector
    f = 0.0;
 
-   FEValues<dim> fe_values(this->fe, this->cell_quadrature, update_values | update_gradients | update_JxW_values);
+   FEValues<dim> fe_values(this->fe, this->cell_quadrature, update_values |
+     update_gradients | update_JxW_values);
 
    Vector<double> cell_residual(this->dofs_per_cell);
    std::vector<unsigned int> local_dof_indices (this->dofs_per_cell);
@@ -325,8 +303,8 @@ void Burgers<dim>::compute_ss_residual(Vector<double> &f)
    // inviscid terms
    //============================================================================
    // loop over cells
-   typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler.begin_active(),
-                                                  endc = this->dof_handler.end();
+   typename DoFHandler<dim>::active_cell_iterator
+     cell = this->dof_handler.begin_active(), endc = this->dof_handler.end();
    for (; cell!=endc; ++cell)
    {
       // reset cell residual
@@ -336,8 +314,10 @@ void Burgers<dim>::compute_ss_residual(Vector<double> &f)
       fe_values.reinit(cell);
    
       // get current solution values and gradients
-      fe_values[velocity_extractor].get_function_values   (this->new_solution,solution_values);
-      fe_values[velocity_extractor].get_function_gradients(this->new_solution,solution_gradients);
+      fe_values[velocity_extractor].get_function_values(
+        this->new_solution,solution_values);
+      fe_values[velocity_extractor].get_function_gradients(
+        this->new_solution,solution_gradients);
       
       // loop over quadrature points
       for (unsigned int q = 0; q < this->n_q_points_cell; ++q) {
@@ -355,14 +335,15 @@ void Burgers<dim>::compute_ss_residual(Vector<double> &f)
 
       // aggregate local residual into global residual
       cell->get_dof_indices(local_dof_indices);
-      this->constraints.distribute_local_to_global(cell_residual, local_dof_indices, f);
+      this->constraints.distribute_local_to_global(cell_residual,
+        local_dof_indices, f);
    } // end cell loop
 
    //============================================================================
    // viscous terms
    //============================================================================
-   // if using maximum-principle preserving artificial viscosity, add its bilinear form
-   // else use the usual viscous flux contribution
+   // if using maximum-principle preserving artificial viscosity, add its
+   // bilinear form else use the usual viscous flux contribution
    if (this->parameters.viscosity_type == ConservationLawParameters<dim>::max_principle) {
       this->add_maximum_principle_viscosity_bilinear_form(f);
    } else {
@@ -522,9 +503,6 @@ void Burgers<dim>::compute_ss_jacobian()
 }
 */
 
-/** \brief Computes the flux speed at each quadrature point in domain and
- *         finds the max in each cell and the max in the entire domain.
- */
 template <int dim>
 void Burgers<dim>::update_flux_speeds()
 {
@@ -557,11 +535,6 @@ void Burgers<dim>::update_flux_speeds()
    }
 }
 
-/** \brief Computes entropy at each quadrature point in cell
- *  \param[in] solution solution
- *  \param[in] fe_values FEValues object
- *  \param[out] entropy entropy values at each quadrature point in cell
- */
 template <int dim>
 void Burgers<dim>::compute_entropy(const Vector<double> &solution,
                                    FEValues<dim>        &fe_values,
@@ -574,11 +547,6 @@ void Burgers<dim>::compute_entropy(const Vector<double> &solution,
       entropy(q) = 0.5*velocity[q]*velocity[q];
 }
 
-/** \brief Computes entropy at each quadrature point on face
- *  \param[in] solution solution
- *  \param[in] fe_values_face FEFaceValues object
- *  \param[out] entropy entropy values at each quadrature point on face
- */
 template <int dim>
 void Burgers<dim>::compute_entropy_face(const Vector<double> &solution,
                                         FEFaceValues<dim>    &fe_values_face,
@@ -591,11 +559,6 @@ void Burgers<dim>::compute_entropy_face(const Vector<double> &solution,
       entropy(q) = 0.5*velocity[q]*velocity[q];
 }
 
-/** \brief Computes divergence of entropy flux at each quadrature point in cell
- *  \param[in] solution solution
- *  \param[in] fe_values FEValues object
- *  \param[out] divergence_entropy_flux divergence of entropy flux at each quadrature point in cell
- */
 template <int dim>
 void Burgers<dim>::compute_divergence_entropy_flux (const Vector<double> &solution,
                                                     FEValues<dim>        &fe_values,

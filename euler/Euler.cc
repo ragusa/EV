@@ -1052,45 +1052,44 @@ void Euler<dim>::update_flux_speeds()
    std::vector<Tensor<1,dim> > velocity (this->n_q_points_cell);
    std::vector<double>         speed_of_sound (this->n_q_points_cell);
    std::vector<double>         pressure (this->n_q_points_cell);
-   std::vector<double>         dpdrho   (this->n_q_points_cell);
-   std::vector<double>         dpdmx    (this->n_q_points_cell);
-   std::vector<double>         dpdE     (this->n_q_points_cell);
-   std::vector<double>         temperature (this->n_q_points_cell);
-   std::vector<double>         internal_energy (this->n_q_points_cell);
 
    // reset max flux speed
    this->max_flux_speed = 0.0;
 
    // loop over cells to compute first order viscosity at each quadrature point
-   typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler.begin_active(),
-      endc = this->dof_handler.end();
+   typename DoFHandler<dim>::active_cell_iterator
+     cell = this->dof_handler.begin_active(), endc = this->dof_handler.end();
    for (; cell != endc; ++cell)
    {
+      // get conservative variables
       fe_values.reinit(cell);
-      fe_values[density_extractor] .get_function_values(this->new_solution, density);
-      fe_values[momentum_extractor].get_function_values(this->new_solution, momentum);
-      fe_values[energy_extractor]  .get_function_values(this->new_solution, energy);
+      fe_values[density_extractor].get_function_values(
+        this->new_solution, density);
+      fe_values[momentum_extractor].get_function_values(
+        this->new_solution, momentum);
+      fe_values[energy_extractor].get_function_values(
+        this->new_solution, energy);
 
       // compute velocity
       compute_velocity(density, momentum, velocity);
 
       // compute speed of sound
-      compute_internal_energy_cell (internal_energy, density, momentum, energy);
-      compute_temperature_cell     (temperature, internal_energy);
-      compute_pressure_cell        (pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
-      compute_speed_of_sound       (speed_of_sound, density, pressure);
+      compute_pressure(density, momentum, energy, pressure);
+      compute_speed_of_sound(speed_of_sound, density, pressure);
 
-      double max_speed_of_sound = 0.0; // max speed of sound on cell
-      double max_velocity = 0.0;       // max velocity on cell
+      // get maximum speed of sound and maximum fluid speed
+      double max_speed_of_sound = 0.0;
+      double max_speed = 0.0;
       for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
       {
-         max_speed_of_sound = std::max( max_speed_of_sound, speed_of_sound[q] );
-         max_velocity       = std::max( max_velocity,       velocity[q].norm() );
+         max_speed_of_sound = std::max(max_speed_of_sound, speed_of_sound[q]);
+         max_speed = std::max(max_speed, velocity[q].norm());
       }
 
       // get max flux speed
-      this->max_flux_speed_cell[cell] = max_speed_of_sound + max_velocity;
-      this->max_flux_speed = std::max(this->max_flux_speed, this->max_flux_speed_cell[cell]);
+      this->max_flux_speed_cell[cell] = max_speed_of_sound + max_speed;
+      this->max_flux_speed = std::max(this->max_flux_speed,
+        this->max_flux_speed_cell[cell]);
    }
 }
 
@@ -1104,21 +1103,22 @@ void Euler<dim>::compute_entropy(
    std::vector<Tensor<1,dim> > momentum (this->n_q_points_cell);
    std::vector<double>         energy   (this->n_q_points_cell);
    std::vector<double>         pressure (this->n_q_points_cell);
-   std::vector<double>         dpdrho   (this->n_q_points_cell);
-   std::vector<double>         dpdmx    (this->n_q_points_cell);
-   std::vector<double>         dpdE     (this->n_q_points_cell);
-   std::vector<double>         temperature     (this->n_q_points_cell);
-   std::vector<double>         internal_energy (this->n_q_points_cell);
 
-   fe_values[density_extractor].get_function_values  (this->new_solution, density);
-   fe_values[momentum_extractor].get_function_values (this->new_solution, momentum);
-   fe_values[energy_extractor].get_function_values   (this->new_solution, energy);
-   compute_internal_energy_cell (internal_energy, density, momentum, energy);
-   compute_temperature_cell     (temperature, internal_energy);
-   compute_pressure_cell        (pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
+   // get conservative variables
+   fe_values[density_extractor].get_function_values(
+     this->new_solution, density);
+   fe_values[momentum_extractor].get_function_values(
+     this->new_solution, momentum);
+   fe_values[energy_extractor].get_function_values(
+     this->new_solution, energy);
 
+   // compute pressure
+   compute_pressure(density, momentum, energy, pressure);
+
+   // compute entropy
    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-      entropy[q] = density[q]/(gamma - 1.0)*std::log(pressure[q]/std::pow(density[q],gamma));
+      entropy[q] = density[q]/(gamma - 1.0)
+        *std::log(pressure[q]/std::pow(density[q],gamma));
 }
 
 template <int dim>
@@ -1127,58 +1127,76 @@ void Euler<dim>::compute_entropy_face(
   FEFaceValues<dim>    &fe_values_face,
   Vector<double>       &entropy) const
 {
-   std::vector<double>         density  (this->n_q_points_face);
-   std::vector<Tensor<1,dim> > momentum (this->n_q_points_face);
-   std::vector<double>         energy   (this->n_q_points_face);
-   std::vector<double> pressure         (this->n_q_points_face);
-   std::vector<double> dpdrho           (this->n_q_points_face);
-   std::vector<double> dpdmx            (this->n_q_points_face);
-   std::vector<double> dpdE             (this->n_q_points_face);
-   std::vector<double> temperature      (this->n_q_points_face);
-   std::vector<double> internal_energy  (this->n_q_points_face);
+   std::vector<double>         density (this->n_q_points_face);
+   std::vector<Tensor<1,dim> > momentum(this->n_q_points_face);
+   std::vector<double>         energy  (this->n_q_points_face);
+   std::vector<double>         pressure(this->n_q_points_face);
 
-   fe_values_face[density_extractor].get_function_values  (this->new_solution, density);
-   fe_values_face[momentum_extractor].get_function_values (this->new_solution, momentum);
-   fe_values_face[energy_extractor].get_function_values   (this->new_solution, energy);
-   compute_internal_energy_face (internal_energy, density, momentum, energy);
-   compute_temperature_face     (temperature, internal_energy);
-   compute_pressure_face        (pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
+   // get conservative variables
+   fe_values_face[density_extractor].get_function_values(
+     this->new_solution, density);
+   fe_values_face[momentum_extractor].get_function_values(
+     this->new_solution, momentum);
+   fe_values_face[energy_extractor].get_function_values(
+     this->new_solution, energy);
 
+   // compute pressure
+   compute_pressure(density, momentum, energy, pressure);
+
+   // compute entropy
    for (unsigned int q = 0; q < this->n_q_points_face; ++q)
-      entropy[q] = density[q]/(gamma - 1.0)*std::log(pressure[q]/std::pow(density[q],gamma));
+      entropy[q] = density[q]/(gamma - 1.0)
+        *std::log(pressure[q]/std::pow(density[q],gamma));
 }
 
 template <int dim>
-void Euler<dim>::compute_divergence_entropy_flux (const Vector<double> &solution,
-                                                  FEValues<dim>        &fe_values,
-                                                  Vector<double>       &divergence) const
+void Euler<dim>::compute_divergence_entropy_flux(
+  const Vector<double> &solution,
+  FEValues<dim>        &fe_values,
+  Vector<double>       &divergence) const
 {
    std::vector<double>         density  (this->n_q_points_cell);
    std::vector<Tensor<1,dim> > momentum (this->n_q_points_cell);
    std::vector<double>         energy   (this->n_q_points_cell);
    std::vector<double>         pressure (this->n_q_points_cell);
-   std::vector<double>         dpdrho   (this->n_q_points_cell);
-   std::vector<double>         dpdmx    (this->n_q_points_cell);
-   std::vector<double>         dpdE     (this->n_q_points_cell);
    std::vector<Tensor<1,dim> > density_gradient    (this->n_q_points_cell);
    std::vector<Tensor<2,dim> > momentum_gradient   (this->n_q_points_cell);
    std::vector<Tensor<1,dim> > energy_gradient     (this->n_q_points_cell);
    std::vector<double>         momentum_divergence (this->n_q_points_cell);
-   Tensor<1, dim> pressure_gradient;
+   //Tensor<1, dim> pressure_gradient;
 
-   fe_values[density_extractor].get_function_values       (this->new_solution, density);
-   fe_values[momentum_extractor].get_function_values      (this->new_solution, momentum);
-   fe_values[energy_extractor].get_function_values        (this->new_solution, energy);
-   fe_values[density_extractor].get_function_gradients    (this->new_solution, density_gradient);
-   fe_values[momentum_extractor].get_function_gradients   (this->new_solution, momentum_gradient);
-   fe_values[energy_extractor].get_function_gradients     (this->new_solution, energy_gradient);
-   fe_values[momentum_extractor].get_function_divergences (this->new_solution, momentum_divergence);
-   compute_pressure_cell (pressure, dpdrho, dpdmx, dpdE, density, momentum, energy);
+   // get conservative variables
+   fe_values[density_extractor].get_function_values( 
+     this->new_solution, density);
+   fe_values[momentum_extractor].get_function_values(
+     this->new_solution, momentum);
+   fe_values[energy_extractor].get_function_values(
+     this->new_solution, energy);
 
-   for (unsigned int q = 0; q < this->n_q_points_cell; ++q) {
-      pressure_gradient = (gamma - 1.0) * energy_gradient[q] - momentum[q] * momentum_gradient[q];
-      divergence[q] = momentum_divergence[q] * std::log(pressure[q]/std::pow(density[q],gamma))
-         + momentum[q] * (pressure_gradient / pressure[q] - gamma/density[q]*density_gradient[q]);
+   // get gradients of conservative variables
+   fe_values[density_extractor].get_function_gradients(
+     this->new_solution, density_gradient);
+   fe_values[momentum_extractor].get_function_gradients(
+     this->new_solution, momentum_gradient);
+   fe_values[energy_extractor].get_function_gradients(
+     this->new_solution, energy_gradient);
+
+   // get divergence of momentum
+   fe_values[momentum_extractor].get_function_divergences( 
+     this->new_solution, momentum_divergence);
+
+   // compute pressure
+   compute_pressure(density, momentum, energy, pressure);
+
+   // compute divergence of entropy flux
+   for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+   {
+      Tensor<1, dim> pressure_gradient = (gamma - 1.0) * energy_gradient[q]
+        - momentum[q] * momentum_gradient[q];
+      divergence[q] = momentum_divergence[q] * std::log(
+        pressure[q] / std::pow(density[q],gamma))
+        + momentum[q] * (pressure_gradient / pressure[q]
+        - gamma/density[q]*density_gradient[q]);
    }
 }
 

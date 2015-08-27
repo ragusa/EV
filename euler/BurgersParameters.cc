@@ -42,7 +42,7 @@ void BurgersParameters<dim>::get_burgers_parameters(
 {
    // get conservation law parameters
    this->get_conservation_law_parameters(parameter_handler);
-   this->n_components = n_burgers_components;
+   this->n_components = 1;
 
    // problem
    parameter_handler.enter_subsection("problem");
