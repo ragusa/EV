@@ -1,9 +1,12 @@
 /**
+ * \file Burgers.cc
  * \brief Provides the function definitions for the Burgers class.
  */
 
-/** \brief Constructor for the Burgers class.
- *  \param[in] params Burgers equation parameters
+/**
+ * \brief Constructor.
+ *
+ * \param[in] params Burgers equation parameters
  */
 template <int dim>
 Burgers<dim>::Burgers(const BurgersParameters<dim> &params):
@@ -13,9 +16,6 @@ Burgers<dim>::Burgers(const BurgersParameters<dim> &params):
 {
 } 
 
-/** \brief Returns the names of each component.
- *  \return vector of names of each component
- */
 template <int dim>
 std::vector<std::string> Burgers<dim>::get_component_names ()
 {
@@ -23,13 +23,6 @@ std::vector<std::string> Burgers<dim>::get_component_names ()
    return names;
 }
 
-/** \brief Returns the interpretations for each component.
- *
- *         This function returns the interpretation of each component,
- *         i.e., whether each component is a scalar or a component of
- *         a vector.
- *  \return data component interpretations
- */
 template <int dim>
 std::vector<DataComponentInterpretation::DataComponentInterpretation>
    Burgers<dim>::get_component_interpretations ()
@@ -41,10 +34,6 @@ std::vector<DataComponentInterpretation::DataComponentInterpretation>
    return data_component_interpretation;
 } 
 
-/** \brief Creates the domain, computes volume, defines initial
- *         conditions, and defines boundary conditions and exact
- *         solution if it exists.
- */
 template <int dim>
 void Burgers<dim>::define_problem()
 {
@@ -61,7 +50,8 @@ void Burgers<dim>::define_problem()
          double domain_start = 0;
          double domain_width = 1.0;
          this->domain_volume = std::pow(domain_width,dim);
-         GridGenerator::hyper_cube(this->triangulation, domain_start, domain_start + domain_width);
+         GridGenerator::hyper_cube(this->triangulation, domain_start,
+           domain_start + domain_width);
 
          // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
          this->n_boundaries = 1;
@@ -98,7 +88,8 @@ void Burgers<dim>::define_problem()
          double domain_start = -1.0;
          double domain_width = 2.0;
          this->domain_volume = std::pow(domain_width,dim);
-         GridGenerator::hyper_cube(this->triangulation, domain_start, domain_start + domain_width);
+         GridGenerator::hyper_cube(this->triangulation, domain_start,
+           domain_start + domain_width);
 
          // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
          this->n_boundaries = 1;
@@ -147,7 +138,8 @@ void Burgers<dim>::define_problem()
          double domain_start = -1.0;
          double domain_width = 2.0;
          this->domain_volume = std::pow(domain_width,dim);
-         GridGenerator::hyper_cube(this->triangulation, domain_start, domain_start + domain_width);
+         GridGenerator::hyper_cube(this->triangulation, domain_start,
+           domain_start + domain_width);
 
          // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
          this->n_boundaries = 1;
@@ -258,9 +250,6 @@ void Burgers<dim>::define_problem()
    }
 }
 
-/**
- * \brief Assembles the lumped mass matrix.
- */
 template <int dim>
 void Burgers<dim>::assemble_lumped_mass_matrix()
 {
@@ -387,7 +376,8 @@ void Burgers<dim>::compute_ss_residual(Vector<double> &f)
          fe_values.reinit(cell);
       
          // get current solution gradients
-         fe_values[velocity_extractor].get_function_gradients(this->new_solution,solution_gradients);
+         fe_values[velocity_extractor].get_function_gradients(this->new_solution,
+           solution_gradients);
          
          // loop over quadrature points
          for (unsigned int q = 0; q < this->n_q_points_cell; ++q) {
@@ -413,12 +403,12 @@ void Burgers<dim>::compute_ss_residual(Vector<double> &f)
  *  \param cell current cell.
  *  \param cell_residual residual contribution for the current cell, to be aggregated into the global residual.
  */
+/*
 template <int dim>
 void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                                             const typename DoFHandler<dim>::active_cell_iterator &cell,
                                             Vector<double> &cell_residual)
 {
-/*
    // loop over faces
    for (unsigned int face = 0; face < this->faces_per_cell; ++face)
    {
@@ -474,11 +464,12 @@ void Burgers<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                                    *fe_face_values.JxW(q);
       }
    }
-*/
 }
+*/
 
 /** \brief Computes the steady-state Jacobian matrix and stores in system_matrix.
  */
+/*
 template <int dim>
 void Burgers<dim>::compute_ss_jacobian()
 {
@@ -528,8 +519,8 @@ void Burgers<dim>::compute_ss_jacobian()
       // add to global matrix
       this->constraints.distribute_local_to_global(cell_matrix, local_dof_indices, this->system_matrix);
    }
-
 }
+*/
 
 /** \brief Computes the flux speed at each quadrature point in domain and
  *         finds the max in each cell and the max in the entire domain.

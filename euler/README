@@ -34,4 +34,18 @@ This script calls the script "plot_explicit" with arguments inferred by the
 contents of CMakeLists.txt and the appropriate input file. To call
 "plot_explicit" directly, call it without arguments to see the correct usage.
 
+=================================================================================
+To compile and view doxygen:
+=================================================================================
+1. Compile the html output:
+
+   $ doxygen Doxyfile
+
+2. Open the file ./html/index.html in your favorite browser.
+
+The script "dox" executes the above and switches focus to the web browser.
+It assumes that Google Chrome and "wmctrl" are installed:
+
+$ dox
+
 

@@ -18,56 +18,72 @@
 #include "BurgersParameters.h"
 
 /**
- * Provides the necessary functions for the Burgers equation.
+ * \brief Class for solving the Burgers equation.
  *
- * This class extends the ConservationLaw class to viscous
- * Burgers' equation:
+ * The Burgers equation is the following:
  * \f[
- *   u_t + u u_x = \nu u_{xx}
+ *   \frac{\partial u}{\partial t}
+ *   + \nabla\cdot\left(\frac{1}{2}u^2\mathbf{v}\right) = 0 ,
+ * \f]
+ * where \f$\mathbf{v}\f$ is a constant velocity field:
+ * \f[
+ *   \mathbf{v} = \left[\begin{array}{c}1\\1\\1\end{array}\right]
+ *   \qquad \mbox{(3-D)}
  * \f]
  */
 template <int dim>
 class Burgers : public ConservationLaw<dim>
 {
-  public:
+public:
+
     Burgers(const BurgersParameters<dim> &params);
 
-  private:
+private:
+
     BurgersParameters<dim> burgers_parameters;
 
-    // number of components and position of components in solution vector
     static const unsigned int n_burgers_components = 1;
 
     const FEValuesExtractors::Scalar velocity_extractor;
 
-    // vector of names of each component
-    std::vector<std::string> get_component_names();
+    std::vector<std::string> get_component_names() override;
 
-    // data component interpretation (scalar or vector) for outputting solution
     std::vector<DataComponentInterpretation::DataComponentInterpretation>
-       get_component_interpretations();
+       get_component_interpretations() override;
 
     void assemble_lumped_mass_matrix() override;
 
-    void define_problem();
-    void output_solution(double time);
+    void define_problem() override;
 
-    void compute_ss_residual(Vector<double> &solution);
-    void compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
-                                  const typename DoFHandler<dim>::active_cell_iterator &cell,
-                                  Vector<double> &cell_residual);
-    void compute_ss_jacobian();
-    void update_flux_speeds();
+    void output_solution(double time) override;
 
-    void compute_entropy                 (const Vector<double> &solution,
-                                          FEValues<dim>        &fe_values,
-                                          Vector<double>       &entropy) const;
-    void compute_entropy_face            (const Vector<double> &solution,
-                                          FEFaceValues<dim>    &fe_values_face,
-                                          Vector<double>       &entropy) const;
-    void compute_divergence_entropy_flux (const Vector<double> &solution,
-                                          FEValues<dim>        &fe_values,
-                                          Vector<double>       &divergence_entropy_flux) const;
+    void compute_ss_residual(Vector<double> &solution) override;
+
+/*
+    void compute_face_ss_residual(
+      FEFaceValues<dim> &fe_face_values,
+      const typename DoFHandler<dim>::active_cell_iterator &cell,
+      Vector<double> &cell_residual) override;
+*/
+
+    //void compute_ss_jacobian() override;
+
+    void update_flux_speeds() override;
+
+    void compute_entropy(
+      const Vector<double> &solution,
+      FEValues<dim>        &fe_values,
+      Vector<double>       &entropy) const override;
+
+    void compute_entropy_face(
+      const Vector<double> &solution,
+      FEFaceValues<dim>    &fe_values_face,
+      Vector<double>       &entropy) const override;
+
+    void compute_divergence_entropy_flux(
+      const Vector<double> &solution,
+      FEValues<dim>        &fe_values,
+      Vector<double>       &divergence_entropy_flux) const override;
 };
 
 #include "Burgers.cc"

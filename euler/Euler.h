@@ -66,7 +66,7 @@ private:
                                 const typename DoFHandler<dim>::active_cell_iterator &cell,
                                 Vector<double> &cell_residual);
 */
-  void compute_ss_jacobian();
+  //void compute_ss_jacobian();
   
   void compute_inviscid_fluxes(
     const std::vector<double>         & density,
@@ -76,6 +76,7 @@ private:
     std::vector<Tensor<2,dim> > & momentum_flux,
     std::vector<Tensor<1,dim> > & energy_flux
     ) const;
+
   void compute_viscous_fluxes(
     const std::vector<double>         & viscosity,
     const std::vector<double>         & density,
@@ -89,6 +90,7 @@ private:
     std::vector<Tensor<2,dim> >       & momentum_viscous_flux,
     std::vector<Tensor<1,dim> >       & energy_viscous_flux
     ) const;
+
   void update_flux_speeds();
   void compute_entropy (const Vector<double> &solution,
                         FEValues<dim>        &fe_values,

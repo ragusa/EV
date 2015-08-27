@@ -1,9 +1,12 @@
-/** \file Euler.cc
- *  \brief Provides the function definitions for the Euler class.
+/**
+ * \file Euler.cc
+ * \brief Provides the function definitions for the Euler class.
  */
 
-/** \brief Constructor for the Euler class.
- *  \param[in] params Euler equation parameters
+/**
+ * \brief Constructor.
+ *
+ * \param[in] params Euler equation parameters
  */
 template <int dim>
 Euler<dim>::Euler(const EulerParameters<dim> &params):
@@ -15,9 +18,6 @@ Euler<dim>::Euler(const EulerParameters<dim> &params):
 {
 } 
 
-/** \brief Returns the names of each component.
- *  \return vector of names of each component
- */
 template <int dim>
 std::vector<std::string> Euler<dim>::get_component_names ()
 {
@@ -30,14 +30,6 @@ std::vector<std::string> Euler<dim>::get_component_names ()
    return names;
 }
 
-/** \brief Returns the interpretations for each component.
- *
- *  This function returns the interpretation of each component,
- *  i.e., whether each component is a scalar or a component of
- *  a vector.
- *
- *  \return data component interpretations
- */
 template <int dim>
 std::vector<DataComponentInterpretation::DataComponentInterpretation>
 Euler<dim>::get_component_interpretations ()
@@ -53,10 +45,6 @@ Euler<dim>::get_component_interpretations ()
    return component_interpretations;
 } 
 
-/** \brief Create the domain, compute volume, define initial
- *         conditions, and define boundary conditions and exact
- *         solution if it exists.
- */
 template <int dim>
 void Euler<dim>::define_problem()
 {
@@ -314,9 +302,6 @@ void Euler<dim>::define_problem()
    }
 }
 
-/**
- * \brief Assembles the lumped mass matrix.
- */
 template <int dim>
 void Euler<dim>::assemble_lumped_mass_matrix()
 {
@@ -738,6 +723,7 @@ void Euler<dim>::compute_inviscid_fluxes(
 /** \brief computes the steady-state Jacobian, which is used if an implicit
  *         time integration scheme is to be used.
  */
+/*
 template <int dim>
 void Euler<dim>::compute_ss_jacobian()
 {
@@ -873,6 +859,7 @@ void Euler<dim>::compute_ss_jacobian()
       this->constraints.distribute_local_to_global(cell_matrix, local_dof_indices, this->system_matrix);
    }
 }
+*/
 
 /** \brief Computes a vector of velocity values.
  */
@@ -1014,14 +1001,16 @@ void Euler<dim>::compute_pressure_cell(      std::vector<double> &pressure,
    }
 }
 
-/** \brief Computes pressure and pressure derivatives at each quadrature point in face.
- *  \param[out] pressure pressure
- *  \param[out] dpdrho derivative of pressure with respect to density
- *  \param[out] dpdmx derivative of pressure with respect to x-momentum
- *  \param[out] dpdE derivative of pressure with respect to energy
- *  \param[in] density density
- *  \param[in] momentum momentum
- *  \param[in] energy energy
+/**
+ * \brief Computes pressure and pressure derivatives at each quadrature point in face.
+ *
+ * \param[out] pressure pressure
+ * \param[out] dpdrho derivative of pressure with respect to density
+ * \param[out] dpdmx derivative of pressure with respect to x-momentum
+ * \param[out] dpdE derivative of pressure with respect to energy
+ * \param[in] density density
+ * \param[in] momentum momentum
+ * \param[in] energy energy
  */
 template <int dim>
 void Euler<dim>::compute_pressure_face(      std::vector<double> &pressure,
@@ -1044,17 +1033,15 @@ void Euler<dim>::compute_pressure_face(      std::vector<double> &pressure,
 /** \brief Computes speed of sound at each quadrature point in cell.
  */
 template <int dim>
-void Euler<dim>::compute_speed_of_sound(      std::vector<double> &speed_of_sound,
-   const std::vector<double> &density,
-   const std::vector<double> &pressure) const
-   {
-   for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-      speed_of_sound[q] = std::sqrt(gamma*pressure[q]/density[q]);
-   }
+void Euler<dim>::compute_speed_of_sound(
+  std::vector<double>       &speed_of_sound,
+  const std::vector<double> &density,
+  const std::vector<double> &pressure) const
+{
+  for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+    speed_of_sound[q] = std::sqrt(gamma*pressure[q]/density[q]);
+}
 
-/** \brief Computes the flux speed at each quadrature point in domain and
- *         finds the max in each cell and the max in the entire domain.
- */
 template <int dim>
 void Euler<dim>::update_flux_speeds()
 {
@@ -1107,16 +1094,12 @@ void Euler<dim>::update_flux_speeds()
    }
 }
 
-/** \brief Computes entropy at each quadrature point in cell
- *  \param solution solution
- *  \param fe_values FEValues object
- *  \param entropy entropy values at each quadrature point in cell
- */
 template <int dim>
-void Euler<dim>::compute_entropy(const Vector<double> &solution,
-   FEValues<dim>        &fe_values,
-   Vector<double>       &entropy) const
-   {
+void Euler<dim>::compute_entropy(
+  const Vector<double> &solution,
+  FEValues<dim>        &fe_values,
+  Vector<double>       &entropy) const
+{
    std::vector<double>         density  (this->n_q_points_cell);
    std::vector<Tensor<1,dim> > momentum (this->n_q_points_cell);
    std::vector<double>         energy   (this->n_q_points_cell);
@@ -1136,18 +1119,14 @@ void Euler<dim>::compute_entropy(const Vector<double> &solution,
 
    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
       entropy[q] = density[q]/(gamma - 1.0)*std::log(pressure[q]/std::pow(density[q],gamma));
-   }
+}
 
-/** \brief Computes entropy at each quadrature point on face
- *  \param solution solution
- *  \param fe_values_face FEFaceValues object
- *  \param entropy entropy values at each quadrature point on face
- */
 template <int dim>
-void Euler<dim>::compute_entropy_face(const Vector<double> &solution,
-   FEFaceValues<dim>    &fe_values_face,
-   Vector<double>       &entropy) const
-   {
+void Euler<dim>::compute_entropy_face(
+  const Vector<double> &solution,
+  FEFaceValues<dim>    &fe_values_face,
+  Vector<double>       &entropy) const
+{
    std::vector<double>         density  (this->n_q_points_face);
    std::vector<Tensor<1,dim> > momentum (this->n_q_points_face);
    std::vector<double>         energy   (this->n_q_points_face);
@@ -1167,15 +1146,8 @@ void Euler<dim>::compute_entropy_face(const Vector<double> &solution,
 
    for (unsigned int q = 0; q < this->n_q_points_face; ++q)
       entropy[q] = density[q]/(gamma - 1.0)*std::log(pressure[q]/std::pow(density[q],gamma));
-   }
+}
 
-/**
- * Computes divergence of entropy flux at each quadrature point in cell.
- *
- *  \param solution solution
- *  \param fe_values FEValues object
- *  \param divergence divergence of entropy flux at each quadrature point in cell
- */
 template <int dim>
 void Euler<dim>::compute_divergence_entropy_flux (const Vector<double> &solution,
                                                   FEValues<dim>        &fe_values,

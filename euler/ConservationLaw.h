@@ -46,15 +46,15 @@
 using namespace dealii;
 
 /**
- * Class providing framework for solving a general conservation law.
+ * \brief Class providing framework for solving a general conservation law.
  *
- * This class solves a conservation law of the form:
+ * This class solves a general conservation law system of the form:
  * \f[
  *   \frac{\partial\mathbf{u}}{\partial t} 
  *   + \nabla \cdot \mathbf{F}(\mathbf{u}) = \mathbf{0},
  * \f]
- * where \f$\vec{u}\f$ is the vector of conservation variables and \f$F(\vec{u})\f$
- * is the flux tensor.
+ * where \f$\mathbf{u}\f$ is the vector of conservation variables and
+ * \f$\mathbf{F}(\mathbf{u})\f$ is the flux tensor.
  */
 template <int dim>
 class ConservationLaw
@@ -76,9 +76,18 @@ protected:
     void assemble_mass_matrix();
     void solve_runge_kutta();
 
+    /**
+     * \brief Computes the lumped mass matrix.
+     */
     virtual void assemble_lumped_mass_matrix() = 0;
 
+    /**
+     * \brief Computes the flux speed \f$\lambda\f$ at each quadrature point
+     *        in domain and finds the max in each cell and the max in the
+     *        entire domain.
+     */ 
     virtual void update_flux_speeds() = 0;
+
     double compute_dt_from_cfl_condition();
     double compute_cfl_number(const double &dt) const;
 
@@ -88,9 +97,35 @@ protected:
 
     void apply_Dirichlet_BC(const double &time);
 
-    virtual void compute_ss_residual (Vector<double> &solution) = 0;
-    virtual void compute_ss_jacobian() = 0;
-    void compute_tr_residual(unsigned int i, double dt);
+    /** \brief Computes the steady-state residual.
+     *
+     *  This function computes the steady-state residual \f$\mathbf{r}\f$
+     *  in the following discretized system:
+     *  \f[
+     *    \mathbf{M}\frac{d\mathbf{U}}{dt} = \mathbf{r} .
+     *  \f]
+     *  In general, this steady-state residual consists of an inviscid component
+     *  and a viscous component:
+     *  \f[
+     *    \mathbf{r} = \mathbf{r}^{inviscid} + \mathbf{r}^{viscous} ,
+     *  \f]
+     *  which are computed as follows:
+     *  \f[
+     *    r^{inviscid}_i = -\left(\varphi_i,
+     *      \nabla\cdot\mathbf{f}(u_h)\right)_\Omega ,
+     *  \f]
+     *  \f[
+     *    r^{viscous}_i = -\sum\limits_{K\subset S_i}\nu_K\sum\limits_j
+     *      U_j b_K(\varphi_i, \varphi_j) .
+     *  \f]
+     *
+     *  \param[out] r steady-state residual \f$\mathbf{r}\f$
+     */
+    virtual void compute_ss_residual(Vector<double> &r) = 0;
+
+    //virtual void compute_ss_jacobian() = 0;
+
+    //void compute_tr_residual(unsigned int i, double dt);
 
     // viscosity functions
     void update_viscosities(const double &dt);
@@ -102,14 +137,39 @@ protected:
     void update_entropy_viscosities(const double &dt);
     void update_entropy_residuals(const double &dt);
     void update_jumps();
+
+    /**
+     * \brief Computes entropy for each quadrature point on a cell.
+     *
+     * \param[in] solution solution
+     * \param[in] fe_values FEValues object
+     * \param[out] entropy entropy values at each quadrature point on cell
+     */
     virtual void compute_entropy(
       const Vector<double> &solution,
       FEValues<dim>        &fe_values,
       Vector<double>       &entropy) const = 0;
+
+    /**
+     * \brief Computes entropy for each quadrature point on a face.
+     *
+     * \param[in] solution solution
+     * \param[in] fe_values_face FEFaceValues object
+     * \param[out] entropy entropy values at each quadrature point on face
+     */
     virtual void compute_entropy_face(
       const Vector<double> &solution,
       FEFaceValues<dim>    &fe_values_face,
       Vector<double>       &entropy) const = 0;
+
+   /**
+    * \brief Computes divergence of entropy flux at each quadrature point in cell.
+    *
+    * \param[in] solution solution
+    * \param[in] fe_values FEValues object
+    * \param[out] divergence divergence of entropy flux at each quadrature
+    *             point on cell
+    */
     virtual void compute_divergence_entropy_flux(
       const Vector<double> &solution,
       FEValues<dim>        &fe_values,
@@ -140,16 +200,38 @@ protected:
                               unsigned int         &n_col
                        );
 
+    /**
+     * \brief Returns the names of each component.
+     *
+     * \return vector of names of each component
+     */
     virtual std::vector<std::string> get_component_names() = 0;
+
+    /**
+     * \brief Returns the interpretations for each component.
+     *
+     * This function returns the interpretation of each component,
+     * i.e., whether each component is a scalar or a component of
+     * a vector.
+     *
+     * \return data component interpretations
+     */
     virtual std::vector<DataComponentInterpretation::DataComponentInterpretation>
        get_component_interpretations() = 0;
 
+    /**
+     * \brief Creates the domain, computes volume, defines initial
+     *        conditions, and defines boundary conditions and exact
+     *        solution if it exists.
+     */
     virtual void define_problem() = 0;
+
     /** name of problem */
     std::string problem_name;
 
     /** input parameters for conservation law */
     const ConservationLawParameters<dim> parameters;
+
     /** number of components in the system */
     const unsigned int n_components;
 
@@ -164,9 +246,9 @@ protected:
     const unsigned int   dofs_per_cell;
     /** faces per cell */
     const unsigned int   faces_per_cell;
-    /** number of DoFs in global system */
+    /** \brief Number of degrees of freedom */
     unsigned int         n_dofs;
-    /** DoF handler */
+    /** \brief Degree of freedom handler */
     DoFHandler<dim>      dof_handler;
     /** constraint matrix */
     ConstraintMatrix     constraints;
@@ -281,7 +363,10 @@ protected:
     /** estimation of error per cell for adaptive mesh refinement */
     Vector<float> estimated_error_per_cell;
 
-    /** structure containing Runge-Kutta constants and memory for f's (steady-state residual evaluations) */
+    /**
+     * \brief Contains Runge-Kutta constants and memory for stage
+     *        steady-state residuals.
+     */
     struct RungeKuttaParameters
     {
        int s;
@@ -298,6 +383,11 @@ protected:
 
     // boundary nodes
     void get_dirichlet_nodes();
+
+    /**
+     * \brief Vector of degrees of freedom subject to Dirichlet boundary
+     *        conditions.
+     */
     std::vector<unsigned int> dirichlet_nodes;
 };
 

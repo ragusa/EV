@@ -25,7 +25,7 @@ end
 subsection time
    # options are <constant_dt|cfl_condition>
    set time step size method = cfl_condition
-   set final time = 1.0
+   set final time = 0.5
    set time step size = 0.001
    set cfl = 0.50
 end
