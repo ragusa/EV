@@ -1,5 +1,5 @@
 /** \file BurgersParameters.cc
- *  \brief Provides function definitions for the BurgersParameters class.
+ *  \brief Provides the function definitions for the BurgersParameters class.
  */
 using namespace dealii;
 

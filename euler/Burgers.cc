@@ -284,6 +284,41 @@ void Burgers<dim>::assemble_lumped_mass_matrix()
    }
 }
 
+/**
+ * \brief Computes the steady-state residual.
+ *
+ * Rearranging the Burgers equation,
+ * \f[
+ *   \frac{\partial u}{\partial t}
+ *   = - u\mathbf{v}\cdot\nabla u .
+ * \f]
+ * Substituting the approximate FEM solution and testing with a test function
+ * \f$\varphi_i\f$ gives the weak form for degree of freedom \f$i\f$:
+ * \f[
+ *   \left(\varphi_i,\frac{\partial u_h}{\partial t}\right)_\Omega
+ *   = - \left(\varphi_i,u_h\mathbf{v}\cdot\nabla u_h\right)_\Omega .
+ * \f]
+ * Adding a viscous bilinear form,
+ * \f[
+ *   \left(\varphi_i,\frac{\partial u_h}{\partial t}\right)_\Omega
+ *   = - \left(\varphi_i,u_h\mathbf{v}\cdot\nabla u_h\right)_\Omega
+ *   - \sum\limits_{K\subset S_i}\nu_K\sum\limits_j
+ *   U_j b_K(\varphi_i, \varphi_j) .
+ * \f]
+ * This yields a discrete system
+ * \f[
+ *   \mathbf{M}\frac{d\mathbf{U}}{dt} = \mathbf{r} ,
+ * \f]
+ * where \f$\mathbf{M}\f$ is the mass matrix and the steady-state residual
+ * \f$\mathbf{r}\f$ is given by
+ * \f[
+ *   r_i = - \left(\varphi_i,u_h\mathbf{v}\cdot\nabla u_h\right)_\Omega
+ *   - \sum\limits_{K\subset S_i}\nu_K\sum\limits_j
+ *   U_j b_K(\varphi_i, \varphi_j) .
+ * \f]
+ *
+ *  \param[out] r steady-state residual \f$\mathbf{r}\f$
+ */
 template <int dim>
 void Burgers<dim>::compute_ss_residual(Vector<double> &f)
 {

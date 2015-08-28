@@ -1,4 +1,10 @@
-/** \fn ConservationLawParameters<dim>::declare_conservation_law_parameters(ParameterHandler &prm)
+/**
+ * \file ConservationLawParameters.cc
+ * \brief Provides the function definitions for the ConservationLawParameters
+ *        class.
+ */
+
+/**
  *  \brief Declares the parameters that will be in input file.
  *
  *  This function declares all of the input parameters required

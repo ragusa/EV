@@ -1,5 +1,6 @@
 /**
- * Provides the header for the ConservationLaw class.
+ * \file ConservationLaw.h
+ * \brief Provides the header for the ConservationLaw class.
  */
 #ifndef ConservationLaw_h
 #define ConservationLaw_h

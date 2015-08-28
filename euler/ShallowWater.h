@@ -1,9 +1,9 @@
 /**
- * \file Burgers.h
- * \brief Provides the header for the Burgers class.
+ * \file ShallowWater.h
+ * \brief Provides the header for the ShallowWater class.
  */
-#ifndef Burgers_h
-#define Burgers_h
+#ifndef ShallowWater_h
+#define ShallowWater_h
 
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_accessor.h>
@@ -16,45 +16,36 @@
 #include <deal.II/fe/fe_values_extractors.h>
 #include <deal.II/lac/vector.h>
 #include "ConservationLaw.h"
-#include "BurgersParameters.h"
+#include "ShallowWaterParameters.h"
 
 /**
- * \brief Class for solving the Burgers equation.
+ * \brief Class for solving the shallow water equations.
  *
- * The Burgers equation is the following:
+ * The shallow water equations are the following:
  * \f[
- *   \frac{\partial u}{\partial t}
- *   + \nabla\cdot\left(\frac{1}{2}u^2\mathbf{v}\right) = 0 ,
- * \f]
- * or
- * \f[
- *   \frac{\partial u}{\partial t}
- *   + u\mathbf{v}\cdot\nabla u = 0 ,
- * \f]
- * where \f$\mathbf{v}\f$ is a constant velocity field:
- * \f[
- *   \mathbf{v} = \left[\begin{array}{c}1\end{array}\right]
- *   \qquad \mbox{(1-D)}
+ *   \frac{\partial h}{\partial t}
+ *   + \nabla\cdot\left(h\mathbf{u}\right) = 0 ,
  * \f]
  * \f[
- *   \mathbf{v} = \left[\begin{array}{c}1\\1\end{array}\right]
- *   \qquad \mbox{(2-D)}
+ *   \frac{\partial(h\mathbf{u})}{\partial t}
+ *   + \nabla\cdot\left(h\mathbf{u}\otimes\mathbf{u}
+ *   + \frac{1}{2}g h^2 \mathbf{I}\right) = 
+ *   - g h \nabla b ,
  * \f]
- * \f[
- *   \mathbf{v} = \left[\begin{array}{c}1\\1\\1\end{array}\right]
- *   \qquad \mbox{(3-D)}
- * \f]
+ * where \f$h\f$ is water height, \f$\mathbf{u}\f$ is velocity,
+ * \f$g\f$ is acceleration due to gravity, \f$\mathbf{I}\f$ is the identity
+ * tensor, and \f$b\f$ is the bathymetry (bottom topography).
  */
 template <int dim>
-class Burgers : public ConservationLaw<dim>
+class ShallowWater : public ConservationLaw<dim>
 {
 public:
 
-    Burgers(const BurgersParameters<dim> &params);
+    ShallowWater(const ShallowWaterParameters<dim> &params);
 
 private:
 
-    BurgersParameters<dim> burgers_parameters;
+    ShallowWaterParameters<dim> burgers_parameters;
 
     const FEValuesExtractors::Scalar velocity_extractor;
 
@@ -70,15 +61,6 @@ private:
     void output_solution(double time) override;
 
     void compute_ss_residual(Vector<double> &solution) override;
-
-/*
-    void compute_face_ss_residual(
-      FEFaceValues<dim> &fe_face_values,
-      const typename DoFHandler<dim>::active_cell_iterator &cell,
-      Vector<double> &cell_residual) override;
-*/
-
-    //void compute_ss_jacobian() override;
 
     void update_flux_speeds() override;
 
@@ -98,6 +80,6 @@ private:
       Vector<double>       &divergence_entropy_flux) const override;
 };
 
-#include "Burgers.cc"
+#include "ShallowWater.cc"
 
 #endif

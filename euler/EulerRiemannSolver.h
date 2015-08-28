@@ -1,3 +1,8 @@
+/**
+ * \file EulerRiemannSolver.h
+ * \brief Provides the header for the EulerRiemannSolver class.
+ */
+
 #ifndef EulerRiemannSolver_cc
 #define EulerRiemannSolver_cc
 
@@ -6,7 +11,7 @@
 using namespace dealii;
 
 /**
- * Class for computing the exact solution for an Euler Riemann problem.
+ * \brief Class for computing the exact solution for an Euler Riemann problem.
  */
 template<int dim>
 class EulerRiemannSolver : public Function<dim>

@@ -16,7 +16,7 @@
 using namespace dealii;
 
 /**
- * Class for outputting solutions and evaluating error and convergence.
+ * \brief Class for outputting solutions and evaluating error and convergence.
  */
 template<int dim>
 class PostProcessor

@@ -1,5 +1,6 @@
 /**
- * Provides driver for solving the Burgers equation.
+ * \file burgers.cc
+ * \brief Provides driver for solving the Burgers equation.
  */
 
 #include <iostream>
