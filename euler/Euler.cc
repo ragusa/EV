@@ -37,10 +37,13 @@ Euler<dim>::get_component_interpretations ()
    std::vector<DataComponentInterpretation::DataComponentInterpretation>
    component_interpretations(n_euler_components);
 
-   component_interpretations[0] = DataComponentInterpretation::component_is_scalar;
+   component_interpretations[0] =
+     DataComponentInterpretation::component_is_scalar;
    for (int d = 0; d < dim; ++d)
-      component_interpretations[1+d] = DataComponentInterpretation::component_is_part_of_vector;
-   component_interpretations[dim+1] = DataComponentInterpretation::component_is_scalar;
+     component_interpretations[1+d] =
+       DataComponentInterpretation::component_is_part_of_vector;
+   component_interpretations[dim+1] =
+     DataComponentInterpretation::component_is_scalar;
 
    return component_interpretations;
 } 
