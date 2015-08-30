@@ -1,21 +1,26 @@
-There are a number of positivity-preserving
-schemes developed for finite volume discretizations based on slope
-limiters or flux limiters~\cite{toro99}\cite{leveque02}, but these
-techniques have proved difficult to extend to finite element
-discretizations. Therefore, obtaining high-order, positivity-preserving
-solutions has long remained a challenge for finite element methods, but
-recently the flux-corrected transport (FCT) algorithm,
-a positivity-preserving scheme initially developed by Boris and Book\cite{borisbook},
-has been applied to continuous finite element discretizations
-for conservation laws of the following form~\cite{kuzmin_book}:
+Recently, to address the issue of negativies and spurious oscillations,
+the flux-corrected transport (FCT) algorithm,
+initially developed by Boris and Book\cite{borisbook},
+has been applied to continuous finite element discretizations.
+This work aims to extend this approach to radiative
+transport:
 
-\[
-   \frac{\partial u}{\partial t} + \nabla\cdot\mathbf{f}(u) = 0.
-\]
+\begin{multline}
+  \frac{1}{v(E)}\frac{\partial\psi}{\partial t}
+  + \mathbf{\Omega}\cdot\mathbf{\nabla}\psi(\mathbf{x},E,\mathbf{\Omega},t)
+	+ \Sigma_t(\mathbf{x},E)\psi(\mathbf{x},E,\mathbf{\Omega},t)
+  = \\
+  \int\limits_0^\infty dE'\int\limits_{4\pi}d\Omega'\Sigma_s(\mathbf{x},
+    E'\rightarrow E,\mathbf{\Omega}'\rightarrow\mathbf{\Omega})
+    \psi(\mathbf{x},E',\mathbf{\Omega}',t)
+    + \frac{\chi_p(E)}{4\pi}\int\limits_0^\infty dE'\nu_p(E')\Sigma(\mathbf{x},E')
+    \phi(\mathbf{x},E',t)\\
+  + \sum\limits_{i=1}^I\frac{\chi_{d,i}(E)}{4\pi}\lambda_i C_i(\mathbf{x},t)
+  + S_{ext}(\mathbf{x},E,\mathbf{\Omega},t)
+\end{multline}
 
-Here we generalize flux-corrected-transport concepts to
-include equations with a positive reaction term $\sigma$ and external
-source term $q$:
+Here we use a simplified model which omits fission sources and
+scattering and considers a single direction and energy:
 
 \begin{equation}\label{eq:tr}
   \frac{\partial u}{\partial t} + \nabla\cdot(\mathbf{v}u(\mathbf{x},t))
@@ -25,9 +30,5 @@ source term $q$:
 where $\mathbf{v}$ is a constant velocity field, as found in
 radiation transport equations. In addition, a recently developed
 high-order scheme based on the entropy viscosity work performed
-by Guermond~\cite{guermond_secondorder} is applied. The
-concept of entropy viscosity is to add artificial diffusion
-according to local entropy production, thus avoiding unnecessarily
-adding diffusion where it is not needed and thus deteriorating 
-the solution more than necessary.
+by Guermond~\cite{guermond_secondorder} is applied.
 

@@ -3,6 +3,8 @@
 \usepackage[T1]{fontenc}
 \usepackage{amssymb}
 \usepackage{float}
+\usepackage{amsmath}
+\usepackage{caption}
 \usepackage[backend=bibtex]{biblatex}
 \addbibresource{references.bib}
 \setlength{\tabcolsep}{2em}
@@ -80,17 +82,17 @@
 % FIRST COLUMN
 \column{0.25}
   \block{\centering INTRODUCTION}{
-    \setlength{\parskip}{\baselineskip}
+    \setlength{\parskip}{0.5\baselineskip}
     \vspace{-\parskip}
     \input{content/introduction}
   }
   \block{\centering DISCRETIZATION}{
-    \setlength{\parskip}{\baselineskip}
+    \setlength{\parskip}{0.5\baselineskip}
     \vspace{-\parskip}
     \input{content/discretization}
   }
   \block{\centering LOW-ORDER SCHEME}{
-    \setlength{\parskip}{\baselineskip}
+    \setlength{\parskip}{0.5\baselineskip}
     \vspace{-\parskip}
     \input{content/low_order_scheme}
   }
@@ -98,12 +100,12 @@
 % SECOND COLUMN
 \column{0.25}
   \block{\centering HIGH-ORDER SCHEME}{
-    \setlength{\parskip}{\baselineskip}
+    \setlength{\parskip}{0.5\baselineskip}
     \vspace{-\parskip}
     \input{content/high_order_scheme}
   }
   \block{\centering FCT SCHEME}{
-    \setlength{\parskip}{\baselineskip}
+    \setlength{\parskip}{0.5\baselineskip}
     \vspace{-\parskip}
     \input{content/fct_scheme}
   }
@@ -111,7 +113,7 @@
 % THIRD COLUMN
 \column{0.25}
   \block{\centering RESULTS}{
-    \setlength{\parskip}{\baselineskip}
+    \setlength{\parskip}{0.5\baselineskip}
     \vspace{-\parskip}
     \input{content/results1}
   }
@@ -119,12 +121,12 @@
 % FOURTH COLUMN
 \column{0.25}
   \block{}{
-    \setlength{\parskip}{\baselineskip}
+    \setlength{\parskip}{0.5\baselineskip}
     \vspace{-\parskip}
     \input{content/results2}
   }
   \block{\centering CONCLUSIONS}{
-    \setlength{\parskip}{\baselineskip}
+    \setlength{\parskip}{0.5\baselineskip}
     \vspace{-\parskip}
     \input{content/conclusions}
   }

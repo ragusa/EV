@@ -4,6 +4,15 @@ Testing with each FEM basis function $\varphi_i(\mathbf{x})$ gives a linear syst
       \mathbf{M}^C\frac{d\mathbf{U}}{dt}+\mathbf{A} \mathbf{U}(t) = \mathbf{b},
 \end{equation}
 
+\begin{equation}
+	M^C_{i,j} \equiv \int\limits_{S_{i,j}}
+    \varphi_j\varphi_i dV, \qquad
+  A_{i,j} = \int\limits_{S_{i,j}}\left(
+   \mathbf{v}\cdot\nabla\varphi_j +
+   \sigma\varphi_j\right)\varphi_i dV, \qquad
+	b_i \equiv \int\limits_{S_i} q\varphi_i dV.
+\end{equation}
+
 To discretize Eqn.~\ref{eq:semidiscrete} in time, fully explicit
 temporal discretization schemes are used, such as explicit Euler:
 

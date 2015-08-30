@@ -1,20 +1,14 @@
-In conclusion, the FCT scheme presented guarantees
-a non-negative solution that satisfies a discrete maximum principle.
-While this FCT scheme does not guarantee monotonicity, it has been
-found to be successful in many simple test problems. The underlying
-high-order scheme based on entropy viscosity has been found to
-produce a higher quality FCT solution than using an inviscid
-high-order scheme. A number of challenges remain - for example,
-FCT transients can give rise to spurious plateaus and can have non-monotone
-solutions within the bounds of the imposed discrete maximum principle.
-These unphysical effects arise due to unphysical oscillations in the
-high-order solution; improving the high-order solution improves
-the quality of the FCT scheme.
+The numerical solutions obtained by this scheme
+\begin{itemize}
+  \item are guaranteed non-negative
+  \item are not guaranteed to be monotone, but rarely not monotone in practice
+  \item satisfy a discrete maximum principle
+  \item are 2nd-order accurate
+\end{itemize}
 
-Future work will extend this scheme to implicit time
-discretizations since the CFL condition required by explicit time
-discretizations can be very restrictive, particularly for radiation transport simulations.
-In addition, many problems of interest involve steady-state solutions
-of the transport equation, so a steady-state FCT scheme will also be
-a subject of future work.
+Current and future work includes
+\begin{itemize}
+  \item implicit time discretizations
+  \item conservation law \emph{systems}
+\end{itemize}
 

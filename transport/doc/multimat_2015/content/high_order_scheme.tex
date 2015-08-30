@@ -3,12 +3,7 @@ viscosity introduced by Guermond~\cite{guermond_ev}, which by itself
 is not guaranteed to be monotonicity-preserving or positivity-preserving;
 however, when used as a component of the flux-corrected transport scheme,
 the resulting scheme is positivity-preserving
-and satisfies a discrete maximum principle. Alternatively, one could use
-the inviscid Galerkin scheme given in Eqn.~\ref{eq:exgalerkin} as
-the high-order scheme component in the flux-corrected transport algorithm,
-as has been done in the past for FEM-FCT~\cite{kuzmin_book}; however,
-in practice it has been found that the FCT solution may still
-contain small oscillations and effects that deteriorate the quality of the solution.
+and satisfies a discrete maximum principle.
 The high-order scheme has the form
 
 \begin{equation}\label{eq:highorderscheme}
