@@ -314,8 +314,8 @@ void Euler<dim>::assemble_lumped_mass_matrix()
    std::vector<types::global_dof_index> local_dof_indices (this->dofs_per_cell);
    FullMatrix<double> local_mass (this->dofs_per_cell, this->dofs_per_cell);
 
-   typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler.begin_active(),
-                                                  endc = this->dof_handler.end();
+   typename DoFHandler<dim>::active_cell_iterator
+     cell = this->dof_handler.begin_active(), endc = this->dof_handler.end();
    for (; cell != endc; ++cell)
    {
       fe_values.reinit(cell);
@@ -404,13 +404,17 @@ void Euler<dim>::compute_cell_ss_residual(
    std::vector<Tensor<1,dim> > density_gradient (this->n_q_points_cell);
    std::vector<Tensor<2,dim> > momentum_gradient(this->n_q_points_cell);
    std::vector<Tensor<1,dim> > energy_gradient  (this->n_q_points_cell);
-   fe_values[density_extractor].get_function_gradients (this->new_solution, density_gradient);
-   fe_values[momentum_extractor].get_function_gradients(this->new_solution, momentum_gradient);
-   fe_values[energy_extractor].get_function_gradients  (this->new_solution, energy_gradient);
+   fe_values[density_extractor].get_function_gradients (this->new_solution,
+     density_gradient);
+   fe_values[momentum_extractor].get_function_gradients(this->new_solution,
+     momentum_gradient);
+   fe_values[energy_extractor].get_function_gradients  (this->new_solution,
+     energy_gradient);
 
    // get momentum divergences
    std::vector<double> momentum_divergence(this->n_q_points_cell);
-   fe_values[momentum_extractor].get_function_divergences(this->new_solution, momentum_divergence);
+   fe_values[momentum_extractor].get_function_divergences(this->new_solution,
+     momentum_divergence);
 
    // get viscosity values on cell
    std::vector<double> viscosity(this->n_q_points_cell);
@@ -864,7 +868,12 @@ void Euler<dim>::compute_ss_jacobian()
 }
 */
 
-/** \brief Computes a vector of velocity values.
+/**
+ * \brief Computes a vector of velocity values.
+ *
+ * \param[in] density  vector of density values
+ * \param[in] momentum vector of momentum values
+ * \param[out] velocity vector of velocity values
  */
 template <int dim>
 void Euler<dim>::compute_velocity(
