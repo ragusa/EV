@@ -1,4 +1,9 @@
 /**
+ * \file PostProcessor.cc
+ * \brief Provides the function definitions for the Postprocessor class.
+ */
+
+/**
  * Constructor.
  */
 template<int dim>

@@ -1,4 +1,10 @@
-/** Constructor.
+/**
+ * \file EulerRiemannSolver.cc
+ * \brief Provides the function definitions for the EulerRiemannSolver class.
+ */
+
+/**
+ * \brief Constructor.
  */
 template<int dim>
 EulerRiemannSolver<dim>::EulerRiemannSolver(

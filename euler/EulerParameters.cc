@@ -1,5 +1,5 @@
 /** \file EulerParameters.cc
- *  \brief Provides function definitions for the EulerParameters class.
+ *  \brief Provides the function definitions for the EulerParameters class.
  */
 using namespace dealii;
 

@@ -5,15 +5,13 @@
 #define BurgersParameters_h
 
 #include <iostream>
-
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/function_parser.h>
 
 using namespace dealii;
 
 /** \class BurgersParameters
- *  \brief Declares and retrieves parameters related to
- *         Burgers equation.
+ *  \brief Class for parameters related to the Burgers equation.
  */
 template <int dim>
 class BurgersParameters : public ConservationLawParameters<dim>

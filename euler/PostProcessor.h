@@ -1,3 +1,8 @@
+/**
+ * \file PostProcessor.h
+ * \brief Provides the header for the Postprocessor class.
+ */
+
 #ifndef PostProcessor_cc
 #define PostProcessor_cc
 

@@ -2,18 +2,17 @@
  * \file ConservationLaw.h
  * \brief Provides the header for the ConservationLaw class.
  */
+
 #ifndef ConservationLaw_h
 #define ConservationLaw_h
 
 #include <iostream>
 #include <fstream>
 #include <algorithm>
-
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/function_parser.h>
 #include <deal.II/base/convergence_table.h>
-
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/sparsity_pattern.h>
@@ -22,32 +21,27 @@
 #include <deal.II/lac/constraint_matrix.h>
 #include <deal.II/lac/precondition.h>
 #include <deal.II/lac/solver_cg.h>
-
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/grid_generator.h>
 #include <deal.II/grid/grid_refinement.h>
-
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_tools.h>
-
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/mapping_q1.h>
-
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/data_component_interpretation.h>
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/error_estimator.h>
-
 #include "ConservationLawParameters.h"
 #include "PostProcessor.h"
 
 using namespace dealii;
 
 /**
- * \brief Class providing framework for solving a general conservation law.
+ * \brief Class for solving a general conservation law.
  *
  * This class solves a general conservation law system of the form:
  * \f[
@@ -67,6 +61,21 @@ public:
     void run();
 
 protected:
+
+    /**
+     * \brief Typedef for cell iterators
+     */    
+    typedef typename DoFHandler<dim>::active_cell_iterator cell_iterator;
+
+    /**
+     * \brief Typedef for cell iterator map to double
+     */
+    typedef std::map<cell_iterator, double> cell_double_map;
+
+    /**
+     * \brief Typedef for cell iterator map to vector
+     */
+    typedef std::map<cell_iterator, Vector<double> > cell_vector_map;
 
     void initialize_system();
     void initialize_runge_kutta();
@@ -179,12 +188,11 @@ protected:
     // output functions
     virtual void output_solution(double time) = 0;
     void output_map(
-      std::map<typename DoFHandler<dim>::active_cell_iterator,
-      Vector<double> > &map,
-      const std::string &output_filename_base);
+      const cell_vector_map &map,
+      const std::string     &output_filename_base) const;
     void output_map(
-      std::map<typename DoFHandler<dim>::active_cell_iterator, double> &map,
-      const std::string &output_filename_base);
+      const cell_double_map &map,
+      const std::string     &output_filename_base) const;
 
     // checking functions
     void check_nan();
@@ -348,16 +356,16 @@ protected:
     double domain_volume;
 
     // maps
-    std::map<typename DoFHandler<dim>::active_cell_iterator, double>          cell_diameter;
-    std::map<typename DoFHandler<dim>::active_cell_iterator, double>          max_flux_speed_cell;
-    std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > viscosity_cell_q;
-    std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > first_order_viscosity_cell_q;
-    std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > entropy_viscosity_cell_q;
-    std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > entropy_viscosity_with_jumps_cell_q;
-    std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > entropy_residual_cell_q;
-    std::map<typename DoFHandler<dim>::active_cell_iterator, double>          max_entropy_residual_cell;
-    std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > entropy_cell_q;
-    std::map<typename DoFHandler<dim>::active_cell_iterator, double>          max_jumps_cell;
+    cell_double_map cell_diameter;
+    cell_double_map max_flux_speed_cell;
+    cell_vector_map viscosity_cell_q;
+    cell_vector_map first_order_viscosity_cell_q;
+    cell_vector_map entropy_viscosity_cell_q;
+    cell_vector_map entropy_viscosity_with_jumps_cell_q;
+    cell_vector_map entropy_residual_cell_q;
+    cell_double_map max_entropy_residual_cell;
+    cell_vector_map entropy_cell_q;
+    cell_double_map max_jumps_cell;
 
     /** flag for last adaptive refinement cycle; used so that only final cycle is output */
     bool in_final_cycle;
@@ -365,7 +373,7 @@ protected:
     Vector<float> estimated_error_per_cell;
 
     /**
-     * \brief Contains Runge-Kutta constants and memory for stage
+     * \brief Structure for Runge-Kutta constants and memory for stage
      *        steady-state residuals.
      */
     struct RungeKuttaParameters

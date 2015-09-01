@@ -9,8 +9,7 @@
 using namespace dealii;
 
 /** \class ConservationLawParameters
- *  \brief Declares and retrieves input parameters related to solving
- *  for a conservation law.
+ *  \brief Class for parameters related to solving conservation law equations.
  */
 template<int dim>
 class ConservationLawParameters

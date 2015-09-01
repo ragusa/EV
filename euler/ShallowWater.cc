@@ -294,23 +294,38 @@ void ShallowWater<dim>::assemble_lumped_mass_matrix()
 /**
  * \brief Computes the steady-state residual.
  *
- * Rearranging the shallow water equation,
+ * Rearranging the continuity equation, substituting the approximate FEM
+ * solution and testing with a test function \f$\varphi_i^h\f$ gives its
+ * weak form for degree of freedom \f$i\f$:
  * \f[
- *   \frac{\partial u}{\partial t}
- *   = - u\mathbf{v}\cdot\nabla u .
+ *   \left(\varphi_i^h,\frac{\partial h_h}{\partial t}\right)_\Omega
+ *   = - \left(\varphi_i^h,\nabla\cdot (h \mathbf{u})_h\right)_\Omega .
  * \f]
- * Substituting the approximate FEM solution and testing with a test function
- * \f$\varphi_i\f$ gives the weak form for degree of freedom \f$i\f$:
+ * Integrating by parts gives
  * \f[
- *   \left(\varphi_i,\frac{\partial u_h}{\partial t}\right)_\Omega
- *   = - \left(\varphi_i,u_h\mathbf{v}\cdot\nabla u_h\right)_\Omega .
+ *   \left(\varphi_i^h,\frac{\partial h_h}{\partial t}\right)_\Omega
+ *   = \left(\nabla\varphi_i^h,(h \mathbf{u})_h\right)_\Omega 
+ *   - \left(\varphi_i^h,(h \mathbf{u})_h\cdot\mathbf{n}\right)_{\partial\Omega} .
  * \f]
- * Adding a viscous bilinear form,
+ * Rearranging the momentum equation, substituting the approximate FEM
+ * solution and testing with a test function \f$\varphi_i^{h\mathbf{u}}\f$
+ * gives its weak form for degree of freedom \f$i\f$:
  * \f[
- *   \left(\varphi_i,\frac{\partial u_h}{\partial t}\right)_\Omega
- *   = - \left(\varphi_i,u_h\mathbf{v}\cdot\nabla u_h\right)_\Omega
- *   - \sum\limits_{K\subset S_i}\nu_K\sum\limits_j
- *   U_j b_K(\varphi_i, \varphi_j) .
+ *   \left(\varphi_i^{h\mathbf{u}},\frac{\partial (h\mathbf{u})_h}{\partial t}
+ *   \right)_\Omega
+ *   = - \left(\varphi_i^{h\mathbf{u}},\nabla\cdot (h\mathbf{u}\otimes\mathbf{u}
+ *   + \frac{1}{2}g h^2\mathbf{I})_h\right)_\Omega
+ *   + \left(\varphi_i^{h\mathbf{u}},g h_h\nabla b\right)_\Omega .
+ * \f]
+ * Integrating by parts gives
+ * \f[
+ *   \left(\varphi_i^{h\mathbf{u}},\frac{\partial (h\mathbf{u})_h}{\partial t}
+ *   \right)_\Omega
+ *   = \left(\nabla\varphi_i^{h\mathbf{u}},(h\mathbf{u}\otimes\mathbf{u}
+ *   + \frac{1}{2}g h^2\mathbf{I})_h\right)_\Omega
+ *   - \left(\varphi_i^{h\mathbf{u}},(h\mathbf{u}\otimes\mathbf{u}
+ *   + \frac{1}{2}g h^2\mathbf{I})_h\cdot\mathbf{n}\right)_{\partial\Omega}
+ *   + \left(\varphi_i^{h\mathbf{u}},g h_h\nabla b\right)_\Omega .
  * \f]
  * This yields a discrete system
  * \f[
@@ -319,9 +334,14 @@ void ShallowWater<dim>::assemble_lumped_mass_matrix()
  * where \f$\mathbf{M}\f$ is the mass matrix and the steady-state residual
  * \f$\mathbf{r}\f$ is given by
  * \f[
- *   r_i = - \left(\varphi_i,u_h\mathbf{v}\cdot\nabla u_h\right)_\Omega
- *   - \sum\limits_{K\subset S_i}\nu_K\sum\limits_j
- *   U_j b_K(\varphi_i, \varphi_j) .
+ *   r_i = 
+ *   \left(\nabla\varphi_i^h,(h \mathbf{u})_h\right)_\Omega 
+ *   - \left(\varphi_i^h,(h \mathbf{u})_h\cdot\mathbf{n}\right)_{\partial\Omega}
+ *   + \left(\nabla\varphi_i^{h\mathbf{u}},(h\mathbf{u}\otimes\mathbf{u}
+ *   + \frac{1}{2}g h^2\mathbf{I})_h\right)_\Omega
+ *   - \left(\varphi_i^{h\mathbf{u}},(h\mathbf{u}\otimes\mathbf{u}
+ *   + \frac{1}{2}g h^2\mathbf{I})_h\cdot\mathbf{n}\right)_{\partial\Omega}
+ *   + \left(\varphi_i^{h\mathbf{u}},g h_h\nabla b\right)_\Omega .
  * \f]
  *
  *  \param[out] r steady-state residual \f$\mathbf{r}\f$

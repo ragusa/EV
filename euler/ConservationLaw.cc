@@ -476,7 +476,7 @@ void ConservationLaw<dim>::update_cell_sizes()
    for (; cell != endc; ++cell)
    {
       cell_diameter[cell] = cell->diameter();
-      minimum_cell_diameter = std::min( minimum_cell_diameter, cell_diameter[cell] );
+      minimum_cell_diameter = std::min(minimum_cell_diameter, cell_diameter[cell]);
    }
 }
 
@@ -529,7 +529,7 @@ void ConservationLaw<dim>::apply_Dirichlet_BC(const double &time)
       for (unsigned int component = 0; component < n_components; ++component)
          if (boundary_types[boundary][component] == dirichlet)
          {
-            // create mask to prevent function from being applied to other components
+            // mask other components
             std::vector<bool> component_mask(n_components, false);
             component_mask[component] = true;
             // fill boundary_values with boundary values
@@ -551,17 +551,21 @@ void ConservationLaw<dim>::apply_Dirichlet_BC(const double &time)
             }
          }
    // apply boundary values to the solution
-   for (std::map<unsigned int, double>::const_iterator it = boundary_values.begin(); it != boundary_values.end(); ++it)
-      new_solution(it->first) = (it->second);
+   for (std::map<unsigned int, double>::const_iterator it =
+     boundary_values.begin(); it != boundary_values.end(); ++it)
+     new_solution(it->first) = (it->second);
 }
 
 /** \brief Outputs a mapped quantity at all quadrature points.
- *  \param map map between cell iterator and vector of values at quadrature points within cell.
- *  \param output_filename_base string which forms the base (without extension) of the output file.
+ *  \param map map between cell iterator and vector of values at quadrature
+ *         points within cell.
+ *  \param output_filename_base string which forms the base (without extension)
+ *         of the output file.
  */
 template <int dim>
-void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, Vector<double> > &map,
-                                      const std::string &output_filename_base)
+void ConservationLaw<dim>::output_map(
+  const cell_vector_map &map,
+  const std::string     &output_filename_base) const
 {
    if (dim == 1)
    {
@@ -597,10 +601,6 @@ void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_
          output << profile[i].first << "," << profile[i].second << std::endl;
       output.close();
    }
-   else
-   {
-      std::cout << "Maps were not output because this has only been implemented for 1d" << std::endl;
-   }
 }
 
 /** \brief Outputs a mapped quantity at all cells, not all quadrature points within cells
@@ -608,8 +608,9 @@ void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_
  *  \param output_filename_base string which forms the base (without extension) of the output file.
  */
 template <int dim>
-void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_cell_iterator, double> &map,
-                                      const std::string &output_filename_base)
+void ConservationLaw<dim>::output_map(
+  const cell_double_map &map,
+  const std::string     &output_filename_base) const
 {
    if (dim == 1)
    {
@@ -644,10 +645,6 @@ void ConservationLaw<dim>::output_map(std::map<typename DoFHandler<dim>::active_
       for (i = 0; i < total_n_q_points; ++i)
          output << profile[i].first << "," << profile[i].second << std::endl;
       output.close();
-   }
-   else
-   {
-      std::cout << "Maps were not output because this has only been implemented for 1d" << std::endl;
    }
 }
 
@@ -918,9 +915,11 @@ double ConservationLaw<dim>::compute_cfl_number(const double &dt) const
 /** \brief Adds the viscous bilinear form for maximum-principle preserving viscosity
  */
 template <int dim>
-void ConservationLaw<dim>::add_maximum_principle_viscosity_bilinear_form(Vector<double> &f)
+void ConservationLaw<dim>::add_maximum_principle_viscosity_bilinear_form(
+  Vector<double> &f)
 {
-   FEValues<dim> fe_values(fe, cell_quadrature, update_values | update_gradients | update_JxW_values);
+   FEValues<dim> fe_values(fe, cell_quadrature, update_values | update_gradients
+     | update_JxW_values);
 
    // allocate memory needed for cell residual and aggregation into global residual
    Vector<double> cell_residual(dofs_per_cell);
@@ -948,8 +947,8 @@ void ConservationLaw<dim>::add_maximum_principle_viscosity_bilinear_form(Vector<
 
             b_i += new_solution(local_dof_indices[j])*b_K;
          }
-         // add viscous term for dof i; note 0 is used for quadrature point because the
-         // viscosity is the same for all quadrature points
+         // add viscous term for dof i; note 0 is used for quadrature point
+         // because viscosity is the same for all quadrature points on a cell
          cell_residual(i) += viscosity_cell_q[cell](0)*b_i;
       }
 
@@ -1276,7 +1275,8 @@ void ConservationLaw<dim>::update_entropy_viscosities(const double &dt)
 template <int dim>
 void ConservationLaw<dim>::update_entropy_residuals(const double &dt)
 {
-   FEValues<dim> fe_values (fe, cell_quadrature, update_values | update_gradients | update_JxW_values);
+   FEValues<dim> fe_values (fe, cell_quadrature, update_values
+     | update_gradients | update_JxW_values);
    Vector<double> old_entropy             (n_q_points_cell);
    Vector<double> divergence_entropy_flux (n_q_points_cell);
 
@@ -1299,12 +1299,13 @@ void ConservationLaw<dim>::update_entropy_residuals(const double &dt)
          double dsdt = (entropy_cell_q[cell](q) - old_entropy(q)) / dt;
          entropy_residual_cell_q[cell](q) = std::abs( dsdt + divergence_entropy_flux(q) );
 
-         // add entropy to volume-weighted sum for use in computation of entropy average
+         // add entropy to volume-weighted sum
          entropy_average += entropy_cell_q[cell](q) * fe_values.JxW(q);
       }
 
       // get the max entropy residual on each cell
-      max_entropy_residual_cell[cell] = *std::max_element(entropy_residual_cell_q[cell].begin(),entropy_residual_cell_q[cell].end());
+      max_entropy_residual_cell[cell] = *std::max_element(
+        entropy_residual_cell_q[cell].begin(),entropy_residual_cell_q[cell].end());
    }
    // finish computing entropy average by dividing by the domain volume
    entropy_average /= domain_volume;
@@ -1314,7 +1315,7 @@ void ConservationLaw<dim>::update_entropy_residuals(const double &dt)
    for (cell = dof_handler.begin_active(); cell != endc; ++cell)
       for (unsigned int q = 0; q < n_q_points_cell; ++q)
          max_entropy_deviation = std::max(max_entropy_deviation,
-                                          std::abs(entropy_cell_q[cell](q) - entropy_average));
+           std::abs(entropy_cell_q[cell](q) - entropy_average));
 }
 
 /** \brief Updates the jumps.
@@ -1344,7 +1345,8 @@ void ConservationLaw<dim>::update_jumps()
          typename DoFHandler<dim>::face_iterator face = cell->face(iface);
          if (face->at_boundary() == false)
          {
-            Assert(cell->neighbor(iface).state() == IteratorState::valid, ExcInternalError());
+            Assert(cell->neighbor(iface).state() == IteratorState::valid,
+              ExcInternalError());
             typename DoFHandler<dim>::cell_iterator neighbor = cell->neighbor(iface);
             const unsigned int ineighbor = cell->neighbor_of_neighbor(iface);
             Assert(ineighbor < faces_per_cell, ExcInternalError());
@@ -1356,8 +1358,10 @@ void ConservationLaw<dim>::update_jumps()
             compute_entropy_face(new_solution,fe_values_face,entropy);
 
             // get gradients on adjacent faces of current cell and neighboring cell
-            fe_values_face.get_function_gradients(         new_solution, gradients_face);
-            fe_values_face_neighbor.get_function_gradients(new_solution, gradients_face_neighbor);
+            fe_values_face.get_function_gradients(new_solution,
+              gradients_face);
+            fe_values_face_neighbor.get_function_gradients(new_solution,
+              gradients_face_neighbor);
 
             // get normal vectors
             normal_vectors = fe_values_face.get_normal_vectors();
@@ -1367,7 +1371,8 @@ void ConservationLaw<dim>::update_jumps()
             {
                // compute difference in gradients across face
                gradients_face[q] -= gradients_face_neighbor[q];
-               double jump_on_face = std::abs((gradients_face[q] * normal_vectors[q])*entropy[q]);
+               double jump_on_face = std::abs((gradients_face[q]
+                 * normal_vectors[q])*entropy[q]);
                max_jump_on_face = std::max(max_jump_on_face, jump_on_face);
             }
          } // end if (at_boundary())
@@ -1425,12 +1430,12 @@ void ConservationLaw<dim>::check_nan()
  *  \param [out] n_col number of nonzero entries of row i
  */
 template <int dim>
-void ConservationLaw<dim>::get_matrix_row(const SparseMatrix<double> &matrix,
-                                          const unsigned int         &i,
-                                                std::vector<double>  &row_values,
-                                                std::vector<unsigned int> &row_indices,
-                                                unsigned int &n_col
-                                         )
+void ConservationLaw<dim>::get_matrix_row(
+  const SparseMatrix<double> &matrix,
+  const unsigned int         &i,
+  std::vector<double>        &row_values,
+  std::vector<unsigned int>  &row_indices,
+  unsigned int               &n_col)
 {
     // get first and one-past-last iterator for row
     SparseMatrix<double>::const_iterator matrix_iterator     = matrix.begin(i);
@@ -1459,8 +1464,9 @@ bool ConservationLaw<dim>::check_DMP(const unsigned int &n) const
    // check that each dof value is bounded by its neighbors
    bool DMP_satisfied = true;
    for (unsigned int i = 0; i < n_dofs; ++i) {
-      // check if dof is a Dirichlet node or not - if it is, don't check max principle
-      if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) == dirichlet_nodes.end())
+      // check if dof is a Dirichlet node or not
+      if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i)
+        == dirichlet_nodes.end())
       {
          double value_i = new_solution(i);
          if (value_i < min_values(i)) {

@@ -1,6 +1,6 @@
 /**
  * \file euler.cc
- * \brief Provides driver for solving the Euler equations.
+ * \brief Provides the driver for solving the Euler equations.
  */
 
 #include <iostream>

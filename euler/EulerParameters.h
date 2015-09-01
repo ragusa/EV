@@ -12,8 +12,7 @@
 using namespace dealii;
 
 /** \class EulerParameters
- *  \brief Declares and retrieves parameters related to
- *         the Euler equations.
+ *  \brief Class for parameters related to the Euler equations.
  */
 template <int dim>
 class EulerParameters : public ConservationLawParameters<dim>

@@ -5,28 +5,22 @@
 #define Euler_h
 
 #include <deal.II/base/symmetric_tensor.h>
-
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_accessor.h>
-
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
 #include <deal.II/grid/grid_in.h>
-
 #include <deal.II/numerics/data_component_interpretation.h>
-
 #include <deal.II/fe/mapping.h>
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/fe/fe_values_extractors.h>
-
 #include <deal.II/lac/vector.h>
-
 #include "ConservationLaw.h"
 #include "EulerParameters.h"
 #include "EulerRiemannSolver.h"
 
 /** \class Euler
- *  \brief Provides the necessary functions for Euler equations.
+ *  \brief Class for solving the Euler equations.
  */
 template <int dim>
 class Euler : public ConservationLaw<dim>
