@@ -1,9 +1,9 @@
-Recently, to address the issue of negativies and spurious oscillations,
-the flux-corrected transport (FCT) algorithm,
-initially developed by Boris and Book\cite{borisbook},
-has been applied to continuous finite element discretizations.
-This work aims to extend this approach to radiative
-transport:
+Flux-Corrected Transport (FCT) algorithms, 
+initially developed by Boris and Book \cite{borisbook}, aim at addressing  the issue of solution negativities and spurious oscillations for conservation laws.
+
+Recently, the concept of FCT has been applied to continuous finite element discretizations.
+
+This work aims to extend this approach to radiative transport:
 
 \begin{multline}
   \frac{1}{v(E)}\frac{\partial\psi}{\partial t}
@@ -19,8 +19,8 @@ transport:
   + S_{ext}(\mathbf{x},E,\mathbf{\Omega},t)
 \end{multline}
 
-Here we use a simplified model which omits fission sources and
-scattering and considers a single direction and energy:
+Here we use a simplified model which lumps fission and
+scattering sources and considers a single direction and energy:
 
 \begin{equation}\label{eq:tr}
   \frac{\partial u}{\partial t} + \nabla\cdot(\mathbf{v}u(\mathbf{x},t))
@@ -28,7 +28,9 @@ scattering and considers a single direction and energy:
 \end{equation}
 
 where $\mathbf{v}$ is a constant velocity field, as found in
-radiation transport equations. In addition, a recently developed
-high-order scheme based on the entropy viscosity work performed
-by Guermond~\cite{guermond_secondorder} is applied.
+radiation transport equations. 
+
+%In addition, a recently developed
+%high-order scheme based on the entropy viscosity work performed
+%by Guermond~\cite{guermond_secondorder} is applied.
 
