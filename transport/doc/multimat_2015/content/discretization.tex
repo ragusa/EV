@@ -14,11 +14,11 @@ Testing with each FEM basis function $\varphi_i(\mathbf{x})$ gives a linear syst
 \end{equation}
 
 To discretize Eqn.~\ref{eq:semidiscrete} in time, fully explicit
-temporal discretization schemes are used, such as explicit Euler:
+temporal discretization schemes are used, such as explicit Euler,
 
 \begin{equation}\label{eq:exgalerkin}
    \mathbf{M}^C\frac{\mathbf{U}^{n+1}-\mathbf{U}^n}{\Delta t}
      + \mathbf{A}\mathbf{U}^n = \mathbf{b}^n.
 \end{equation}
 
-and 3rd-order SSP explicit methods.
+and 3rd-order SSP (SSP3) explicit methods.

@@ -1,5 +1,5 @@
-The high-order scheme is based on the concept of entropy
-viscosity introduced by Guermond~\cite{guermond_ev,guermond_secondorder}, which by itself
+The high-order scheme is based on the concept of \underline{\bf entropy
+viscosity} introduced by Guermond~\cite{guermond_ev,guermond_secondorder} which, by itself,
 does not guaranteed monotonicity-preserving or positivity-preserving.
 
 %however, when used as a component of the flux-corrected transport scheme,
@@ -9,29 +9,31 @@ The high-order scheme has the form
 
 \begin{equation}\label{eq:highorderscheme}
    \mathbf{M}^C\frac{\mathbf{U}^{H,n+1}-\mathbf{U}^n}{\Delta t}
-      +\left(\mathbf{A}+\mathbf{D}^{H,n}\right)\mathbf{U}^n = \mathbf{b},
+      +\left(\mathbf{A}+\tcr{\mathbf{D}^{H,n}}\right)\mathbf{U}^n = \mathbf{b},
 \end{equation}
 
-where the high-order diffusion operator is computed in the same manner
+where the high-order diffusion operator $\tcr{\mathbf{D}^{H}}$ is computed in the same manner
 as its low-order counterpart, but employs a high-order viscosity definition
 based on an entropy viscosity bounded by the low-order viscosity:
-$\nu^{H,n}_K = \min(\nu^{L}_K,\nu^{E,n}_K)$. 
+\framebox{$\nu^{H,n}_K = \min(\nu^{L}_K,\nu^{E,n}_K)$.} 
 
 To compute the entropy viscosity $\nu^{E}$, 
-one first selects a convex entropy functional $E(u)$ such as $E(u)=\frac{1}{2}u^2$.
+one first selects a convex entropy functional $E(u)$, e.g., $E(u)=\tfrac{1}{2}u^2$.
 
-The entropy viscosity is designed to add viscosity in regions of entropy
-production, such as shocks, and avoids adding viscosity elsewhere. 
+The entropy viscosity is designed \underline{\bf to add viscosity in regions of entropy
+production}, such as shocks, and avoids adding viscosity elsewhere. 
 
-The entropy viscosity is selected proportional to the entropy residual $R_K^n$:
+Thus, the entropy viscosity is selected proportional to the entropy residual $R_K^n$:
 %\begin{equation}
    %\nu^{E,n}_K = \frac{c_E R_K^n(u_h^n,u_h^{n-1})
       %+ c_J\max\limits_{F\in\partial K}J_F(u_h^n)}
       %{\|E(u_h^n)-\bar{E}(u_h^n)\|_{L^\infty(\mathcal{D})}},
 %\end{equation}
 \begin{equation}
+\boxed{
    \nu^{E,n}_K = c_E \frac{R_K^n(u_h^n,u_h^{n-1})}      
       {\|E(u_h^n)-\bar{E}(u_h^n)\|_{L^\infty(\mathcal{D})}},
+}
 \end{equation}
 where 
 %$R_K^n(u_h^n,u_h^{n-1})$ is the entropy residual, $J_F(u_h^n)$
@@ -44,8 +46,10 @@ usually $\sim 1$.
 
 The entropy residual evaluated with explicit Euler is the following:
 \begin{equation}
+\boxed{
     R_K^n(u_h^n,u_h^{n-1}) = \left\|\frac{E(u_h^n)-E(u_h^{n-1})}{\Delta t^n}
       + \left.\frac{dE}{du}\right|_{u_h^n}\left[\mathbf{\Omega}\cdot\nabla u_h^n
       + \sigma u_h^n
       - q \right]\right\|_{L^\infty(K)}.
+}
 \end{equation}

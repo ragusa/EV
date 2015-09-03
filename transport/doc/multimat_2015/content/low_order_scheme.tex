@@ -1,17 +1,17 @@
-A monotonicity-preserving, positivity-preserving low-order scheme
+A \underline{\bf monotonicity-preserving, positivity-preserving low-order} scheme
 is defined by lumping the mass matrix and adding a low-order diffusion
 operator:
 
 \begin{equation}\label{eq:loworderscheme}
    \mathbf{M}^L\frac{\mathbf{U}^{L,n+1}-\mathbf{U}^n}{\Delta t}
-      +\left(\mathbf{A}+\mathbf{D}^L\right)\mathbf{U}^n = \mathbf{b},
+      +\left(\mathbf{A}+\tcr{\mathbf{D}^L}\right)\mathbf{U}^n = \mathbf{b},
 \end{equation}
 
-where the diffusion matrix entries are computed using a local low-order
+where the diffusion matrix $\tcr{\mathbf{D}^L}$ entries are computed using a local low-order
 viscosity and viscous bilinear form:
 
 \begin{equation}\label{eq:loworderD}
-   D^L_{i,j} = \sum\limits_{K\subset S_{i,j}}\nu_K^L b_K(\varphi_j,\varphi_i).
+   \tcr{D^L_{i,j}} = \sum\limits_{K\subset S_{i,j}}\nu_K^L b_K(\varphi_j,\varphi_i).
 \end{equation}
 
 The local viscous bilinear form for an element $K$ takes a graph-theoretic
@@ -38,8 +38,8 @@ The local low-order viscosity is defined as the following:
 
 If the CFL condition $\Delta t \leq \frac{M_{i,i}^L}{A_{i,i}^L}$
 is satisfied for all $i$, then the explicit
-low-order scheme given in Eqn. \ref{eq:loworderscheme} satisfies the following
-discrete maximum principle:
+low-order scheme given in Eqn. \ref{eq:loworderscheme} \underline{\bf satisfies the following
+discrete maximum principle}:
 
 \begin{equation}\label{eq:dmp}
    U_{\min,i}^n\left(1-\frac{\Delta t}{M_{i,i}^L}

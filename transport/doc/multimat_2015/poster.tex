@@ -5,6 +5,7 @@
 \usepackage{float}
 \usepackage{amsmath}
 \usepackage{caption}
+\usepackage{color}
 \usepackage[backend=bibtex]{biblatex}
 \addbibresource{references.bib}
 \setlength{\tabcolsep}{2em}
@@ -74,6 +75,8 @@
 \usetitlestyle{Empty} % Default, Basic, Envelope, Wave, VerticalShading, Filled, Empty
 \useblockstyle{myblockstyle} % Default, Basic, Minimal, Envelope, Corner, Slide, TornOut
 
+\newcommand{\tcr}[1]{\textcolor{black}{#1}}
+
 % document
 %--------------------------------------------------------------------------------
 \begin{document}\maketitle
@@ -136,12 +139,12 @@
       \printbibliography[heading=none]
     \end{center}
   }
-  \block{}{
-    \setlength{\parskip}{\baselineskip}
-    \vspace{-2\parskip}
-    \begin{center}
-      \includegraphics[width=0.2\textwidth]{figures/neup_logo.jpg}
-    \end{center}
-  }
+  %\block{}{
+    %\setlength{\parskip}{\baselineskip}
+    %\vspace{-2\parskip}
+    %\begin{center}
+      %\includegraphics[width=0.12\textwidth]{figures/neup_logo.jpg}
+    %\end{center}
+  %}
 \end{columns}
 \end{document}

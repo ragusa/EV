@@ -1,9 +1,9 @@
-Flux-Corrected Transport (FCT) algorithms, 
+\tcr{\underline{\bf Flux-Corrected Transport (FCT)}} algorithms, 
 initially developed by Boris and Book \cite{borisbook}, aim at addressing  the issue of solution negativities and spurious oscillations for conservation laws.
 
 Recently, the concept of FCT has been applied to continuous finite element discretizations.
 
-This work aims to extend this approach to radiative transport:
+The present work aims to extend this approach to radiative transport:
 
 \begin{multline}
   \frac{1}{v(E)}\frac{\partial\psi}{\partial t}
@@ -13,22 +13,22 @@ This work aims to extend this approach to radiative transport:
   \int\limits_0^\infty dE'\int\limits_{4\pi}d\Omega'\Sigma_s(\mathbf{x},
     E'\rightarrow E,\mathbf{\Omega}'\rightarrow\mathbf{\Omega})
     \psi(\mathbf{x},E',\mathbf{\Omega}',t)
-    + \frac{\chi_p(E)}{4\pi}\int\limits_0^\infty dE'\nu_p(E')\Sigma(\mathbf{x},E')
-    \phi(\mathbf{x},E',t)\\
-  + \sum\limits_{i=1}^I\frac{\chi_{d,i}(E)}{4\pi}\lambda_i C_i(\mathbf{x},t)
+    %+ \frac{\chi_p(E)}{4\pi}\int\limits_0^\infty dE'\nu_p(E')\Sigma(\mathbf{x},E')
+    %\phi(\mathbf{x},E',t)\\
+  %+ \sum\limits_{i=1}^I\frac{\chi_{d,i}(E)}{4\pi}\lambda_i C_i(\mathbf{x},t)
   + S_{ext}(\mathbf{x},E,\mathbf{\Omega},t)
 \end{multline}
 
-Here we use a simplified model which lumps fission and
-scattering sources and considers a single direction and energy:
+Here, we use a simplified model which lumps scattering and external sources and consider a single direction and energy:
 
 \begin{equation}\label{eq:tr}
-  \frac{\partial u}{\partial t} + \nabla\cdot(\mathbf{v}u(\mathbf{x},t))
-  + \sigma(\mathbf{x})u(\mathbf{x},t) = q(\mathbf{x},t),
+\boxed{
+  \ \frac{\partial u}{\partial t} + \nabla\cdot(\mathbf{v}u(\mathbf{x},t))
+  + \sigma(\mathbf{x})u(\mathbf{x},t) = q(\mathbf{x},t) \ 
+}
 \end{equation}
 
-where $\mathbf{v}$ is a constant velocity field, as found in
-radiation transport equations. 
+where $\mathbf{v}$ is a given velocity field. 
 
 %In addition, a recently developed
 %high-order scheme based on the entropy viscosity work performed
