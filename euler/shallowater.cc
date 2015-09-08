@@ -10,45 +10,54 @@
 
 using namespace dealii;
 
-int main(int argc, char ** argv) {
-   try {
-      dealii::deallog.depth_console(0);
+int main(int argc, char ** argv)
+{
+  try
+  {
+    dealii::deallog.depth_console(0);
 
-      // spatial dimensions
-      const int dimension = 1;
+    // spatial dimensions
+    const int dimension = 1;
 
-      // ensure dimension <= 2
-      Assert(dimension <= 2, ExcImpossibleInDim(dim));
+    // ensure dimension <= 2
+    Assert(dimension <= 2, ExcImpossibleInDim(dim));
 
-      // declare input parameters and read them from input file
-      ParameterHandler parameter_handler;
-      ShallowWaterParameters<dimension>::declare_parameters(parameter_handler);
-      parameter_handler.read_input("input_sw");
-      ShallowWaterParameters<dimension> parameters;
-      parameters.get_parameters(parameter_handler);
+    // declare input parameters and read them from input file
+    ParameterHandler parameter_handler;
+    ShallowWaterParameters<dimension>::declare_parameters(parameter_handler);
+    parameter_handler.read_input("input_sw");
+    ShallowWaterParameters<dimension> parameters;
+    parameters.get_parameters(parameter_handler);
 
-      // run problem
-      ShallowWater<dimension> problem(parameters);
-      problem.run();
+    // run problem
+    ShallowWater<dimension> problem(parameters);
+    problem.run();
+  }
+  catch (std::exception & exc)
+  {
+    std::cerr << std::endl
+              << std::endl
+              << "----------------------------------------------------"
+              << std::endl;
+    std::cerr << "Exception on processing: " << std::endl
+              << exc.what() << std::endl
+              << "Aborting!" << std::endl
+              << "----------------------------------------------------"
+              << std::endl;
+    return 1;
+  }
+  catch (...)
+  {
+    std::cerr << std::endl
+              << std::endl
+              << "----------------------------------------------------"
+              << std::endl;
+    std::cerr << "Unknown exception!" << std::endl
+              << "Aborting!" << std::endl
+              << "----------------------------------------------------"
+              << std::endl;
+    return 1;
+  }
 
-   } catch (std::exception &exc) {
-      std::cerr << std::endl << std::endl
-            << "----------------------------------------------------"
-            << std::endl;
-      std::cerr << "Exception on processing: " << std::endl << exc.what()
-            << std::endl << "Aborting!" << std::endl
-            << "----------------------------------------------------"
-            << std::endl;
-      return 1;
-   } catch (...) {
-      std::cerr << std::endl << std::endl
-            << "----------------------------------------------------"
-            << std::endl;
-      std::cerr << "Unknown exception!" << std::endl << "Aborting!" << std::endl
-            << "----------------------------------------------------"
-            << std::endl;
-      return 1;
-   };
-
-   return 0;
+  return 0;
 }

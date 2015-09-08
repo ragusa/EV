@@ -1,0 +1,19 @@
+#!/bin/bash
+#
+# Formats file using a code-formatter
+#
+# Usage: format <filename>
+
+if [ $# -ne 1 ]; then
+  echo "USAGE: format <file>"
+else
+  # use astyle
+  #astyle --options=./.astyle_options $1
+
+  # use uncrustify
+  #uncrustify -c uncrustify.cfg --no-backup $1
+
+  # use clang-format
+  cp $1 $1.bak
+  clang-format -style=file $1.bak > $1
+fi

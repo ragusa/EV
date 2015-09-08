@@ -19,12 +19,11 @@ template <int dim>
 class ShallowWaterParameters : public ConservationLawParameters<dim>
 {
 public:
-
   ShallowWaterParameters();
 
-  static void declare_parameters(ParameterHandler &parameter_handler);
+  static void declare_parameters(ParameterHandler & parameter_handler);
 
-  void get_parameters(ParameterHandler &parameter_handler);
+  void get_parameters(ParameterHandler & parameter_handler);
 
   unsigned int problem_id;
 };

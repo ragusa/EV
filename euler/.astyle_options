@@ -1,0 +1,32 @@
+# each curly brace gets its own line
+style=allman
+
+# indent with 2 spaces
+indent=spaces=2
+
+# indent case statements in switch blocks
+indent-switches
+
+# indent comments beginning in column 1, which by default are not indented
+indent-col1-comments
+
+# set minimal indent to zero for multiline header statements
+min-conditional-indent=0
+
+# pad header commands (e.g., 'if', 'for', etc.) with a space
+pad-header
+
+# put pointer and reference operators next to variable name
+align-pointer=name
+
+# convert tabs into spaces
+convert-tabs
+
+# do not retain a backup of the original file
+suffix=none
+
+# use linux line-end characters
+#lineend=linux
+
+# set a maximum line length
+max-code-length=82
