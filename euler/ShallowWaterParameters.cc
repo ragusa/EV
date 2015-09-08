@@ -43,7 +43,7 @@ void ShallowWaterParameters<dim>::get_parameters(
 {
    // get conservation law parameters
    this->get_conservation_law_parameters(parameter_handler);
-   this->n_components = 1;
+   this->n_components = dim + 1;
 
    // problem
    parameter_handler.enter_subsection("problem");

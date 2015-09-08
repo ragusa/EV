@@ -186,7 +186,7 @@ protected:
       Vector<double>       &divergence) const = 0;
 
     // output functions
-    virtual void output_solution(double time) = 0;
+    //virtual void output_solution(double time) = 0;
     void output_map(
       const cell_vector_map &map,
       const std::string     &output_filename_base) const;

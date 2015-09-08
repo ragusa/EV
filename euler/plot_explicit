@@ -3,7 +3,7 @@
 # Plots solution or convergence.
 #
 # USAGE: plot_explicit <phys> <name> <disc> <sol|conv>
-#   <phys> conservation law: burgers|euler
+#   <phys> conservation law: burgers|euler|shallowwater
 #   <name> name of problem (directory in ./output)
 #   <disc> time discretization identifier: erk1|erk2|erk3|erk4|sdirk22
 #   <sol|conv> type of plot: 'sol' plots solution, 'conv' plots convergence.
@@ -61,6 +61,12 @@ elsif ($conservation_law eq "euler")
    @components = ("Density","Momentum","Energy");
    @components_filenames = ("density","momentum","energy");
    @components_columns = (2,3,4);
+}
+elsif ($conservation_law eq "shallowwater")
+{
+   @components = ("Height","Momentum");
+   @components_filenames = ("height","momentum");
+   @components_columns = (2,3);
 }
 else
 {

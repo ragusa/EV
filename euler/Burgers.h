@@ -67,8 +67,6 @@ private:
 
     void define_problem() override;
 
-    void output_solution(double time) override;
-
     void compute_ss_residual(Vector<double> &solution) override;
 
 /*

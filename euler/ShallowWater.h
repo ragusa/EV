@@ -29,7 +29,7 @@
  * \f[
  *   \frac{\partial(h\mathbf{u})}{\partial t}
  *   + \nabla\cdot\left(h\mathbf{u}\otimes\mathbf{u}
- *   + \frac{1}{2}g h^2 \mathbf{I}\right) = 
+ *   + \frac{1}{2}g h^2 \mathbf{I}\right) =
  *   - g h \nabla b ,
  * \f]
  * where \f$h\f$ is water height, \f$\mathbf{u}\f$ is velocity,
@@ -40,10 +40,13 @@ template <int dim>
 class ShallowWater : public ConservationLaw<dim>
 {
 public:
-
-    ShallowWater(const ShallowWaterParameters<dim> &params);
+  ShallowWater(const ShallowWaterParameters<dim> & params);
 
 private:
+  /**
+   * \brief Typedef for cell iterators
+   */
+  using cell_iterator = typename ConservationLaw<dim>::cell_iterator;
 
   ShallowWaterParameters<dim> sw_parameters;
 
@@ -53,43 +56,39 @@ private:
   std::vector<std::string> get_component_names() override;
 
   std::vector<DataComponentInterpretation::DataComponentInterpretation>
-     get_component_interpretations() override;
+    get_component_interpretations() override;
 
   void assemble_lumped_mass_matrix() override;
 
   void define_problem() override;
 
-  void output_solution(double time) override;
+  //void output_solution(double time) override;
 
-  void compute_ss_residual(Vector<double> &solution) override;
+  void compute_ss_residual(Vector<double> & solution) override;
 
   void update_flux_speeds() override;
 
-  void compute_entropy(
-    const Vector<double> &solution,
-    FEValues<dim>        &fe_values,
-    Vector<double>       &entropy) const override;
+  void compute_entropy(const Vector<double> & solution,
+                       FEValues<dim> & fe_values,
+                       Vector<double> & entropy) const override;
 
-  void compute_entropy_face(
-    const Vector<double> &solution,
-    FEFaceValues<dim>    &fe_values_face,
-    Vector<double>       &entropy) const override;
+  void compute_entropy_face(const Vector<double> & solution,
+                            FEFaceValues<dim> & fe_values_face,
+                            Vector<double> & entropy) const override;
 
   void compute_divergence_entropy_flux(
-    const Vector<double> &solution,
-    FEValues<dim>        &fe_values,
-    Vector<double>       &divergence_entropy_flux) const override;
+    const Vector<double> & solution,
+    FEValues<dim> & fe_values,
+    Vector<double> & divergence_entropy_flux) const override;
 
-  void compute_inviscid_fluxes(
-    const std::vector<double>         & height,
-    const std::vector<Tensor<1,dim> > & momentum,
-    std::vector<Tensor<1,dim> > & height_flux,
-    std::vector<Tensor<2,dim> > & momentum_flux) const;
+  void compute_inviscid_fluxes(const std::vector<double> & height,
+                               const std::vector<Tensor<1, dim>> & momentum,
+                               std::vector<Tensor<1, dim>> & height_flux,
+                               std::vector<Tensor<2, dim>> & momentum_flux) const;
 
-  void compute_velocity(
-    const std::vector<double>         & height,
-    const std::vector<Tensor<1,dim> > & momentum,
-    std::vector<Tensor<1,dim> >       & velocity) const;
+  void compute_velocity(const std::vector<double> & height,
+                        const std::vector<Tensor<1, dim>> & momentum,
+                        std::vector<Tensor<1, dim>> & velocity) const;
 
   /** \brief Acceleration due to gravity */
   double gravity;

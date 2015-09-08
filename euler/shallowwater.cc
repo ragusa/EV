@@ -20,7 +20,7 @@ int main(int argc, char ** argv)
     const int dimension = 1;
 
     // ensure dimension <= 2
-    Assert(dimension <= 2, ExcImpossibleInDim(dim));
+    Assert(dimension <= 2, ExcImpossibleInDim(dimension));
 
     // declare input parameters and read them from input file
     ParameterHandler parameter_handler;

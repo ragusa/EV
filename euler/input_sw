@@ -1,0 +1,73 @@
+subsection finite element
+   set degree = 1
+end
+
+subsection quadrature
+   set number of quadrature points = 5
+end
+
+# Problem IDs:
+# 0 dam_break_flat
+subsection problem
+   set problem id = 0
+end
+
+subsection refinement
+   set initial refinement level = 5
+   set refinement cycles = 1
+   set refinement fraction = 0.3
+   set coarsening fraction = 0.03
+end
+
+subsection time
+   # options are <constant_dt|cfl_condition>
+   set time step size method = cfl_condition
+   set final time = 0.25
+   set time step size = 0.0001
+   set cfl = 0.10
+end
+
+subsection artificial viscosity
+   # options are <none|constant|old_first_order|max_principle|entropy>
+   set viscosity type = old_first_order
+   set constant viscosity value = 0.01
+   set first order viscosity coefficient = 0.1
+   set entropy viscosity coefficient = 5.0
+   set jump coefficient = 1.0
+   set add jumps = false
+end
+
+subsection temporal integration
+   # options are <runge_kutta>
+   set temporal integrator = runge_kutta
+   # options are <ERK1|ERK2|ERK3|ERK4|SDIRK22>
+   set runge kutta method = ERK1
+end
+
+# this section is not yet applicable
+subsection nonlinear solver
+   set nonlinear verbosity = verbose
+   set nonlinear method = newton
+   set nonlinear absolute tolerance = 1e-8
+   set nonlinear relative tolerance = 1e-8
+   set max nonlinear iterations = 100
+   set damping = 0.9
+end
+
+subsection linear solver
+   set linear verbosity = verbose
+   set linear method = direct
+   set mass matrix linear method = direct
+   set linear absolute tolerance = 1e-10
+   set linear relative tolerance = 1e-10
+   set max linear iterations = 150
+end
+
+subsection output
+   set output period = 0
+   set output mesh = false
+   set output mass matrix = false
+   set output viscosity = false
+   set exact solution refinement level = 7
+   set save convergence results = false
+end

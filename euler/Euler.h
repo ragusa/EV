@@ -29,6 +29,11 @@ public:
   Euler(const EulerParameters<dim> & params);
 
 private:
+  /**
+   * \brief Typedef for cell iterators
+   */
+  using cell_iterator = typename ConservationLaw<dim>::cell_iterator;
+
   EulerParameters<dim> euler_parameters;
 
   // number of components and position of components in solution vector
@@ -54,7 +59,7 @@ private:
   void compute_cell_ss_residual(
     FEValues<dim> & fe_values,
     FEFaceValues<dim> & fe_face_values,
-    const typename DoFHandler<dim>::active_cell_iterator & cell,
+    const cell_iterator & cell,
     Vector<double> & cell_residual);
   /*
     void compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,

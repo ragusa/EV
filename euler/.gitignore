@@ -4,6 +4,7 @@ Makefile
 cmake_install.cmake
 euler
 burgers
+shallowwater
 html
 latex
 rm_out
