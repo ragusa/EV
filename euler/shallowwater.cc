@@ -25,7 +25,7 @@ int main(int argc, char ** argv)
     // declare input parameters and read them from input file
     ParameterHandler parameter_handler;
     ShallowWaterParameters<dimension>::declare_parameters(parameter_handler);
-    parameter_handler.read_input("input_sw");
+    parameter_handler.read_input("input_shallowwater");
     ShallowWaterParameters<dimension> parameters;
     parameters.get_parameters(parameter_handler);
 

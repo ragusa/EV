@@ -17,6 +17,7 @@
 #include <deal.II/lac/vector.h>
 #include "ConservationLaw.h"
 #include "ShallowWaterParameters.h"
+#include "ShallowWaterRiemannSolver.h"
 
 /**
  * \brief Class for solving the shallow water equations.

@@ -88,29 +88,26 @@ void ShallowWater<dim>::define_problem()
       this->initial_conditions_strings[0] = "if(x<0,3,1)";
       this->initial_conditions_strings[1] = "0";
 
-      // exact solution
-      this->has_exact_solution = false;
-      /*
-               this->exact_solution_strings[0] =
-         "if(t>0,if(x/t<0,0,if(x/t<1,x/t,1)),if(x<0,0,1))";
-
-               // create and initialize function parser for exact solution
-               std::shared_ptr<FunctionParser<dim> >
-         exact_solution_function_derived
-         =
-                 std::make_shared<FunctionParser<dim>
-         >(this->parameters.n_components);
-               std::map<std::string,double> constants;
-               exact_solution_function_derived->initialize("x,t",
-                                                           this->exact_solution_strings,
-                                                           constants,
-                                                           true);
-               // point base class pointer to derived class function object
-               this->exact_solution_function = exact_solution_function_derived;
-      */
-
-      // acceleration due to gravity
+      // problem parameters
+      const double h_left  = 3.0;
+      const double u_left  = 0.0;
+      const double h_right = 1.0;
+      const double u_right = 0.0;
       gravity = 1.0;
+      const double x_interface = 0.0;
+
+      // exact solution
+      this->has_exact_solution = true;
+      // create and initialize Riemann solver for exact solution
+      std::shared_ptr<ShallowWaterRiemannSolver<dim>> exact_solution_function_derived =
+        std::make_shared<ShallowWaterRiemannSolver<dim>>(h_left,
+                                                  u_left,
+                                                  h_right,
+                                                  u_right,
+                                                  gravity,
+                                                  x_interface);
+      // point base class pointer to derived class function object
+      this->exact_solution_function = exact_solution_function_derived;
 
       break;
     }
@@ -335,13 +332,29 @@ void ShallowWater<dim>::compute_velocity(
     velocity[q] = momentum[q] / height[q];
 }
 
+/**
+ * \brief Computes the maximum flux speed \f$\lambda\f$ at each quadrature point
+ *        in domain and finds the max in each cell and the max in the
+ *        entire domain.
+ *
+ * The eigenvalues of the shallow water equations are:
+ * - \f$\lambda_1 = \|\mathbf{u}\|\f$,
+ * - \f$\lambda_2 = \|\mathbf{u}\| + c\f$,
+ * - \f$\lambda_3 = \|\mathbf{u}\| - c\f$,
+ *
+ * where \f$c\f$ is the sound speed:
+ * \f[
+ *   c = \sqrt{gh} \,.
+ * \f]
+ * The maximum wave speed is thus the second eigenvalue:
+ * \f[
+ *   \lambda_{max} = \|\mathbf{u}\| + c \,.
+ * \f]
+ */
 template <int dim>
 void ShallowWater<dim>::update_flux_speeds()
 {
-/*
   FEValues<dim> fe_values(this->fe, this->cell_quadrature, update_values);
-  Tensor<1, dim> dfdu;
-  std::vector<double> velocity(this->n_q_points_cell);
 
   // reset max flux speed
   this->max_flux_speed = 0.0;
@@ -352,23 +365,35 @@ void ShallowWater<dim>::update_flux_speeds()
   for (; cell != endc; ++cell)
   {
     fe_values.reinit(cell);
-    fe_values[velocity_extractor].get_function_values(this->new_solution,
-                                                      velocity);
 
+    // get solution values for height and momentum
+    std::vector<double> height(this->n_q_points_cell);
+    std::vector<Tensor<1,dim> > momentum(this->n_q_points_cell);
+    fe_values[height_extractor].get_function_values(this->new_solution,
+                                                      height);
+    fe_values[momentum_extractor].get_function_values(this->new_solution,
+                                                      momentum);
+
+    // compute velocity values
+    std::vector<Tensor<1,dim> > velocity(this->n_q_points_cell);
+    compute_velocity(height, momentum, velocity);
+
+    // determine max flux speed in cell
     this->max_flux_speed_cell[cell] = 0.0;
     for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
     {
-      for (unsigned int d = 0; d < dim; ++d)
-        dfdu[d] = velocity[q];
+      // compute flux speed
+      double flux_speed = velocity[q].norm() + std::sqrt(gravity*height[q]);
+
+      // compare with current maximum flux speed in cell
       this->max_flux_speed_cell[cell] =
-        std::max(this->max_flux_speed_cell[cell], dfdu.norm());
+        std::max(this->max_flux_speed_cell[cell], flux_speed);
     }
 
-    // get max flux speed
+    // determine max flux speed in domain
     this->max_flux_speed =
       std::max(this->max_flux_speed, this->max_flux_speed_cell[cell]);
   }
-*/
 }
 
 template <int dim>
