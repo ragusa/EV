@@ -1,15 +1,11 @@
-Each subdirectory in this directory corresponds to a document.
-Some documents rely on content that is located elsewhere.
-Dissertation content files are located in
-
-./dissertation/content/
-
-These content files are used by dissertation.tex, methodology.tex,
-and results.tex.
-
 ./dissertation/  contains dissertation and its content files
-./methodology/   contains methodology content from dissertation but in
-                 a more pleasing format
+
+./meetings/      contains records of meetings
+
+./notes/         contains observations and methodology content from dissertation
+                 in a more pleasing format
+
+./presentations/ contains various presentations/posters made
+
 ./results/       contains results content from dissertation but in
                  a more pleasing format
-./meetings/      contains records of meetings

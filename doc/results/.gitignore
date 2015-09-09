@@ -1,9 +1,8 @@
 *.aux
 *.dvi
-*.fdb_latexmk
 *.fls
 *.log
 *.bbl
 *.blg
 *.toc
-results.pdf
+transport_results.pdf

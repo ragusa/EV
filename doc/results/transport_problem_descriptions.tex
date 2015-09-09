@@ -1,4 +1,4 @@
-\section{Test Problem Descriptions}
+\section{Transport Test Problem Descriptions}
 In this section, the test problem suite is described. These descriptions
 include the domain, initial conditions, boundary conditions, and other
 physical parameters.
@@ -19,13 +19,14 @@ category can be fully described by:
   \item the cross sections in each region, $\sigma_0,\ldots,\sigma_{N_r-1}$,
 \end{itemize}
 
-Exact Solution
+The exact solution is the following:
 \[
   u(\x,t) = u_b + u_q \eqc
 \]
+where
 \[
-  u_b=\tilde{u_0}(x-ct)e^{-\tau},
-        \quad N_r=3,\quad
+  u_b=\tilde{u_0}(x-ct)e^{-\tau} \eqc
+        \quad N_r=3\eqc\quad
         \tau = \sum\limits_{i=0}^{N_r-1} \sigma_i s_i \eqc
 \]
 \[
@@ -42,7 +43,7 @@ Exact Solution
   u_{q,i} = \left\{\begin{array}{l l}
         \frac{q_i}{\sigma_i}\left(1-e^{-\sigma_i s_i}\right), & \sigma_i\neq 0\\
         q_i s_i, & \sigma_i = 0
-        \end{array}\right. \eqc
+        \end{array}\right. \eqp
 \]
 %================================================================================
 \subsection{Void-to-Absorber}\label{sec:void_to_absorber}
