@@ -331,6 +331,9 @@ protected:
     /** initial conditions functions */
     FunctionParser<dim>      initial_conditions_function;
 
+    /** constants for function parsers */
+    std::map<std::string, double> constants;
+
     /** option if the problem has an exact solution provided */
     bool has_exact_solution;
     /** exact solution function strings for each component, which will be parsed */

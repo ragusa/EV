@@ -51,7 +51,7 @@ void ShallowWater<dim>::define_problem()
 {
   switch (sw_parameters.problem_id)
   {
-    case 0:
+    case 0: // 1-D dam break over flat bottom
     {
       Assert(dim == 1, ExcImpossibleInDim(dim));
 
@@ -108,6 +108,74 @@ void ShallowWater<dim>::define_problem()
                                                   x_interface);
       // point base class pointer to derived class function object
       this->exact_solution_function = exact_solution_function_derived;
+
+      // initialize bathymetry function
+      std::map<std::string, double> constants;
+      std::string bathymetry_string = "0";
+      bathymetry_function.initialize(
+        "x", bathymetry_string, this->constants, false);
+
+      break;
+    }
+    case 1: // 1-D dam break over rectangular bump
+    {
+      Assert(dim == 1, ExcImpossibleInDim(dim));
+
+      // name of problem
+      this->problem_name = "dam_break_bump";
+
+      // domain
+      const double domain_start = 0.0;
+      const double domain_width = 1500.0;
+      this->domain_volume = std::pow(domain_width, dim);
+      GridGenerator::hyper_cube(
+        this->triangulation, domain_start, domain_start + domain_width);
+
+      // constants
+      this->constants["midpoint"] = domain_start + 0.5*domain_width; // midpoint
+      this->constants["bump_width"] = 375.0; // width of bump
+      this->constants["bump_height"] = 8.0; // height of bump
+      this->constants["bump_left"] = this->constants["midpoint"] - 0.5*this->constants["bump_width"];
+      this->constants["bump_right"] = this->constants["midpoint"] + 0.5*this->constants["bump_width"];
+      this->constants["h_left"]  = 20.0;
+      this->constants["h_right"] = 15.0;
+
+      // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
+      this->n_boundaries = 1;
+      typename Triangulation<dim>::cell_iterator cell =
+        this->triangulation.begin();
+      typename Triangulation<dim>::cell_iterator endc = this->triangulation.end();
+      for (; cell != endc; ++cell)
+        for (unsigned int face = 0; face < this->faces_per_cell; ++face)
+          if (cell->face(face)->at_boundary())
+            cell->face(face)->set_boundary_indicator(0);
+      this->boundary_types.resize(this->n_boundaries);
+      this->boundary_types[0].resize(this->n_components);
+      this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
+      this->boundary_types[0][1] = ConservationLaw<dim>::dirichlet;
+      this->dirichlet_function_strings.resize(this->n_boundaries);
+      this->dirichlet_function_strings[0].resize(this->n_components);
+      this->dirichlet_function_strings[0][0] = "if(x<midpoint,h_left,h_right)";
+      this->dirichlet_function_strings[0][1] = "0";
+      this->use_exact_solution_as_BC = false;
+
+      // initial conditions
+      this->initial_conditions_strings[0] = "if(x<=bump_left,h_left,"
+                                            "if(x<=midpoint,h_left-bump_height,"
+                                            "if(x<=bump_right,h_right-bump_height,h_right)))";
+      this->initial_conditions_strings[1] = "0";
+
+      // problem parameters
+      gravity = 9.812;
+
+      // exact solution
+      this->has_exact_solution = false;
+
+      // initialize bathymetry function
+      std::string bathymetry_string = "if(abs(x-midpoint)<=0.5*bump_width,"
+                                      "bump_height, 0)";
+      bathymetry_function.initialize(
+        "x", bathymetry_string, this->constants, false);
 
       break;
     }
@@ -189,7 +257,8 @@ void ShallowWater<dim>::assemble_lumped_mass_matrix()
  *   + \frac{1}{2}g h^2\mathbf{I})_h\right)_\Omega
  *   - \left(\varphi_i^{h\mathbf{u}},(h\mathbf{u}\otimes\mathbf{u}
  *   + \frac{1}{2}g h^2\mathbf{I})_h\cdot\mathbf{n}\right)_{\partial\Omega}
- *   + \left(\varphi_i^{h\mathbf{u}},g h_h\nabla b\right)_\Omega .
+ *   - \left(\nabla\cdot\varphi_i^{h\mathbf{u}},g h_h b\right)_\Omega
+ *   + \left(\varphi_i^{h\mathbf{u}},g h_h b \mathbf{n}\right)_{\partial\Omega} .
  * \f]
  * This yields a discrete system
  * \f[
@@ -205,7 +274,8 @@ void ShallowWater<dim>::assemble_lumped_mass_matrix()
  *   + \frac{1}{2}g h^2\mathbf{I})_h\right)_\Omega
  *   - \left(\varphi_i^{h\mathbf{u}},(h\mathbf{u}\otimes\mathbf{u}
  *   + \frac{1}{2}g h^2\mathbf{I})_h\cdot\mathbf{n}\right)_{\partial\Omega}
- *   + \left(\varphi_i^{h\mathbf{u}},g h_h\nabla b\right)_\Omega .
+ *   - \left(\nabla\cdot\varphi_i^{h\mathbf{u}},g h_h b\right)_\Omega
+ *   + \left(\varphi_i^{h\mathbf{u}},g h_h b \mathbf{n}\right)_{\partial\Omega} .
  * \f]
  *
  *  \param[out] r steady-state residual \f$\mathbf{r}\f$
@@ -218,7 +288,8 @@ void ShallowWater<dim>::compute_ss_residual(Vector<double> & f)
 
   FEValues<dim> fe_values(this->fe,
                           this->cell_quadrature,
-                          update_values | update_gradients | update_JxW_values);
+                          update_values | update_gradients |
+                          update_quadrature_points | update_JxW_values);
 
   Vector<double> cell_residual(this->dofs_per_cell);
   std::vector<unsigned int> local_dof_indices(this->dofs_per_cell);
@@ -250,6 +321,15 @@ void ShallowWater<dim>::compute_ss_residual(Vector<double> & f)
     compute_inviscid_fluxes(
       height, momentum, height_inviscid_flux, momentum_inviscid_flux);
 
+    // get quadrature points on cell
+    std::vector<Point<dim> > points(this->n_q_points_cell);
+    points = fe_values.get_quadrature_points();
+
+    // compute bathymetry
+    std::vector<double> bathymetry(this->n_q_points_cell);
+    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+      bathymetry[q] = bathymetry_function.value(points[q]);
+
     // loop over quadrature points
     for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
     {
@@ -258,11 +338,15 @@ void ShallowWater<dim>::compute_ss_residual(Vector<double> & f)
       {
         cell_residual(i) +=
           (
-            // height contributions
-            fe_values[height_extractor].gradient(i, q) * height_inviscid_flux[q] +
-            // momentum contributions
-            double_contract(fe_values[momentum_extractor].gradient(i, q),
-                            momentum_inviscid_flux[q])) *
+            // height inviscid flux
+            fe_values[height_extractor].gradient(i, q) * height_inviscid_flux[q]
+            // momentum inviscid flux
+            + double_contract(fe_values[momentum_extractor].gradient(i, q),
+                            momentum_inviscid_flux[q])
+            // bathymetry source term
+            - fe_values[momentum_extractor].divergence(i, q)
+              * gravity*height[q]*bathymetry[q]
+          ) *
           fe_values.JxW(q);
       }
     }

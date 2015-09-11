@@ -160,7 +160,6 @@ void ConservationLaw<dim>::initialize_system()
         need_to_compute_face_residual = true;
 
   // create constants used for parsed functions
-  std::map<std::string, double> constants;
   constants["pi"] = numbers::PI;
 
   // create string of variables to be used in function parser objects

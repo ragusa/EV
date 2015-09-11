@@ -93,6 +93,9 @@ private:
 
   /** \brief Acceleration due to gravity */
   double gravity;
+
+  /** \brief Bathymetry (bottom topography) function \f$b\f$ */
+  FunctionParser<dim> bathymetry_function;
 };
 
 #include "ShallowWater.cc"
