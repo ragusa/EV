@@ -39,7 +39,8 @@ if ($time_integrator_string eq "SS") {
 # determine which plot to make
 my $rootname;
 if ($plot_type eq "sol") {
-   $rootname = "solutions";
+   #$rootname = "solutions";
+   $rootname = "waterlevel";
 } elsif ($plot_type eq "conv") {
    $rootname = "convergence";
 } else {

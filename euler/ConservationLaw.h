@@ -193,6 +193,18 @@ protected:
     void output_map(
       const cell_double_map &map,
       const std::string     &output_filename_base) const;
+    /**
+     * \brief Outputs additional quantities other than the solution variables.
+     *
+     * Derived classes define this function if any additional quantities are
+     * desired to be output.
+     *
+     * \param[in] postprocessor the post-processor object
+     */
+    virtual void output_additional_quantities( 
+      const PostProcessor<dim> & postprocessor) const
+    {
+    }
 
     // checking functions
     void check_nan();

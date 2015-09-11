@@ -12,21 +12,23 @@ PostProcessor<dim>::PostProcessor(
   const bool has_exact_solution_,
   std::shared_ptr<Function<dim>> & exact_solution_function_,
   const std::string & problem_name_,
-  const std::vector<std::string> & component_names_,
+  const std::vector<std::string> & solution_component_names_,
   const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
-    component_interpretations_)
+    solution_component_interpretations_,
+  const Triangulation<dim> & triangulation_)
   : parameters(parameters_),
     problem_name(problem_name_),
     has_exact_solution(has_exact_solution_),
     exact_solution_function(exact_solution_function_),
-    component_names(component_names_),
-    component_interpretations(component_interpretations_),
+    solution_component_names(solution_component_names_),
+    solution_component_interpretations(solution_component_interpretations_),
     is_steady_state(parameters.time_discretization ==
                     ConservationLawParameters<dim>::TemporalDiscretization::SS),
     fe(FE_Q<dim>(parameters.degree), parameters_.n_components),
     cell_quadrature(parameters.n_quadrature_points),
     current_cycle(0),
-    is_last_cycle(false)
+    is_last_cycle(false),
+    fine_dof_handler(fine_triangulation)
 {
   // assert that a nonempty problem name was provided
   Assert(!problem_name.empty(), ExcInvalidState());
@@ -147,6 +149,9 @@ PostProcessor<dim>::PostProcessor(
   std::stringstream output_dir_ss;
   output_dir_ss << "output/" << problem_name << "/";
   output_dir = output_dir_ss.str();
+
+  // create fine triangulation and dof handler
+  createFineTriangulationAndDoFHandler(triangulation_);
 }
 
 /**
@@ -191,28 +196,9 @@ void PostProcessor<dim>::output_results(const Vector<double> & solution,
     // write exact solution output file
     if (parameters.output_exact_solution and has_exact_solution)
     {
-      // create fine mesh on which to interpolate exact solution function
-      Triangulation<dim> fine_triangulation;
-      fine_triangulation.copy_triangulation(triangulation);
-      const unsigned int final_refinement_level =
-        parameters.initial_refinement_level + parameters.n_refinement_cycles - 1;
-      const int n_refinements =
-        parameters.exact_solution_refinement_level - final_refinement_level;
-      if (n_refinements > 0)
-        fine_triangulation.refine_global(n_refinements);
-
-      // create dof handler for fine mesh
-      DoFHandler<dim> fine_dof_handler(fine_triangulation);
-      fine_dof_handler.distribute_dofs(fe);
-
-      // interpolate exact solution
-      exact_solution_function->set_time(parameters.end_time);
-      Vector<double> exact_solution(fine_dof_handler.n_dofs());
-      VectorTools::interpolate(
-        fine_dof_handler, *exact_solution_function, exact_solution);
-
-      // output exact solution to file
-      output_solution(exact_solution, fine_dof_handler, filename_exact);
+      // call function to evaluate and output exact solution
+      output_function(*exact_solution_function, solution_component_names,
+        solution_component_interpretations, filename_exact, parameters.end_time);
     }
 
     // output convergence table
@@ -276,8 +262,9 @@ void PostProcessor<dim>::output_results(const Vector<double> & solution,
   }
 }
 
-/** \brief Outputs a solution to a file.
- *  \param [in] solution a vector of solution values.
+/** \brief Outputs the solution to a file.
+ *
+ *  \param [in] values a vector of values for the quantity.
  *  \param [in] dof_handler degrees of freedom handler.
  *  \param [in] output_string string for the output filename.
  */
@@ -286,43 +273,76 @@ void PostProcessor<dim>::output_solution(const Vector<double> & solution,
                                          const DoFHandler<dim> & dof_handler,
                                          const std::string & output_string) const
 {
+  // call function that outputs a vector of values to a file,
+  // with the solution component names and types lists
+  output_at_dof_points(solution,
+                       solution_component_names,
+                       solution_component_interpretations,
+                       dof_handler,
+                       output_string);
+}
+
+/**
+ * \brief Outputs to a file a vector of values, possibly with multiple
+ *        components, evaluated at positions of the dofs.
+ *
+ * \param[in] values a vector of values for the quantity.
+ * \param[in] component_names list of names of each component in the
+ *            vector of values
+ * \param[in] component_interpretations list of types (scalar or vector)
+ *            of each component in the vector of values
+ * \param[in] dof_handler degrees of freedom handler.
+ * \param[in] output_string string for the output filename.
+ */
+template <int dim>
+void PostProcessor<dim>::output_at_dof_points(
+  const Vector<double> & values,
+  const std::vector<std::string> & component_names,
+  const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
+    component_interpretations,
+  const DoFHandler<dim> & dof_handler,
+  const std::string & output_string) const
+{
   if (is_last_cycle)
   {
-    // create output directory if it doesn't exist
+    // create output directory and subdirectory if they do not exist
     create_directory("output");
-
-    // create output subdirectory if it doesn't exist
     create_directory(output_dir);
 
-    // create DataOut object for solution
+    // create DataOut object for quantity
     DataOut<dim> data_out;
     data_out.attach_dof_handler(dof_handler);
-    // data_out.add_data_vector(solution, "flux");
-    data_out.add_data_vector(solution,
+    data_out.add_data_vector(values,
                              component_names,
                              DataOut<dim>::type_dof_data,
                              component_interpretations);
     data_out.build_patches();
 
-    // create output filename for solution
-    std::string filename_extension;
+    // write GNUplot file for 1-D and .vtk file otherwise
     if (dim == 1)
-      filename_extension = ".gpl";
-    else
-      filename_extension = ".vtk";
+    {
+      // create output filestream
+      std::stringstream filename_ss;
+      filename_ss << output_dir << output_string << ".gpl";
+      std::string filename = filename_ss.str();
+      std::ofstream output_filestream(filename.c_str());
+      output_filestream.precision(15);
 
-    std::stringstream filename_ss;
-    filename_ss << output_dir << output_string << filename_extension;
-    std::string filename = filename_ss.str();
-
-    // create output filestream for exact solution
-    std::ofstream output_filestream(filename.c_str());
-    output_filestream.precision(15);
-    // write file
-    if (dim == 1)
+      // write output file
       data_out.write_gnuplot(output_filestream);
+    }
     else
+    {
+      // create output filestream
+      std::stringstream filename_ss;
+      filename_ss << output_dir << output_string << ".vtk";
+      std::string filename = filename_ss.str();
+      std::ofstream output_filestream(filename.c_str());
+      output_filestream.precision(15);
+
+      // write output file
       data_out.write_vtk(output_filestream);
+    }
   }
 }
 
@@ -375,7 +395,8 @@ void PostProcessor<dim>::output_viscosity(
     visc_out.write_vtk(viscosity_outstream);
 }
 
-/** \brief evaluate error between numerical and exact solution
+/**
+ * \brief evaluate error between numerical and exact solution
  */
 template <int dim>
 void PostProcessor<dim>::evaluate_error(const Vector<double> & solution,
@@ -493,7 +514,7 @@ void PostProcessor<dim>::create_directory(const std::string & directory) const
 }
 
 /**
- * Sets the current cycle and flags it if it is the last.
+ * \brief Sets the current cycle and flags it if it is the last.
  */
 template <int dim>
 void PostProcessor<dim>::setCycle(const unsigned int & cycle)
@@ -503,10 +524,86 @@ void PostProcessor<dim>::setCycle(const unsigned int & cycle)
 }
 
 /**
- * Returns whether this cycle is the last or not.
+ * \brief Creates fine triangulation and dof handler for outputting functions.
  */
 template <int dim>
-bool PostProcessor<dim>::askIfLastCycle() const
+void PostProcessor<dim>::createFineTriangulationAndDoFHandler(
+  const Triangulation<dim> & triangulation)
 {
-  return is_last_cycle;
+    // create fine mesh on which to interpolate functions
+    fine_triangulation.copy_triangulation(triangulation);
+    const unsigned int final_refinement_level =
+      parameters.initial_refinement_level + parameters.n_refinement_cycles - 1;
+    const int n_refinements =
+      parameters.exact_solution_refinement_level - final_refinement_level;
+    if (n_refinements > 0)
+      fine_triangulation.refine_global(n_refinements);
 }
+
+/**
+ * \brief Computes a function on a fine triangulation and outputs to file.
+ *
+ * This version is for time-independent functions.
+ *
+ * \param[in] function the function to be evaluated
+ * \param[in] component_names list of names of each component in the
+ *            vector of values
+ * \param[in] component_interpretations list of types (scalar or vector)
+ *            of each component in the vector of values
+ * \param[in] filename the output filename
+ */
+template <int dim>
+void PostProcessor<dim>::output_function(
+  const Function<dim> & function,
+  const std::vector<std::string> & component_names,
+  const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
+    component_interpretations,
+  const std::string & filename) const
+{
+  // create FESystem object for function
+  const unsigned int n_components_function = component_names.size();
+  FESystem<dim> fe_function(FE_Q<dim>(parameters.degree),n_components_function);
+
+  // create dof handler for function and distribute dofs
+  DoFHandler<dim> dof_handler(fine_triangulation);
+  dof_handler.distribute_dofs(fe_function);
+
+  // compute function values
+  Vector<double> function_values(dof_handler.n_dofs());
+  VectorTools::interpolate(dof_handler, function, function_values);
+
+  // output function values to file
+  output_at_dof_points(function_values, component_names,
+    component_interpretations, dof_handler, filename);
+}
+
+/**
+ * \brief Computes a function on a fine triangulation and outputs to file.
+ *
+ * This version is for time-dependent functions.
+ *
+ * \param[in] function the function to be evaluated
+ * \param[in] component_names list of names of each component in the
+ *            vector of values
+ * \param[in] component_interpretations list of types (scalar or vector)
+ *            of each component in the vector of values
+ * \param[in] filename the output filename
+ * \param[in] t the time at which to evaluate the function
+ */
+template <int dim>
+void PostProcessor<dim>::output_function(
+  Function<dim> & function,
+  const std::vector<std::string> & component_names,
+  const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
+    component_interpretations,
+  const std::string & filename,
+  const double & t) const
+{
+      // set time of function
+      function.set_time(t);
+
+      // call time-independent version of function
+      output_function(function, component_names, component_interpretations,
+        filename);
+}
+

@@ -537,3 +537,21 @@ void ShallowWater<dim>::compute_divergence_entropy_flux(
     }
   */
 }
+
+template <int dim>
+void ShallowWater<dim>::output_additional_quantities(
+  const PostProcessor<dim> & postprocessor) const
+{
+  // output the bathymetry function
+  std::string output_file = "bathymetry";
+  std::vector<std::string> bathymetry_component_names{"bathymetry"};
+  std::vector<DataComponentInterpretation::DataComponentInterpretation>
+    bathymetry_component_interpretations{DataComponentInterpretation::component_is_scalar};
+  postprocessor.output_function(bathymetry_function, bathymetry_component_names,
+    bathymetry_component_interpretations, output_file);
+/*
+  postprocessor.output_function(*(this->exact_solution_function), this->component_names,
+    this->component_interpretations, output_file);
+*/
+}
+

@@ -63,8 +63,6 @@ private:
 
   void define_problem() override;
 
-  //void output_solution(double time) override;
-
   void compute_ss_residual(Vector<double> & solution) override;
 
   void update_flux_speeds() override;
@@ -90,6 +88,8 @@ private:
   void compute_velocity(const std::vector<double> & height,
                         const std::vector<Tensor<1, dim>> & momentum,
                         std::vector<Tensor<1, dim>> & velocity) const;
+
+  void output_additional_quantities(const PostProcessor<dim> & postprocessor) const override;
 
   /** \brief Acceleration due to gravity */
   double gravity;

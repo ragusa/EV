@@ -53,7 +53,8 @@ void ConservationLaw<dim>::run()
                                    exact_solution_function,
                                    problem_name,
                                    component_names,
-                                   component_interpretations);
+                                   component_interpretations,
+                                   triangulation);
 
   // loop over adaptive refinement cycles
   for (unsigned int cycle = 0; cycle < parameters.n_refinement_cycles; ++cycle)
@@ -101,10 +102,13 @@ void ConservationLaw<dim>::run()
     // evaluate errors for convergence study
     postprocessor.evaluate_error(new_solution, dof_handler, triangulation);
 
-    // output grid and solution and print convergence results
-    postprocessor.output_results(new_solution, dof_handler, triangulation);
-
   } // end of refinement loop
+
+  // output grid and solution and print convergence results
+  postprocessor.output_results(new_solution, dof_handler, triangulation);
+
+  // output additional quantities of interest
+  output_additional_quantities(postprocessor);
 
   /*
      // output final viscosities if non-constant viscosity used

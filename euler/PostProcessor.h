@@ -32,9 +32,10 @@ public:
     const bool has_exact_solution,
     std::shared_ptr<Function<dim>> & exact_solution_function,
     const std::string & problem_name,
-    const std::vector<std::string> & component_names,
+    const std::vector<std::string> & solution_component_names,
     const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
-      component_interpretations);
+      solution_component_interpretations,
+    const Triangulation<dim> & triangulation);
 
   ~PostProcessor();
 
@@ -45,6 +46,14 @@ public:
   void output_solution(const Vector<double> & solution,
                        const DoFHandler<dim> & dof_handler,
                        const std::string & output_string) const;
+
+  void output_at_dof_points(
+    const Vector<double> & values,
+    const std::vector<std::string> & component_names,
+    const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
+      component_interpretations,
+    const DoFHandler<dim> & dof_handler,
+    const std::string & output_string) const;
 
   void output_viscosity(const Vector<double> & low_order_viscosity,
                         const Vector<double> & entropy_viscosity,
@@ -59,7 +68,20 @@ public:
 
   void setCycle(const unsigned int & cycle);
 
-  bool askIfLastCycle() const;
+  void output_function(
+    const Function<dim> & function,
+    const std::vector<std::string> & component_names,
+    const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
+      component_interpretations,
+    const std::string & filename) const;
+
+  void output_function(
+    Function<dim> & function,
+    const std::vector<std::string> & component_names,
+    const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
+      component_interpretations,
+    const std::string & filename,
+    const double & end_time) const;
 
 private:
   void output_grid(const Triangulation<dim> & triangulation) const;
@@ -74,9 +96,11 @@ private:
   const bool has_exact_solution;
   std::shared_ptr<Function<dim>> exact_solution_function;
 
-  const std::vector<std::string> component_names;
+  /** \brief List of names of each solution component */
+  const std::vector<std::string> solution_component_names;
+  /** \brief List of type (scalar or vector) of each solution component */
   const std::vector<DataComponentInterpretation::DataComponentInterpretation>
-    component_interpretations;
+    solution_component_interpretations;
 
   double dt_nominal;
   const bool is_steady_state;
@@ -91,6 +115,11 @@ private:
 
   unsigned int current_cycle;
   bool is_last_cycle;
+
+  Triangulation<dim> fine_triangulation;
+  DoFHandler<dim> fine_dof_handler;
+  void createFineTriangulationAndDoFHandler(
+    const Triangulation<dim> & triangulation);
 };
 
 #include "PostProcessor.cc"
