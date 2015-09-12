@@ -1,18 +1,23 @@
 # note: this script requires Gnuplot version 4.6 or higher
 # usage: gnuplot -e 'problem_name=<problem name>;
 #           timeintegrator=<time integrator string>;
-#           component=<component of solution>;
-#           component_filename=<filename for component>;
-#           component_column=<column of component>' solutions.gp
+#           quantity=<quantity>;
+#           column=<column of quantity in input file>' solutions.gp
+
+#if (quantity eq "waterlevel") {
+#   filebase = "waterlevel"
+#} else {
+   filebase = "solution"
+#}
 
 # list of possible input files to plot and their corresponding titles
-file_initial  = "solution_initial"
-file_exact    = "solution_exact"
-file_galerkin = "solution_Gal_"   .timeintegrator
-file_low      = "solution_low_"   .timeintegrator
-file_high     = "solution_EV_"    .timeintegrator
-file_EVFCT    = "solution_EVFCT_" .timeintegrator
-file_GalFCT   = "solution_GalFCT_".timeintegrator
+file_initial  = filebase."_initial"
+file_exact    = filebase."_exact"
+file_galerkin = filebase."_Gal_"   .timeintegrator
+file_low      = filebase."_low_"   .timeintegrator
+file_high     = filebase."_EV_"    .timeintegrator
+file_EVFCT    = filebase."_EVFCT_" .timeintegrator
+file_GalFCT   = filebase."_GalFCT_".timeintegrator
 file_LowDMPmin = "DMPmin_Low"
 file_LowDMPmax = "DMPmax_Low"
 file_GalFCTDMPmin = "DMPmin_GalFCT"
@@ -75,15 +80,32 @@ do for [i=1:words(file_list)] {
    }
 }
 
+# determine y label
+if (quantity eq "velocity") {
+   quantity_ylabel = "Velocity"
+} else { if (quantity eq "density") {
+   quantity_ylabel = "Density"
+} else { if (quantity eq "momentum") {
+   quantity_ylabel = "Momentum"
+} else { if (quantity eq "energy") {
+   quantity_ylabel = "Energy"
+} else { if (quantity eq "height") {
+   quantity_ylabel = "Height"
+} else { if (quantity eq "waterlevel") {
+   quantity_ylabel = "Water Level"
+} else {
+   quantity_ylabel = "Unknown"
+}}}}}}
+
 set terminal postscript enhanced color
-output_file = outdir.component_filename."_".timeintegrator.".pdf"
+output_file = outdir.quantity."_".timeintegrator.".pdf"
 set output '| ps2pdf - '.output_file
-set ylabel component
+set ylabel quantity_ylabel
 set xlabel "x"
 set key top right
 
 plot for [i=1:words(existing_file_list)] outdir.word(existing_file_list,i)\
-   using 1:int(component_column) with linesp linetype word(existing_lt_list,i)\
+   using 1:int(column) with linesp linetype word(existing_lt_list,i)\
    linecolor word(existing_lc_list,i)\
    pointtype word(existing_sym_list,i)\
    title word(existing_title_list,i)

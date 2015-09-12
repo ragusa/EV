@@ -36,38 +36,23 @@ if ($time_integrator_string eq "SS") {
    $is_ss = 0;
 }
 
-# determine which plot to make
-my $rootname;
-if ($plot_type eq "sol") {
-   #$rootname = "solutions";
-   $rootname = "waterlevel";
-} elsif ($plot_type eq "conv") {
-   $rootname = "convergence";
-} else {
-   die("Invalid command-line argument: must be \"sol\" or \"conv\"");
-}
-
 # determine the names of each component in solution
-my @components;
-my @components_filenames;
-my @components_columns;
+my @quantity;
+my @column;
 if ($conservation_law eq "burgers")
 {
-   @components = ("Velocity");
-   @components_filenames = ("velocity");
-   @components_columns = (2);
+   @quantity = ("velocity");
+   @column = (2);
 }
 elsif ($conservation_law eq "euler")
 {
-   @components = ("Density","Momentum","Energy");
-   @components_filenames = ("density","momentum","energy");
-   @components_columns = (2,3,4);
+   @quantity = ("density","momentum","energy");
+   @column = (2,3,4);
 }
 elsif ($conservation_law eq "shallowwater")
 {
-   @components = ("Height","Momentum");
-   @components_filenames = ("height","momentum");
-   @components_columns = (2,3);
+   @quantity = ("waterlevel","momentum");
+   @column = (2,3);
 }
 else
 {
@@ -77,20 +62,29 @@ else
 # go to plotscripts directory
 chdir "plotscripts";
 
+# determine which plotscript to use
+my $plotscript;
+if ($plot_type eq "sol") {
+   $plotscript = "solutions.gp";
+} elsif ($plot_type eq "conv") {
+   $plotscript = "convergence.gp";
+} else {
+   die("Invalid command-line argument: must be \"sol\" or \"conv\"");
+}
+
 # loop over components
-foreach my $i (0 .. $#components)
+foreach my $i (0 .. $#quantity)
 {
    # call gnuplot
    system("gnuplot -e \"problem_name='$problem_name';
       timeintegrator='$time_integrator_string';
       is_ss='$is_ss';
-      component='$components[$i]';
-      component_filename='$components_filenames[$i]';
-      component_column='$components_columns[$i]'\" $rootname.gp");
+      quantity='$quantity[$i]';
+      column='$column[$i]'\" $plotscript");
    system("sleep 1");
       
    # name of resulting plot file
-   my $output_file = "../output/$problem_name/$components_filenames[$i]".
+   my $output_file = "../output/$problem_name/$quantity[$i]".
       "_$time_integrator_string.pdf";
    
    # crop pdf

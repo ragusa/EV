@@ -1,4 +1,4 @@
-output_file = "../output/compare_solution.pdf"
+output_file = "../output/customplot.pdf"
 
 # create plot
 set terminal postscript enhanced color
@@ -10,6 +10,3 @@ plot "../output/solution_none.gpl" using 1:2 title "none" with lines,\
      "../output/solution_first.gpl" using 1:2 title "first order" with lines,\
      "../output/solution_ent.gpl" using 1:2 title "entropy" with lines,\
      "../output/solution_jumps.gpl" using 1:2 title "entropy with jumps" with lines
-reset
-set output
-set terminal pop

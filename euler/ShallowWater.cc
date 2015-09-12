@@ -543,15 +543,26 @@ void ShallowWater<dim>::output_additional_quantities(
   const PostProcessor<dim> & postprocessor) const
 {
   // output the bathymetry function
+  //---------------------------------------------------------------------------
   std::string output_file = "bathymetry";
   std::vector<std::string> bathymetry_component_names{"bathymetry"};
   std::vector<DataComponentInterpretation::DataComponentInterpretation>
     bathymetry_component_interpretations{DataComponentInterpretation::component_is_scalar};
   postprocessor.output_function(bathymetry_function, bathymetry_component_names,
     bathymetry_component_interpretations, output_file);
-/*
-  postprocessor.output_function(*(this->exact_solution_function), this->component_names,
-    this->component_interpretations, output_file);
-*/
+
+  // output the water level
+  //---------------------------------------------------------------------------
+  // create FESystem object for water level
+  FESystem<dim> waterlevel_fe(FE_Q<dim>(parameters.degree), 1);
+
+  // create dof handler for water level and distribute dofs
+  DoFHandler<dim> waterlevel_dof_handler(this->triangulation);
+  waterlevel_dof_handler.distribute_dofs(waterlevel_fe);
+
+  // compute bathymetry at dof points
+  Vector<double> bathymetry_values(waterlevel_dof_handler.n_dofs());
+  VectorTools::interpolate(waterlevel_dof_handler, bathymetry_function,
+    bathymetry_values);
 }
 
