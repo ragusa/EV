@@ -201,10 +201,8 @@ protected:
      *
      * \param[in] postprocessor the post-processor object
      */
-    virtual void output_additional_quantities( 
-      const PostProcessor<dim> & postprocessor) const
-    {
-    }
+    virtual void output_results( 
+      PostProcessor<dim> & postprocessor) const;
 
     // checking functions
     void check_nan();

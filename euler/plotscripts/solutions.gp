@@ -4,11 +4,7 @@
 #           quantity=<quantity>;
 #           column=<column of quantity in input file>' solutions.gp
 
-#if (quantity eq "waterlevel") {
-#   filebase = "waterlevel"
-#} else {
-   filebase = "solution"
-#}
+filebase = "solution"
 
 # list of possible input files to plot and their corresponding titles
 file_initial  = filebase."_initial"
@@ -66,17 +62,17 @@ existing_lt_list = ""
 existing_lc_list = ""
 existing_sym_list = ""
 do for [i=1:words(file_list)] {
-   myfile = word(file_list,i).".gpl"
+   myfile  = word(file_list,i).".gpl"
    mytitle = word(title_list,i)
-   mylt = word(linetypes,i)
-   mylc = word(linecolors,i)
-   mysym = word(symboltypes,i)
+   mylt    = word(linetypes,i)
+   mylc    = word(linecolors,i)
+   mysym   = word(symboltypes,i)
    if (!is_missing(myfile)) {
-      existing_file_list = existing_file_list." ".myfile
+      existing_file_list  = existing_file_list ." ".myfile
       existing_title_list = existing_title_list." ".mytitle
-      existing_lt_list = existing_lt_list." ".mylt
-      existing_lc_list = existing_lc_list." ".mylc
-      existing_sym_list = existing_sym_list." ".mysym
+      existing_lt_list    = existing_lt_list   ." ".mylt
+      existing_lc_list    = existing_lc_list   ." ".mylc
+      existing_sym_list   = existing_sym_list  ." ".mysym
    }
 }
 
@@ -104,8 +100,34 @@ set ylabel quantity_ylabel
 set xlabel "x"
 set key top right
 
-plot for [i=1:words(existing_file_list)] outdir.word(existing_file_list,i)\
-   using 1:int(column) with linesp linetype word(existing_lt_list,i)\
-   linecolor word(existing_lc_list,i)\
-   pointtype word(existing_sym_list,i)\
-   title word(existing_title_list,i)
+# if water level plot, then plot with bathymetry function
+if (quantity eq "waterlevel") {
+
+   bathymetry_file = file_galerkin.".gpl"
+   if (is_missing(bathymetry_file)) {
+      bathymetry_file = file_low.".gpl"
+      if (is_missing(bathymetry_file)) {
+         bathymetry_file = file_high.".gpl"
+         if (is_missing(bathymetry_file)) {
+            bathymetry_file = file_EVFCT.".gpl"
+            if (is_missing(bathymetry_file)) {
+               bathymetry_file = file_GalFCT.".gpl"
+            }
+         }
+      }
+   }
+
+   plot for [i=1:words(existing_file_list)] outdir.word(existing_file_list,i)\
+      using 1:int(column) with linesp linetype word(existing_lt_list,i)\
+      linecolor word(existing_lc_list,i)\
+      pointtype word(existing_sym_list,i)\
+      title word(existing_title_list,i),\
+      outdir.bathymetry_file using 1:4 with lines title "Bottom topography"
+
+} else {
+   plot for [i=1:words(existing_file_list)] outdir.word(existing_file_list,i)\
+      using 1:int(column) with linesp linetype word(existing_lt_list,i)\
+      linecolor word(existing_lc_list,i)\
+      pointtype word(existing_sym_list,i)\
+      title word(existing_title_list,i)
+}

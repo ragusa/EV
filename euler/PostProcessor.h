@@ -13,8 +13,9 @@
 #include <deal.II/grid/tria.h>
 #include <deal.II/grid/grid_out.h>
 #include <deal.II/lac/vector.h>
-#include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/data_out.h>
+#include <deal.II/numerics/data_postprocessor.h>
+#include <deal.II/numerics/vector_tools.h>
 #include <sys/stat.h>
 #include "ConservationLawParameters.h"
 
@@ -43,9 +44,36 @@ public:
                       const DoFHandler<dim> & dof_handler,
                       const Triangulation<dim> & triangulation);
 
+  void output_results(const Vector<double> & solution,
+                      const DoFHandler<dim> & dof_handler,
+                      const Triangulation<dim> & triangulation,
+                      const DataPostprocessor<dim> & data_postprocessor);
+
   void output_solution(const Vector<double> & solution,
                        const DoFHandler<dim> & dof_handler,
                        const std::string & output_string) const;
+
+  void output_solution(const Vector<double> & solution,
+                       const DoFHandler<dim> & dof_handler,
+                       const std::string & output_string,
+                       const DataPostprocessor<dim> & data_postprocessor) const;
+
+  void evaluate_error(const Vector<double> & solution,
+                      const DoFHandler<dim> & dof_handler,
+                      const Triangulation<dim> & triangulation);
+
+  void update_dt(const double & dt);
+
+  void set_cycle(const unsigned int & cycle);
+
+private:
+
+  void output_viscosity(const Vector<double> & low_order_viscosity,
+                        const Vector<double> & entropy_viscosity,
+                        const Vector<double> & high_order_viscosity,
+                        const DoFHandler<dim> & dof_handler) const;
+
+  void output_exact_solution();
 
   void output_at_dof_points(
     const Vector<double> & values,
@@ -55,18 +83,16 @@ public:
     const DoFHandler<dim> & dof_handler,
     const std::string & output_string) const;
 
-  void output_viscosity(const Vector<double> & low_order_viscosity,
-                        const Vector<double> & entropy_viscosity,
-                        const Vector<double> & high_order_viscosity,
-                        const DoFHandler<dim> & dof_handler) const;
+  void output_at_dof_points(
+    const Vector<double> & values,
+    const std::vector<std::string> & component_names,
+    const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
+      component_interpretations,
+    const DoFHandler<dim> & dof_handler,
+    const std::string & output_string,
+    const DataPostprocessor<dim> & data_postprocessor) const;
 
-  void evaluate_error(const Vector<double> & solution,
-                      const DoFHandler<dim> & dof_handler,
-                      const Triangulation<dim> & triangulation);
-
-  void update_dt(const double & dt);
-
-  void setCycle(const unsigned int & cycle);
+  void output_convergence_data();
 
   void output_function(
     const Function<dim> & function,
@@ -83,8 +109,8 @@ public:
     const std::string & filename,
     const double & end_time) const;
 
-private:
   void output_grid(const Triangulation<dim> & triangulation) const;
+
   void create_directory(const std::string & dir) const;
 
   const ConservationLawParameters<dim> parameters;

@@ -110,10 +110,14 @@ void ShallowWater<dim>::define_problem()
       this->exact_solution_function = exact_solution_function_derived;
 
       // initialize bathymetry function
+      std::shared_ptr<FunctionParser<dim>> bathymetry_function_derived =
+        std::make_shared<FunctionParser<dim>>();
       std::map<std::string, double> constants;
       std::string bathymetry_string = "0";
-      bathymetry_function.initialize(
+      bathymetry_function_derived->initialize(
         "x", bathymetry_string, this->constants, false);
+      // point base class pointer to derived class function object
+      bathymetry_function = bathymetry_function_derived;
 
       break;
     }
@@ -160,8 +164,8 @@ void ShallowWater<dim>::define_problem()
       this->use_exact_solution_as_BC = false;
 
       // initial conditions
-      this->initial_conditions_strings[0] = "if(x<=bump_left,h_left,"
-                                            "if(x<=midpoint,h_left-bump_height,"
+      this->initial_conditions_strings[0] = "if(x<bump_left,h_left,"
+                                            "if(x<midpoint,h_left-bump_height,"
                                             "if(x<=bump_right,h_right-bump_height,h_right)))";
       this->initial_conditions_strings[1] = "0";
 
@@ -172,10 +176,14 @@ void ShallowWater<dim>::define_problem()
       this->has_exact_solution = false;
 
       // initialize bathymetry function
+      std::shared_ptr<FunctionParser<dim>> bathymetry_function_derived =
+        std::make_shared<FunctionParser<dim>>();
       std::string bathymetry_string = "if(abs(x-midpoint)<=0.5*bump_width,"
                                       "bump_height, 0)";
-      bathymetry_function.initialize(
+      bathymetry_function_derived->initialize(
         "x", bathymetry_string, this->constants, false);
+      // point base class pointer to derived class function object
+      bathymetry_function = bathymetry_function_derived;
 
       break;
     }
@@ -328,7 +336,7 @@ void ShallowWater<dim>::compute_ss_residual(Vector<double> & f)
     // compute bathymetry
     std::vector<double> bathymetry(this->n_q_points_cell);
     for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-      bathymetry[q] = bathymetry_function.value(points[q]);
+      bathymetry[q] = bathymetry_function->value(points[q]);
 
     // loop over quadrature points
     for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
@@ -539,9 +547,19 @@ void ShallowWater<dim>::compute_divergence_entropy_flux(
 }
 
 template <int dim>
-void ShallowWater<dim>::output_additional_quantities(
-  const PostProcessor<dim> & postprocessor) const
+void ShallowWater<dim>::output_results(
+  PostProcessor<dim> & postprocessor) const
 {
+  // create shallow water post-processor
+  ShallowWaterPostProcessor<dim> shallowwater_postprocessor(bathymetry_function);
+
+  // call post-processor
+  postprocessor.output_results(
+    this->new_solution,
+    this->dof_handler,
+    this->triangulation,
+    shallowwater_postprocessor);
+/*
   // output the bathymetry function
   //---------------------------------------------------------------------------
   std::string output_file = "bathymetry";
@@ -564,5 +582,6 @@ void ShallowWater<dim>::output_additional_quantities(
   Vector<double> bathymetry_values(waterlevel_dof_handler.n_dofs());
   VectorTools::interpolate(waterlevel_dof_handler, bathymetry_function,
     bathymetry_values);
+*/
 }
 

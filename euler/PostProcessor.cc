@@ -162,111 +162,82 @@ PostProcessor<dim>::~PostProcessor()
 {
 }
 
-/** \brief Output grid, solution, and viscosity to output file and print
- *         convergence table.
+/**
+ * \brief Outputs grid, solution, exact solution, and convergence data.
+ *
+ * \param[in] solution solution vector
+ * \param[in] dof_handler degree of freedom handler
+ * \param[in] triangulation triangulation
  */
 template <int dim>
 void PostProcessor<dim>::output_results(const Vector<double> & solution,
                                         const DoFHandler<dim> & dof_handler,
                                         const Triangulation<dim> & triangulation)
 {
-  if (is_last_cycle)
-  {
-    // create output directory if it doesn't exist
-    create_directory("output");
+  // create output directory if it doesn't exist
+  create_directory("output");
 
-    // create output subdirectory if it doesn't exist
-    create_directory(output_dir);
+  // create output subdirectory if it doesn't exist
+  create_directory(output_dir);
 
-    // output grid
-    if (parameters.output_mesh)
-    {
-      if (dim > 1)
-        output_grid(triangulation);
-      else
-        std::cout
-          << "User specified to output the mesh, but 1-d meshes cannot be output"
-          << std::endl;
-    }
+  // output grid
+  output_grid(triangulation);
 
-    // output solution
-    std::string solution_filename = "solution" + appendage_string;
-    output_solution(solution, dof_handler, solution_filename);
+  // output solution
+  std::string solution_filename = "solution" + appendage_string;
+  output_solution(solution, dof_handler, solution_filename);
 
-    // write exact solution output file
-    if (parameters.output_exact_solution and has_exact_solution)
-    {
-      // call function to evaluate and output exact solution
-      output_function(*exact_solution_function, solution_component_names,
-        solution_component_interpretations, filename_exact, parameters.end_time);
-    }
+  // output exact solution
+  output_exact_solution();
 
-    // output convergence table
-    if (has_exact_solution)
-    {
-      // format columns
-      convergence_table.set_precision("dx", 3);
-      convergence_table.set_scientific("dx", true);
-      if (not is_steady_state)
-      {
-        convergence_table.set_precision("dt", 3);
-        convergence_table.set_scientific("dt", true);
-        convergence_table.set_scientific("1/dt", true);
-      }
-      convergence_table.set_precision("L1 error", 3);
-      convergence_table.set_scientific("L1 error", true);
-      convergence_table.set_precision("L2 error", 3);
-      convergence_table.set_scientific("L2 error", true);
-      switch (parameters.refinement_mode)
-      {
-        case ConservationLawParameters<dim>::RefinementMode::time:
-        {
-          // evaluate temporal convergence rates
-          convergence_table.evaluate_convergence_rates(
-            "L1 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
-          convergence_table.evaluate_convergence_rates(
-            "L2 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
-          break;
-        }
-        case ConservationLawParameters<dim>::RefinementMode::space:
-        {
-          // evaluate spatial convergence rates
-          convergence_table.evaluate_convergence_rates(
-            "L1 error", ConvergenceTable::reduction_rate_log2);
-          convergence_table.evaluate_convergence_rates(
-            "L2 error", ConvergenceTable::reduction_rate_log2);
-          break;
-        }
-        default:
-        {
-          ExcNotImplemented();
-        }
-      }
-      // print convergence table to console
-      std::cout << std::endl;
-      convergence_table.write_text(std::cout);
-
-      // save convergence results to file
-      if (parameters.save_convergence_results)
-      {
-        // create output filestream for exact solution
-        std::string filename =
-          output_dir + "convergence" + appendage_string + ".gpl";
-        std::ofstream output_filestream(filename.c_str());
-        // write convergence results to file
-        convergence_table.write_text(
-          output_filestream,
-          TableHandler::table_with_separate_column_description);
-      }
-    }
-  }
+  // output convergence data
+  output_convergence_data();
 }
 
-/** \brief Outputs the solution to a file.
+/**
+ * \brief Outputs grid, solution, exact solution, and convergence data.
  *
- *  \param [in] values a vector of values for the quantity.
- *  \param [in] dof_handler degrees of freedom handler.
- *  \param [in] output_string string for the output filename.
+ * This version has an additional parameter for a DataPostprocessor object
+ * so that derived quantities can be output.
+ *
+ * \param[in] solution solution vector
+ * \param[in] dof_handler degree of freedom handler
+ * \param[in] triangulation triangulation
+ * \param[in] data_postprocessor postprocessor for derived quantities to
+ *            be output
+ */
+template <int dim>
+void PostProcessor<dim>::output_results(const Vector<double> & solution,
+                                        const DoFHandler<dim> & dof_handler,
+                                        const Triangulation<dim> & triangulation,
+                                        const DataPostprocessor<dim> & data_postprocessor)
+{
+  // create output directory if it doesn't exist
+  create_directory("output");
+
+  // create output subdirectory if it doesn't exist
+  create_directory(output_dir);
+
+  // output grid
+  output_grid(triangulation);
+
+  // output solution
+  std::string solution_filename = "solution" + appendage_string;
+  output_solution(solution, dof_handler, solution_filename, data_postprocessor);
+
+  // output exact solution
+  output_exact_solution();
+
+  // output convergence data
+  output_convergence_data();
+}
+
+/**
+ * \brief Outputs the solution to a file.
+ *
+ * \param[in] values a vector of values for the quantity.
+ * \param[in] dof_handler degrees of freedom handler.
+ * \param[in] output_string string for the output filename.
  */
 template <int dim>
 void PostProcessor<dim>::output_solution(const Vector<double> & solution,
@@ -280,6 +251,51 @@ void PostProcessor<dim>::output_solution(const Vector<double> & solution,
                        solution_component_interpretations,
                        dof_handler,
                        output_string);
+}
+
+/**
+ * \brief Outputs the solution to a file.
+ *
+ * This version has an additional parameter for a DataPostprocessor object
+ * so that derived quantities can be output.
+ *
+ * \param[in] values a vector of values for the quantity.
+ * \param[in] dof_handler degrees of freedom handler.
+ * \param[in] output_string string for the output filename.
+ * \param[in] data_postprocessor postprocessor for derived quantities to
+ *            be output
+ */
+template <int dim>
+void PostProcessor<dim>::output_solution(const Vector<double> & solution,
+                                         const DoFHandler<dim> & dof_handler,
+                                         const std::string & output_string,
+                                         const DataPostprocessor<dim> & data_postprocessor) const
+{
+  // call function that outputs a vector of values to a file,
+  // with the solution component names and types lists
+  output_at_dof_points(solution,
+                       solution_component_names,
+                       solution_component_interpretations,
+                       dof_handler,
+                       output_string,
+                       data_postprocessor);
+}
+
+/**
+ * \brief Outputs the exact solution to a file.
+ */
+template <int dim>
+void PostProcessor<dim>::output_exact_solution()
+{
+  if (parameters.output_exact_solution and has_exact_solution)
+  {
+    // call function to evaluate and output exact solution
+    output_function(*exact_solution_function,
+                    solution_component_names,
+                    solution_component_interpretations,
+                    filename_exact,
+                    parameters.end_time);
+  }
 }
 
 /**
@@ -303,8 +319,6 @@ void PostProcessor<dim>::output_at_dof_points(
   const DoFHandler<dim> & dof_handler,
   const std::string & output_string) const
 {
-  if (is_last_cycle)
-  {
     // create output directory and subdirectory if they do not exist
     create_directory("output");
     create_directory(output_dir);
@@ -342,6 +356,141 @@ void PostProcessor<dim>::output_at_dof_points(
 
       // write output file
       data_out.write_vtk(output_filestream);
+    }
+}
+
+/**
+ * \brief Outputs to a file a vector of values, possibly with multiple
+ *        components, evaluated at positions of the dofs.
+ *
+ * This version has an additional parameter for a DataPostprocessor object
+ * so that derived quantities can be output.
+ *
+ * \param[in] values a vector of values for the quantity.
+ * \param[in] component_names list of names of each component in the
+ *            vector of values
+ * \param[in] component_interpretations list of types (scalar or vector)
+ *            of each component in the vector of values
+ * \param[in] dof_handler degrees of freedom handler.
+ * \param[in] output_string string for the output filename.
+ * \param[in] data_postprocessor postprocessor for derived quantities to
+ *            be output
+ */
+template <int dim>
+void PostProcessor<dim>::output_at_dof_points(
+  const Vector<double> & values,
+  const std::vector<std::string> & component_names,
+  const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
+    component_interpretations,
+  const DoFHandler<dim> & dof_handler,
+  const std::string & output_string,
+  const DataPostprocessor<dim> & data_postprocessor) const
+{
+    // create output directory and subdirectory if they do not exist
+    create_directory("output");
+    create_directory(output_dir);
+
+    // create DataOut object for quantity
+    DataOut<dim> data_out;
+    data_out.attach_dof_handler(dof_handler);
+    data_out.add_data_vector(values,
+                             component_names,
+                             DataOut<dim>::type_dof_data,
+                             component_interpretations);
+    data_out.add_data_vector(values, data_postprocessor);
+    data_out.build_patches();
+
+    // write GNUplot file for 1-D and .vtk file otherwise
+    if (dim == 1)
+    {
+      // create output filestream
+      std::stringstream filename_ss;
+      filename_ss << output_dir << output_string << ".gpl";
+      std::string filename = filename_ss.str();
+      std::ofstream output_filestream(filename.c_str());
+      output_filestream.precision(15);
+
+      // write output file
+      data_out.write_gnuplot(output_filestream);
+    }
+    else
+    {
+      // create output filestream
+      std::stringstream filename_ss;
+      filename_ss << output_dir << output_string << ".vtk";
+      std::string filename = filename_ss.str();
+      std::ofstream output_filestream(filename.c_str());
+      output_filestream.precision(15);
+
+      // write output file
+      data_out.write_vtk(output_filestream);
+    }
+}
+
+/**
+ * \brief Outputs convergence table to console and to a file.
+ */
+template <int dim>
+void PostProcessor<dim>::output_convergence_data()
+{
+  if (has_exact_solution)
+  {
+    // format columns
+    convergence_table.set_precision("dx", 3);
+    convergence_table.set_scientific("dx", true);
+    if (not is_steady_state)
+    {
+      convergence_table.set_precision("dt", 3);
+      convergence_table.set_scientific("dt", true);
+      convergence_table.set_scientific("1/dt", true);
+    }
+    convergence_table.set_precision("L1 error", 3);
+    convergence_table.set_scientific("L1 error", true);
+    convergence_table.set_precision("L2 error", 3);
+    convergence_table.set_scientific("L2 error", true);
+
+    // evaluate convergence rates
+    switch (parameters.refinement_mode)
+    {
+      case ConservationLawParameters<dim>::RefinementMode::time:
+      {
+        // evaluate temporal convergence rates
+        convergence_table.evaluate_convergence_rates(
+          "L1 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
+        convergence_table.evaluate_convergence_rates(
+          "L2 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
+        break;
+      }
+      case ConservationLawParameters<dim>::RefinementMode::space:
+      {
+        // evaluate spatial convergence rates
+        convergence_table.evaluate_convergence_rates(
+          "L1 error", ConvergenceTable::reduction_rate_log2);
+        convergence_table.evaluate_convergence_rates(
+          "L2 error", ConvergenceTable::reduction_rate_log2);
+        break;
+      }
+      default:
+      {
+        ExcNotImplemented();
+      }
+    }
+
+    // print convergence table to console
+    std::cout << std::endl;
+    convergence_table.write_text(std::cout);
+
+    // save convergence results to file
+    if (parameters.save_convergence_results)
+    {
+      // create output filestream for exact solution
+      std::string filename =
+        output_dir + "convergence" + appendage_string + ".gpl";
+      std::ofstream output_filestream(filename.c_str());
+
+      // write convergence results to file
+      convergence_table.write_text(
+        output_filestream, TableHandler::table_with_separate_column_description);
     }
   }
 }
@@ -468,19 +617,31 @@ template <int dim>
 void PostProcessor<dim>::output_grid(
   const Triangulation<dim> & triangulation) const
 {
-  // create output directory if it doesn't exist
-  create_directory("output");
+  if (parameters.output_mesh)
+  {
+    if (dim > 1)
+    {
+      // create output directory if it doesn't exist
+      create_directory("output");
 
-  // create output subdirectory if it doesn't exist
-  create_directory(output_dir);
+      // create output subdirectory if it doesn't exist
+      create_directory(output_dir);
 
-  // create output filestream
-  std::string filename = output_dir + "grid.eps";
-  std::ofstream output(filename.c_str());
+      // create output filestream
+      std::string filename = output_dir + "grid.eps";
+      std::ofstream output(filename.c_str());
 
-  // write grid to eps
-  GridOut grid_out;
-  grid_out.write_eps(triangulation, output);
+      // write grid to eps
+      GridOut grid_out;
+      grid_out.write_eps(triangulation, output);
+    }
+    else
+    {
+      std::cout
+        << "User specified to output the mesh, but 1-d meshes cannot be output"
+        << std::endl;
+    }
+  }
 }
 
 /** \brief Update the time step size to be put in convergence table
@@ -517,7 +678,7 @@ void PostProcessor<dim>::create_directory(const std::string & directory) const
  * \brief Sets the current cycle and flags it if it is the last.
  */
 template <int dim>
-void PostProcessor<dim>::setCycle(const unsigned int & cycle)
+void PostProcessor<dim>::set_cycle(const unsigned int & cycle)
 {
   current_cycle = cycle;
   is_last_cycle = (cycle == parameters.n_refinement_cycles - 1);
@@ -530,14 +691,14 @@ template <int dim>
 void PostProcessor<dim>::createFineTriangulationAndDoFHandler(
   const Triangulation<dim> & triangulation)
 {
-    // create fine mesh on which to interpolate functions
-    fine_triangulation.copy_triangulation(triangulation);
-    const unsigned int final_refinement_level =
-      parameters.initial_refinement_level + parameters.n_refinement_cycles - 1;
-    const int n_refinements =
-      parameters.exact_solution_refinement_level - final_refinement_level;
-    if (n_refinements > 0)
-      fine_triangulation.refine_global(n_refinements);
+  // create fine mesh on which to interpolate functions
+  fine_triangulation.copy_triangulation(triangulation);
+  const unsigned int final_refinement_level =
+    parameters.initial_refinement_level + parameters.n_refinement_cycles - 1;
+  const int n_refinements =
+    parameters.exact_solution_refinement_level - final_refinement_level;
+  if (n_refinements > 0)
+    fine_triangulation.refine_global(n_refinements);
 }
 
 /**
@@ -562,7 +723,7 @@ void PostProcessor<dim>::output_function(
 {
   // create FESystem object for function
   const unsigned int n_components_function = component_names.size();
-  FESystem<dim> fe_function(FE_Q<dim>(parameters.degree),n_components_function);
+  FESystem<dim> fe_function(FE_Q<dim>(parameters.degree), n_components_function);
 
   // create dof handler for function and distribute dofs
   DoFHandler<dim> dof_handler(fine_triangulation);
@@ -573,8 +734,11 @@ void PostProcessor<dim>::output_function(
   VectorTools::interpolate(dof_handler, function, function_values);
 
   // output function values to file
-  output_at_dof_points(function_values, component_names,
-    component_interpretations, dof_handler, filename);
+  output_at_dof_points(function_values,
+                       component_names,
+                       component_interpretations,
+                       dof_handler,
+                       filename);
 }
 
 /**
@@ -599,11 +763,9 @@ void PostProcessor<dim>::output_function(
   const std::string & filename,
   const double & t) const
 {
-      // set time of function
-      function.set_time(t);
+  // set time of function
+  function.set_time(t);
 
-      // call time-independent version of function
-      output_function(function, component_names, component_interpretations,
-        filename);
+  // call time-independent version of function
+  output_function(function, component_names, component_interpretations, filename);
 }
-

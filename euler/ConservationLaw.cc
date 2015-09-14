@@ -60,7 +60,8 @@ void ConservationLaw<dim>::run()
   for (unsigned int cycle = 0; cycle < parameters.n_refinement_cycles; ++cycle)
   {
     // set cycle for post-processor
-    postprocessor.setCycle(cycle);
+    if (cycle == parameters.n_refinement_cycles-1)
+      postprocessor.set_cycle(cycle);
 
     // refine mesh if not the first cycle
     if (cycle > 0)
@@ -105,10 +106,7 @@ void ConservationLaw<dim>::run()
   } // end of refinement loop
 
   // output grid and solution and print convergence results
-  postprocessor.output_results(new_solution, dof_handler, triangulation);
-
-  // output additional quantities of interest
-  output_additional_quantities(postprocessor);
+  output_results(postprocessor);
 
   /*
      // output final viscosities if non-constant viscosity used
@@ -1611,3 +1609,15 @@ void ConservationLaw<dim>::get_dirichlet_nodes()
           dirichlet_nodes.push_back(it->first);
       }
 }
+
+/**
+ * \brief Outputs results.
+ */
+template <int dim>
+void ConservationLaw<dim>::output_results(
+  PostProcessor<dim> & postprocessor) const
+{
+  // call post-processor
+  postprocessor.output_results(new_solution, dof_handler, triangulation);
+}
+

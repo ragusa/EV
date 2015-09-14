@@ -17,6 +17,7 @@
 #include <deal.II/lac/vector.h>
 #include "ConservationLaw.h"
 #include "ShallowWaterParameters.h"
+#include "ShallowWaterPostProcessor.h"
 #include "ShallowWaterRiemannSolver.h"
 
 /**
@@ -89,13 +90,13 @@ private:
                         const std::vector<Tensor<1, dim>> & momentum,
                         std::vector<Tensor<1, dim>> & velocity) const;
 
-  void output_additional_quantities(const PostProcessor<dim> & postprocessor) const override;
+  void output_results(PostProcessor<dim> & postprocessor) const override;
 
   /** \brief Acceleration due to gravity */
   double gravity;
 
   /** \brief Bathymetry (bottom topography) function \f$b\f$ */
-  FunctionParser<dim> bathymetry_function;
+  std::shared_ptr<Function<dim>> bathymetry_function;
 };
 
 #include "ShallowWater.cc"
