@@ -60,6 +60,8 @@ public:
     ~ConservationLaw();
     void run();
 
+    DeclException0(ExcNaNEncountered);
+
 protected:
 
     /**

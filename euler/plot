@@ -1,34 +1,34 @@
 #!/usr/bin/env perl
 #
 # Calls the plot_detailed plot script with command-line arguments inferred
-# from the TARGET in CMakeLists.txt and the options in the appropriate input file.
+# from the options in the appropriate input file.
 #
-# USAGE: plot
+# USAGE: $ plot
+#
+#        OR
+#
+#        $ plot <conservation law>
+#
+#        where <conservation law> is "burgers", "euler", or "shallowwater".
+#        In the first usage, a default parameter for <conservation law> is used;
+#        This is determined by the variable $default_conservation_law, set below.
 
 use strict;
 
-# read CMakeLists to determine which conservation law executable was last used
-#================================================================================
-# initialize search arrays
-my $found_TARGET = 0;
-my $TARGET;
+# default conservation law to be plotted (see USAGE)
+my $default_conservation_law = "shallowwater";
 
-# read input file for search strings
-open(CMAKELISTS, '<', "CMakeLists.txt");
-while (my $line = <CMAKELISTS>)
+# determine the conservation law; if not provided as a command-line argument,
+# then use the default conservation law
+my $n_arguments = @ARGV;
+my $conservation_law;
+if ($n_arguments < 1)
 {
-  if ($line =~ /SET\(TARGET/)
-  {
-    my @TARGET_fields1 = split /\s+/, $line;
-    my @TARGET_fields2 = split /"/, $TARGET_fields1[1];
-    $TARGET = $TARGET_fields2[1];
-    $found_TARGET = 1;
-    last;
-  }
+   $conservation_law = $default_conservation_law;
 }
-if (not $found_TARGET)
+else
 {
-  die "TARGET was not found in CMakeLists.txt\n";
+   $conservation_law = $ARGV[0];
 }
 
 # read appropriate input file to find the necessary input parameters
@@ -51,7 +51,7 @@ my $problem_ID_found = 0;
 my $time_discretization;
 my $time_discretization_found = 0;
 
-open(IN, '<', "input_$TARGET") or die $!;
+open(IN, '<', "input_$conservation_law") or die $!;
 while (<IN>)
 {
   # get line
@@ -109,4 +109,4 @@ if (not($problem_ID_found and $time_discretization_found))
 my $problem_name = $problem_names{$problem_ID};
 
 # call plot script
-system("plot_explicit $TARGET $problem_name $time_discretization sol");
+system("plot_explicit $conservation_law $problem_name $time_discretization sol");

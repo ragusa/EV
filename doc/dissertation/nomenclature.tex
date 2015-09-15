@@ -1,33 +1,24 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-%  New template code for TAMU Theses and Dissertations starting Fall 2012.  
-%  For more info about this template or the 
-%  TAMU LaTeX User's Group, see http://www.howdy.me/.
-%
-%  Author: Wendy Lynn Turner 
-%	 Version 1.0 
-%  Last updated 8/5/2012
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%%                           NOMENCLATURE
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 \chapter*{NOMENCLATURE}
-\addcontentsline{toc}{chapter}{NOMENCLATURE}  % Needs to be set to part, so the TOC doesnt add 'CHAPTER ' prefix in the TOC.
+% Needs to be set to part, so the TOC doesnt add 'CHAPTER ' prefix in the TOC.
+\addcontentsline{toc}{chapter}{NOMENCLATURE}  
 
-\begin{tabular}{ll}
-B/CS  & Bryan/College Station\tabularnewline
-HSUS & Humane Society of the United States\tabularnewline
-P & Pressure\tabularnewline
-T  & Time\tabularnewline
-TVA & Tennessee Valley Authority\tabularnewline
-TxDOT \hfill{}\hfill{}\hfill{}\hfill{}\hfill{}\hfill{}\hfill{}\hfill{} & \multicolumn{1}{l}{Texas Department of Transportation}\tabularnewline
+%\begin{tabular}{ll}
+%B/CS  & Bryan/College Station\tabularnewline
+%HSUS & Humane Society of the United States\tabularnewline
+%P & Pressure\tabularnewline
+%T  & Time\tabularnewline
+%TVA & Tennessee Valley Authority\tabularnewline
+%TxDOT \hfill{}\hfill{}\hfill{}\hfill{}\hfill{}\hfill{}\hfill{}\hfill{} & \multicolumn{1}{l}{Texas Department of Transportation}\tabularnewline
+%\end{tabular}
+\begin{tabular}{l p{5in}}
+$\mathcal{D}$ & problem domain\\
+$\f$  & conservation law flux function\\
+$t$   & time\\
+$u$   & depending on context, may denote either a scalar solution or $x$ component
+        of velocity\\
+$u_h$ & numerical approximation to $u$\\
+$\U$  & array of discrete solution values\\
+$\x$  & spatial position\\
 \end{tabular}
-
-\vspace{2em}
-
-This page is optional.
 
 \pagebreak{}

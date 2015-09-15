@@ -51,14 +51,14 @@ elsif ($conservation_law eq "euler")
 }
 elsif ($conservation_law eq "shallowwater")
 {
-   @quantity = ("height","momentum","bathymetry","waterlevel");
+   @quantity = ("waterlevel");
    # columns are: 
    # 1: x
    # 2: height
    # 3: momentum
    # 4: bathymetry
    # 5: water level
-   @column = (2,3,4,5);
+   @column = (5);
 }
 else
 {
@@ -71,8 +71,7 @@ chdir "plotscripts";
 # determine which plotscript to use
 my $plotscript;
 if ($plot_type eq "sol") {
-   #$plotscript = "solutions.gp";
-   $plotscript = "waterlevel.gp";
+   $plotscript = "solutions.gp";
 } elsif ($plot_type eq "conv") {
    $plotscript = "convergence.gp";
 } else {
