@@ -1466,7 +1466,7 @@ void ConservationLaw<dim>::check_nan()
 {
   unsigned int n = n_dofs;
   for (unsigned int i = 0; i < n; ++i)
-    Assert(new_solution(i) == new_solution(i), ExcNumberNotFinite());
+    AssertIsFinite(new_solution(i));
 }
 
 /** \brief Gets the values and indices of nonzero elements in a sparse matrix.

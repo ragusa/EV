@@ -2,18 +2,9 @@
 #  CMake script:
 ##
 
-# Set the name of the project and target:
-SET(TARGET "shallowwater")
-
-# Declare all source files the target consists of:
-SET(TARGET_SRC
-  ${TARGET}.cc
-  # You can specify additional files here!
-  )
-
 # add option to prevent c++11 standard error
 SET(GNUXX_FLAGS "-std=c++0x")
-add_definitions(${GNUXX_FLAGS})
+ADD_DEFINITIONS(${GNUXX_FLAGS})
 
 # Usually, you will not need to modify anything beyond this point...
 
@@ -21,7 +12,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8)
 
 FIND_PACKAGE(deal.II 8.0 QUIET
   HINTS
-    ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ ../../../ ../../../../../ ../../soft/deal.ii_dev/installed/ $ENV{DEAL_II_DIR}
+    ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ $ENV{DEAL_II_DIR}
   #
   # If the deal.II library cannot be found (because it is not installed at a
   # default location or your project resides at an uncommon place), you
@@ -39,5 +30,14 @@ IF (NOT ${deal.II_FOUND})
 ENDIF ()
 
 DEAL_II_INITIALIZE_CACHED_VARIABLES()
-PROJECT(${TARGET})
-DEAL_II_INVOKE_AUTOPILOT()
+
+PROJECT(myproject)
+
+ADD_EXECUTABLE(burgers burgers.cc)
+DEAL_II_SETUP_TARGET(burgers)
+
+ADD_EXECUTABLE(euler euler.cc)
+DEAL_II_SETUP_TARGET(euler)
+
+ADD_EXECUTABLE(shallowwater shallowwater.cc)
+DEAL_II_SETUP_TARGET(shallowwater)
