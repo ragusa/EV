@@ -1,0 +1,32 @@
+%==============================================================================
+% Theorem environments for dissertation
+%==============================================================================
+\usepackage{ifthen}
+
+\newtheorem{mytheorem}{Theorem}[section]
+\newtheorem{mylemma}{Lemma}[section]
+\newtheorem{mycorollary}{Corollary}[section]
+\newtheorem{mydefinition}{Definition}[section]
+\newtheorem{myproposition}{Proposition}[section]
+
+\newenvironment{theorem}[2]
+   {\ifthenelse{\equal{#1}{}}{\begin{mytheorem}}{\begin{mytheorem}[#1]}
+   \ifthenelse{\equal{#2}{}}{}{\label{#2}}}
+   {\end{mytheorem}}
+\newenvironment{lemma}[2]
+   {\ifthenelse{\equal{#1}{}}{\begin{mylemma}}{\begin{mylemma}[#1]}
+   \ifthenelse{\equal{#2}{}}{}{\label{#2}}}
+   {\end{mylemma}}
+\newenvironment{corollary}[2]
+   {\ifthenelse{\equal{#1}{}}{\begin{mycorollary}}{\begin{mycorollary}[#1]}
+   \ifthenelse{\equal{#2}{}}{}{\label{#2}}}
+   {\end{mycorollary}}
+\newenvironment{definition}[2]
+   {\ifthenelse{\equal{#1}{}}{\begin{mydefinition}}{\begin{mydefinition}[#1]}
+   \ifthenelse{\equal{#2}{}}{}{\label{#2}}}
+   {\end{mydefinition}}
+\newenvironment{proposition}[2]
+   {\ifthenelse{\equal{#1}{}}{\begin{myproposition}}{\begin{myproposition}[#1]}
+   \ifthenelse{\equal{#2}{}}{}{\label{#2}}}
+   {\end{myproposition}}
+

@@ -1,7 +1,7 @@
 %--------------------------------------------------------------------------------
 \subsubsection{Explicit Euler}
 %--------------------------------------------------------------------------------
-\begin{theorem}[label={exloworderDMP}]{Explicit Euler Scheme Discrete Maximum Principle}
+\begin{theorem}{Explicit Euler Scheme Discrete Maximum Principle}{exloworderDMP}
 If the CFL-like condition
 \begin{equation}\label{ex_CFL}
    \Delta t \leq \frac{m_i}{A_{i,i}^L}\quad\forall i
@@ -50,8 +50,7 @@ able to be applied:
 and similarly for the lower bound.\qed
 \end{proof}
 %--------------------------------------------------------------------------------
-\begin{corollary}{Low-Order Solution Satisfies Upper CMP Bound without Source}
-  \label{withoutsource}
+\begin{corollary}{Low-Order Solution Satisfies Upper CMP Bound without Source}{withoutsource}
    Without any source, the low-order solution obtained using the Explicit Euler
    method satisfies the upper bound
    for the continuous maximum principle given by Theorem \ref{cont}:
@@ -102,7 +101,7 @@ proving the above condition. $f'(\zeta)=-1+e^{-\zeta}$ is indeed nonpositive; th
 the upper DMP bound is proven to satisfy the upper CMP bound.\qed
 \end{proof}
 %--------------------------------------------------------------------------------
-\begin{corollary}{Low-Order Solution Not Guaranteed to Satisfy Upper CMP Bound with Source}
+\begin{corollary}{Low-Order Solution Not Guaranteed to Satisfy Upper CMP Bound with Source}{}
    With a source, the low-order solution obtained using the Explicit Euler
    method cannot be proven to satisfy the upper bound
    for the continuous maximum principle given by Theorem \ref{cont}:

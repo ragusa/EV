@@ -1,12 +1,13 @@
 %==============================================================================
-% THEOREM ENVIRONMENTS
+% Theorem environments for personal notes
 %==============================================================================
-\RequirePackage[most]{tcolorbox}
+\usepackage[most]{tcolorbox}
+\usepackage{ifthen}
 
 \makeatletter
 
 % environment for theorems
-\newtcolorbox[auto counter,number within=section]{theorem}[2][]{
+\newtcolorbox[auto counter,number within=section]{colortheorem}[2][]{
 breakable,
 enhanced,
 colback=blue!05,
@@ -21,7 +22,7 @@ overlay unbroken and first={
 }
 
 % environment for lemmas
-\newtcolorbox[auto counter,number within=section]{lemma}[2][]{
+\newtcolorbox[auto counter,number within=section]{colorlemma}[2][]{
 breakable,
 enhanced,
 colback=green!05,
@@ -36,7 +37,7 @@ overlay unbroken and first={
 }
 
 % environment for Corollaries
-\newtcolorbox[auto counter,number within=section]{corollary}[2][]{
+\newtcolorbox[auto counter,number within=section]{colorcorollary}[2][]{
 breakable,
 enhanced,
 colback=red!05,
@@ -51,7 +52,7 @@ overlay unbroken and first={
 }
 
 % environment for Definitions
-\newtcolorbox[auto counter,number within=section]{definition}[2][]{
+\newtcolorbox[auto counter,number within=section]{colordefinition}[2][]{
 breakable,
 enhanced,
 colback=orange!05,
@@ -66,7 +67,7 @@ overlay unbroken and first={
 }
 
 % environment for Propositions
-\newtcolorbox[auto counter,number within=section]{proposition}[2][]{
+\newtcolorbox[auto counter,number within=section]{colorproposition}[2][]{
 breakable,
 enhanced,
 colback=black!05,
@@ -82,16 +83,25 @@ overlay unbroken and first={
 
 \makeatother
 
-% other math environments
-\newenvironment{proof}[1][Proof]{\begin{trivlist}
-\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
-\newenvironment{example}[1][Example]{\begin{trivlist}
-\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
-\newenvironment{remark}[1][Remark]{\begin{trivlist}
-\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+% create standard environments for each theorem environment
+\newenvironment{theorem}[2]
+   {\ifthenelse{\equal{#2}{}}{\begin{colortheorem}{#1}}
+   {\begin{colortheorem}[label={#2}]{#1}}}
+   {\end{colortheorem}}
+\newenvironment{lemma}[2]
+   {\ifthenelse{\equal{#2}{}}{\begin{colorlemma}{#1}}
+   {\begin{colorlemma}[label={#2}]{#1}}}
+   {\end{colorlemma}}
+\newenvironment{corollary}[2]
+   {\ifthenelse{\equal{#2}{}}{\begin{colorcorollary}{#1}}
+   {\begin{colorcorollary}[label={#2}]{#1}}}
+   {\end{colorcorollary}}
+\newenvironment{definition}[2]
+   {\ifthenelse{\equal{#2}{}}{\begin{colordefinition}{#1}}
+   {\begin{colordefinition}[label={#2}]{#1}}}
+   {\end{colordefinition}}
+\newenvironment{proposition}[2]
+   {\ifthenelse{\equal{#2}{}}{\begin{colorproposition}{#1}}
+   {\begin{colorproposition}[label={#2}]{#1}}}
+   {\end{colorproposition}}
 
-% QED symbol command
-\newcommand{\qed}{\nobreak \ifvmode \relax \else
-      \ifdim\lastskip<1.5em \hskip-\lastskip
-      \hskip1.5em plus0em minus0.5em \fi \nobreak
-      \vrule height0.75em width0.5em depth0.25em\fi}

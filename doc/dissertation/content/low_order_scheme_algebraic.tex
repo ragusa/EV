@@ -4,7 +4,7 @@
 In this section, an algebraic approach is taken to develop a low-order scheme,
 which is based on a low-order artificial diffusion matrix:
 %--------------------------------------------------------------------------------
-\begin{definition}{Low-Order Artificial Diffusion Matrix}
+\begin{definition}{Low-Order Artificial Diffusion Matrix}{}
    The low-order artificial diffusion matrix $\mathbf{D}^L$ is defined as
    \begin{equation}
       D_{i,j}^L \equiv \left\{\begin{array}{c c}
@@ -20,7 +20,7 @@ The low-order system matrix is then defined as the sum of the inviscid
 steady-state system matrix $\mathbf{A}$ and the low-order artificial diffusion
 matrix $\mathbf{D}^L$:
 %--------------------------------------------------------------------------------
-\begin{definition}{Low-Order Steady-State System Matrix}
+\begin{definition}{Low-Order Steady-State System Matrix}{}
    The low-order steady-state system matrix is
    \begin{equation}\label{systemmatrixdef}
       \mathbf{A}^L \equiv \mathbf{A} + \mathbf{D}^L.
@@ -41,7 +41,7 @@ system matrix defined in Equation \eqref{systemmatrixdef} is an M-matrix, which
 allows a discrete maximum principle for the low-order solution to be proven in
 Section \ref{DMP}.
 %--------------------------------------------------------------------------------
-\begin{lemma}[label={offdiagonalnegative}]{Non-Positivity of Off-Diagonal Matrix Entries}
+\begin{lemma}{Non-Positivity of Off-Diagonal Matrix Entries}{offdiagonalnegative}
    The off-diagonal elements of the low-order steady-state system matrix
    are non-positive: $A^L_{i,j}\le 0, j\ne i$.
 \end{lemma}
@@ -63,7 +63,7 @@ outputs of the $\max()$ function:
 \end{tabular}
 \end{proof}
 %--------------------------------------------------------------------------------
-\begin{lemma}[label={diagonalpositive}]{Non-Negativity of Diagonal Matrix Entries}
+\begin{lemma}{Non-Negativity of Diagonal Matrix Entries}{diagonalpositive}
    The diagonal elements of the linear system matrix are non-negative: $A^L_{i,i}\ge 0$.
 \end{lemma}
 \begin{proof}
@@ -93,7 +93,7 @@ to some positive value such as 1 with a corresponding incoming value
 accounted for in the right hand side $\b$ of the linear system.\qed
 \end{proof}
 %--------------------------------------------------------------------------------
-\begin{lemma}{Non-Negativity of Row Sum}
+\begin{lemma}{Non-Negativity of Row Sum}{}
    The sum of all elements in a row $i$ is non-negative: $\sumj A^L_{i,j} \ge 0$.
 \end{lemma}
 
@@ -111,7 +111,7 @@ Using the fact that $\sumj\varphi_j(\x)=1$,
 \end{eqnarray*}
 \end{proof}
 %--------------------------------------------------------------------------------
-\begin{lemma}[label={diagonallydominant}]{Diagonal Dominance}
+\begin{lemma}{Diagonal Dominance}{diagonallydominant}
    $\mathbf{A}^L$ is strictly diagonally dominant:
    $\left|A^L_{i,i}\right| \ge \sum\limits_{j\ne i} \left|A^L_{i,j}\right|$.
 \end{lemma}
@@ -126,7 +126,7 @@ it is proven that $\mathbf{A}^L$ is strictly diagonally dominant:
 \end{eqnarray*}
 \end{proof}
 %--------------------------------------------------------------------------------
-\begin{lemma}{M-Matrix}
+\begin{lemma}{M-Matrix}{}
    $\mathbf{A}^L$ is an M-Matrix.
 \end{lemma}
 \begin{proof}

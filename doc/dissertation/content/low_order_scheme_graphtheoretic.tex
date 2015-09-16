@@ -3,7 +3,7 @@
 In this section, a graph-theoretic approach is taken to define a low-order
 scheme that is maximum principle preserving. The following bilinear form
 is employed in the low-order scheme:
-\begin{definition}{Local Bilinear Form}
+\begin{definition}{Local Bilinear Form}{}
    The local bilinear form for cell $K$ is defined as follows:
    \begin{equation}\label{bilinearform}
       b_K(\varphi_j, \varphi_i) \equiv \left\{\begin{array}{l l}
@@ -19,7 +19,7 @@ is employed in the low-order scheme:
 %--------------------------------------------------------------------------------
 The low-order viscosity is defined as follows:
 %--------------------------------------------------------------------------------
-\begin{definition}{Low-Order Viscosity}
+\begin{definition}{Low-Order Viscosity}{}
    The low-order viscosity for the radiative transfer equation on cell $K$ is
    defined as follows:
    \begin{equation}
@@ -31,7 +31,7 @@ The low-order viscosity is defined as follows:
    dual-support of test functions $\varphi_i$ and $\varphi_j$.
 \end{definition}
 %--------------------------------------------------------------------------------
-\begin{definition}{Low-Order Artificial Diffusion Matrix}
+\begin{definition}{Low-Order Artificial Diffusion Matrix}{}
    The low-order artificial diffusion matrix $\mathbf{D}^L$ is defined as
    \begin{equation}\label{loworderdiffusionGT}
       D_{i,j}^L \equiv \sum\limits_{K\subset S_{i,j}}\nu_K^L b_K(\varphi_j,\varphi_i).
@@ -42,7 +42,7 @@ The low-order system matrix is then defined as the sum of the inviscid
 steady-state system matrix $\mathbf{A}$ and the low-order artificial diffusion
 matrix $\mathbf{D}^L$:
 %--------------------------------------------------------------------------------
-\begin{definition}{Low-Order Steady-State System Matrix}
+\begin{definition}{Low-Order Steady-State System Matrix}{}
    The low-order steady-state system matrix is
    \begin{equation}\label{loworderssmatrixGT}
       \mathbf{A}^L \equiv \mathbf{A} + \mathbf{D}^L.
@@ -58,7 +58,7 @@ system matrix defined in Equation \eqref{loworderssmatrixGT} is an M-matrix, whi
 allows a discrete maximum principle for the low-order solution to be proven in
 Section \ref{DMP}.
 %--------------------------------------------------------------------------------
-\begin{lemma}[label={offdiagonalnegative_gt}]{Non-Positivity of Off-Diagonal Elements}
+\begin{lemma}{Non-Positivity of Off-Diagonal Elements}{offdiagonalnegative_gt}
    The off-diagonal elements of the linear system matrix are non-positive:
    $A^L_{i,j}\le 0, j\ne i$.
 \end{lemma}
@@ -91,7 +91,7 @@ From Equations \eqref{loworderssmatrixGT} and \eqref{loworderdiffusionGT},
 \end{eqnarray*}
 \end{proof}
 %--------------------------------------------------------------------------------
-\begin{lemma}[label={diagonalpositive_gt}]{Non-Negativity of Diagonal Elements}
+\begin{lemma}{Non-Negativity of Diagonal Elements}{diagonalpositive_gt}
    The diagonal elements  of the linear system matrix are non-negative: $A^L_{i,i}\ge 0$.
 \end{lemma}
 
@@ -121,7 +121,7 @@ to some positive value such as 1 with a corresponding incoming value
 accounted for in the right hand side $\b$ of the linear system.\qed
 \end{proof}
 %--------------------------------------------------------------------------------
-\begin{lemma}{Non-Negativity of Row Sums}
+\begin{lemma}{Non-Negativity of Row Sums}{}
    The sum of all elements in a row $i$ is non-negative: $\sum\limits_j A^L_{i,j} \ge 0$.
 \end{lemma}
 
@@ -142,7 +142,7 @@ $\sum\limits_j b_K(\varphi_j,\varphi_i)=0$,
 \end{eqnarray*}
 \end{proof}
 %--------------------------------------------------------------------------------
-\begin{lemma}[label={diagonallydominant_gt}]{Diagonal Dominance}
+\begin{lemma}{Diagonal Dominance}{diagonallydominant_gt}
    $\mathbf{A}^L$ is strictly diagonally dominant:
    $\left|A^L_{i,i}\right| \ge \sum\limits_{j\ne i} \left|A^L_{i,j}\right|$.
 \end{lemma}
@@ -157,7 +157,7 @@ it is proven that $\mathbf{A}^L$ is strictly diagonally dominant:
 \end{eqnarray*}
 \end{proof}
 %--------------------------------------------------------------------------------
-\begin{lemma}{M-Matrix}
+\begin{lemma}{M-Matrix}{}
    $\mathbf{A}^L$ is an M-Matrix.
 \end{lemma}
 \begin{proof}
