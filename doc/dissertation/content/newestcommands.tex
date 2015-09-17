@@ -1,0 +1,113 @@
+% general
+\newcommand{\spaceposition}{\mathbf{x}}
+\newcommand{\timevalue}{t}
+\newcommand{\timestepsize}{\Delta\timevalue}
+\newcommand{\timeindex}{n}
+\newcommand{\speed}{v}
+\newcommand{\velocity}{\mathbf{\speed}}
+\newcommand{\normalvector}{\mathbf{n}}
+
+% domain and FEM
+\newcommand{\domain}{\mathcal{D}}
+\newcommand{\domainboundary}{\partial\domain}
+\newcommand{\cellindex}{K}
+\newcommand{\volume}{V}
+\newcommand{\testfunction}{\varphi}
+\newcommand{\support}{S}
+
+% local viscous bilinear form
+\newcommand{\localviscbilinearform}{b}
+\newcommand{\cellvolume}{\volume_\cellindex}
+\newcommand{\cardinalitycell}{n_\cellindex}
+\newcommand{\indicescell}{\mathcal{I}}
+
+% entropy viscosity
+\newcommand{\entropy}{\eta}
+\newcommand{\entropyjump}{J}
+\newcommand{\entropyresidual}{\mathcal{R}}
+\newcommand{\entropyresidualcoef}{c_\entropyresidual}
+\newcommand{\entropyjumpcoef}{c_\entropyjump}
+
+% viscosity
+\newcommand{\visc}{\nu_\cellindex}
+\newcommand{\lowordervisc}{\visc^L}
+\newcommand{\highordervisc}{\visc^H}
+\newcommand{\entropyvisc}{\visc^\entropy}
+
+% conservation law
+\newcommand{\consfluxletter}{f}
+\newcommand{\consfluxscalar}{\mathbf{\consfluxletter}}
+\newcommand{\consfluxvector}{\mathbf{\MakeUppercase{\consfluxletter}}}
+\newcommand{\conssource}{\mathbf{S}}
+
+% solution
+\newcommand{\scalarsolution}{u}
+\newcommand{\approximatescalarsolution}{\scalarsolution_h}
+\newcommand{\solutionvalueletter}{U}
+\newcommand{\solutionvector}{\mathbf{\solutionvalueletter}}
+\newcommand{\lowordersolution}{\solutionvector^L}
+\newcommand{\highordersolution}{\solutionvector^H}
+
+% mass matrix
+\newcommand{\massmatrixletter}{M}
+\newcommand{\massmatrix}{\mathbf{\massmatrixletter}}
+\newcommand{\consistentmassmatrix}{\massmatrix^C}
+\newcommand{\lumpedmassmatrix}{\massmatrix^L}
+
+% steady-state system matrix and rhs
+\newcommand{\ssmatrixletter}{A}
+\newcommand{\ssmatrix}{\mathbf{\ssmatrixletter}}
+\newcommand{\loworderssmatrix}{\ssmatrix^L}
+\newcommand{\highorderssmatrix}{\ssmatrix^H}
+\newcommand{\ssrhsletter}{b}
+\newcommand{\ssrhs}{\mathbf{\ssrhsletter}}
+\newcommand{\ssresletter}{r}
+\newcommand{\ssres}{\mathbf{\ssresletter}}
+
+% diffusion matrix
+\newcommand{\diffusionmatrixletter}{D}
+\newcommand{\diffusionmatrix}{\mathbf{\diffusionmatrixletter}}
+\newcommand{\loworderdiffusionmatrix}{\diffusionmatrix^L}
+\newcommand{\highorderdiffusionmatrix}{\diffusionmatrix^H}
+
+% Runge-Kutta
+\newcommand{\RKstagesolution}{\hat{\mathbf{\solutionvalueletter}}}
+\newcommand{\RKintermediatesolution}{\tilde{\mathbf{\solutionvalueletter}}}
+\newcommand{\RKoldsolutioncoef}{\alpha}
+\newcommand{\RKstagesolutioncoef}{\beta}
+\newcommand{\RKtimecoef}{c}
+\newcommand{\RKstagetime}{\hat{\timevalue}}
+
+% FCT
+\newcommand{\DMPbound}{W}
+\newcommand{\DMPboundsi}{\DMPbound^\pm_i}
+\newcommand{\limitedfluxbound}{Q}
+\newcommand{\limitedfluxboundsi}{\limitedfluxbound^\pm_i}
+\newcommand{\limiterletter}{L}
+\newcommand{\limitermatrix}{\mathbf{\limiterletter}}
+\newcommand{\correctionfluxletter}{p}
+\newcommand{\correctionfluxvector}{\mathbf{\correctionfluxletter}}
+\newcommand{\correctionfluxij}{\MakeUppercase{\correctionfluxletter}_{i,j}}
+\newcommand{\correctionfluxmatrix}{\mathbf{\MakeUppercase{\correctionfluxletter}}}
+\newcommand{\correctionfluxsumsi}{\MakeUppercase{\correctionfluxletter}^\pm_i}
+
+% radiation transport
+\newcommand{\angularflux}{\psi}
+\newcommand{\speedoflight}{c}
+\newcommand{\totalcrosssection}{\Sigma_t}
+\newcommand{\reactioncoef}{\sigma}
+\newcommand{\directionvector}{\mathbf{\Omega}}
+\newcommand{\scalarsource}{q}
+
+% Euler equations
+\newcommand{\density}{\rho}
+\newcommand{\totalenergy}{E}
+\newcommand{\momentum}{\mathbf{m}}
+\newcommand{\pressure}{p}
+\newcommand{\gasconstant}{\gamma}
+
+% shallow water equations
+\newcommand{\height}{h}
+\newcommand{\heightmomentum}{\mathbf{q}}
+\newcommand{\bathymetry}{b}
+

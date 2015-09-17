@@ -1,24 +1,165 @@
 \chapter*{NOMENCLATURE}
-% Needs to be set to part, so the TOC doesnt add 'CHAPTER ' prefix in the TOC.
 \addcontentsline{toc}{chapter}{NOMENCLATURE}  
 
-%\begin{tabular}{ll}
-%B/CS  & Bryan/College Station\tabularnewline
-%HSUS & Humane Society of the United States\tabularnewline
-%P & Pressure\tabularnewline
-%T  & Time\tabularnewline
-%TVA & Tennessee Valley Authority\tabularnewline
-%TxDOT \hfill{}\hfill{}\hfill{}\hfill{}\hfill{}\hfill{}\hfill{}\hfill{} & \multicolumn{1}{l}{Texas Department of Transportation}\tabularnewline
-%\end{tabular}
-\begin{tabular}{l p{5in}}
-$\mathcal{D}$ & problem domain\\
-$\f$  & conservation law flux function\\
-$t$   & time\\
-$u$   & depending on context, may denote either a scalar solution or $x$ component
-        of velocity\\
-$u_h$ & numerical approximation to $u$\\
-$\U$  & array of discrete solution values\\
-$\x$  & spatial position\\
+Table \ref{tab:abbreviations} lists the abbreviations used in this dissertation,
+and Table \ref{tab:symbols} lists the symbols used in this dissertation.
+
+\begin{table}[htb]
+\caption{Abbreviations Used in Dissertation\label{tab:abbreviations}}
+\begin{center}
+\begin{tabular}{l l}\hline
+\emph{Abbreviation} & \emph{Description}\\\hline
+DMP & discrete maximum principle\\
+EV  & entropy viscosity\\
+FCT & flux-corrected transport\\
+FEM & finite element method\\\hline
 \end{tabular}
+\end{center}
+\end{table}
+
+\begin{center}
+\begin{longtable}{l p{5in}}
+\caption{Symbols Used in Dissertation\label{tab:symbols}}\\
+\hline
+\emph{Symbol} & \emph{Description}\\
+\hline
+\endfirsthead
+\hline
+\emph{Symbol} & \emph{Description}\\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+%==============================================================================
+% Latin alphabet: A-Z
+%==============================================================================
+% A-B
+%------------------------------------------------------------------------------
+$\ssmatrix$        & steady-state matrix\\
+$\highorderssmatrix$ & high-order steady-state matrix\\
+$\loworderssmatrix$ & low-order steady-state matrix\\
+$\bathymetry$      & bathymetry (bottom topography) function for shallow
+                     water equations\\
+$\ssrhs$           & steady-state right hand side vector\\
+$\localviscbilinearform_\cellindex(\testfunction_i,\testfunction_j)$ &
+                     viscous bilinear form for cell $\cellindex$ and test
+                     functions $\testfunction_i$ and $\testfunction_j$\\
+
+% C
+%------------------------------------------------------------------------------
+$\speedoflight$    & speed of light\\
+$\RKtimecoef_i$    & time step size fraction for stage $i$ of a
+                     Runge-Kutta time step\\
+$\entropyjumpcoef$ & coefficient for the entropy jump term in the definition
+                     of entropy viscosity\\
+$\entropyresidualcoef$ & coefficient for the entropy residual term in the
+                         definition of entropy viscosity\\
+
+% D
+%------------------------------------------------------------------------------
+$\highorderdiffusionmatrix$ & high-order diffusion matrix\\
+$\loworderdiffusionmatrix$ & low-order diffusion matrix\\
+$\domain$          & problem domain\\
+$\domainboundary$  & problem domain boundary\\
+
+% E-K
+%------------------------------------------------------------------------------
+$\totalenergy$     & total energy density\\
+$\consfluxscalar$  & conservation law flux function for scalar case\\
+$\consfluxvector$  & conservation law flux function for vector case\\
+$\height$          & height\\
+$\indicescell(\cellindex)$ & set of degree of freedom indices with support on
+                             cell $\cellindex$\\
+$\entropyjump_F$ & entropy jump for face $F$\\
+$\cellindex$       & cell index\\
+
+% L-M
+%------------------------------------------------------------------------------
+$\limitermatrix$   & matrix of limiting coefficients\\
+$\limiterletter_{i,j}$ & limiting coefficient for degrees of freedom $i$
+                         and $j$\\
+$\limiterletter^\pm_i$ & limiting coefficient bounds for degree of freedom $i$
+                         due to DMP of $i$ alone\\
+$\momentum$        & momentum\\
+$\consistentmassmatrix$ & consistent mass matrix\\
+$\lumpedmassmatrix$ & lumped mass matrix\\
+
+% N-P
+%------------------------------------------------------------------------------
+$\timeindex$       & time index\\
+$\normalvector$    & normal vector to a surface\\
+$\cardinalitycell$ & cardinality of cell $\cellindex$\\
+$\pressure$        & pressure\\
+$\correctionfluxvector$ & FCT correction flux vector\\
+$\correctionfluxmatrix$ & matrix of FCT internodal correction flux entries\\
+$\correctionfluxij$ & FCT internodal correction flux for degrees of freedom
+                      $i$ and $j$\\
+$\correctionfluxsumsi$ & sum of positive ($+$) and negative ($-$) FCT internodal
+                         correction fluxes for degree of freedom $i$\\
+
+% Q-T
+%------------------------------------------------------------------------------
+$\scalarsource$    & scalar source function\\
+$\heightmomentum$  & ``momentum'' for shallow water equations,
+                     $\height\velocity$\\
+$\limitedfluxboundsi$ & upper and lower bounds for limited flux sum for degree
+                        of freedom $i$\\
+$\ssres$           & steady-state residual vector\\
+$\entropyresidual_\cellindex$ & entropy residual for cell $\cellindex$\\
+$\support$         & support of FEM test/basis function\\
+$\conssource$      & conservation law source function\\
+$\timevalue$       & time\\
+
+% U
+%------------------------------------------------------------------------------
+$\RKstagetime_i$   & stage $i$ time of a Runge-Kutta time step\\
+$\scalarsolution$  & depending on context, may denote either a scalar solution or
+                     $x$ component of velocity\\
+$\approximatescalarsolution$ & numerical approximation to $\scalarsolution$\\
+$\solutionvector$  & solution vector\\
+$\RKstagesolution^i$ & stage solution vector for stage $i$ of a Runge-Kutta time
+                       step\\
+$\RKintermediatesolution^i$ & intermediate solution vector for stage $i$ of a
+                              Runge-Kutta time step\\
+$\highordersolution$ & high-order solution vector\\
+$\lowordersolution$ & low-order solution vector\\
+
+% V-Z
+%------------------------------------------------------------------------------
+$\speed$           & speed\\
+$\velocity$        & velocity\\
+$\volume$          & volume\\
+$\cellvolume$      & volume of cell $\cellindex$\\
+$\DMPboundsi$      & upper and lower DMP bounds for degree of freedom $i$\\
+$\spaceposition$   & spatial position\\
+%==============================================================================
+% Greek alphabet
+%==============================================================================
+% alpha - mu
+%------------------------------------------------------------------------------
+$\RKoldsolutioncoef_i$ & coefficient for the old solution vector in stage
+                         $i$ of a Runge-Kutta time step\\
+$\RKstagesolutioncoef_i$ & coefficient for the stage solution vector in stage
+                           $i$ of a Runge-Kutta time step\\
+$\timestepsize$    & time step size\\
+$\entropy$         & entropy function\\
+$\theta$           & parameter for $\theta$ time discretization scheme\\
+
+% nu - omega
+%------------------------------------------------------------------------------
+$\lowordervisc$    & low-order viscosity for cell $\cellindex$\\
+$\highordervisc$   & high-order viscosity for cell $\cellindex$\\
+$\entropyvisc$     & entropy viscosity for cell $\cellindex$\\
+$\density$         & density\\
+$\reactioncoef$    & reaction coefficient\\
+$\totalcrosssection$ & total macroscopic cross-section\\
+$\testfunction$    & FEM test/basis function\\
+$\angularflux$     & angular flux\\
+$\directionvector$ & unit transport direction vector\\
+%==============================================================================
+\end{longtable}
+\end{center}
 
 \pagebreak{}
