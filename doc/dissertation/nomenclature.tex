@@ -4,21 +4,16 @@
 Table \ref{tab:abbreviations} lists the abbreviations used in this dissertation,
 and Table \ref{tab:symbols} lists the symbols used in this dissertation.
 
-\begin{table}[htb]
-\caption{Abbreviations Used in Dissertation\label{tab:abbreviations}}
-\begin{center}
-\begin{tabular}{l l}\hline
-\emph{Abbreviation} & \emph{Description}\\\hline
+\begin{mytable}{Abbreviations Used in Dissertation}{abbreviations}{l l}
+{\emph{Abbreviation} & \emph{Description}}
 DMP & discrete maximum principle\\
 EV  & entropy viscosity\\
 FCT & flux-corrected transport\\
-FEM & finite element method\\\hline
-\end{tabular}
-\end{center}
-\end{table}
+FEM & finite element method\\
+\end{mytable}
 
 \begin{center}
-\begin{longtable}{l p{5in}}
+\begin{longtable}{l p{4.8in}}
 \caption{Symbols Used in Dissertation\label{tab:symbols}}\\
 \hline
 \emph{Symbol} & \emph{Description}\\
@@ -69,6 +64,7 @@ $\domainboundary$  & problem domain boundary\\
 $\totalenergy$     & total energy density\\
 $\consfluxscalar$  & conservation law flux function for scalar case\\
 $\consfluxvector$  & conservation law flux function for vector case\\
+$\gravity$         & acceleration due to gravity\\
 $\height$          & height\\
 $\indicescell(\cellindex)$ & set of degree of freedom indices with support on
                              cell $\cellindex$\\

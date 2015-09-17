@@ -110,4 +110,53 @@
 \newcommand{\height}{h}
 \newcommand{\heightmomentum}{\mathbf{q}}
 \newcommand{\bathymetry}{b}
+\newcommand{\gravity}{g}
 
+%==============================================================================
+% sums and integrals
+\renewcommand{\ij}{_{i,j}}
+\newcommand{\sumj}{\sum\limits_j}
+\newcommand{\sumjnoti}{\sum\limits_{j\ne i}}
+\newcommand{\sumKSi}{\sum\limits_{\cellindex\subset\support_i}}
+\newcommand{\sumKSij}{\sum\limits_{\cellindex\subset\support_{i,j}}}
+\newcommand{\intSi}{\int\limits_{\support_i}}
+\newcommand{\intSij}{\int\limits_{\support_{i,j}}}
+
+% common fractions
+\newcommand{\half}{\frac{1}{2}}
+
+% derivatives
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}} % partial derivative
+\newcommand{\ddt}[1]{\frac{d#1}{dt}}                 % ordinary d/dt
+\newcommand{\ppt}[1]{\pd{#1}{t}}                     % partial d/dt
+
+% typesetting
+\newcommand{\pr}[1]{\left(#1\right)} % parentheses
+\newcommand{\tab}{\hspace*{0.5cm}}   % tab for verbatim evironments
+\newcommand{\eqp}{\,.} % equation period
+\newcommand{\eqc}{\,,} % equation comma
+
+% QED symbol command
+\newcommand{\qed}{\nobreak \ifvmode \relax \else
+      \ifdim\lastskip<1.5em \hskip-\lastskip
+      \hskip1.5em plus0em minus0.5em \fi \nobreak
+      \vrule height0.75em width0.5em depth0.25em\fi}
+
+% math environments
+\newenvironment{proof}[1][Proof]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+\newenvironment{example}[1][Example]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+\newenvironment{remark}[1][Remark]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+
+% table environment
+% #1 = caption
+% #2 = label
+% #3 = table format (columns)
+% #4 = header row
+\newenvironment{mytable}[4]
+  {\begin{table}[htb]\caption{#1\label{tab:#2}}\begin{center}
+    \begin{tabular}
+    {#3}\hline #4\\\hline}
+  {\hline\end{tabular}\end{center}\end{table}}

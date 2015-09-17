@@ -9,9 +9,9 @@
 \usepackage{tocvsec2}
 \usepackage[titletoc]{appendix}
 \usepackage{appendix}
-\usepackage{longtable} % for tables that are too large for a single page
+\usepackage{longtable}  % for tables that are too large for a single page
 \usepackage{tamuconfig}
-\usepackage{rotating}
+\usepackage{rotating}   % to allow rotation of floats
 \usepackage{color}
 \usepackage{alltt}
 \usepackage{amsmath}
@@ -19,10 +19,13 @@
 \usepackage[hidelinks]{hyperref}
 
 % input user-defined commands
-\input{content/newcommands}
+%\input{content/newcommands}
 \input{content/newestcommands}
 \input{content/theorems_dissertation}
 
+%===============================================================================
+% Document
+%===============================================================================
 \begin{document}
 
 \renewcommand{\tamumanuscripttitle}{Solution of the Transport Equation Using
@@ -53,7 +56,7 @@
 \include{chapter1}
 \include{chapter2}
 \include{chapter3}
-%\include{chapter4}
+\include{chapter4}
 
 \let\oldbibitem\bibitem
 \renewcommand{\bibitem}{\setlength{\itemsep}{0pt}\oldbibitem}

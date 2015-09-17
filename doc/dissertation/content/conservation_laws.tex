@@ -1,0 +1,34 @@
+A general system of conservation law equations is
+\begin{equation}
+  \ppt{\solutionvector} + \nabla\cdot\consfluxvector(\solutionvector)
+  = \mathbf{0} \eqc
+\end{equation}
+where $\solutionvector$ is a vector of conserved quantities and
+$\consfluxvector(\solutionvector)$ is the vector of conservation law flux
+functions. When a conservation law does not fit this model equation,
+a source term must be added:
+\begin{equation}
+  \ppt{\solutionvector} + \nabla\cdot\consfluxvector(\solutionvector)
+  = \conssource(\solutionvector) \eqp
+\end{equation}
+Some examples are the following:
+\begin{mytable}{Conservation Law Systems}{cons_law_systems}{l c c c}
+{\emph{System} & $\solutionvector$ & $\consfluxvector(\solutionvector)$
+  & $\conssource(\solutionvector)$}
+\\
+Burgers equation & $\scalarsolution$ & $\half\scalarsolution^2$ & 0\\ [1ex]\\
+Euler equations &
+  $\left[\begin{array}{c}\density\\\momentum\\\totalenergy\end{array}\right]$ &
+  $\left[\begin{array}{c}\momentum\\
+    \momentum\otimes\velocity + \pressure\mathbb{I}\\
+    \pr{\totalenergy + \pressure}\velocity\end{array}\right]$ &
+  $\mathbf{0}$\\ [1ex]\\
+Shallow water equations &
+  $\left[\begin{array}{c}\height\\\heightmomentum\end{array}\right]$ &
+  $\left[\begin{array}{c}\heightmomentum\\
+    \heightmomentum\otimes\velocity + \half\gravity\height^2\mathbb{I}
+    \end{array}\right]$ &
+  $\left[\begin{array}{c}0\\-\gravity\height\nabla\bathymetry\end{array}
+    \right]$\\ [1ex]\\
+\end{mytable}
+
