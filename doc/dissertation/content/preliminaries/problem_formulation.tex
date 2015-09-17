@@ -1,0 +1,45 @@
+The main focus of this research is on radiation transport;
+however, most of the analysis performed is valid
+for any general conservation law of the following form:
+\begin{equation}\label{eq:cons_law}
+   \ppt{\scalarsolution} + \divergence\consfluxscalar
+   + \reactioncoef\xt \scalarsolution\xt = \scalarsource\xt \eqc
+\end{equation}
+where $\scalarsolution\xt$ is a general scalar conserved quantity at position
+$\x$ and time $\timevalue$, $\consfluxscalar$ is a general flux
+function,
+$\reactioncoef\xt$ is a reaction term, and $\scalarsource\xt$ is a source
+term. This notation will be used throughout this document to keep
+the analysis as general as possible; radiation transport notation
+will only be adopted when assumptions are needed. This is often the case when
+the assumption of a constant, linear flux function $\consfluxscalar$ is needed.
+In this case, the constant velocity field is denoted by $\velocity$:
+$\consfluxscalar=\velocity\scalarsolution$.
+
+For radiation transport, the conservation law equation is the following:
+\begin{equation}\label{eq:rad_transport}
+  \frac{1}{\speed}\ppt{\angularflux} + \directionvector\cdot\nabla\angularflux\xt
+  + \totalcrosssection(\x)\angularflux\xt = \radiationsource\xt \eqc
+\end{equation}
+where $\angularflux\xt$ is the angular flux in direction $\directionvector$,
+$\speed$ is the transport speed, $\totalcrosssection(\x)$
+is the macroscopic total cross-section, and $\radiationsource\xt$ is the
+total source (extraneous plus scattering).
+
+To complete the problem formulation, one must provide boundary
+conditions and, for transient problems, intitial conditions:
+\begin{equation}
+   \scalarsolution\xt = \scalarsolution^0(\x)
+   \quad \forall \x\in\domain \eqp
+\end{equation}
+Boundary conditions will depend on the chosen conservation law and
+the particular problem. 
+For radiation transport, and any conservation law for which the velocity field
+is constant, a well-posed problem can be completed with an incoming flux
+boundary condition:
+\begin{equation}
+   \scalarsolution\xt = \scalarsolution^{inc}\xt \quad \forall \x
+   \in \domainboundary^-,
+     \quad \domainboundary^- = \{\x\in\domainboundary:
+     \velocity\cdot\normalvector(\x)<0\} \eqp
+\end{equation}

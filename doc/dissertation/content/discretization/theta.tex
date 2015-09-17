@@ -1,0 +1,9 @@
+Discretizing Equation \eqref{semidiscrete} with the $\theta$ scheme gives
+\begin{equation}\label{galerkin_theta}
+  \M^C\frac{\U^{n+1}-\U^n}{\dt}
+  + (1-\theta)\A\U^n + \theta\A\U^{n+1}
+  = (1-\theta)\b^n + \theta\b^{n+1}.
+\end{equation}
+Note that $\theta=0$ corresponds to the explicit Euler method,
+$\theta=1$ corresponds to the implicit Euler method, and $\theta=\frac{1}{2}$
+corresponds to the Crank-Nicolson method.

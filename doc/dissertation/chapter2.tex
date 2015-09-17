@@ -1,2 +1,19 @@
-\chapter{\uppercase{Methodology}}
-\input{content/conservation_laws}
+\chapter{METHODOLOGY}
+
+\section{Preliminaries}
+  \subsection{Conservation Laws}
+    \input{content/preliminaries/conservation_laws}
+  \subsection{Problem Formulation}
+    \input{content/preliminaries/problem_formulation}
+\section{Discretization}
+  \subsection{Spatial Discretization}\label{sec:spatial_discretization}
+    \input{content/discretization/spatial_discretization}
+  \subsection{Temporal Discretization}\label{sec:temporal_discretization}
+    \subsubsection{Explicit Euler Scheme}
+      \input{content/discretization/explicit_euler}
+    \subsubsection{Strong Stability-Preserving Runge-Kutta (SSPRK)
+      Schemes\label{sec:ssprk}}
+      \input{content/discretization/ssprk}
+    \subsubsection{Theta Schemes\label{sec:theta}}
+      \input{content/discretization/theta}
+  

@@ -1,0 +1,66 @@
+The continuous Galerkin (CG) finite element method (FEM) is used for spatial
+discretization.  The numerical solution is thus approximated using an
+expansion of basis functions $\testfunction_j(\x)$:
+\begin{equation}
+   \approximatescalarsolution\xt = \sumj \solutionletter_j(\timevalue)
+   \testfunction_j(\x) \eqc
+\end{equation}
+where the coefficients $\solutionletter_j(\timevalue)$ are the basis function
+expansion coefficients at time $\timevalue$. Substituting the approximate
+solution into Equation \eqref{eq:cons_law} and testing with basis function
+$\testfunction_i(\x)$ gives
+\begin{equation}
+   \int\limits_{S_i}\pd{u_h}{t}\testfunction_i(\x) d\volume
+      + \int\limits_{S_i}\left(\nabla\cdot\g(u_h)
+      + \sigma(\x)u_h(\x,t)\right)\varphi_i(\x) d\volume
+      = \int\limits_{S_i} q(\x,t) \varphi_i(\x) d\volume \eqc
+\end{equation}
+where $S_i$ is the support of $\varphi_i(\x)$. If the flux function
+$\g(u)$ is linear, then the system to be solved is linear:
+\begin{equation}\label{semidiscrete}
+   \M^C\frac{d\U}{dt}+\A \U(t) = \b(t) \eqc
+\end{equation}
+where $\A$ is the steady-state system matrix and $\U$ is the
+vector of discrete solution values. If the velocity field $\v$ is
+constant, then the elements of $\A$ are
+\begin{equation}\label{Aij}
+A_{i,j} \equiv \int\limits_{S_{i,j}}\left(
+   \v\cdot\nabla\varphi_j(\x) +
+   \sigma(\x)\varphi_j(\x)\right)\varphi_i(\x) dV \eqc
+\end{equation}
+where $S_{i,j}$ is the dual support of $\varphi_i(\x)$ and $\varphi_j(\x)$.
+Otherwise, the divergence of the velocity field appears:
+\begin{equation}\label{eq:Aij_nonconstant_v}
+A_{i,j} \equiv \int\limits_{S_{i,j}}\left(
+   \v\cdot\nabla\varphi_j(\x) +
+   (\sigma(\x)+\nabla\cdot\v)\varphi_j(\x)\right)\varphi_i(\x) dV \eqp
+\end{equation}
+If the flux function $\g(u)$ is nonlinear, then the system is
+nonlinear, but it may be expressed in a quasilinear form:
+\begin{equation}\label{eq:semi_quasilinear}
+   \M^C\frac{d\U}{dt}+\A(u_h) \U(t) = \b(t) \eqc
+\end{equation}
+where $u_h\xt$ is the numerical solution, and the quasilinear
+matrix (i.e., the Jacobian matrix) entries are
+\begin{equation}\label{eq:Aij_nonlinear}
+A_{i,j}(u_h) \equiv \int\limits_{S_{i,j}}\left(
+   \g'(u_h)\cdot\nabla\varphi_j(\x) +
+   (\sigma(\x)+\nabla\cdot\v)\varphi_j(\x)\right)\varphi_i(\x) dV \eqp
+\end{equation}
+The elements of $\b(t)$ are
+\begin{equation}
+	b_i(t) \equiv \int\limits_{S_i} q(\x,t)\varphi_i(\x) dV \eqp
+\end{equation}
+$\M^C$ is the consistent mass matrix, which has the entries
+\begin{equation}\label{massmatrix}
+	M^C_{i,j} \equiv \int\limits_{S_{i,j}}
+   \varphi_j(\x)\varphi_i(\x) dV \eqp
+\end{equation}
+Similarly, for the linear steady-state case, the linear system is
+\begin{equation}
+  \A\U = \b \eqc
+\end{equation}
+or for the nonlinear case,
+\begin{equation}
+  \A(u_h)\U = \b \eqp
+\end{equation}

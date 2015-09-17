@@ -1,11 +1,19 @@
 % general
-\newcommand{\spaceposition}{\mathbf{x}}
+\newcommand{\x}{\mathbf{x}}
 \newcommand{\timevalue}{t}
 \newcommand{\timestepsize}{\Delta\timevalue}
 \newcommand{\timeindex}{n}
 \newcommand{\speed}{v}
 \newcommand{\velocity}{\mathbf{\speed}}
 \newcommand{\normalvector}{\mathbf{n}}
+
+% solution
+\newcommand{\scalarsolution}{u}
+\newcommand{\approximatescalarsolution}{\scalarsolution_h}
+\newcommand{\solutionletter}{U}
+\newcommand{\solutionvector}{\mathbf{\solutionletter}}
+\newcommand{\lowordersolution}{\solutionvector^L}
+\newcommand{\highordersolution}{\solutionvector^H}
 
 % domain and FEM
 \newcommand{\domain}{\mathcal{D}}
@@ -36,17 +44,10 @@
 
 % conservation law
 \newcommand{\consfluxletter}{f}
-\newcommand{\consfluxscalar}{\mathbf{\consfluxletter}}
-\newcommand{\consfluxvector}{\mathbf{\MakeUppercase{\consfluxletter}}}
-\newcommand{\conssource}{\mathbf{S}}
-
-% solution
-\newcommand{\scalarsolution}{u}
-\newcommand{\approximatescalarsolution}{\scalarsolution_h}
-\newcommand{\solutionvalueletter}{U}
-\newcommand{\solutionvector}{\mathbf{\solutionvalueletter}}
-\newcommand{\lowordersolution}{\solutionvector^L}
-\newcommand{\highordersolution}{\solutionvector^H}
+\newcommand{\consfluxscalar}{\mathbf{\consfluxletter}(\scalarsolution)}
+\newcommand{\consfluxvector}{\mathbf{\MakeUppercase{\consfluxletter}}
+  (\solutionvector)}
+\newcommand{\conssource}{\mathbf{S}(\solutionvector)}
 
 % mass matrix
 \newcommand{\massmatrixletter}{M}
@@ -98,6 +99,7 @@
 \newcommand{\reactioncoef}{\sigma}
 \newcommand{\directionvector}{\mathbf{\Omega}}
 \newcommand{\scalarsource}{q}
+\newcommand{\radiationsource}{Q}
 
 % Euler equations
 \newcommand{\density}{\rho}
@@ -135,6 +137,10 @@
 \newcommand{\tab}{\hspace*{0.5cm}}   % tab for verbatim evironments
 \newcommand{\eqp}{\,.} % equation period
 \newcommand{\eqc}{\,,} % equation comma
+
+% miscellaneous
+\newcommand{\xt}{\pr{\x,\timevalue}}
+\newcommand{\divergence}{\nabla\cdot}
 
 % QED symbol command
 \newcommand{\qed}{\nobreak \ifvmode \relax \else

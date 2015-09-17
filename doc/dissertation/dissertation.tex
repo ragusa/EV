@@ -23,6 +23,9 @@
 \input{content/newestcommands}
 \input{content/theorems_dissertation}
 
+% create black bar where there are "Overfull"s
+\overfullrule=1cm
+
 %===============================================================================
 % Document
 %===============================================================================
@@ -61,6 +64,6 @@
 \let\oldbibitem\bibitem
 \renewcommand{\bibitem}{\setlength{\itemsep}{0pt}\oldbibitem}
 \include{bibliography}
-\include{appendices}
+%\include{appendices}
 
 \end{document}

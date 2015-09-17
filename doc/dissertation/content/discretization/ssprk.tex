@@ -1,0 +1,41 @@
+Strong Stability-Preserving Runge Kutta (SSPRK) methods are a class of multistage
+Runge Kutta methods that offer high-order accuracy while preserving stability.
+The subset of SSPRK methods considered in this research conform to the
+following form for a given time step $t^n\rightarrow t^{n+1}$,
+where $\hat{\U}^i$ denotes the $i$th stage solution:
+\begin{equation}
+   \hat{\U}^i = \alpha_i\hat{\U}^0
+%   + \beta_i\,\mbox{step}(\hat{\U}^{i-1},t^n+c_i\Delta t),
+   + \beta_i\tilde{\U}^i \eqc
+\end{equation}
+where $\Delta t=t^{n+1}-t^n$, $\hat{\U}^0=\U^n$,
+and $\tilde{\U}^i$ is the solution of the following forward Euler
+step:
+\begin{equation}
+   \M\tilde{\U}^i = \M\hat{\U}^{i-1}
+   + \Delta t(\b(t_i) - \A(t_i)\hat{\U}^{i-1}) \eqc
+\end{equation}
+where $t_i = t^n+c_i\Delta t$,
+$\M$ is the mass matrix, $\b(t)$ is the steady-state
+right hand side vector, and $\A(t)$ is the steady-state matrix.
+Therefore the function performs a time step that is similar to an
+explicit Euler step, except that the steady-state residual is not
+necessarily evaluated at time $t^n$. The new solution $\U^{n+1}$
+is the final stage solution:
+\begin{equation}
+   \U^{n+1} = \hat{\U}^s,
+\end{equation}
+where $s$ is the number of stages for the scheme.
+
+The Explicit Euler scheme can be expressed as a 1-stage SSPRK method with
+with the following coefficients:
+\begin{equation}
+   \alpha_1 = 0\qquad\beta_1 = 1\qquad c_1 = 0,
+\end{equation}
+and the 3-stage, 3rd-order accurate SSPRK scheme (also known as the Shu-Osher
+scheme), has the following coefficients:
+\begin{equation}
+   \alpha = \left[\begin{array}{c}0\\\frac{3}{4}\\\frac{1}{3}\end{array}\right]
+   \qquad\beta = \left[\begin{array}{c}1\\\frac{1}{4}\\\frac{2}{3}\end{array}\right]
+   \qquad c = \left[\begin{array}{c}0\\1\\\frac{1}{2}\end{array}\right].
+\end{equation}
