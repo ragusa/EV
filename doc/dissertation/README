@@ -1,16 +1,31 @@
+=====================
 Dissertation files
 =====================
 
+=====================
 Main file:
 =====================
 
 dissertation.tex
 
-
+=====================
 Directories:
 =====================
 
-/chapters  contains .tex file for each chapter
 /content   contains .tex files for different content, inputted into chapter
            .tex files.
 /figures   contains figures used in dissertation
+
+=====================
+TO DO:
+=====================
+* eliminate newcommands.tex in favor of newestcommands.tex; this entails
+  substituting commands defined in newcommands.tex with the equivalent
+  commands in newestcommands.tex
+* use the commands defined in newestcommands.tex universally
+* eliminate all Overfull hbox warnings: these should be marked with black bars
+  in the margins
+* check that all equation references use \eqref instead of \ref
+* use identifiers for each type of reference, e.g., for tables,
+  \ref{tab:mytablename}
+

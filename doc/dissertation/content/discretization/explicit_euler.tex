@@ -1,7 +1,12 @@
-Considering a time step from time $t^n$ to time $t^{n+1}$ with time step size
-$\Delta t\equiv t^{n+1}-t^n$, the semi-discrete equation given by Equation
-\eqref{semidiscrete} is discretized using the explicit Euler:
-\begin{equation}\label{galerkin_FE}
-   \M^C\frac{\U^{n+1}-\U^n}{\dt} + \A\U^n = \b^n,
+Considering a time step from time $\timevalue^\timeindex$ to time
+$\timevalue^{\timeindex+1}$ with time step size $\timestepsize\equiv
+\timevalue^{\timeindex+1}-\timevalue^\timeindex$, the semi-discrete equation
+given by Equation \eqref{eq:semidiscrete} is discretized using the explicit
+Euler:
+\begin{equation}\label{eq:galerkin_FE}
+   \consistentmassmatrix\frac{\solutionvector^{\timeindex+1}
+   -\solutionvector^\timeindex}{\timestepsize}
+   +\ssmatrix\solutionvector^\timeindex = \ssrhs^\timeindex,
 \end{equation}
-where $\U^{n+1}$ is the Galerkin solution at time $t^{n+1}$.
+where $\solutionvector^{\timeindex+1}$ is the Galerkin solution at time
+$\timevalue^{\timeindex+1}$.

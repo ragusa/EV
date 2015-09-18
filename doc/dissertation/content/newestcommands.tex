@@ -9,6 +9,7 @@
 
 % solution
 \newcommand{\scalarsolution}{u}
+\newcommand{\vectorsolution}{\mathbf{\scalarsolution}}
 \newcommand{\approximatescalarsolution}{\scalarsolution_h}
 \newcommand{\solutionletter}{U}
 \newcommand{\solutionvector}{\mathbf{\solutionletter}}
@@ -46,8 +47,8 @@
 \newcommand{\consfluxletter}{f}
 \newcommand{\consfluxscalar}[1][\scalarsolution]{\mathbf{\consfluxletter}(#1)}
 \newcommand{\consfluxvector}{\mathbf{\MakeUppercase{\consfluxletter}}
-  (\solutionvector)}
-\newcommand{\conssource}{\mathbf{S}(\solutionvector)}
+  (\vectorsolution)}
+\newcommand{\conssource}{\mathbf{S}(\vectorsolution)}
 
 % mass matrix
 \newcommand{\massmatrixletter}{M}
@@ -78,6 +79,7 @@
 \newcommand{\RKstagesolutioncoef}{\beta}
 \newcommand{\RKtimecoef}{c}
 \newcommand{\RKstagetime}{\hat{\timevalue}}
+\newcommand{\RKnstages}{s}
 
 % FCT
 \newcommand{\DMPbound}{W}

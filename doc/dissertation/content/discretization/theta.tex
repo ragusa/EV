@@ -1,9 +1,11 @@
-Discretizing Equation \eqref{semidiscrete} with the $\theta$ scheme gives
-\begin{equation}\label{galerkin_theta}
-  \M^C\frac{\U^{n+1}-\U^n}{\dt}
-  + (1-\theta)\A\U^n + \theta\A\U^{n+1}
-  = (1-\theta)\b^n + \theta\b^{n+1}.
+Discretizing Equation \eqref{eq:semidiscrete} with the $\theta$ scheme gives
+\begin{equation}\label{eq:galerkin_theta}
+  \consistentmassmatrix\frac{\solutionvector^{\timeindex+1}
+  - \solutionvector^\timeindex}{\timestepsize}
+  + (1-\theta)\ssmatrix\solutionvector^\timeindex
+  + \theta\ssmatrix\solutionvector^{\timeindex+1}
+  = (1-\theta)\ssrhs^\timeindex + \theta\ssrhs^{\timeindex+1}.
 \end{equation}
 Note that $\theta=0$ corresponds to the explicit Euler method,
-$\theta=1$ corresponds to the implicit Euler method, and $\theta=\frac{1}{2}$
+$\theta=1$ corresponds to the implicit Euler method, and $\theta=\half$
 corresponds to the Crank-Nicolson method.

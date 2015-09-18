@@ -1,19 +1,49 @@
 \chapter{METHODOLOGY}
 
+%===============================================================================
 \section{Preliminaries}
+%===============================================================================
   \subsection{Conservation Laws}
     \input{content/preliminaries/conservation_laws}
+    \subsubsection{The Burgers Equation}
+    \subsubsection{The Shallow Water Equations\label{sec:shallowwater}}
+%      \input{content/preliminaries/shallowwater}
+    \subsubsection{The Euler Equations}
   \subsection{Problem Formulation}
     \input{content/preliminaries/problem_formulation}
+%===============================================================================
 \section{Discretization}
-  \subsection{Spatial Discretization}\label{sec:spatial_discretization}
+%===============================================================================
+  \subsection{Spatial Discretization\label{sec:spatial_discretization}}
     \input{content/discretization/spatial_discretization}
-%  \subsection{Temporal Discretization}\label{sec:temporal_discretization}
-%    \subsubsection{Explicit Euler Scheme}
-%      \input{content/discretization/explicit_euler}
-%    \subsubsection{Strong Stability-Preserving Runge-Kutta (SSPRK)
-%      Schemes\label{sec:ssprk}}
-%      \input{content/discretization/ssprk}
-%    \subsubsection{Theta Schemes\label{sec:theta}}
-%      \input{content/discretization/theta}
-  
+  \subsection{Temporal Discretization\label{sec:temporal_discretization}}
+    \subsubsection{Explicit Euler Scheme}
+      \input{content/discretization/explicit_euler}
+    \subsubsection{Strong Stability-Preserving Runge-Kutta (SSPRK)
+      Schemes\label{sec:ssprk}}
+      \input{content/discretization/ssprk}
+    \subsubsection{Theta Schemes\label{sec:theta}}
+      \input{content/discretization/theta}
+%===============================================================================
+\section{Low-Order Schemes}  
+%===============================================================================
+%  \subsection{Algebraic Low-Order Scheme}
+%     \input{content/low_order/low_order_scheme_algebraic}
+%  \subsection{Graph-Theoretic Low-Order Scheme}
+%     \input{content/low_order/low_order_scheme_graphtheoretic}
+%  \subsection{Discrete Maximum Principles}
+%     \input{content/low_order/steadystate_DMP}
+%     \input{content/low_order/explicit_DMP}
+%     \input{content/low_order/theta_DMP}
+%===============================================================================
+\section{High-Order Schemes}  
+%===============================================================================
+  \subsection{Entropy Viscosity}
+    \subsubsection{Entropy Viscosity for the Shallow Water Equations}
+      \input{content/high_order/EV_shallowwater}
+%===============================================================================
+\section{FCT Schemes}  
+%===============================================================================
+%===============================================================================
+\section{Implementation}  
+%===============================================================================

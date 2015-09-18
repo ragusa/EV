@@ -1,20 +1,20 @@
 A general system of conservation law equations is
 \begin{equation}
-  \ppt{\solutionvector} + \divergence\consfluxvector
+  \ppt{\vectorsolution} + \divergence\consfluxvector
   = \mathbf{0} \eqc
 \end{equation}
-where $\solutionvector$ is a vector of conserved quantities and
+where $\vectorsolution$ is a vector of conserved quantities and
 $\consfluxvector$ is the vector of conservation law flux
 functions. When a conservation law does not fit this model equation,
 a source term must be added:
 \begin{equation}
-  \ppt{\solutionvector} + \nabla\cdot\consfluxvector
+  \ppt{\vectorsolution} + \nabla\cdot\consfluxvector
   = \conssource \eqp
 \end{equation}
 Table \ref{tab:cons_law_systems} gives some examples of conservation law
 systems.
 \begin{mytable}{Conservation Law Systems}{cons_law_systems}{l c c c}
-{\emph{System} & $\solutionvector$ & $\consfluxvector$ & $\conssource$}
+{\emph{System} & $\vectorsolution$ & $\consfluxvector$ & $\conssource$}
 \\
 Burgers equation & $\scalarsolution$ & $\half\scalarsolution^2$ & 0\\ [1ex]\\
 Euler equations &

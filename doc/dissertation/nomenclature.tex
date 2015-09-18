@@ -19,6 +19,7 @@ FEM & finite element method\\
 \emph{Symbol} & \emph{Description}\\
 \hline
 \endfirsthead
+\multicolumn{2}{c}{Table \thetable\ -- Continued}\vspace{3ex}\\
 \hline
 \emph{Symbol} & \emph{Description}\\
 \hline
@@ -104,6 +105,7 @@ $\limitedfluxboundsi$ & upper and lower bounds for limited flux sum for degree
                         of freedom $i$\\
 $\ssres$           & steady-state residual vector\\
 $\entropyresidual_\cellindex$ & entropy residual for cell $\cellindex$\\
+$\RKnstages$       & number of stages for a Runge-Kutta scheme\\
 $\support_i$       & support of FEM test/basis function $i$\\
 $\support\ij$      & dual support of FEM test/basis functions $i$ and $j$\\
 $\conssource$      & conservation law source function\\
@@ -112,8 +114,9 @@ $\timevalue$       & time\\
 % U
 %------------------------------------------------------------------------------
 $\RKstagetime_i$   & stage $i$ time of a Runge-Kutta time step\\
-$\scalarsolution$  & depending on context, may denote either a scalar solution or
-                     $x$ component of velocity\\
+$\scalarsolution$  & solution variable for a scalar conservation law\\
+$\vectorsolution$  & vector of solution variables for a conservation law
+                     system\\
 $\approximatescalarsolution$ & numerical approximation to $\scalarsolution$\\
 $\solutionvector$  & solution vector\\
 $\RKstagesolution^i$ & stage solution vector for stage $i$ of a Runge-Kutta time

@@ -1,0 +1,129 @@
+Recall from Section \ref{sec:shallowwater} the definition of the shallow
+water equations:
+\begin{gather}
+  \ppt{\vectorsolution} + \nabla\cdot\consfluxvector
+  = \conssource \eqc
+\\
+  \vectorsolution
+    = \left[\begin{array}{c}\height\\\heightmomentum\end{array}\right]
+  \eqc\quad
+  \consfluxvector
+  = \left[\begin{array}{c}\heightmomentum\\
+    \heightmomentum\otimes\velocity + \half\gravity\height^2\mathbb{I}
+    \end{array}\right]
+  \eqc\quad
+  \conssource
+  = \left[\begin{array}{c}0\\-\gravity\height\nabla\bathymetry\end{array}
+    \right] \eqp
+\end{gather}
+In this section, the following notation will be used to denote the fluxes
+for each component:
+\begin{equation}
+  \consfluxvector
+  = \left[\begin{array}{c}
+    \mathbf{\consfluxletter}^\height(\vectorsolution)\\
+    \mathbf{\consfluxletter}^\heightmomentum(\vectorsolution)
+    \end{array}\right]
+  = \left[\begin{array}{c}\heightmomentum\\
+    \heightmomentum\otimes\velocity + \half\gravity\height^2\mathbb{I}
+    \end{array}\right]
+\end{equation}
+The entropy function for the shallow water equations is defined to be
+the sum of the kinetic and potential ``energy'' terms:
+\begin{equation}
+  \entropy(\vectorsolution) = \half\height\speed^2 + \half\gravity\height^2 \eqc
+\end{equation}
+or in terms of the conservative variables,
+\begin{equation}
+  \entropy(\vectorsolution) = \half\frac{\heightmomentum\cdot\heightmomentum}
+  {\height} + \half\gravity\height^2 \eqp
+\end{equation}
+The objective here is to derive an entropy balance equation, which gives the
+rate of change of entropy, $\partial_\timevalue\entropy$. To yield such an
+equation, one can take advantage of the derivative chain rule:
+\begin{equation}\label{eq:shallowwater_chainrule}
+  \partial_\timevalue\entropy
+  = \partial_\height\entropy\,\partial_\timevalue\height
+  + \partial_\heightmomentum\entropy\cdot\partial_\timevalue\heightmomentum \eqc
+\end{equation}
+where the partial derivatives of the entropy function with respect to each
+solution variable are the following:
+\begin{equation}
+  \partial_\height\entropy
+  = -\half\frac{\heightmomentum\cdot\heightmomentum}{\height^2}
+  + \gravity\height \eqc
+  \quad
+  \partial_\heightmomentum\entropy = \frac{\heightmomentum}{\height} \eqp
+\end{equation}
+To arrive at an entropy equality, each conservation equation in the system
+is multiplied by the respective derivative of the entropy function and then
+summed:
+\begin{equation}
+  \partial_\height\entropy\,\partial_\timevalue\height
+  + \partial_\heightmomentum\entropy\cdot\partial_\timevalue\heightmomentum
+  + \partial_\height\entropy\,\divergence
+    \mathbf{\consfluxletter}^\height(\vectorsolution)
+  + \partial_\heightmomentum\entropy\,\divergence 
+    \mathbf{\consfluxletter}^\heightmomentum(\vectorsolution)
+  = - \partial_\heightmomentum\entropy\,\gravity\height\nabla\bathymetry \eqc
+\end{equation}
+which when simplified using Equation \eqref{eq:shallowwater_chainrule} gives
+\begin{equation}
+  \partial_\timevalue\entropy
+  + \partial_\height\entropy\,\divergence
+    \mathbf{\consfluxletter}^\height(\vectorsolution)
+  + \partial_\heightmomentum\entropy\,\divergence
+    \mathbf{\consfluxletter}^\heightmomentum(\vectorsolution)
+  = - \partial_\heightmomentum\entropy\,\gravity\height\nabla\bathymetry \eqp
+\end{equation}
+Chain rule can also be applied to spatial derivatives, which allows the
+entropy equality to be put in the form
+\begin{equation}
+  \partial_\timevalue\entropy
+  + \divergence\mathbf{\consfluxletter}^\entropy(\vectorsolution)
+  = - \partial_\heightmomentum\entropy\,\gravity\height\nabla\bathymetry \eqp
+\end{equation}
+The entropy flux $\mathbf{\consfluxletter}^\entropy(\vectorsolution)$ is
+derived as follows, where the dependence of the flux functions on
+$\vectorsolution$ is dropped for clarity:
+\begin{align}
+  \nabla\cdot\mathbf{\consfluxletter}^\entropy
+  &= 
+    \partial_\height\entropy\,\divergence
+    \mathbf{\consfluxletter}^\height
+  + \partial_\heightmomentum\entropy\,\divergence
+    \mathbf{\consfluxletter}^\heightmomentum
+  \\
+  \partial_\height\mathbf{\consfluxletter}^\entropy\cdot\nabla\height
+  + \partial_\heightmomentum\mathbf{\consfluxletter}^\entropy
+  \,\divergence\heightmomentum
+  &= 
+    \partial_\height\entropy\,\divergence
+    \mathbf{\consfluxletter}^\height
+  + \partial_\heightmomentum\entropy\,\divergence
+    \mathbf{\consfluxletter}^\heightmomentum
+  \\
+  \partial_\height\mathbf{\consfluxletter}^\entropy\cdot\nabla\height
+  + \partial_\heightmomentum\mathbf{\consfluxletter}^\entropy
+  \,\divergence\heightmomentum
+  &= 
+    \pr{-\half\frac{\heightmomentum\cdot\heightmomentum}{\height^2}
+    + \gravity\height}
+    \divergence\mathbf{\consfluxletter}^\height
+    + \pr{\frac{\heightmomentum}{\height}}
+    \divergence\mathbf{\consfluxletter}^\heightmomentum
+  \\
+  \partial_\height\mathbf{\consfluxletter}^\entropy\cdot\nabla\height
+  + \partial_\heightmomentum\mathbf{\consfluxletter}^\entropy
+  \,\divergence\heightmomentum
+  &= 
+    \pr{-\half\frac{\heightmomentum\cdot\heightmomentum}{\height^2}
+    + \gravity\height}
+    \divergence\heightmomentum
+    + \frac{\heightmomentum}{\height}\cdot
+    \pr{\frac{2\heightmomentum}{\height}\divergence\heightmomentum
+    + \pr{\gravity\height\mathbb{I}
+    - \frac{\heightmomentum\otimes\heightmomentum}{\height^2}}\cdot\nabla\height}
+\end{align}
+
+
