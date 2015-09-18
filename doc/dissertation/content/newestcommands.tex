@@ -44,7 +44,7 @@
 
 % conservation law
 \newcommand{\consfluxletter}{f}
-\newcommand{\consfluxscalar}{\mathbf{\consfluxletter}(\scalarsolution)}
+\newcommand{\consfluxscalar}[1][\scalarsolution]{\mathbf{\consfluxletter}(#1)}
 \newcommand{\consfluxvector}{\mathbf{\MakeUppercase{\consfluxletter}}
   (\solutionvector)}
 \newcommand{\conssource}{\mathbf{S}(\solutionvector)}
@@ -72,8 +72,8 @@
 \newcommand{\highorderdiffusionmatrix}{\diffusionmatrix^H}
 
 % Runge-Kutta
-\newcommand{\RKstagesolution}{\hat{\mathbf{\solutionvalueletter}}}
-\newcommand{\RKintermediatesolution}{\tilde{\mathbf{\solutionvalueletter}}}
+\newcommand{\RKstagesolution}{\hat{\mathbf{\solutionletter}}}
+\newcommand{\RKintermediatesolution}{\tilde{\mathbf{\solutionletter}}}
 \newcommand{\RKoldsolutioncoef}{\alpha}
 \newcommand{\RKstagesolutioncoef}{\beta}
 \newcommand{\RKtimecoef}{c}
