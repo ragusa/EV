@@ -1,0 +1,53 @@
+%================================================================================
+\subsection{High-Order Semidiscrete Scheme}
+%================================================================================
+In general, a high-order scheme is of the form
+\begin{equation}\label{eq:high_semidiscrete}
+   \consistentmassmatrix\ddt{d\highordersolution}
+    + \highorderssmatrix(\timevalue)\highordersolution(\timevalue) 
+    = \ssrhs(\timevalue) \eqc
+\end{equation}
+or in the steady-state case,
+\begin{equation}\label{eq:high_ss}
+   \highorderssmatrix\highordersolution = \ssrhs \eqc
+\end{equation}
+where the high-order steady-state system matrix $\highorderssmatrix(\timevalue)$ is
+defined as the sum of the inviscid steady-state matrix $\A$
+and a high-order artificial diffusion matrix $\D^H(\timevalue)$:
+\begin{equation}
+   \highorderssmatrix(\timevalue) = \A + \D^H(\timevalue) \eqp
+\end{equation}
+If the Galerkin scheme given in Section \ref{sec:galerkindef} is to be
+used as the high order scheme, then $\D^H(\timevalue)$ is zero.
+%--------------------------------------------------------------------------------
+\subsection{High-Order Explicit Euler Scheme}
+%--------------------------------------------------------------------------------
+The high-order explicit Euler scheme is the following:
+\begin{equation}\label{high_FE}
+   \consistentmassmatrix\frac{\highordersolution-\U^n}{\dt^{n+1}} + \A^{H,n}\U^n = \ssrhs^n \eqc
+\end{equation}
+where the high-order steady-state system matrix $\A^{H,n}$ is
+defined as the sum of the inviscid steady-state matrix $\A$
+and a high-order artificial diffusion matrix $\D^{H,n}$:
+\begin{equation}
+   \A^{H,n} = \A + \D^{H,n} \eqp
+\end{equation}
+If the Galerkin scheme given in Section \ref{galerkindef} is to be
+used as the high order scheme, then $\D^{H,n}$ is zero.
+%--------------------------------------------------------------------------------
+\subsection{High-Order Theta Scheme}
+%--------------------------------------------------------------------------------
+The high-order $\theta$ scheme is the following:
+\begin{equation}\label{high_theta}
+  \consistentmassmatrix\frac{\highordersolution-\U^n}{\dt}
+  + (1-\theta)\A^{H,n}\U^n + \theta\A^{H,n+1}\highordersolution
+  = (1-\theta)\ssrhs^n + \theta\ssrhs^{n+1}.
+\end{equation}
+where the high-order steady-state system matrix $\A^{H,n}$ is
+defined as the sum of the inviscid steady-state matrix $\A$
+and a high-order artificial diffusion matrix $\D^{H,n}$:
+\begin{equation}
+   \A^{H,n} = \A + \D^{H,n} \eqp
+\end{equation}
+If the Galerkin scheme given in Section \ref{galerkindef} is to be
+used as the high order scheme, then $\D^{H,n}$ is zero.

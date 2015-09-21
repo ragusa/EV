@@ -1,0 +1,69 @@
+To construct a high-order scheme, the concept of entropy viscosity is used in
+conjunction with the bilinear form introduced in Equation
+\eqref{eq:bilinearform}.  The high-order viscosity
+$\highordercellviscosity[\timeindex]$ is computed as the minimum of the
+low-order viscosity $\lowordercellviscosity$ and the entropy viscosity
+$\entropycellviscosity[\timeindex]$:
+\begin{equation}
+   \highordercellviscosity[\timeindex] = \min(\lowordercellviscosity,
+   \entropycellviscosity[\timeindex]) \eqc
+\end{equation}
+where the entropy viscosity is defined as
+\begin{equation}
+   \entropycellviscosity[n] = \frac{\entropyresidualcoef
+   \entropyresidual_\cellindex^\timeindex(\approximatescalarsolution^\timeindex,
+   \approximatescalarsolution^{\timeindex-1})
+   + \entropyjumpcoef\max\limits_{F\in\partial \cellindex}\entropyjump_F(
+   \approximatescalarsolution^\timeindex)}
+   {\|\entropy(\approximatescalarsolution^\timeindex)
+   -\bar{\entropy}(\approximatescalarsolution^\timeindex)\|_{L^\infty(\domain)}}
+   \eqp
+\end{equation}
+%The entropy is defined to be some convex function of $u$ such as
+%$E(u)=\frac{1}{2}u^2$. The entropy residual $R_K^n(\approximatescalarsolution^n,\approximatescalarsolution^{n-1})$ is the
+%following:
+%\begin{equation}
+%  \entropyresidual_\cellindex^n(\approximatescalarsolution^n,\approximatescalarsolution^{n-1})
+%  = \left\|\frac{E(\approximatescalarsolution^n)-E(\approximatescalarsolution^{n-1})}{\timestepsize^\timeindex}
+%  + E'(\approximatescalarsolution^n)\left[\mathbf{\Omega}\cdot\nabla \approximatescalarsolution^n
+%  + \sigma \approximatescalarsolution^n
+%  - q\right]\right\|_{L^\infty(K)},
+%\end{equation}
+%where the $L^\infty(K)$ norm is approximated as the maximum of the norm operand evaluated
+%at each quadrature point on $K$.
+%The entropy jumps are also computed on each face $F$ on the boundary of $K$:
+%\begin{equation}
+%   J_F(\approximatescalarsolution^n) = \|\mathbf{\Omega}\cdot
+%      \mathbf{n}_F[\![\partial_n E(\approximatescalarsolution^n)]\!]\|_{L^\infty(F)},
+%\end{equation}
+%where $\mathbf{n}_F$ is the outward unit vector for face $F$ and
+%the $L^\infty(F)$ norm is approximated as the maximum of the norm operand evaluated
+%at each quadrature point on $F$. The term $[\![\partial_n E(\approximatescalarsolution^n)]\!]$ is computed as
+%\begin{eqnarray}
+%   [\![\partial_n E(\approximatescalarsolution^n)]\!] & = & [\![\nabla E(\approximatescalarsolution^n)\cdot\mathbf{n}_F]\!]\\
+%                        & = & [\![\approximatescalarsolution^n\nabla \approximatescalarsolution^n\cdot\mathbf{n}_F]\!]\\
+%                        & = & (\approximatescalarsolution^n|_K\nabla \approximatescalarsolution^n|_K - \approximatescalarsolution^n|_{K'}
+%                           \nabla \approximatescalarsolution^n|_{K'})\cdot\mathbf{n}_F
+%\end{eqnarray}
+%where $\cdot|_K$ denotes the computation of $\cdot$ from $K$, and $\cdot|_{K'}$
+%denotes the computation of $\cdot$ from the neighbor $K'$ sharing the face $F$.
+%
+%The high-order counterpart of the low-order artificial diffusion matrix defined
+%in Equation \eqref{eq:loworderdiffusionGT} uses the high-order viscosity $\nu_K^{H,n}$
+%instead of the low-order viscosity:
+%\begin{equation}
+%   D^{H,n}_{i,j} = \sum\limits_{K\subset S_{i,j}}\nu_K^{H,n} b_K(\varphi_j,\varphi_i).
+%\end{equation}
+%Similarly to the low-order scheme, a high-order steady-state system matrix is
+%defined to be the sum of the Galerkin steady-state system matrix $\ssmatrix$ and the
+%high-order artificial diffusion matrix $\diffusionmatrix^{H,n}$:
+%\begin{equation}
+%   \highorderssmatrix{n} = \ssmatrix + \diffusionmatrix^{H,n},
+%\end{equation}
+%and the high order scheme is the following:
+%\begin{equation}\label{gthighorderscheme}
+%   \consistentmassmatrix\frac{\U^{H,n+1}-\U^n}{\timestepsize}
+%   + \highorderssmatrix{\timeindex}\solutionvector^\timeindex = \ssrhs \eqc
+%\end{equation}
+%where $\highordersolution{\timeindex+1}$ is the high-order solution at time
+%$\timevalue^{\timeindex+1}$.

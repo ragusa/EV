@@ -13,8 +13,10 @@
 \newcommand{\approximatescalarsolution}{\scalarsolution_h}
 \newcommand{\solutionletter}{U}
 \newcommand{\solutionvector}{\mathbf{\solutionletter}}
-\newcommand{\lowordersolution}{\solutionvector^L}
-\newcommand{\highordersolution}{\solutionvector^H}
+\newcommand{\lowordersolution}[1][]{
+  \ifthenelse{\equal{#1}{}}{\solutionvector^L}{\solutionvector^{L,#1}}}
+\newcommand{\highordersolution}[1][]{
+  \ifthenelse{\equal{#1}{}}{\solutionvector^H}{\solutionvector^{H,#1}}}
 
 % domain and FEM
 \newcommand{\domain}{\mathcal{D}}
@@ -37,18 +39,32 @@
 \newcommand{\entropyresidualcoef}{c_\entropyresidual}
 \newcommand{\entropyjumpcoef}{c_\entropyjump}
 
-% viscosity
-\newcommand{\visc}{\nu_\cellindex}
-\newcommand{\lowordervisc}{\visc^L}
-\newcommand{\highordervisc}{\visc^H}
-\newcommand{\entropyvisc}{\visc^\entropy}
-
 % conservation law
 \newcommand{\consfluxletter}{f}
 \newcommand{\consfluxscalar}[1][\scalarsolution]{\mathbf{\consfluxletter}(#1)}
 \newcommand{\consfluxvector}{\mathbf{\MakeUppercase{\consfluxletter}}
   (\vectorsolution)}
 \newcommand{\conssource}{\mathbf{S}(\vectorsolution)}
+
+% viscosity
+\newcommand{\viscosity}{\nu}
+\newcommand{\cellviscosity}{\viscosity_\cellindex}
+\newcommand{\lowordercellviscosity}[1][]{
+  \ifthenelse{\equal{#1}{}}{\cellviscosity^L}
+  {\cellviscosity^{L,#1}}}
+\newcommand{\highordercellviscosity}[1][]{
+  \ifthenelse{\equal{#1}{}}{\cellviscosity^H}
+  {\cellviscosity^{H,#1}}}
+\newcommand{\entropycellviscosity}[1][]{
+  \ifthenelse{\equal{#1}{}}{\cellviscosity^\entropy}
+  {\cellviscosity^{\entropy,#1}}}
+
+% viscous fluxes
+\newcommand{\viscstring}{\text{visc}}
+\newcommand{\viscflux}[1]{\mathbf{\consfluxletter}^{\viscstring,#1}}
+\newcommand{\viscconsfluxvector}
+  {\mathbf{\MakeUppercase{\consfluxletter}}^\viscstring
+  (\vectorsolution,\viscosity)}
 
 % mass matrix
 \newcommand{\massmatrixletter}{M}
@@ -117,6 +133,10 @@
 \newcommand{\gravity}{g}
 
 %==============================================================================
+% colors
+\colorlet{lightBlue}{blue!10!white}
+\colorlet{lightGreen}{green!10!white}
+
 % sums and integrals
 \renewcommand{\ij}{_{i,j}}
 \newcommand{\sumj}{\sum\limits_j}
@@ -136,6 +156,7 @@
 
 % typesetting
 \newcommand{\pr}[1]{\left(#1\right)} % parentheses
+\newcommand{\sq}[1]{\left[#1\right]} % square brackets
 \newcommand{\tab}{\hspace*{0.5cm}}   % tab for verbatim evironments
 \newcommand{\eqp}{\,.} % equation period
 \newcommand{\eqc}{\,,} % equation comma
@@ -143,6 +164,12 @@
 % miscellaneous
 \newcommand{\xt}{\pr{\x,\timevalue}}
 \newcommand{\divergence}{\nabla\cdot}
+
+% command to highlight term in equation
+\newcommand{\highlightblue}[1]{
+  \colorbox{lightBlue}{$\displaystyle#1$}}
+\newcommand{\highlightgreen}[1]{
+  \colorbox{lightGreen}{$\displaystyle#1$}}
 
 % QED symbol command
 \newcommand{\qed}{\nobreak \ifvmode \relax \else
