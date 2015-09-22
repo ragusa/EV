@@ -473,7 +473,7 @@ void Euler<dim>::compute_cell_ss_residual(FEValues<dim> & fe_values,
   // get viscosity values on cell
   std::vector<double> viscosity(this->n_q_points_cell);
   for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-    viscosity[q] = this->viscosity_cell_q[cell](q);
+    viscosity[q] = this->viscosity[cell];
 
   // compute inviscid fluxes
   std::vector<Tensor<1, dim>> density_inviscid_flux(this->n_q_points_cell);
@@ -1246,41 +1246,43 @@ void Euler<dim>::compute_entropy(const Vector<double> & solution,
 template <int dim>
 void Euler<dim>::compute_divergence_entropy_flux(
   const Vector<double> & solution,
-  FEValues<dim> & fe_values,
+  const FEValuesBase<dim> & fe_values,
   Vector<double> & divergence) const
 {
-  std::vector<double> density(this->n_q_points_cell);
-  std::vector<Tensor<1, dim>> momentum(this->n_q_points_cell);
-  std::vector<double> energy(this->n_q_points_cell);
-  std::vector<double> pressure(this->n_q_points_cell);
-  std::vector<Tensor<1, dim>> density_gradient(this->n_q_points_cell);
-  std::vector<Tensor<2, dim>> momentum_gradient(this->n_q_points_cell);
-  std::vector<Tensor<1, dim>> energy_gradient(this->n_q_points_cell);
-  std::vector<double> momentum_divergence(this->n_q_points_cell);
-  // Tensor<1, dim> pressure_gradient;
+  // get number of quadrature points
+  const unsigned int n = divergence.size();
+
+  std::vector<double> density(n);
+  std::vector<Tensor<1, dim>> momentum(n);
+  std::vector<double> energy(n);
+  std::vector<double> pressure(n);
+  std::vector<Tensor<1, dim>> density_gradient(n);
+  std::vector<Tensor<2, dim>> momentum_gradient(n);
+  std::vector<Tensor<1, dim>> energy_gradient(n);
+  std::vector<double> momentum_divergence(n);
 
   // get conservative variables
-  fe_values[density_extractor].get_function_values(this->new_solution, density);
-  fe_values[momentum_extractor].get_function_values(this->new_solution, momentum);
-  fe_values[energy_extractor].get_function_values(this->new_solution, energy);
+  fe_values[density_extractor].get_function_values(solution, density);
+  fe_values[momentum_extractor].get_function_values(solution, momentum);
+  fe_values[energy_extractor].get_function_values(solution, energy);
 
   // get gradients of conservative variables
-  fe_values[density_extractor].get_function_gradients(this->new_solution,
+  fe_values[density_extractor].get_function_gradients(solution,
                                                       density_gradient);
-  fe_values[momentum_extractor].get_function_gradients(this->new_solution,
+  fe_values[momentum_extractor].get_function_gradients(solution,
                                                        momentum_gradient);
-  fe_values[energy_extractor].get_function_gradients(this->new_solution,
+  fe_values[energy_extractor].get_function_gradients(solution,
                                                      energy_gradient);
 
   // get divergence of momentum
-  fe_values[momentum_extractor].get_function_divergences(this->new_solution,
+  fe_values[momentum_extractor].get_function_divergences(solution,
                                                          momentum_divergence);
 
   // compute pressure
   compute_pressure(density, momentum, energy, pressure);
 
   // compute divergence of entropy flux
-  for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+  for (unsigned int q = 0; q < n; ++q)
   {
     Tensor<1, dim> pressure_gradient =
       (gamma - 1.0) * energy_gradient[q] - momentum[q] * momentum_gradient[q];

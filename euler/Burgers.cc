@@ -608,11 +608,14 @@ void Burgers<dim>::compute_entropy(const Vector<double> & solution,
 template <int dim>
 void Burgers<dim>::compute_divergence_entropy_flux(
   const Vector<double> & solution,
-  const FEValues<dim> & fe_values,
+  const FEValuesBase<dim> & fe_values,
   Vector<double> & divergence_entropy_flux) const
 {
-  std::vector<double> velocity(this->n_q_points_cell);
-  std::vector<Tensor<1, dim>> velocity_gradient(this->n_q_points_cell);
+  // get number of quadrature points
+  const unsigned int n = divergence_entropy_flux.size();
+
+  std::vector<double> velocity(n);
+  std::vector<Tensor<1, dim>> velocity_gradient(n);
 
   fe_values[velocity_extractor].get_function_values(solution, velocity);
   fe_values[velocity_extractor].get_function_gradients(solution,
@@ -623,7 +626,7 @@ void Burgers<dim>::compute_divergence_entropy_flux(
   for (unsigned int d = 0; d < dim; ++d)
     v[d] = 1.0;
 
-  for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+  for (unsigned int q = 0; q < n; ++q)
   {
     // compute dot product of constant field v with gradient of u
     double v_dot_velocity_gradient = v * velocity_gradient[q];

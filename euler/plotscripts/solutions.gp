@@ -117,12 +117,14 @@ if (quantity eq "waterlevel") {
       }
    }
 
+   set style fill pattern 7
    plot for [i=1:words(existing_file_list)] outdir.word(existing_file_list,i)\
       using 1:int(column) with linesp linetype word(existing_lt_list,i)\
       linecolor word(existing_lc_list,i)\
       pointtype word(existing_sym_list,i)\
       title word(existing_title_list,i),\
-      outdir.bathymetry_file using 1:4 with lines title "Bottom topography"
+      outdir.bathymetry_file using 1:4 with filledcurves y1=0 linecolor 0\
+        linetype 1 title "Bottom topography"
 
 } else {
    plot for [i=1:words(existing_file_list)] outdir.word(existing_file_list,i)\

@@ -10,7 +10,7 @@ end
 # 0 dam_break_flat
 # 1 dam_break_bump
 subsection problem
-   set problem id = 0
+   set problem id = 1
 end
 
 subsection refinement
@@ -23,7 +23,7 @@ end
 subsection time
    # options are <constant_dt|cfl_condition>
    set time step size method = cfl_condition
-   set final time = 0.5
+   set final time = 15.0
    set time step size = 0.0001
    set cfl = 0.10
 end
@@ -32,9 +32,9 @@ subsection artificial viscosity
    # options are <none|constant|old_first_order|max_principle|entropy>
    set viscosity type = entropy
    set constant viscosity value = 0.01
-   set first order viscosity coefficient = 0.1
-   set entropy viscosity coefficient = 1000000.0
-   set jump coefficient = 1.0
+   set first order viscosity coefficient = 1.0
+   set entropy viscosity coefficient = 0.1
+   set jump coefficient = 0.0
    set add jumps = false
 end
 

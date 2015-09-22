@@ -255,7 +255,7 @@ void ShallowWater<dim>::assemble_lumped_mass_matrix()
  *   \right)_\Omega
  *   = - \left(\varphi_i^{h\mathbf{u}},\nabla\cdot (h\mathbf{u}\otimes\mathbf{u}
  *   + \frac{1}{2}g h^2\mathbf{I})_h\right)_\Omega
- *   + \left(\varphi_i^{h\mathbf{u}},g h_h\nabla b\right)_\Omega .
+ *   - \left(\varphi_i^{h\mathbf{u}},g h_h\nabla b\right)_\Omega .
  * \f]
  * Integrating by parts gives
  * \f[
@@ -265,8 +265,8 @@ void ShallowWater<dim>::assemble_lumped_mass_matrix()
  *   + \frac{1}{2}g h^2\mathbf{I})_h\right)_\Omega
  *   - \left(\varphi_i^{h\mathbf{u}},(h\mathbf{u}\otimes\mathbf{u}
  *   + \frac{1}{2}g h^2\mathbf{I})_h\cdot\mathbf{n}\right)_{\partial\Omega}
- *   - \left(\nabla\cdot\varphi_i^{h\mathbf{u}},g h_h b\right)_\Omega
- *   + \left(\varphi_i^{h\mathbf{u}},g h_h b \mathbf{n}\right)_{\partial\Omega} .
+ *   + \left(\nabla\cdot\varphi_i^{h\mathbf{u}},g h_h b\right)_\Omega
+ *   - \left(\varphi_i^{h\mathbf{u}},g h_h b \mathbf{n}\right)_{\partial\Omega} .
  * \f]
  * This yields a discrete system
  * \f[
@@ -282,8 +282,8 @@ void ShallowWater<dim>::assemble_lumped_mass_matrix()
  *   + \frac{1}{2}g h^2\mathbf{I})_h\right)_\Omega
  *   - \left(\varphi_i^{h\mathbf{u}},(h\mathbf{u}\otimes\mathbf{u}
  *   + \frac{1}{2}g h^2\mathbf{I})_h\cdot\mathbf{n}\right)_{\partial\Omega}
- *   - \left(\nabla\cdot\varphi_i^{h\mathbf{u}},g h_h b\right)_\Omega
- *   + \left(\varphi_i^{h\mathbf{u}},g h_h b \mathbf{n}\right)_{\partial\Omega} .
+ *   + \left(\nabla\cdot\varphi_i^{h\mathbf{u}},g h_h b\right)_\Omega
+ *   - \left(\varphi_i^{h\mathbf{u}},g h_h b \mathbf{n}\right)_{\partial\Omega} .
  * \f]
  *
  *  \param[out] r steady-state residual \f$\mathbf{r}\f$
@@ -331,11 +331,6 @@ void ShallowWater<dim>::compute_ss_residual(Vector<double> & f)
     fe_values[momentum_extractor].get_function_gradients(this->new_solution,
                                                          momentum_gradient);
 
-    // get viscosity values on cell
-    std::vector<double> viscosity(this->n_q_points_cell);
-    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-      viscosity[q] = this->viscosity_cell_q[cell](q);
-
     // compute inviscid fluxes
     std::vector<Tensor<1, dim>> height_inviscid_flux(this->n_q_points_cell);
     std::vector<Tensor<2, dim>> momentum_inviscid_flux(this->n_q_points_cell);
@@ -345,7 +340,7 @@ void ShallowWater<dim>::compute_ss_residual(Vector<double> & f)
     // compute viscous fluxes
     std::vector<Tensor<1, dim>> height_viscous_flux(this->n_q_points_cell);
     std::vector<Tensor<2, dim>> momentum_viscous_flux(this->n_q_points_cell);
-    compute_viscous_fluxes(viscosity,
+    compute_viscous_fluxes(this->viscosity[cell],
                            height_gradient,
                            momentum_gradient,
                            height_viscous_flux,
@@ -376,8 +371,9 @@ void ShallowWater<dim>::compute_ss_residual(Vector<double> & f)
             double_contract(fe_values[momentum_extractor].gradient(i, q),
                             momentum_inviscid_flux[q] + momentum_viscous_flux[q])
             // bathymetry source term
-            -
-            fe_values[momentum_extractor].divergence(i, q) * gravity * height[q] *
+            +
+            (fe_values[momentum_extractor].divergence(i, q) * gravity * height[q]
+            + fe_values[momentum_extractor].value(i, q) * gravity * height_gradient[q]) *
               bathymetry[q]) *
           fe_values.JxW(q);
       }
@@ -410,7 +406,7 @@ void ShallowWater<dim>::compute_inviscid_fluxes(
   const unsigned int n = height.size();
 
   // identity tensor
-  SymmetricTensor<2, dim> identity_tensor = unit_symmetric_tensor<dim>();
+  SymmetricTensor<2,dim> identity_tensor = unit_symmetric_tensor<dim>();
 
   // compute auxiliary quantities
   std::vector<Tensor<1, dim>> velocity(n);
@@ -435,7 +431,7 @@ void ShallowWater<dim>::compute_inviscid_fluxes(
  */
 template <int dim>
 void ShallowWater<dim>::compute_viscous_fluxes(
-  const std::vector<double> & viscosity,
+  const double & viscosity,
   const std::vector<Tensor<1, dim>> & height_gradient,
   const std::vector<Tensor<2, dim>> & momentum_gradient,
   std::vector<Tensor<1, dim>> & height_viscous_flux,
@@ -447,14 +443,11 @@ void ShallowWater<dim>::compute_viscous_fluxes(
   // loop over vector elements
   for (unsigned int q = 0; q < n; ++q)
   {
-    // viscosity
-    double nu = viscosity[q];
-
     // density viscous flux
-    height_viscous_flux[q] = -nu * height_gradient[q];
+    height_viscous_flux[q] = - viscosity * height_gradient[q];
 
     // momentum viscous flux
-    momentum_viscous_flux[q] = -nu * momentum_gradient[q];
+    momentum_viscous_flux[q] = - viscosity * momentum_gradient[q];
   }
 }
 
@@ -576,31 +569,54 @@ void ShallowWater<dim>::compute_entropy(const Vector<double> & solution,
 template <int dim>
 void ShallowWater<dim>::compute_divergence_entropy_flux(
   const Vector<double> & solution,
-  FEValues<dim> & fe_values,
+  const FEValuesBase<dim> & fe_values,
   Vector<double> & divergence_entropy_flux) const
 {
-  /*
-    std::vector<double> velocity(this->n_q_points_cell);
-    std::vector<Tensor<1, dim>> velocity_gradient(this->n_q_points_cell);
+  // get number of quadrature points
+  const unsigned int n = divergence_entropy_flux.size();
 
-    fe_values[velocity_extractor].get_function_values(solution, velocity);
-    fe_values[velocity_extractor].get_function_gradients(solution,
-                                                         velocity_gradient);
+  // get solution values
+  std::vector<double> height(n);
+  std::vector<Tensor<1, dim>> momentum(n);
+  fe_values[height_extractor].get_function_values(solution, height);
+  fe_values[momentum_extractor].get_function_values(solution, momentum);
 
-    // constant field v = (1,1,1) (3-D)
-    Tensor<1, dim> v;
-    for (unsigned int d = 0; d < dim; ++d)
-      v[d] = 1.0;
+  // get height gradient
+  std::vector<Tensor<1, dim>> height_gradient(n);
+  fe_values[height_extractor].get_function_gradients(solution, height_gradient);
 
-    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-    {
-      // compute dot product of constant field v with gradient of u
-      double v_dot_velocity_gradient = v * velocity_gradient[q];
+  // get momentum divergence
+  std::vector<double> momentum_divergence(n);
+  fe_values[momentum_extractor].get_function_divergences(
+    solution, momentum_divergence);
 
-      divergence_entropy_flux(q) =
-        velocity[q] * velocity[q] * v_dot_velocity_gradient;
-    }
-  */
+  // identity tensor
+  SymmetricTensor<2,dim> identity_tensor = unit_symmetric_tensor<dim>();
+
+  // compute divergence of entropy flux for each quadrature point
+  for (unsigned int q = 0; q < n; ++q)
+  {
+    // compute derivative of entropy with respect to each component
+    const double dentropy_dheight = - 0.5 * momentum[q] * momentum[q]
+      / (height[q] * height[q]) + gravity * height[q];
+    const Tensor<1,dim> dentropy_dmomentum = momentum[q] / height[q];
+
+    // compute outer product of momentum with itself
+    Tensor<2, dim> momentum_times_momentum;
+    outer_product(momentum_times_momentum, momentum[q], momentum[q]);
+
+    // compute divergence of each component flux
+    const Tensor<2,dim> aux = gravity * height[q] * identity_tensor;
+    const double divergence_height_flux = momentum_divergence[q];
+    const Tensor<1,dim> divergence_momentum_flux = 2.0 * momentum[q] / height[q]
+      * momentum_divergence[q] + (aux
+      - momentum_times_momentum / (height[q] * height[q]))
+      * height_gradient[q];
+
+    // compute divergence of entropy flux
+    divergence_entropy_flux[q] = dentropy_dheight * divergence_height_flux
+      + dentropy_dmomentum * divergence_momentum_flux;
+  }
 }
 
 template <int dim>
@@ -614,28 +630,4 @@ void ShallowWater<dim>::output_results(PostProcessor<dim> & postprocessor) const
                                this->dof_handler,
                                this->triangulation,
                                shallowwater_postprocessor);
-  /*
-    // output the bathymetry function
-    //---------------------------------------------------------------------------
-    std::string output_file = "bathymetry";
-    std::vector<std::string> bathymetry_component_names{"bathymetry"};
-    std::vector<DataComponentInterpretation::DataComponentInterpretation>
-      bathymetry_component_interpretations{DataComponentInterpretation::component_is_scalar};
-    postprocessor.output_function(bathymetry_function, bathymetry_component_names,
-      bathymetry_component_interpretations, output_file);
-
-    // output the water level
-    //---------------------------------------------------------------------------
-    // create FESystem object for water level
-    FESystem<dim> waterlevel_fe(FE_Q<dim>(parameters.degree), 1);
-
-    // create dof handler for water level and distribute dofs
-    DoFHandler<dim> waterlevel_dof_handler(this->triangulation);
-    waterlevel_dof_handler.distribute_dofs(waterlevel_fe);
-
-    // compute bathymetry at dof points
-    Vector<double> bathymetry_values(waterlevel_dof_handler.n_dofs());
-    VectorTools::interpolate(waterlevel_dof_handler, bathymetry_function,
-      bathymetry_values);
-  */
 }

@@ -98,7 +98,7 @@ private:
                        Vector<double> & entropy) const;
 
   void compute_divergence_entropy_flux(const Vector<double> & solution,
-                                       FEValues<dim> & fe_values,
+                                       const FEValuesBase<dim> & fe_values,
                                        Vector<double> & divergence) const;
 
   void compute_velocity(const std::vector<double> & density,

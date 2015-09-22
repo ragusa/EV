@@ -35,7 +35,7 @@ end
 
 subsection artificial viscosity
    # options are <none|constant|old_first_order|max_principle|entropy>
-   set viscosity type = old_first_order
+   set viscosity type = entropy
    set constant viscosity value = 0.01
    set first order viscosity coefficient = 0.1
    set entropy viscosity coefficient = 5.0

@@ -1,35 +1,43 @@
 \documentclass{mathnotes}
 \usepackage{color}
+\usepackage{xcolor}
 \usepackage{alltt}
 \usepackage{amsmath}
 \usepackage{amssymb}
-\title{Maximum-Principle Preserving Finite Element Method for the Radiation Transport Equation}
+\title{Maximum-Principle Preserving Finite Element Method for the
+  Radiation Transport Equation}
 \author{Jean-Luc Guermond\\Jean Ragusa\\Joshua Hansel}
 
-\input{../../dissertation/content/newcommands}
+\input{../../dissertation/content/newestcommands}
 \input{../../dissertation/content/theorems_dissertation}
 
 \begin{document}
 
 \maketitle
-\tableofcontents
+%\tableofcontents
 
-\input{../../dissertation/content/problem_formulation}
-\input{../../dissertation/content/maximum_principles}
-\input{../../dissertation/content/discretization}
-\input{../../dissertation/content/low_order_scheme_algebraic}
-\input{../../dissertation/content/low_order_scheme_graphtheoretic}
-\input{../../dissertation/content/steadystate_DMP}
-\input{../../dissertation/content/explicit_DMP}
-\input{../../dissertation/content/theta_DMP}
-\input{../../dissertation/content/high_order_scheme}
-\input{../../dissertation/content/steadystate_FCT}
-\input{../../dissertation/content/transient_FCT}
-\input{../../dissertation/content/limiting_coefficients}
-\input{../../dissertation/content/steadystate_Q}
-\input{../../dissertation/content/explicit_Q}
-\input{../../dissertation/content/theta_Q}
-\input{../../dissertation/content/nonlinear_iteration}
-\input{../../dissertation/content/implementation}
+%===============================================================================
+\section{Preliminaries}
+%===============================================================================
+\subsection{Conservation Laws}
+  \input{../../dissertation/content/preliminaries/conservation_laws}
+%  \subsubsection{The Burgers Equation}
+%  \subsubsection{The Shallow Water Equations\label{sec:shallowwater}}
+%    \input{content/preliminaries/shallowwater}
+%  \subsubsection{The Euler Equations}
+%\subsection{Problem Formulation}
+%  \input{content/preliminaries/problem_formulation}
+%===============================================================================
+\section{High-Order Schemes}  
+%===============================================================================
+\subsection{Entropy Viscosity}
+  \subsubsection{Entropy Viscosity for the Shallow Water Equations}
+    \input{../../dissertation/content/high_order/EV_shallowwater}
+
+%===============================================================================
+\section*{References}
+%===============================================================================
+\bibliographystyle{plain}
+\bibliography{../../dissertation/references}
 
 \end{document}

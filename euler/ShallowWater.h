@@ -74,7 +74,7 @@ private:
 
   void compute_divergence_entropy_flux(
     const Vector<double> & solution,
-    FEValues<dim> & fe_values,
+    const FEValuesBase<dim> & fe_values,
     Vector<double> & divergence_entropy_flux) const override;
 
   void compute_inviscid_fluxes(const std::vector<double> & height,
@@ -83,7 +83,7 @@ private:
                                std::vector<Tensor<2, dim>> & momentum_flux) const;
 
   void compute_viscous_fluxes(
-    const std::vector<double> & viscosity,
+    const double & viscosity,
     const std::vector<Tensor<1, dim>> & height_gradient,
     const std::vector<Tensor<2, dim>> & momentum_gradient,
     std::vector<Tensor<1, dim>> & height_viscous_flux,

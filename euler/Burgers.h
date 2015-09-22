@@ -86,9 +86,9 @@ private:
       Vector<double>          &entropy) const override;
 
     void compute_divergence_entropy_flux(
-      const Vector<double> &solution,
-      const FEValues<dim>  &fe_values,
-      Vector<double>       &divergence_entropy_flux) const override;
+      const Vector<double>    &solution,
+      const FEValuesBase<dim> &fe_values,
+      Vector<double>          &divergence_entropy_flux) const override;
 };
 
 #include "Burgers.cc"

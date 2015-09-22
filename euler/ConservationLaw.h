@@ -172,9 +172,9 @@ protected:
     *             point on cell
     */
     virtual void compute_divergence_entropy_flux(
-      const Vector<double> &solution,
-      const FEValues<dim>  &fe_values,
-      Vector<double>       &divergence) const = 0;
+      const Vector<double>    &solution,
+      const FEValuesBase<dim> &fe_values,
+      Vector<double>          &divergence) const = 0;
 
     // output functions
     //virtual void output_solution(double time) = 0;
