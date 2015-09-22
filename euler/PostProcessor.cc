@@ -106,29 +106,29 @@ PostProcessor<dim>::PostProcessor(
   std::string viscosity_string;
   switch (parameters.viscosity_type)
   {
-    case 0:
+    case ConservationLawParameters<dim>::ViscosityType::none:
     {
       viscosity_string = "Gal";
       break;
     }
-    case 1:
+    case ConservationLawParameters<dim>::ViscosityType::constant:
+    {
+      viscosity_string = "constant";
+      break;
+    }
+    case ConservationLawParameters<dim>::ViscosityType::old_first_order:
     {
       viscosity_string = "low";
       break;
     }
-    case 2:
+    case ConservationLawParameters<dim>::ViscosityType::max_principle:
+    {
+      viscosity_string = "newlow";
+      break;
+    }
+    case ConservationLawParameters<dim>::ViscosityType::entropy:
     {
       viscosity_string = "EV";
-      break;
-    }
-    case 3:
-    {
-      viscosity_string = "EVFCT";
-      break;
-    }
-    case 4:
-    {
-      viscosity_string = "GalFCT";
       break;
     }
     default:

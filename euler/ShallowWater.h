@@ -69,12 +69,8 @@ private:
   void update_flux_speeds() override;
 
   void compute_entropy(const Vector<double> & solution,
-                       FEValues<dim> & fe_values,
+                       const FEValuesBase<dim> & fe_values,
                        Vector<double> & entropy) const override;
-
-  void compute_entropy_face(const Vector<double> & solution,
-                            FEFaceValues<dim> & fe_values_face,
-                            Vector<double> & entropy) const override;
 
   void compute_divergence_entropy_flux(
     const Vector<double> & solution,
@@ -85,6 +81,13 @@ private:
                                const std::vector<Tensor<1, dim>> & momentum,
                                std::vector<Tensor<1, dim>> & height_flux,
                                std::vector<Tensor<2, dim>> & momentum_flux) const;
+
+  void compute_viscous_fluxes(
+    const std::vector<double> & viscosity,
+    const std::vector<Tensor<1, dim>> & height_gradient,
+    const std::vector<Tensor<2, dim>> & momentum_gradient,
+    std::vector<Tensor<1, dim>> & height_viscous_flux,
+    std::vector<Tensor<2, dim>> & momentum_viscous_flux) const;
 
   void compute_velocity(const std::vector<double> & height,
                         const std::vector<Tensor<1, dim>> & momentum,

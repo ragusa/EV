@@ -12,7 +12,7 @@ end
 # 2 burgers_rarefaction
 # 3 burgers_2D
 subsection problem
-   set problem id = 2
+   set problem id = 1
 end
 
 subsection refinement
@@ -32,7 +32,7 @@ end
 
 subsection artificial viscosity
    # options are <none|constant|old_first_order|max_principle|entropy>
-   set viscosity type = old_first_order
+   set viscosity type = none
    set constant viscosity value = 0.02
    set first order viscosity coefficient = 0.5
    set entropy viscosity coefficient = 2.0

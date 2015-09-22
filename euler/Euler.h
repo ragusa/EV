@@ -61,12 +61,14 @@ private:
     FEFaceValues<dim> & fe_face_values,
     const cell_iterator & cell,
     Vector<double> & cell_residual);
+
   /*
     void compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
                                   const typename
     DoFHandler<dim>::active_cell_iterator &cell,
                                   Vector<double> &cell_residual);
   */
+
   // void compute_ss_jacobian();
 
   void compute_inviscid_fluxes(const std::vector<double> & density,
@@ -92,12 +94,8 @@ private:
   void update_flux_speeds();
 
   void compute_entropy(const Vector<double> & solution,
-                       FEValues<dim> & fe_values,
+                       const FEValuesBase<dim> & fe_values,
                        Vector<double> & entropy) const;
-
-  void compute_entropy_face(const Vector<double> & solution,
-                            FEFaceValues<dim> & fe_values,
-                            Vector<double> & entropy) const;
 
   void compute_divergence_entropy_flux(const Vector<double> & solution,
                                        FEValues<dim> & fe_values,

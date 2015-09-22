@@ -81,18 +81,13 @@ private:
     void update_flux_speeds() override;
 
     void compute_entropy(
-      const Vector<double> &solution,
-      FEValues<dim>        &fe_values,
-      Vector<double>       &entropy) const override;
-
-    void compute_entropy_face(
-      const Vector<double> &solution,
-      FEFaceValues<dim>    &fe_values_face,
-      Vector<double>       &entropy) const override;
+      const Vector<double>    &solution,
+      const FEValuesBase<dim> &fe_values,
+      Vector<double>          &entropy) const override;
 
     void compute_divergence_entropy_flux(
       const Vector<double> &solution,
-      FEValues<dim>        &fe_values,
+      const FEValues<dim>  &fe_values,
       Vector<double>       &divergence_entropy_flux) const override;
 };
 

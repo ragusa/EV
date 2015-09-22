@@ -360,14 +360,9 @@ void ConservationLaw<dim>::setup_system()
   // clear maps
   cell_diameter.clear();
   max_flux_speed_cell.clear();
-  viscosity_cell_q.clear();
-  first_order_viscosity_cell_q.clear();
-  entropy_viscosity_cell_q.clear();
-  entropy_viscosity_with_jumps_cell_q.clear();
-  entropy_cell_q.clear();
-  entropy_residual_cell_q.clear();
-  max_entropy_residual_cell.clear();
-  max_jumps_cell.clear();
+  viscosity.clear();
+  first_order_viscosity.clear();
+  entropy_viscosity.clear();
 
   // clear and distribute dofs
   dof_handler.clear();
@@ -458,18 +453,6 @@ void ConservationLaw<dim>::setup_system()
       ConservationLawParameters<dim>::runge_kutta)
     for (int i = 0; i < rk.s; ++i)
       rk.f[i].reinit(n_dofs);
-
-  // allocate memory for viscosity maps
-  cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
-  for (; cell != endc; ++cell)
-  {
-    viscosity_cell_q[cell] = Vector<double>(n_q_points_cell);
-    first_order_viscosity_cell_q[cell] = Vector<double>(n_q_points_cell);
-    entropy_viscosity_cell_q[cell] = Vector<double>(n_q_points_cell);
-    entropy_cell_q[cell] = Vector<double>(n_q_points_cell);
-    entropy_residual_cell_q[cell] = Vector<double>(n_q_points_cell);
-    entropy_viscosity_with_jumps_cell_q[cell] = Vector<double>(n_q_points_cell);
-  }
 }
 
 /** \brief Updates the cell sizes map and minimum cell size.
@@ -580,6 +563,7 @@ void ConservationLaw<dim>::apply_Dirichlet_BC(const double & time)
  *  \param output_filename_base string which forms the base (without extension)
  *         of the output file.
  */
+/*
 template <int dim>
 void ConservationLaw<dim>::output_map(
   const cell_vector_map & map, const std::string & output_filename_base) const
@@ -618,6 +602,7 @@ void ConservationLaw<dim>::output_map(
     output.close();
   }
 }
+*/
 
 /** \brief Outputs a mapped quantity at all cells, not all quadrature points
  * within cells
@@ -626,6 +611,7 @@ void ConservationLaw<dim>::output_map(
  *  \param output_filename_base string which forms the base (without extension) of
  * the output file.
  */
+/*
 template <int dim>
 void ConservationLaw<dim>::output_map(
   const cell_double_map & map, const std::string & output_filename_base) const
@@ -664,6 +650,7 @@ void ConservationLaw<dim>::output_map(
     output.close();
   }
 }
+*/
 
 /**
  * \brief Solves transient using a Runge-Kutta scheme.
@@ -974,7 +961,7 @@ void ConservationLaw<dim>::add_maximum_principle_viscosity_bilinear_form(
       }
       // add viscous term for dof i; note 0 is used for quadrature point
       // because viscosity is the same for all quadrature points on a cell
-      cell_residual(i) += viscosity_cell_q[cell](0) * b_i;
+      cell_residual(i) += viscosity[cell] * b_i;
     }
 
     // aggregate local residual into global residual
@@ -1047,34 +1034,31 @@ void ConservationLaw<dim>::update_viscosities(const double & dt)
     // no viscosity
     case ConservationLawParameters<dim>::none:
     {
-      Vector<double> const_visc(n_q_points_cell);
       cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
       for (; cell != endc; ++cell)
-        viscosity_cell_q[cell] = const_visc;
+        viscosity[cell] = 0.0;
       break;
     }
     // constant viscosity
     case ConservationLawParameters<dim>::constant:
     {
-      Vector<double> const_visc(n_q_points_cell);
-      const_visc.add(parameters.constant_viscosity_value);
       cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
       for (; cell != endc; ++cell)
-        viscosity_cell_q[cell] = const_visc;
+        viscosity[cell] = parameters.constant_viscosity_value;
       break;
     }
     // old first order viscosity
     case ConservationLawParameters<dim>::old_first_order:
     {
       update_old_first_order_viscosity();
-      viscosity_cell_q = first_order_viscosity_cell_q;
+      viscosity = first_order_viscosity;
       break;
     }
     // max principle viscosity
     case ConservationLawParameters<dim>::max_principle:
     {
       update_max_principle_viscosity();
-      viscosity_cell_q = first_order_viscosity_cell_q;
+      viscosity = first_order_viscosity;
       break;
     }
     // entropy viscosity
@@ -1084,20 +1068,9 @@ void ConservationLaw<dim>::update_viscosities(const double & dt)
       update_entropy_viscosities(dt);
 
       cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
-      // with jumps
-      if (parameters.add_jumps)
-        for (; cell != endc; ++cell)
-          for (unsigned int q = 0; q < n_q_points_cell; ++q)
-            viscosity_cell_q[cell](q) =
-              std::min(first_order_viscosity_cell_q[cell](q),
-                       entropy_viscosity_with_jumps_cell_q[cell](q));
-      // without jumps
-      else
-        for (; cell != endc; ++cell)
-          for (unsigned int q = 0; q < n_q_points_cell; ++q)
-            viscosity_cell_q[cell](q) =
-              std::min(first_order_viscosity_cell_q[cell](q),
-                       entropy_viscosity_cell_q[cell](q));
+      for (; cell != endc; ++cell)
+        viscosity[cell] = std::min(first_order_viscosity[cell], 
+          entropy_viscosity[cell]);
       break;
     }
     default:
@@ -1108,8 +1081,9 @@ void ConservationLaw<dim>::update_viscosities(const double & dt)
   }
 }
 
-/** \brief Computes first order viscosity at each quadrature point in each cell.
- *         This first order viscosity is of the type using a tuning parameter.
+/**
+ * \brief Computes first order viscosity for each cell.
+          This first order viscosity is of the type using a tuning parameter.
  */
 template <int dim>
 void ConservationLaw<dim>::update_old_first_order_viscosity()
@@ -1120,15 +1094,14 @@ void ConservationLaw<dim>::update_old_first_order_viscosity()
   cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
   for (; cell != endc; ++cell)
   {
-    double visc =
+    first_order_viscosity[cell] =
       std::abs(c_max * cell_diameter[cell] * max_flux_speed_cell[cell]);
-    for (unsigned int q = 0; q < n_q_points_cell; ++q)
-      first_order_viscosity_cell_q[cell](q) = visc;
   }
 }
 
-/** \brief Computes the maximum-principle preserving first order viscosity at each
- *         quadrature point in each cell.
+/**
+ * \brief Computes the maximum-principle preserving first order viscosity
+ *        for each cell.
  */
 template <int dim>
 void ConservationLaw<dim>::update_max_principle_viscosity()
@@ -1146,22 +1119,19 @@ void ConservationLaw<dim>::update_max_principle_viscosity()
     // get local dof indices
     cell->get_dof_indices(local_dof_indices);
 
-    for (unsigned int q = 0; q < n_q_points_cell; ++q)
+    first_order_viscosity[cell] = 0.0;
+    for (unsigned int i = 0; i < dofs_per_cell; ++i)
     {
-      first_order_viscosity_cell_q[cell](q) = 0.0;
-      for (unsigned int i = 0; i < dofs_per_cell; ++i)
+      for (unsigned int j = 0; j < dofs_per_cell; ++j)
       {
-        for (unsigned int j = 0; j < dofs_per_cell; ++j)
+        if (i != j)
         {
-          if (i != j)
-          {
-            first_order_viscosity_cell_q[cell](q) =
-              std::max(first_order_viscosity_cell_q[cell](q),
-                       std::abs(viscous_fluxes(local_dof_indices[i],
-                                               local_dof_indices[j])) /
-                         (-viscous_bilinear_forms(local_dof_indices[i],
-                                                  local_dof_indices[j])));
-          }
+          first_order_viscosity[cell] =
+            std::max(first_order_viscosity[cell],
+                     std::abs(viscous_fluxes(local_dof_indices[i],
+                                             local_dof_indices[j])) /
+                       (-viscous_bilinear_forms(local_dof_indices[i],
+                                                local_dof_indices[j])));
         }
       }
     }
@@ -1267,106 +1237,167 @@ void ConservationLaw<dim>::compute_viscous_bilinear_forms()
   }
 }
 
-/** \brief Computes entropy viscosity at each quadrature point in each cell.
+/**
+ * \brief Computes entropy viscosity for each cell.
+ *
+ * \param[in] dt time step size
  */
 template <int dim>
 void ConservationLaw<dim>::update_entropy_viscosities(const double & dt)
 {
-  // update entropy residuals and max entropy deviation
-  update_entropy_residuals(dt);
+  // compute normalization constant for entropy viscosity
+  const double entropy_normalization = compute_entropy_normalization(new_solution);
 
-  // compute entropy viscosity
-  double c_s = parameters.entropy_viscosity_coef;
-  double c_j = parameters.jump_coef;
+  // get tuning parameters
+  const double entropy_residual_coefficient = parameters.entropy_viscosity_coef;
+  const double jump_coefficient = parameters.jump_coef;
 
-  cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
-  if (parameters.add_jumps)
-  {
-    // update jumps
-    update_jumps();
-
-    for (; cell != endc; ++cell)
-    {
-      double aux = std::pow(cell_diameter[cell], 2) / max_entropy_deviation;
-      double entropy_without_jumps_cell =
-        aux * c_s * max_entropy_residual_cell[cell];
-      double entropy_with_jumps_cell =
-        entropy_without_jumps_cell + aux * c_j * max_jumps_cell[cell];
-
-      for (unsigned int q = 0; q < n_q_points_cell; ++q)
-      {
-        entropy_viscosity_with_jumps_cell_q[cell](q) = entropy_with_jumps_cell;
-        entropy_viscosity_cell_q[cell](q) = entropy_without_jumps_cell;
-      }
-    }
-  }
-  else
-  {
-    for (; cell != endc; ++cell)
-    {
-      double aux = std::pow(cell_diameter[cell], 2) / max_entropy_deviation;
-      double entropy_without_jumps_cell =
-        aux * c_s * max_entropy_residual_cell[cell];
-
-      for (unsigned int q = 0; q < n_q_points_cell; ++q)
-        entropy_viscosity_cell_q[cell](q) = entropy_without_jumps_cell;
-    }
-  }
-}
-
-/** \brief Updates the entropy residuals at each quadrature point in each cell.
- */
-template <int dim>
-void ConservationLaw<dim>::update_entropy_residuals(const double & dt)
-{
+  // FE values
   FEValues<dim> fe_values(
     fe, cell_quadrature, update_values | update_gradients | update_JxW_values);
-  Vector<double> old_entropy(n_q_points_cell);
-  Vector<double> divergence_entropy_flux(n_q_points_cell);
 
-  // domain-averaged entropy
-  double entropy_average = 0.0;
-
+  // compute entropy viscosity for each cell
   cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
   for (; cell != endc; ++cell)
   {
+    // reinitialize FE values
     fe_values.reinit(cell);
-    // compute entropy of current and old solutions
-    compute_entropy(new_solution, fe_values, entropy_cell_q[cell]);
-    compute_entropy(old_solution, fe_values, old_entropy);
-    compute_divergence_entropy_flux(
-      new_solution, fe_values, divergence_entropy_flux);
 
-    for (unsigned int q = 0; q < n_q_points_cell; ++q)
-    {
-      // compute entropy residual
-      double dsdt = (entropy_cell_q[cell](q)-old_entropy(q)) / dt;
-      entropy_residual_cell_q[cell](q) =
-        std::abs(dsdt + divergence_entropy_flux(q));
+    // compute max entropy residual on cell
+    const double max_entropy_residual = compute_max_entropy_residual(
+      new_solution, old_solution, dt, fe_values);
+    //const double max_entropy_jump = compute_max_entropy_jump();
+    const double max_entropy_jump = 0.0;
 
-      // add entropy to volume-weighted sum
-      entropy_average += entropy_cell_q[cell](q)*fe_values.JxW(q);
-    }
-
-    // get the max entropy residual on each cell
-    max_entropy_residual_cell[cell] = *std::max_element(
-      entropy_residual_cell_q[cell].begin(), entropy_residual_cell_q[cell].end());
+    // compute entropy viscosity
+    double aux = std::pow(cell_diameter[cell], 2) / entropy_normalization;
+    entropy_viscosity[cell] =
+      aux * (entropy_residual_coefficient * max_entropy_residual
+      + jump_coefficient * max_entropy_jump);
   }
-  // finish computing entropy average by dividing by the domain volume
-  entropy_average /= domain_volume;
-
-  // compute max entropy deviation to be used as entropy normalization term
-  max_entropy_deviation = 0.0;
-  for (cell = dof_handler.begin_active(); cell != endc; ++cell)
-    for (unsigned int q = 0; q < n_q_points_cell; ++q)
-      max_entropy_deviation = std::max(
-        max_entropy_deviation, std::abs(entropy_cell_q[cell](q)-entropy_average));
 }
 
-/** \brief Updates the jumps.
+/**
+ * Computes the domain-averaged entropy and the max entropy deviation in the
+ * domain.
+ *
+ * \param[in] solution solution with which to calculate entropy for the
+ *            normalization constant
+ *
+ * \return normalization constant for entropy viscosity
+ */
+template<int dim>
+double ConservationLaw<dim>::compute_entropy_normalization(
+  const Vector<double> & solution) const
+{
+  FEValues < dim
+    > fe_values(fe, cell_quadrature, update_values | update_JxW_values);
+
+  Vector<double> entropy(n_q_points_cell);
+
+  // compute domain-averaged entropy
+  //--------------------------------
+  double domain_integral_entropy = 0.0;
+
+  // loop over cells
+  cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
+  for (; cell != endc; ++cell)
+  {
+    // reinitialize FE values
+    fe_values.reinit(cell);
+
+    // compute entropy
+    compute_entropy(solution, fe_values, entropy);
+
+    // loop over quadrature points
+    for (unsigned int q = 0; q < n_q_points_cell; ++q)
+    {
+      // add contribution of quadrature point to entropy integral
+      domain_integral_entropy += entropy[q] * fe_values.JxW(q);
+    }
+  }
+  // domain-averaged entropy_values
+  const double domain_averaged_entropy = domain_integral_entropy / domain_volume;
+
+  // compute max deviation of entropy_values from domain-averaged entropy
+  //--------------------------------------------------------------
+  double normalization_constant = 0.0;
+
+  // loop over cells
+  for (cell = dof_handler.begin_active(); cell != endc; ++cell)
+  {
+    // reinitialize FE values
+    fe_values.reinit(cell);
+
+    // compute entropy
+    compute_entropy(solution, fe_values, entropy);
+
+    // loop over quadrature points
+    for (unsigned int q = 0; q < n_q_points_cell; ++q)
+    {
+      // update max deviation for the normalization constant
+      normalization_constant = std::max(normalization_constant,
+        std::abs(entropy[q] - domain_averaged_entropy));
+    }
+  }
+
+  // guard against division by zero
+  if (normalization_constant == 0.0)
+    normalization_constant = 1.0;
+
+  return normalization_constant;
+}
+
+/**
+ * \brief Computes the max entropy residual in a cell.
+ *
+ * \param[in] new_solution new solution
+ * \param[in] old_solution old solution
+ * \param[in] dt time step size
+ * \param[in] fe_values FE values
+ *
+ * \return max entropy residual in a cell
  */
 template <int dim>
-void ConservationLaw<dim>::update_jumps()
+double ConservationLaw<dim>::compute_max_entropy_residual(
+  const Vector<double> & new_solution,
+  const Vector<double> & old_solution,
+  const double & dt,
+  const FEValues<dim> & fe_values) const
+{
+  Vector<double> entropy_new(n_q_points_cell);
+  Vector<double> entropy_old(n_q_points_cell);
+  Vector<double> divergence_entropy_flux(n_q_points_cell);
+  Vector<double> entropy_residual(n_q_points_cell);
+
+  // compute entropy of current and old solutions
+  compute_entropy(new_solution, fe_values, entropy_new);
+  compute_entropy(old_solution, fe_values, entropy_old);
+  compute_divergence_entropy_flux(
+    new_solution, fe_values, divergence_entropy_flux);
+
+  // compute entropy residual at each quadrature point on cell
+  double max_entropy_residual = 0.0;
+  for (unsigned int q = 0; q < n_q_points_cell; ++q)
+  {
+    // compute entropy residual
+    double dsdt = (entropy_new[q] - entropy_old[q]) / dt;
+    entropy_residual[q] =
+      std::abs(dsdt + divergence_entropy_flux[q]);
+
+    // update maximum entropy residual
+    max_entropy_residual = std::max(max_entropy_residual, entropy_residual[q]);
+  }
+
+  return max_entropy_residual;
+}
+
+/**
+ * \brief Computes the max entropy jump in a cell.
+ */
+/*
+template <int dim>
+void ConservationLaw<dim>::compute_max_entropy_jump() const
 {
   FEFaceValues<dim> fe_values_face(fe,
                                    face_quadrature,
@@ -1430,6 +1461,7 @@ void ConservationLaw<dim>::update_jumps()
 
   } // end cell loop
 }
+*/
 
 /** \brief Computes the negative of the transient residual and stores in
  *         system_rhs

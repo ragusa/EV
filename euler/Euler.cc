@@ -1218,13 +1218,16 @@ void Euler<dim>::update_flux_speeds()
 
 template <int dim>
 void Euler<dim>::compute_entropy(const Vector<double> & solution,
-                                 FEValues<dim> & fe_values,
+                                 const FEValuesBase<dim> & fe_values,
                                  Vector<double> & entropy) const
 {
-  std::vector<double> density(this->n_q_points_cell);
-  std::vector<Tensor<1, dim>> momentum(this->n_q_points_cell);
-  std::vector<double> energy(this->n_q_points_cell);
-  std::vector<double> pressure(this->n_q_points_cell);
+  // get number of quadrature points
+  const unsigned int n = entropy.size();
+
+  std::vector<double> density(n);
+  std::vector<Tensor<1, dim>> momentum(n);
+  std::vector<double> energy(n);
+  std::vector<double> pressure(n);
 
   // get conservative variables
   fe_values[density_extractor].get_function_values(this->new_solution, density);
@@ -1235,34 +1238,7 @@ void Euler<dim>::compute_entropy(const Vector<double> & solution,
   compute_pressure(density, momentum, energy, pressure);
 
   // compute entropy
-  for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-    entropy[q] = density[q] / (gamma - 1.0) *
-      std::log(pressure[q] / std::pow(density[q], gamma));
-}
-
-template <int dim>
-void Euler<dim>::compute_entropy_face(const Vector<double> & solution,
-                                      FEFaceValues<dim> & fe_values_face,
-                                      Vector<double> & entropy) const
-{
-  std::vector<double> density(this->n_q_points_face);
-  std::vector<Tensor<1, dim>> momentum(this->n_q_points_face);
-  std::vector<double> energy(this->n_q_points_face);
-  std::vector<double> pressure(this->n_q_points_face);
-
-  // get conservative variables
-  fe_values_face[density_extractor].get_function_values(this->new_solution,
-                                                        density);
-  fe_values_face[momentum_extractor].get_function_values(this->new_solution,
-                                                         momentum);
-  fe_values_face[energy_extractor].get_function_values(this->new_solution,
-                                                       energy);
-
-  // compute pressure
-  compute_pressure(density, momentum, energy, pressure);
-
-  // compute entropy
-  for (unsigned int q = 0; q < this->n_q_points_face; ++q)
+  for (unsigned int q = 0; q < n; ++q)
     entropy[q] = density[q] / (gamma - 1.0) *
       std::log(pressure[q] / std::pow(density[q], gamma));
 }

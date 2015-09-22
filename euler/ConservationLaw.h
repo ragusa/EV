@@ -72,12 +72,7 @@ protected:
     /**
      * \brief Typedef for cell iterator map to double
      */
-    typedef std::map<cell_iterator, double> cell_double_map;
-
-    /**
-     * \brief Typedef for cell iterator map to vector
-     */
-    typedef std::map<cell_iterator, Vector<double> > cell_vector_map;
+    typedef std::map<cell_iterator, double> cell_map;
 
     void initialize_system();
     void initialize_runge_kutta();
@@ -147,32 +142,26 @@ protected:
     void compute_viscous_fluxes();
     void add_maximum_principle_viscosity_bilinear_form(Vector<double> &solution);
     void update_entropy_viscosities(const double &dt);
-    void update_entropy_residuals(const double &dt);
-    void update_jumps();
+    double compute_entropy_normalization(const Vector<double> & solution) const;
+    double compute_max_entropy_residual(
+      const Vector<double> & new_solution,
+      const Vector<double> & old_solution,
+      const double & dt,
+      const FEValues<dim> & fe_values) const;
+    //double compute_max_entropy_jump() const;
 
     /**
-     * \brief Computes entropy for each quadrature point on a cell.
+     * \brief Computes entropy for each quadrature point on a cell or face.
      *
      * \param[in] solution solution
-     * \param[in] fe_values FEValues object
-     * \param[out] entropy entropy values at each quadrature point on cell
+     * \param[in] fe_values FE values, either for a cell or a face
+     * \param[out] entropy entropy values at each quadrature point on
+     *             cell or face
      */
     virtual void compute_entropy(
-      const Vector<double> &solution,
-      FEValues<dim>        &fe_values,
-      Vector<double>       &entropy) const = 0;
-
-    /**
-     * \brief Computes entropy for each quadrature point on a face.
-     *
-     * \param[in] solution solution
-     * \param[in] fe_values_face FEFaceValues object
-     * \param[out] entropy entropy values at each quadrature point on face
-     */
-    virtual void compute_entropy_face(
-      const Vector<double> &solution,
-      FEFaceValues<dim>    &fe_values_face,
-      Vector<double>       &entropy) const = 0;
+      const Vector<double>    &solution,
+      const FEValuesBase<dim> &fe_values,
+      Vector<double>          &entropy) const = 0;
 
    /**
     * \brief Computes divergence of entropy flux at each quadrature point in cell.
@@ -184,17 +173,20 @@ protected:
     */
     virtual void compute_divergence_entropy_flux(
       const Vector<double> &solution,
-      FEValues<dim>        &fe_values,
+      const FEValues<dim>  &fe_values,
       Vector<double>       &divergence) const = 0;
 
     // output functions
     //virtual void output_solution(double time) = 0;
+/*
     void output_map(
       const cell_vector_map &map,
       const std::string     &output_filename_base) const;
     void output_map(
       const cell_double_map &map,
       const std::string     &output_filename_base) const;
+*/
+
     /**
      * \brief Outputs additional quantities other than the solution variables.
      *
@@ -365,22 +357,15 @@ protected:
     double minimum_cell_diameter;
     /** maximum flux speed; used for CFL condition */
     double max_flux_speed;
-    /** max entropy deviation */
-    double max_entropy_deviation;
     /** domain volume; used for calculation of domain-averaged entropy */
     double domain_volume;
 
     // maps
-    cell_double_map cell_diameter;
-    cell_double_map max_flux_speed_cell;
-    cell_vector_map viscosity_cell_q;
-    cell_vector_map first_order_viscosity_cell_q;
-    cell_vector_map entropy_viscosity_cell_q;
-    cell_vector_map entropy_viscosity_with_jumps_cell_q;
-    cell_vector_map entropy_residual_cell_q;
-    cell_double_map max_entropy_residual_cell;
-    cell_vector_map entropy_cell_q;
-    cell_double_map max_jumps_cell;
+    cell_map cell_diameter;
+    cell_map max_flux_speed_cell;
+    cell_map viscosity;
+    cell_map first_order_viscosity;
+    cell_map entropy_viscosity;
 
     /** flag for last adaptive refinement cycle; used so that only final cycle is output */
     bool in_final_cycle;
