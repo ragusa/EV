@@ -1083,7 +1083,12 @@ void ConservationLaw<dim>::update_viscosities(const double & dt)
 
 /**
  * \brief Computes first order viscosity for each cell.
-          This first order viscosity is of the type using a tuning parameter.
+ *
+ * The first order viscosity is computed as
+ * \f[
+ *   \nu_K^1 = c_{max} h_K \lambda_{K,max} \,,
+ * \f]
+ * where \f$\lambda_{K,max}\f$ is the maximum flux speed on cell \f$K\f$.
  */
 template <int dim>
 void ConservationLaw<dim>::update_old_first_order_viscosity()

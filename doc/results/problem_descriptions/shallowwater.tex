@@ -1,0 +1,95 @@
+%================================================================================
+\section{Shallow Water Equations Test Problem Descriptions}
+%================================================================================
+%--------------------------------------------------------------------------------
+\subsection{1-D Dam Break over Flat Terrain}\label{sec:1d_dam_break_flat}
+%--------------------------------------------------------------------------------
+This is a 1-D Riemann problem with flat bottom topography, i.e.,
+$\bathymetry(x)=0$, taken from \cite{chen2013}.
+Typical end times are $\timevalue=0.5$ and $\timevalue=2$.
+Table \ref{tab:1d_dam_break_flat} summarizes the test parameters.
+
+\begin{mytable}{1-D Dam Break over Flat Terrain Test Problem Summary}
+{1d_dam_break_flat}{l l}
+{\emph{Parameter} & \emph{Value}}
+Domain              & $\domain = (-5,5)$\\
+Initial Conditions  & $(\height,\speed)^T(x,0) = \left\{\begin{array}{l l}
+  (3,0)^T & x < 0\\
+  (1,0)^T & \text{otherwise}\\
+  \end{array}\right.$\\
+Boundary Conditions & $(\height,\speed)^T(-5,\timevalue) = (3,0)^T$\\
+                    & $(\height,\speed)^T(5,\timevalue) = (1,0)^T$\\
+Gravity & $\gravity = 1$\\
+Bottom Topography & $\bathymetry(x) = 0$\\
+Exact Solution    & Available with exact Riemann solver\\
+\end{mytable}
+%--------------------------------------------------------------------------------
+\subsection{1-D Dam Break over Rectangular Bump}\label{sec:1d_dam_break_bump}
+%--------------------------------------------------------------------------------
+This is a 1-D dam break problem with a rectangular bump on the
+terrain beneath the water surface, taken from \cite{chen2013} and
+\cite{vukovic2002}. This bump straddles the dam so that essentially
+the initial values for the height $\height$ are defined in 4 regions, so this is
+not a classic 2-region Riemann value problem. The bump is nominally in the
+region $|x-750|\leq 187.5$, i.e., $x\in(\tilde{x}_{\text{bump,L}},
+\tilde{x}_{\text{bump,R}})=(562.5,937.5)$; 
+however, the bump edges are chosen to be coincident with the mesh so
+that the gradient $\nabla\bathymetry$ need not be evaluated, due to the
+discontinuity at the bump's edges. Therefore the actual bump edges
+are chosen to be $(x_{\text{bump,L}},x_{\text{bump,R}})$, which
+are computed as
+\begin{equation}
+  x_{\text{bump,L}} = \text{round}\pr{\frac{\tilde{x}_{\text{bump,L}}}
+  {\Delta x}}\Delta x
+  \eqc \quad
+  x_{\text{bump,R}} = \text{round}\pr{\frac{\tilde{x}_{\text{bump,R}}}
+  {\Delta x}}\Delta x
+  \eqc
+\end{equation}
+where the $\text{round}()$ function rounds the operand to the nearest integer,
+and $\Delta x$ is a uniform mesh size.
+Typical end times are $\timevalue=15$ and $\timevalue=55$.
+Table \ref{tab:1d_dam_break_bump} summarizes the test parameters.
+
+\begin{mytable}{1-D Dam Break over Flat Terrain Test Problem Summary}
+{1d_dam_break_bump}{l l}
+{\emph{Parameter} & \emph{Value}}
+Domain              & $\domain = (0,1500)$\\
+Initial Conditions  & $(\height+\bathymetry,\speed)^T(x,0)
+  = \left\{\begin{array}{l l}
+  (20,0)^T & x < 750\\
+  (15,0)^T & \text{otherwise}\\
+  \end{array}\right.$\\
+Boundary Conditions & $(\height,\speed)^T(-5,\timevalue) = (3,0)^T$\\
+                    & $(\height,\speed)^T(5,\timevalue) = (1,0)^T$\\
+Gravity & $\gravity = 9.812$\\
+Bottom Topography & $\bathymetry(x)
+  = \left\{\begin{array}{l l}
+  8 & x_{\text{bump,L}}\leq x\leq x_{\text{bump,R}}\\
+  0 & \text{otherwise}\\
+  \end{array}\right.$\\
+\end{mytable}
+%--------------------------------------------------------------------------------
+\subsection{1-D Lake at Rest}\label{sec:1d_lake_at_rest}
+%--------------------------------------------------------------------------------
+This is a 1-D problem in which a lake sits at rest over a nonzero bottom
+topography.
+$\bathymetry(x)=0$, taken from \cite{fjordholm2011}.
+A typical end time is $\timevalue=100$.
+Table \ref{tab:1d_lake_at_rest} summarizes the test parameters.
+
+\begin{mytable}{1-D Lake at Rest Test Problem Summary}
+{1d_lake_at_rest}{l l}
+{\emph{Parameter} & \emph{Value}}
+Domain              & $\domain = (0,20)$\\
+Initial Conditions  & $(\height+\bathymetry,\speed)^T(x,0) = (1,0)^T$\\
+Boundary Conditions & $(\height,\speed)^T(0, \timevalue) = (1,0)^T$\\
+                    & $(\height,\speed)^T(20,\timevalue) = (1,0)^T$\\
+Gravity & $\gravity = 9.812$\\
+Bottom Topography & $\bathymetry(x)
+  = \left\{\begin{array}{l l}
+  \frac{4-(x-10)^2}{20} & |x - 10|\leq 2\\
+  0                     & \text{otherwise}\\
+  \end{array}\right.$\\
+Exact Solution    & $(\height+\bathymetry,\speed)^T(x,0) = (1,0)^T$\\
+\end{mytable}

@@ -26,15 +26,16 @@
  * The shallow water equations are the following:
  * \f[
  *   \frac{\partial h}{\partial t}
- *   + \nabla\cdot\left(h\mathbf{u}\right) = 0 ,
+ *   + \nabla\cdot\mathbf{q} = 0 ,
  * \f]
  * \f[
- *   \frac{\partial(h\mathbf{u})}{\partial t}
- *   + \nabla\cdot\left(h\mathbf{u}\otimes\mathbf{u}
+ *   \frac{\partial\mathbf{q}}{\partial t}
+ *   + \nabla\cdot\left(\mathbf{q}\otimes\mathbf{v}
  *   + \frac{1}{2}g h^2 \mathbf{I}\right) =
  *   - g h \nabla b ,
  * \f]
- * where \f$h\f$ is water height, \f$\mathbf{u}\f$ is velocity,
+ * where \f$h\f$ is water height, \f$\mathbf{v}\f$ is velocity,
+ * \f$\mathbf{q}=h\mathbf{v}\f$ is the ``momentum'',
  * \f$g\f$ is acceleration due to gravity, \f$\mathbf{I}\f$ is the identity
  * tensor, and \f$b\f$ is the bathymetry (bottom topography).
  */
@@ -100,6 +101,9 @@ private:
 
   /** \brief Bathymetry (bottom topography) function \f$b\f$ */
   std::shared_ptr<Function<dim>> bathymetry_function;
+
+  /** \brief Bathymetry (bottom topography) gradient function \f$\nabla b\f$ */
+  std::shared_ptr<Function<dim>> bathymetry_gradient_function;
 };
 
 #include "ShallowWater.cc"

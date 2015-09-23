@@ -113,14 +113,25 @@ void ShallowWater<dim>::define_problem()
       std::string bathymetry_string = "0";
       bathymetry_function_derived->initialize(
         "x", bathymetry_string, this->constants, false);
-      // point base class pointer to derived class function object
       bathymetry_function = bathymetry_function_derived;
+
+      // initialize bathymetry gradient function
+      std::shared_ptr<FunctionParser<dim>> bathymetry_gradient_function_derived =
+        std::make_shared<FunctionParser<dim>>(dim);
+      std::string bathymetry_gradient_string = "0";
+      bathymetry_gradient_function_derived->initialize(
+        "x", bathymetry_gradient_string, this->constants, false);
+      bathymetry_gradient_function = bathymetry_gradient_function_derived;
 
       break;
     }
     case 1: // 1-D dam break over rectangular bump
     {
       Assert(dim == 1, ExcImpossibleInDim(dim));
+
+      // NOTE: need to ensure that adaptive mesh refinement is not used for
+      // this problem because bump edges must be coincident with mesh edges;
+      // otherwise, the gradient of the discontinuity would be evaluated
 
       // name of problem
       this->problem_name = "dam_break_bump";
@@ -133,13 +144,27 @@ void ShallowWater<dim>::define_problem()
         this->triangulation, domain_start, domain_start + domain_width);
 
       // constants
-      this->constants["midpoint"] = domain_start + 0.5 * domain_width; // midpoint
-      this->constants["bump_width"] = 375.0; // width of bump
-      this->constants["bump_height"] = 8.0;  // height of bump
-      this->constants["bump_left"] =
-        this->constants["midpoint"] - 0.5 * this->constants["bump_width"];
-      this->constants["bump_right"] =
-        this->constants["midpoint"] + 0.5 * this->constants["bump_width"];
+      const double midpoint = domain_start + 0.5 * domain_width;
+      const double bump_width = 375.0;
+      const double bump_left_nominal = midpoint - 0.5 * bump_width;
+      const double bump_right_nominal = midpoint + 0.5 * bump_width;
+
+      // determine actual bump left and right positions; they must be coincident
+      // with mesh edges
+      const unsigned int n_cells = std::pow(2,
+        this->parameters.initial_refinement_level);
+      const double dx = domain_width / n_cells;
+      const double bump_left = std::round((bump_left_nominal - domain_start)
+        / dx) * dx;
+      const double bump_right = std::round((bump_right_nominal - domain_start)
+        / dx) * dx;
+
+      // constants for function parser
+      this->constants["midpoint"] = midpoint;     // midpoint
+      this->constants["bump_width"] = bump_width; // width of bump
+      this->constants["bump_height"] = 8.0;       // height of bump
+      this->constants["bump_left"] = bump_left;   // left edge of bump
+      this->constants["bump_right"] = bump_right; // right edge of bump
       this->constants["h_left"] = 20.0;
       this->constants["h_right"] = 15.0;
 
@@ -178,12 +203,95 @@ void ShallowWater<dim>::define_problem()
       // initialize bathymetry function
       std::shared_ptr<FunctionParser<dim>> bathymetry_function_derived =
         std::make_shared<FunctionParser<dim>>();
-      std::string bathymetry_string = "if(abs(x-midpoint)<=0.5*bump_width,"
-                                      "bump_height, 0)";
+      std::string bathymetry_string = "if(x<bump_left,0,"
+                                      "if(x<=bump_right,bump_height,0))";
       bathymetry_function_derived->initialize(
         "x", bathymetry_string, this->constants, false);
-      // point base class pointer to derived class function object
       bathymetry_function = bathymetry_function_derived;
+
+      // initialize bathymetry gradient function
+      std::shared_ptr<FunctionParser<dim>> bathymetry_gradient_function_derived =
+        std::make_shared<FunctionParser<dim>>(dim);
+      std::string bathymetry_gradient_string = "0";
+      bathymetry_gradient_function_derived->initialize(
+        "x", bathymetry_gradient_string, this->constants, false);
+      bathymetry_gradient_function = bathymetry_gradient_function_derived;
+
+      break;
+    }
+    case 2: // 1-D lake at rest
+    {
+      Assert(dim == 1, ExcImpossibleInDim(dim));
+
+      // NOTE: need to ensure that adaptive mesh refinement is not used for
+      // this problem because bump edges must be coincident with mesh edges;
+      // otherwise, the gradient of the discontinuity would be evaluated
+
+      // name of problem
+      this->problem_name = "lake_at_rest";
+
+      // domain
+      const double domain_start = 0.0;
+      const double domain_width = 20.0;
+      this->domain_volume = std::pow(domain_width, dim);
+      GridGenerator::hyper_cube(
+        this->triangulation, domain_start, domain_start + domain_width);
+
+      // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
+      this->n_boundaries = 1;
+      typename Triangulation<dim>::cell_iterator cell =
+        this->triangulation.begin();
+      typename Triangulation<dim>::cell_iterator endc = this->triangulation.end();
+      for (; cell != endc; ++cell)
+        for (unsigned int face = 0; face < this->faces_per_cell; ++face)
+          if (cell->face(face)->at_boundary())
+            cell->face(face)->set_boundary_indicator(0);
+      this->boundary_types.resize(this->n_boundaries);
+      this->boundary_types[0].resize(this->n_components);
+      this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
+      this->boundary_types[0][1] = ConservationLaw<dim>::dirichlet;
+      this->dirichlet_function_strings.resize(this->n_boundaries);
+      this->dirichlet_function_strings[0].resize(this->n_components);
+      this->dirichlet_function_strings[0][0] = "1"; // height
+      this->dirichlet_function_strings[0][1] = "0"; // momentum
+      this->use_exact_solution_as_BC = false;
+
+      // initial conditions
+      this->initial_conditions_strings[0] =
+        "if(abs(x-10)<2,1-(4-(x-10)^2)/20,1)";
+      this->initial_conditions_strings[1] = "0";
+
+      // problem parameters
+      gravity = 9.812;
+
+      // exact solution
+      this->has_exact_solution = true;
+      this->exact_solution_strings[0] =
+        "if(abs(x-10)<2,1-(4-(x-10)^2)/20,1)";
+      this->exact_solution_strings[1] = "0";
+
+      // create and initialize function parser for exact solution
+      std::shared_ptr<FunctionParser<dim>> exact_solution_function_derived =
+        std::make_shared<FunctionParser<dim>>(this->parameters.n_components);
+      exact_solution_function_derived->initialize(
+        "x", this->exact_solution_strings, this->constants, false);
+      this->exact_solution_function = exact_solution_function_derived;
+
+      // initialize bathymetry function
+      std::shared_ptr<FunctionParser<dim>> bathymetry_function_derived =
+        std::make_shared<FunctionParser<dim>>();
+      std::string bathymetry_string = "if(abs(x-10)<2,(4-(x-10)^2)/20,0)";
+      bathymetry_function_derived->initialize(
+        "x", bathymetry_string, this->constants, false);
+      bathymetry_function = bathymetry_function_derived;
+
+      // initialize bathymetry gradient function
+      std::shared_ptr<FunctionParser<dim>> bathymetry_gradient_function_derived =
+        std::make_shared<FunctionParser<dim>>(dim);
+      std::string bathymetry_gradient_string = "if(abs(x-10)<2,1-x/10,0)";
+      bathymetry_gradient_function_derived->initialize(
+        "x", bathymetry_gradient_string, this->constants, false);
+      bathymetry_gradient_function = bathymetry_gradient_function_derived;
 
       break;
     }
@@ -239,34 +347,33 @@ void ShallowWater<dim>::assemble_lumped_mass_matrix()
  * weak form for degree of freedom \f$i\f$:
  * \f[
  *   \left(\varphi_i^h,\frac{\partial h_h}{\partial t}\right)_\Omega
- *   = - \left(\varphi_i^h,\nabla\cdot (h \mathbf{u})_h\right)_\Omega .
+ *   = - \left(\varphi_i^h,\nabla\cdot\mathbf{q}_h\right)_\Omega .
  * \f]
  * Integrating by parts gives
  * \f[
  *   \left(\varphi_i^h,\frac{\partial h_h}{\partial t}\right)_\Omega
- *   = \left(\nabla\varphi_i^h,(h \mathbf{u})_h\right)_\Omega
- *   - \left(\varphi_i^h,(h \mathbf{u})_h\cdot\mathbf{n}\right)_{\partial\Omega} .
+ *   = \left(\nabla\varphi_i^h,\mathbf{q}_h\right)_\Omega
+ *   - \left(\varphi_i^h,\mathbf{q}_h\cdot\mathbf{n}\right)_{\partial\Omega} .
  * \f]
  * Rearranging the momentum equation, substituting the approximate FEM
- * solution and testing with a test function \f$\varphi_i^{h\mathbf{u}}\f$
+ * solution and testing with a test function \f$\varphi_i^{\mathbf{q}}\f$
  * gives its weak form for degree of freedom \f$i\f$:
  * \f[
- *   \left(\varphi_i^{h\mathbf{u}},\frac{\partial (h\mathbf{u})_h}{\partial t}
+ *   \left(\varphi_i^{\mathbf{q}},\frac{\partial\mathbf{q}_h}{\partial t}
  *   \right)_\Omega
- *   = - \left(\varphi_i^{h\mathbf{u}},\nabla\cdot (h\mathbf{u}\otimes\mathbf{u}
+ *   = - \left(\varphi_i^{\mathbf{q}},\nabla\cdot(\mathbf{q}\otimes\mathbf{v}
  *   + \frac{1}{2}g h^2\mathbf{I})_h\right)_\Omega
- *   - \left(\varphi_i^{h\mathbf{u}},g h_h\nabla b\right)_\Omega .
+ *   - \left(\varphi_i^{\mathbf{q}},g h_h\nabla b\right)_\Omega .
  * \f]
  * Integrating by parts gives
  * \f[
- *   \left(\varphi_i^{h\mathbf{u}},\frac{\partial (h\mathbf{u})_h}{\partial t}
+ *   \left(\varphi_i^{\mathbf{q}},\frac{\partial\mathbf{q}_h}{\partial t}
  *   \right)_\Omega
- *   = \left(\nabla\varphi_i^{h\mathbf{u}},(h\mathbf{u}\otimes\mathbf{u}
+ *   = \left(\nabla\varphi_i^{\mathbf{q}},(\mathbf{q}\otimes\mathbf{v}
  *   + \frac{1}{2}g h^2\mathbf{I})_h\right)_\Omega
- *   - \left(\varphi_i^{h\mathbf{u}},(h\mathbf{u}\otimes\mathbf{u}
+ *   - \left(\varphi_i^{\mathbf{q}},\mathbf{q}\otimes\mathbf{v}
  *   + \frac{1}{2}g h^2\mathbf{I})_h\cdot\mathbf{n}\right)_{\partial\Omega}
- *   + \left(\nabla\cdot\varphi_i^{h\mathbf{u}},g h_h b\right)_\Omega
- *   - \left(\varphi_i^{h\mathbf{u}},g h_h b \mathbf{n}\right)_{\partial\Omega} .
+ *   - \left(\varphi_i^{\mathbf{q}},g h_h\nabla b\right)_\Omega .
  * \f]
  * This yields a discrete system
  * \f[
@@ -276,14 +383,13 @@ void ShallowWater<dim>::assemble_lumped_mass_matrix()
  * \f$\mathbf{r}\f$ is given by
  * \f[
  *   r_i =
- *   \left(\nabla\varphi_i^h,(h \mathbf{u})_h\right)_\Omega
- *   - \left(\varphi_i^h,(h \mathbf{u})_h\cdot\mathbf{n}\right)_{\partial\Omega}
- *   + \left(\nabla\varphi_i^{h\mathbf{u}},(h\mathbf{u}\otimes\mathbf{u}
+ *   \left(\nabla\varphi_i^h,\mathbf{q}_h\right)_\Omega
+ *   - \left(\varphi_i^h,\mathbf{q}_h\cdot\mathbf{n}\right)_{\partial\Omega}
+ *   + \left(\nabla\varphi_i^{\mathbf{q}},(\mathbf{q}\otimes\mathbf{v}
  *   + \frac{1}{2}g h^2\mathbf{I})_h\right)_\Omega
- *   - \left(\varphi_i^{h\mathbf{u}},(h\mathbf{u}\otimes\mathbf{u}
+ *   - \left(\varphi_i^{\mathbf{q}},(\mathbf{q}\otimes\mathbf{v}
  *   + \frac{1}{2}g h^2\mathbf{I})_h\cdot\mathbf{n}\right)_{\partial\Omega}
- *   + \left(\nabla\cdot\varphi_i^{h\mathbf{u}},g h_h b\right)_\Omega
- *   - \left(\varphi_i^{h\mathbf{u}},g h_h b \mathbf{n}\right)_{\partial\Omega} .
+ *   - \left(\varphi_i^{\mathbf{q}},g h_h\nabla b\right)_\Omega .
  * \f]
  *
  *  \param[out] r steady-state residual \f$\mathbf{r}\f$
@@ -302,9 +408,6 @@ void ShallowWater<dim>::compute_ss_residual(Vector<double> & f)
   Vector<double> cell_residual(this->dofs_per_cell);
   std::vector<unsigned int> local_dof_indices(this->dofs_per_cell);
 
-  //===========================================================================
-  // inviscid terms
-  //===========================================================================
   // loop over cells
   cell_iterator cell = this->dof_handler.begin_active(),
                 endc = this->dof_handler.end();
@@ -350,14 +453,16 @@ void ShallowWater<dim>::compute_ss_residual(Vector<double> & f)
     std::vector<Point<dim>> points(this->n_q_points_cell);
     points = fe_values.get_quadrature_points();
 
-    // compute bathymetry
-    std::vector<double> bathymetry(this->n_q_points_cell);
-    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-      bathymetry[q] = bathymetry_function->value(points[q]);
-
     // loop over quadrature points
     for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
     {
+      // compute gradient of bathymetry function
+      Tensor<1,dim> bathymetry_gradient(0.0);
+      for (unsigned int d = 0; d < dim; ++d)
+      {
+        bathymetry_gradient[d] = bathymetry_gradient_function->value(points[q], d);
+      }
+
       // loop over test functions
       for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
       {
@@ -371,10 +476,8 @@ void ShallowWater<dim>::compute_ss_residual(Vector<double> & f)
             double_contract(fe_values[momentum_extractor].gradient(i, q),
                             momentum_inviscid_flux[q] + momentum_viscous_flux[q])
             // bathymetry source term
-            +
-            (fe_values[momentum_extractor].divergence(i, q) * gravity * height[q]
-            + fe_values[momentum_extractor].value(i, q) * gravity * height_gradient[q]) *
-              bathymetry[q]) *
+            - fe_values[momentum_extractor].value(i, q) * gravity * height[q] *
+              bathymetry_gradient) *
           fe_values.JxW(q);
       }
     }
@@ -475,17 +578,17 @@ void ShallowWater<dim>::compute_velocity(
  *        entire domain.
  *
  * The eigenvalues of the shallow water equations are:
- * - \f$\lambda_1 = \|\mathbf{u}\|\f$,
- * - \f$\lambda_2 = \|\mathbf{u}\| + c\f$,
- * - \f$\lambda_3 = \|\mathbf{u}\| - c\f$,
+ * - \f$\lambda_1 = \|\mathbf{v}\|\f$,
+ * - \f$\lambda_2 = \|\mathbf{v}\| + a\f$,
+ * - \f$\lambda_3 = \|\mathbf{v}\| - a\f$,
  *
- * where \f$c\f$ is the sound speed:
+ * where \f$a\f$ is the sound speed:
  * \f[
- *   c = \sqrt{gh} \,.
+ *   a = \sqrt{gh} \,.
  * \f]
  * The maximum wave speed is thus the second eigenvalue:
  * \f[
- *   \lambda_{max} = \|\mathbf{u}\| + c \,.
+ *   \lambda_{max} = \|\mathbf{v}\| + a \,.
  * \f]
  */
 template <int dim>
@@ -536,10 +639,10 @@ void ShallowWater<dim>::update_flux_speeds()
  * \brief Computes entropy \f$\eta\f$ at each quadrature point on cell or face.
  *
  * For the shallow water equations, the entropy is defined as
- * \[
+ * \f[
  *   \eta(\mathbf{u}) = \frac{1}{2}\frac{\mathbf{q}\cdot\mathbf{q}}{h}
  *   + \frac{1}{2}g h^2
- * \]
+ * \f]
  */
 template <int dim>
 void ShallowWater<dim>::compute_entropy(const Vector<double> & solution,
