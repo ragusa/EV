@@ -84,24 +84,24 @@ overlay unbroken and first={
 \makeatother
 
 % create standard environments for each theorem environment
-\newenvironment{theorem}[2]
-   {\ifthenelse{\equal{#2}{}}{\begin{colortheorem}{#1}}
-   {\begin{colortheorem}[label={#2}]{#1}}}
+\newenvironment{theorem}[2][]
+   {\ifthenelse{\equal{#1}{}}{\begin{colortheorem}{#2}}
+   {\begin{colortheorem}[label={#1}]{#2}}}
    {\end{colortheorem}}
-\newenvironment{lemma}[2]
-   {\ifthenelse{\equal{#2}{}}{\begin{colorlemma}{#1}}
-   {\begin{colorlemma}[label={#2}]{#1}}}
+\newenvironment{lemma}[2][]
+   {\ifthenelse{\equal{#1}{}}{\begin{colorlemma}{#2}}
+   {\begin{colorlemma}[label={#1}]{#2}}}
    {\end{colorlemma}}
-\newenvironment{corollary}[2]
-   {\ifthenelse{\equal{#2}{}}{\begin{colorcorollary}{#1}}
-   {\begin{colorcorollary}[label={#2}]{#1}}}
+\newenvironment{corollary}[2][]
+   {\ifthenelse{\equal{#1}{}}{\begin{colorcorollary}{#2}}
+   {\begin{colorcorollary}[label={#1}]{#2}}}
    {\end{colorcorollary}}
-\newenvironment{definition}[2]
-   {\ifthenelse{\equal{#2}{}}{\begin{colordefinition}{#1}}
-   {\begin{colordefinition}[label={#2}]{#1}}}
+\newenvironment{definition}[2][]
+   {\ifthenelse{\equal{#1}{}}{\begin{colordefinition}{#2}}
+   {\begin{colordefinition}[label={#1}]{#2}}}
    {\end{colordefinition}}
-\newenvironment{proposition}[2]
-   {\ifthenelse{\equal{#2}{}}{\begin{colorproposition}{#1}}
-   {\begin{colorproposition}[label={#2}]{#1}}}
+\newenvironment{proposition}[2][]
+   {\ifthenelse{\equal{#1}{}}{\begin{colorproposition}{#2}}
+   {\begin{colorproposition}[label={#1}]{#2}}}
    {\end{colorproposition}}
 

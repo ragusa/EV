@@ -7,8 +7,8 @@ expansion of basis functions $\testfunction_j(\x)$:
 \end{equation}
 where the coefficients $\solutionletter_j(\timevalue)$ are the basis function
 expansion coefficients at time $\timevalue$. Substituting the approximate
-solution into Equation \eqref{eq:cons_law} and testing with basis function
-$\testfunction_i(\x)$ gives
+solution into Equation \eqref{eq:scalar_transport} and testing with basis
+function $\testfunction_i(\x)$ gives
 \begin{equation}
    \intSi\ppt{\approximatescalarsolution}\testfunction_i(\x) d\volume
       + \intSi\left(\divergence\consfluxscalar[\approximatescalarsolution]
@@ -16,29 +16,22 @@ $\testfunction_i(\x)$ gives
       \testfunction_i(\x) d\volume
       = \intSi \scalarsource\xt \testfunction_i(\x) d\volume \eqc
 \end{equation}
-where $\support_i$ is the support of $\testfunction_i(\x)$. If the flux function
-$\consfluxscalar$ is linear, then the system to be solved is linear:
+where $\support_i$ is the support of $\testfunction_i(\x)$. If the flux
+function $\consfluxscalar$ is linear with respect to $\scalarsolution$, i.e.,
+$\consfluxscalar = \velocity\scalarsolution$ for some uniform velocity field
+$\velocity$, then the system to be solved is linear:
 \begin{equation}\label{eq:semidiscrete}
   \consistentmassmatrix\ddt{\solutionvector}+\ssmatrix\solutionvector(t)
   = \ssrhs(\timevalue) \eqc
 \end{equation}
-where $\ssmatrix$ is the steady-state system matrix and $\solutionvector$ is the
-vector of discrete solution values. If the velocity field $\velocity$ is
-constant, then the elements of $\ssmatrix$ are
+with the elements of $\ssmatrix$ being the following:
 \begin{equation}\label{eq:Aij}
   \ssmatrixletter\ij \equiv \intSij\left(
   \velocity\cdot\nabla\testfunction_j(\x) +
   \reactioncoef(\x)\testfunction_j(\x)\right)\testfunction_i(\x) d\volume \eqc
 \end{equation}
 where $\support\ij$ is the dual support of $\testfunction_i(\x)$ and
-$\testfunction_j(\x)$.  Otherwise, the divergence of the velocity field
-appears:
-\begin{equation}\label{eq:Aij_nonconstant_v}
-  \ssmatrixletter\ij \equiv \intSij\left(
-  \velocity\cdot\nabla\testfunction_j(\x) +
-  (\reactioncoef(\x)+\divergence\velocity)\testfunction_j(\x)\right)
-  \testfunction_i(\x) d\volume \eqp
-\end{equation}
+$\testfunction_j(\x)$.
 If the flux function $\consfluxscalar$ is nonlinear, then the system is
 nonlinear, but it may be expressed in a quasilinear form:
 \begin{equation}\label{eq:semi_quasilinear}
@@ -52,7 +45,7 @@ quasilinear matrix (i.e., the Jacobian matrix) entries are
   \ssmatrixletter\ij(\approximatescalarsolution) \equiv \intSij\left(
   \mathbf{\consfluxletter}'(\approximatescalarsolution)\cdot\nabla
   \testfunction_j(\x) +
-  (\reactioncoef(\x)+\nabla\cdot\velocity)\testfunction_j(\x)\right)
+  \reactioncoef(\x)\testfunction_j(\x)\right)
   \testfunction_i(\x) d\volume \eqp
 \end{equation}
 The elements of $\ssrhs(\timevalue)$ are

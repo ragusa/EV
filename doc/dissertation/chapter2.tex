@@ -1,48 +1,55 @@
 \chapter{METHODOLOGY}
 
 %===============================================================================
-\section{Preliminaries}
+\section{Model Equations}
 %===============================================================================
-  \subsection{Conservation Laws}
-    \input{content/preliminaries/conservation_laws}
-    \subsubsection{The Burgers Equation}
-    \subsubsection{The Shallow Water Equations\label{sec:shallowwater}}
-%      \input{content/preliminaries/shallowwater}
-    \subsubsection{The Euler Equations}
-  \subsection{Problem Formulation}
-    \input{content/preliminaries/problem_formulation}
+\subsection{General Conservation Law Systems}
+  \input{content/preliminaries/conservation_laws}
+\subsection{Scalar Conservation Laws}
+  \input{content/preliminaries/scalar}
+\subsection{The Burgers Equation}
+%  \input{content/preliminaries/burgers}
+\subsection{The Shallow Water Equations\label{sec:shallowwater}}
+%  \input{content/preliminaries/shallowwater}
+\subsection{The Euler Equations}
+%  \input{content/preliminaries/euler}
 %===============================================================================
 \section{Discretization}
 %===============================================================================
-  \subsection{Spatial Discretization\label{sec:spatial_discretization}}
-    \input{content/discretization/spatial_discretization}
-  \subsection{Temporal Discretization\label{sec:temporal_discretization}}
-    \subsubsection{Explicit Euler Scheme}
-      \input{content/discretization/explicit_euler}
-    \subsubsection{Strong Stability-Preserving Runge-Kutta (SSPRK)
-      Schemes\label{sec:ssprk}}
-      \input{content/discretization/ssprk}
-    \subsubsection{Theta Schemes\label{sec:theta}}
-      \input{content/discretization/theta}
+\subsection{Spatial Discretization\label{sec:spatial_discretization}}
+  \input{content/discretization/spatial_discretization}
+\subsection{Temporal Discretization\label{sec:temporal_discretization}}
+  \subsubsection{Explicit Euler Scheme}
+    \input{content/discretization/explicit_euler}
+  \subsubsection{Strong Stability-Preserving Runge-Kutta (SSPRK)
+    Schemes\label{sec:ssprk}}
+    \input{content/discretization/ssprk}
+  \subsubsection{Theta Schemes\label{sec:theta}}
+    \input{content/discretization/theta}
 %===============================================================================
 \section{Low-Order Schemes}  
 %===============================================================================
-%  \subsection{Algebraic Low-Order Scheme}
-%     \input{content/low_order/low_order_scheme_algebraic}
-%  \subsection{Graph-Theoretic Low-Order Scheme}
-%     \input{content/low_order/low_order_scheme_graphtheoretic}
-%  \subsection{Discrete Maximum Principles}
-%     \input{content/low_order/steadystate_DMP}
-%     \input{content/low_order/explicit_DMP}
-%     \input{content/low_order/theta_DMP}
+\subsection{Low-Order Viscosity\label{sec:low_order_viscosity}}
+  \input{content/low_order/low_order_viscosity}
+\subsection{The Low-Order System}
+  \input{content/low_order/low_order_system}
+\subsection{M-Matrix Property}
+  \input{content/low_order/m_matrix}
+\subsection{Discrete Maximum Principles\label{sec:DMP}}
+  \input{content/low_order/steadystate_DMP}
+%  \input{content/low_order/explicit_DMP}
+%  \input{content/low_order/theta_DMP}
 %===============================================================================
 \section{High-Order Schemes}  
 %===============================================================================
-  \subsection{Entropy Viscosity}
-    \subsubsection{Entropy Viscosity for Scalar Conservation Law Equations}
-      \input{content/high_order/EV_scalar}
-    \subsubsection{Entropy Viscosity for the Shallow Water Equations}
-      \input{content/high_order/EV_shallowwater}
+\subsection{Entropy Viscosity\label{sec:entropy_viscosity}}
+  \subsubsection{Entropy Viscosity for Scalar Conservation Law Equations
+    \label{sec:entropy_viscosity_scalar}}
+    \input{content/high_order/EV_scalar}
+  \subsubsection{Entropy Viscosity for the Shallow Water Equations}
+    \input{content/high_order/EV_shallowwater}
+\subsection{The High-Order System}
+  \input{content/high_order/high_order_system}
 %===============================================================================
 \section{FCT Schemes}  
 %===============================================================================

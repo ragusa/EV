@@ -1,7 +1,7 @@
-The main focus of this research is on radiation transport;
+The primary application of this research is radiation transport;
 however, most of the analysis performed is valid
-for any general conservation law of the following form:
-\begin{equation}\label{eq:cons_law}
+for any conservation law of the following form:
+\begin{equation}\label{eq:scalar_transport}
    \ppt{\scalarsolution} + \divergence\consfluxscalar
    + \reactioncoef\xt \scalarsolution\xt = \scalarsource\xt \eqc
 \end{equation}
@@ -11,31 +11,42 @@ function,
 $\reactioncoef\xt$ is a reaction term, and $\scalarsource\xt$ is a source
 term. This notation will be used throughout this document to keep
 the analysis as general as possible; radiation transport notation
-will only be adopted when assumptions are needed. This is often the case when
-the assumption of a constant, linear flux function $\consfluxscalar$ is needed.
-In this case, the constant velocity field is denoted by $\velocity$:
-$\consfluxscalar=\velocity\scalarsolution$.
+will only be adopted when assumptions are needed.
 
-For radiation transport, the conservation law equation is the following:
+Scalar radiation transport,
 \begin{equation}\label{eq:rad_transport}
   \frac{1}{\speed}\ppt{\angularflux} + \directionvector\cdot\nabla\angularflux\xt
   + \totalcrosssection(\x)\angularflux\xt = \radiationsource\xt \eqc
 \end{equation}
+fits the conservation law model of Equation \eqref{eq:scalar_transport} by
+making the following substitutions:
+\[
+  \consfluxscalar\rightarrow\velocity\scalarsolution
+  \eqc \quad
+  \velocity\rightarrow\speed\directionvector
+  \eqc \quad
+  \scalarsolution\rightarrow\angularflux
+  \eqc \quad
+  \reactioncoef\rightarrow\speed\totalcrosssection
+  \eqc \quad
+  \scalarsource\rightarrow\speed\radiationsource
+  \eqc
+\]
 where $\angularflux\xt$ is the angular flux in direction $\directionvector$,
 $\speed$ is the transport speed, $\totalcrosssection(\x)$
 is the macroscopic total cross-section, and $\radiationsource\xt$ is the
 total source (extraneous plus scattering).
 
-To complete the problem formulation, one must provide boundary
-conditions and, for transient problems, intitial conditions:
+To complete the problem formulation, boundary
+conditions must be provided, as well as intitial conditions if the
+problem is transient:
 \begin{equation}
    \scalarsolution\xt = \scalarsolution^0(\x)
    \quad \forall \x\in\domain \eqp
 \end{equation}
 Boundary conditions will depend on the chosen conservation law and
 the particular problem. 
-For radiation transport, and any conservation law for which the velocity field
-is constant, a well-posed problem can be completed with an incoming flux
+For linear transport a well-posed problem can be completed with an incoming flux
 boundary condition:
 \begin{equation}
    \scalarsolution\xt = \scalarsolution^{inc}\xt \quad \forall \x
@@ -43,3 +54,5 @@ boundary condition:
      \quad \domainboundary^- = \{\x\in\domainboundary:
      \velocity\cdot\normalvector(\x)<0\} \eqp
 \end{equation}
+For nonlinear conservation laws, care must be taken to ensure that the
+boundary conditions used result in a well-posed problem.

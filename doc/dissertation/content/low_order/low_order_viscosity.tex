@@ -1,0 +1,43 @@
+In this section, a graph-theoretic approach is taken to define a low-order
+scheme that is monotone and maximum principle preserving. The following
+bilinear form is employed in the low-order scheme:
+%--------------------------------------------------------------------------------
+\begin{definition}{Local Viscous Bilinear Form}
+   The local viscous bilinear form for cell $\cell$ is defined as follows:
+   \begin{equation}\label{eq:bilinearform}
+     \localviscbilinearform{\cell}{j}{i} \equiv \left\{\begin{array}{l l}
+       -\frac{1}{\cardinality - 1}\cellvolume & i\ne j
+       \quad i,j\in \indicescell \\
+       \cellvolume & i = j \eqc \quad i,j\in \indicescell \\
+       0           & i\notin\indicescell \quad | \quad j\notin\indicescell
+     \end{array}\right. \eqc
+   \end{equation}
+   with $\indicescell$ being the set of indices corresponding to degrees of
+   freedom in the support of cell $\cell$:
+   \begin{equation}
+     \indicescell \equiv \{j\in\{1,\ldots,N\}: |\support_j\cap \cell|\ne 0\}
+     \eqc
+   \end{equation}
+   and $\cardinality$ being the number of elements in the set $\indicescell$,
+   i.e., the set's cardinality:
+   \begin{equation}
+     \cardinality \equiv \textup{card}(\indicescell) \eqp
+   \end{equation} 
+\end{definition}
+%--------------------------------------------------------------------------------
+The definition of the low-order viscosity follows.
+%--------------------------------------------------------------------------------
+\begin{definition}{Low-Order Viscosity}
+   The low-order viscosity for cell $\cell$ is defined as follows:
+   \begin{equation}
+     \lowordercellviscosity \equiv \max\limits_{i\ne j\in \indicescell}
+     \frac{\max(0,\ssmatrixletter\ij)}
+     {-\sum\limits_{T\subset\support\ij} \localviscbilinearform{T}{j}{i}}
+     \eqc
+   \end{equation}
+   where $\ssmatrixletter\ij$ is the $i,j$th entry of the Galerkin
+   steady-state matrix given by Equation \eqref{eq:Aij} and
+   $\support\ij=\support_i\cap \support_j$ is the dual-support of test
+   functions $\testfunction_i$ and $\testfunction_j$.
+\end{definition}
+%--------------------------------------------------------------------------------

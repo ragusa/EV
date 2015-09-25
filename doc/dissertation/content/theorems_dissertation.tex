@@ -9,24 +9,29 @@
 \newtheorem{mydefinition}{Definition}[section]
 \newtheorem{myproposition}{Proposition}[section]
 
-\newenvironment{theorem}[2]
-   {\ifthenelse{\equal{#1}{}}{\begin{mytheorem}}{\begin{mytheorem}[#1]}
-   \ifthenelse{\equal{#2}{}}{}{\label{#2}}}
+\newenvironment{theorem}[2][]
+   {\ifthenelse{\equal{#2}{}}{\begin{mytheorem}}
+   {\begin{mytheorem}\textbf{\textup{(#2)}}}
+   \ifthenelse{\equal{#1}{}}{}{\label{#1}}}
    {\end{mytheorem}}
-\newenvironment{lemma}[2]
-   {\ifthenelse{\equal{#1}{}}{\begin{mylemma}}{\begin{mylemma}[#1]}
-   \ifthenelse{\equal{#2}{}}{}{\label{#2}}}
+\newenvironment{lemma}[2][]
+   {\ifthenelse{\equal{#2}{}}{\begin{mylemma}}
+   {\begin{mylemma}\textbf{\textup{(#2)}}}
+   \ifthenelse{\equal{#1}{}}{}{\label{#1}}}
    {\end{mylemma}}
-\newenvironment{corollary}[2]
-   {\ifthenelse{\equal{#1}{}}{\begin{mycorollary}}{\begin{mycorollary}[#1]}
-   \ifthenelse{\equal{#2}{}}{}{\label{#2}}}
+\newenvironment{corollary}[2][]
+   {\ifthenelse{\equal{#2}{}}{\begin{mycorollary}}
+   {\begin{mycorollary}\textbf{\textup{(#2)}}}
+   \ifthenelse{\equal{#1}{}}{}{\label{#1}}}
    {\end{mycorollary}}
-\newenvironment{definition}[2]
-   {\ifthenelse{\equal{#1}{}}{\begin{mydefinition}}{\begin{mydefinition}[#1]}
-   \ifthenelse{\equal{#2}{}}{}{\label{#2}}}
+\newenvironment{definition}[2][]
+   {\ifthenelse{\equal{#2}{}}{\begin{mydefinition}}
+   {\begin{mydefinition}\textbf{\textup{(#2)}}}
+   \ifthenelse{\equal{#1}{}}{}{\label{#1}}}
    {\end{mydefinition}}
-\newenvironment{proposition}[2]
-   {\ifthenelse{\equal{#1}{}}{\begin{myproposition}}{\begin{myproposition}[#1]}
-   \ifthenelse{\equal{#2}{}}{}{\label{#2}}}
+\newenvironment{proposition}[2][]
+   {\ifthenelse{\equal{#2}{}}{\begin{myproposition}}
+   {\begin{myproposition}\textbf{\textup{(#2)}}}
+   \ifthenelse{\equal{#1}{}}{}{\label{#1}}}
    {\end{myproposition}}
 

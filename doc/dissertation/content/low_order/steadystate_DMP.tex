@@ -1,33 +1,40 @@
-\subsection{Discrete Maximum Principles}\label{DMP}
-%================================================================================
-In this section, discrete maximum principles are proved for the steady-state
-case and a number of temporal discretizations.
-%--------------------------------------------------------------------------------
-\subsubsection{Steady-State}
-%--------------------------------------------------------------------------------
-\begin{theorem}{Steady-State Scheme Discrete Maximum Principle}{}
-The low-order solution $\mathbf{U}^L$ satisfies the following maximum principle:
-\begin{equation}\label{ss_max_principle}
-   W_i^-\leq U_i^L\leq W_i^+\quad\forall i,
+\begin{theorem}{Steady-State Scheme Discrete Maximum Principle} The low-order
+solution $\lowordersolution$ satisfies the following maximum principle:
+\begin{equation}\label{eq:DMP_ss}
+   \DMPbound_i^-\leq \solutionletter_i^L\leq \DMPbound_i^+\quad\forall i \eqc
 \end{equation}
 where
 \begin{equation}
-   W_i^\pm \equiv -\frac{1}{A^L_{i,i}}\sum\limits_{j\ne i} A^L_{i,j}
-      U_{\substack{\max\\\min},i}^L + \frac{b_i}{A^L_{i,i}},
+   \DMPbound_i^\pm \equiv -\frac{1}{\ssmatrixletter^L_{i,i}}
+      \sumjnoti\ssmatrixletter^L_{i,j}
+      \solutionletter_{\substack{\max\\\min},i}^L
+      + \frac{\ssrhsletter_i}{\ssmatrixletter^L_{i,i}} \eqc
 \end{equation}
-where $U_{\min,i}^L = \min\limits_{j\in \mathcal{I}(S_i)}U_j^L$, $U_{\max,i}^L
-= \max\limits_{j\in \mathcal{I}(S_i)}U_j^L$,
-and $\mathcal{I}(S_i)$ is the set of indices of degrees of freedom in the support
-of degree of freedom $i$.
+where
+\[
+  \solutionletter_{\min,i}^L = \min\limits_{j\in\indicescell[\support_i]}
+    \solutionletter_j^L
+  \eqc\quad
+  \solutionletter_{\max,i}^L = \max\limits_{j\in\indicescell[\support_i]}
+    \solutionletter_j^L
+  \eqc
+\]
+and $\indicescell[\support_i]$ is the set of indices of degrees of freedom in
+the support of degree of freedom $i$.
 \end{theorem}
 
 \begin{proof}
 \begin{eqnarray*}
-	\sum\limits_j A^L_{i,j}U_j^L & = & b_i\\
-	A^L_{i,i}U_i^L & = & \sum\limits_{j\ne i} -A^L_{i,j}U_j^L + b_i\\
-	A^L_{i,i}U_i^L & \le & \left(\sum\limits_{j\ne i} -A^L_{i,j}\right)U_{\max,i}^L + b_i\\
-   U_i^L & \le & -\frac{1}{A^L_{i,i}}\sum\limits_{j\ne i} A^L_{i,j}U_{\max,i}^L
-      + \frac{b_i}{A^L_{i,i}}
+  \sumj\ssmatrixletter^L_{i,j}\solutionletter_j^L & = & \ssrhsletter_i\eqc\\
+  \ssmatrixletter^L_{i,i}\solutionletter_i^L      & = & \sum\limits_{j\ne i}
+    - \ssmatrixletter^L_{i,j}\solutionletter_j^L + \ssrhsletter_i\eqc\\
+  \ssmatrixletter^L_{i,i}\solutionletter_i^L      & \le &
+    \pr{\sumjnoti -\ssmatrixletter^L_{i,j}}\solutionletter_{\max,i}^L
+    + \ssrhsletter_i\eqc\\
+  \solutionletter_i^L & \le & -\frac{1}{\ssmatrixletter^L_{i,i}}
+    \sumjnoti\ssmatrixletter^L_{i,j}\solutionletter_{\max,i}^L
+    + \frac{\ssrhsletter_i}{\ssmatrixletter^L_{i,i}} \eqp
 \end{eqnarray*}
-A similar analysis is performed to prove the lower bound for $U_i^L$.\qed
+A similar analysis is performed to prove the lower bound for
+$\solutionletter_i^L$.\qed
 \end{proof}

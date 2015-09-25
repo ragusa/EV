@@ -6,11 +6,14 @@ and Table \ref{tab:symbols} lists the symbols used in this dissertation.
 
 \begin{mytable}{Abbreviations Used in Dissertation}{abbreviations}{l l}
 {\emph{Abbreviation} & \emph{Description}}
-CG  & continuous Galerkin\\
-DMP & discrete maximum principle\\
-EV  & entropy viscosity\\
-FCT & flux-corrected transport\\
-FEM & finite element method\\
+CG    & continuous Galerkin\\
+CGFEM & continuous Galerkin finite element method\\
+DMP   & discrete maximum principle\\
+EV    & entropy viscosity\\
+FCT   & flux-corrected transport\\
+FEM   & finite element method\\
+RK    & Runge-Kutta\\
+SSPRK & strong stability-preserving Runge-Kutta\\
 \end{mytable}
 
 \begin{center}
@@ -34,13 +37,14 @@ FEM & finite element method\\
 %==============================================================================
 % A-B
 %------------------------------------------------------------------------------
+$\speedofsound$    & speed of sound\\
 $\ssmatrix$        & steady-state matrix\\
 $\highorderssmatrix$ & high-order steady-state matrix\\
 $\loworderssmatrix$ & low-order steady-state matrix\\
 $\bathymetry$      & bathymetry (bottom topography) function for shallow
                      water equations\\
 $\ssrhs$           & steady-state right hand side vector\\
-$\localviscbilinearform_\cellindex(\testfunction_i,\testfunction_j)$ &
+$\localviscbilinearform{\cellindex}{i}{j}$ &
                      viscous bilinear form for cell $\cellindex$ and test
                      functions $\testfunction_i$ and $\testfunction_j$\\
 
@@ -68,8 +72,8 @@ $\consfluxscalar$  & conservation law flux function for scalar case\\
 $\consfluxvector$  & conservation law flux function for vector case\\
 $\gravity$         & acceleration due to gravity\\
 $\height$          & height\\
-$\indicescell(\cellindex)$ & set of degree of freedom indices with support on
-                             cell $\cellindex$\\
+$\indicescell$     & set of degree of freedom indices with support on
+                     cell $\cellindex$\\
 $\entropyjump_F$ & entropy jump for face $F$\\
 $\cellindex$       & cell index\\
 
@@ -88,7 +92,7 @@ $\lumpedmassmatrix$ & lumped mass matrix\\
 %------------------------------------------------------------------------------
 $\timeindex$       & time index\\
 $\normalvector$    & normal vector to a surface\\
-$\cardinalitycell$ & cardinality of cell $\cellindex$\\
+$\cardinality$     & cardinality of cell $\cellindex$\\
 $\pressure$        & pressure\\
 $\correctionfluxvector$ & FCT correction flux vector\\
 $\correctionfluxmatrix$ & matrix of FCT internodal correction flux entries\\

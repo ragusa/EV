@@ -20,7 +20,7 @@ water equations:
 \end{equation}
 In this section, the following notation will be used to denote the fluxes
 for each component:
-\begin{equation}
+\[
   \consfluxvector
   = \left[\begin{array}{c}
     \mathbf{\consfluxletter}^\height(\vectorsolution)\\
@@ -29,21 +29,16 @@ for each component:
   = \left[\begin{array}{c}\heightmomentum\\
     \heightmomentum\otimes\velocity + \half\gravity\height^2\mathbb{I}
     \end{array}\right] \eqp
-\end{equation}
+\]
 In this section the dependence of the flux functions on $\vectorsolution$
 will be dropped for brevity.
 The entropy function for the shallow water equations is defined to be
-the sum of the kinetic and potential ``energy'' terms:
+the sum of the kinetic and potential ``energy'' terms, in terms of the
+conservative variables:
 \begin{equation}
-  \entropy(\vectorsolution) = \half\height\speed^2 + \half\gravity\height^2
-  \eqc
-\end{equation}
-or in terms of the conservative variables,
-\begin{equation}
-  \boxed{
-    \entropy(\vectorsolution) = \half\frac{\heightmomentum\cdot\heightmomentum}
-    {\height} + \half\gravity\height^2
-  } \eqp
+  \entropy(\vectorsolution) = \half\frac{\heightmomentum\cdot\heightmomentum}
+  {\height} + \half\gravity\height^2
+  \eqp
 \end{equation}
 The objective here is to derive an entropy balance equation, which gives the
 rate of change of entropy, $\partial_\timevalue\entropy$. To yield such an
@@ -65,7 +60,7 @@ solution variable are the following:
 To arrive at an entropy equality, each conservation equation in the system
 is multiplied by the respective derivative of the entropy function and then
 summed:
-\begin{equation}
+\[
   \highlightblue{\partial_\height\entropy\,\partial_\timevalue\height
   + \partial_\heightmomentum\entropy\cdot\partial_\timevalue\heightmomentum}
   + \highlightgreen{\partial_\height\entropy\,\divergence
@@ -73,12 +68,12 @@ summed:
   + \partial_\heightmomentum\entropy\cdot\pr{\divergence 
     \mathbf{\consfluxletter}^\heightmomentum}}
   = - \partial_\heightmomentum\entropy\cdot\gravity\height\nabla\bathymetry \eqc
-\end{equation}
+\]
 where the terms highlighted in blue show the \emph{temporal} derivative terms
 and the terms highlighted in green show the \emph{spatial} derivative terms.
 Using Equation \eqref{eq:shallowwater_chainrule}, the temporal derivatives
 can be expressed as a partial derivative of entropy:
-\begin{equation}
+\begin{equation}\label{eq:shallowwater_spatial_derivative_expanded}
   \highlightblue{\partial_\timevalue\entropy}
   + \highlightgreen{\partial_\height\entropy\,\divergence
     \mathbf{\consfluxletter}^\height
@@ -86,15 +81,17 @@ can be expressed as a partial derivative of entropy:
     \mathbf{\consfluxletter}^\heightmomentum}}
   = - \partial_\heightmomentum\entropy\cdot\gravity\height\nabla\bathymetry \eqp
 \end{equation}
-Chain rule can also be applied to spatial derivatives, which allows the
-entropy equality to be put in the form
+An \emph{entropy flux} $\mathbf{\consfluxletter}^\entropy$, is defined such
+that its divergence matches the spatial derivative terms in Equation
+\eqref{eq:shallowwater_spatial_derivative_expanded}:
 \begin{equation}\label{eq:shallowwater_entropy_equality}
   \highlightblue{\partial_\timevalue\entropy}
   + \highlightgreen{\divergence\mathbf{\consfluxletter}^\entropy}
   = - \partial_\heightmomentum\entropy\cdot\gravity\height\nabla\bathymetry \eqp
 \end{equation}
-The entropy flux $\mathbf{\consfluxletter}^\entropy$ is
-derived as follows:
+Comparing Equations \eqref{eq:shallowwater_spatial_derivative_expanded} and
+\eqref{eq:shallowwater_entropy_equality} gives the definition of the
+divergence of the entropy flux:
 \begin{align}
   \nabla\cdot\mathbf{\consfluxletter}^\entropy
   &= 
@@ -102,14 +99,14 @@ derived as follows:
     \mathbf{\consfluxletter}^\height
   + \partial_\heightmomentum\entropy\cdot
     \pr{\divergence\mathbf{\consfluxletter}^\heightmomentum}
-  \\
+  \nonumber\\
   \nabla\cdot\mathbf{\consfluxletter}^\entropy
   &= 
     \partial_\height\entropy\,\divergence
     \mathbf{\consfluxletter}^\height
   + \partial_\heightmomentum\entropy\cdot
     \pr{\divergence\mathbf{\consfluxletter}^\heightmomentum}
-  \\
+  \nonumber\\
   \nabla\cdot\mathbf{\consfluxletter}^\entropy
   &= 
     \pr{-\half\frac{\heightmomentum\cdot\heightmomentum}{\height^2}
@@ -117,7 +114,7 @@ derived as follows:
     \divergence\mathbf{\consfluxletter}^\height
     + \frac{\heightmomentum}{\height}\cdot
     \pr{\divergence\mathbf{\consfluxletter}^\heightmomentum}
-  \\
+  \nonumber\\
   \nabla\cdot\mathbf{\consfluxletter}^\entropy
   &= 
     \pr{-\half\frac{\heightmomentum\cdot\heightmomentum}{\height^2}
@@ -127,10 +124,20 @@ derived as follows:
     \pr{\frac{2\heightmomentum}{\height}\divergence\heightmomentum
     + \pr{\gravity\height\mathbb{I}
     - \frac{\heightmomentum\otimes\heightmomentum}{\height^2}}\cdot\nabla\height}
+  \nonumber\\\label{eq:shallowwater_divergence_coef}
+  \nabla\cdot\mathbf{\consfluxletter}^\entropy
+  &= 
+    \pr{\frac{3}{2}\frac{\heightmomentum\cdot\heightmomentum}{\height^2}
+    + \gravity\height}
+    \divergence\heightmomentum
+    + \pr{\gravity\heightmomentum
+    - \frac{\heightmomentum\cdot(\heightmomentum\otimes\heightmomentum)}
+    {\height^3}}\cdot\nabla\height
 \end{align}
-Assuming the entropy flux $\mathbf{\consfluxletter}^\entropy$ to a function
-of $\height$ and $\heightmomentum$ only and applying chain rule for
-its divergence yields
+Assuming the entropy flux to be a function of $\height$ and $\heightmomentum$
+only, i.e., the entropy flux is
+$\mathbf{\consfluxletter}^\entropy(\height,\heightmomentum)$, and applying
+chain rule for its divergence yields
 \begin{equation}
   \nabla\cdot\mathbf{\consfluxletter}^\entropy
   = \partial_\height\mathbf{\consfluxletter}^\entropy\cdot\nabla\height
@@ -138,6 +145,7 @@ its divergence yields
   \,\divergence\heightmomentum \eqp
 \end{equation}
 Matching the coefficients of $\nabla\height$ and $\divergence\heightmomentum$
+between this equation and Equation \eqref{eq:shallowwater_divergence_coef}
 gives the definitions of the partial derivatives of the entropy flux:
 \begin{equation}\label{eq:shallowwater_entropy_pds}
   \partial_\height\mathbf{\consfluxletter}^\entropy
@@ -151,21 +159,21 @@ gives the definitions of the partial derivatives of the entropy flux:
 \end{equation}
 Integrating the equation for $\partial_\height\mathbf{\consfluxletter}^\entropy$
 gives
-\begin{equation}
+\[
   \mathbf{\consfluxletter}^\entropy
   = \gravity\heightmomentum\height
   + \half\frac{\heightmomentum\cdot\pr{\heightmomentum\otimes\heightmomentum}} 
   {\height^2}
   + c(\heightmomentum) \eqc
-\end{equation}
+\]
 where $c(\heightmomentum)$ is a constant with respect to $\height$. Taking
 the partial derivative of this expression with respect to $\heightmomentum$
 gives
-\begin{equation}
+\[
   \partial_\heightmomentum\mathbf{\consfluxletter}^\entropy
   = \frac{3}{2}\frac{\heightmomentum\cdot\heightmomentum}{\height^2}
   + \gravity\height + c'(\heightmomentum) \eqc
-\end{equation}
+\]
 which when compared to the equation for 
 $\partial_\heightmomentum\mathbf{\consfluxletter}^\entropy$ in Equation
 \eqref{eq:shallowwater_entropy_pds} gives
@@ -173,21 +181,19 @@ $c'(\heightmomentum)=0\Rightarrow c(\heightmomentum)=c$, where
 $c$ can just be chosen to be zero. Thus the final equation for the
 entropy flux is
 \begin{equation}
-  \boxed{
-  \mathbf{\consfluxletter}^\entropy
+  \mathbf{\consfluxletter}^\entropy(\vectorsolution)
   = \gravity\height\heightmomentum
   + \half\frac{\heightmomentum\cdot\pr{\heightmomentum\otimes\heightmomentum}} 
   {\height^2}
-  } \eqp
+  \eqp
 \end{equation}
 Bringing the source term in Equation \eqref{eq:shallowwater_entropy_equality}
-over to the left hand side allows an entropy residual to be 
+over to the left hand side allows an entropy residual to be defined:
 \begin{equation}
-  \boxed{
-  \entropyresidual \equiv \partial_\timevalue\entropy
+  \entropyresidual = \partial_\timevalue\entropy
   + \divergence\mathbf{\consfluxletter}^\entropy
   + \partial_\heightmomentum\entropy\cdot\gravity\height\nabla\bathymetry
-  } \eqp
+  \eqp
 \end{equation}
 The regularization of the shallow water equations is achieved by adding
 viscous fluxes:
@@ -204,8 +210,9 @@ viscous fluxes:
     \end{array}\right]
   = \left[\begin{array}{c}
     \viscosity\nabla\height\\
-    \viscosity\divergence\heightmomentum
+    \viscosity\nabla\heightmomentum
     \end{array}\right] \eqc
 \end{gathered}
 \end{equation}
-where $\viscosity$ is viscosity, which is computed as in Section \ref{blah}.
+where $\viscosity$ is viscosity, which is computed as in Section
+\ref{sec:entropy_viscosity_scalar}.

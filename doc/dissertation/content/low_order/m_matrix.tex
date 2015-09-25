@@ -1,0 +1,144 @@
+In this section, it will be shown that the low-order steady-state system matrix
+defined in Equation \eqref{eq:low_order_ss_matrix} is an M-matrix, which allows
+a discrete maximum principle for the low-order solution to be proven in Section
+\ref{sec:DMP}.
+%--------------------------------------------------------------------------------
+\begin{lemma}[lem:offdiagonalnegative]{Non-Positivity of Off-Diagonal Elements}
+   The off-diagonal elements of the linear system matrix are non-positive:
+   \[
+     \ssmatrixletter^L\ij\le 0, \quad j\ne i \eqp
+   \]
+\end{lemma}
+
+\begin{proof}
+This proof begins by bounding the term $\diffusionmatrixletter\ij^L$:
+\begin{eqnarray*}
+   \diffusionmatrixletter\ij^L=\sumKSij\lowordercellviscosity
+   \localviscbilinearform{\cell}{j}{i}
+   & = & \sumKSij\max\limits_{k\ne \ell\in \indicescell}
+     \pr{\frac{\max(0,\ssmatrixletter_{k,\ell})}
+       {-\sum\limits_{T\subset \support_{k,\ell}}
+       \localviscbilinearform{T}{\ell}{k}}}
+     \localviscbilinearform{\cell}{j}{i} \eqp
+\end{eqnarray*}
+Since $\localviscbilinearform{\cell}{j}{i} < 0$ for $j\ne i$ and $y_i \leq
+\max_j y_j$,
+\begin{eqnarray*}
+   \diffusionmatrixletter\ij & \le & \sumKSij \frac{\max(0,\ssmatrixletter\ij)}
+   {-\sum\limits_{T\subset\support\ij} \localviscbilinearform{T}{j}{i}}
+   \localviscbilinearform{\cell}{j}{i} \eqc\\
+   &  =  & -\max(0,\ssmatrixletter\ij)
+     \frac{\sumKSij\localviscbilinearform{\cell}{j}{i}}
+     {\sum\limits_{T\subset\support\ij} \localviscbilinearform{T}{j}{i}} \eqc\\
+   &  =  & -\max(0,\ssmatrixletter\ij) \eqc\\
+   & \le & -\ssmatrixletter\ij \eqp
+\end{eqnarray*}
+Applying this inequality to Equation \eqref{eq:low_order_ss_matrix} gives
+\begin{eqnarray*}
+  \ssmatrixletter^L\ij &  =  & \ssmatrixletter\ij + \diffusionmatrixletter\ij^L
+    \eqc\\
+  \ssmatrixletter^L\ij & \le & \ssmatrixletter\ij - \ssmatrixletter\ij
+    \eqc\\
+  \ssmatrixletter^L\ij & \le & 0 \eqp \qed
+\end{eqnarray*}
+\end{proof}
+%--------------------------------------------------------------------------------
+\begin{lemma}[lem:diagonalpositive]{Non-Negativity of Diagonal Elements}
+   The diagonal elements  of the linear system matrix are non-negative:
+   \[
+     \ssmatrixletter^L_{i,i}\ge 0 \eqp
+   \]
+\end{lemma}
+
+\begin{proof}
+The diagonal elements of the low-order system matrix are
+\[
+  \ssmatrixletter^L_{i,i} = \intSi\nabla\cdot
+  \frac{\velocity\testfunction_i^2(\x)}{2}d\volume
+  + \intSi\sigma(\x)\testfunction_i^2(\x)d\volume
+  + \sumKSi\lowordercellviscosity \localviscbilinearform{\cell}{i}{i} \eqp
+\]
+To prove that $\ssmatrixletter^L_{i,i}$ is non-negative, it is sufficient to
+prove that each term in the above expression is non-negative. The
+non-negativity of the interaction term and viscous term are obvious
+($\reactioncoef \ge 0, \, \lowordercellviscosity\ge 0, \,
+\localviscbilinearform{\cell}{i}{i}>0$), but the non-negativity of the divergence
+term is not necessarily obvious. On the interior of the domain, the divergence
+term gives zero contribution because the divergence integral may be transformed
+into a surface integral
+$\intSi\velocity\cdot\normalvector\frac{\testfunction_i^2}{2} d\volume$ via the
+divergence theorem; one can then recognize that the basis function
+$\testfunction_i$ evaluates to zero on the boundary of its support
+$\support_i$. On the outflow boundary of the domain, the term
+$\velocity\cdot\normalvector \frac{\testfunction_i^2}{2}$ is positive because
+$\velocity\cdot\normalvector > 0$ for an outflow boundary. This quantity is of
+course negative for the inflow boundary, but a Dirichlet boundary condition is
+strongly imposed on the incoming boundary, so for degrees of freedom $i$ on the
+incoming boundary, $\ssmatrixletter^L_{i,i}$ will be set equal to some positive
+value such as 1 with a corresponding incoming value accounted for in the right
+hand side $\ssrhs$ of the linear system.\qed
+\end{proof}
+%--------------------------------------------------------------------------------
+\begin{lemma}{Non-Negativity of Row Sums}
+   The sum of all elements in a row $i$ is non-negative:
+   \[
+     \sumj \ssmatrixletter^L\ij \ge 0 \eqp
+   \]
+\end{lemma}
+
+\begin{proof}
+Using the fact that $\sumj\testfunction_j(\x)=1$ and
+$\sumj \localviscbilinearform{\cell}{j}{i}=0$,
+\begin{eqnarray*}
+   \sumj \ssmatrixletter^L\ij & = & \sumj \intSij
+      \left(\velocity\cdot\nabla\testfunction_j(\x) +
+      \reactioncoef(\x)\testfunction_j(\x)\right)\testfunction_i(\x) d\volume +
+      \sumj\sumKSij\lowordercellviscosity \localviscbilinearform{\cell}{j}{i}
+      \eqc\\
+   & = & \intSi\left(\velocity\cdot
+      \nabla\sumj\testfunction_j(\x) +
+      \reactioncoef(\x)\sumj\testfunction_j(\x)\right)
+      \testfunction_i(\x) d\volume \eqc\\
+   \label{eq:rowsum} & = & \intSi\reactioncoef(\x)\testfunction_i(\x) d\volume
+     \eqc\\
+   &\ge& 0 \eqp \qed
+\end{eqnarray*}
+\end{proof}
+%--------------------------------------------------------------------------------
+\begin{lemma}[lem:diagonallydominant]{Diagonal Dominance}
+   $\loworderssmatrix$ is strictly diagonally dominant:
+   \[
+     \left|\ssmatrixletter^L_{i,i}\right|
+     \ge \sumjnoti \left|\ssmatrixletter^L\ij\right| \eqp
+   \]
+\end{lemma}
+\begin{proof}
+Using the inequalities $\sumj \ssmatrixletter^L\ij \ge 0$ and
+$\ssmatrixletter^L\ij\le 0, j\ne i$, it is proven that $\loworderssmatrix$ is
+strictly diagonally dominant:
+\begin{eqnarray*}
+  \sumj     \ssmatrixletter^L\ij       & \ge & 0 \eqc\\
+  \sumjnoti \ssmatrixletter^L\ij + \ssmatrixletter^L_{i,i} & \ge & 0 \eqc\\
+  \left|\ssmatrixletter^L_{i,i}\right| & \ge & \sumjnoti -\ssmatrixletter^L\ij
+    \eqc\\
+  \left|\ssmatrixletter^L_{i,i}\right| & \ge
+    & \sumjnoti \left|\ssmatrixletter^L\ij\right| \eqp \qed
+\end{eqnarray*}
+\end{proof}
+%--------------------------------------------------------------------------------
+\begin{lemma}{M-Matrix}
+  $\loworderssmatrix$ is an M-Matrix.
+\end{lemma}
+\begin{proof}
+To prove that a matrix is an M-Matrix, it is sufficient to prove that
+the following 3 statements are true:
+\begin{enumerate}
+\item $\ssmatrixletter^L\ij\le 0, j\ne i$,
+\item $\ssmatrixletter^L_{i,i}\ge 0$,
+\item $\left|\ssmatrixletter^L_{i,i}\right|
+      \ge \sumjnoti \left|\ssmatrixletter^L\ij\right|$.
+\end{enumerate}
+These conditions are proven by Lemmas \ref{lem:offdiagonalnegative},
+\ref{lem:diagonalpositive}, and \ref{lem:diagonallydominant}, respectively.\qed
+\end{proof}
+%--------------------------------------------------------------------------------

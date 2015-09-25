@@ -1,0 +1,51 @@
+The low-order system uses a steady-state system matrix that is augmented
+to include the low-order diffusion matrix. Definitions of the low-order
+diffusion matrix and low-order system matrix follow.
+%--------------------------------------------------------------------------------
+\begin{definition}{Low-Order Artificial Diffusion Matrix}
+   The low-order artificial diffusion matrix $\loworderdiffusionmatrix$
+   is assembled using the low-order viscosity and local viscous bilinear
+   form introduced in Section \ref{sec:low_order_viscosity}:
+   \begin{equation}\label{eq:low_order_diffusion_matrix}
+     \diffusionmatrixletter\ij^L \equiv \sumKSij\lowordercellviscosity
+     \localviscbilinearform{\cell}{j}{i} \eqp
+   \end{equation}
+\end{definition}
+%--------------------------------------------------------------------------------
+\begin{definition}{Low-Order Steady-State System Matrix}
+   The low-order steady-state system matrix is the sum of the inviscid 
+   steady-state system matrix $\ssmatrix$ and the low-order diffusion
+   matrix $\loworderdiffusionmatrix$:
+   \begin{equation}\label{eq:low_order_ss_matrix}
+      \loworderssmatrix \equiv \ssmatrix + \loworderdiffusionmatrix \eqp
+   \end{equation}
+\end{definition}
+%--------------------------------------------------------------------------------
+For the low-order system, the mass matrix is lumped, and the low-order
+steady-state system matrix defined in Equation \eqref{eq:low_order_ss_matrix}
+is used. The low-order system for different time discretizations follows:
+\begin{center}{\textbf{Semidiscrete scheme}:}\end{center}
+\begin{equation}\label{eq:low_semidiscrete}
+   \lumpedmassmatrix\ddt{\lowordersolution}
+    + \loworderssmatrix(\timevalue)\lowordersolution(\timevalue) 
+    = \ssrhs(\timevalue)
+\end{equation}
+\begin{center}{\textbf{Explicit Euler scheme}:}\end{center}
+\begin{equation}\label{eq:low_FE}
+  \lumpedmassmatrix\frac{\lowordersolution-\solutionvector^{\timeindex}}
+  {\timestepsize}
+  + \loworderssmatrix[\timeindex]\solutionvector^{\timeindex}
+  = \ssrhs^\timeindex
+\end{equation}
+\begin{center}{\textbf{Theta scheme}:}\end{center}
+\begin{equation}\label{eq:low_theta}
+  \lumpedmassmatrix\frac{\lowordersolution-\solutionvector^\timeindex}
+  {\timestepsize}
+  + (1-\theta)\loworderssmatrix[\timeindex]\solutionvector^\timeindex
+  + \theta\loworderssmatrix[\timeindex+1]\lowordersolution
+  = (1-\theta)\ssrhs^\timeindex + \theta\ssrhs^{\timeindex+1}
+\end{equation}
+\begin{center}{\textbf{Steady-state scheme}:}\end{center}
+\begin{equation}\label{eq:low_ss}
+   \loworderssmatrix\lowordersolution = \ssrhs
+\end{equation}

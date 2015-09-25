@@ -25,15 +25,17 @@
 \newcommand{\domain}{\mathcal{D}}
 \newcommand{\domainboundary}{\partial\domain}
 \newcommand{\cellindex}{K}
+\newcommand{\cell}{K}
 \newcommand{\volume}{V}
 \newcommand{\testfunction}{\varphi}
 \newcommand{\support}{S}
 
 % local viscous bilinear form
-\newcommand{\localviscbilinearform}{b}
+\newcommand{\localviscbilinearform}[3]{b_#1(\testfunction_#2, \testfunction_#3)}
 \newcommand{\cellvolume}{\volume_\cellindex}
-\newcommand{\cardinalitycell}{n_\cellindex}
-\newcommand{\indicescell}{\mathcal{I}}
+\newcommand{\cardinality}[1][]{\ifthenelse{\equal{#1}{}}{n_\cell}{n_#1}}
+\newcommand{\indicescell}[1][]{\ifthenelse{\equal{#1}{}}{\mathcal{I}(\cell)}
+  {\mathcal{I}(#1)}}
 
 % entropy viscosity
 \newcommand{\entropy}{\eta}
@@ -77,19 +79,40 @@
 
 % steady-state system matrix and rhs
 \newcommand{\ssmatrixletter}{A}
-\newcommand{\ssmatrix}{\mathbf{\ssmatrixletter}}
-\newcommand{\loworderssmatrix}{\ssmatrix^L}
-\newcommand{\highorderssmatrix}{\ssmatrix^H}
+\newcommand{\ssmatrix}[1][]{
+  \ifthenelse{\equal{#1}{}}
+  {\mathbf{\ssmatrixletter}}
+  {\mathbf{\ssmatrixletter}^#1}}
+\newcommand{\loworderssmatrix}[1][]{
+  \ifthenelse{\equal{#1}{}}
+  {\ssmatrix^L}
+  {\ssmatrix^{L,#1}}}
+\newcommand{\highorderssmatrix}[1][]{
+  \ifthenelse{\equal{#1}{}}
+  {\ssmatrix^H}
+  {\ssmatrix^{H,#1}}}
 \newcommand{\ssrhsletter}{b}
-\newcommand{\ssrhs}{\mathbf{\ssrhsletter}}
+\newcommand{\ssrhs}[1][]{
+  \ifthenelse{\equal{#1}{}}
+  {\mathbf{\ssrhsletter}}
+  {\mathbf{\ssrhsletter}^#1}}
 \newcommand{\ssresletter}{r}
 \newcommand{\ssres}{\mathbf{\ssresletter}}
 
 % diffusion matrix
 \newcommand{\diffusionmatrixletter}{D}
-\newcommand{\diffusionmatrix}{\mathbf{\diffusionmatrixletter}}
-\newcommand{\loworderdiffusionmatrix}{\diffusionmatrix^L}
-\newcommand{\highorderdiffusionmatrix}{\diffusionmatrix^H}
+\newcommand{\diffusionmatrix}[1][]{
+  \ifthenelse{\equal{#1}{}}
+  {\mathbf{\diffusionmatrixletter}}
+  {\mathbf{\diffusionmatrixletter}^#1}}
+\newcommand{\loworderdiffusionmatrix}[1][]{
+  \ifthenelse{\equal{#1}{}}
+  {\diffusionmatrix^L}
+  {\diffusionmatrix^{L,#1}}}
+\newcommand{\highorderdiffusionmatrix}[1][]{
+  \ifthenelse{\equal{#1}{}}
+  {\diffusionmatrix^H}
+  {\diffusionmatrix^{H,#1}}}
 
 % Runge-Kutta
 \newcommand{\RKstagesolution}{\hat{\mathbf{\solutionletter}}}
@@ -134,6 +157,7 @@
 \newcommand{\heightmomentum}{\mathbf{q}}
 \newcommand{\bathymetry}{b}
 \newcommand{\gravity}{g}
+\newcommand{\speedofsound}{a}
 
 %==============================================================================
 % colors
