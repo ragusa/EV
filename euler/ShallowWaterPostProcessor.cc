@@ -49,14 +49,14 @@ UpdateFlags ShallowWaterPostProcessor<dim>::get_needed_update_flags() const
 template <int dim>
 void ShallowWaterPostProcessor<dim>::compute_derived_quantities_vector(
   const std::vector< Vector< double > > &  uh,
-  const std::vector< std::vector< Tensor< 1, dim > > > & duh,
-  const std::vector< std::vector< Tensor< 2, dim > > > & dduh,
-  const std::vector< Point< dim > > & normals,
+  const std::vector< std::vector< Tensor< 1, dim > > > &,
+  const std::vector< std::vector< Tensor< 2, dim > > > &,
+  const std::vector< Point< dim > > &,
   const std::vector< Point< dim > > & evaluation_points,
   std::vector< Vector< double > > & computed_quantities
 ) const
 {
-  const unsigned int n_quadrature_points = uh.size();
+  const unsigned int n_quadrature_points = evaluation_points.size();
   for (unsigned int q = 0; q < n_quadrature_points; ++q)
   {
     const double b = bathymetry_function->value(evaluation_points[q]);

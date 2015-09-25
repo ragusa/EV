@@ -411,15 +411,15 @@ void ConservationLaw<dim>::setup_system()
   constraints.close();
 
   // create sparsity patterns
-  CompressedSparsityPattern compressed_constrained_sparsity_pattern(n_dofs);
-  CompressedSparsityPattern compressed_unconstrained_sparsity_pattern(n_dofs);
+  DynamicSparsityPattern dynamic_constrained_sparsity_pattern(n_dofs);
+  DynamicSparsityPattern dynamic_unconstrained_sparsity_pattern(n_dofs);
   DoFTools::make_sparsity_pattern(
-    dof_handler, compressed_constrained_sparsity_pattern, constraints, false);
+    dof_handler, dynamic_constrained_sparsity_pattern, constraints, false);
   DoFTools::make_sparsity_pattern(dof_handler,
-                                  compressed_unconstrained_sparsity_pattern);
-  constrained_sparsity_pattern.copy_from(compressed_constrained_sparsity_pattern);
+                                  dynamic_unconstrained_sparsity_pattern);
+  constrained_sparsity_pattern.copy_from(dynamic_constrained_sparsity_pattern);
   unconstrained_sparsity_pattern.copy_from(
-    compressed_unconstrained_sparsity_pattern);
+    dynamic_unconstrained_sparsity_pattern);
 
   // reinitialize matrices with sparsity pattern
   consistent_mass_matrix.reinit(constrained_sparsity_pattern);

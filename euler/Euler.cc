@@ -77,7 +77,7 @@ void Euler<dim>::define_problem()
       for (; cell != endc; ++cell)
         for (unsigned int face = 0; face < this->faces_per_cell; ++face)
           if (cell->face(face)->at_boundary())
-            cell->face(face)->set_boundary_indicator(0);
+            cell->face(face)->set_boundary_id(0);
 
       // set boundary conditions type for each boundary and component
       this->boundary_types.resize(this->n_boundaries);
@@ -158,7 +158,7 @@ void Euler<dim>::define_problem()
       for (; cell != endc; ++cell)
         for (unsigned int face = 0; face < this->faces_per_cell; ++face)
           if (cell->face(face)->at_boundary())
-            cell->face(face)->set_boundary_indicator(0);
+            cell->face(face)->set_boundary_id(0);
 
       // set boundary conditions type for each boundary and component
       this->boundary_types.resize(this->n_boundaries);
@@ -230,19 +230,19 @@ void Euler<dim>::define_problem()
             Point<dim> face_center = cell->face(face)->center();
             if (face_center(1) < small_number)
             { // y = 0 boundary
-              cell->face(face)->set_boundary_indicator(0);
+              cell->face(face)->set_boundary_id(0);
             }
             else if (face_center(0) > 1.0 - small_number)
             { // x = 1 boundary
-              cell->face(face)->set_boundary_indicator(1);
+              cell->face(face)->set_boundary_id(1);
             }
             else if (face_center(1) > 1.0 - small_number)
             { // y = 1 boundary
-              cell->face(face)->set_boundary_indicator(2);
+              cell->face(face)->set_boundary_id(2);
             }
             else if (face_center(0) < small_number)
             { // x = 0 boundary
-              cell->face(face)->set_boundary_indicator(3);
+              cell->face(face)->set_boundary_id(3);
             }
             else
             {
@@ -794,7 +794,8 @@ void Euler<dim>::compute_inviscid_fluxes(
   const unsigned int n = density.size();
 
   // identity tensor
-  SymmetricTensor<2, dim> identity_tensor = unit_symmetric_tensor<dim>();
+  SymmetricTensor<2, dim> identity_tensor_sym = unit_symmetric_tensor<dim>();
+  Tensor<2,dim> identity_tensor(identity_tensor_sym);
 
   // compute auxiliary quantities
   std::vector<Tensor<1, dim>> velocity(n);
@@ -1230,9 +1231,9 @@ void Euler<dim>::compute_entropy(const Vector<double> & solution,
   std::vector<double> pressure(n);
 
   // get conservative variables
-  fe_values[density_extractor].get_function_values(this->new_solution, density);
-  fe_values[momentum_extractor].get_function_values(this->new_solution, momentum);
-  fe_values[energy_extractor].get_function_values(this->new_solution, energy);
+  fe_values[density_extractor].get_function_values(solution, density);
+  fe_values[momentum_extractor].get_function_values(solution, momentum);
+  fe_values[energy_extractor].get_function_values(solution, energy);
 
   // compute pressure
   compute_pressure(density, momentum, energy, pressure);

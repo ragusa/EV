@@ -73,7 +73,7 @@ void ShallowWater<dim>::define_problem()
       for (; cell != endc; ++cell)
         for (unsigned int face = 0; face < this->faces_per_cell; ++face)
           if (cell->face(face)->at_boundary())
-            cell->face(face)->set_boundary_indicator(0);
+            cell->face(face)->set_boundary_id(0);
       this->boundary_types.resize(this->n_boundaries);
       this->boundary_types[0].resize(this->n_components);
       this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
@@ -176,7 +176,7 @@ void ShallowWater<dim>::define_problem()
       for (; cell != endc; ++cell)
         for (unsigned int face = 0; face < this->faces_per_cell; ++face)
           if (cell->face(face)->at_boundary())
-            cell->face(face)->set_boundary_indicator(0);
+            cell->face(face)->set_boundary_id(0);
       this->boundary_types.resize(this->n_boundaries);
       this->boundary_types[0].resize(this->n_components);
       this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
@@ -245,7 +245,7 @@ void ShallowWater<dim>::define_problem()
       for (; cell != endc; ++cell)
         for (unsigned int face = 0; face < this->faces_per_cell; ++face)
           if (cell->face(face)->at_boundary())
-            cell->face(face)->set_boundary_indicator(0);
+            cell->face(face)->set_boundary_id(0);
       this->boundary_types.resize(this->n_boundaries);
       this->boundary_types[0].resize(this->n_components);
       this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
@@ -457,7 +457,7 @@ void ShallowWater<dim>::compute_ss_residual(Vector<double> & f)
     for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
     {
       // compute gradient of bathymetry function
-      Tensor<1,dim> bathymetry_gradient(0.0);
+      Tensor<1,dim> bathymetry_gradient;
       for (unsigned int d = 0; d < dim; ++d)
       {
         bathymetry_gradient[d] = bathymetry_gradient_function->value(points[q], d);
@@ -509,7 +509,8 @@ void ShallowWater<dim>::compute_inviscid_fluxes(
   const unsigned int n = height.size();
 
   // identity tensor
-  SymmetricTensor<2,dim> identity_tensor = unit_symmetric_tensor<dim>();
+  SymmetricTensor<2,dim> identity_tensor_sym = unit_symmetric_tensor<dim>();
+  Tensor<2,dim> identity_tensor(identity_tensor_sym);
 
   // compute auxiliary quantities
   std::vector<Tensor<1, dim>> velocity(n);
@@ -694,7 +695,8 @@ void ShallowWater<dim>::compute_divergence_entropy_flux(
     solution, momentum_divergence);
 
   // identity tensor
-  SymmetricTensor<2,dim> identity_tensor = unit_symmetric_tensor<dim>();
+  SymmetricTensor<2,dim> identity_tensor_sym = unit_symmetric_tensor<dim>();
+  Tensor<2,dim> identity_tensor(identity_tensor_sym);
 
   // compute divergence of entropy flux for each quadrature point
   for (unsigned int q = 0; q < n; ++q)

@@ -61,7 +61,7 @@ void Burgers<dim>::define_problem()
       for (; cell != endc; ++cell)
         for (unsigned int face = 0; face < this->faces_per_cell; ++face)
           if (cell->face(face)->at_boundary())
-            cell->face(face)->set_boundary_indicator(0);
+            cell->face(face)->set_boundary_id(0);
       this->boundary_types.resize(this->n_boundaries);
       this->boundary_types[0].resize(this->n_components);
       this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
@@ -100,7 +100,7 @@ void Burgers<dim>::define_problem()
       for (; cell != endc; ++cell)
         for (unsigned int face = 0; face < this->faces_per_cell; ++face)
           if (cell->face(face)->at_boundary())
-            cell->face(face)->set_boundary_indicator(0);
+            cell->face(face)->set_boundary_id(0);
       this->boundary_types.resize(this->n_boundaries);
       this->boundary_types[0].resize(this->n_components);
       this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
@@ -149,7 +149,7 @@ void Burgers<dim>::define_problem()
       for (; cell != endc; ++cell)
         for (unsigned int face = 0; face < this->faces_per_cell; ++face)
           if (cell->face(face)->at_boundary())
-            cell->face(face)->set_boundary_indicator(0);
+            cell->face(face)->set_boundary_id(0);
       this->boundary_types.resize(this->n_boundaries);
       this->boundary_types[0].resize(this->n_components);
       this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
@@ -199,7 +199,7 @@ void Burgers<dim>::define_problem()
       for (; cell != endc; ++cell)
         for (unsigned int face = 0; face < this->faces_per_cell; ++face)
           if (cell->face(face)->at_boundary())
-            cell->face(face)->set_boundary_indicator(0);
+            cell->face(face)->set_boundary_id(0);
       this->boundary_types.resize(this->n_boundaries);
       this->boundary_types[0].resize(this->n_components);
       this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
