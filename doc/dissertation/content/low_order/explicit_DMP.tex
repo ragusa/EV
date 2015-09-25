@@ -1,51 +1,63 @@
-%--------------------------------------------------------------------------------
-\subsubsection{Explicit Euler}
-%--------------------------------------------------------------------------------
-\begin{theorem}{Explicit Euler Scheme Discrete Maximum Principle}{exloworderDMP}
+\begin{theorem}[thm:explicit_dmp]{Explicit Euler Scheme Discrete
+  Maximum Principle}
 If the CFL-like condition
-\begin{equation}\label{ex_CFL}
-   \Delta t \leq \frac{m_i}{A_{i,i}^L}\quad\forall i
+\begin{equation}\label{eq:explicit_cfl}
+   \timestepsize \leq \frac{\massmatrixletter_{i,i}^L}{\ssmatrixletter_{i,i}^L}
+   \quad\forall i
    \qquad\Longleftrightarrow\qquad
-   1 - \frac{\Delta t}{m_i}A_{i,i}^L \geq 0\quad\forall i,
+   1 - \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssmatrixletter_{i,i}^L
+     \geq 0\quad\forall i \eqc
 \end{equation}
 is satisfied, then the low-order solution obtained using the Explicit Euler
 method satisfies the following discrete maximum principle:
-\begin{equation}\label{explicit_max_principle}
-   W_i^-\leq U_i^{L,n+1}\leq W_i^+\quad\forall i,
+\begin{equation}\label{eq:explicit_dmp}
+   \DMPbound_i^-\leq \solutionletter_i^{L,n+1}\leq \DMPbound_i^+\quad\forall i
+   \eqc
 \end{equation}
 where
-\begin{equation}\label{ex_bounds}
-   W_i^\pm\equiv U_{\substack{\max\\\min},i}^n\left(1-\frac{\Delta t}{m_i}
-      \sum\limits_j A^L_{i,j}\right)
-      + \frac{\Delta t}{m_i}b_i^n,
+\begin{equation}\label{eq:explicit_bounds}
+   \DMPbound_i^\pm\equiv \solutionletter_{\substack{\max\\\min},i}^n
+     \pr{1-\frac{\timestepsize}{\massmatrixletter_{i,i}^L}
+       \sumj\ssmatrixletter^L_{i,j}}
+     + \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssrhsletter_i^n \eqc
 \end{equation}
-where $U_{\substack{\max\\\min},i}^n =
-\substack{\max\\\min\limits_{j\in \mathcal{I}(S_i)}}U_j^n$,
-and $\mathcal{I}(S_i)$ is the set of indices of degrees of freedom in the
+where $\solutionletter_{\substack{\max\\\min},i}^n =
+\substack{\max\\\min\limits_{j\in\indicescell[\support_i]}}\solutionletter_j^n$,
+and $\indicescell[\support_i]$ is the set of indices of degrees of freedom in the
 support of degree of freedom $i$.
 \end{theorem}
 
 \begin{proof}
-Evaluating row $i$ of Equation \eqref{semidiscretelow} with Explicit Euler
+Evaluating row $i$ of Equation \eqref{eq:semidiscretelow} with Explicit Euler
 and rearranging,
 \[
-   U_i^{L,n+1} = U_i^n - \frac{\Delta t}{m_i}\sum\limits_j U_j^n A^L_{i,j}
-      + \frac{\Delta t}{m_i}b_i^n,
+   \solutionletter_i^{L,n+1}
+   = \solutionletter_i^n
+   - \frac{\timestepsize}{\massmatrixletter_{i,i}^L}
+       \sumj\solutionletter_j^n \ssmatrixletter^L_{i,j}
+   + \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssrhsletter_i^n \eqc
 \]
-where $m_i$ is the $i$th element of the lumped mass matrix.
+where $\massmatrixletter_{i,i}^L$ is the $i$th element of the lumped mass matrix.
 Rearranging this equation,
 \[
-   U_i^{L,n+1} = \left(1-\frac{\Delta t}{m_i}A^L_{i,i}\right)U_i^n - \frac{\Delta t}{m_i}
-      \sum\limits_{j\ne i} U_j^n A^L_{i,j} + \frac{\Delta t}{m_i}b_i^n,
+   \solutionletter_i^{L,n+1}
+   = \left(1-\frac{\timestepsize}{\massmatrixletter_{i,i}^L}
+       \ssmatrixletter^L_{i,i}\right)\solutionletter_i^n
+   - \frac{\timestepsize}{\massmatrixletter_{i,i}^L}
+       \sumjnoti\solutionletter_j^n \ssmatrixletter^L_{i,j}
+   + \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssrhsletter_i^n \eqc
 \]
-The CFL-like condition in Equation \eqref{ex_CFL} gives that $1-\frac{\Delta t}{m_i}A^L_{i,i} \ge 0$, and by
-Lemma \ref{offdiagonalnegative}, it is known that the off-diagonal
-elements $A^L_{i,j}, j\ne i$, are non-positive. Thus, the following inequality is
-able to be applied:
+The CFL-like condition in Equation \eqref{eq:explicit_cfl} gives that
+$1-\frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssmatrixletter^L_{i,i} \ge
+0$, and by Lemma \ref{lem:offdiagonalnegative}, it is known that the
+off-diagonal elements $\ssmatrixletter^L_{i,j}, j\ne i$, are non-positive.
+Thus, the following inequality is able to be applied:
 \[
-   U_i^{L,n+1} \le
-   U_{\max,i}^n\left(1-\frac{\Delta t}{m_i}\sum\limits_j A^L_{i,j}\right)
-      + \frac{\Delta t}{m_i}b_i^n,
+   \solutionletter_i^{L,n+1}
+   \le \solutionletter_{\max,i}^n
+         \pr{1-\frac{\timestepsize}{\massmatrixletter_{i,i}^L}
+         \sumj\ssmatrixletter^L_{i,j}}
+   + \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssrhsletter_i^n \eqc
 \]
 and similarly for the lower bound.\qed
 \end{proof}
