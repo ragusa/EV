@@ -1,0 +1,45 @@
+\begin{theorem}{Limited Flux Bounds for Steady-State Scheme}
+   Using the steady-state FCT scheme given by Equation
+   \eqref{eq:fct_steady_state},
+   the following limited flux bounds $\limitedfluxbound_i^\pm$ correspond to the
+   discrete maximum principle
+   $\DMPbound_i^+\le \solutionletter_i\le \DMPbound_i^-$:
+   \begin{equation}
+   \begin{split}
+     \limitedfluxbound_i^\pm & \equiv \ssmatrixletter_{i,i}^L \DMPbound_i^\pm
+       + \sumjnoti\ssmatrixletter\ij^L\solutionletter_j - \ssrhsletter_i\\
+     & = \sumjnoti\ssmatrixletter\ij^L(\solutionletter_j
+       - \solutionletter_{\substack{\max\\\min},i}) \eqp
+   \end{split}
+   \end{equation}
+\end{theorem}
+
+\begin{proof}
+   Starting with row $i$ of Equation \eqref{eq:fct_steady_state},
+   \[
+      \sumj \ssmatrixletter\ij^L \solutionletter_j
+      = \ssrhsletter_i + \limitedfluxsumi \eqp
+   \]
+   Solving for $\limitedfluxsumi$ gives
+   \[
+      \limitedfluxsumi = \sumj\ssmatrixletter\ij^L\solutionletter_j
+      - \ssrhsletter_i \eqp
+   \]
+   The discrete maximum principle is
+   \[
+      \DMPbound_i^-\le \solutionletter_i\le \DMPbound_i^+ \eqp
+   \]
+   Through addition/subtraction and multiplication/division operations, this
+   principle can be made to look like the following:
+   \[
+   \ssmatrixletter_{i,i}^L \DMPbound_i^-
+     + \sumjnoti\ssmatrixletter\ij^L\solutionletter_j - \ssrhsletter_i
+   \le \sumj \ssmatrixletter\ij^L \solutionletter_j - \ssrhsletter_i
+   \le \ssmatrixletter_{i,i}^L \DMPbound_i^+
+     + \sumjnoti\ssmatrixletter\ij^L \solutionletter_j - \ssrhsletter_i \eqc
+   \]
+   which by substituting equations above gives
+   \[
+      \limitedfluxbound_i^-\le\limitedfluxsumi\le \limitedfluxbound_i^+ \eqp\qed
+   \]
+\end{proof}

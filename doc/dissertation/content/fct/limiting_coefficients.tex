@@ -1,32 +1,35 @@
-%--------------------------------------------------------------------------------
-\subsection{Limiting Coefficients}\label{L}
-%--------------------------------------------------------------------------------
-\begin{theorem}{Discrete Maximum Principle-Satisfying Limiting Coefficients}{}
-   Suppose that that a discrete maximum principle $W_i^+\le U_i^{n+1}\le W_i^-$
+\begin{theorem}{Discrete Maximum Principle-Satisfying Limiting Coefficients}
+   Suppose that that a discrete maximum principle
+   $\DMPbound_i^+\le \solutionletter_i^{n+1}\le \DMPbound_i^-$
    corresponds to the following inequality for the limited correction fluxes:
    \begin{equation}
-      Q_i^- \le \sumj L\ij F\ij \le Q_i^+,
+      \limitedfluxbound_i^- \le \limitedfluxsumi \le \limitedfluxbound_i^+ \eqc
    \end{equation}
-   where $Q_i^\pm$ are bounds that depend on the temporal discretization. Then,
+   where $\limitedfluxbound_i^\pm$ are bounds that depend on the temporal
+   discretization. Then,
    the following limiter coefficient definitions satisfy the discrete maximum
    principle:
-   \begin{equation}\label{P_defs}
-      P_i^+ \equiv \sum\limits_j\max(0,F_{i,j}) \qquad
-      P_i^- \equiv \sum\limits_j\min(0,F_{i,j}),
+   \begin{equation}\label{eq:flux_sums}
+      \correctionfluxletter_i^+ \equiv \sumj\max(0,\correctionfluxij) \eqc\qquad
+      \correctionfluxletter_i^- \equiv \sumj\min(0,\correctionfluxij) \eqc
    \end{equation}
-   \begin{equation}\label{R_defs}
-      R_i^\pm \equiv\left\{
+   \begin{equation}\label{eq:single_node_limiting_coefficients}
+      \limiterletter_i^\pm \equiv\left\{
          \begin{array}{l l}
-            1                                          & P_i^\pm = 0\\
-            \min\left(1,\frac{Q_i^\pm}{P_i^\pm}\right) & P_i^\pm \ne 0
+            1 & \correctionfluxletter_i^\pm = 0\\
+            \min\left(1,\frac{\limitedfluxbound_i^\pm}
+              {\correctionfluxletter_i^\pm}\right) & \correctionfluxletter_i^\pm
+              \ne 0
          \end{array}
-         \right.,
+         \right. \eqc
    \end{equation}
-   \begin{equation}\label{L_defs}
-      L_{i,j} \equiv\left\{
+   \begin{equation}\label{eq:limiting_coefficients}
+      \limiterletter\ij \equiv\left\{
          \begin{array}{l l}
-            \min(R_i^+,R_j^-) & F_{i,j} \geq 0\\
-            \min(R_i^-,R_j^+) & F_{i,j} < 0
+            \min(\limiterletter_i^+,\limiterletter_j^-)
+              & \correctionfluxij \geq 0\\
+            \min(\limiterletter_i^-,\limiterletter_j^+)
+              & \correctionfluxij < 0
          \end{array}
          \right..
    \end{equation}  
@@ -35,33 +38,42 @@
 \begin{proof}
    First, note some properties of the above definitions:
    \begin{gather*}
-      P_i^+ \geq 0, \qquad P_i^- \leq 0,\\
-      Q_i^+ \geq 0, \qquad Q_i^- \leq 0,\\
-      0 \leq R_i^\pm \leq 1,\\
-      0 \leq L\ij \leq 1.
+      \correctionfluxletter_i^+ \geq 0
+        \eqc \qquad \correctionfluxletter_i^- \leq 0 \eqc\\
+      \limitedfluxbound_i^+ \geq 0
+        \eqc \qquad \limitedfluxbound_i^- \leq 0 \eqc\\
+      0 \leq \limiterletter_i^\pm \leq 1 \eqc\\
+      0 \leq \limiterletter\ij \leq 1 \eqp
    \end{gather*}
    The proof will be given for the upper bound.
    \[
-      \sum\limits_j L_{i,j}F_{i,j}
-         \leq \sum\limits_{j:F_{i,j}\geq 0} L_{i,j}F_{i,j}
-         = \sum\limits_{j:F_{i,j}\geq 0} \min(R_i^+,R_j^-)F_{i,j}
-         \leq \sum\limits_{j:F_{i,j}\geq 0} R_i^+ F_{i,j}
+      \sumj\limiterletter\ij\correctionfluxij
+      \leq \sum\limits_{j:\correctionfluxij\geq 0}
+        \limiterletter\ij\correctionfluxij
+      = \sum\limits_{j:\correctionfluxij\geq 0}
+        \min(\limiterletter_i^+,\limiterletter_j^-)\correctionfluxij
+      \leq \sum\limits_{j:\correctionfluxij\geq 0}
+        \limiterletter_i^+\correctionfluxij \eqp
    \]
-   For the case $P_i^+ = 0$,
+   For the case $\correctionfluxletter_i^+ = 0$,
    \[
-      \sum\limits_{j:F_{i,j}\geq 0} R_i^+ F_{i,j} = 0 \leq Q_i^+
+      \sum\limits_{j:\correctionfluxij\geq 0}
+        \limiterletter_i^+ \correctionfluxij = 0 \leq \limitedfluxbound_i^+ \eqp
    \]
-   For the case $P_i^+ \ne 0$,
+   For the case $\correctionfluxletter_i^+ \ne 0$,
    \[
-      \sum\limits_{j:F_{i,j}\geq 0} R_i^+ F_{i,j}
-      \leq \sum\limits_{j:F_{i,j}\geq 0}\frac{Q_i^+}{P_i^+} F_{i,j}
-      = \frac{Q_i^+}{P_i^+} \sum\limits_{j:F_{i,j}\geq 0} F_{i,j}
-      = \frac{Q_i^+}{P_i^+} \sum\limits_{j:F_{i,j}\geq 0} \max(0,F_{i,j})
-      = Q_i^+
+      \sum\limits_{j:\correctionfluxij\geq 0} \limiterletter_i^+\correctionfluxij
+      \leq \sum\limits_{j:\correctionfluxij\geq 0}\frac{\limitedfluxbound_i^+}
+        {\correctionfluxletter_i^+}\correctionfluxij
+      = \frac{\limitedfluxbound_i^+}{\correctionfluxletter_i^+}
+        \sum\limits_{j:\correctionfluxij\geq 0} \correctionfluxij
+      = \frac{\limitedfluxbound_i^+}{\correctionfluxletter_i^+}
+        \sum\limits_{j:\correctionfluxij\geq 0} \max(0,\correctionfluxij)
+      = \limitedfluxbound_i^+ \eqp
    \]
    Thus,
    \[
-      \sum\limits_j L_{i,j}F_{i,j} \leq Q_i^+
+      \sumj \limiterletter\ij\correctionfluxij \leq \limitedfluxbound_i^+ \eqp
    \]
    The lower bound is proved similarly.
    \qed

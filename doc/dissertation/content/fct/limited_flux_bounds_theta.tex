@@ -1,0 +1,75 @@
+\begin{theorem}{Limited Flux Bounds for Theta Scheme}
+  Using the Theta FCT scheme
+  \begin{equation}
+    \lumpedmassmatrix\frac{\solutionvector^{\timeindex+1}
+      - \solutionvector^\timeindex}{\timestepsize}
+    + (1-\theta)\loworderssmatrix\solutionvector^\timeindex
+    + \theta\loworderssmatrix\solutionvector^{\timeindex+1}
+    = (1-\theta)\ssrhs^\timeindex + \theta\ssrhs^{\timeindex+1}
+    + \limitedfluxsum \eqc
+  \end{equation}
+  the following limited flux bounds $\limitedfluxbound_i^\pm$ correspond to the
+  discrete maximum principle
+  $\DMPbound_i^+\le \solutionletter_i^{\timeindex+1}\le \DMPbound_i^-$:
+  \begin{equation}
+    \limitedfluxbound_i^\pm \equiv \lumpedmassentry\frac{\DMPbound_i^\pm
+      - \solutionletter_i^\timeindex}{\timestepsize}
+    +(1-\theta)\sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
+    +\theta\sumj \ssmatrixletter\ij^L \solutionletter_j^{\timeindex+1}
+    =(1-\theta)\ssrhsletter_i^\timeindex
+    +\theta \ssrhsletter_i^{\timeindex+1} \eqp
+  \end{equation}
+\end{theorem}
+
+\begin{proof}
+  Starting with row $i$ of Equation \eqref{eq:fct_theta},
+   \[
+      \lumpedmassentry\frac{\solutionletter_i^{\timeindex+1}
+        - \solutionletter_i^\timeindex}{\timestepsize}
+      + (1-\theta)\sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
+      + \theta\sumj \ssmatrixletter\ij^L \solutionletter_j^{\timeindex+1}
+      = (1-\theta)\ssrhsletter_i^\timeindex
+      + \theta \ssrhsletter_i^{\timeindex+1}
+      + \limitedfluxsumi \eqp
+   \]
+   Solving for $\limitedfluxsumi$ gives
+   \[
+      \limitedfluxsumi =
+      \lumpedmassentry\frac{\solutionletter_i^{\timeindex+1}
+        - \solutionletter_i^\timeindex}{\timestepsize}
+      + (1-\theta)\sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
+      + \theta\sumj \ssmatrixletter\ij^L \solutionletter_j^{\timeindex+1}
+      - (1-\theta)\ssrhsletter_i^\timeindex
+      - \theta \ssrhsletter_i^{\timeindex+1} \eqp
+   \]
+   The discrete maximum principle is
+   \[
+      \DMPbound_i^-\le \solutionletter_i^{\timeindex+1}\le \DMPbound_i^+ \eqp
+   \]
+   Through addition/subtraction and multiplication/division operations, this
+   principle can be made to look like the following:
+   \begin{multline*}
+   \lumpedmassentry\frac{\DMPbound_i^-
+     -\solutionletter_i^\timeindex}{\timestepsize}
+      + (1-\theta)\sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
+      + \theta\sumj \ssmatrixletter\ij^L \solutionletter_j^{\timeindex+1}
+      - (1-\theta)\ssrhsletter_i^\timeindex
+      - \theta \ssrhsletter_i^{\timeindex+1}\\
+   \le \lumpedmassentry\frac{\solutionletter_i^{\timeindex+1}
+     -\solutionletter_i^\timeindex}{\timestepsize}
+      + (1-\theta)\sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
+      + \theta\sumj \ssmatrixletter\ij^L \solutionletter_j^{\timeindex+1}
+      - (1-\theta)\ssrhsletter_i^\timeindex
+      - \theta \ssrhsletter_i^{\timeindex+1}\\
+   \le \lumpedmassentry\frac{\DMPbound_i^+
+     -\solutionletter_i^\timeindex}{\timestepsize}
+      + (1-\theta)\sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
+      + \theta\sumj \ssmatrixletter\ij^L \solutionletter_j^{\timeindex+1}
+      - (1-\theta)\ssrhsletter_i^\timeindex
+      - \theta \ssrhsletter_i^{\timeindex+1},
+   \end{multline*}
+   which by substituting equations above gives
+   \[
+     \limitedfluxbound_i^-\le\limitedfluxsumi\le \limitedfluxbound_i^+ \eqp\qed
+   \]
+\end{proof}

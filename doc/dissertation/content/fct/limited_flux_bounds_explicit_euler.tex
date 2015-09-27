@@ -1,0 +1,61 @@
+\begin{theorem}{Limited Flux Bounds for Explicit Euler Scheme}
+   Using the Explicit Euler FCT scheme
+   \begin{equation}
+     \lumpedmassmatrix\frac{\solutionvector^{\timeindex+1}
+       - \solutionvector^\timeindex}{\timestepsize}
+       + \loworderssmatrix\solutionvector^\timeindex
+       = \ssrhs^\timeindex + \limitedfluxsum \eqc
+   \end{equation}
+   the following limited flux bounds $\limitedfluxbound_i^\pm$ correspond to the
+   discrete maximum principle
+   $\DMPbound_i^+\le \solutionletter_i^{\timeindex+1}\le \DMPbound_i^-$:
+   \begin{equation}\label{eq:limited_flux_bounds_explicit_euler}
+     \limitedfluxbound_i^\pm \equiv \lumpedmassentry
+       \frac{\DMPbound_i^\pm-\solutionletter_i^\timeindex}{\timestepsize}
+     + \sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
+     - \ssrhsletter_i^\timeindex.
+   \end{equation}
+\end{theorem}
+
+\begin{proof}
+   Starting with row $i$ of Equation \eqref{eq:fct_explicit_euler},
+   \[
+     \lumpedmassentry\frac{\solutionletter_i^{\timeindex+1}
+       - \solutionletter_i^\timeindex}{\timestepsize}
+     + \sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
+     = \ssrhsletter_i^\timeindex
+       + \sumj \limiterletter\ij\MakeUppercase{\correctionfluxletter}\ij \eqp
+   \]
+   Solving for $\limitedfluxsumi$ gives
+   \[
+     \limitedfluxsumi = \lumpedmassentry
+       \frac{\solutionletter_i^{\timeindex+1}-\solutionletter_i^\timeindex}
+       {\timestepsize}
+     + \sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
+     - \ssrhsletter_i^\timeindex \eqp
+   \]
+   The discrete maximum principle is
+   \[
+     \DMPbound_i^-\le \solutionletter_i^{\timeindex+1}\le \DMPbound_i^+ \eqp
+   \]
+   Through addition/subtraction and multiplication/division operations, this
+   principle can be made to look like the following:
+   \begin{multline*}
+     \lumpedmassentry\frac{\DMPbound_i^- -\solutionletter_i^\timeindex}
+       {\timestepsize}
+     + \sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
+     - \ssrhsletter_i^\timeindex
+     \le \lumpedmassentry\frac{\solutionletter_i^{\timeindex+1}
+       - \solutionletter_i^\timeindex}{\timestepsize}
+     + \sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
+     - \ssrhsletter_i^\timeindex
+     \\\le \lumpedmassentry\frac{\DMPbound_i^+
+       - \solutionletter_i^\timeindex}{\timestepsize}
+     + \sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
+     - \ssrhsletter_i^\timeindex \eqc
+   \end{multline*}
+   which by substituting equations above gives
+   \[
+      \limitedfluxbound_i^-\le\limitedfluxsumi\le \limitedfluxbound_i^+\eqp\qed
+   \]
+\end{proof}

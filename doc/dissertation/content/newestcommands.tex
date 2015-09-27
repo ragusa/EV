@@ -76,6 +76,7 @@
 \newcommand{\massmatrix}{\mathbf{\massmatrixletter}}
 \newcommand{\consistentmassmatrix}{\massmatrix^C}
 \newcommand{\lumpedmassmatrix}{\massmatrix^L}
+\newcommand{\lumpedmassentry}{\massmatrixletter^L_{i,i}}
 
 % steady-state system matrix and rhs
 \newcommand{\ssmatrixletter}{A}
@@ -135,6 +136,9 @@
 \newcommand{\correctionfluxij}{\MakeUppercase{\correctionfluxletter}_{i,j}}
 \newcommand{\correctionfluxmatrix}{\mathbf{\MakeUppercase{\correctionfluxletter}}}
 \newcommand{\correctionfluxsumsi}{\MakeUppercase{\correctionfluxletter}^\pm_i}
+\newcommand{\limitedfluxsum}{\limitermatrix\cdot\correctionfluxmatrix}
+\newcommand{\limitedfluxsumi}{\sumj\limiterletter\ij
+  \MakeUppercase{\correctionfluxletter}\ij}
 
 % radiation transport
 \newcommand{\angularflux}{\psi}

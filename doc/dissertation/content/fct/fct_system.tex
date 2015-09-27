@@ -1,25 +1,178 @@
-In this section, the general FCT scheme for the steady-state case is presented.
-The flux correction vector $\f$ is defined such that:
-\begin{equation}\label{ss_f}
-   \A^L\U^H = \b + \f \eqp
+The crux of the flux-corrected transport scheme is to define an antidiffusive
+correction flux $\correctionfluxvector$ from a monotone, low-order scheme to a
+high-order scheme.  Thus to define $\correctionfluxvector$ for a particular
+temporal discretization, $\correctionfluxvector$ is added as a source to the
+respective low-order system given in Section \ref{sec:low_order_system}, except
+that the solution at $\timeindex+1$ is no longer the low-order solution
+$\lowordersolution$, but instead, the high-order solution $\highordersolution$.
+The systems defining $\correctionfluxvector$ for each temporal discretization
+follow.
+\begin{center}{\textbf{Steady-state scheme}:}\end{center}
+\begin{equation}\label{eq:correction_flux_definition_steady_state}
+  \loworderssmatrix\highordersolution = \ssrhs + \correctionfluxvector
 \end{equation}
-Decomposing the correction flux into $\F$ and applying a limiter
-$\L$ gives
-\begin{equation}\label{FCT_limited_ss}
-   \A^L\U = \b + \LF \eqp
+\begin{center}{\textbf{Semidiscrete scheme}:}\end{center}
+\begin{equation}\label{eq:correction_flux_definition_semidiscrete}
+  \lumpedmassmatrix\ddt{\highordersolution}
+  + \loworderssmatrix\highordersolution(\timevalue)
+  = \ssrhs(\timevalue) + \correctionfluxvector
 \end{equation}
-where $\LF$ denotes row-wise dot products: $(\LF)_i = L_{i,:}F_{i,:}^T
-= \sumj L\ij F\ij$ and $\U$ is the FCT solution.  The limiter $\L$ is
-defined in Section \ref{L}.
-
-Combining Equations \eqref{ss_f} and \eqref{high_ss}
-gives the definition of $\f$:
+\begin{center}{\textbf{Explicit Euler scheme}:}\end{center}
+\begin{equation}\label{eq:correction_flux_definition_explicit_euler}
+  \lumpedmassmatrix\frac{\highordersolution-\solutionvector^\timeindex}
+    {\timestepsize}
+  + \loworderssmatrix\solutionvector^\timeindex
+  = \ssrhs^\timeindex + \correctionfluxvector
+\end{equation}
+\begin{center}{\textbf{Theta scheme}:}\end{center}
+\begin{equation}\label{eq:correction_flux_definition_theta}
+  \lumpedmassmatrix\frac{\highordersolution-\solutionvector^\timeindex}
+    {\timestepsize}
+  + (1-\theta)\loworderssmatrix\solutionvector^\timeindex
+  + \theta\loworderssmatrix\highordersolution
+  = (1-\theta)\ssrhs^\timeindex + \theta\ssrhs^{\timeindex+1}
+  + \correctionfluxvector
+\end{equation}
+The object of FCT is to limit these correction fluxes to satisfy
+physically-motivated bounds imposed on the solution. To adopt the limiting
+procedure used in this dissertation, it is necessary to decompose the
+correction flux for a node $i$ into a sum of correction fluxes coming into node
+$i$ from its neighbors. These decomposed fluxes are conveniently represented by
+a correction flux matrix, denoted by $\correctionfluxmatrix$, e.g., entry
+$\MakeUppercase{\correctionfluxletter}\ij$ is the correction flux going into node
+$i$ from node $j$, and $\sumj\MakeUppercase{\correctionfluxletter}\ij =
+\correctionfluxletter_i$. Thus the question remains of how to distribute, or
+\emph{decompose}, the correction flux $\correctionfluxletter_i$ amongst its
+neighbors.  A convenient decomposition reveals itself when the correction flux
+definitions given by Equations
+\eqref{eq:correction_flux_definition_steady_state}
+- \eqref{eq:correction_flux_definition_theta} are combined with the respective
+high-order system equations given by Equations \eqref{eq:high_ss} -
+\eqref{eq:high_theta}. This yields new expressions for $\correctionfluxvector$,
+which follow.
+\begin{center}{\textbf{Steady-state scheme}:}\end{center}
+\begin{equation}\label{eq:correction_flux_steady_state}
+  \correctionfluxvector \equiv \pr{\loworderdiffusionmatrix
+    - \highorderdiffusionmatrix}\highordersolution
+\end{equation}
+\begin{center}{\textbf{Semidiscrete scheme}:}\end{center}
+\begin{equation}\label{eq:correction_flux_semidiscrete}
+  \correctionfluxvector \equiv -\pr{\consistentmassmatrix
+    - \lumpedmassmatrix}\ddt{\highordersolution}
+  + \pr{\loworderdiffusionmatrix - \highorderdiffusionmatrix(\timevalue)}
+    \highordersolution(\timevalue)
+\end{equation}
+\begin{center}{\textbf{Explicit Euler scheme}:}\end{center}
+\begin{equation}\label{eq:correction_flux_explicit_euler}
+  \correctionfluxvector \equiv -\pr{\consistentmassmatrix
+    - \lumpedmassmatrix}\frac{\highordersolution-\solutionvector^\timeindex}
+    {\timestepsize^{\timeindex+1}}
+  + \pr{\loworderdiffusionmatrix
+    - \highorderdiffusionmatrix[\timeindex]}\solutionvector^\timeindex
+\end{equation}
+\begin{center}{\textbf{Theta scheme}:}\end{center}
+\begin{equation}\label{eq:correction_flux_theta}
+  \correctionfluxvector \equiv -\pr{\consistentmassmatrix
+  - \lumpedmassmatrix}\frac{\highordersolution-\solutionvector^\timeindex}
+    {\timestepsize^{\timeindex+1}}
+  + (1-\theta)\pr{\loworderdiffusionmatrix
+    - \highorderdiffusionmatrix[\timeindex]}\solutionvector^\timeindex 
+  + \theta    \pr{\loworderdiffusionmatrix
+    - \highorderdiffusionmatrix[\timeindex+1]}\highordersolution
+\end{equation}
+These definitions suggest convenient decompositions because
+$\consistentmassmatrix-\lumpedmassmatrix$ and
+$\loworderdiffusionmatrix-\highorderdiffusionmatrix$ are symmetric
+and feature zero row and column sums; these decompositions follow
+for each temporal discretization.
+\begin{center}{\textbf{Steady-state scheme}:}\end{center}
 \begin{equation}
-   \f \equiv \pr{\D^L-\D^H}\U^H \eqp
+  \MakeUppercase{\correctionfluxletter}\ij
+  = \pr{\diffusionmatrixletter\ij^L-\diffusionmatrixletter\ij^H}
+    \pr{\solutionletter_j^H - \solutionletter_i^H}
 \end{equation}
-Since $\D^L-\D^H$ is symmetric
-and features zero row and column sums, a valid decomposition for $\f$,
-called $\F$, is
+\begin{center}{\textbf{Semidiscrete scheme}:}\end{center}
 \begin{equation}
-   F\ij = \pr{D\ij^L-D\ij^H}\pr{U_j^H - U_i^H} \eqp
+  \MakeUppercase{\correctionfluxletter}\ij
+  = -\massmatrixletter^C\ij\pr{\ddt{\solutionletter_j^H}
+    - \ddt{\solutionletter_i^H}}
+  + \pr{\diffusionmatrixletter\ij^L-\diffusionmatrixletter\ij^H(\timevalue)}
+    \pr{\solutionletter_j^H(\timevalue) - \solutionletter_i^H(\timevalue)}
 \end{equation}
+\begin{center}{\textbf{Explicit Euler scheme}:}\end{center}
+\begin{equation}
+  \MakeUppercase{\correctionfluxletter}\ij
+  = -\massmatrixletter^C\ij\pr{\frac{\solutionletter_j^H
+    - \solutionletter_j^\timeindex}{\timestepsize}
+    - \frac{\solutionletter_i^H - \solutionletter_i^\timeindex}
+    {\timestepsize}}
+  + \pr{\diffusionmatrixletter\ij^L-\diffusionmatrixletter\ij^{H,n}}
+    \pr{\solutionletter_j^\timeindex - \solutionletter_i^\timeindex}
+\end{equation}
+\begin{center}{\textbf{Theta scheme}:}\end{center}
+\begin{multline}
+  \MakeUppercase{\correctionfluxletter}\ij
+  = -\massmatrixletter^C\ij\pr{\frac{\solutionletter_j^H
+    - \solutionletter_j^\timeindex}{\timestepsize}
+    - \frac{\solutionletter_i^H - \solutionletter_i^\timeindex}
+      {\timestepsize}}
+  + (1-\theta)\pr{\diffusionmatrixletter\ij^L
+    - \diffusionmatrixletter\ij^{H,\timeindex}}
+    \pr{\solutionletter_j^\timeindex - \solutionletter_i^\timeindex}\\
+  + \theta    \pr{\diffusionmatrixletter\ij^L
+    - \diffusionmatrixletter\ij^{H,\timeindex+1}}
+    \pr{\solutionletter_j^H - \solutionletter_i^H}
+\end{multline}
+Up until this point, no limiting has been applied; using the schemes as defined
+in Equations \eqref{eq:correction_flux_definition_steady_state}
+- \eqref{eq:correction_flux_definition_theta} would simply reproduce the
+high-order solution $\highordersolution$. As stated previously, FCT applies a
+limiting procedure to the antidiffusive correction fluxes to satisfy the bounds
+that are imposed. This is achieved by assigning each \emph{internodal}
+correction flux $\MakeUppercase{\correctionfluxletter}\ij$ its own limiting
+coefficient $\limiterletter\ij$, which is applied as a scaling factor. Again,
+it is convenient to store these limiting coefficients in a matrix
+$\limitermatrix$. Instead of adding the full correction flux to a node $i$,
+$\correctionfluxletter_i=\sumj\MakeUppercase{\correctionfluxletter}\ij$, the
+limited correction flux sum
+$\sumj\limiterletter\ij\MakeUppercase{\correctionfluxletter}\ij$ is added. In
+vector form, this row-wise product is denoted by $\limitedfluxsum$, i.e.,
+$(\limitedfluxsum)_i =
+\limiterletter_{i,:}\MakeUppercase{\correctionfluxletter}_{i,:}^T =
+\limitedfluxsumi$.
+The FCT scheme for each temporal discretization follows.
+\begin{center}{\textbf{Steady-state scheme}:}\end{center}
+\begin{equation}\label{eq:fct_steady_state}
+  \loworderssmatrix\solutionvector = \ssrhs + \limitedfluxsum
+\end{equation}
+\begin{center}{\textbf{Semidiscrete scheme}:}\end{center}
+\begin{equation}\label{eq:fct_semidiscrete}
+  \lumpedmassmatrix\ddt{\solutionvector}
+  + \loworderssmatrix\solutionvector(\timevalue)
+  = \ssrhs(\timevalue) + \limitedfluxsum
+\end{equation}
+\begin{center}{\textbf{Explicit Euler scheme}:}\end{center}
+\begin{equation}\label{eq:fct_explicit_euler}
+  \lumpedmassmatrix\frac{\solutionvector^{\timeindex+1}
+    - \solutionvector^\timeindex}{\timestepsize}
+  + \loworderssmatrix\solutionvector^\timeindex
+  = \ssrhs^\timeindex + \limitedfluxsum
+\end{equation}
+\begin{center}{\textbf{Theta scheme}:}\end{center}
+\begin{equation}\label{eq:fct_theta}
+  \lumpedmassmatrix\frac{\solutionvector^{\timeindex+1}
+    - \solutionvector^\timeindex}{\timestepsize}
+  + (1-\theta)\loworderssmatrix\solutionvector^\timeindex
+  + \theta\loworderssmatrix\solutionvector^{\timeindex+1}
+  = (1-\theta)\ssrhs^\timeindex
+  + \theta\ssrhs^{\timeindex+1} + \limitedfluxsum
+\end{equation}
+Each of these limiting coefficients is a number from zero to one; if the
+coefficient is one, then no limiting is applied, and if it is zero, then full
+limiting is applied, i.e., the internodal correction flux
+$\MakeUppercase{\correctionfluxletter}\ij$ is completely cancelled. If all of
+the limiting coefficients are zero, then the low-order solution
+$\lowordersolution$ is recovered, and if all of the limiting coeffients are
+one, then the high-order solution $\highordersolution$ is recovered. The
+definition of the limiting coefficients is given in Section
+\ref{sec:limiting_coefficients}.

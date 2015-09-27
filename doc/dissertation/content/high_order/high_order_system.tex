@@ -22,6 +22,10 @@ Unlike the low-order system, the high-order system does not lump the
 mass matrix, and it uses the high-order steady-state system matrix
 defined in Equation \eqref{eq:high_order_ss_matrix}. The high-order
 system for different time discretizations follows:
+\begin{center}{\textbf{Steady-state scheme}:}\end{center}
+\begin{equation}\label{eq:high_ss}
+   \highorderssmatrix\highordersolution = \ssrhs
+\end{equation}
 \begin{center}{\textbf{Semidiscrete scheme}:}\end{center}
 \begin{equation}\label{eq:high_semidiscrete}
    \consistentmassmatrix\ddt{\highordersolution}
@@ -42,8 +46,4 @@ system for different time discretizations follows:
   + (1-\theta)\highorderssmatrix[\timeindex]\solutionvector^\timeindex
   + \theta\highorderssmatrix[\timeindex+1]\highordersolution
   = (1-\theta)\ssrhs^\timeindex + \theta\ssrhs^{\timeindex+1}
-\end{equation}
-\begin{center}{\textbf{Steady-state scheme}:}\end{center}
-\begin{equation}\label{eq:high_ss}
-   \highorderssmatrix\highordersolution = \ssrhs
 \end{equation}

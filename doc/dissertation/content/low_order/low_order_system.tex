@@ -24,6 +24,10 @@ diffusion matrix and low-order system matrix follow.
 For the low-order system, the mass matrix is lumped, and the low-order
 steady-state system matrix defined in Equation \eqref{eq:low_order_ss_matrix}
 is used. The low-order system for different time discretizations follows:
+\begin{center}{\textbf{Steady-state scheme}:}\end{center}
+\begin{equation}\label{eq:low_ss}
+   \loworderssmatrix\lowordersolution = \ssrhs
+\end{equation}
 \begin{center}{\textbf{Semidiscrete scheme}:}\end{center}
 \begin{equation}\label{eq:low_semidiscrete}
    \lumpedmassmatrix\ddt{\lowordersolution}
@@ -31,7 +35,7 @@ is used. The low-order system for different time discretizations follows:
     = \ssrhs(\timevalue)
 \end{equation}
 \begin{center}{\textbf{Explicit Euler scheme}:}\end{center}
-\begin{equation}\label{eq:low_FE}
+\begin{equation}\label{eq:low_explicit_euler}
   \lumpedmassmatrix\frac{\lowordersolution-\solutionvector^{\timeindex}}
   {\timestepsize}
   + \loworderssmatrix[\timeindex]\solutionvector^{\timeindex}
@@ -44,8 +48,4 @@ is used. The low-order system for different time discretizations follows:
   + (1-\theta)\loworderssmatrix[\timeindex]\solutionvector^\timeindex
   + \theta\loworderssmatrix[\timeindex+1]\lowordersolution
   = (1-\theta)\ssrhs^\timeindex + \theta\ssrhs^{\timeindex+1}
-\end{equation}
-\begin{center}{\textbf{Steady-state scheme}:}\end{center}
-\begin{equation}\label{eq:low_ss}
-   \loworderssmatrix\lowordersolution = \ssrhs
 \end{equation}
