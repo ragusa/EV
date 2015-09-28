@@ -1,0 +1,61 @@
+Rearranging the continuity equation, substituting the approximate FEM
+solution and testing with a test function $\testfunction_i^\height$ gives its
+weak form for degree of freedom $i$:
+\begin{equation}
+  \left(\testfunction_i^\height,\ppt{\tilde{\height}}\right)_\domain
+  = - \left(\testfunction_i^\height,\nabla\cdot\tilde{\heightmomentum}
+    \right)_\domain \eqp
+\end{equation}
+Integrating by parts gives
+\begin{equation}
+  \left(\testfunction_i^\height,\ppt{\tilde{\height}}\right)_\domain
+  = \left(\nabla\testfunction_i^\height,\tilde{\heightmomentum}\right)_\domain
+  - \left(\testfunction_i^\height,\tilde{\heightmomentum}\cdot\normalvector
+    \right)_{\domainboundary} \eqp
+\end{equation}
+Rearranging the momentum equation, substituting the approximate FEM
+solution and testing with a test function $\testfunction_i^{\heightmomentum}$
+gives its weak form for degree of freedom $i$:
+\begin{equation}
+  \left(\testfunction_i^{\heightmomentum},\ppt{\tilde{\heightmomentum}}
+  \right)_\domain
+  = - \left(\testfunction_i^{\heightmomentum},\nabla\cdot
+    \left(\tilde{\heightmomentum}\otimes\tilde{\velocity}
+  + \frac{1}{2}\gravity\tilde{\height}^2\mathbf{I}\right)\right)_\domain
+  - \left(\testfunction_i^{\heightmomentum},
+    \gravity\tilde{\height}\nabla\bathymetry\right)_\domain \eqp
+\end{equation}
+Integrating by parts gives
+\begin{multline}
+  \left(\testfunction_i^{\heightmomentum},\ppt{\tilde{\heightmomentum}}
+  \right)_\domain
+  = \left(\nabla\testfunction_i^{\heightmomentum},
+    \left(\tilde{\heightmomentum}\otimes\tilde{\velocity}
+    + \frac{1}{2}\gravity\tilde{\height}^2\mathbf{I}\right)\right)_\domain
+  \\- \left(\testfunction_i^{\heightmomentum},
+    \left(\tilde{\heightmomentum}\otimes\tilde{\velocity}
+    + \frac{1}{2}\gravity \tilde{\height}^2\mathbf{I}\right)\cdot\normalvector
+    \right)_{\domainboundary}
+  - \left(\testfunction_i^{\heightmomentum},
+    \gravity\tilde{\height}\nabla\bathymetry\right)_\domain \eqp
+\end{multline}
+This yields a discrete system
+\begin{equation}
+  \consistentmassmatrix\ddt{\solutionvector} = \ssres \eqc
+\end{equation}
+where $\consistentmassmatrix$ is the mass matrix and the steady-state residual
+$\ssres$ is given by
+\begin{multline}
+  r_i =
+  - \left(\testfunction_i^\height,\tilde{\heightmomentum}\cdot\normalvector
+    \right)_{\domainboundary}
+  + \left(\nabla\testfunction_i^{\heightmomentum},
+    \left(\tilde{\heightmomentum}\otimes\tilde{\velocity}
+    + \frac{1}{2}\gravity\tilde{\height}^2\mathbf{I}\right)\right)_\domain
+  \\- \left(\testfunction_i^{\heightmomentum},
+    \left(\tilde{\heightmomentum}\otimes\tilde{\velocity}
+    + \frac{1}{2}\gravity \tilde{\height}^2\mathbf{I}\right)\cdot\normalvector
+    \right)_{\domainboundary}
+  - \left(\testfunction_i^{\heightmomentum},
+    \gravity\tilde{\height}\nabla\bathymetry\right)_\domain \eqp
+\end{multline}

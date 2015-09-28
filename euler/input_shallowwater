@@ -11,11 +11,12 @@ end
 # 1 dam_break_bump
 # 2 lake_at_rest
 subsection problem
-   set problem id = 2
+   set problem id = 0
 end
 
 subsection refinement
-   set initial refinement level = 5
+   # 2^5=32, 2^10=1024, 2^11=2048
+   set initial refinement level = 11
    set refinement cycles = 1
    set refinement fraction = 0.3
    set coarsening fraction = 0.03
@@ -24,16 +25,16 @@ end
 subsection time
    # options are <constant_dt|cfl_condition>
    set time step size method = cfl_condition
-   set final time = 100.0
+   set final time = 0.5
    set time step size = 0.0001
-   set cfl = 0.10
+   set cfl = 0.50
 end
 
 subsection artificial viscosity
    # options are <none|constant|old_first_order|max_principle|entropy>
    set viscosity type = old_first_order
    set constant viscosity value = 0.01
-   set first order viscosity coefficient = 0.3
+   set first order viscosity coefficient = 0.5
    set entropy viscosity coefficient = 1.0
    set jump coefficient = 0.0
    set add jumps = false

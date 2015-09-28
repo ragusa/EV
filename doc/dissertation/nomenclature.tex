@@ -3,6 +3,31 @@
 
 Table \ref{tab:abbreviations} lists the abbreviations used in this dissertation,
 and Table \ref{tab:symbols} lists the symbols used in this dissertation.
+In general, any symbol in non-boldface font is a scalar (zero-order tensor),
+any lowercase symbol in a boldface font is a vector (first-order tensor),
+and any uppercase symbol in a boldface font is a matrix (second-order tensor).
+One exception to this rule is the solution vector, $\solutionvector$, which
+is uppercase despite being a vector, not a matrix. This is to distinguish
+it from the continuous solution vector for vector-valued conservation laws,
+$\vectorsolution$, since ``u'' is traditionally used in both circumstances.
+
+Individual matrix entries are denoted by the non-boldface equivalent of
+the matrix symbol, with two subscripted indices, and individual vector entries
+are denoted by the non-boldface equivalent, with one subscripted index.
+Symbols used for degree of freedom indices include $i$, $j$, $k$, and $\ell$,
+and cell indices are usually denoted by $\cell$. Temporal indices
+use $\timeindex$ as a superscript, and iteration indices use $(\ell)$
+as a superscript. Other symbols appearing in subscripts or superscripts
+are typically descriptors, e.g., to distinguish a function for different
+components of a vector-valued system, or to distinguish a low-order order
+vs. a high-order quantity.
+
+Sums often give only the summation index, with the lower/upper bounds or the
+set being understood. For example, if the set of all degrees of freedom indices
+is $\mathcal{I}(\domain)=\{1,\ldots,\maxdof\}$, where $\maxdof$ is the maximum
+degree of freedom index, then the sum notation
+$\sum\limits_{j\in\mathcal{I}(\domain)}$ or $\sum\limits_{j=1}^N$ is shortened
+to $\sumj$.
 
 \begin{mytable}{Abbreviations Used in Dissertation}{abbreviations}{l l}
 {\emph{Abbreviation} & \emph{Description}}
