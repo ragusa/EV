@@ -30,6 +30,7 @@ class PostProcessor
 public:
   PostProcessor(
     const ConservationLawParameters<dim> & parameters,
+    const double & end_time,
     const bool has_exact_solution,
     std::shared_ptr<Function<dim>> & exact_solution_function,
     const std::string & problem_name,
@@ -107,13 +108,15 @@ private:
     const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
       component_interpretations,
     const std::string & filename,
-    const double & end_time) const;
+    const double & time) const;
 
   void output_grid(const Triangulation<dim> & triangulation) const;
 
   void create_directory(const std::string & dir) const;
 
   const ConservationLawParameters<dim> parameters;
+
+  const double end_time;
 
   const std::string problem_name;
 

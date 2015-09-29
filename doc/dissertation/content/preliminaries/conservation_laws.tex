@@ -20,13 +20,13 @@ Burgers equation & $\scalarsolution$ & $\half\scalarsolution^2$ & 0\\ [1ex]\\
 Euler equations &
   $\left[\begin{array}{c}\density\\\momentum\\\totalenergy\end{array}\right]$ &
   $\left[\begin{array}{c}\momentum\\
-    \momentum\otimes\velocity + \pressure\mathbb{I}\\
+    \momentum\otimes\velocity + \pressure\identity\\
     \pr{\totalenergy + \pressure}\velocity\end{array}\right]$ &
   $\mathbf{0}$\\ [1ex]\\
 Shallow water equations &
   $\left[\begin{array}{c}\height\\\heightmomentum\end{array}\right]$ &
   $\left[\begin{array}{c}\heightmomentum\\
-    \heightmomentum\otimes\velocity + \half\gravity\height^2\mathbb{I}
+    \heightmomentum\otimes\velocity + \half\gravity\height^2\identity
     \end{array}\right]$ &
   $\left[\begin{array}{c}0\\-\gravity\height\nabla\bathymetry\end{array}
     \right]$\\ [1ex]\\

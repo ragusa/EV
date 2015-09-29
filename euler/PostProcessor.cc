@@ -9,6 +9,7 @@
 template <int dim>
 PostProcessor<dim>::PostProcessor(
   const ConservationLawParameters<dim> & parameters_,
+  const double & end_time_,
   const bool has_exact_solution_,
   std::shared_ptr<Function<dim>> & exact_solution_function_,
   const std::string & problem_name_,
@@ -17,6 +18,7 @@ PostProcessor<dim>::PostProcessor(
     solution_component_interpretations_,
   const Triangulation<dim> & triangulation_)
   : parameters(parameters_),
+    end_time(end_time_),
     problem_name(problem_name_),
     has_exact_solution(has_exact_solution_),
     exact_solution_function(exact_solution_function_),
@@ -294,7 +296,7 @@ void PostProcessor<dim>::output_exact_solution()
                     solution_component_names,
                     solution_component_interpretations,
                     filename_exact,
-                    parameters.end_time);
+                    end_time);
   }
 }
 
@@ -559,7 +561,7 @@ void PostProcessor<dim>::evaluate_error(const Vector<double> & solution,
     Assert(has_exact_solution, ExcInvalidState());
 
     // set time for exact solution function
-    exact_solution_function->set_time(parameters.end_time);
+    exact_solution_function->set_time(end_time);
 
     // number of cells
     unsigned int n_cells = triangulation.n_active_cells();
@@ -668,9 +670,11 @@ void PostProcessor<dim>::create_directory(const std::string & directory) const
       directory_exists = true;
 
   // create directory if it doesn't exist
-  int make_status = 0;
+  int make_status;
   if (!directory_exists)
     make_status = system(("mkdir " + directory).c_str());
+  else
+    make_status = 0;
   Assert(make_status == 0, ExcInternalError());
 }
 

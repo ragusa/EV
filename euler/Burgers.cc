@@ -76,6 +76,9 @@ void Burgers<dim>::define_problem()
       // exact solution
       this->has_exact_solution = false;
 
+      // default end time
+      this->has_default_end_time = false;
+
       break;
     }
     case 1: // 1-D Riemann problem, shock wave (u_left > u_right)
@@ -124,6 +127,9 @@ void Burgers<dim>::define_problem()
         "x,t", this->exact_solution_strings, constants, true);
       // point base class pointer to derived class function object
       this->exact_solution_function = exact_solution_function_derived;
+
+      // default end time
+      this->has_default_end_time = false;
 
       break;
     }
@@ -174,6 +180,9 @@ void Burgers<dim>::define_problem()
         "x,t", this->exact_solution_strings, constants, true);
       // point base class pointer to derived class function object
       this->exact_solution_function = exact_solution_function_derived;
+
+      // default end time
+      this->has_default_end_time = false;
 
       break;
     }
@@ -238,6 +247,10 @@ void Burgers<dim>::define_problem()
         "x,y,t", this->exact_solution_strings, constants, true);
       // point base class pointer to derived class function object
       this->exact_solution_function = exact_solution_function_derived;
+
+      // default end time
+      this->has_default_end_time = true;
+      this->default_end_time = 0.5;
 
       break;
     }

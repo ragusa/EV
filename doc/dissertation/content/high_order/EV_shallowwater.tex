@@ -10,7 +10,7 @@ water equations:
   \eqc\quad
   \consfluxvector
   = \left[\begin{array}{c}\heightmomentum\\
-    \heightmomentum\otimes\velocity + \half\gravity\height^2\mathbb{I}
+    \heightmomentum\otimes\velocity + \half\gravity\height^2\identity
     \end{array}\right]
   \eqc\quad
   \conssource
@@ -27,7 +27,7 @@ for each component:
     \mathbf{\consfluxletter}^\heightmomentum(\vectorsolution)
     \end{array}\right]
   = \left[\begin{array}{c}\heightmomentum\\
-    \heightmomentum\otimes\velocity + \half\gravity\height^2\mathbb{I}
+    \heightmomentum\otimes\velocity + \half\gravity\height^2\identity
     \end{array}\right] \eqp
 \]
 In this section the dependence of the flux functions on $\vectorsolution$
@@ -122,7 +122,7 @@ divergence of the entropy flux:
     \divergence\heightmomentum
     + \frac{\heightmomentum}{\height}\cdot
     \pr{\frac{2\heightmomentum}{\height}\divergence\heightmomentum
-    + \pr{\gravity\height\mathbb{I}
+    + \pr{\gravity\height\identity
     - \frac{\heightmomentum\otimes\heightmomentum}{\height^2}}\cdot\nabla\height}
   \nonumber\\\label{eq:shallowwater_divergence_coef}
   \nabla\cdot\mathbf{\consfluxletter}^\entropy

@@ -65,6 +65,8 @@ private:
 
   void define_problem() override;
 
+  void perform_additional_setup() override;
+
   void compute_ss_residual(Vector<double> & solution) override;
 
   void update_flux_speeds() override;
@@ -99,11 +101,20 @@ private:
   /** \brief Acceleration due to gravity */
   double gravity;
 
+  /** \brief Finite element system for bathymetry */
+  const FE_Q<dim> fe_bathymetry;
+
+  /** \brief Degree of freedom handler for bathymetry */
+  DoFHandler<dim> dof_handler_bathymetry;
+
+  /** \brief Bathymetry (bottom topography) vector \f$b\f$ */
+  Vector<double> bathymetry_vector;
+
   /** \brief Bathymetry (bottom topography) function \f$b\f$ */
   std::shared_ptr<Function<dim>> bathymetry_function;
 
   /** \brief Bathymetry (bottom topography) gradient function \f$\nabla b\f$ */
-  std::shared_ptr<Function<dim>> bathymetry_gradient_function;
+  //std::shared_ptr<Function<dim>> bathymetry_gradient_function;
 };
 
 #include "ShallowWater.cc"

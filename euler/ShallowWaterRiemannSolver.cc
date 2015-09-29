@@ -52,7 +52,7 @@ ShallowWaterRiemannSolver<dim>::ShallowWaterRiemannSolver(
   const unsigned int max_iteration = 50; // maximum number of iterations
   const double tolerance = 1.0e-6;       // iteration tolerance
   double h_star_old = h_star;            // old iterate for h in star region
-  bool converged = false;                // flag for convergence
+  bool converged;                        // flag for convergence
   double f_left = 0.0, f_right = 0.0, f_deriv_left = 0.0,
          f_deriv_right = 0.0; // fluxes
   for (unsigned int k = 0; k < max_iteration; ++k)
@@ -74,6 +74,8 @@ ShallowWaterRiemannSolver<dim>::ShallowWaterRiemannSolver(
     {
       converged = true;
       break;
+    } else {
+      converged = false;
     }
 
     // cancel negative h

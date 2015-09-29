@@ -49,6 +49,7 @@ void ConservationLaw<dim>::run()
 
   // create post-processor object
   PostProcessor<dim> postprocessor(parameters,
+                                   end_time,
                                    has_exact_solution,
                                    exact_solution_function,
                                    problem_name,
@@ -147,9 +148,17 @@ void ConservationLaw<dim>::initialize_system()
   component_names = get_component_names();
   component_interpretations = get_component_interpretations();
 
-  // define problem parameters and make initial triangulation
+  // define problem parameters
   define_problem();
+
+  // make initial triangulation
   triangulation.refine_global(parameters.initial_refinement_level);
+
+  // determine end time if chose to use default end time
+  if (parameters.use_default_end_time && has_default_end_time)
+    end_time = default_end_time;
+  else
+    end_time = parameters.end_time;
 
   // set flag to skip computing face residuals if all BC are Dirichlet
   need_to_compute_face_residual = false;
@@ -453,6 +462,9 @@ void ConservationLaw<dim>::setup_system()
       ConservationLawParameters<dim>::runge_kutta)
     for (int i = 0; i < rk.s; ++i)
       rk.f[i].reinit(n_dofs);
+
+  // perform additional setup required by derived classes
+  perform_additional_setup();
 }
 
 /** \brief Updates the cell sizes map and minimum cell size.
@@ -676,7 +688,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
 {
   old_time = 0.0;
   unsigned int n = 1; // time step index
-  double t_end = parameters.end_time;
+  double t_end = end_time;
   bool in_transient = true;
   bool DMP_satisfied = true;
   while (in_transient)

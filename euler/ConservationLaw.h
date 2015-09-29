@@ -239,6 +239,11 @@ protected:
      */
     virtual void define_problem() = 0;
 
+    /**
+     * \brief Performs additional setup required by a derived class.
+     */
+    virtual void perform_additional_setup() {}
+
     /** name of problem */
     std::string problem_name;
 
@@ -398,6 +403,13 @@ protected:
      *        conditions.
      */
     std::vector<unsigned int> dirichlet_nodes;
+
+    /** \brief default end time for test problem */
+    double default_end_time;
+    /** \brief flag to signal that test problem has a default end time */
+    bool has_default_end_time;
+    /** \brief chosen end time */
+    double end_time;
 };
 
 #include "ConservationLaw.cc"

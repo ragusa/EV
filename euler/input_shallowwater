@@ -16,7 +16,7 @@ end
 
 subsection refinement
    # 2^5=32, 2^10=1024, 2^11=2048
-   set initial refinement level = 11
+   set initial refinement level = 10
    set refinement cycles = 1
    set refinement fraction = 0.3
    set coarsening fraction = 0.03
@@ -25,14 +25,15 @@ end
 subsection time
    # options are <constant_dt|cfl_condition>
    set time step size method = cfl_condition
-   set final time = 0.5
+   set use default end time = true
+   set final time = 100.0
    set time step size = 0.0001
    set cfl = 0.50
 end
 
 subsection artificial viscosity
    # options are <none|constant|old_first_order|max_principle|entropy>
-   set viscosity type = old_first_order
+   set viscosity type = entropy
    set constant viscosity value = 0.01
    set first order viscosity coefficient = 0.5
    set entropy viscosity coefficient = 1.0

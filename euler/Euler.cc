@@ -132,6 +132,10 @@ void Euler<dim>::define_problem()
       // point base class pointer to derived class function object
       this->exact_solution_function = exact_solution_function_derived;
 
+      // default end time
+      this->has_default_end_time = true;
+      this->default_end_time = 0.25;
+
       break;
     }
     case 1: // 1-D Leblanc tube problem
@@ -196,6 +200,9 @@ void Euler<dim>::define_problem()
 
       // physical constants
       gamma = 5.0 / 3.0;
+
+      // default end time
+      this->has_default_end_time = false;
 
       break;
     }
@@ -346,6 +353,10 @@ void Euler<dim>::define_problem()
 
       // physical constants
       gamma = 5.0 / 3.0;
+
+      // default end time
+      this->has_default_end_time = true;
+      this->default_end_time = 2.0;
 
       break;
     }

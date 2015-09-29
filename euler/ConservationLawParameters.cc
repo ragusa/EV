@@ -67,6 +67,9 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters (Parame
                         "cfl_condition",
                         Patterns::Selection("constant_dt|cfl_condition"),
                         "method of computing time step size");
+      prm.declare_entry("use default end time", "true",
+                        Patterns::Bool(),
+                        "Use default end time for the particular test problem");
       prm.declare_entry("final time", "1.0",
                         Patterns::Double(),
                         "final time value");
@@ -273,6 +276,7 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
       else
          Assert(false,ExcNotImplemented());
 
+      use_default_end_time = prm.get_bool("use default end time");
       end_time = prm.get_double("final time");
       time_step_size = prm.get_double("time step size");
       cfl = prm.get_double("cfl");

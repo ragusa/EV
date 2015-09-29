@@ -29,6 +29,7 @@ class ConservationLawParameters
 
     enum TimeStepSizeMethod { constant_dt, cfl_condition };
     TimeStepSizeMethod time_step_size_method;
+    bool use_default_end_time;
     double end_time;
     double time_step_size;
     double cfl;

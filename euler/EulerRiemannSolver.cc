@@ -76,7 +76,7 @@ EulerRiemannSolver<dim>::EulerRiemannSolver(
   const unsigned int max_iter = 5000;
   const double tolpre = 1.0e-12;
   double pold = p_star;
-  bool converged = false;
+  bool converged;
   double fl;
   double fr;
   for (unsigned int i = 0; i < max_iter; ++i)
@@ -120,6 +120,8 @@ EulerRiemannSolver<dim>::EulerRiemannSolver(
     {
       converged = true;
       break;
+    } else {
+      converged = false;
     }
     if (p_star < 0)
       p_star = tolpre;
