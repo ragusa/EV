@@ -237,10 +237,6 @@ void ShallowWater<dim>::define_problem()
     {
       Assert(dim == 1, ExcImpossibleInDim(dim));
 
-      // NOTE: need to ensure that adaptive mesh refinement is not used for
-      // this problem because bump edges must be coincident with mesh edges;
-      // otherwise, the gradient of the discontinuity would be evaluated
-
       // name of problem
       this->problem_name = "lake_at_rest";
 
@@ -310,6 +306,73 @@ void ShallowWater<dim>::define_problem()
       // default end time
       this->has_default_end_time = true;
       this->default_end_time = 10.0;
+
+      break;
+    }
+    case 3: // 1-D lake at rest perturbed
+    {
+      Assert(dim == 1, ExcImpossibleInDim(dim));
+
+      // name of problem
+      this->problem_name = "lake_at_rest_perturbed";
+
+      // domain
+      const double domain_start = 0.0;
+      const double domain_width = 20.0;
+      this->domain_volume = std::pow(domain_width, dim);
+      GridGenerator::hyper_cube(
+        this->triangulation, domain_start, domain_start + domain_width);
+
+      // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
+      this->n_boundaries = 1;
+      typename Triangulation<dim>::cell_iterator cell =
+        this->triangulation.begin();
+      typename Triangulation<dim>::cell_iterator endc = this->triangulation.end();
+      for (; cell != endc; ++cell)
+        for (unsigned int face = 0; face < this->faces_per_cell; ++face)
+          if (cell->face(face)->at_boundary())
+            cell->face(face)->set_boundary_id(0);
+      this->boundary_types.resize(this->n_boundaries);
+      this->boundary_types[0].resize(this->n_components);
+      this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
+      this->boundary_types[0][1] = ConservationLaw<dim>::dirichlet;
+      this->dirichlet_function_strings.resize(this->n_boundaries);
+      this->dirichlet_function_strings[0].resize(this->n_components);
+      this->dirichlet_function_strings[0][0] = "1"; // height
+      this->dirichlet_function_strings[0][1] = "0"; // momentum
+      this->use_exact_solution_as_BC = false;
+
+      // initial conditions
+      this->initial_conditions_strings[0] = "if(abs(x-6)<0.25,1.01,"
+        "if(abs(x-10)<2,1-(4-(x-10)^2)/20,1))";
+      this->initial_conditions_strings[1] = "0";
+
+      // problem parameters
+      gravity = 9.812;
+
+      // exact solution
+      this->has_exact_solution = true;
+      this->exact_solution_strings[0] = "if(abs(x-10)<2,1-(4-(x-10)^2)/20,1)";
+      this->exact_solution_strings[1] = "0";
+
+      // create and initialize function parser for exact solution
+      std::shared_ptr<FunctionParser<dim>> exact_solution_function_derived =
+        std::make_shared<FunctionParser<dim>>(this->parameters.n_components);
+      exact_solution_function_derived->initialize(
+        "x", this->exact_solution_strings, this->constants, false);
+      this->exact_solution_function = exact_solution_function_derived;
+
+      // initialize bathymetry function
+      std::shared_ptr<FunctionParser<dim>> bathymetry_function_derived =
+        std::make_shared<FunctionParser<dim>>();
+      std::string bathymetry_string = "if(abs(x-10)<2,(4-(x-10)^2)/20,0)";
+      bathymetry_function_derived->initialize(
+        "x", bathymetry_string, this->constants, false);
+      bathymetry_function = bathymetry_function_derived;
+
+      // default end time
+      this->has_default_end_time = true;
+      this->default_end_time = 1.5;
 
       break;
     }
@@ -671,6 +734,37 @@ void ShallowWater<dim>::update_flux_speeds()
       std::max(this->max_flux_speed, this->max_flux_speed_cell[cell]);
   }
 }
+
+/**
+ * \brief Computes entropy \f$\eta\f$ at each degree of freedom point.
+ *
+ * For the shallow water equations, the entropy is defined as
+ * \f[
+ *   \eta(\mathbf{u}) = \frac{1}{2}\frac{\mathbf{q}\cdot\mathbf{q}}{h}
+ *   + \frac{1}{2}g h^2
+ * \f]
+ */
+/*
+template <int dim>
+void ShallowWater<dim>::compute_entropy_dof(const Vector<double> & solution,
+                                            const FEValuesBase<dim> & fe_values,
+                                            Vector<double> & entropy) const
+{
+  // get number of quadrature points
+  const unsigned int n = entropy.size();
+
+  // get height and momentum
+  std::vector<double> height(n);
+  std::vector<Tensor<1, dim>> momentum(n);
+  fe_values[height_extractor].get_function_values(solution, height);
+  fe_values[momentum_extractor].get_function_values(solution, momentum);
+
+  // compute entropy
+  for (unsigned int q = 0; q < n; ++q)
+    entropy(q) = 0.5 * momentum[q] * momentum[q] / height[q] +
+      0.5 * gravity * height[q] * height[q];
+}
+*/
 
 /**
  * \brief Computes entropy \f$\eta\f$ at each quadrature point on cell or face.

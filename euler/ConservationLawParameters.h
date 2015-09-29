@@ -79,7 +79,6 @@ class ConservationLawParameters
     double first_order_viscosity_coef;
     double entropy_viscosity_coef;
     double jump_coef;
-    bool add_jumps;
 };
 
 #include "ConservationLawParameters.cc"

@@ -127,8 +127,7 @@ void ConservationLaw<dim>::run()
            output_map(first_order_viscosity_cell_q, "first_order_viscosity");
            output_map(entropy_viscosity_cell_q,     "entropy_viscosity");
            output_map(viscosity_cell_q,             "viscosity");
-           if (parameters.add_jumps)
-              output_map(entropy_viscosity_with_jumps_cell_q,
+           output_map(entropy_viscosity_with_jumps_cell_q,
      "entropy_viscosity_with_jumps");
            break;
         default:

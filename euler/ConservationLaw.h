@@ -176,8 +176,6 @@ protected:
       const FEValuesBase<dim> &fe_values,
       Vector<double>          &divergence) const = 0;
 
-    // output functions
-    //virtual void output_solution(double time) = 0;
 /*
     void output_map(
       const cell_vector_map &map,

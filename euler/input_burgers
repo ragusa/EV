@@ -38,7 +38,6 @@ subsection artificial viscosity
    set first order viscosity coefficient = 0.5
    set entropy viscosity coefficient = 2.0
    set jump coefficient = 4.0
-   set add jumps = true
 end
 
 subsection temporal integration
