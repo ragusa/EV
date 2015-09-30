@@ -74,7 +74,7 @@ Bottom Topography & $\bathymetry(x)
 %--------------------------------------------------------------------------------
 This is a 1-D problem in which a lake sits at rest over a nonzero bottom
 topography.
-$\bathymetry(x)=0$, taken from \cite{fjordholm2011}.
+$\bathymetry(x)=0$, taken from \cite{fjordholm2011} and \cite{goutal1997}.
 A typical end time is $\timevalue=100$.
 Table \ref{tab:1d_lake_at_rest} summarizes the test parameters.
 
@@ -88,8 +88,34 @@ Boundary Conditions & $(\height,\speed)^T(0, \timevalue) = (1,0)^T$\\
 Gravity & $\gravity = 9.812$\\
 Bottom Topography & $\bathymetry(x)
   = \left\{\begin{array}{l l}
-  \frac{4-(x-10)^2}{20} & |x - 10|\leq 2\\
+  \frac{4-(x-10)^2}{20} & |x - 10| < 2\\
   0                     & \text{otherwise}\\
   \end{array}\right.$\\
 Exact Solution    & $(\height+\bathymetry,\speed)^T(x,0) = (1,0)^T$\\
+\end{mytable}
+%--------------------------------------------------------------------------------
+\subsection{1-D Lake at Rest with Perturbation}
+  \label{sec:1d_lake_at_rest_perturbed}
+%--------------------------------------------------------------------------------
+This test problem, taken from \cite{fjordholm2011}, is the same lake-at-rest
+problem as in Section \ref{sec:1d_lake_at_rest} but with an initial
+perturbation at $x=6$.
+Table \ref{tab:1d_lake_at_rest_perturbed} summarizes the test parameters.
+
+\begin{mytable}{1-D Lake at Rest with Perturbation Test Problem Summary}
+{1d_lake_at_rest_perturbed}{l l}
+{\emph{Parameter} & \emph{Value}}
+Domain              & $\domain = (0,20)$\\
+Initial Conditions  & $(\height+\bathymetry)(x,0) = \left\{\begin{array}{l l}
+                        1.01 & |x-6|<\frac{1}{4}\\
+                        1    & \mbox{otherwise}\end{array}\right.$\\
+                    & $\speed(x,0) = 0$\\
+Boundary Conditions & $(\height,\speed)^T(0, \timevalue) = (1,0)^T$\\
+                    & $(\height,\speed)^T(20,\timevalue) = (1,0)^T$\\
+Gravity & $\gravity = 9.812$\\
+Bottom Topography & $\bathymetry(x)
+  = \left\{\begin{array}{l l}
+  \frac{4-(x-10)^2}{20} & |x - 10| < 2\\
+  0                     & \text{otherwise}\\
+  \end{array}\right.$\\
 \end{mytable}

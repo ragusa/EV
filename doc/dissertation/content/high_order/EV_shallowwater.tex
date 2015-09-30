@@ -190,7 +190,7 @@ entropy flux is
 Bringing the source term in Equation \eqref{eq:shallowwater_entropy_equality}
 over to the left hand side allows an entropy residual to be defined:
 \begin{equation}
-  \entropyresidual = \partial_\timevalue\entropy
+  \entropyresidual(\vectorsolution) \equiv \partial_\timevalue\entropy
   + \divergence\mathbf{\consfluxletter}^\entropy
   + \partial_\heightmomentum\entropy\cdot\gravity\height\nabla\bathymetry
   \eqp
@@ -204,11 +204,11 @@ viscous fluxes:
   = \conssource \eqc
 \\
   \viscconsfluxvector
-  = \left[\begin{array}{c}
+  \equiv \left[\begin{array}{c}
     \viscflux{\height}(\vectorsolution,\viscosity)\\
     \viscflux{\heightmomentum}(\vectorsolution,\viscosity)
     \end{array}\right]
-  = \left[\begin{array}{c}
+  \equiv \left[\begin{array}{c}
     \viscosity\nabla\height\\
     \viscosity\nabla\heightmomentum
     \end{array}\right] \eqc

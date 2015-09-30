@@ -11,39 +11,50 @@ $\entropycellviscosity[\timeindex]$:
 where the entropy viscosity is defined as
 \begin{equation}
    \entropycellviscosity[n] = \frac{\entropyresidualcoef
-   \entropyresidual_\cellindex^\timeindex(\approximatescalarsolution^\timeindex,
-   \approximatescalarsolution^{\timeindex-1})
-   + \entropyjumpcoef\max\limits_{F\in\partial \cellindex}\entropyjump_F(
-   \approximatescalarsolution^\timeindex)}
+   \entropyresidual_\cellindex^\timeindex
+   + \entropyjumpcoef\entropyjump_\cell^\timeindex}
    {\|\entropy(\approximatescalarsolution^\timeindex)
    -\bar{\entropy}(\approximatescalarsolution^\timeindex)\|_{L^\infty(\domain)}}
    \eqp
 \end{equation}
 The entropy is defined to be some convex function of $\scalarsolution$ such as
 $\entropy(\scalarsolution)=\frac{1}{2}\scalarsolution^2$. The entropy residual
-$\entropyresidual_\cellindex^\timeindex(\approximatescalarsolution^\timeindex,
-\approximatescalarsolution^{\timeindex-1})$ is the following:
+$\entropyresidual_\cellindex^\timeindex$ is the following:
 \begin{equation}
-  \entropyresidual_\cellindex^\timeindex(\approximatescalarsolution^\timeindex,
+  \entropyresidual_\cellindex^\timeindex
+  \equiv \left\|\entropyresidual(\approximatescalarsolution^\timeindex,
   \approximatescalarsolution^{\timeindex-1})
-  = \left\|\frac{\entropy(\approximatescalarsolution^\timeindex)
+  \right\|_{L^\infty(\cellindex)} \eqc
+\end{equation}
+\begin{equation}
+  \entropyresidual(\approximatescalarsolution^\timeindex,
+  \approximatescalarsolution^{\timeindex-1})
+  \equiv \frac{\entropy(\approximatescalarsolution^\timeindex)
   - \entropy(\approximatescalarsolution^{\timeindex-1})} 
   {\timestepsize^\timeindex}
   + \entropy'(\approximatescalarsolution^\timeindex)\pr{
   \divergence\consfluxscalar[\approximatescalarsolution^\timeindex]
   + \reactioncoef \approximatescalarsolution^\timeindex
-  - \scalarsource}\right\|_{L^\infty(\cellindex)} \eqc
+  - \scalarsource} \eqc
 \end{equation}
 where the $L^\infty(\cellindex)$ norm is approximated as the maximum of the
 norm operand evaluated at each quadrature point on $\cellindex$.  Because the
 entropy residual only measures cell-wise entropy production, it is useful to
 include entropy flux \emph{jumps} in the definition of the entropy viscosity,
-since these jumps are a measure of edge-wise entropy production.  The jump
-$\entropyjump_F$ for a face $F$ measures the jump in the normal component of
-the entropy flux across the cell interface:
+since these jumps are a measure of edge-wise entropy production.
+The entropy viscosity definition uses the largest jump found on any of
+the faces of the cell $\cell$:
+\begin{equation}
+  \entropyjump_\cell^\timeindex
+  \equiv \max\limits_{F\in\partial \cellindex}\entropyjump_F(
+    \approximatescalarsolution^\timeindex) \eqc
+\end{equation}
+where the jump $\entropyjump_F$ for a face $F$ measures the jump in the normal
+component of the entropy flux across the cell interface:
 \begin{equation}
   \entropyjump_F(\approximatescalarsolution^\timeindex)
-  = \|\mathbf{\consfluxletter}'(\approximatescalarsolution)\cdot\normalvector_F
+  \equiv \|\mathbf{\consfluxletter}'(\approximatescalarsolution^\timeindex)
+    \cdot\normalvector_F
   [\![\partial_n \entropy(\approximatescalarsolution^\timeindex)
   ]\!]\|_{L^\infty(F)} \eqc
 \end{equation}
