@@ -80,6 +80,10 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters (Parame
                         "0.5",
                         Patterns::Double(),
                         "CFL number to be used if CFL condition is used to compute time step size.");
+      prm.declare_entry("steady state tolerance",
+                        "1.0e-6",
+                        Patterns::Double(),
+                        "Tolerance for achievement of steady-state");
    }
    prm.leave_subsection();
 
@@ -276,6 +280,7 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters (ParameterH
       end_time = prm.get_double("final time");
       time_step_size = prm.get_double("time step size");
       cfl = prm.get_double("cfl");
+      steady_state_tolerance = prm.get_double("steady state tolerance");
    }
    prm.leave_subsection();
 

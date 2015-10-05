@@ -50,13 +50,16 @@ equation, one can take advantage of the derivative chain rule:
 \end{equation}
 where the partial derivatives of the entropy function with respect to each
 solution variable are the following:
+\begin{subequations}
 \begin{equation}
   \partial_\height\entropy
   = -\half\frac{\heightmomentum\cdot\heightmomentum}{\height^2}
   + \gravity\height \eqc
-  \quad
+\end{equation}
+\begin{equation}
   \partial_\heightmomentum\entropy = \frac{\heightmomentum}{\height} \eqp
 \end{equation}
+\end{subequations}
 To arrive at an entropy equality, each conservation equation in the system
 is multiplied by the respective derivative of the entropy function and then
 summed:
@@ -195,7 +198,7 @@ gives $\dd{c}{\bathymetry}=0\Rightarrow c(\bathymetry)=c$, where
 $c$ can just be chosen to be zero. Thus the final equation for the
 entropy flux is
 \begin{equation}
-  \mathbf{\consfluxletter}^\entropy(\vectorsolution)
+  \mathbf{\consfluxletter}^\entropy(\vectorsolution,\bathymetry)
   = \gravity(\height + \bathymetry)\heightmomentum
   + \half\frac{\heightmomentum\cdot\pr{\heightmomentum\otimes\heightmomentum}} 
   {\height^2}
@@ -208,6 +211,23 @@ Equation \eqref{eq:shallowwater_entropy_equality}:
   + \divergence\mathbf{\consfluxletter}^\entropy
   \eqp
 \end{equation}
+The entropy jump for a face $F$ is defined to be
+\begin{multline}
+  \entropyjump_F(\vectorsolution)
+  \equiv \Bigg\|
+    \partial_\height\entropy \, \partial_\height\mathbf{\consfluxletter}^\height
+      \cdot\normalvector_F
+      \jumpbrackets{\nabla\height \cdot \normalvector_F}
+    + \sum\limits_{d=1}^{\ndimensions}\partial_{\heightmomentumletter_d}\entropy
+      \, \partial_{\heightmomentumletter_d}\mathbf{\consfluxletter}
+        ^{\heightmomentumletter_d} \cdot\normalvector_F
+      \jumpbrackets{\nabla\heightmomentumletter_d \cdot \normalvector_F}
+    \\
+    + \sum\limits_{d=1}^{\ndimensions}\partial_{\heightmomentumletter_d}\entropy
+        \, \gravity\height
+      \jumpbrackets{\dd{\bathymetry}{x_d}\normalvectorletter_{F,d}}
+  \Bigg\|_{L^\infty(F)} \eqp
+\end{multline}
 The regularization of the shallow water equations is achieved by adding
 viscous fluxes:
 \begin{equation}

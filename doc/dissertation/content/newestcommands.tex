@@ -1,5 +1,6 @@
 % required packages
 \usepackage{xcolor}
+\usepackage{stmaryrd} % jump brackets: \llbracket, \rrbracket
 
 % general
 \newcommand{\x}{\mathbf{x}}
@@ -8,7 +9,9 @@
 \newcommand{\timeindex}{n}
 \newcommand{\speed}{v}
 \newcommand{\velocity}{\mathbf{\speed}}
-\newcommand{\normalvector}{\mathbf{n}}
+\newcommand{\normalvectorletter}{n}
+\newcommand{\normalvector}{\mathbf{\normalvectorletter}}
+\newcommand{\ndimensions}{n_\text{dim}}
 
 % solution
 \newcommand{\scalarsolution}{u}
@@ -160,15 +163,18 @@
 
 % shallow water equations
 \newcommand{\height}{h}
-\newcommand{\heightmomentum}{\mathbf{q}}
+\newcommand{\heightmomentumletter}{q}
+\newcommand{\heightmomentum}{\mathbf{\heightmomentumletter}}
+\newcommand{\heightmomentumx}{\heightmomentumletter_x}
+\newcommand{\heightmomentumy}{\heightmomentumletter_y}
 \newcommand{\bathymetry}{b}
 \newcommand{\gravity}{g}
 \newcommand{\speedofsound}{a}
 
 %==============================================================================
 % colors
-\colorlet{lightBlue}{blue!10!white}
-\colorlet{lightGreen}{green!10!white}
+\colorlet{lightBlue}{blue!20!white}
+\colorlet{lightGreen}{green!20!white}
 
 % sums and integrals
 \renewcommand{\ij}{_{i,j}}
@@ -191,6 +197,7 @@
 % typesetting
 \newcommand{\pr}[1]{\left(#1\right)} % parentheses
 \newcommand{\sq}[1]{\left[#1\right]} % square brackets
+\newcommand{\jumpbrackets}[1]{\left\llbracket#1\right\rrbracket} % jump brackets
 \newcommand{\tab}{\hspace*{0.5cm}}   % tab for verbatim evironments
 \newcommand{\eqp}{\,.} % equation period
 \newcommand{\eqc}{\,,} % equation comma

@@ -29,6 +29,7 @@ subsection time
    set final time = 0.5
    set time step size = 0.001
    set cfl = 0.50
+   set steady state tolerance = 1.0e-6
 end
 
 subsection artificial viscosity

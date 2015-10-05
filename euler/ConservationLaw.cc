@@ -73,9 +73,9 @@ void ConservationLaw<dim>::run()
 
     // print information
     std::cout << std::endl
-              << "Cycle " << cycle << " of " << parameters.n_refinement_cycles - 1
+              << "Cycle " << cycle << " of " << parameters.n_refinement_cycles-1
               << ":" << std::endl;
-    std::cout << "   Number of active cells: " << triangulation.n_active_cells()
+    std::cout << "  Number of active cells: " << triangulation.n_active_cells()
               << std::endl;
 
     // interpolate the initial conditions to the grid, and apply constraints
@@ -716,7 +716,8 @@ void ConservationLaw<dim>::solve_runge_kutta()
       in_transient = false;
     }
 
-    std::cout << "   time step " << n << ": t = " << old_time + dt << std::endl;
+    std::cout << "  time step " << n << ": t = " << "\x1b[1;34m" << old_time + dt
+      << "\x1b[0m" << std::endl;
 
     update_viscosities(dt);
 
@@ -729,7 +730,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
     // compute each f_i
     for (int i = 0; i < rk.s; ++i)
     {
-      std::cout << "      stage " << i + 1 << " of " << rk.s << std::endl;
+      std::cout << "    stage " << i + 1 << " of " << rk.s << std::endl;
       // compute stage time
       current_time = old_time + rk.c[i] * dt;
 
@@ -869,6 +870,25 @@ void ConservationLaw<dim>::solve_runge_kutta()
 
     // check that there are no NaNs in solution
     check_nan();
+
+    // check for steady-state
+    Vector<double> solution_change = new_solution;
+    solution_change.add(-1.0, old_solution);
+    double solution_change_norm = solution_change.l2_norm();
+    double solution_normalization = old_solution.l2_norm();
+    double steady_state_error;
+    if (std::abs(solution_normalization) < 1.0e-15)
+      steady_state_error = solution_change_norm;
+    else
+      steady_state_error = solution_change_norm / solution_normalization;
+    std::cout << "    Steady-state error = " << "\x1b[1;36m"
+      << steady_state_error << "\x1b[0m" << std::endl;
+    if (steady_state_error < parameters.steady_state_tolerance)
+    {
+      in_transient = false;
+      std::cout << "\x1b[1;32m" << "  Converged to steady-state." << "\x1b[0m"
+        << std::endl;
+    }
 
     // check that DMP is satisfied at all time steps
     if (parameters.viscosity_type ==

@@ -33,6 +33,7 @@ class ConservationLawParameters
     double end_time;
     double time_step_size;
     double cfl;
+    double steady_state_tolerance;
 
     unsigned int output_period;
     bool output_mesh;
