@@ -51,11 +51,6 @@ private:
    */
   using cell_iterator = typename ConservationLaw<dim>::cell_iterator;
 
-  ShallowWaterParameters<dim> sw_parameters;
-
-  const FEValuesExtractors::Scalar height_extractor;
-  const FEValuesExtractors::Vector momentum_extractor;
-
   std::vector<std::string> get_component_names() override;
 
   std::vector<DataComponentInterpretation::DataComponentInterpretation>
@@ -80,6 +75,8 @@ private:
     const FEValuesBase<dim> & fe_values,
     Vector<double> & divergence_entropy_flux) const override;
 
+  double compute_max_entropy_jump() const override;
+
   void compute_inviscid_fluxes(const std::vector<double> & height,
                                const std::vector<Tensor<1, dim>> & momentum,
                                std::vector<Tensor<1, dim>> & height_flux,
@@ -98,10 +95,19 @@ private:
 
   void output_results(PostProcessor<dim> & postprocessor) const override;
 
-  /** \brief Acceleration due to gravity */
+  /** \brief Parameters for shallow water equations */
+  ShallowWaterParameters<dim> sw_parameters;
+
+  /** \brief FE values extractor for height */
+  const FEValuesExtractors::Scalar height_extractor;
+
+  /** \brief FE values extractor for momentum */
+  const FEValuesExtractors::Vector momentum_extractor;
+
+  /** \brief Acceleration due to gravity \f$g\f$ */
   double gravity;
 
-  /** \brief Finite element system for bathymetry */
+  /** \brief Finite element for bathymetry */
   const FE_Q<dim> fe_bathymetry;
 
   /** \brief Degree of freedom handler for bathymetry */
