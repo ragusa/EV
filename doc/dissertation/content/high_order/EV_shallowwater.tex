@@ -28,6 +28,21 @@ for each component:
     \end{array}\right]
   = \left[\begin{array}{c}\heightmomentum\\
     \heightmomentum\otimes\velocity + \half\gravity\height^2\identity
+    \end{array}\right] \eqc
+\]
+where $\mathbf{\consfluxletter}^\heightmomentum(\vectorsolution)$ is a vector
+of the momentum component fluxes:
+\[
+  \mathbf{\consfluxletter}^\heightmomentum(\vectorsolution)
+  = \left[\begin{array}{c}
+    \mathbf{\consfluxletter}^{\heightmomentumx}(\vectorsolution)\\
+    \mathbf{\consfluxletter}^{\heightmomentumy}(\vectorsolution)
+    \end{array}\right]
+  = \left[\begin{array}{c c}
+    \frac{\heightmomentumx^2}{\height} + \half\gravity\height^2
+      & \frac{\heightmomentumx\heightmomentumy}{\height}\\
+    \frac{\heightmomentumx\heightmomentumy}{\height}
+      & \frac{\heightmomentumy^2}{\height} + \half\gravity\height^2\\
     \end{array}\right] \eqp
 \]
 In this section the dependence of the flux functions on $\vectorsolution$
@@ -57,7 +72,16 @@ solution variable are the following:
   + \gravity\height \eqc
 \end{equation}
 \begin{equation}
-  \partial_\heightmomentum\entropy = \frac{\heightmomentum}{\height} \eqp
+  \partial_\heightmomentum\entropy
+  = \sq{\begin{array}{c}
+      \partial_{\heightmomentumx}\entropy\\
+      \partial_{\heightmomentumy}\entropy
+    \end{array}}
+  = \sq{\begin{array}{c}
+      \frac{\heightmomentumx}{\height}\\
+      \frac{\heightmomentumy}{\height}
+    \end{array}}
+  = \frac{\heightmomentum}{\height} \eqp
 \end{equation}
 \end{subequations}
 To arrive at an entropy equality, each conservation equation in the system

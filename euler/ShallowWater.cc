@@ -118,14 +118,15 @@ void ShallowWater<dim>::define_problem()
       bathymetry_function = bathymetry_function_derived;
 
       // initialize bathymetry gradient function
-/*
-      std::shared_ptr<FunctionParser<dim>> bathymetry_gradient_function_derived =
-        std::make_shared<FunctionParser<dim>>(dim);
-      std::string bathymetry_gradient_string = "0";
-      bathymetry_gradient_function_derived->initialize(
-        "x", bathymetry_gradient_string, this->constants, false);
-      bathymetry_gradient_function = bathymetry_gradient_function_derived;
-*/
+      /*
+            std::shared_ptr<FunctionParser<dim>>
+         bathymetry_gradient_function_derived =
+              std::make_shared<FunctionParser<dim>>(dim);
+            std::string bathymetry_gradient_string = "0";
+            bathymetry_gradient_function_derived->initialize(
+              "x", bathymetry_gradient_string, this->constants, false);
+            bathymetry_gradient_function = bathymetry_gradient_function_derived;
+      */
 
       // default end time
       this->has_default_end_time = true;
@@ -218,14 +219,15 @@ void ShallowWater<dim>::define_problem()
       bathymetry_function = bathymetry_function_derived;
 
       // initialize bathymetry gradient function
-/*
-      std::shared_ptr<FunctionParser<dim>> bathymetry_gradient_function_derived =
-        std::make_shared<FunctionParser<dim>>(dim);
-      std::string bathymetry_gradient_string = "0";
-      bathymetry_gradient_function_derived->initialize(
-        "x", bathymetry_gradient_string, this->constants, false);
-      bathymetry_gradient_function = bathymetry_gradient_function_derived;
-*/
+      /*
+            std::shared_ptr<FunctionParser<dim>>
+         bathymetry_gradient_function_derived =
+              std::make_shared<FunctionParser<dim>>(dim);
+            std::string bathymetry_gradient_string = "0";
+            bathymetry_gradient_function_derived->initialize(
+              "x", bathymetry_gradient_string, this->constants, false);
+            bathymetry_gradient_function = bathymetry_gradient_function_derived;
+      */
 
       // default end time
       this->has_default_end_time = true;
@@ -294,14 +296,15 @@ void ShallowWater<dim>::define_problem()
       bathymetry_function = bathymetry_function_derived;
 
       // initialize bathymetry gradient function
-/*
-      std::shared_ptr<FunctionParser<dim>> bathymetry_gradient_function_derived =
-        std::make_shared<FunctionParser<dim>>(dim);
-      std::string bathymetry_gradient_string = "if(abs(x-10)<2,1-x/10,0)";
-      bathymetry_gradient_function_derived->initialize(
-        "x", bathymetry_gradient_string, this->constants, false);
-      bathymetry_gradient_function = bathymetry_gradient_function_derived;
-*/
+      /*
+            std::shared_ptr<FunctionParser<dim>>
+         bathymetry_gradient_function_derived =
+              std::make_shared<FunctionParser<dim>>(dim);
+            std::string bathymetry_gradient_string = "if(abs(x-10)<2,1-x/10,0)";
+            bathymetry_gradient_function_derived->initialize(
+              "x", bathymetry_gradient_string, this->constants, false);
+            bathymetry_gradient_function = bathymetry_gradient_function_derived;
+      */
 
       // default end time
       this->has_default_end_time = true;
@@ -343,7 +346,8 @@ void ShallowWater<dim>::define_problem()
       this->use_exact_solution_as_BC = false;
 
       // initial conditions
-      this->initial_conditions_strings[0] = "if(abs(x-6)<0.25,1.01,"
+      this->initial_conditions_strings[0] =
+        "if(abs(x-6)<0.25,1.01,"
         "if(abs(x-10)<2,1-(4-(x-10)^2)/20,1))";
       this->initial_conditions_strings[1] = "0";
 
@@ -667,9 +671,47 @@ void ShallowWater<dim>::compute_velocity(
   const std::vector<Tensor<1, dim>> & momentum,
   std::vector<Tensor<1, dim>> & velocity) const
 {
-  unsigned int n = height.size();
+  const unsigned int n = height.size();
   for (unsigned int q = 0; q < n; ++q)
     velocity[q] = momentum[q] / height[q];
+}
+
+/**
+ * \brief Computes the partial derivative of the entropy function with respect
+ *        to height.
+ * \param[in] height vector of height values
+ * \param[in] momentum vector of momentum values
+ * \param[out] entropy_derivative_height vector of partial derivative of entropy
+ *             with respect to height
+ */
+void compute_entropy_derivative_height(
+  const std::vector<double> & height,
+  const std::vector<Tensor<1, dim>> & momentum,
+  std::vector<double> & entropy_derivative_height) const
+{
+  const unsigned int n = height.size();
+  for (unsigned int q = 0; q < n; ++q)
+    entropy_derivative_height[q] =
+      -0.5 * momentum[q] * momentum[q] / (height[q] * height[q]) +
+      gravity * height[q];
+}
+
+/**
+ * \brief Computes the partial derivative of the entropy function with respect
+ *        to momentum.
+ * \param[in] height vector of height values
+ * \param[in] momentum vector of momentum values
+ * \param[out] entropy_derivative_momentum vector of partial derivative of entropy
+ *             with respect to momentum
+ */
+void compute_entropy_derivative_momentum(
+  const std::vector<double> & height,
+  const std::vector<Tensor<1, dim>> & momentum,
+  std::vector<Tensor<1, dim>> & entropy_derivative_momentum) const
+{
+  const unsigned int n = height.size();
+  for (unsigned int q = 0; q < n; ++q)
+    entropy_derivative_momentum[q] = momentum[q] / height[q];
 }
 
 /**
@@ -862,19 +904,24 @@ void ShallowWater<dim>::compute_divergence_entropy_flux(
  * \param[in] cell cell iterator
  */
 template <int dim>
-double ShallowWater<dim>::compute_max_entropy_jump( 
-  const Vector<double> & solution,
-  const cell_iterator  & cell) const
+double ShallowWater<dim>::compute_max_entropy_jump(
+  const Vector<double> & solution, const cell_iterator & cell) const
 {
   FEFaceValues<dim> fe_values_face(this->fe,
                                    this->face_quadrature,
                                    update_values | update_gradients |
                                      update_normal_vectors);
 
-  std::vector<Tensor<1,dim>> gradients_face(this->n_q_points_face);
-  std::vector<Tensor<1,dim>> gradients_face_neighbor(this->n_q_points_face);
-  std::vector<Tensor<1,dim>> normal_vectors(this->n_q_points_face);
-  Vector<double> entropy(this->n_q_points_face);
+  std::vector<double> height(this->n_q_points_face);
+  std::vector<Tensor<1, dim>> height_gradient(this->n_q_points_face);
+  std::vector<Tensor<1, dim>> height_gradient_neighbor(this->n_q_points_face);
+  std::vector<Tensor<1, dim>> momentum(this->n_q_points_face);
+  std::vector<Tensor<2, dim>> momentum_gradient(this->n_q_points_face);
+  std::vector<Tensor<2, dim>> momentum_gradient_neighbor(this->n_q_points_face);
+  std::vector<double> entropy_derivative_height(this->n_q_points_face);
+  std::vector<Tensor<1, dim>> entropy_derivative_momentum(this->n_q_points_face);
+  std::vector<Tensor<1, dim>> normal_vectors(this->n_q_points_face);
+  // Vector<double> entropy(this->n_q_points_face);
 
   double max_jump_in_cell = 0.0;
 
@@ -888,8 +935,21 @@ double ShallowWater<dim>::compute_max_entropy_jump(
       // reinitialize FE values
       fe_values_face.reinit(cell, iface);
 
+      // get solution values
       fe_values_face[height_extractor].get_function_values(solution, height);
-      fe_values_face.get_function_gradients(solution, gradients_face);
+      fe_values_face[momentum_extractor].get_function_values(solution, momentum);
+
+      // get solution gradients on this cell
+      fe_values_face[height_extractor].get_function_gradients(solution,
+                                                              height_gradient);
+      fe_values_face[momentum_extractor].get_function_gradients(
+        solution, momentum_gradient);
+
+      // compute derivatives of entropy function
+      compute_entropy_derivative_height(
+        height, momentum, entropy_derivative_height);
+      compute_entropy_derivative_momentum(
+        height, momentum, entropy_derivative_momentum);
 
       // compute entropy at each quadrature point on face
       compute_entropy(solution, fe_values_face, entropy);
@@ -906,8 +966,7 @@ double ShallowWater<dim>::compute_max_entropy_jump(
 
       // get gradients from neighboring cell
       fe_values_face.reinit(neighbor, ineighbor);
-      fe_values_face.get_function_gradients(solution,
-                                            gradients_face_neighbor);
+      fe_values_face.get_function_gradients(solution, gradients_face_neighbor);
 
       // loop over face quadrature points to determine max jump on face
       double max_jump_on_face = 0.0;

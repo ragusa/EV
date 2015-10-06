@@ -93,6 +93,16 @@ private:
                         const std::vector<Tensor<1, dim>> & momentum,
                         std::vector<Tensor<1, dim>> & velocity) const;
 
+  void compute_entropy_derivative_height(
+    const std::vector<double> & height,
+    const std::vector<Tensor<1, dim>> & momentum,
+    std::vector<double> & entropy_derivative_height) const;
+
+  void compute_entropy_derivative_momentum(
+    const std::vector<double> & height,
+    const std::vector<Tensor<1, dim>> & momentum,
+    std::vector<Tensor<1,dim>> & entropy_derivative_momentum) const;
+
   void output_results(PostProcessor<dim> & postprocessor) const override;
 
   /** \brief Parameters for shallow water equations */
@@ -120,7 +130,7 @@ private:
   std::shared_ptr<Function<dim>> bathymetry_function;
 
   /** \brief Bathymetry (bottom topography) gradient function \f$\nabla b\f$ */
-  //std::shared_ptr<Function<dim>> bathymetry_gradient_function;
+  // std::shared_ptr<Function<dim>> bathymetry_gradient_function;
 };
 
 #include "ShallowWater.cc"

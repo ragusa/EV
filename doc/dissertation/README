@@ -28,4 +28,5 @@ TO DO:
 * check that all equation references use \eqref instead of \ref
 * use identifiers for each type of reference, e.g., for tables,
   \ref{tab:mytablename}
+* consistently use or do not use equivalence sign (3-bar "=" sign)
 
