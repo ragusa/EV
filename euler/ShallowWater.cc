@@ -911,16 +911,21 @@ double ShallowWater<dim>::compute_max_entropy_jump(
                                    this->face_quadrature,
                                    update_values | update_gradients |
                                      update_normal_vectors);
+  FEFaceValues<dim> fe_values_face_bathymetry(
+    fe_bathymetry, this->face_quadrature, update_values | update_gradients);
 
   std::vector<double> height(this->n_q_points_face);
-  std::vector<Tensor<1, dim>> height_gradient(this->n_q_points_face);
-  std::vector<Tensor<1, dim>> height_gradient_neighbor(this->n_q_points_face);
-  std::vector<Tensor<1, dim>> momentum(this->n_q_points_face);
-  std::vector<Tensor<2, dim>> momentum_gradient(this->n_q_points_face);
-  std::vector<Tensor<2, dim>> momentum_gradient_neighbor(this->n_q_points_face);
+  std::vector<Tensor<1,dim>> height_gradient(this->n_q_points_face);
+  std::vector<Tensor<1,dim>> height_gradient_neighbor(this->n_q_points_face);
+  std::vector<Tensor<1,dim>> momentum(this->n_q_points_face);
+  std::vector<Tensor<2,dim>> momentum_gradient(this->n_q_points_face);
+  std::vector<Tensor<2,dim>> momentum_gradient_neighbor(this->n_q_points_face);
+  std::vector<double> bathymetry(this->n_q_points_face);
+  std::vector<Tensor<1,dim>> bathymetry_gradient(this->n_q_points_face);
+  std::vector<Tensor<1,dim>> bathymetry_gradient_neighbor(this->n_q_points_face);
   std::vector<double> entropy_derivative_height(this->n_q_points_face);
-  std::vector<Tensor<1, dim>> entropy_derivative_momentum(this->n_q_points_face);
-  std::vector<Tensor<1, dim>> normal_vectors(this->n_q_points_face);
+  std::vector<Tensor<1,dim>> entropy_derivative_momentum(this->n_q_points_face);
+  std::vector<Tensor<1,dim>> normal_vectors(this->n_q_points_face);
   // Vector<double> entropy(this->n_q_points_face);
 
   double max_jump_in_cell = 0.0;
@@ -934,16 +939,21 @@ double ShallowWater<dim>::compute_max_entropy_jump(
     {
       // reinitialize FE values
       fe_values_face.reinit(cell, iface);
+      fe_values_face_bathymetry.reinit(cell_bathymetry, iface);
 
-      // get solution values
+      // get solution and bathymetry values
       fe_values_face[height_extractor].get_function_values(solution, height);
       fe_values_face[momentum_extractor].get_function_values(solution, momentum);
+      fe_values_face_bathymetry[momentum_extractor].get_function_values(
+        bathymetry_vector, bathymetry);
 
-      // get solution gradients on this cell
+      // get solution and bathymetry gradients on this cell
       fe_values_face[height_extractor].get_function_gradients(solution,
                                                               height_gradient);
       fe_values_face[momentum_extractor].get_function_gradients(
         solution, momentum_gradient);
+      fe_values_face_bathymetry.get_function_gradients(
+        bathymetry_vector, bathymetry_gradient);
 
       // compute derivatives of entropy function
       compute_entropy_derivative_height(

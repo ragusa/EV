@@ -29,4 +29,7 @@ TO DO:
 * use identifiers for each type of reference, e.g., for tables,
   \ref{tab:mytablename}
 * consistently use or do not use equivalence sign (3-bar "=" sign)
+* check that either of these is consistent throughout the dissertation:
+  1. only important equations are numbered
+  2. all equations are numbered
 
