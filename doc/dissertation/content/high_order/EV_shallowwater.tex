@@ -10,7 +10,8 @@ water equations:
   \eqc\quad
   \consfluxvector
   = \left[\begin{array}{c}\heightmomentum\\
-    \heightmomentum\otimes\velocity + \half\gravity\height^2\identity
+      \frac{\heightmomentum\otimes\heightmomentum}{\height}
+      + \half\gravity\height^2\identity
     \end{array}\right]
   \eqc\quad
   \conssource
@@ -27,7 +28,8 @@ for each component:
     \mathbf{\consfluxletter}^\heightmomentum(\vectorsolution)
     \end{array}\right]
   = \left[\begin{array}{c}\heightmomentum\\
-    \heightmomentum\otimes\velocity + \half\gravity\height^2\identity
+      \frac{\heightmomentum\otimes\heightmomentum}{\height}
+      + \half\gravity\height^2\identity
     \end{array}\right] \eqc
 \]
 where $\mathbf{\consfluxletter}^\heightmomentum(\vectorsolution)$ is a vector
@@ -92,8 +94,8 @@ summed:
   + \partial_\heightmomentum\entropy\cdot\partial_\timevalue\heightmomentum}
   + \highlightgreen{\partial_\height\entropy\,\divergence
     \mathbf{\consfluxletter}^\height
-  + \partial_\heightmomentum\entropy\cdot\pr{\divergence 
-    \mathbf{\consfluxletter}^\heightmomentum}
+  + \sum\limits_{d=1}^{\ndimensions}\partial_{\heightmomentumletter_d}\entropy
+    \divergence\mathbf{\consfluxletter}^{\heightmomentumletter_d}
   + \partial_\heightmomentum\entropy\cdot\gravity\height\nabla\bathymetry}
   = 0 \eqc 
 \end{equation}
@@ -105,8 +107,8 @@ can be expressed as a partial derivative of entropy:
   \highlightblue{\partial_\timevalue\entropy}
   + \highlightgreen{\partial_\height\entropy\,\divergence
     \mathbf{\consfluxletter}^\height
-  + \partial_\heightmomentum\entropy\cdot\pr{\divergence
-    \mathbf{\consfluxletter}^\heightmomentum}
+  + \sum\limits_{d=1}^{\ndimensions}\partial_{\heightmomentumletter_d}\entropy
+    \divergence\mathbf{\consfluxletter}^{\heightmomentumletter_d}
   + \partial_\heightmomentum\entropy\cdot\gravity\height\nabla\bathymetry}
   = 0 \eqp
 \end{equation}
@@ -121,45 +123,68 @@ that its divergence matches the spatial derivative terms in Equation
 Comparing Equations \eqref{eq:shallowwater_spatial_derivative_expanded} and
 \eqref{eq:shallowwater_entropy_equality} gives the definition of the
 divergence of the entropy flux:
-\begin{align}
+\begin{equation}\label{eq:shallowwater_entropy_flux_start}
   \nabla\cdot\mathbf{\consfluxletter}^\entropy
-  &= 
+  = 
     \partial_\height\entropy\,\divergence
     \mathbf{\consfluxletter}^\height
-  + \partial_\heightmomentum\entropy\cdot
-    \pr{\divergence\mathbf{\consfluxletter}^\heightmomentum}
+  + \sum\limits_{d=1}^{\ndimensions}\partial_{\heightmomentumletter_d}\entropy
+    \divergence\mathbf{\consfluxletter}^{\heightmomentumletter_d}
   + \partial_\heightmomentum\entropy\cdot\gravity\height\nabla\bathymetry
-  \nonumber\\
+\end{equation}
+The divergences of the component fluxes are the following:
+\begin{subequations}
+\begin{equation}
+  \divergence\mathbf{\consfluxletter}^\height = \divergence\heightmomentum \eqc
+\end{equation}
+\begin{equation}
+  \divergence\mathbf{\consfluxletter}^{\heightmomentumletter_d}
+  = -\frac{\heightmomentumletter_d}{\height^2}\heightmomentum
+    \cdot\nabla\height
+  + \frac{\heightmomentum}{\height}\cdot\nabla\heightmomentumletter_d
+  + \frac{\heightmomentumletter_d}{\height}\divergence\heightmomentum
+  + \gravity\height\partial_{x_d}\height \eqc
+\end{equation}
+\end{subequations}
+and the momentum sum term simplifies as follows:
+\begin{align}
+  \sum\limits_d^{\ndimensions}\frac{\heightmomentumletter_d}{\height}
+    \divergence\mathbf{\consfluxletter}^{\heightmomentumletter_d}
+  &= \sum\limits_d^{\ndimensions}-\frac{\heightmomentumletter_d^2}{\height^3}
+    \heightmomentum\cdot\nabla\height
+  + \sum\limits_d^{\ndimensions}\frac{\heightmomentumletter_d\heightmomentum}
+    {\height^2}\cdot\nabla\heightmomentumletter_d
+  + \sum\limits_d^{\ndimensions}\frac{\heightmomentumletter_d^2}{\height^2}
+    \divergence\heightmomentum
+  + \sum\limits_d^{\ndimensions}\gravity\heightmomentumletter_d\partial_{x_d}
+    \height \eqc
+  \\
+  \sum\limits_d^{\ndimensions}\frac{\heightmomentumletter_d}{\height}
+    \divergence\mathbf{\consfluxletter}^{\heightmomentumletter_d}
+  &= \pr{-\frac{(\heightmomentum\cdot\heightmomentum)\heightmomentum}{\height^3}}
+    \cdot\nabla\height
+  + \sum\limits_d^{\ndimensions}\pr{\frac{\heightmomentumletter_d\heightmomentum}
+    {\height^2}}\cdot\nabla\heightmomentumletter_d
+  + \pr{\frac{\heightmomentum\cdot\heightmomentum}{\height^2}}
+    \divergence\heightmomentum
+  + \pr{\gravity\heightmomentum}\cdot\nabla\height \eqp
+\end{align}
+Substituting these definitions into Equation
+\eqref{eq:shallowwater_entropy_flux_start} gives
+\begin{equation}\label{eq:shallowwater_divergence_coef}
   \nabla\cdot\mathbf{\consfluxletter}^\entropy
-  &= 
-    \pr{-\half\frac{\heightmomentum\cdot\heightmomentum}{\height^2}
-    + \gravity\height}
-    \divergence\mathbf{\consfluxletter}^\height
-    + \frac{\heightmomentum}{\height}\cdot
-    \pr{\divergence\mathbf{\consfluxletter}^\heightmomentum}
-    + \frac{\heightmomentum}{\height}\cdot\gravity\height\nabla\bathymetry
-  \nonumber\\
-  \nabla\cdot\mathbf{\consfluxletter}^\entropy
-  &= 
-    \pr{-\half\frac{\heightmomentum\cdot\heightmomentum}{\height^2}
+  = 
+    \pr{\frac{1}{2}\frac{\heightmomentum\cdot\heightmomentum}{\height^2}
     + \gravity\height}
     \divergence\heightmomentum
-    + \frac{\heightmomentum}{\height}\cdot
-    \pr{\frac{2\heightmomentum}{\height}\divergence\heightmomentum
-    + \pr{\gravity\height\identity
-    - \frac{\heightmomentum\otimes\heightmomentum}{\height^2}}\cdot\nabla\height}
-    + \gravity\heightmomentum\cdot\nabla\bathymetry
-  \nonumber\\\label{eq:shallowwater_divergence_coef}
-  \nabla\cdot\mathbf{\consfluxletter}^\entropy
-  &= 
-    \pr{\frac{3}{2}\frac{\heightmomentum\cdot\heightmomentum}{\height^2}
-    + \gravity\height}
-    \divergence\heightmomentum
+    + \sum\limits_d^{\ndimensions}\pr{ 
+      \frac{\heightmomentumletter_d\heightmomentum}{\height^2}}
+      \cdot\nabla\heightmomentumletter_d
     + \pr{\gravity\heightmomentum
-    - \frac{\heightmomentum\cdot(\heightmomentum\otimes\heightmomentum)}
+    - \frac{(\heightmomentum\cdot\heightmomentum)\heightmomentum}
     {\height^3}}\cdot\nabla\height
     + \gravity\heightmomentum\cdot\nabla\bathymetry
-\end{align}
+\end{equation}
 Assuming the entropy flux to be a function of $\height$, $\heightmomentum$,
 and $\bathymetry$, i.e., the entropy flux is
 $\mathbf{\consfluxletter}^\entropy(\height,\heightmomentum,\bathymetry)$,
@@ -167,8 +192,9 @@ and applying chain rule for its divergence yields
 \begin{equation}
   \nabla\cdot\mathbf{\consfluxletter}^\entropy
   = \partial_\height\mathbf{\consfluxletter}^\entropy\cdot\nabla\height
-  + \partial_\heightmomentum\mathbf{\consfluxletter}^\entropy
-  \,\divergence\heightmomentum
+  + \sum\limits_{d=1}^{\ndimensions}\partial_{\heightmomentumletter_d}
+    \mathbf{\consfluxletter}^\entropy
+  \cdot\nabla\heightmomentumletter_d
   + \partial_\bathymetry\mathbf{\consfluxletter}^\entropy\cdot\nabla\bathymetry
   \eqp
 \end{equation}
