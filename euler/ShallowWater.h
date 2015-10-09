@@ -16,6 +16,7 @@
 #include <deal.II/fe/fe_values_extractors.h>
 #include <deal.II/lac/vector.h>
 #include "ConservationLaw.h"
+#include "ShallowWaterEntropyFluxFEValuesFace.h"
 #include "ShallowWaterParameters.h"
 #include "ShallowWaterPostProcessor.h"
 #include "ShallowWaterRiemannSolver.h"
@@ -75,7 +76,10 @@ private:
     const FEValuesBase<dim> & fe_values,
     Vector<double> & divergence_entropy_flux) const override;
 
-  double compute_max_entropy_jump() const override;
+  void update_entropy_viscosities(const double & dt) override;
+
+  double compute_max_entropy_jump(const Vector<double> & solution,
+                                          const cell_iterator & cell) const;
 
   void compute_inviscid_fluxes(const std::vector<double> & height,
                                const std::vector<Tensor<1, dim>> & momentum,
@@ -128,9 +132,6 @@ private:
 
   /** \brief Bathymetry (bottom topography) function \f$b\f$ */
   std::shared_ptr<Function<dim>> bathymetry_function;
-
-  /** \brief Bathymetry (bottom topography) gradient function \f$\nabla b\f$ */
-  // std::shared_ptr<Function<dim>> bathymetry_gradient_function;
 };
 
 #include "ShallowWater.cc"

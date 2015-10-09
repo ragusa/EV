@@ -92,7 +92,6 @@ protected:
   void compute_viscous_bilinear_forms();
   void compute_viscous_fluxes();
   void add_maximum_principle_viscosity_bilinear_form(Vector<double> & solution);
-  void update_entropy_viscosities(const double & dt);
   double compute_entropy_normalization(const Vector<double> & solution) const;
   double compute_max_entropy_residual(const Vector<double> & new_solution,
                                       const Vector<double> & old_solution,
@@ -108,6 +107,7 @@ protected:
                       std::vector<unsigned int> & row_indices,
                       unsigned int & n_col);
 
+  virtual void update_entropy_viscosities(const double & dt);
   virtual double compute_max_entropy_jump(const Vector<double> & solution,
                                           const cell_iterator & cell) const;
 

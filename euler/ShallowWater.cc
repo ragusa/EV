@@ -898,6 +898,51 @@ void ShallowWater<dim>::compute_divergence_entropy_flux(
 }
 
 /**
+ * \brief Computes entropy viscosity for each cell.
+ *
+ * \param[in] dt time step size
+ */
+template <int dim>
+void ShallowWater<dim>::update_entropy_viscosities(const double & dt)
+{
+  // compute normalization constant for entropy viscosity
+  const double entropy_normalization = compute_entropy_normalization(new_solution);
+
+  // get tuning parameters
+  const double entropy_residual_coefficient = parameters.entropy_viscosity_coef;
+  const double jump_coefficient = parameters.jump_coef;
+
+  // FE values for entropy residual
+  ShallowWaterEntropyResidualFEValuesCell<dim> entropy_residual_fe_values_cell(
+    this->n_components, this->new_solution,
+  this->triangulation, this->cell_quadrature);
+  ShallowWaterEntropyResidualFEValuesFace<dim> entropy_residual_fe_values_face(
+    this->n_components, this->new_solution,
+  this->triangulation, this->face_quadrature);
+
+  // compute entropy viscosity for each cell
+  cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
+  for (; cell != endc; ++cell)
+  {
+    // compute max entropy residual on cell
+    const double max_entropy_residual = compute_max_entropy_residual(
+      new_solution, old_solution, dt, cell);
+    const double max_entropy_jump = compute_max_entropy_jump(
+      new_solution, cell);
+
+    // compute entropy viscosity
+    double aux = std::pow(cell_diameter[cell], 2) / entropy_normalization;
+    entropy_viscosity[cell] =
+      aux * (entropy_residual_coefficient * max_entropy_residual
+      + jump_coefficient * max_entropy_jump);
+
+    // advance cell iterators
+    entropy_residual_fe_values_cell.advance_cell_iterator();
+    entropy_residual_fe_values_face.advance_cell_iterator();
+  }
+}
+
+/**
  * \brief Computes the max entropy jump in a cell.
  *
  * \param[in] solution solution vector
@@ -911,6 +956,7 @@ double ShallowWater<dim>::compute_max_entropy_jump(
                                    this->face_quadrature,
                                    update_values | update_gradients |
                                      update_normal_vectors);
+/*
   FEFaceValues<dim> fe_values_face_bathymetry(
     fe_bathymetry, this->face_quadrature, update_values | update_gradients);
 
@@ -925,8 +971,9 @@ double ShallowWater<dim>::compute_max_entropy_jump(
   std::vector<Tensor<1,dim>> bathymetry_gradient_neighbor(this->n_q_points_face);
   std::vector<double> entropy_derivative_height(this->n_q_points_face);
   std::vector<Tensor<1,dim>> entropy_derivative_momentum(this->n_q_points_face);
+*/
+  std::vector<Tensor<2,dim>> entropy_flux_gradients(this->n_q_points_face);
   std::vector<Tensor<1,dim>> normal_vectors(this->n_q_points_face);
-  // Vector<double> entropy(this->n_q_points_face);
 
   double max_jump_in_cell = 0.0;
 
@@ -938,9 +985,14 @@ double ShallowWater<dim>::compute_max_entropy_jump(
     if (face->at_boundary() == false)
     {
       // reinitialize FE values
-      fe_values_face.reinit(cell, iface);
-      fe_values_face_bathymetry.reinit(cell_bathymetry, iface);
+      entropy_flux_fe_values_face.reinit(iface);
+      //fe_values_face.reinit(cell, iface);
+      //fe_values_face_bathymetry.reinit(cell_bathymetry, iface);
 
+      // get gradients
+      entropy_flux_gradients = entropy_flux_fe_values_face.get_function_gradients();
+      
+/*
       // get solution and bathymetry values
       fe_values_face[height_extractor].get_function_values(solution, height);
       fe_values_face[momentum_extractor].get_function_values(solution, momentum);
@@ -963,6 +1015,7 @@ double ShallowWater<dim>::compute_max_entropy_jump(
 
       // compute entropy at each quadrature point on face
       compute_entropy(solution, fe_values_face, entropy);
+*/
 
       // get normal vectors
       normal_vectors = fe_values_face.get_all_normal_vectors();
@@ -983,7 +1036,7 @@ double ShallowWater<dim>::compute_max_entropy_jump(
       for (unsigned int q = 0; q < n_q_points_face; ++q)
       {
         // compute difference in gradients across face
-        gradients_face[q] -= gradients_face_neighbor[q];
+        entropy_flux_gradient_jump[q] -= entropy[q];
         double jump_on_face =
           std::abs((gradients_face[q] * normal_vectors[q]) * entropy[q]);
         max_jump_on_face = std::max(max_jump_on_face, jump_on_face);
