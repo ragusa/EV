@@ -109,6 +109,10 @@ void ConservationLaw<dim>::run()
   // output grid and solution and print convergence results
   output_results(postprocessor);
 
+  // output viscosity if requested
+  //if (parameters.output_viscosity)
+//    postprocessor.output_viscosity();
+
   /*
      // output final viscosities if non-constant viscosity used
      switch (parameters.viscosity_type)
@@ -881,7 +885,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
       steady_state_error = solution_change_norm;
     else
       steady_state_error = solution_change_norm / solution_normalization;
-    std::cout << "    Steady-state error = " << "\x1b[1;36m"
+    std::cout << "    Steady-state error = " << "\x1b[1;35m"
       << steady_state_error << "\x1b[0m" << std::endl;
     if (steady_state_error < parameters.steady_state_tolerance)
     {

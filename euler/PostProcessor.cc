@@ -38,14 +38,6 @@ PostProcessor<dim>::PostProcessor(
   // create map of temporal discretization to string identifier
   std::map<typename ConservationLawParameters<dim>::TemporalDiscretization,
            std::string> temp_discretization_map = {
-    /*
-        {ConservationLawParameters<dim>::TemporalDiscretization::SS,"SS"},
-        {ConservationLawParameters<dim>::TemporalDiscretization::FE,"FE"},
-        {ConservationLawParameters<dim>::TemporalDiscretization::CN,"CN"},
-        {ConservationLawParameters<dim>::TemporalDiscretization::BE,"BE"},
-        {ConservationLawParameters<dim>::TemporalDiscretization::SSP2,"SSPRK22"},
-        {ConservationLawParameters<dim>::TemporalDiscretization::SSP3,"SSPRK33"}
-    */
     {ConservationLawParameters<dim>::TemporalDiscretization::ERK1, "ERK1"},
     {ConservationLawParameters<dim>::TemporalDiscretization::ERK2, "ERK2"},
     {ConservationLawParameters<dim>::TemporalDiscretization::ERK3, "ERK3"},
@@ -63,46 +55,6 @@ PostProcessor<dim>::PostProcessor(
   {
     timedisc_string = temp_discretization_map[parameters.time_discretization];
   }
-
-  /*
-    switch (parameters.time_discretization_option)
-    {
-      case ConservationLawParameters<dim>::TemporalDiscretization::SS :
-      {
-        timedisc_string = "SS";
-        break;
-      }
-      case ConservationLawParameters<dim>::TemporalDiscretization::FE :
-      {
-        timedisc_string = "FE";
-        break;
-      }
-      case ConservationLawParameters<dim>::TemporalDiscretization::CN :
-      {
-        timedisc_string = "CN";
-        break;
-      }
-      case ConservationLawParameters<dim>::TemporalDiscretization::BE :
-      {
-        timedisc_string = "BE";
-        break;
-      }
-      case ConservationLawParameters<dim>::TemporalDiscretization::SSP2 :
-      {
-        timedisc_string = "SSPRK22";
-        break;
-      }
-      case ConservationLawParameters<dim>::TemporalDiscretization::SSP3 :
-      {
-        timedisc_string = "SSPRK33";
-        break;
-      }
-      default :
-      {
-        ExcNotImplemented();
-      }
-    }
-  */
 
   // determine viscosity string
   std::string viscosity_string;
@@ -497,11 +449,13 @@ void PostProcessor<dim>::output_convergence_data()
   }
 }
 
-/** \brief Outputs viscosities to file.
- *  \param [in] low_order_viscosity low-order viscosity in each cell.
- *  \param [in] entropy_viscosity entropy viscosity in each cell.
- *  \param [in] high_order_viscosity high-order viscosity in each cell.
- *  \param [in] dof_handler degrees of freedom handler.
+/**
+ * \brief Outputs viscosities to file.
+ *
+ * \param[in] low_order_viscosity low-order viscosity in each cell.
+ * \param[in] entropy_viscosity entropy viscosity in each cell.
+ * \param[in] high_order_viscosity high-order viscosity in each cell.
+ * \param[in] dof_handler degrees of freedom handler.
  */
 template <int dim>
 void PostProcessor<dim>::output_viscosity(

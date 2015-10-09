@@ -79,7 +79,7 @@ do for [i=1:words(file_list)] {
       # check number of data points and do not use symbols if too many
       stats outdir.myfile using 1 noout
       n_data = STATS_records
-      print "Number of data points in ",myfile,": ",n_data
+      # print "Number of data points in ",myfile,": ",n_data
       if (n_data > 500) {
          existing_sym_list   = existing_sym_list  ." -2"
       } else {

@@ -18,7 +18,7 @@ end
 subsection refinement
    # refinementlevel:n_cells
    # 5:32, 9:512, 10:1024, 11:2048
-   set initial refinement level = 10
+   set initial refinement level = 5
    set refinement cycles = 1
    set refinement fraction = 0.3
    set coarsening fraction = 0.03
@@ -73,7 +73,7 @@ subsection output
    set output period = 0
    set output mesh = false
    set output mass matrix = false
-   set output viscosity = false
+   set output viscosity = true
    set exact solution refinement level = 7
    set save convergence results = false
 end
