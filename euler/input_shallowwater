@@ -12,13 +12,13 @@ end
 # 2 lake_at_rest
 # 3 lake_at_rest_perturbed
 subsection problem
-   set problem id = 2
+   set problem id = 0
 end
 
 subsection refinement
    # refinementlevel:n_cells
    # 5:32, 9:512, 10:1024, 11:2048
-   set initial refinement level = 8
+   set initial refinement level = 10
    set refinement cycles = 1
    set refinement fraction = 0.3
    set coarsening fraction = 0.03
@@ -36,7 +36,7 @@ end
 
 subsection artificial viscosity
    # options are <none|constant|old_first_order|max_principle|entropy>
-   set viscosity type = none
+   set viscosity type = entropy
    set constant viscosity value = 0.01
    set first order viscosity coefficient = 0.5
    set entropy viscosity coefficient = 1.0

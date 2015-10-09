@@ -50,7 +50,7 @@ private:
   /**
    * \brief Typedef for cell iterators
    */
-  using cell_iterator = typename ConservationLaw<dim>::cell_iterator;
+  using Cell = typename ConservationLaw<dim>::cell_iterator;
 
   std::vector<std::string> get_component_names() override;
 
@@ -78,8 +78,8 @@ private:
 
   void update_entropy_viscosities(const double & dt) override;
 
-  double compute_max_entropy_jump(const Vector<double> & solution,
-                                          const cell_iterator & cell) const;
+  double compute_max_entropy_jump(ShallowWaterEntropyFluxFEValuesFace<dim> & fe_values,
+                                          const Cell & cell) const;
 
   void compute_inviscid_fluxes(const std::vector<double> & height,
                                const std::vector<Tensor<1, dim>> & momentum,
@@ -97,6 +97,7 @@ private:
                         const std::vector<Tensor<1, dim>> & momentum,
                         std::vector<Tensor<1, dim>> & velocity) const;
 
+  /*
   void compute_entropy_derivative_height(
     const std::vector<double> & height,
     const std::vector<Tensor<1, dim>> & momentum,
@@ -106,6 +107,7 @@ private:
     const std::vector<double> & height,
     const std::vector<Tensor<1, dim>> & momentum,
     std::vector<Tensor<1,dim>> & entropy_derivative_momentum) const;
+  */
 
   void output_results(PostProcessor<dim> & postprocessor) const override;
 

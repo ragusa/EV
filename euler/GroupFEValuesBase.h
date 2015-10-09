@@ -22,12 +22,12 @@ using namespace dealii;
  * It is assumed that both the solution and the function use linear Langrangian
  * finite elements, i.e., FE_Q<dim> elements of degree 1.
  */
-template <int dim, typename FunctionType = double>
+template <int dim, bool is_scalar = true>
 class GroupFEValuesBase
 {
 public:
   /** \brief Typedef for cell iterators */
-  typedef typename DoFHandler<dim>::active_cell_iterator cell_iterator;
+  typedef typename DoFHandler<dim>::active_cell_iterator Cell;
 
   /**
    * \brief Typedef for function FE values extractor.
@@ -38,9 +38,15 @@ public:
    * FEValuesExtractors::Vector, respectively.
    */
   typedef
-    typename std::conditional<std::is_same<FunctionType, double>::value,
+    typename std::conditional<is_scalar,
                               FEValuesExtractors::Scalar,
                               FEValuesExtractors::Vector>::type ExtractorType;
+
+  /** \brief Typedef for function value type (scalar or vector) */
+  typedef typename std::conditional<is_scalar,double,Tensor<1,dim>>::type ValueType;
+
+  /** \brief Typedef for function gradient type (1st or 2nd-order tensor) */
+  typedef typename std::conditional<is_scalar,Tensor<1,dim>,Tensor<2,dim>>::type GradientType;
 
   GroupFEValuesBase(const unsigned int & n_components_solution,
                     const unsigned int & n_components_function,
@@ -89,7 +95,7 @@ protected:
   const unsigned int n_solution_dofs_per_cell;
 
   /** \brief Map from solution cell iterator to function cell iterator */
-  std::map<cell_iterator, cell_iterator> solution_cell_to_function_cell_map;
+  std::map<Cell,Cell> solution_cell_to_function_cell_map;
 
   /** \brief Number of DoFs for function */
   unsigned int n_dofs;

@@ -14,8 +14,8 @@
  * \param[in] solution_ solution vector
  * \param[in] aux_vector_ optional auxiliary vector
  */
-template <int dim, typename FunctionType>
-GroupFEValuesCell<dim,FunctionType>::GroupFEValuesCell(
+template <int dim, bool is_scalar>
+GroupFEValuesCell<dim, is_scalar>::GroupFEValuesCell(
   const unsigned int & n_components_solution_,
   const unsigned int & n_components_function_,
   const DoFHandler<dim> & solution_dof_handler_,
@@ -23,12 +23,12 @@ GroupFEValuesCell<dim,FunctionType>::GroupFEValuesCell(
   const QGauss<dim> & cell_quadrature_,
   const Vector<double> & solution_,
   const Vector<double> & aux_vector_)
-  : GroupFEValuesBase<dim,FunctionType>(n_components_solution_,
-                           n_components_function_,
-                           solution_dof_handler_,
-                           triangulation_,
-                           solution_,
-                           aux_vector_),
+  : GroupFEValuesBase<dim, is_scalar>(n_components_solution_,
+                                      n_components_function_,
+                                      solution_dof_handler_,
+                                      triangulation_,
+                                      solution_,
+                                      aux_vector_),
     cell_quadrature(cell_quadrature_),
     n_quadrature_points(cell_quadrature.size()),
     function_fe_values_cell(
@@ -41,8 +41,8 @@ GroupFEValuesCell<dim,FunctionType>::GroupFEValuesCell(
  *
  * \param[in] solution_cell solution cell iterator
  */
-template <int dim, typename FunctionType>
-void GroupFEValuesCell<dim,FunctionType>::reinit(const cell_iterator & solution_cell)
+template <int dim, bool is_scalar>
+void GroupFEValuesCell<dim, is_scalar>::reinit(const Cell & solution_cell)
 {
   // reinitialize function FE values with the function cell corresponding
   // to the solution cell
@@ -56,10 +56,24 @@ void GroupFEValuesCell<dim,FunctionType>::reinit(const cell_iterator & solution_
  * \param[out] function_values vector of function values at quadrature points
  *             in a cell
  */
-template <int dim, typename FunctionType>
-void GroupFEValuesCell<dim,FunctionType>::get_function_values(
-  std::vector<double> & function_values) const
+template <int dim, bool is_scalar>
+void GroupFEValuesCell<dim, is_scalar>::get_function_values(
+  std::vector<ValueType> & function_values) const
 {
   function_fe_values_cell[this->function_extractor].get_function_values(
     this->function_dof_values, function_values);
+}
+
+/**
+ * \brief Computes function gradients at quadrature points in a cell.
+ *
+ * \param[out] function_gradients vector of function gradients at quadrature
+ *             points in a cell
+ */
+template <int dim, bool is_scalar>
+void GroupFEValuesCell<dim, is_scalar>::get_function_gradients(
+  std::vector<GradientType> & function_gradients) const
+{
+  function_fe_values_cell[this->function_extractor].get_function_gradients(
+    this->function_dof_values, function_gradients);
 }

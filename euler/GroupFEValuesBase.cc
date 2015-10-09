@@ -21,8 +21,8 @@
  * \param[in] solution_ solution vector
  * \param[in] aux_vector_ optional auxiliary vector
  */
-template <int dim, typename FunctionType>
-GroupFEValuesBase<dim,FunctionType>::GroupFEValuesBase(
+template <int dim, bool is_scalar>
+GroupFEValuesBase<dim,is_scalar>::GroupFEValuesBase(
   const unsigned int & n_components_solution_,
   const unsigned int & n_components_function_,
   const DoFHandler<dim> & solution_dof_handler_,
@@ -44,7 +44,7 @@ GroupFEValuesBase<dim,FunctionType>::GroupFEValuesBase(
   n_dofs = dof_handler.n_dofs();
 
   // map solution cell iterator to function cell iterator
-  cell_iterator solution_cell = solution_dof_handler_.begin_active(),
+  Cell solution_cell = solution_dof_handler_.begin_active(),
     solution_endc = solution_dof_handler_.end(),
     function_cell = dof_handler.begin_active();
   for (; solution_cell != solution_endc; ++solution_cell, ++function_cell)
@@ -60,8 +60,8 @@ GroupFEValuesBase<dim,FunctionType>::GroupFEValuesBase(
  * This function must be called by the derived class (it is best to do so in
  * the constructor).
  */
-template <int dim, typename FunctionType>
-void GroupFEValuesBase<dim,FunctionType>::compute_function_dof_values()
+template <int dim, bool is_scalar>
+void GroupFEValuesBase<dim,is_scalar>::compute_function_dof_values()
 {
   for (unsigned int i = 0; i < n_dofs; ++i)
   {
@@ -82,8 +82,8 @@ void GroupFEValuesBase<dim,FunctionType>::compute_function_dof_values()
  *
  * \return function values at DoF support points
  */
-template <int dim, typename FunctionType>
-Vector<double> GroupFEValuesBase<dim,FunctionType>::get_function_dof_values() const
+template <int dim, bool is_scalar>
+Vector<double> GroupFEValuesBase<dim,is_scalar>::get_function_dof_values() const
 {
   return function_dof_values;
 }

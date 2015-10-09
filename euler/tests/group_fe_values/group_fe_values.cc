@@ -66,6 +66,40 @@ private:
   }
 };
 
+// vector function FE values class
+template <int dim>
+class VectorFunctionFEValuesCell : public GroupFEValuesCell<dim,false>
+{
+public:
+  VectorFunctionFEValuesCell(const unsigned int & n_components_solution,
+                             const DoFHandler<dim> & solution_dof_handler,
+                             const Triangulation<dim> & triangulation,
+                             const QGauss<dim> & cell_quadrature,
+                             const Vector<double> & solution,
+                             const Vector<double> & aux_vector = Vector<double>())
+    : GroupFEValuesCell<dim,false>(n_components_solution,
+                             dim,
+                             solution_dof_handler,
+                             triangulation,
+                             cell_quadrature,
+                             solution,
+                             aux_vector)
+  {
+    this->compute_function_dof_values();
+  }
+
+private:
+  std::vector<double> function(const std::vector<double> & solution,
+                               const double & = 0.0) const override
+  {
+    std::vector<double> function_value(this->n_components_function, 1.0);
+    for (unsigned int i = 0; i < solution.size(); ++i)
+      for (unsigned int j = 0; j < this->n_components_function; ++j)
+        function_value[j] *= solution[i]*(j+1.0);
+    return function_value;
+  }
+};
+
 // function to print the function evaluated at the DoF support points
 template <int dim>
 void print_function_at_dof_points(const unsigned int & n_components,
@@ -195,55 +229,17 @@ void print_function_at_quadrature_points(
   }
 }
 
-// main test function
+// function to get a vector of DoF support points
 template <int dim>
-void test()
+std::vector<Point<dim>> get_support_points(
+  const DoFHandler<dim> & dof_handler,
+  const FESystem<dim> & fe,
+  const unsigned int & dofs_per_cell,
+  const unsigned int & n_dofs_per_component)
 {
-  // create triangulation
-  Triangulation<dim> triangulation;
-  GridGenerator::hyper_cube(triangulation, 0.0, 1.0);
-  const unsigned int refinement_level = 3;
-  triangulation.refine_global(refinement_level);
-
-  // create finite elements
+  // hard-code FE degree and number of DoFs per component per cell
   const unsigned int degree = 1;
-  const unsigned int n_components = dim + 1;
-  const FESystem<dim> fe(FE_Q<dim>(degree), n_components);
-  const unsigned int dofs_per_cell = fe.dofs_per_cell;
-  const unsigned int dofs_per_cell_per_component = dofs_per_cell / n_components;
-
-  // create DoF handler
-  DoFHandler<dim> dof_handler(triangulation);
-  dof_handler.distribute_dofs(fe);
-  const unsigned int n_dofs = dof_handler.n_dofs();
-  const unsigned int n_dofs_per_component = n_dofs / n_components;
-
-  // create function for solution initialization
-  std::map<std::string, double> constants;
-  std::vector<std::string> solution_strings(n_components);
-  solution_strings[0] = "x";
-  for (unsigned int d = 0; d < dim; ++d)
-    solution_strings[d + 1] = "x^" + std::to_string(d + 2);
-  FunctionParser<dim> solution_function(n_components);
-  solution_function.initialize(FunctionParser<dim>::default_variable_names(),
-                               solution_strings,
-                               constants,
-                               false);
-
-  // create and initialize solution vector
-  Vector<double> solution(n_dofs);
-  VectorTools::interpolate(dof_handler, solution_function, solution);
-
-  // create quadrature
-  const unsigned int n_q_points_per_dim = 3;
-  const QGauss<dim> cell_quadrature(n_q_points_per_dim);
-  const unsigned int n_q_points_cell = cell_quadrature.size();
-
-  // initialize group FE values
-  ScalarFunctionFEValuesCell<dim> scalar_function_fe_values(
-    n_components, dof_handler, triangulation, cell_quadrature, solution);
-  Vector<double> function_dofs =
-    scalar_function_fe_values.get_function_dof_values();
+  const unsigned int dofs_per_cell_per_component = std::pow(2, dim);
 
   // get mapping of DoFs to support points
   const MappingQ1<dim> mapping_q1;
@@ -300,9 +296,70 @@ void test()
     unique_real_support_points.size() == n_dofs_per_component,
     ExcSizeMismatch(unique_real_support_points.size(), n_dofs_per_component));
 
+  return unique_real_support_points;
+}
+
+// main test function
+template <int dim>
+void test()
+{
+  // create triangulation
+  Triangulation<dim> triangulation;
+  GridGenerator::hyper_cube(triangulation, 0.0, 1.0);
+  const unsigned int refinement_level = 3;
+  triangulation.refine_global(refinement_level);
+
+  // create finite elements
+  const unsigned int degree = 1;
+  const unsigned int n_components = dim + 1;
+  const FESystem<dim> fe(FE_Q<dim>(degree), n_components);
+  const unsigned int dofs_per_cell = fe.dofs_per_cell;
+
+  // create DoF handler
+  DoFHandler<dim> dof_handler(triangulation);
+  dof_handler.distribute_dofs(fe);
+  const unsigned int n_dofs = dof_handler.n_dofs();
+  const unsigned int n_dofs_per_component = n_dofs / n_components;
+
+  // create function for solution initialization
+  std::map<std::string, double> constants;
+  std::vector<std::string> solution_strings(n_components);
+  solution_strings[0] = "x";
+  for (unsigned int d = 0; d < dim; ++d)
+    solution_strings[d + 1] = "x^" + std::to_string(d + 2);
+  FunctionParser<dim> solution_function(n_components);
+  solution_function.initialize(FunctionParser<dim>::default_variable_names(),
+                               solution_strings,
+                               constants,
+                               false);
+
+  // create and initialize solution vector
+  Vector<double> solution(n_dofs);
+  VectorTools::interpolate(dof_handler, solution_function, solution);
+
+  // create quadrature
+  const unsigned int n_q_points_per_dim = 3;
+  const QGauss<dim> cell_quadrature(n_q_points_per_dim);
+  const unsigned int n_q_points_cell = cell_quadrature.size();
+
+  // get a vector of the DoF support points
+  std::vector<Point<dim>> unique_real_support_points =
+    get_support_points<dim>(dof_handler, fe, dofs_per_cell, n_dofs_per_component);
+
+  // Scalar function FE values
+  //============================================================================
+
+  // create scalar function FE values
+  ScalarFunctionFEValuesCell<dim> scalar_function_fe_values(
+    n_components, dof_handler, triangulation, cell_quadrature, solution);
+
+  // get scalar function DoFs
+  Vector<double> scalar_function_dofs =
+    scalar_function_fe_values.get_function_dof_values();
+
   // print table of function at DoF support points
   print_function_at_dof_points<dim>(
-    n_components, unique_real_support_points, solution_function, function_dofs);
+    n_components, unique_real_support_points, solution_function, scalar_function_dofs);
 
   // print table of function at quadrature points
   print_function_at_quadrature_points<dim>(cell_quadrature,
@@ -310,59 +367,32 @@ void test()
                                            n_q_points_cell,
                                            dof_handler,
                                            scalar_function_fe_values,
-                                           function_dofs);
-  //---------------------------------------------------------------------------
-  /*
-    // create FE values
-    FE_Q<dim> fe_scalar(degree);
-    FEValues<dim> fe_values_scalar(fe_scalar, cell_quadrature, update_values);
-    DoFHandler<dim> dof_handler_scalar(triangulation);
-    dof_handler_scalar.distribute_dofs(fe_scalar);
-    typename DoFHandler<dim>::active_cell_iterator cell_scalar =
-    dof_handler_scalar
-                                                                   .begin_active(),
-                                                   endc_scalar =
-                                                     dof_handler_scalar.end();
+                                           scalar_function_dofs);
 
-    // print header
-    std::cout << std::endl << "Quadrature points:" << std::endl;
-    printf("Cell");
-    for (unsigned int q = 0; q < n_q_points_cell; ++q)
-      printf("  f_correct[%i]  f_actual[%i]", q, q);
-    printf("\n");
+  // Vector function FE values
+  //============================================================================
 
-    unsigned int i_cell = 0;
-    for (cell = dof_handler.begin_active(); cell != endc; ++cell, ++cell_scalar)
-    {
-      // reinitialize FE values
-      fe_values_scalar.reinit(cell_scalar);
-      scalar_function_fe_values.reinit(cell);
+  // create vector function FE values
+  VectorFunctionFEValuesCell<dim> vector_function_fe_values(
+    n_components, dof_handler, triangulation, cell_quadrature, solution);
 
-      // get DoF indices
-      std::vector<unsigned int> local_dof_indices(dofs_per_cell_per_component);
-      cell_scalar->get_dof_indices(local_dof_indices);
+  // get vector function DoFs
+  Vector<double> vector_function_dofs =
+    vector_function_fe_values.get_function_dof_values();
 
-      // compute the expected function values at quadrature points
-      std::vector<double> function_values_correct(n_q_points_cell, 0.0);
-      for (unsigned int q = 0; q < n_q_points_cell; ++q)
-        for (unsigned int i = 0; i < dofs_per_cell_per_component; ++i)
-          function_values_correct[q] += function_dofs[local_dof_indices[i]] *
-            fe_values_scalar.shape_value(i, q);
+/*
+  // print table of function at DoF support points
+  print_function_at_dof_points<dim>(
+    n_components, unique_real_support_points, solution_function, vector_function_dofs);
 
-      // get the actual function values at quadrature points
-      std::vector<double> function_values(n_q_points_cell);
-      scalar_function_fe_values.get_function_values(function_values);
-
-      // print values
-      printf("%4i", i_cell);
-      for (unsigned int q = 0; q < n_q_points_cell; ++q)
-        printf("%14.3e  %11.3e", function_values_correct[q], function_values[q]);
-      std::cout << std::endl;
-
-      // increment cell index
-      i_cell++;
-    }
-  */
+  // print table of function at quadrature points
+  print_function_at_quadrature_points<dim>(cell_quadrature,
+                                           triangulation,
+                                           n_q_points_cell,
+                                           dof_handler,
+                                           vector_function_fe_values,
+                                           vector_function_dofs);
+*/
 }
 
 int main(int, char **)
