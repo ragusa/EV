@@ -28,6 +28,12 @@ template <int dim>
 class PostProcessor
 {
 public:
+  /** \brief Typedef for cell iterators */
+  typedef typename DoFHandler<dim>::active_cell_iterator Cell;
+
+  /** \brief Typedef for cell iterator map to double */
+  typedef std::map<Cell, double> CellMap;
+
   PostProcessor(
     const ConservationLawParameters<dim> & parameters,
     const double & end_time,
@@ -67,12 +73,14 @@ public:
 
   void set_cycle(const unsigned int & cycle);
 
-private:
-
-  void output_viscosity(const Vector<double> & low_order_viscosity,
-                        const Vector<double> & entropy_viscosity,
-                        const Vector<double> & high_order_viscosity,
+  /*
+  void output_viscosity(const CellMap & low_order_viscosity_map,
+                        const CellMap & entropy_viscosity_map,
+                        const CellMap & high_order_viscosity_map,
                         const DoFHandler<dim> & dof_handler) const;
+  */
+
+private:
 
   void output_exact_solution();
 
@@ -113,6 +121,8 @@ private:
   void output_grid(const Triangulation<dim> & triangulation) const;
 
   void create_directory(const std::string & dir) const;
+
+  //void cell_map_to_cell_vector(const CellMap & cell_map, Vector<double> & cell_vector) const;
 
   const ConservationLawParameters<dim> parameters;
 

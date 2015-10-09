@@ -110,8 +110,11 @@ void ConservationLaw<dim>::run()
   output_results(postprocessor);
 
   // output viscosity if requested
-  //if (parameters.output_viscosity)
-//    postprocessor.output_viscosity();
+  /*
+  if (parameters.output_viscosity)
+    postprocessor.output_viscosity(first_order_viscosity,
+      entropy_viscosity, viscosity, dof_handler);
+  */
 
   /*
      // output final viscosities if non-constant viscosity used
@@ -1447,7 +1450,8 @@ double ConservationLaw<dim>::compute_max_entropy_jump(
 
   std::vector<Tensor<1,dim>> gradients_face(n_q_points_face);
   std::vector<Tensor<1,dim>> gradients_face_neighbor(n_q_points_face);
-  std::vector<Tensor<1,dim>> normal_vectors(n_q_points_face);
+  //std::vector<Tensor<1,dim>> normal_vectors(n_q_points_face);
+  std::vector<Point<dim>> normal_vectors(n_q_points_face);
   Vector<double> entropy(n_q_points_face);
 
   double max_jump_in_cell = 0.0;
@@ -1467,7 +1471,8 @@ double ConservationLaw<dim>::compute_max_entropy_jump(
       compute_entropy(solution, fe_values_face, entropy);
 
       // get normal vectors
-      normal_vectors = fe_values_face.get_all_normal_vectors();
+      //normal_vectors = fe_values_face.get_all_normal_vectors();
+      normal_vectors = fe_values_face.get_normal_vectors();
 
       // get iterator to neighboring cell and face index of this face
       Assert(cell->neighbor(iface).state() == IteratorState::valid,

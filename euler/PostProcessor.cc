@@ -457,11 +457,12 @@ void PostProcessor<dim>::output_convergence_data()
  * \param[in] high_order_viscosity high-order viscosity in each cell.
  * \param[in] dof_handler degrees of freedom handler.
  */
+/*
 template <int dim>
 void PostProcessor<dim>::output_viscosity(
-  const Vector<double> & low_order_viscosity,
-  const Vector<double> & entropy_viscosity,
-  const Vector<double> & high_order_viscosity,
+  const CellMap & low_order_viscosity_map,
+  const CellMap & entropy_viscosity_map,
+  const CellMap & high_order_viscosity_map,
   const DoFHandler<dim> & dof_handler) const
 {
   // create output directory if it doesn't exist
@@ -473,10 +474,16 @@ void PostProcessor<dim>::output_viscosity(
   // add viscosities to data out object
   DataOut<dim> visc_out;
   visc_out.attach_dof_handler(dof_handler);
+
+  // add data vectors for each viscosity type
+  Vector<double> low_order_viscosity;
+  cell_map_to_cell_vector(low_order_viscosity_map, low_order_viscosity);
   visc_out.add_data_vector(
     low_order_viscosity, "Low_Order_Viscosity", DataOut<dim>::type_cell_data);
+
   visc_out.add_data_vector(
     entropy_viscosity, "Entropy_Viscosity", DataOut<dim>::type_cell_data);
+
   visc_out.add_data_vector(
     high_order_viscosity, "High_Order_Viscosity", DataOut<dim>::type_cell_data);
 
@@ -499,6 +506,7 @@ void PostProcessor<dim>::output_viscosity(
   else
     visc_out.write_vtk(viscosity_outstream);
 }
+*/
 
 /**
  * \brief evaluate error between numerical and exact solution
@@ -631,6 +639,30 @@ void PostProcessor<dim>::create_directory(const std::string & directory) const
     make_status = 0;
   Assert(make_status == 0, ExcInternalError());
 }
+
+/**
+ * \brief Converts a map of cell-iterators-to-values to a vector of values
+ *        for each cell.
+ *
+ * \param[in] cell_map map of cell iterators to values for each cell
+ * \param[out] cell_vector vector of values for each cell
+ */
+/*
+template <int dim>
+void PostProcessor<dim>::cell_map_to_cell_vector(const CellMap & cell_map,
+ Vector<double> & cell_vector) const
+{
+  // resize vector
+  cell_vector.reinit(cell_map.size());
+
+  // loop over keys in cell map to create vector
+  typename CellMap::iterator it;
+  typename CellMap::iterator it_end = cell_map.end();
+  unsigned int i;
+  for (it = cell_map.begin(), i = 0; it != it_end; ++it, ++i)
+    cell_vector[i] = it->second;
+}
+*/
 
 /**
  * \brief Sets the current cycle and flags it if it is the last.

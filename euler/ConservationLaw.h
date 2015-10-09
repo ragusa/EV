@@ -62,14 +62,10 @@ public:
   DeclException0(ExcNaNEncountered);
 
 protected:
-  /**
-   * \brief Typedef for cell iterators
-   */
+  /** \brief Typedef for cell iterators */
   typedef typename DoFHandler<dim>::active_cell_iterator cell_iterator;
 
-  /**
-   * \brief Typedef for cell iterator map to double
-   */
+  /** \brief Typedef for cell iterator map to double */
   typedef std::map<cell_iterator, double> cell_map;
 
   void initialize_system();
