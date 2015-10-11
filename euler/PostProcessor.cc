@@ -45,7 +45,6 @@ PostProcessor<dim>::PostProcessor(
     {ConservationLawParameters<dim>::TemporalDiscretization::SDIRK22, "SDIRK22"}};
 
   // determine time discretization string
-  std::string timedisc_string;
   if (temp_discretization_map.find(parameters.time_discretization) ==
       temp_discretization_map.end())
   {
@@ -450,19 +449,16 @@ void PostProcessor<dim>::output_convergence_data()
 }
 
 /**
- * \brief Outputs viscosities to file.
+ * \brief Outputs a cell map to file.
  *
- * \param[in] low_order_viscosity low-order viscosity in each cell.
- * \param[in] entropy_viscosity entropy viscosity in each cell.
- * \param[in] high_order_viscosity high-order viscosity in each cell.
- * \param[in] dof_handler degrees of freedom handler.
+ * \param[in] cell_map map of cell to value in cell
+ * \param[in] quantity_string string for naming the data vector and output file
+ * \param[in] dof_handler degrees of freedom handler
  */
-/*
 template <int dim>
-void PostProcessor<dim>::output_viscosity(
-  const CellMap & low_order_viscosity_map,
-  const CellMap & entropy_viscosity_map,
-  const CellMap & high_order_viscosity_map,
+void PostProcessor<dim>::output_cell_map(
+  const CellMap & cell_map,
+  const std::string & quantity_string,
   const DoFHandler<dim> & dof_handler) const
 {
   // create output directory if it doesn't exist
@@ -471,21 +467,19 @@ void PostProcessor<dim>::output_viscosity(
   // create output subdirectory if it doesn't exist
   create_directory(output_dir);
 
-  // add viscosities to data out object
-  DataOut<dim> visc_out;
-  visc_out.attach_dof_handler(dof_handler);
+  // create data vector from map
+  Vector<double> cell_vector(cell_map.size());
+  typename CellMap::const_iterator it;
+  typename CellMap::const_iterator it_end = cell_map.end();
+  unsigned int i;
+  for (it = cell_map.begin(), i = 0; it != it_end; ++it, ++i)
+    cell_vector[i] = it->second;
 
-  // add data vectors for each viscosity type
-  Vector<double> low_order_viscosity;
-  cell_map_to_cell_vector(low_order_viscosity_map, low_order_viscosity);
-  visc_out.add_data_vector(
-    low_order_viscosity, "Low_Order_Viscosity", DataOut<dim>::type_cell_data);
-
-  visc_out.add_data_vector(
-    entropy_viscosity, "Entropy_Viscosity", DataOut<dim>::type_cell_data);
-
-  visc_out.add_data_vector(
-    high_order_viscosity, "High_Order_Viscosity", DataOut<dim>::type_cell_data);
+  // add to data out object
+  DataOut<dim> data_out;
+  data_out.attach_dof_handler(dof_handler);
+  data_out.add_data_vector(
+    cell_vector, quantity_string, DataOut<dim>::type_cell_data);
 
   // determine output file extension
   std::string filename_extension;
@@ -495,18 +489,17 @@ void PostProcessor<dim>::output_viscosity(
     filename_extension = ".vtk";
 
   // create output filestream
-  std::string viscosity_filename =
-    output_dir + "viscosity" + appendage_string + filename_extension;
-  std::ofstream viscosity_outstream(viscosity_filename.c_str());
+  std::string filename =
+    output_dir + quantity_string + "_" + timedisc_string + filename_extension;
+  std::ofstream out_stream(filename.c_str());
 
   // build patches and write to file
-  visc_out.build_patches();
+  data_out.build_patches();
   if (dim == 1)
-    visc_out.write_gnuplot(viscosity_outstream);
+    data_out.write_gnuplot(out_stream);
   else
-    visc_out.write_vtk(viscosity_outstream);
+    data_out.write_vtk(out_stream);
 }
-*/
 
 /**
  * \brief evaluate error between numerical and exact solution
@@ -639,30 +632,6 @@ void PostProcessor<dim>::create_directory(const std::string & directory) const
     make_status = 0;
   Assert(make_status == 0, ExcInternalError());
 }
-
-/**
- * \brief Converts a map of cell-iterators-to-values to a vector of values
- *        for each cell.
- *
- * \param[in] cell_map map of cell iterators to values for each cell
- * \param[out] cell_vector vector of values for each cell
- */
-/*
-template <int dim>
-void PostProcessor<dim>::cell_map_to_cell_vector(const CellMap & cell_map,
- Vector<double> & cell_vector) const
-{
-  // resize vector
-  cell_vector.reinit(cell_map.size());
-
-  // loop over keys in cell map to create vector
-  typename CellMap::iterator it;
-  typename CellMap::iterator it_end = cell_map.end();
-  unsigned int i;
-  for (it = cell_map.begin(), i = 0; it != it_end; ++it, ++i)
-    cell_vector[i] = it->second;
-}
-*/
 
 /**
  * \brief Sets the current cycle and flags it if it is the last.

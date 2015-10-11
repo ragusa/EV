@@ -90,11 +90,5 @@ void GroupFEValuesFace<dim, is_scalar>::get_function_gradients(
 template <int dim, bool is_scalar>
 std::vector<Tensor<1,dim>> GroupFEValuesFace<dim, is_scalar>::get_normal_vectors() const
 {
-  //return function_fe_values_face.get_all_normal_vectors();
-  std::vector<Point<dim>> normal_vectors_points = function_fe_values_face.get_normal_vectors();
-  std::vector<Tensor<1,dim>> normal_vectors(n_quadrature_points);
-  for (unsigned int q = 0; q < n_quadrature_points; ++q)
-    normal_vectors[q] = normal_vectors_points[q];
-
-  return normal_vectors;
+  return function_fe_values_face.get_all_normal_vectors();
 }

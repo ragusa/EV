@@ -47,9 +47,7 @@ public:
   ShallowWater(const ShallowWaterParameters<dim> & params);
 
 private:
-  /**
-   * \brief Typedef for cell iterators
-   */
+  /** \brief Typedef for cell iterators */
   using Cell = typename ConservationLaw<dim>::cell_iterator;
 
   std::vector<std::string> get_component_names() override;
@@ -78,6 +76,8 @@ private:
 
   void update_entropy_viscosities(const double & dt) override;
 
+  // eliminate virtual overload warning
+  using ConservationLaw<dim>::compute_max_entropy_jump;
   double compute_max_entropy_jump(ShallowWaterEntropyFluxFEValuesFace<dim> & fe_values,
                                           const Cell & cell) const;
 
@@ -96,18 +96,6 @@ private:
   void compute_velocity(const std::vector<double> & height,
                         const std::vector<Tensor<1, dim>> & momentum,
                         std::vector<Tensor<1, dim>> & velocity) const;
-
-  /*
-  void compute_entropy_derivative_height(
-    const std::vector<double> & height,
-    const std::vector<Tensor<1, dim>> & momentum,
-    std::vector<double> & entropy_derivative_height) const;
-
-  void compute_entropy_derivative_momentum(
-    const std::vector<double> & height,
-    const std::vector<Tensor<1, dim>> & momentum,
-    std::vector<Tensor<1,dim>> & entropy_derivative_momentum) const;
-  */
 
   void output_results(PostProcessor<dim> & postprocessor) const override;
 

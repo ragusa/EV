@@ -61,7 +61,7 @@ void ConservationLaw<dim>::run()
   for (unsigned int cycle = 0; cycle < parameters.n_refinement_cycles; ++cycle)
   {
     // set cycle for post-processor
-    if (cycle == parameters.n_refinement_cycles-1)
+    if (cycle == parameters.n_refinement_cycles - 1)
       postprocessor.set_cycle(cycle);
 
     // refine mesh if not the first cycle
@@ -73,7 +73,7 @@ void ConservationLaw<dim>::run()
 
     // print information
     std::cout << std::endl
-              << "Cycle " << cycle << " of " << parameters.n_refinement_cycles-1
+              << "Cycle " << cycle << " of " << parameters.n_refinement_cycles - 1
               << ":" << std::endl;
     std::cout << "  Number of active cells: " << triangulation.n_active_cells()
               << std::endl;
@@ -110,38 +110,36 @@ void ConservationLaw<dim>::run()
   output_results(postprocessor);
 
   // output viscosity if requested
-  /*
   if (parameters.output_viscosity)
-    postprocessor.output_viscosity(first_order_viscosity,
-      entropy_viscosity, viscosity, dof_handler);
-  */
-
-  /*
-     // output final viscosities if non-constant viscosity used
-     switch (parameters.viscosity_type)
-     {
-        case ConservationLawParameters<dim>::none:
-           break;
-        case ConservationLawParameters<dim>::constant:
-           break;
-        case ConservationLawParameters<dim>::old_first_order:
-           output_map(first_order_viscosity_cell_q, "first_order_viscosity");
-           break;
-        case ConservationLawParameters<dim>::max_principle:
-           output_map(first_order_viscosity_cell_q, "first_order_viscosity");
-           break;
-        case ConservationLawParameters<dim>::entropy:
-           output_map(first_order_viscosity_cell_q, "first_order_viscosity");
-           output_map(entropy_viscosity_cell_q,     "entropy_viscosity");
-           output_map(viscosity_cell_q,             "viscosity");
-           output_map(entropy_viscosity_with_jumps_cell_q,
-     "entropy_viscosity_with_jumps");
-           break;
-        default:
-           Assert(false,ExcNotImplemented());
-           break;
-     }
-  */
+  {
+    // output final viscosities if non-constant viscosity used
+    switch (parameters.viscosity_type)
+    {
+      case ConservationLawParameters<dim>::none:
+        break;
+      case ConservationLawParameters<dim>::constant:
+        break;
+      case ConservationLawParameters<dim>::old_first_order:
+        postprocessor.output_cell_map(
+          first_order_viscosity, "firstorderviscosity", dof_handler);
+        break;
+      case ConservationLawParameters<dim>::max_principle:
+        postprocessor.output_cell_map(
+          first_order_viscosity, "loworderviscosity", dof_handler);
+        break;
+      case ConservationLawParameters<dim>::entropy:
+        postprocessor.output_cell_map(
+          first_order_viscosity, "firstorderviscosity", dof_handler);
+        postprocessor.output_cell_map(
+          entropy_viscosity, "entropyviscosity", dof_handler);
+        postprocessor.output_cell_map(
+          viscosity, "highorderviscosity", dof_handler);
+        break;
+      default:
+        Assert(false, ExcNotImplemented());
+        break;
+    }
+  }
 }
 
 /**
@@ -463,7 +461,8 @@ void ConservationLaw<dim>::setup_system()
   min_values.reinit(n_dofs);
   estimated_error_per_cell.reinit(triangulation.n_active_cells());
 
-  // allocate memory for steady-state residual evaluations if Runge-Kutta is used
+  // allocate memory for steady-state residual evaluations if Runge-Kutta is
+  // used
   if (parameters.temporal_integrator ==
       ConservationLawParameters<dim>::runge_kutta)
     for (int i = 0; i < rk.s; ++i)
@@ -624,9 +623,11 @@ void ConservationLaw<dim>::output_map(
 
 /** \brief Outputs a mapped quantity at all cells, not all quadrature points
  * within cells
- *  \param map map between cell iterator and vector of values at quadrature points
+ *  \param map map between cell iterator and vector of values at quadrature
+ * points
  * within cell.
- *  \param output_filename_base string which forms the base (without extension) of
+ *  \param output_filename_base string which forms the base (without extension)
+ * of
  * the output file.
  */
 /*
@@ -723,8 +724,8 @@ void ConservationLaw<dim>::solve_runge_kutta()
       in_transient = false;
     }
 
-    std::cout << "  time step " << n << ": t = " << "\x1b[1;34m" << old_time + dt
-      << "\x1b[0m" << std::endl;
+    std::cout << "  time step " << n << ": t = "
+              << "\x1b[1;34m" << old_time + dt << "\x1b[0m" << std::endl;
 
     update_viscosities(dt);
 
@@ -775,7 +776,8 @@ void ConservationLaw<dim>::solve_runge_kutta()
                     // compute initial norm of transient residual - used in
                     // convergence tolerance
                     double residual_norm = system_rhs.l2_norm();
-                    // compute nonlinear tolerance based on provided ATOL and RTOL
+                    // compute nonlinear tolerance based on provided ATOL and
+           RTOL
                     double nonlinear_tolerance = parameters.nonlinear_atol +
                        parameters.nonlinear_rtol * residual_norm;
                     // initialize convergence flag
@@ -785,7 +787,8 @@ void ConservationLaw<dim>::solve_runge_kutta()
                       iteration < parameters.max_nonlinear_iterations;
            ++iteration)
                     {
-                       // compute steady-state Jacobian and store in system_matrix
+                       // compute steady-state Jacobian and store in
+           system_matrix
                        compute_ss_jacobian();
                        // compute transient Jacobian and store in system_matrix
                        system_matrix *= rk.a[i][i]*dt;
@@ -837,8 +840,10 @@ void ConservationLaw<dim>::solve_runge_kutta()
      *
      * M*y^{n+1} = M*y^n + dt*sum_{i=1}^s(b_i*f_i)
      */
-    // if the next time step solution was already computed in the last stage, then
-    // there is no need to perform the linear combination of f's. Plus, since f[0]
+    // if the next time step solution was already computed in the last stage,
+    // then
+    // there is no need to perform the linear combination of f's. Plus, since
+    // f[0]
     // is always computed from the previous time step solution, re-use the end f
     // as f[0] for the next time step
     if (rk.solution_computed_in_last_stage)
@@ -888,13 +893,14 @@ void ConservationLaw<dim>::solve_runge_kutta()
       steady_state_error = solution_change_norm;
     else
       steady_state_error = solution_change_norm / solution_normalization;
-    std::cout << "    Steady-state error = " << "\x1b[1;35m"
-      << steady_state_error << "\x1b[0m" << std::endl;
+    std::cout << "    Steady-state error = "
+              << "\x1b[1;35m" << steady_state_error << "\x1b[0m" << std::endl;
     if (steady_state_error < parameters.steady_state_tolerance)
     {
       in_transient = false;
-      std::cout << "\x1b[1;32m" << "  Converged to steady-state." << "\x1b[0m"
-        << std::endl;
+      std::cout << "\x1b[1;32m"
+                << "  Converged to steady-state."
+                << "\x1b[0m" << std::endl;
     }
 
     // check that DMP is satisfied at all time steps
@@ -970,7 +976,8 @@ void ConservationLaw<dim>::add_maximum_principle_viscosity_bilinear_form(
   FEValues<dim> fe_values(
     fe, cell_quadrature, update_values | update_gradients | update_JxW_values);
 
-  // allocate memory needed for cell residual and aggregation into global residual
+  // allocate memory needed for cell residual and aggregation into global
+  // residual
   Vector<double> cell_residual(dofs_per_cell);
   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
 
@@ -1107,8 +1114,8 @@ void ConservationLaw<dim>::update_viscosities(const double & dt)
 
       cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
       for (; cell != endc; ++cell)
-        viscosity[cell] = std::min(first_order_viscosity[cell], 
-          entropy_viscosity[cell]);
+        viscosity[cell] =
+          std::min(first_order_viscosity[cell], entropy_viscosity[cell]);
       break;
     }
     default:
@@ -1169,12 +1176,11 @@ void ConservationLaw<dim>::update_max_principle_viscosity()
       {
         if (i != j)
         {
-          first_order_viscosity[cell] =
-            std::max(first_order_viscosity[cell],
-                     std::abs(viscous_fluxes(local_dof_indices[i],
-                                             local_dof_indices[j])) /
-                       (-viscous_bilinear_forms(local_dof_indices[i],
-                                                local_dof_indices[j])));
+          first_order_viscosity[cell] = std::max(
+            first_order_viscosity[cell],
+            std::abs(viscous_fluxes(local_dof_indices[i], local_dof_indices[j])) /
+              (-viscous_bilinear_forms(local_dof_indices[i],
+                                       local_dof_indices[j])));
         }
       }
     }
@@ -1187,7 +1193,8 @@ void ConservationLaw<dim>::update_max_principle_viscosity()
  *         Each element of the resulting matrix, \f$V_{i,j}\f$ is computed as
  *         follows:
  *         \f[
- *            V_{i,j} = \int_{S_{ij}}(\mathbf{f}'(u)\cdot\nabla\varphi_j)\varphi_i
+ *            V_{i,j} =
+ *\int_{S_{ij}}(\mathbf{f}'(u)\cdot\nabla\varphi_j)\varphi_i
  * d\mathbf{x}
  *         \f]
  */
@@ -1289,7 +1296,8 @@ template <int dim>
 void ConservationLaw<dim>::update_entropy_viscosities(const double & dt)
 {
   // compute normalization constant for entropy viscosity
-  const double entropy_normalization = compute_entropy_normalization(new_solution);
+  const double entropy_normalization =
+    compute_entropy_normalization(new_solution);
 
   // get tuning parameters
   const double entropy_residual_coefficient = parameters.entropy_viscosity_coef;
@@ -1300,16 +1308,15 @@ void ConservationLaw<dim>::update_entropy_viscosities(const double & dt)
   for (; cell != endc; ++cell)
   {
     // compute max entropy residual on cell
-    const double max_entropy_residual = compute_max_entropy_residual(
-      new_solution, old_solution, dt, cell);
-    const double max_entropy_jump = compute_max_entropy_jump(
-      new_solution, cell);
+    const double max_entropy_residual =
+      compute_max_entropy_residual(new_solution, old_solution, dt, cell);
+    const double max_entropy_jump = compute_max_entropy_jump(new_solution, cell);
 
     // compute entropy viscosity
     double aux = std::pow(cell_diameter[cell], 2) / entropy_normalization;
     entropy_viscosity[cell] =
-      aux * (entropy_residual_coefficient * max_entropy_residual
-      + jump_coefficient * max_entropy_jump);
+      aux * (entropy_residual_coefficient * max_entropy_residual +
+             jump_coefficient * max_entropy_jump);
   }
 }
 
@@ -1322,7 +1329,7 @@ void ConservationLaw<dim>::update_entropy_viscosities(const double & dt)
  *
  * \return normalization constant for entropy viscosity
  */
-template<int dim>
+template <int dim>
 double ConservationLaw<dim>::compute_entropy_normalization(
   const Vector<double> & solution) const
 {
@@ -1371,8 +1378,8 @@ double ConservationLaw<dim>::compute_entropy_normalization(
     for (unsigned int q = 0; q < n_q_points_cell; ++q)
     {
       // update max deviation for the normalization constant
-      normalization_constant = std::max(normalization_constant,
-        std::abs(entropy[q] - domain_averaged_entropy));
+      normalization_constant = std::max(
+        normalization_constant, std::abs(entropy[q] - domain_averaged_entropy));
     }
   }
 
@@ -1401,8 +1408,7 @@ double ConservationLaw<dim>::compute_max_entropy_residual(
   const cell_iterator & cell) const
 {
   // FE values
-  FEValues<dim> fe_values(
-    fe, cell_quadrature, update_values | update_gradients);
+  FEValues<dim> fe_values(fe, cell_quadrature, update_values | update_gradients);
   fe_values.reinit(cell);
 
   Vector<double> entropy_new(n_q_points_cell);
@@ -1422,8 +1428,7 @@ double ConservationLaw<dim>::compute_max_entropy_residual(
   {
     // compute entropy residual
     double dsdt = (entropy_new[q] - entropy_old[q]) / dt;
-    entropy_residual[q] =
-      std::abs(dsdt + divergence_entropy_flux[q]);
+    entropy_residual[q] = std::abs(dsdt + divergence_entropy_flux[q]);
 
     // update maximum entropy residual
     max_entropy_residual = std::max(max_entropy_residual, entropy_residual[q]);
@@ -1439,19 +1444,17 @@ double ConservationLaw<dim>::compute_max_entropy_residual(
  * \param[in] cell cell iterator
  */
 template <int dim>
-double ConservationLaw<dim>::compute_max_entropy_jump( 
-  const Vector<double> & solution,
-  const cell_iterator  & cell) const
+double ConservationLaw<dim>::compute_max_entropy_jump(
+  const Vector<double> & solution, const cell_iterator & cell) const
 {
   FEFaceValues<dim> fe_values_face(fe,
                                    face_quadrature,
                                    update_values | update_gradients |
                                      update_normal_vectors);
 
-  std::vector<Tensor<1,dim>> gradients_face(n_q_points_face);
-  std::vector<Tensor<1,dim>> gradients_face_neighbor(n_q_points_face);
-  //std::vector<Tensor<1,dim>> normal_vectors(n_q_points_face);
-  std::vector<Point<dim>> normal_vectors(n_q_points_face);
+  std::vector<Tensor<1, dim>> gradients_face(n_q_points_face);
+  std::vector<Tensor<1, dim>> gradients_face_neighbor(n_q_points_face);
+  std::vector<Tensor<1, dim>> normal_vectors(n_q_points_face);
   Vector<double> entropy(n_q_points_face);
 
   double max_jump_in_cell = 0.0;
@@ -1471,8 +1474,7 @@ double ConservationLaw<dim>::compute_max_entropy_jump(
       compute_entropy(solution, fe_values_face, entropy);
 
       // get normal vectors
-      //normal_vectors = fe_values_face.get_all_normal_vectors();
-      normal_vectors = fe_values_face.get_normal_vectors();
+      normal_vectors = fe_values_face.get_all_normal_vectors();
 
       // get iterator to neighboring cell and face index of this face
       Assert(cell->neighbor(iface).state() == IteratorState::valid,
@@ -1483,8 +1485,7 @@ double ConservationLaw<dim>::compute_max_entropy_jump(
 
       // get gradients from neighboring cell
       fe_values_face.reinit(neighbor, ineighbor);
-      fe_values_face.get_function_gradients(solution,
-                                            gradients_face_neighbor);
+      fe_values_face.get_function_gradients(solution, gradients_face_neighbor);
 
       // loop over face quadrature points to determine max jump on face
       double max_jump_on_face = 0.0;
@@ -1694,4 +1695,3 @@ void ConservationLaw<dim>::output_results(
   // call post-processor
   postprocessor.output_results(new_solution, dof_handler, triangulation);
 }
-

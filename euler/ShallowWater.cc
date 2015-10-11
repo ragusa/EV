@@ -575,7 +575,7 @@ void ShallowWater<dim>::compute_ss_residual(Vector<double> & f)
               (height_inviscid_flux[q] + height_viscous_flux[q])
             // momentum inviscid flux
             +
-            double_contract(fe_values[momentum_extractor].gradient(i, q),
+            double_contract<0,0,1,1>(fe_values[momentum_extractor].gradient(i, q),
                             momentum_inviscid_flux[q] + momentum_viscous_flux[q])
             // bathymetry source term
             -
@@ -626,8 +626,8 @@ void ShallowWater<dim>::compute_inviscid_fluxes(
     height_flux[q] = momentum[q];
 
     // compute momentum inviscid flux
-    Tensor<2, dim> velocity_times_momentum;
-    outer_product(velocity_times_momentum, velocity[q], momentum[q]);
+    Tensor<2, dim> velocity_times_momentum =
+      outer_product(velocity[q], momentum[q]);
     momentum_flux[q] = velocity_times_momentum +
       0.5 * gravity * std::pow(height[q], 2) * identity_tensor;
   }
@@ -886,8 +886,8 @@ void ShallowWater<dim>::compute_divergence_entropy_flux(
     const Tensor<1, dim> dentropy_dmomentum = momentum[q] / height[q];
 
     // compute outer product of momentum with itself
-    Tensor<2, dim> momentum_times_momentum;
-    outer_product(momentum_times_momentum, momentum[q], momentum[q]);
+    Tensor<2, dim> momentum_times_momentum =
+      outer_product(momentum[q], momentum[q]);
 
     // compute divergence of each component flux
     const Tensor<2, dim> aux = gravity * height[q] * identity_tensor;

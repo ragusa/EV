@@ -73,12 +73,9 @@ public:
 
   void set_cycle(const unsigned int & cycle);
 
-  /*
-  void output_viscosity(const CellMap & low_order_viscosity_map,
-                        const CellMap & entropy_viscosity_map,
-                        const CellMap & high_order_viscosity_map,
-                        const DoFHandler<dim> & dof_handler) const;
-  */
+  void output_cell_map(const CellMap & cell_map,
+                       const std::string & quantity_string,
+                       const DoFHandler<dim> & dof_handler) const;
 
 private:
 
@@ -122,8 +119,6 @@ private:
 
   void create_directory(const std::string & dir) const;
 
-  //void cell_map_to_cell_vector(const CellMap & cell_map, Vector<double> & cell_vector) const;
-
   const ConservationLawParameters<dim> parameters;
 
   const double end_time;
@@ -147,6 +142,7 @@ private:
   const FESystem<dim> fe;
 
   std::string output_dir;
+  std::string timedisc_string;
   std::string appendage_string;
   std::string filename_exact;
 
