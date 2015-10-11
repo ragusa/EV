@@ -121,7 +121,7 @@ void ConservationLaw<dim>::run()
         break;
       case ConservationLawParameters<dim>::old_first_order:
         postprocessor.output_cell_map(
-          first_order_viscosity, "firstorderviscosity", dof_handler);
+          first_order_viscosity, "loworderviscosity", dof_handler);
         break;
       case ConservationLawParameters<dim>::max_principle:
         postprocessor.output_cell_map(
@@ -129,7 +129,7 @@ void ConservationLaw<dim>::run()
         break;
       case ConservationLawParameters<dim>::entropy:
         postprocessor.output_cell_map(
-          first_order_viscosity, "firstorderviscosity", dof_handler);
+          first_order_viscosity, "loworderviscosity", dof_handler);
         postprocessor.output_cell_map(
           entropy_viscosity, "entropyviscosity", dof_handler);
         postprocessor.output_cell_map(

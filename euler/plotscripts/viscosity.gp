@@ -1,42 +1,23 @@
 # note: this script requires Gnuplot version 4.6 or higher
 # usage: gnuplot -e 'problem_name=<problem name>;
-#           timeintegrator=<time integrator string>;
-#           quantity=<quantity>;
-#           column=<column of quantity in input file>' solutions.gp
+#           timeintegrator=<time integrator string>'
+#           viscosity.gp
 
-filebase = "solution"
+filebase = "viscosity"
 
 # list of possible input files to plot and their corresponding titles
-file_initial  = filebase."_initial"
-file_exact    = filebase."_exact"
-file_galerkin = filebase."_Gal_"   .timeintegrator
-file_low      = filebase."_low_"   .timeintegrator
-file_high     = filebase."_EV_"    .timeintegrator
-file_EVFCT    = filebase."_EVFCT_" .timeintegrator
-file_GalFCT   = filebase."_GalFCT_".timeintegrator
-file_list = file_initial." ".\
-            file_exact." ".\
-            file_galerkin." ".\
-            file_low." ".\
-            file_high." ".\
-            file_EVFCT." ".\
-            file_GalFCT." ".\
-title_list = "Initial\
-              Exact\
-              Galerkin\
-              Low-Order\
-              EV\
-              EV-FCT\
-              Galerkin-FCT\
-              DMP-min\
-              DMP-max\
-              DMP-min-Gal-FCT\
-              DMP-max-Gal-FCT\
-              DMP-min-EV-FCT\
-              DMP-max-EV-FCT"
-linetypes = "2 1 1 1 1 1 1 2 2 2 2 4 4"
-linecolors = "-1 -1 1 2 3 4 5 -1 -1 -1 -1 -1 -1"
-symboltypes = "-2 -2 1 2 3 4 6 -2 -2 -2 -2 -2 -2"
+file_loworder  = "loworderviscosity_" .timeintegrator
+file_entropy   = "entropyviscosity_"  .timeintegrator
+file_highorder = "highorderviscosity_".timeintegrator
+file_list = file_loworder." ".\
+            file_entropy." ".\
+            file_highorder." "
+title_list = "Low-Order\
+              Entropy\
+              High-Order"
+linetypes = "1 1 1"
+linecolors = "2 3 4"
+symboltypes = "-2 -2 -2"
 
 # define is_missing(x) function for determining if an input file exists
 outdir = "../output/".problem_name."/"
@@ -63,73 +44,20 @@ do for [i=1:words(file_list)] {
       existing_title_list = existing_title_list." ".mytitle
       existing_lt_list    = existing_lt_list   ." ".mylt
       existing_lc_list    = existing_lc_list   ." ".mylc
-
-      # check number of data points and do not use symbols if too many
-      stats outdir.myfile using 1 noout
-      n_data = STATS_records
-      # print "Number of data points in ",myfile,": ",n_data
-      if (n_data > 500) {
-         existing_sym_list   = existing_sym_list  ." -2"
-      } else {
-         existing_sym_list   = existing_sym_list  ." ".mysym
-      }
+      existing_sym_list   = existing_sym_list  ." ".mysym
    }
 }
-
-# determine y label
-if (quantity eq "velocity") {
-   quantity_ylabel = "Velocity"
-} else { if (quantity eq "density") {
-   quantity_ylabel = "Density"
-} else { if (quantity eq "momentum") {
-   quantity_ylabel = "Momentum"
-} else { if (quantity eq "energy") {
-   quantity_ylabel = "Energy"
-} else { if (quantity eq "height") {
-   quantity_ylabel = "Height"
-} else { if (quantity eq "waterlevel") {
-   quantity_ylabel = "Water Level"
-} else {
-   quantity_ylabel = "Unknown"
-}}}}}}
 
 set terminal postscript enhanced color
-output_file = outdir.quantity."_".timeintegrator.".pdf"
+output_file = outdir."viscosity_".timeintegrator.".pdf"
 set output '| ps2pdf - '.output_file
-set ylabel quantity_ylabel
+set ylabel "Viscosity"
 set xlabel "x"
+set logscale y
 set key top right
 
-# if water level plot, then plot with bathymetry function
-if (quantity eq "waterlevel") {
-
-   bathymetry_file = file_galerkin.".gpl"
-   if (is_missing(bathymetry_file)) {
-      bathymetry_file = file_low.".gpl"
-      if (is_missing(bathymetry_file)) {
-         bathymetry_file = file_high.".gpl"
-         if (is_missing(bathymetry_file)) {
-            bathymetry_file = file_EVFCT.".gpl"
-            if (is_missing(bathymetry_file)) {
-               bathymetry_file = file_GalFCT.".gpl"
-            }
-         }
-      }
-   }
-
-   set style fill pattern 7
-   plot for [i=1:words(existing_file_list)] outdir.word(existing_file_list,i)\
-      using 1:int(column) with linesp linetype word(existing_lt_list,i)\
-      linecolor word(existing_lc_list,i)\
-      pointtype word(existing_sym_list,i)\
-      title word(existing_title_list,i),\
-      outdir.bathymetry_file using 1:4 with filledcurves y1=0 linecolor 0\
-        linetype 1 title "Bottom topography"
-
-} else {
-   plot for [i=1:words(existing_file_list)] outdir.word(existing_file_list,i)\
-      using 1:int(column) with linesp linetype word(existing_lt_list,i)\
-      linecolor word(existing_lc_list,i)\
-      pointtype word(existing_sym_list,i)\
-      title word(existing_title_list,i)
-}
+plot for [i=1:words(existing_file_list)] outdir.word(existing_file_list,i)\
+  using 1:2 with linesp linetype word(existing_lt_list,i)\
+  linecolor word(existing_lc_list,i)\
+  pointtype word(existing_sym_list,i)\
+  title word(existing_title_list,i)

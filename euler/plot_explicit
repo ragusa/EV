@@ -2,11 +2,11 @@
 #
 # Plots solution or convergence.
 #
-# USAGE: plot_explicit <phys> <name> <disc> <sol|conv>
+# USAGE: plot_explicit <phys> <name> <disc> <type>
 #   <phys> conservation law: burgers|euler|shallowwater
 #   <name> name of problem (directory in ./output)
 #   <disc> time discretization identifier: erk1|erk2|erk3|erk4|sdirk22
-#   <sol|conv> type of plot: 'sol' plots solution, 'conv' plots convergence.
+#   <type> type of plot: sol|conv|visc
 
 use strict;
 
@@ -15,11 +15,11 @@ my $croppdf = 1;
 
 # check for correct number of input arguments
 if ($#ARGV != 3) {
-   die "USAGE: plot <phys> <name> <disc> <sol|conv>
-   <phys> conservation law: burgers|euler
+   die "USAGE: plot <phys> <name> <disc> <type>
+   <phys> conservation law: burgers|euler|shallowwater
    <name> name of problem (directory in ./output)
    <disc> time discretization identifier: ERK1|ERK2|ERK3|ERK4|SDIRK22
-   <sol|conv> type of plot: 'sol' plots solution, 'conv' plots convergence.\n";
+   <type> type of plot: sol|conv|visc\n";
 }
 
 # get input arguments
@@ -36,39 +36,6 @@ if ($time_integrator_string eq "SS") {
    $is_ss = 0;
 }
 
-# determine the names of each component in solution
-my @quantity;
-my @column;
-if ($conservation_law eq "burgers")
-{
-   @quantity = ("velocity");
-   @column = (2);
-}
-elsif ($conservation_law eq "euler")
-{
-   @quantity = ("density","momentum","energy");
-   @column = (2,3,4);
-}
-elsif ($conservation_law eq "shallowwater")
-{
-   #@quantity = ("height","momentum","waterlevel");
-   #@quantity = ("height","momentum");
-   @quantity = ("waterlevel");
-   # columns are: 
-   # 1: x
-   # 2: height
-   # 3: momentum
-   # 4: bathymetry
-   # 5: water level
-   #@column = (2,3,5);
-   #@column = (2,3);
-   @column = (5);
-}
-else
-{
-   die("Invalid conservation law");
-}
-
 # go to plotscripts directory
 chdir "plotscripts";
 
@@ -78,30 +45,87 @@ if ($plot_type eq "sol") {
    $plotscript = "solutions.gp";
 } elsif ($plot_type eq "conv") {
    $plotscript = "convergence.gp";
+} elsif ($plot_type eq "visc") {
+   $plotscript = "viscosity.gp";
 } else {
-   die("Invalid command-line argument: must be \"sol\" or \"conv\"");
+   die("Invalid command-line argument: must be \"sol\", \"conv\", or \"visc\"");
 }
 
-# loop over components
-foreach my $i (0 .. $#quantity)
+if ($plot_type eq "visc")
 {
-   # call gnuplot
-   system("gnuplot -e \"problem_name='$problem_name';
-      timeintegrator='$time_integrator_string';
-      is_ss='$is_ss';
-      quantity='$quantity[$i]';
-      column='$column[$i]'\" $plotscript");
-   system("sleep 1");
-      
-   # name of resulting plot file
-   my $output_file = "../output/$problem_name/$quantity[$i]".
-      "_$time_integrator_string.pdf";
-   
-   # crop pdf
-   if ($croppdf) {
-      system("pdfcrop $output_file $output_file");
-   }
-   
-   # view output
-   system("evince $output_file");
+  # call gnuplot
+  system("gnuplot -e \"problem_name='$problem_name';
+     timeintegrator='$time_integrator_string'\" $plotscript");
+  system("sleep 1");
+     
+  # name of resulting plot file
+  my $output_file = "../output/$problem_name/viscosity".
+     "_$time_integrator_string.pdf";
+  
+  # crop pdf
+  if ($croppdf) {
+     system("pdfcrop $output_file $output_file");
+  }
+  
+  # view output
+  system("evince $output_file");
+}
+else
+{
+  # determine the names of each component in solution
+  my @quantity;
+  my @column;
+  if ($conservation_law eq "burgers")
+  {
+     @quantity = ("velocity");
+     @column = (2);
+  }
+  elsif ($conservation_law eq "euler")
+  {
+     @quantity = ("density","momentum","energy");
+     @column = (2,3,4);
+  }
+  elsif ($conservation_law eq "shallowwater")
+  {
+     #@quantity = ("height","momentum","waterlevel");
+     #@quantity = ("height","momentum");
+     @quantity = ("waterlevel");
+     # columns are: 
+     # 1: x
+     # 2: height
+     # 3: momentum
+     # 4: bathymetry
+     # 5: water level
+     #@column = (2,3,5);
+     #@column = (2,3);
+     @column = (5);
+  }
+  else
+  {
+     die("Invalid conservation law");
+  }
+  
+  # loop over components
+  foreach my $i (0 .. $#quantity)
+  {
+     # call gnuplot
+     system("gnuplot -e \"problem_name='$problem_name';
+        timeintegrator='$time_integrator_string';
+        is_ss='$is_ss';
+        quantity='$quantity[$i]';
+        column='$column[$i]'\" $plotscript");
+     system("sleep 1");
+        
+     # name of resulting plot file
+     my $output_file = "../output/$problem_name/$quantity[$i]".
+        "_$time_integrator_string.pdf";
+     
+     # crop pdf
+     if ($croppdf) {
+        system("pdfcrop $output_file $output_file");
+     }
+     
+     # view output
+     system("evince $output_file");
+  }
 }

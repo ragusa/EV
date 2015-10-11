@@ -3,15 +3,18 @@
 # Calls the plot_detailed plot script with command-line arguments inferred
 # from the options in the appropriate input file.
 #
-# USAGE: $ plot
+# USAGE: $ plot [conservation law] [type]
 #
 #        OR
 #
-#        $ plot <conservation law>
+#        $ plot [type] [conservation law]
 #
-#        where <conservation law> is "burgers", "euler", or "shallowwater".
-#        In the first usage, a default parameter for <conservation law> is used;
-#        This is determined by the variable $default_conservation_law, set below.
+#        where
+#          [conservation law]: burgers|euler|shallowwater
+#          [type]:             sol|conv|visc
+#
+#        If no conservation law is given, then the conservation law is
+#        determined by the variable $default_conservation_law, set below.
 
 use strict;
 
@@ -22,13 +25,46 @@ my $default_conservation_law = "shallowwater";
 # then use the default conservation law
 my $n_arguments = @ARGV;
 my $conservation_law;
-if ($n_arguments < 1)
+my $type;
+
+my %arg_identity = (
+  "sol" => "type",
+  "visc" => "type",
+  "burgers" => "conservationlaw",
+  "euler" => "conservationlaw",
+  "shallowwater" => "conservationlaw"
+);
+
+my $found_conservationlaw = 0;
+my $found_type = 0;
+for (my $i = 0; $i < $n_arguments; $i++)
 {
-   $conservation_law = $default_conservation_law;
+  my $arg = $ARGV[$i];
+  my $identity = $arg_identity{$arg};
+  if ($identity eq "conservationlaw")
+  {
+    $conservation_law = $arg;
+    $found_conservationlaw = 1;
+  }
+  elsif ($identity eq "type")
+  {
+    $type = $arg;
+    $found_type = 1;
+  }
+  else
+  {
+    die "Invalid command-line argument."
+  }
 }
-else
+
+if (not $found_conservationlaw)
 {
-   $conservation_law = $ARGV[0];
+  $conservation_law = $default_conservation_law;
+}
+
+if (not $found_type)
+{
+  $type = "sol";
 }
 
 # read appropriate input file to find the necessary input parameters
@@ -109,4 +145,6 @@ if (not($problem_ID_found and $time_discretization_found))
 my $problem_name = $problem_names{$problem_ID};
 
 # call plot script
-system("plot_explicit $conservation_law $problem_name $time_discretization sol");
+my $function_call = "plot_explicit $conservation_law $problem_name ".
+  "$time_discretization $type";
+system($function_call);
