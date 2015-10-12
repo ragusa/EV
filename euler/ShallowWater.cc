@@ -411,8 +411,7 @@ void ShallowWater<dim>::assemble_lumped_mass_matrix()
   std::vector<types::global_dof_index> local_dof_indices(this->dofs_per_cell);
   FullMatrix<double> local_mass(this->dofs_per_cell, this->dofs_per_cell);
 
-  Cell cell = this->dof_handler.begin_active(),
-                endc = this->dof_handler.end();
+  Cell cell = this->dof_handler.begin_active(), endc = this->dof_handler.end();
   for (; cell != endc; ++cell)
   {
     fe_values.reinit(cell);
@@ -511,9 +510,8 @@ void ShallowWater<dim>::compute_ss_residual(Vector<double> & f)
   std::vector<unsigned int> local_dof_indices(this->dofs_per_cell);
 
   // loop over cells
-  Cell cell = this->dof_handler.begin_active(),
-                endc = this->dof_handler.end(),
-                cell_bathymetry = dof_handler_bathymetry.begin_active();
+  Cell cell = this->dof_handler.begin_active(), endc = this->dof_handler.end(),
+       cell_bathymetry = dof_handler_bathymetry.begin_active();
   for (; cell != endc; ++cell, ++cell_bathymetry)
   {
     // reset cell residual
@@ -575,8 +573,9 @@ void ShallowWater<dim>::compute_ss_residual(Vector<double> & f)
               (height_inviscid_flux[q] + height_viscous_flux[q])
             // momentum inviscid flux
             +
-            double_contract<0,0,1,1>(fe_values[momentum_extractor].gradient(i, q),
-                            momentum_inviscid_flux[q] + momentum_viscous_flux[q])
+            double_contract<0, 0, 1, 1>(
+              fe_values[momentum_extractor].gradient(i, q),
+              momentum_inviscid_flux[q] + momentum_viscous_flux[q])
             // bathymetry source term
             -
             fe_values[momentum_extractor].value(i, q) * gravity * height[q] *
@@ -748,8 +747,7 @@ void ShallowWater<dim>::update_flux_speeds()
   this->max_flux_speed = 0.0;
 
   // loop over cells to compute first order viscosity at each quadrature point
-  Cell cell = this->dof_handler.begin_active(),
-                endc = this->dof_handler.end();
+  Cell cell = this->dof_handler.begin_active(), endc = this->dof_handler.end();
   for (; cell != endc; ++cell)
   {
     fe_values.reinit(cell);
@@ -916,7 +914,8 @@ void ShallowWater<dim>::update_entropy_viscosities(const double & dt)
     this->compute_entropy_normalization(this->new_solution);
 
   // get tuning parameters
-  const double entropy_residual_coefficient = this->parameters.entropy_viscosity_coef;
+  const double entropy_residual_coefficient =
+    this->parameters.entropy_viscosity_coef;
   const double jump_coefficient = this->parameters.jump_coef;
 
   // FE values for entropy flux
@@ -933,8 +932,8 @@ void ShallowWater<dim>::update_entropy_viscosities(const double & dt)
   for (; cell != endc; ++cell)
   {
     // compute max entropy residual on cell
-    const double max_entropy_residual =
-      this->compute_max_entropy_residual(this->new_solution, this->old_solution, dt, cell);
+    const double max_entropy_residual = this->compute_max_entropy_residual(
+      this->new_solution, this->old_solution, dt, cell);
 
     // compute max entropy flux jump
     const double max_entropy_jump =

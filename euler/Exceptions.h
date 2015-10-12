@@ -8,7 +8,6 @@
 using namespace dealii;
 
 /** \brief Exception for a modulus not returning zero */
-DeclException2(ExcModulusNotZero, int, int,
-  << arg1 << " % " << arg2 << " != 0");
+DeclException2(ExcModulusNotZero, int, int, << arg1 << " % " << arg2 << " != 0");
 
 #endif

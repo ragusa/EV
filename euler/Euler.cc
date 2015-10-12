@@ -525,7 +525,9 @@ void Euler<dim>::compute_cell_ss_residual(FEValues<dim> & fe_values,
            fe_values[density_extractor].gradient(i, q) *
              (density_inviscid_flux[q] + density_viscous_flux[q])
            // momentum
-           + double_contract<0,0,1,1>(fe_values[momentum_extractor].gradient(i, q),
+           +
+           double_contract<0, 0, 1, 1>(
+             fe_values[momentum_extractor].gradient(i, q),
              momentum_inviscid_flux[q] + momentum_viscous_flux[q])
            // energy
            +
@@ -671,7 +673,7 @@ void Euler<dim>::compute_viscous_fluxes(
     density_viscous_flux[q] = -nu * density_gradient[q];
 
     // momentum viscous flux
-    Tensor<2, dim> density_viscous_flux_times_velocity = 
+    Tensor<2, dim> density_viscous_flux_times_velocity =
       outer_product(density_viscous_flux[q], velocity[q]);
     Tensor<2, dim> momentum_times_density_gradient =
       outer_product(momentum[q], density_gradient[q]);
@@ -803,7 +805,7 @@ void Euler<dim>::compute_inviscid_fluxes(
 
   // identity tensor
   SymmetricTensor<2, dim> identity_tensor_sym = unit_symmetric_tensor<dim>();
-  Tensor<2,dim> identity_tensor(identity_tensor_sym);
+  Tensor<2, dim> identity_tensor(identity_tensor_sym);
 
   // compute auxiliary quantities
   std::vector<Tensor<1, dim>> velocity(n);
@@ -818,7 +820,8 @@ void Euler<dim>::compute_inviscid_fluxes(
     density_flux[q] = momentum[q];
 
     // compute momentum inviscid flux
-    Tensor<2, dim> velocity_times_momentum = outer_product(velocity[q], momentum[q]);
+    Tensor<2, dim> velocity_times_momentum =
+      outer_product(velocity[q], momentum[q]);
     momentum_flux[q] = velocity_times_momentum + pressure[q] * identity_tensor;
 
     // compute energy inviscid flux
@@ -1275,12 +1278,10 @@ void Euler<dim>::compute_divergence_entropy_flux(
   fe_values[energy_extractor].get_function_values(solution, energy);
 
   // get gradients of conservative variables
-  fe_values[density_extractor].get_function_gradients(solution,
-                                                      density_gradient);
+  fe_values[density_extractor].get_function_gradients(solution, density_gradient);
   fe_values[momentum_extractor].get_function_gradients(solution,
                                                        momentum_gradient);
-  fe_values[energy_extractor].get_function_gradients(solution,
-                                                     energy_gradient);
+  fe_values[energy_extractor].get_function_gradients(solution, energy_gradient);
 
   // get divergence of momentum
   fe_values[momentum_extractor].get_function_divergences(solution,

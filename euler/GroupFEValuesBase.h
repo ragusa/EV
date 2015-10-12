@@ -43,10 +43,13 @@ public:
                               FEValuesExtractors::Vector>::type ExtractorType;
 
   /** \brief Typedef for function value type (scalar or vector) */
-  typedef typename std::conditional<is_scalar,double,Tensor<1,dim>>::type ValueType;
+  typedef
+    typename std::conditional<is_scalar, double, Tensor<1, dim>>::type ValueType;
 
   /** \brief Typedef for function gradient type (1st or 2nd-order tensor) */
-  typedef typename std::conditional<is_scalar,Tensor<1,dim>,Tensor<2,dim>>::type GradientType;
+  typedef
+    typename std::conditional<is_scalar, Tensor<1, dim>, Tensor<2, dim>>::type
+      GradientType;
 
   GroupFEValuesBase(const unsigned int & n_components_solution,
                     const unsigned int & n_components_function,
@@ -95,7 +98,7 @@ protected:
   const unsigned int n_solution_dofs_per_cell;
 
   /** \brief Map from solution cell iterator to function cell iterator */
-  std::map<Cell,Cell> solution_cell_to_function_cell_map;
+  std::map<Cell, Cell> solution_cell_to_function_cell_map;
 
   /** \brief Number of DoFs for function */
   unsigned int n_dofs;

@@ -17,17 +17,17 @@ using namespace dealii;
 template <int dim>
 class EulerParameters : public ConservationLawParameters<dim>
 {
-  public:
-    EulerParameters();
+public:
+  EulerParameters();
 
-    static void declare_euler_parameters (ParameterHandler &parameter_handler);
-           void get_euler_parameters     (ParameterHandler &parameter_handler);
+  static void declare_euler_parameters(ParameterHandler & parameter_handler);
+  void get_euler_parameters(ParameterHandler & parameter_handler);
 
-    static const int n_euler_components = dim+2;
+  static const int n_euler_components = dim + 2;
 
-    unsigned int problem_id;
+  unsigned int problem_id;
 
-    double prandtl; // Prandtl number, used in relation of viscosities nu and kappa
+  double prandtl; // Prandtl number, used in relation of viscosities nu and kappa
 };
 
 #include "EulerParameters.cc"

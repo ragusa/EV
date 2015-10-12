@@ -22,22 +22,22 @@
  * \param[in] aux_vector_ optional auxiliary vector
  */
 template <int dim, bool is_scalar>
-GroupFEValuesBase<dim,is_scalar>::GroupFEValuesBase(
+GroupFEValuesBase<dim, is_scalar>::GroupFEValuesBase(
   const unsigned int & n_components_solution_,
   const unsigned int & n_components_function_,
   const DoFHandler<dim> & solution_dof_handler_,
   const Triangulation<dim> & triangulation_,
   const Vector<double> & solution_,
-  const Vector<double> & aux_vector_) :
-  n_components_solution(n_components_solution_),
-  n_components_function(n_components_function_),
-  fe(FE_Q<dim>(1), n_components_function),
-  function_extractor(0),
-  dof_handler(triangulation_),
-  n_function_dofs_per_cell(fe.dofs_per_cell),
-  n_solution_dofs_per_cell(n_function_dofs_per_cell*n_components_solution),
-  solution(&solution_),
-  aux_vector(&aux_vector_)
+  const Vector<double> & aux_vector_)
+  : n_components_solution(n_components_solution_),
+    n_components_function(n_components_function_),
+    fe(FE_Q<dim>(1), n_components_function),
+    function_extractor(0),
+    dof_handler(triangulation_),
+    n_function_dofs_per_cell(fe.dofs_per_cell),
+    n_solution_dofs_per_cell(n_function_dofs_per_cell * n_components_solution),
+    solution(&solution_),
+    aux_vector(&aux_vector_)
 {
   // distribute DoFs and initialize cell iterators
   dof_handler.distribute_dofs(fe);
@@ -45,8 +45,8 @@ GroupFEValuesBase<dim,is_scalar>::GroupFEValuesBase(
 
   // map solution cell iterator to function cell iterator
   Cell solution_cell = solution_dof_handler_.begin_active(),
-    solution_endc = solution_dof_handler_.end(),
-    function_cell = dof_handler.begin_active();
+       solution_endc = solution_dof_handler_.end(),
+       function_cell = dof_handler.begin_active();
   for (; solution_cell != solution_endc; ++solution_cell, ++function_cell)
     solution_cell_to_function_cell_map[solution_cell] = function_cell;
 
@@ -61,19 +61,21 @@ GroupFEValuesBase<dim,is_scalar>::GroupFEValuesBase(
  * the constructor).
  */
 template <int dim, bool is_scalar>
-void GroupFEValuesBase<dim,is_scalar>::compute_function_dof_values()
+void GroupFEValuesBase<dim, is_scalar>::compute_function_dof_values()
 {
   for (unsigned int i = 0; i < n_dofs; ++i)
   {
     // extract all components of solution at DoF support point
     std::vector<double> solution_at_support_point(n_components_solution);
     for (unsigned int j = 0; j < n_components_solution; ++j)
-      solution_at_support_point[j] = (*solution)[i*n_components_solution + j];
+      solution_at_support_point[j] = (*solution)[i * n_components_solution + j];
 
     // compute function at DoF support point
-    std::vector<double> function_at_support_point = function(solution_at_support_point);
+    std::vector<double> function_at_support_point =
+      function(solution_at_support_point);
     for (unsigned int j = 0; j < n_components_function; ++j)
-      function_dof_values[i*n_components_function + j] = function_at_support_point[j];
+      function_dof_values[i * n_components_function + j] =
+        function_at_support_point[j];
   }
 }
 
@@ -83,7 +85,7 @@ void GroupFEValuesBase<dim,is_scalar>::compute_function_dof_values()
  * \return function values at DoF support points
  */
 template <int dim, bool is_scalar>
-Vector<double> GroupFEValuesBase<dim,is_scalar>::get_function_dof_values() const
+Vector<double> GroupFEValuesBase<dim, is_scalar>::get_function_dof_values() const
 {
   return function_dof_values;
 }

@@ -3,17 +3,42 @@
 # Formats file using a code-formatter
 #
 # Usage: format <filename>
+#        format all
+#
+# "format all" will format all *.cc and *.h files in the current directory
 
 if [ $# -ne 1 ]; then
   echo "USAGE: format <file>"
 else
-  # use astyle
-  #astyle --options=./.astyle_options $1
 
-  # use uncrustify
-  #uncrustify -c uncrustify.cfg --no-backup $1
+  if [ $1 == "all" ]; then
+    # loop over all *.cc and *.h files in current directory
+    for file in $(ls *.cc *.h); do
+      # create backup and run clang-format on file
+      cp $file $file.bak
+      clang-format -style=file $file.bak > $file
 
-  # use clang-format
-  cp $1 $1.bak
-  clang-format -style=file $1.bak > $1
+      # diff new file with its backup to determine if changes were made
+      nlines=`diff $file $file.bak | wc -l`
+      if [ $nlines -gt 0 ]; then
+        echo "Formatted $file."
+      fi
+    done
+  else
+    # use clang-format
+    cp $1 $1.bak
+    clang-format -style=file $1.bak > $1
+
+    # diff new file with its backup to determine if changes were made
+    nlines=`diff $1 $1.bak | wc -l`
+    if [ $nlines -gt 0 ]; then
+      echo "Formatted $1."
+    fi
+  fi
 fi
+
+# Other code formatters:
+# use astyle
+#astyle --options=./.astyle_options $1
+# use uncrustify
+#uncrustify -c uncrustify.cfg --no-backup $1

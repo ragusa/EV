@@ -63,8 +63,7 @@ ShallowWaterRiemannSolver<dim>::ShallowWaterRiemannSolver(
 
     // compute new iterate for h in star region
     h_star = h_star_old -
-      (f_left + f_right + u_right - u_left) /
-        (f_deriv_left + f_deriv_right);
+      (f_left + f_right + u_right - u_left) / (f_deriv_left + f_deriv_right);
 
     // compute relative change
     double dh = std::abs(h_star - h_star_old) / (0.5 * (h_star + h_star_old));
@@ -74,7 +73,9 @@ ShallowWaterRiemannSolver<dim>::ShallowWaterRiemannSolver(
     {
       converged = true;
       break;
-    } else {
+    }
+    else
+    {
       converged = false;
     }
 

@@ -20,7 +20,7 @@ GroupFEValuesFace<dim, is_scalar>::GroupFEValuesFace(
   const unsigned int & n_components_function_,
   const DoFHandler<dim> & solution_dof_handler_,
   const Triangulation<dim> & triangulation_,
-  const QGauss<dim-1> & face_quadrature_,
+  const QGauss<dim - 1> & face_quadrature_,
   const Vector<double> & solution_,
   const Vector<double> & aux_vector_)
   : GroupFEValuesBase<dim, is_scalar>(n_components_solution_,
@@ -88,7 +88,9 @@ void GroupFEValuesFace<dim, is_scalar>::get_function_gradients(
  * \return normal vectors at quadrature points in a face
  */
 template <int dim, bool is_scalar>
-std::vector<Tensor<1,dim>> GroupFEValuesFace<dim, is_scalar>::get_normal_vectors() const
+std::vector<Tensor<1, dim>> GroupFEValuesFace<dim,
+                                              is_scalar>::get_normal_vectors()
+  const
 {
   return function_fe_values_face.get_all_normal_vectors();
 }

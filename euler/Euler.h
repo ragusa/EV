@@ -56,11 +56,10 @@ private:
 
   void compute_ss_residual(Vector<double> & solution) override;
 
-  void compute_cell_ss_residual(
-    FEValues<dim> & fe_values,
-    FEFaceValues<dim> & fe_face_values,
-    const cell_iterator & cell,
-    Vector<double> & cell_residual);
+  void compute_cell_ss_residual(FEValues<dim> & fe_values,
+                                FEFaceValues<dim> & fe_face_values,
+                                const cell_iterator & cell,
+                                Vector<double> & cell_residual);
 
   /*
     void compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,

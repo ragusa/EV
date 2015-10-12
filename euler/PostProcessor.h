@@ -78,7 +78,6 @@ public:
                        const DoFHandler<dim> & dof_handler) const;
 
 private:
-
   void output_exact_solution();
 
   void output_at_dof_points(

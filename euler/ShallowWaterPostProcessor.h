@@ -18,8 +18,8 @@ template <int dim>
 class ShallowWaterPostProcessor : public DataPostprocessor<dim>
 {
 public:
-  ShallowWaterPostProcessor(const std::shared_ptr<Function<dim> > &
-    bathymetry_function);
+  ShallowWaterPostProcessor(
+    const std::shared_ptr<Function<dim>> & bathymetry_function);
 
   std::vector<std::string> get_names() const override;
 
@@ -29,16 +29,15 @@ public:
   UpdateFlags get_needed_update_flags() const override;
 
   void compute_derived_quantities_vector(
-    const std::vector< Vector< double > > &  uh,
-    const std::vector< std::vector< Tensor< 1, dim > > > & duh,
-    const std::vector< std::vector< Tensor< 2, dim > > > & dduh,
-    const std::vector< Point< dim > > & normals,
-    const std::vector< Point< dim > > & evaluation_points,
-    std::vector< Vector< double > > & computed_quantities
-  ) const override;
+    const std::vector<Vector<double>> & uh,
+    const std::vector<std::vector<Tensor<1, dim>>> & duh,
+    const std::vector<std::vector<Tensor<2, dim>>> & dduh,
+    const std::vector<Point<dim>> & normals,
+    const std::vector<Point<dim>> & evaluation_points,
+    std::vector<Vector<double>> & computed_quantities) const override;
 
 private:
-  std::shared_ptr<Function<dim> > bathymetry_function;
+  std::shared_ptr<Function<dim>> bathymetry_function;
 };
 
 #include "ShallowWaterPostProcessor.cc"

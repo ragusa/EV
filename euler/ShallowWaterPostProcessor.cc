@@ -3,8 +3,8 @@
  */
 template <int dim>
 ShallowWaterPostProcessor<dim>::ShallowWaterPostProcessor(
-  const std::shared_ptr<Function<dim>> & bathymetry_function_) :
-    bathymetry_function(bathymetry_function_)
+  const std::shared_ptr<Function<dim>> & bathymetry_function_)
+  : bathymetry_function(bathymetry_function_)
 {
 }
 
@@ -29,12 +29,12 @@ std::vector<DataComponentInterpretation::DataComponentInterpretation>
   ShallowWaterPostProcessor<dim>::get_data_component_interpretation() const
 {
   std::vector<DataComponentInterpretation::DataComponentInterpretation>
-    interpretations(2,DataComponentInterpretation::component_is_scalar);
+    interpretations(2, DataComponentInterpretation::component_is_scalar);
   return interpretations;
 }
 
 /**
- * \brief Gets the necessary update flags for evaluating post-processor 
+ * \brief Gets the necessary update flags for evaluating post-processor
  *        quantities.
  */
 template <int dim>
@@ -48,13 +48,12 @@ UpdateFlags ShallowWaterPostProcessor<dim>::get_needed_update_flags() const
  */
 template <int dim>
 void ShallowWaterPostProcessor<dim>::compute_derived_quantities_vector(
-  const std::vector< Vector< double > > &  uh,
-  const std::vector< std::vector< Tensor< 1, dim > > > &,
-  const std::vector< std::vector< Tensor< 2, dim > > > &,
-  const std::vector< Point< dim > > &,
-  const std::vector< Point< dim > > & evaluation_points,
-  std::vector< Vector< double > > & computed_quantities
-) const
+  const std::vector<Vector<double>> & uh,
+  const std::vector<std::vector<Tensor<1, dim>>> &,
+  const std::vector<std::vector<Tensor<2, dim>>> &,
+  const std::vector<Point<dim>> &,
+  const std::vector<Point<dim>> & evaluation_points,
+  std::vector<Vector<double>> & computed_quantities) const
 {
   const unsigned int n_quadrature_points = evaluation_points.size();
   for (unsigned int q = 0; q < n_quadrature_points; ++q)
@@ -64,4 +63,3 @@ void ShallowWaterPostProcessor<dim>::compute_derived_quantities_vector(
     computed_quantities[q](1) = b + uh[q](0); // water level; b + h
   }
 }
-

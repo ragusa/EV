@@ -22,7 +22,7 @@ public:
   ShallowWaterEntropyFluxFEValuesFace(
     const DoFHandler<dim> & solution_dof_handler,
     const Triangulation<dim> & triangulation,
-    const QGauss<dim-1> & face_quadrature,
+    const QGauss<dim - 1> & face_quadrature,
     const Vector<double> & solution,
     const Vector<double> & bathymetry_vector,
     const double & gravity)

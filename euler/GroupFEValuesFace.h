@@ -31,7 +31,7 @@ public:
                     const unsigned int & n_components_function,
                     const DoFHandler<dim> & solution_dof_handler,
                     const Triangulation<dim> & triangulation,
-                    const QGauss<dim-1> & face_quadrature,
+                    const QGauss<dim - 1> & face_quadrature,
                     const Vector<double> & solution,
                     const Vector<double> & aux_vector = Vector<double>());
 
@@ -42,11 +42,11 @@ public:
   void get_function_gradients(
     std::vector<GradientType> & function_gradients) const;
 
-  std::vector<Tensor<1,dim>> get_normal_vectors() const;
+  std::vector<Tensor<1, dim>> get_normal_vectors() const;
 
 protected:
   /** \brief Face quadrature */
-  const QGauss<dim-1> face_quadrature;
+  const QGauss<dim - 1> face_quadrature;
 
   /** \brief Number of quadrature points */
   const unsigned int n_quadrature_points;

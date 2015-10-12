@@ -160,10 +160,11 @@ void PostProcessor<dim>::output_results(const Vector<double> & solution,
  *            be output
  */
 template <int dim>
-void PostProcessor<dim>::output_results(const Vector<double> & solution,
-                                        const DoFHandler<dim> & dof_handler,
-                                        const Triangulation<dim> & triangulation,
-                                        const DataPostprocessor<dim> & data_postprocessor)
+void PostProcessor<dim>::output_results(
+  const Vector<double> & solution,
+  const DoFHandler<dim> & dof_handler,
+  const Triangulation<dim> & triangulation,
+  const DataPostprocessor<dim> & data_postprocessor)
 {
   // create output directory if it doesn't exist
   create_directory("output");
@@ -219,10 +220,11 @@ void PostProcessor<dim>::output_solution(const Vector<double> & solution,
  *            be output
  */
 template <int dim>
-void PostProcessor<dim>::output_solution(const Vector<double> & solution,
-                                         const DoFHandler<dim> & dof_handler,
-                                         const std::string & output_string,
-                                         const DataPostprocessor<dim> & data_postprocessor) const
+void PostProcessor<dim>::output_solution(
+  const Vector<double> & solution,
+  const DoFHandler<dim> & dof_handler,
+  const std::string & output_string,
+  const DataPostprocessor<dim> & data_postprocessor) const
 {
   // call function that outputs a vector of values to a file,
   // with the solution component names and types lists
@@ -272,44 +274,44 @@ void PostProcessor<dim>::output_at_dof_points(
   const DoFHandler<dim> & dof_handler,
   const std::string & output_string) const
 {
-    // create output directory and subdirectory if they do not exist
-    create_directory("output");
-    create_directory(output_dir);
+  // create output directory and subdirectory if they do not exist
+  create_directory("output");
+  create_directory(output_dir);
 
-    // create DataOut object for quantity
-    DataOut<dim> data_out;
-    data_out.attach_dof_handler(dof_handler);
-    data_out.add_data_vector(values,
-                             component_names,
-                             DataOut<dim>::type_dof_data,
-                             component_interpretations);
-    data_out.build_patches();
+  // create DataOut object for quantity
+  DataOut<dim> data_out;
+  data_out.attach_dof_handler(dof_handler);
+  data_out.add_data_vector(values,
+                           component_names,
+                           DataOut<dim>::type_dof_data,
+                           component_interpretations);
+  data_out.build_patches();
 
-    // write GNUplot file for 1-D and .vtk file otherwise
-    if (dim == 1)
-    {
-      // create output filestream
-      std::stringstream filename_ss;
-      filename_ss << output_dir << output_string << ".gpl";
-      std::string filename = filename_ss.str();
-      std::ofstream output_filestream(filename.c_str());
-      output_filestream.precision(15);
+  // write GNUplot file for 1-D and .vtk file otherwise
+  if (dim == 1)
+  {
+    // create output filestream
+    std::stringstream filename_ss;
+    filename_ss << output_dir << output_string << ".gpl";
+    std::string filename = filename_ss.str();
+    std::ofstream output_filestream(filename.c_str());
+    output_filestream.precision(15);
 
-      // write output file
-      data_out.write_gnuplot(output_filestream);
-    }
-    else
-    {
-      // create output filestream
-      std::stringstream filename_ss;
-      filename_ss << output_dir << output_string << ".vtk";
-      std::string filename = filename_ss.str();
-      std::ofstream output_filestream(filename.c_str());
-      output_filestream.precision(15);
+    // write output file
+    data_out.write_gnuplot(output_filestream);
+  }
+  else
+  {
+    // create output filestream
+    std::stringstream filename_ss;
+    filename_ss << output_dir << output_string << ".vtk";
+    std::string filename = filename_ss.str();
+    std::ofstream output_filestream(filename.c_str());
+    output_filestream.precision(15);
 
-      // write output file
-      data_out.write_vtk(output_filestream);
-    }
+    // write output file
+    data_out.write_vtk(output_filestream);
+  }
 }
 
 /**
@@ -339,45 +341,45 @@ void PostProcessor<dim>::output_at_dof_points(
   const std::string & output_string,
   const DataPostprocessor<dim> & data_postprocessor) const
 {
-    // create output directory and subdirectory if they do not exist
-    create_directory("output");
-    create_directory(output_dir);
+  // create output directory and subdirectory if they do not exist
+  create_directory("output");
+  create_directory(output_dir);
 
-    // create DataOut object for quantity
-    DataOut<dim> data_out;
-    data_out.attach_dof_handler(dof_handler);
-    data_out.add_data_vector(values,
-                             component_names,
-                             DataOut<dim>::type_dof_data,
-                             component_interpretations);
-    data_out.add_data_vector(values, data_postprocessor);
-    data_out.build_patches();
+  // create DataOut object for quantity
+  DataOut<dim> data_out;
+  data_out.attach_dof_handler(dof_handler);
+  data_out.add_data_vector(values,
+                           component_names,
+                           DataOut<dim>::type_dof_data,
+                           component_interpretations);
+  data_out.add_data_vector(values, data_postprocessor);
+  data_out.build_patches();
 
-    // write GNUplot file for 1-D and .vtk file otherwise
-    if (dim == 1)
-    {
-      // create output filestream
-      std::stringstream filename_ss;
-      filename_ss << output_dir << output_string << ".gpl";
-      std::string filename = filename_ss.str();
-      std::ofstream output_filestream(filename.c_str());
-      output_filestream.precision(15);
+  // write GNUplot file for 1-D and .vtk file otherwise
+  if (dim == 1)
+  {
+    // create output filestream
+    std::stringstream filename_ss;
+    filename_ss << output_dir << output_string << ".gpl";
+    std::string filename = filename_ss.str();
+    std::ofstream output_filestream(filename.c_str());
+    output_filestream.precision(15);
 
-      // write output file
-      data_out.write_gnuplot(output_filestream);
-    }
-    else
-    {
-      // create output filestream
-      std::stringstream filename_ss;
-      filename_ss << output_dir << output_string << ".vtk";
-      std::string filename = filename_ss.str();
-      std::ofstream output_filestream(filename.c_str());
-      output_filestream.precision(15);
+    // write output file
+    data_out.write_gnuplot(output_filestream);
+  }
+  else
+  {
+    // create output filestream
+    std::stringstream filename_ss;
+    filename_ss << output_dir << output_string << ".vtk";
+    std::string filename = filename_ss.str();
+    std::ofstream output_filestream(filename.c_str());
+    output_filestream.precision(15);
 
-      // write output file
-      data_out.write_vtk(output_filestream);
-    }
+    // write output file
+    data_out.write_vtk(output_filestream);
+  }
 }
 
 /**

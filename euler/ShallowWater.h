@@ -78,8 +78,9 @@ private:
 
   // eliminate virtual overload warning
   using ConservationLaw<dim>::compute_max_entropy_jump;
-  double compute_max_entropy_jump(ShallowWaterEntropyFluxFEValuesFace<dim> & fe_values,
-                                          const Cell & cell) const;
+  double compute_max_entropy_jump(
+    ShallowWaterEntropyFluxFEValuesFace<dim> & fe_values,
+    const Cell & cell) const;
 
   void compute_inviscid_fluxes(const std::vector<double> & height,
                                const std::vector<Tensor<1, dim>> & momentum,

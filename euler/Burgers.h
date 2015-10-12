@@ -49,46 +49,43 @@ template <int dim>
 class Burgers : public ConservationLaw<dim>
 {
 public:
-
-    Burgers(const BurgersParameters<dim> &params);
+  Burgers(const BurgersParameters<dim> & params);
 
 private:
+  BurgersParameters<dim> burgers_parameters;
 
-    BurgersParameters<dim> burgers_parameters;
+  const FEValuesExtractors::Scalar velocity_extractor;
 
-    const FEValuesExtractors::Scalar velocity_extractor;
+  std::vector<std::string> get_component_names() override;
 
-    std::vector<std::string> get_component_names() override;
+  std::vector<DataComponentInterpretation::DataComponentInterpretation>
+    get_component_interpretations() override;
 
-    std::vector<DataComponentInterpretation::DataComponentInterpretation>
-       get_component_interpretations() override;
+  void assemble_lumped_mass_matrix() override;
 
-    void assemble_lumped_mass_matrix() override;
+  void define_problem() override;
 
-    void define_problem() override;
+  void compute_ss_residual(Vector<double> & solution) override;
 
-    void compute_ss_residual(Vector<double> &solution) override;
+  /*
+      void compute_face_ss_residual(
+        FEFaceValues<dim> &fe_face_values,
+        const typename DoFHandler<dim>::active_cell_iterator &cell,
+        Vector<double> &cell_residual) override;
+  */
 
-/*
-    void compute_face_ss_residual(
-      FEFaceValues<dim> &fe_face_values,
-      const typename DoFHandler<dim>::active_cell_iterator &cell,
-      Vector<double> &cell_residual) override;
-*/
+  // void compute_ss_jacobian() override;
 
-    //void compute_ss_jacobian() override;
+  void update_flux_speeds() override;
 
-    void update_flux_speeds() override;
+  void compute_entropy(const Vector<double> & solution,
+                       const FEValuesBase<dim> & fe_values,
+                       Vector<double> & entropy) const override;
 
-    void compute_entropy(
-      const Vector<double>    &solution,
-      const FEValuesBase<dim> &fe_values,
-      Vector<double>          &entropy) const override;
-
-    void compute_divergence_entropy_flux(
-      const Vector<double>    &solution,
-      const FEValuesBase<dim> &fe_values,
-      Vector<double>          &divergence_entropy_flux) const override;
+  void compute_divergence_entropy_flux(
+    const Vector<double> & solution,
+    const FEValuesBase<dim> & fe_values,
+    Vector<double> & divergence_entropy_flux) const override;
 };
 
 #include "Burgers.cc"

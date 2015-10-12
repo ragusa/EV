@@ -16,14 +16,14 @@ using namespace dealii;
 template <int dim>
 class BurgersParameters : public ConservationLawParameters<dim>
 {
-  public:
-    BurgersParameters();
+public:
+  BurgersParameters();
 
-    static void declare_burgers_parameters(ParameterHandler &parameter_handler);
+  static void declare_burgers_parameters(ParameterHandler & parameter_handler);
 
-    void get_burgers_parameters(ParameterHandler &parameter_handler);
+  void get_burgers_parameters(ParameterHandler & parameter_handler);
 
-    unsigned int problem_id;
+  unsigned int problem_id;
 };
 
 #include "BurgersParameters.cc"
