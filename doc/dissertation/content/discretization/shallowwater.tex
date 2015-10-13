@@ -2,16 +2,16 @@ Rearranging the continuity equation, substituting the approximate FEM
 solution and testing with a test function $\testfunction_i^\height$ gives its
 weak form for degree of freedom $i$:
 \begin{equation}
-  \left(\testfunction_i^\height,\ppt{\tilde{\height}}\right)_\domain
-  = - \left(\testfunction_i^\height,\nabla\cdot\tilde{\heightmomentum}
-    \right)_\domain \eqp
+  \intdomain{\testfunction_i^\height\ppt{\tilde{\height}}}
+  = - \intdomain{\testfunction_i^\height\nabla\cdot\tilde{\heightmomentum}}
+  \eqp
 \end{equation}
 Integrating by parts gives
 \begin{equation}
-  \left(\testfunction_i^\height,\ppt{\tilde{\height}}\right)_\domain
-  = \left(\nabla\testfunction_i^\height,\tilde{\heightmomentum}\right)_\domain
-  - \left(\testfunction_i^\height,\tilde{\heightmomentum}\cdot\normalvector
-    \right)_{\domainboundary} \eqp
+  \intdomain{\testfunction_i^\height\ppt{\tilde{\height}}}
+  = \intdomain{\nabla\testfunction_i^\height\cdot\tilde{\heightmomentum}}
+  - \intboundary{\testfunction_i^\height\tilde{\heightmomentum}\cdot\normalvector}
+  \eqp
 \end{equation}
 Rearranging the momentum equation, substituting the approximate FEM
 solution and testing with a test function $\testfunction_i^{\heightmomentum}$

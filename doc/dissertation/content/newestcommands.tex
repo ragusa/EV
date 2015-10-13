@@ -30,6 +30,7 @@
 \newcommand{\cellindex}{K}
 \newcommand{\cell}{K}
 \newcommand{\volume}{V}
+\newcommand{\area}{A}
 \newcommand{\testfunction}{\varphi}
 \newcommand{\support}{S}
 \newcommand{\maxdof}{N}
@@ -182,6 +183,8 @@
 \newcommand{\sumjnoti}{\sum\limits_{j\ne i}}
 \newcommand{\sumKSi}{\sum\limits_{\cellindex\subset\support_i}}
 \newcommand{\sumKSij}{\sum\limits_{\cellindex\subset\support_{i,j}}}
+\newcommand{\intdomain}[1]{\int\limits_\domain #1 \,d\volume}
+\newcommand{\intboundary}[1]{\int\limits_{\domainboundary} #1 \,d\area}
 \newcommand{\intSi}{\int\limits_{\support_i}}
 \newcommand{\intSij}{\int\limits_{\support_{i,j}}}
 
