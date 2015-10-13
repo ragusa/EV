@@ -82,8 +82,9 @@ protected:
                     const Vector<double> & b,
                     Vector<double> & x);
   void apply_Dirichlet_BC(const double & time);
-  void update_viscosities(const double & dt);
-  void update_old_first_order_viscosity();
+  void update_viscosities(const double & dt, const unsigned int & n);
+  virtual void update_old_low_order_viscosity(
+    const bool & using_low_order_scheme);
   void update_max_principle_viscosity();
   void compute_viscous_bilinear_forms();
   void compute_viscous_fluxes();

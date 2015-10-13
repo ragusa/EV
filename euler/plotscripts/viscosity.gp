@@ -16,7 +16,7 @@ title_list = "Low-Order\
               Entropy\
               High-Order"
 linetypes = "1 1 1"
-linecolors = "2 3 4"
+linecolors = "6 3 2"
 symboltypes = "-2 -2 -2"
 
 # define is_missing(x) function for determining if an input file exists
@@ -48,16 +48,19 @@ do for [i=1:words(file_list)] {
    }
 }
 
-set terminal postscript enhanced color
+set terminal pdfcairo
 output_file = outdir."viscosity_".timeintegrator.".pdf"
-set output '| ps2pdf - '.output_file
+set output output_file
 set ylabel "Viscosity"
 set xlabel "x"
-set logscale y
+#set logscale y
 set key top right
+set style fill transparent solid 0.5 noborder
 
-plot for [i=1:words(existing_file_list)] outdir.word(existing_file_list,i)\
-  using 1:2 with linesp linetype word(existing_lt_list,i)\
+plot for [i=1:words(existing_file_list)]\
+  outdir.word(existing_file_list,i) using 1:2\
+  with filledcurves y1=0\
+  linetype word(existing_lt_list,i)\
   linecolor word(existing_lc_list,i)\
-  pointtype word(existing_sym_list,i)\
   title word(existing_title_list,i)
+

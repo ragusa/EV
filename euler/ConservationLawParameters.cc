@@ -79,9 +79,11 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
       "final time", "1.0", Patterns::Double(), "final time value");
     prm.declare_entry(
       "time step size", "1e-3", Patterns::Double(), "time step size");
-    prm.declare_entry(
-      "cfl", "0.5", Patterns::Double(), "CFL number to be used if CFL condition "
-                                        "is used to compute time step size.");
+    prm.declare_entry("cfl",
+                      "0.5",
+                      Patterns::Double(),
+                      "CFL number to be used if CFL condition "
+                      "is used to compute time step size.");
     prm.declare_entry("steady state tolerance",
                       "1.0e-6",
                       Patterns::Double(),
@@ -185,6 +187,11 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
       "1e-3",
       Patterns::Double(),
       "tuning constant value to be used with first-order viscosity");
+    prm.declare_entry("use low order viscosity for first time step",
+                      "true",
+                      Patterns::Bool(),
+                      "option to use low-order viscosity for first time step"
+                      " of entropy viscosity method");
     prm.declare_entry("entropy viscosity coefficient",
                       "1e-3",
                       Patterns::Double(),
@@ -399,6 +406,8 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
     constant_viscosity_value = prm.get_double("constant viscosity value");
     first_order_viscosity_coef =
       prm.get_double("first order viscosity coefficient");
+    use_low_order_viscosity_for_first_time_step =
+      prm.get_bool("use low order viscosity for first time step");
     entropy_viscosity_coef = prm.get_double("entropy viscosity coefficient");
     jump_coef = prm.get_double("jump coefficient");
   }

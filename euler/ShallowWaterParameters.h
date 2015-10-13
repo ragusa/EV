@@ -26,6 +26,10 @@ public:
   void get_parameters(ParameterHandler & parameter_handler);
 
   unsigned int problem_id;
+
+  bool use_local_entropy_normalization;
+
+  bool multiply_low_order_viscosity_by_froude;
 };
 
 #include "ShallowWaterParameters.cc"

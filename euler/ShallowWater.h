@@ -74,7 +74,13 @@ private:
     const FEValuesBase<dim> & fe_values,
     Vector<double> & divergence_entropy_flux) const override;
 
+  void update_old_low_order_viscosity(
+    const bool & using_low_order_scheme) override;
+
   void update_entropy_viscosities(const double & dt) override;
+
+  double compute_local_entropy_normalization(const Vector<double> & solution,
+                                             const Cell & cell) const;
 
   // eliminate virtual overload warning
   using ConservationLaw<dim>::compute_max_entropy_jump;
@@ -94,9 +100,16 @@ private:
     std::vector<Tensor<1, dim>> & height_viscous_flux,
     std::vector<Tensor<2, dim>> & momentum_viscous_flux) const;
 
-  void compute_velocity(const std::vector<double> & height,
-                        const std::vector<Tensor<1, dim>> & momentum,
-                        std::vector<Tensor<1, dim>> & velocity) const;
+  std::vector<Tensor<1, dim>> compute_velocity(
+    const std::vector<double> & height,
+    const std::vector<Tensor<1, dim>> & momentum) const;
+
+  std::vector<double> compute_speed(
+    const std::vector<double> & height,
+    const std::vector<Tensor<1, dim>> & momentum) const;
+
+  std::vector<double> compute_sound_speed(
+    const std::vector<double> & height) const;
 
   void output_results(PostProcessor<dim> & postprocessor) const override;
 

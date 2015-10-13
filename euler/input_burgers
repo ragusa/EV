@@ -37,6 +37,7 @@ subsection artificial viscosity
    set viscosity type = entropy
    set constant viscosity value = 0.02
    set first order viscosity coefficient = 0.5
+   set use low order viscosity for first time step = true
    set entropy viscosity coefficient = 2.0
    set jump coefficient = 4.0
 end

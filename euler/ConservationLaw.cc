@@ -727,7 +727,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
     std::cout << "  time step " << n << ": t = "
               << "\x1b[1;34m" << old_time + dt << "\x1b[0m" << std::endl;
 
-    update_viscosities(dt);
+    update_viscosities(dt, n);
 
     // update old_solution to new_solution for next time step;
     // this is not done at the end of the previous time step because
@@ -1069,10 +1069,15 @@ void ConservationLaw<dim>::linear_solve(const SparseMatrix<double> & A,
   constraints.distribute(x);
 }
 
-/** \brief Updates viscosity at each quadrature point in each cell.
+/**
+ * \brief Updates viscosity at each quadrature point in each cell.
+ *
+ * \param[in] dt time step size
+ * \param[in] n time index
  */
 template <int dim>
-void ConservationLaw<dim>::update_viscosities(const double & dt)
+void ConservationLaw<dim>::update_viscosities(const double & dt,
+                                              const unsigned int & n)
 {
   switch (parameters.viscosity_type)
   {
@@ -1095,7 +1100,7 @@ void ConservationLaw<dim>::update_viscosities(const double & dt)
     // old first order viscosity
     case ConservationLawParameters<dim>::old_first_order:
     {
-      update_old_first_order_viscosity();
+      update_old_low_order_viscosity(true);
       viscosity = first_order_viscosity;
       break;
     }
@@ -1109,13 +1114,23 @@ void ConservationLaw<dim>::update_viscosities(const double & dt)
     // entropy viscosity
     case ConservationLawParameters<dim>::entropy:
     {
-      update_old_first_order_viscosity();
-      update_entropy_viscosities(dt);
+      // compute low-order viscosities
+      update_old_low_order_viscosity(false);
 
       cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
-      for (; cell != endc; ++cell)
-        viscosity[cell] =
-          std::min(first_order_viscosity[cell], entropy_viscosity[cell]);
+      if (parameters.use_low_order_viscosity_for_first_time_step && n == 1)
+      {
+        // use low-order viscosities for first time step
+        for (; cell != endc; ++cell)
+          viscosity[cell] = first_order_viscosity[cell];
+      }
+      {
+        // compute high-order viscosities
+        update_entropy_viscosities(dt);
+        for (; cell != endc; ++cell)
+          viscosity[cell] =
+            std::min(first_order_viscosity[cell], entropy_viscosity[cell]);
+      }
       break;
     }
     default:
@@ -1127,16 +1142,20 @@ void ConservationLaw<dim>::update_viscosities(const double & dt)
 }
 
 /**
- * \brief Computes first order viscosity for each cell.
+ * \brief Computes low-order viscosity for each cell.
  *
- * The first order viscosity is computed as
+ * The low-order viscosity is computed as
  * \f[
- *   \nu_K^1 = c_{max} h_K \lambda_{K,max} \,,
+ *   \nu_K^L = c_{max} h_K \lambda_{K,max} \,,
  * \f]
  * where \f$\lambda_{K,max}\f$ is the maximum flux speed on cell \f$K\f$.
+ *
+ * \param[in] use_low_order_scheme flag that the low-order viscosities are
+ *            are used in a low-order scheme as opposed to an entropy
+ *            viscosity scheme
  */
 template <int dim>
-void ConservationLaw<dim>::update_old_first_order_viscosity()
+void ConservationLaw<dim>::update_old_low_order_viscosity(const bool &)
 {
   double c_max = parameters.first_order_viscosity_coef;
 

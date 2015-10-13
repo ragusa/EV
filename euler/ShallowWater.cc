@@ -615,8 +615,7 @@ void ShallowWater<dim>::compute_inviscid_fluxes(
   Tensor<2, dim> identity_tensor(identity_tensor_sym);
 
   // compute auxiliary quantities
-  std::vector<Tensor<1, dim>> velocity(n);
-  compute_velocity(height, momentum, velocity);
+  std::vector<Tensor<1, dim>> velocity = compute_velocity(height, momentum);
 
   // loop over vector elements
   for (unsigned int q = 0; q < n; ++q)
@@ -660,64 +659,66 @@ void ShallowWater<dim>::compute_viscous_fluxes(
 /**
  * \brief Computes a vector of velocity values.
  *
- * \param[in] height  vector of height values
+ * \param[in] height   vector of height values
  * \param[in] momentum vector of momentum values
- * \param[out] velocity vector of velocity values
+ *
+ * \return vector of velocity values
  */
 template <int dim>
-void ShallowWater<dim>::compute_velocity(
+std::vector<Tensor<1, dim>> ShallowWater<dim>::compute_velocity(
   const std::vector<double> & height,
-  const std::vector<Tensor<1, dim>> & momentum,
-  std::vector<Tensor<1, dim>> & velocity) const
+  const std::vector<Tensor<1, dim>> & momentum) const
 {
   const unsigned int n = height.size();
+
+  std::vector<Tensor<1, dim>> velocity(n);
   for (unsigned int q = 0; q < n; ++q)
     velocity[q] = momentum[q] / height[q];
+
+  return velocity;
 }
 
 /**
- * \brief Computes the partial derivative of the entropy function with respect
- *        to height.
- * \param[in] height vector of height values
+ * \brief Computes a vector of speed values.
+ *
+ * \param[in] height   vector of height values
  * \param[in] momentum vector of momentum values
- * \param[out] entropy_derivative_height vector of partial derivative of entropy
- *             with respect to height
+ *
+ * \return vector of speed values
  */
-/*
 template <int dim>
-void compute_entropy_derivative_height(
+std::vector<double> ShallowWater<dim>::compute_speed(
   const std::vector<double> & height,
-  const std::vector<Tensor<1, dim>> & momentum,
-  std::vector<double> & entropy_derivative_height) const
+  const std::vector<Tensor<1, dim>> & momentum) const
 {
   const unsigned int n = height.size();
+
+  std::vector<double> speed(n);
   for (unsigned int q = 0; q < n; ++q)
-    entropy_derivative_height[q] =
-      -0.5 * momentum[q] * momentum[q] / (height[q] * height[q]) +
-      gravity * height[q];
+    speed[q] = momentum[q].norm() / height[q];
+
+  return speed;
 }
-*/
 
 /**
- * \brief Computes the partial derivative of the entropy function with respect
- *        to momentum.
+ * \brief Computes a vector of sound speed values.
+ *
  * \param[in] height vector of height values
- * \param[in] momentum vector of momentum values
- * \param[out] entropy_derivative_momentum vector of partial derivative of entropy
- *             with respect to momentum
+ *
+ * \return vector of sound speed values
  */
-/*
 template <int dim>
-void compute_entropy_derivative_momentum(
-  const std::vector<double> & height,
-  const std::vector<Tensor<1, dim>> & momentum,
-  std::vector<Tensor<1, dim>> & entropy_derivative_momentum) const
+std::vector<double> ShallowWater<dim>::compute_sound_speed(
+  const std::vector<double> & height) const
 {
   const unsigned int n = height.size();
+
+  std::vector<double> sound_speed(n);
   for (unsigned int q = 0; q < n; ++q)
-    entropy_derivative_momentum[q] = momentum[q] / height[q];
+    sound_speed[q] = std::sqrt(gravity * height[q]);
+
+  return sound_speed;
 }
-*/
 
 /**
  * \brief Computes the maximum flux speed \f$\lambda\f$ at each quadrature point
@@ -760,8 +761,7 @@ void ShallowWater<dim>::update_flux_speeds()
                                                       momentum);
 
     // compute velocity values
-    std::vector<Tensor<1, dim>> velocity(this->n_q_points_cell);
-    compute_velocity(height, momentum, velocity);
+    std::vector<Tensor<1, dim>> velocity = compute_velocity(height, momentum);
 
     // determine max flux speed in cell
     this->max_flux_speed_cell[cell] = 0.0;
@@ -902,6 +902,79 @@ void ShallowWater<dim>::compute_divergence_entropy_flux(
 }
 
 /**
+ * \brief Computes low-order viscosity for each cell.
+ *
+ * The low-order viscosity is computed as
+ * \f[
+ *   \nu_K^L = c_{max} h_K \lambda_{K,max} \,,
+ * \f]
+ * where \f$\lambda_{K,max}\f$ is the maximum flux speed on cell \f$K\f$,
+ * or if the user specifies, the low-order viscosity definition above is
+ * multiplied by the local Froude number:
+ * \f[
+ *   \nu_K^L = c_{max} \mbox{Fr}_K h_K \lambda_{K,max} \,,
+ * \f]
+ * where the Froude number is taken to be the max over all quadrature points:
+ * \f[
+ *   \mbox{Fr}_K = \max\limits_q \frac{u_q}{a_q} \,.
+ * \f]
+ *
+ * \param[in] using_low_order_scheme flag that the low-order viscosities are
+ *            are used in a low-order scheme as opposed to an entropy
+ *            viscosity scheme
+ */
+template <int dim>
+void ShallowWater<dim>::update_old_low_order_viscosity(
+  const bool & using_low_order_scheme)
+{
+  const double c_max = this->parameters.first_order_viscosity_coef;
+
+  Cell cell = this->dof_handler.begin_active(), endc = this->dof_handler.end();
+
+  if (using_low_order_scheme &&
+      sw_parameters.multiply_low_order_viscosity_by_froude)
+  {
+    FEValues<dim> fe_values(this->fe, this->cell_quadrature, update_values);
+
+    // compute low-order viscosity for each cell
+    for (; cell != endc; ++cell)
+    {
+      fe_values.reinit(cell);
+
+      // extract height and momentum
+      std::vector<double> height(this->n_q_points_cell);
+      fe_values[height_extractor].get_function_values(this->new_solution, height);
+      std::vector<Tensor<1, dim>> momentum(this->n_q_points_cell);
+      fe_values[momentum_extractor].get_function_values(this->new_solution,
+                                                        momentum);
+
+      // compute fluid speed and sound speed
+      std::vector<double> speed = compute_speed(height, momentum);
+      std::vector<double> sound_speed = compute_sound_speed(height);
+
+      // compute Froude number for cell by taking the maximum over
+      // quadrature points
+      double froude = 0.0;
+      for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+        froude = std::max(froude, speed[q] / sound_speed[q]);
+
+      this->first_order_viscosity[cell] =
+        std::abs(c_max * froude * this->cell_diameter[cell] *
+                 this->max_flux_speed_cell[cell]);
+    }
+  }
+  else
+  {
+    // compute low-order viscosity for each cell
+    for (; cell != endc; ++cell)
+    {
+      this->first_order_viscosity[cell] = std::abs(
+        c_max * this->cell_diameter[cell] * this->max_flux_speed_cell[cell]);
+    }
+  }
+}
+
+/**
  * \brief Computes entropy viscosity for each cell.
  *
  * \param[in] dt time step size
@@ -910,8 +983,10 @@ template <int dim>
 void ShallowWater<dim>::update_entropy_viscosities(const double & dt)
 {
   // compute normalization constant for entropy viscosity
-  const double entropy_normalization =
-    this->compute_entropy_normalization(this->new_solution);
+  double uniform_entropy_normalization = 1.0e15;
+  if (!sw_parameters.use_local_entropy_normalization)
+    uniform_entropy_normalization =
+      this->compute_entropy_normalization(this->new_solution);
 
   // get tuning parameters
   const double entropy_residual_coefficient =
@@ -931,6 +1006,14 @@ void ShallowWater<dim>::update_entropy_viscosities(const double & dt)
   Cell cell = this->dof_handler.begin_active(), endc = this->dof_handler.end();
   for (; cell != endc; ++cell)
   {
+    // compute local entropy normalization if requested
+    double entropy_normalization;
+    if (sw_parameters.use_local_entropy_normalization)
+      entropy_normalization =
+        compute_local_entropy_normalization(this->new_solution, cell);
+    else
+      entropy_normalization = uniform_entropy_normalization;
+
     // compute max entropy residual on cell
     const double max_entropy_residual = this->compute_max_entropy_residual(
       this->new_solution, this->old_solution, dt, cell);
@@ -945,6 +1028,40 @@ void ShallowWater<dim>::update_entropy_viscosities(const double & dt)
       aux * (entropy_residual_coefficient * max_entropy_residual +
              jump_coefficient * max_entropy_jump);
   }
+}
+
+/**
+ * \brief Computes the local entropy viscosity normalization coefficient
+ *        \f$gh^2\f$ for a cell.
+ *
+ * The cell value for \f$gh^2\f$ is chosen to be the minimum quadrature
+ * point value:
+ *
+ * \f[
+ *   c^{\mbox{normalization}}_K = \min\limits_{q} g h_q^2
+ * \f]
+ *
+ * \param[in] solution solution vector
+ * \param[in] cell cell iterator
+ *
+ * \return local entropy viscosity normalization coefficient for a cell
+ */
+template <int dim>
+double ShallowWater<dim>::compute_local_entropy_normalization(
+  const Vector<double> & solution, const Cell & cell) const
+{
+  // get height values
+  FEValues<dim> fe_values(this->fe, this->cell_quadrature, update_values);
+  fe_values.reinit(cell);
+  std::vector<double> height(this->n_q_points_cell);
+  fe_values[height_extractor].get_function_values(solution, height);
+
+  // loop over quadrature points to determine minimum
+  double normalization = 1.0e15;
+  for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+    normalization = std::max(normalization, gravity * std::pow(height[q], 2));
+
+  return normalization;
 }
 
 /**

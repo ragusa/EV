@@ -115,6 +115,7 @@ public:
   ViscosityType viscosity_type;
   double constant_viscosity_value;
   double first_order_viscosity_coef;
+  bool use_low_order_viscosity_for_first_time_step;
   double entropy_viscosity_coef;
   double jump_coef;
 };
