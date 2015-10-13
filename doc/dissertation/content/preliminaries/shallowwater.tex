@@ -1,0 +1,62 @@
+The shallow water equations, also known as the Saint-Venant equations, are an
+approximation of conservation of mass and momentum equations applied to free
+surface flows, which assume the fluid to be incompressible, non-viscous, and
+non-heat-conducting. The shallow water equations make the additional
+approximation that the depth component of acceleration can be neglected due to
+horizontal length scales being much greater than the depth length
+scale and then depth-integrate the conservation equations to obtain
+the following\cite{toro2009}\cite{leveque2002}:
+\begin{equation}
+\begin{gathered}
+  \ppt{\vectorsolution} + \nabla\cdot\consfluxvector
+  = \conssource \eqc
+\\
+  \vectorsolution
+    = \left[\begin{array}{c}
+        \height\\
+        \heightmomentumx\\
+        \heightmomentumy
+      \end{array}\right]
+  \eqc\quad
+  \consfluxvector
+  = \left[\begin{array}{c c}
+      \heightmomentumx & \heightmomentumy\\
+      \frac{\heightmomentumx^2}{\height} + \half\gravity\height^2
+        & \frac{\heightmomentumx\heightmomentumy}{\height}\\
+      \frac{\heightmomentumx\heightmomentumy}{\height}
+        & \frac{\heightmomentumy^2}{\height} + \half\gravity\height^2\\
+    \end{array}\right]
+  \eqc\quad
+  \conssource
+  = \left[\begin{array}{c}
+      0\\
+     -\gravity\height\pd{\bathymetry}{x}\\
+     -\gravity\height\pd{\bathymetry}{y}\\
+    \end{array}\right]
+  \eqc
+\end{gathered}
+\end{equation}
+written more concisely as
+\[
+  \vectorsolution
+    = \left[\begin{array}{c}\height\\\heightmomentum\end{array}\right]
+  \eqc\quad
+  \consfluxvector
+  = \left[\begin{array}{c}\heightmomentum\\
+      \frac{\heightmomentum\otimes\heightmomentum}{\height}
+      + \half\gravity\height^2\identity
+    \end{array}\right]
+  \eqc\quad
+  \conssource
+  = \left[\begin{array}{c}0\\-\gravity\height\nabla\bathymetry\end{array}
+    \right] \eqc
+\]
+where $\height$ is the height of the water, which plays the role of density
+in the continuity equation, $\heightmomentum=\height\velocity$ is sometimes
+referred to as \emph{discharge} and plays the role of momentum and so will
+here just be referred to as ``momentum'', $\velocity$ is velocity, $\gravity$
+is acceleration due to gravity, and $\bathymetry$ is the topography of the
+bottom of the fluid body with respect to some reference point.
+
+Note that the shallow water equations are only valid in 1-D or 2-D, not 3-D,
+since they are depth-integrated equations.
