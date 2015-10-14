@@ -345,24 +345,28 @@ The entropy jump for a face $F$ is defined to be
     \cdot\normalvector\cdot\normalvector
   \right\|_{L^\infty(F)} \eqp
 \end{equation}
-The regularization of the shallow water equations is achieved by adding
-viscous fluxes:
+Finally, the entropy viscosity is computed as in the scalar case but with
+more generality in the normalization constant $c^{\text{normalization},\timeindex}_\cell$:
 \begin{equation}
-\begin{gathered}
-  \ppt{\vectorsolution} + \nabla\cdot\consfluxvector
-  + \highlightgreen{\nabla\cdot\viscconsfluxvector}
-  = \conssource \eqc
-\\
-  \viscconsfluxvector
-  \equiv \left[\begin{array}{c}
-    \viscflux{\height}(\vectorsolution,\viscosity)\\
-    \viscflux{\heightmomentum}(\vectorsolution,\viscosity)
-    \end{array}\right]
-  \equiv \left[\begin{array}{c}
-    \viscosity\nabla\height\\
-    \viscosity\nabla\heightmomentum
-    \end{array}\right] \eqc
-\end{gathered}
+   \entropycellviscosity[n] = \frac{\entropyresidualcoef
+   \entropyresidual_\cellindex^\timeindex
+   + \entropyjumpcoef\entropyjump_\cell^\timeindex}
+   {c^{\text{normalization},\timeindex}_\cell}
+   \eqp
 \end{equation}
-where $\viscosity$ is viscosity, which is computed as in Section
-\ref{sec:entropy_viscosity_scalar}.
+As in the scalar case, one may use a global normalization constant, in this case
+the maximum deviation of entropy from the average:
+\begin{equation}
+  c^{\text{normalization},\timeindex}_\cell = \|\entropy(\approximatevectorsolution^\timeindex)
+   -\bar{\entropy}(\approximatevectorsolution^\timeindex)\|_{L^\infty(\domain)}
+  \eqp
+\end{equation}
+Alternately, for the shallow water equations, the following local normalization
+constant is used:
+\begin{equation}
+  c^{\text{normalization},\timeindex}_\cell
+  = \min\limits_{\x_q\in\mathcal{Q}_\cell} \gravity (\approximate{h}^\timeindex(\x_q))^2
+  \eqc
+\end{equation}
+where $\mathcal{Q}_\cell$ is the set of quadrature points in cell $\cell$.
+

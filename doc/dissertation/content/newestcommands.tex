@@ -18,7 +18,9 @@
 % solution
 \newcommand{\scalarsolution}{u}
 \newcommand{\vectorsolution}{\mathbf{\scalarsolution}}
-\newcommand{\approximatescalarsolution}{\tilde{\scalarsolution}}
+\newcommand{\approximate}[1]{\tilde{#1}}
+\newcommand{\approximatescalarsolution}{\approximate{\scalarsolution}}
+\newcommand{\approximatevectorsolution}{\approximate{\vectorsolution}}
 \newcommand{\solutionletter}{U}
 \newcommand{\solutionvector}{\mathbf{\solutionletter}}
 \newcommand{\lowordersolution}[1][]{
