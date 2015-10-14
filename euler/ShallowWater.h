@@ -97,6 +97,7 @@ private:
     const double & viscosity,
     const std::vector<Tensor<1, dim>> & height_gradient,
     const std::vector<Tensor<2, dim>> & momentum_gradient,
+    const std::vector<Tensor<1, dim>> & bathymetry_gradient,
     std::vector<Tensor<1, dim>> & height_viscous_flux,
     std::vector<Tensor<2, dim>> & momentum_viscous_flux) const;
 

@@ -536,6 +536,11 @@ void ShallowWater<dim>::compute_ss_residual(Vector<double> & f)
     fe_values[momentum_extractor].get_function_gradients(this->new_solution,
                                                          momentum_gradient);
 
+    // compute gradients of bathymetry function
+    std::vector<Tensor<1, dim>> bathymetry_gradient(this->n_q_points_cell);
+    fe_values_bathymetry.get_function_gradients(bathymetry_vector,
+                                                bathymetry_gradient);
+
     // compute inviscid fluxes
     std::vector<Tensor<1, dim>> height_inviscid_flux(this->n_q_points_cell);
     std::vector<Tensor<2, dim>> momentum_inviscid_flux(this->n_q_points_cell);
@@ -548,13 +553,9 @@ void ShallowWater<dim>::compute_ss_residual(Vector<double> & f)
     compute_viscous_fluxes(this->viscosity[cell],
                            height_gradient,
                            momentum_gradient,
+                           bathymetry_gradient,
                            height_viscous_flux,
                            momentum_viscous_flux);
-
-    // compute gradients of bathymetry function
-    std::vector<Tensor<1, dim>> bathymetry_gradient(this->n_q_points_cell);
-    fe_values_bathymetry.get_function_gradients(bathymetry_vector,
-                                                bathymetry_gradient);
 
     // get quadrature points on cell
     std::vector<Point<dim>> points(this->n_q_points_cell);
@@ -639,6 +640,7 @@ void ShallowWater<dim>::compute_viscous_fluxes(
   const double & viscosity,
   const std::vector<Tensor<1, dim>> & height_gradient,
   const std::vector<Tensor<2, dim>> & momentum_gradient,
+  const std::vector<Tensor<1, dim>> & bathymetry_gradient,
   std::vector<Tensor<1, dim>> & height_viscous_flux,
   std::vector<Tensor<2, dim>> & momentum_viscous_flux) const
 {
@@ -649,7 +651,8 @@ void ShallowWater<dim>::compute_viscous_fluxes(
   for (unsigned int q = 0; q < n; ++q)
   {
     // density viscous flux
-    height_viscous_flux[q] = -viscosity * height_gradient[q];
+    height_viscous_flux[q] =
+      -viscosity * (height_gradient[q] + bathymetry_gradient[q]);
 
     // momentum viscous flux
     momentum_viscous_flux[q] = -viscosity * momentum_gradient[q];
