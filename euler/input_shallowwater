@@ -12,7 +12,7 @@ end
 # 2 lake_at_rest
 # 3 lake_at_rest_perturbed
 subsection problem
-   set problem id = 1
+   set problem id = 0
 end
 
 subsection refinement
@@ -39,7 +39,7 @@ subsection artificial viscosity
    set viscosity type = entropy
    set constant viscosity value = 0.01
    set first order viscosity coefficient = 0.5
-   set multiply low order viscosity by froude = true
+   set multiply low order viscosity by froude = false
    set use low order viscosity for first time step = true
    set entropy viscosity coefficient = 1.0
    set jump coefficient = 1.0

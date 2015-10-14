@@ -90,7 +90,7 @@ protected:
   void compute_viscous_fluxes();
   void add_maximum_principle_viscosity_bilinear_form(Vector<double> & solution);
   double compute_entropy_normalization(const Vector<double> & solution) const;
-  double compute_max_entropy_residual(const Vector<double> & new_solution,
+  virtual double compute_max_entropy_residual(const Vector<double> & new_solution,
                                       const Vector<double> & old_solution,
                                       const double & dt,
                                       const cell_iterator & cell) const;
@@ -171,9 +171,11 @@ protected:
    *             point on cell
    */
   virtual void compute_divergence_entropy_flux(
-    const Vector<double> & solution,
-    const FEValuesBase<dim> & fe_values,
-    Vector<double> & divergence) const = 0;
+    const Vector<double> &,
+    const FEValuesBase<dim> &,
+    Vector<double> &) const
+  {
+  }
 
   /**
    * \brief Outputs additional quantities other than the solution variables.

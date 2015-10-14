@@ -16,6 +16,7 @@
 #include <deal.II/fe/fe_values_extractors.h>
 #include <deal.II/lac/vector.h>
 #include "ConservationLaw.h"
+#include "ShallowWaterEntropyFluxFEValuesCell.h"
 #include "ShallowWaterEntropyFluxFEValuesFace.h"
 #include "ShallowWaterParameters.h"
 #include "ShallowWaterPostProcessor.h"
@@ -69,11 +70,14 @@ private:
                        const FEValuesBase<dim> & fe_values,
                        Vector<double> & entropy) const override;
 
-  void compute_divergence_entropy_flux(
-    const Vector<double> & solution,
-    const FEValuesBase<dim> & fe_values,
-    Vector<double> & divergence_entropy_flux) const override;
-
+  // eliminate virtual overload warning
+  using ConservationLaw<dim>::compute_max_entropy_residual;
+  double compute_max_entropy_residual(const Vector<double> & new_solution,
+                                      const Vector<double> & old_solution,
+                                      const ShallowWaterEntropyFluxFEValuesCell<dim> & entropy_flux_fe_values,
+                                      const double & dt,
+                                      const Cell & cell) const;
+ 
   void update_old_low_order_viscosity(
     const bool & using_low_order_scheme) override;
 

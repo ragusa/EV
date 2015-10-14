@@ -652,7 +652,7 @@ void ShallowWater<dim>::compute_viscous_fluxes(
   {
     // density viscous flux
     height_viscous_flux[q] =
-      -viscosity * (height_gradient[q] + bathymetry_gradient[q]);
+      -viscosity * (height_gradient[q] + 0*bathymetry_gradient[q]);
 
     // momentum viscous flux
     momentum_viscous_flux[q] = -viscosity * momentum_gradient[q];
@@ -785,37 +785,6 @@ void ShallowWater<dim>::update_flux_speeds()
 }
 
 /**
- * \brief Computes entropy \f$\eta\f$ at each degree of freedom point.
- *
- * For the shallow water equations, the entropy is defined as
- * \f[
- *   \eta(\mathbf{u}) = \frac{1}{2}\frac{\mathbf{q}\cdot\mathbf{q}}{h}
- *   + \frac{1}{2}g h^2
- * \f]
- */
-/*
-template <int dim>
-void ShallowWater<dim>::compute_entropy_dof(const Vector<double> & solution,
-                                            const FEValuesBase<dim> & fe_values,
-                                            Vector<double> & entropy) const
-{
-  // get number of quadrature points
-  const unsigned int n = entropy.size();
-
-  // get height and momentum
-  std::vector<double> height(n);
-  std::vector<Tensor<1, dim>> momentum(n);
-  fe_values[height_extractor].get_function_values(solution, height);
-  fe_values[momentum_extractor].get_function_values(solution, momentum);
-
-  // compute entropy
-  for (unsigned int q = 0; q < n; ++q)
-    entropy(q) = 0.5 * momentum[q] * momentum[q] / height[q] +
-      0.5 * gravity * height[q] * height[q];
-}
-*/
-
-/**
  * \brief Computes entropy \f$\eta\f$ at each quadrature point on cell or face.
  *
  * For the shallow water equations, the entropy is defined as
@@ -842,66 +811,6 @@ void ShallowWater<dim>::compute_entropy(const Vector<double> & solution,
   for (unsigned int q = 0; q < n; ++q)
     entropy(q) = 0.5 * momentum[q] * momentum[q] / height[q] +
       0.5 * gravity * height[q] * height[q];
-}
-
-/**
- * \brief Computes the divergence of the entropy flux
- *        \f$\nabla\cdot\mathbf{f}^\eta\f$ at each quadrature point
- *        on a cell or face.
- */
-template <int dim>
-void ShallowWater<dim>::compute_divergence_entropy_flux(
-  const Vector<double> & solution,
-  const FEValuesBase<dim> & fe_values,
-  Vector<double> & divergence_entropy_flux) const
-{
-  // get number of quadrature points
-  const unsigned int n = divergence_entropy_flux.size();
-
-  // get solution values
-  std::vector<double> height(n);
-  std::vector<Tensor<1, dim>> momentum(n);
-  fe_values[height_extractor].get_function_values(solution, height);
-  fe_values[momentum_extractor].get_function_values(solution, momentum);
-
-  // get height gradient
-  std::vector<Tensor<1, dim>> height_gradient(n);
-  fe_values[height_extractor].get_function_gradients(solution, height_gradient);
-
-  // get momentum divergence
-  std::vector<double> momentum_divergence(n);
-  fe_values[momentum_extractor].get_function_divergences(solution,
-                                                         momentum_divergence);
-
-  // identity tensor
-  SymmetricTensor<2, dim> identity_tensor_sym = unit_symmetric_tensor<dim>();
-  Tensor<2, dim> identity_tensor(identity_tensor_sym);
-
-  // compute divergence of entropy flux for each quadrature point
-  for (unsigned int q = 0; q < n; ++q)
-  {
-    // compute derivative of entropy with respect to each component
-    const double dentropy_dheight =
-      -0.5 * momentum[q] * momentum[q] / (height[q] * height[q]) +
-      gravity * height[q];
-    const Tensor<1, dim> dentropy_dmomentum = momentum[q] / height[q];
-
-    // compute outer product of momentum with itself
-    Tensor<2, dim> momentum_times_momentum =
-      outer_product(momentum[q], momentum[q]);
-
-    // compute divergence of each component flux
-    const Tensor<2, dim> aux = gravity * height[q] * identity_tensor;
-    const double divergence_height_flux = momentum_divergence[q];
-    const Tensor<1, dim> divergence_momentum_flux =
-      2.0 * momentum[q] / height[q] * momentum_divergence[q] +
-      (aux - momentum_times_momentum / (height[q] * height[q])) *
-        height_gradient[q];
-
-    // compute divergence of entropy flux
-    divergence_entropy_flux[q] = dentropy_dheight * divergence_height_flux +
-      dentropy_dmomentum * divergence_momentum_flux;
-  }
 }
 
 /**
@@ -997,6 +906,13 @@ void ShallowWater<dim>::update_entropy_viscosities(const double & dt)
   const double jump_coefficient = this->parameters.jump_coef;
 
   // FE values for entropy flux
+  ShallowWaterEntropyFluxFEValuesCell<dim> entropy_flux_fe_values_cell(
+    this->dof_handler,
+    this->triangulation,
+    this->cell_quadrature,
+    this->new_solution,
+    bathymetry_vector,
+    gravity);
   ShallowWaterEntropyFluxFEValuesFace<dim> entropy_flux_fe_values_face(
     this->dof_handler,
     this->triangulation,
@@ -1009,6 +925,10 @@ void ShallowWater<dim>::update_entropy_viscosities(const double & dt)
   Cell cell = this->dof_handler.begin_active(), endc = this->dof_handler.end();
   for (; cell != endc; ++cell)
   {
+    // reinitialize entropy flux FE values for cell (face values will need be
+    // reinitialized in compute_max_entropy_jump())
+    entropy_flux_fe_values_cell.reinit(cell);
+
     // compute local entropy normalization if requested
     double entropy_normalization;
     if (sw_parameters.use_local_entropy_normalization)
@@ -1019,7 +939,7 @@ void ShallowWater<dim>::update_entropy_viscosities(const double & dt)
 
     // compute max entropy residual on cell
     const double max_entropy_residual = this->compute_max_entropy_residual(
-      this->new_solution, this->old_solution, dt, cell);
+      this->new_solution, this->old_solution, entropy_flux_fe_values_cell, dt, cell);
 
     // compute max entropy flux jump
     const double max_entropy_jump =
@@ -1065,6 +985,53 @@ double ShallowWater<dim>::compute_local_entropy_normalization(
     normalization = std::max(normalization, gravity * std::pow(height[q], 2));
 
   return normalization;
+}
+
+/**
+ * \brief Computes the max entropy residual in a cell.
+ *
+ * \param[in] new_solution new solution
+ * \param[in] old_solution old solution
+ * \param[in] entropy_flux_fe_values FE values for entropy flux
+ * \param[in] dt time step size
+ * \param[in] cell cell iterator
+ *
+ * \return max entropy residual in a cell
+ */
+template <int dim>
+double ShallowWater<dim>::compute_max_entropy_residual(
+  const Vector<double> & new_solution,
+  const Vector<double> & old_solution,
+  const ShallowWaterEntropyFluxFEValuesCell<dim> & entropy_flux_fe_values,
+  const double & dt,
+  const Cell & cell) const
+{
+  // FE values
+  FEValues<dim> fe_values(this->fe, this->cell_quadrature, update_values | update_gradients);
+  fe_values.reinit(cell);
+
+  Vector<double> entropy_new(this->n_q_points_cell);
+  Vector<double> entropy_old(this->n_q_points_cell);
+  Vector<double> entropy_residual(this->n_q_points_cell);
+
+  // compute entropy of current and old solutions
+  compute_entropy(new_solution, fe_values, entropy_new);
+  compute_entropy(old_solution, fe_values, entropy_old);
+  std::vector<double> divergence_entropy_flux = entropy_flux_fe_values.get_function_divergences();
+
+  // compute entropy residual at each quadrature point on cell
+  double max_entropy_residual = 0.0;
+  for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+  {
+    // compute entropy residual
+    double dsdt = (entropy_new[q] - entropy_old[q]) / dt;
+    entropy_residual[q] = std::abs(dsdt + divergence_entropy_flux[q]);
+
+    // update maximum entropy residual
+    max_entropy_residual = std::max(max_entropy_residual, entropy_residual[q]);
+  }
+
+  return max_entropy_residual;
 }
 
 /**
@@ -1135,6 +1102,11 @@ double ShallowWater<dim>::compute_max_entropy_jump(
   return max_jump_in_cell;
 }
 
+/**
+ * \brief Calls output function of postprocessor.
+ *
+ * \param[in] postprocessor post-processor
+ */
 template <int dim>
 void ShallowWater<dim>::output_results(PostProcessor<dim> & postprocessor) const
 {

@@ -1117,17 +1117,18 @@ void ConservationLaw<dim>::update_viscosities(const double & dt,
       // compute low-order viscosities
       update_old_low_order_viscosity(false);
 
-      cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
+      cell_iterator cell, endc = dof_handler.end();
       if (parameters.use_low_order_viscosity_for_first_time_step && n == 1)
       {
         // use low-order viscosities for first time step
-        for (; cell != endc; ++cell)
+        for (cell = dof_handler.begin_active(); cell != endc; ++cell)
           viscosity[cell] = first_order_viscosity[cell];
       }
+      else
       {
         // compute high-order viscosities
         update_entropy_viscosities(dt);
-        for (; cell != endc; ++cell)
+        for (cell = dof_handler.begin_active(); cell != endc; ++cell)
           viscosity[cell] =
             std::min(first_order_viscosity[cell], entropy_viscosity[cell]);
       }

@@ -42,6 +42,8 @@ public:
   void get_function_gradients(
     std::vector<GradientType> & function_gradients) const;
 
+  std::vector<double> get_function_divergences() const;
+
 protected:
   /** \brief Cell quadrature */
   const QGauss<dim> cell_quadrature;
