@@ -4,9 +4,10 @@
 \usepackage{alltt}
 \usepackage{amsmath}
 \usepackage{amssymb}
-\title{Maximum-Principle Preserving Finite Element Method for the
-  Radiation Transport Equation}
-\author{Jean-Luc Guermond\\Jean Ragusa\\Joshua Hansel}
+%\title{Maximum-Principle Preserving Finite Element Method for the
+%  Radiation Transport Equation}
+%\author{Jean-Luc Guermond\\Jean Ragusa\\Joshua Hansel}
+\title{Shallow Water Notes}
 
 \input{../../dissertation/content/newestcommands}
 \input{../../dissertation/content/theorems_dissertation}
@@ -16,11 +17,17 @@
 \maketitle
 %\tableofcontents
 
+\section{Equations}
+\input{../../dissertation/content/preliminaries/shallowwater}
+\section{Weak Form}
+\input{../../dissertation/content/discretization/shallowwater}
+\section{Boundary Conditions}
+\input{../../dissertation/content/discretization/shallowwater_bc}
 %===============================================================================
-\section{Preliminaries}
+%\section{Preliminaries}
 %===============================================================================
-\subsection{Conservation Laws}
-  \input{../../dissertation/content/preliminaries/conservation_laws}
+%\subsection{Conservation Laws}
+%  \input{../../dissertation/content/preliminaries/conservation_laws}
 %  \subsubsection{The Burgers Equation}
 %  \subsubsection{The Shallow Water Equations\label{sec:shallowwater}}
 %    \input{content/preliminaries/shallowwater}
@@ -28,21 +35,21 @@
 %\subsection{Problem Formulation}
 %  \input{content/preliminaries/problem_formulation}
 %===============================================================================
-\section{High-Order Schemes}  
+%\section{High-Order Schemes}  
 %===============================================================================
-\subsection{Entropy Viscosity\label{sec:entropy_viscosity}}
-  \subsubsection{Entropy Viscosity for Scalar Conservation Law Equations
-    \label{sec:entropy_viscosity_scalar}}
-    \input{../../dissertation/content/high_order/EV_scalar}
-  \subsubsection{Entropy Viscosity for the Shallow Water Equations}
-    \input{../../dissertation/content/high_order/EV_shallowwater}
-\subsection{The High-Order System}
-  \input{../../dissertation/content/high_order/high_order_system}
-
+%\subsection{Entropy Viscosity\label{sec:entropy_viscosity}}
+%  \subsubsection{Entropy Viscosity for Scalar Conservation Law Equations
+%    \label{sec:entropy_viscosity_scalar}}
+%    \input{../../dissertation/content/high_order/EV_scalar}
+%  \subsubsection{Entropy Viscosity for the Shallow Water Equations}
+%    \input{../../dissertation/content/high_order/EV_shallowwater}
+%\subsection{The High-Order System}
+%  \input{../../dissertation/content/high_order/high_order_system}
+%
 %===============================================================================
-\section*{References}
+%\section*{References}
 %===============================================================================
-\bibliographystyle{plain}
-\bibliography{../../dissertation/references}
+%\bibliographystyle{plain}
+%\bibliography{../../dissertation/references}
 
 \end{document}

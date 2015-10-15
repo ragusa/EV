@@ -1,0 +1,85 @@
+In 1-D, the boundary integrals in Equations \eqref{eq:shallowwater_height_weak_form}
+and \eqref{eq:shallowwater_momentumx_weak_form} reduce to differences between
+the right and left boundaries:
+\begin{subequations}
+\begin{equation}\label{eq:boundary_height_1d}
+  \intboundary{\testfunction_i^\height\tilde{\heightmomentum}\cdot\normalvector}
+  = \pr{\height\velocityx}_R - \pr{\height\velocityx}_L \eqc 
+\end{equation}
+\begin{equation}\label{eq:boundary_momentumx_1d}
+  \intboundary{\testfunction_i^{\heightmomentumx}
+    \pr{\frac{\tilde{\heightmomentumx}^2}{\height}
+    + \frac{1}{2}\gravity\tilde{\height}^2}\normalx}
+  = \pr{\height\velocityx^2 + \half\gravity\height^2}_R
+    -\pr{\height\velocityx^2 + \half\gravity\height^2}_L
+  \eqc
+\end{equation}
+\end{subequations}
+where $R$ and $L$ denote right and left boundaries, respectively.
+
+In 1-D, there are 2 characteristics,
+\begin{subequations}
+\begin{equation}
+  d\velocityx - 2d\speedofsound = 0\eqc
+\end{equation}
+\begin{equation}
+  d\velocityx + 2d\speedofsound = 0 \eqc
+\end{equation}
+\end{subequations}
+which correspond to the eigenvalues $\lambda_1=\velocityx - \speedofsound$ and
+$\lambda_2=\velocityx + \speedofsound$, respectively.
+Integrating these from the boundary position $x\BC$ to the adjacent
+node position $x\interior$ gives
+\begin{subequations}
+\begin{equation}\label{eq:characteristic_bc_1}
+  \velocityx\interior - \velocityx\BC
+  = 2\pr{\speedofsound\interior - \speedofsound\BC} \eqc
+\end{equation}
+\begin{equation}\label{eq:characteristic_bc_2}
+  \velocityx\interior - \velocityx\BC
+  = 2\pr{\speedofsound\BC - \speedofsound\interior} \eqc
+\end{equation}
+\end{subequations}
+associated with $\lambda_1$ and $\lambda_2$, respectively.
+At each boundary, one
+must determine whether the waves associated with each eigenvalue are coming
+into the domain or going out of the domain; this determines which boundary
+conditions rely on external information vs. information internal to the domain.
+If $\lambda_i\normalx \leq 0$, then the boundary condition for wave $i$ uses
+external information and otherwise uses internal information.
+
+For subcritical flow, i.e., $|\velocityx|\leq\speedofsound$,
+the signs of each eigenvalue are $\lambda_1\leq 0$ and $\lambda_2\geq 0$,
+whereas for supercritical flow, the signs are $\lambda_1\geq 0$
+and $\lambda_2\geq 0$.
+
+As an example, consider a problem with subcritical flow in which both
+boundaries are outlets. At each boundary it will be necessary to provide one
+external boundary condition. Suppose at both boundaries one chooses to fulfill
+this requirement by providing boundary height values: $\height_L$ and $\height_R$.
+Thus the task remains to compute the boundary velocities
+$\velocityx_L$ and $\velocityx_R$, which is achieved by using Equations
+\eqref{eq:characteristic_bc_1} and \eqref{eq:characteristic_bc_2}.
+The sound speeds $\speedofsound_L$ and $\speedofsound_R$ used in these
+equations are computed directly from the provided boundary height values
+$\height_L$ and $\height_R$.
+For the left boundary, the 2-wave comes from the exterior and thus Equation
+\eqref{eq:characteristic_bc_2} is used to compute the left boundary
+velocity:
+\begin{equation}
+  \velocityx_L
+  = \velocityx_1 + 2\pr{\speedofsound_1 - \speedofsound_L} \eqc
+\end{equation}
+where the numbering of degrees of freedom starts from zero and
+thus $\velocityx_1$ and $\speedofsound_1$ correspond to the node
+adjacent to the left boundary node.
+For the right boundary, the 1-wave comes from the exterior, and
+thus Equation \eqref{eq:characteristic_bc_1} is used instead of
+\eqref{eq:characteristic_bc_2}:
+\begin{equation}
+  \velocityx_R
+  = \velocityx_{N-1} + 2\pr{\speedofsound_R - \speedofsound_{N-1}} \eqc
+\end{equation}
+where $N$ is the total number of nodes.
+With the boundary values determined, Equations \eqref{eq:boundary_height_1d}
+and \eqref{eq:boundary_momentumx_1d} are ready to be applied.

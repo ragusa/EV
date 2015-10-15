@@ -7,7 +7,7 @@ weak form for degree of freedom $i$:
   \eqp
 \end{equation}
 Integrating by parts gives
-\begin{equation}
+\begin{equation}\label{eq:shallowwater_height_weak_form}
   \intdomain{\testfunction_i^\height\ppt{\tilde{\height}}}
   = \intdomain{\nabla\testfunction_i^\height\cdot\tilde{\heightmomentum}}
   - \intboundary{\testfunction_i^\height\tilde{\heightmomentum}\cdot\normalvector}
@@ -31,7 +31,7 @@ gives its weak form for degree of freedom $i$:
   \eqp
 \end{multline}
 Integrating by parts for the flux terms gives
-\begin{multline}
+\begin{multline}\label{eq:shallowwater_momentumx_weak_form}
   \intdomain{\testfunction_i^{\heightmomentumx}\ppt{\tilde{\heightmomentumx}}}
   =
     \intdomain{\pd{\testfunction_i^{\heightmomentumx}}{x}
@@ -92,15 +92,15 @@ where $\consistentmassmatrix$ is the mass matrix and the steady-state residual
 $\ssres$ is given by
 \begin{multline}
   r_i =
-  - \left(\testfunction_i^\height,\tilde{\heightmomentum}\cdot\normalvector
-    \right)_{\domainboundary}
-  + \left(\nabla\testfunction_i^{\heightmomentum},
+  \intdomain{\nabla\testfunction_i^\height\cdot\tilde{\heightmomentum}}
+  - \intboundary{\testfunction_i^\height\tilde{\heightmomentum}\cdot\normalvector}
+  + \intdomain{\nabla\testfunction_i^{\heightmomentum}:
     \left(\tilde{\heightmomentum}\otimes\tilde{\velocity}
-    + \frac{1}{2}\gravity\tilde{\height}^2\mathbf{I}\right)\right)_\domain
-  \\- \left(\testfunction_i^{\heightmomentum},
+    + \frac{1}{2}\gravity\tilde{\height}^2\mathbf{I}\right)}
+  \\
+  - \intboundary{\testfunction_i^{\heightmomentum}\cdot
     \left(\tilde{\heightmomentum}\otimes\tilde{\velocity}
-    + \frac{1}{2}\gravity \tilde{\height}^2\mathbf{I}\right)\cdot\normalvector
-    \right)_{\domainboundary}
-  - \left(\testfunction_i^{\heightmomentum},
-    \gravity\tilde{\height}\nabla\bathymetry\right)_\domain \eqp
+    + \frac{1}{2}\gravity \tilde{\height}^2\mathbf{I}\right)\cdot\normalvector}
+  - \intdomain{\testfunction_i^{\heightmomentum}\cdot
+    \gravity\tilde{\height}\nabla\bathymetry}
 \end{multline}

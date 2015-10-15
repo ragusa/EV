@@ -4,8 +4,8 @@ surface flows, which assume the fluid to be incompressible, non-viscous, and
 non-heat-conducting. The shallow water equations make the additional
 approximation that the depth component of acceleration can be neglected due to
 horizontal length scales being much greater than the depth length
-scale and then depth-integrate the conservation equations to obtain
-the following\cite{toro2009}\cite{leveque2002}:
+scale. Depth-integrating the conservation equations gives the shallow
+water equations\cite{toro2009}\cite{leveque2002}:
 \begin{equation}
 \begin{gathered}
   \ppt{\vectorsolution} + \nabla\cdot\consfluxvector
@@ -53,10 +53,12 @@ written more concisely as
 \]
 where $\height$ is the height of the water, which plays the role of density
 in the continuity equation, $\heightmomentum=\height\velocity$ is sometimes
-referred to as \emph{discharge} and plays the role of momentum and so will
-here just be referred to as ``momentum'', $\velocity$ is velocity, $\gravity$
+referred to as \emph{discharge} and plays the role of momentum (hereafter,
+$\heightmomentum$ will usually just be referred to as ``momentum''),
+$\velocity$ is velocity, $\gravity$
 is acceleration due to gravity, and $\bathymetry$ is the topography of the
-bottom of the fluid body with respect to some reference point.
+bottom terrain of the fluid body, hereafter referred to as the \emph{bathymetry}
+function.
 
 Note that the shallow water equations are only valid in 1-D or 2-D, not 3-D,
 since they are depth-integrated equations.
