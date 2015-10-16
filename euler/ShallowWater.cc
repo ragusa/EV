@@ -585,6 +585,9 @@ void ShallowWater<dim>::compute_ss_residual(Vector<double> & f)
       }
     }
 
+    // apply boundary conditions
+    boundary_conditions.apply(cell, fe_values, this->new_solution, cell_residual);
+
     // aggregate local residual into global residual
     cell->get_dof_indices(local_dof_indices);
     this->constraints.distribute_local_to_global(
@@ -652,7 +655,7 @@ void ShallowWater<dim>::compute_viscous_fluxes(
   {
     // density viscous flux
     height_viscous_flux[q] =
-      -viscosity * (height_gradient[q] + 0*bathymetry_gradient[q]);
+      -viscosity * (height_gradient[q] + 0 * bathymetry_gradient[q]);
 
     // momentum viscous flux
     momentum_viscous_flux[q] = -viscosity * momentum_gradient[q];
@@ -938,8 +941,12 @@ void ShallowWater<dim>::update_entropy_viscosities(const double & dt)
       entropy_normalization = uniform_entropy_normalization;
 
     // compute max entropy residual on cell
-    const double max_entropy_residual = this->compute_max_entropy_residual(
-      this->new_solution, this->old_solution, entropy_flux_fe_values_cell, dt, cell);
+    const double max_entropy_residual =
+      this->compute_max_entropy_residual(this->new_solution,
+                                         this->old_solution,
+                                         entropy_flux_fe_values_cell,
+                                         dt,
+                                         cell);
 
     // compute max entropy flux jump
     const double max_entropy_jump =
@@ -1007,7 +1014,8 @@ double ShallowWater<dim>::compute_max_entropy_residual(
   const Cell & cell) const
 {
   // FE values
-  FEValues<dim> fe_values(this->fe, this->cell_quadrature, update_values | update_gradients);
+  FEValues<dim> fe_values(
+    this->fe, this->cell_quadrature, update_values | update_gradients);
   fe_values.reinit(cell);
 
   Vector<double> entropy_new(this->n_q_points_cell);
@@ -1017,7 +1025,8 @@ double ShallowWater<dim>::compute_max_entropy_residual(
   // compute entropy of current and old solutions
   compute_entropy(new_solution, fe_values, entropy_new);
   compute_entropy(old_solution, fe_values, entropy_old);
-  std::vector<double> divergence_entropy_flux = entropy_flux_fe_values.get_function_divergences();
+  std::vector<double> divergence_entropy_flux =
+    entropy_flux_fe_values.get_function_divergences();
 
   // compute entropy residual at each quadrature point on cell
   double max_entropy_residual = 0.0;

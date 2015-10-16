@@ -84,7 +84,8 @@ void GroupFEValuesCell<dim, is_scalar>::get_function_gradients(
  * \return vector of function divergences at quadrature points in a cell
  */
 template <int dim, bool is_scalar>
-std::vector<double> GroupFEValuesCell<dim, is_scalar>::get_function_divergences() const
+std::vector<double> GroupFEValuesCell<dim, is_scalar>::get_function_divergences()
+  const
 {
   std::vector<double> function_divergences(n_quadrature_points);
   function_fe_values_cell[this->function_extractor].get_function_divergences(

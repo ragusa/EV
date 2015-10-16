@@ -91,9 +91,9 @@ protected:
   void add_maximum_principle_viscosity_bilinear_form(Vector<double> & solution);
   double compute_entropy_normalization(const Vector<double> & solution) const;
   virtual double compute_max_entropy_residual(const Vector<double> & new_solution,
-                                      const Vector<double> & old_solution,
-                                      const double & dt,
-                                      const cell_iterator & cell) const;
+                                              const Vector<double> & old_solution,
+                                              const double & dt,
+                                              const cell_iterator & cell) const;
   void get_dirichlet_nodes();
   void check_nan();
   bool check_DMP(const unsigned int & n) const;
@@ -170,10 +170,9 @@ protected:
    * \param[out] divergence divergence of entropy flux at each quadrature
    *             point on cell
    */
-  virtual void compute_divergence_entropy_flux(
-    const Vector<double> &,
-    const FEValuesBase<dim> &,
-    Vector<double> &) const
+  virtual void compute_divergence_entropy_flux(const Vector<double> &,
+                                               const FEValuesBase<dim> &,
+                                               Vector<double> &) const
   {
   }
 

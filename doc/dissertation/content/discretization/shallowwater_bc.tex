@@ -43,15 +43,20 @@ node position $x\interior$ gives
 associated with $\lambda_1$ and $\lambda_2$, respectively.
 At each boundary, one
 must determine whether the waves associated with each eigenvalue are coming
-into the domain or going out of the domain; this determines which boundary
-conditions rely on external information vs. information internal to the domain.
-If $\lambda_i\normalx \leq 0$, then the boundary condition for wave $i$ uses
-external information and otherwise uses internal information.
+into the domain or going out of the domain; this determines how many external
+boundary conditions must be applied at each boundary.
+If $\lambda_i\normalx \leq 0$, then an external boundary condition must be
+applied for the $i$-wave; otherwise, internal information is used for that
+boundary condition.
 
 For subcritical flow, i.e., $|\velocityx|\leq\speedofsound$,
-the signs of each eigenvalue are $\lambda_1\leq 0$ and $\lambda_2\geq 0$,
-whereas for supercritical flow, the signs are $\lambda_1\geq 0$
-and $\lambda_2\geq 0$.
+the signs of each eigenvalue are $\lambda_1\leq 0$ and $\lambda_2\geq 0$.
+For supercritical flow, the signs are $\lambda_1\geq 0$
+and $\lambda_2\geq 0$ for $\velocityx<0$, and for $\velocityx\geq 0$,
+the signs are $\lambda_1\leq 0$ and $\lambda_2\leq 0$. Thus for supercritical
+flow, inlets, i.e., boundaries for which $\velocityx\normalx<0$, require
+2 external boundary conditions, whereas outlets use 2 internal boundary
+conditions.
 
 As an example, consider a problem with subcritical flow in which both
 boundaries are outlets. At each boundary it will be necessary to provide one
@@ -83,3 +88,4 @@ thus Equation \eqref{eq:characteristic_bc_1} is used instead of
 where $N$ is the total number of nodes.
 With the boundary values determined, Equations \eqref{eq:boundary_height_1d}
 and \eqref{eq:boundary_momentumx_1d} are ready to be applied.
+
