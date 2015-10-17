@@ -17,7 +17,8 @@ the right and left boundaries:
 \end{subequations}
 where $R$ and $L$ denote right and left boundaries, respectively.
 
-In 1-D, there are 2 characteristics,
+In 1-D, there are 2 characteristics, associated with the following Riemann
+invariants:
 \begin{subequations}
 \begin{equation}
   d\velocityx - 2d\speedofsound = 0\eqc
@@ -45,6 +46,20 @@ At each boundary, one
 must determine whether the waves associated with each eigenvalue are coming
 into the domain or going out of the domain; this determines how many external
 boundary conditions must be applied at each boundary.
+The Froude number $\mbox{Fr}\equiv\frac{|\velocityx|}{\speedofsound}$,
+along with the sign of the velocity $\velocityx$, determines the sign
+of each of the 2 eigenvalues, which is summarized in Table
+\ref{tab:shallowwater_eigenvalue_signs}.
+
+\begin{mytable}{Signs of Eigenvalues for Different Cases}
+{shallowwater_eigenvalue_signs}{l c c}
+{\textbf{Froude Sign} & $\velocityx<0$ & $\velocityx\geq 0$}
+  $\mbox{Fr} < 1$ & $\lambda_1\leq 0$ & $\lambda_1< 0$\\
+                  & $\lambda_2> 0$    & $\lambda_2\geq 0$\\\hline
+  $\mbox{Fr} \geq 1$ & $\lambda_1\leq 0$ & $\lambda_1\geq 0$\\
+                     & $\lambda_2\leq 0$    & $\lambda_2\geq 0$\\
+\end{mytable}
+
 If $\lambda_i\normalx \leq 0$, then an external boundary condition must be
 applied for the $i$-wave; otherwise, internal information is used for that
 boundary condition.
@@ -56,36 +71,18 @@ and $\lambda_2\geq 0$ for $\velocityx<0$, and for $\velocityx\geq 0$,
 the signs are $\lambda_1\leq 0$ and $\lambda_2\leq 0$. Thus for supercritical
 flow, inlets, i.e., boundaries for which $\velocityx\normalx<0$, require
 2 external boundary conditions, whereas outlets use 2 internal boundary
-conditions.
+conditions. Table \ref{tab:shallowwater_bc} summarizes the
+applications of open boundary conditions for different scenarios.
 
-As an example, consider a problem with subcritical flow in which both
-boundaries are outlets. At each boundary it will be necessary to provide one
-external boundary condition. Suppose at both boundaries one chooses to fulfill
-this requirement by providing boundary height values: $\height_L$ and $\height_R$.
-Thus the task remains to compute the boundary velocities
-$\velocityx_L$ and $\velocityx_R$, which is achieved by using Equations
-\eqref{eq:characteristic_bc_1} and \eqref{eq:characteristic_bc_2}.
-The sound speeds $\speedofsound_L$ and $\speedofsound_R$ used in these
-equations are computed directly from the provided boundary height values
-$\height_L$ and $\height_R$.
-For the left boundary, the 2-wave comes from the exterior and thus Equation
-\eqref{eq:characteristic_bc_2} is used to compute the left boundary
-velocity:
-\begin{equation}
-  \velocityx_L
-  = \velocityx_1 + 2\pr{\speedofsound_1 - \speedofsound_L} \eqc
-\end{equation}
-where the numbering of degrees of freedom starts from zero and
-thus $\velocityx_1$ and $\speedofsound_1$ correspond to the node
-adjacent to the left boundary node.
-For the right boundary, the 1-wave comes from the exterior, and
-thus Equation \eqref{eq:characteristic_bc_1} is used instead of
-\eqref{eq:characteristic_bc_2}:
-\begin{equation}
-  \velocityx_R
-  = \velocityx_{N-1} + 2\pr{\speedofsound_R - \speedofsound_{N-1}} \eqc
-\end{equation}
-where $N$ is the total number of nodes.
-With the boundary values determined, Equations \eqref{eq:boundary_height_1d}
-and \eqref{eq:boundary_momentumx_1d} are ready to be applied.
-
+\begin{mytable}
+{Summary of Open Boundary Conditions for the Shallow Water Equations}
+{shallowwater_bc}{l l}{\textbf{Scenario} & \textbf{Equations}}
+  Subcritical Left Boundary & Provide $\speedofsound_0$\\
+  (Inlet or Outlet)& $\velocityx_0 = \velocityx_1
+    + 2\pr{\speedofsound_0 - \speedofsound_1}$\\\hline
+  Subcritical Right Boundary & Provide $\speedofsound_{N-1}$\\
+  (Inlet or Outlet)& $\velocityx_{N-1} = \velocityx_{N-2}
+    + 2\pr{\speedofsound_{N-2} - \speedofsound_{N-1}}$\\\hline
+  Supercritical Inlet & Provide $\speedofsound_0$, $\velocityx_0$\\\hline
+  Supercritical Outlet & ?\\
+\end{mytable}
