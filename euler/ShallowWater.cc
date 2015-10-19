@@ -117,17 +117,6 @@ void ShallowWater<dim>::define_problem()
         "x", bathymetry_string, this->constants, false);
       bathymetry_function = bathymetry_function_derived;
 
-      // initialize bathymetry gradient function
-      /*
-            std::shared_ptr<FunctionParser<dim>>
-         bathymetry_gradient_function_derived =
-              std::make_shared<FunctionParser<dim>>(dim);
-            std::string bathymetry_gradient_string = "0";
-            bathymetry_gradient_function_derived->initialize(
-              "x", bathymetry_gradient_string, this->constants, false);
-            bathymetry_gradient_function = bathymetry_gradient_function_derived;
-      */
-
       // default end time
       this->has_default_end_time = true;
       this->default_end_time = 2.0;
@@ -218,17 +207,6 @@ void ShallowWater<dim>::define_problem()
         "x", bathymetry_string, this->constants, false);
       bathymetry_function = bathymetry_function_derived;
 
-      // initialize bathymetry gradient function
-      /*
-            std::shared_ptr<FunctionParser<dim>>
-         bathymetry_gradient_function_derived =
-              std::make_shared<FunctionParser<dim>>(dim);
-            std::string bathymetry_gradient_string = "0";
-            bathymetry_gradient_function_derived->initialize(
-              "x", bathymetry_gradient_string, this->constants, false);
-            bathymetry_gradient_function = bathymetry_gradient_function_derived;
-      */
-
       // default end time
       this->has_default_end_time = true;
       this->default_end_time = 15.0;
@@ -294,17 +272,6 @@ void ShallowWater<dim>::define_problem()
       bathymetry_function_derived->initialize(
         "x", bathymetry_string, this->constants, false);
       bathymetry_function = bathymetry_function_derived;
-
-      // initialize bathymetry gradient function
-      /*
-            std::shared_ptr<FunctionParser<dim>>
-         bathymetry_gradient_function_derived =
-              std::make_shared<FunctionParser<dim>>(dim);
-            std::string bathymetry_gradient_string = "if(abs(x-10)<2,1-x/10,0)";
-            bathymetry_gradient_function_derived->initialize(
-              "x", bathymetry_gradient_string, this->constants, false);
-            bathymetry_gradient_function = bathymetry_gradient_function_derived;
-      */
 
       // default end time
       this->has_default_end_time = true;
@@ -379,6 +346,19 @@ void ShallowWater<dim>::define_problem()
       this->default_end_time = 1.5;
 
       break;
+    }
+    default:
+    {
+      Assert(false, ExcNotImplemented());
+      break;
+    }
+  }
+
+  // create boundary conditions
+  switch (this->boundary_conditions_type)
+  {
+    case dirichlet:
+    {
     }
     default:
     {

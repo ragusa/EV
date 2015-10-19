@@ -5,6 +5,7 @@
 #ifndef ShallowWaterBoundaryConditions_h
 #define ShallowWaterBoundaryConditions_h
 
+#include <deal.II/base/quadrature_lib.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/lac/vector.h>
@@ -16,23 +17,23 @@ using namespace dealii;
  * \brief Base class for shallow water boundary conditions.
  */
 template <int dim>
-class ShallowWaterBoundaryConditions
+class ShallowWaterBoundaryConditions : BoundaryConditions<dim>
 {
 public:
   /** \brief Typedef for cell iterators */
   typedef typename DoFHandler<dim>::active_cell_iterator Cell;
 
-  ShallowWaterBoundaryConditions();
-
-  void apply(const Cell & cell, const FEValues<dim> & fe_values,
-    const Vector<double> & solution);
+  ShallowWaterBoundaryConditions(const FESystem<dim> & fe,
+                                 const QGauss<dim> & face_quadrature,
+                                 const double & gravity);
 
 private:
-  virtual void apply_boundary_condition(const Cell & cell,
-    const FEValues<dim> & fe_values_cell, const FEValuesFace<dim> & fe_values_face,
-    const Vector<double> & solution, Vector<double> & cell_residual) const = 0;
+  void integrate_face(const std::vector<double> & height,
+                      const std::vector<Tensor<1, dim>> & momentum,
+                      Vector<double> & cell_residual) const;
 
-  void integrate_face() const;
+  /** \brief acceleration due to gravity */
+  const double gravity;
 };
 
 #include "ShallowWaterBoundaryConditions.cc"

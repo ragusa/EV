@@ -1,17 +1,29 @@
 /**
  * \brief Constructor.
+ *
+ * \param[in] fe_ finite element system
+ * \param[in] face_quadrature_ quadrature for face
  */
 template <int dim>
-BoundaryConditions<dim>::BoundaryConditions(FESystem)
+BoundaryConditions<dim>::BoundaryConditions(
+  const FESystem<dim> & fe_, const QGauss<dim - 1> & face_quadrature_)
+  : fe(fe_),
+    face_quadrature(face_quadrature_),
+    fe_values_face(fe,
+                   face_quadrature,
+                   update_values | update_gradients update_normal_vectors |
+                     update_JxW_values),
+    faces_per_cell(GeometryInfo<dim>::faces_per_cell),
+    dofs_per_cell(fe.dofs_per_cell),
+    n_quadrature_points_face(face_quadrature.size())
 {
-  FEValues<dim> fe_values(this->fe,
-                          this->cell_quadrature,
-                          update_values | update_gradients |
-                            update_quadrature_points | update_JxW_values);
 }
 
 /**
- * \brief Applies boundary conditions for a cell.
+ * \brief Loops over faces in a cell to apply its boundary conditions, if any.
+ *
+ * It is assumed that the cell FE values have already been reinitialized to
+ * the cell.
  *
  * \param[in] cell cell iterator
  * \param[in] fe_values_cell FE values for cell, in case cell values are needed
@@ -20,22 +32,23 @@ BoundaryConditions<dim>::BoundaryConditions(FESystem)
  */
 template <int dim>
 void BoundaryConditions<dim>::apply(const Cell & cell,
- const FEValues<dim> & fe_values_cell,
-    const Vector<double> & solution,
-    Vector<double> & cell_residual)
+                                    const FEValues<dim> & fe_values_cell,
+                                    const Vector<double> & solution,
+                                    Vector<double> & cell_residual)
 {
   // loop over faces
   for (unsigned int iface = 0; iface < faces_per_cell; ++iface)
   {
     // determine if face is interior
-    typename DoFHandler<dim>::face_iterator face = cell->face(iface);
+    Face face = cell->face(iface);
     if (face->at_boundary() == true)
     {
       // reinitialize FE values
       fe_values_face.reinit(cell, iface);
 
       // apply boundary conditions for this boundary face
-      apply_boundary_condition(cell, fe_values_cell, fe_values_face, solution, cell_residual);
+      apply_boundary_condition(
+        cell, fe_values_cell, fe_values_face, solution, cell_residual);
     }
   }
 }
