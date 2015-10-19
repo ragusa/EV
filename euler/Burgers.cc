@@ -62,13 +62,11 @@ void Burgers<dim>::define_problem()
         for (unsigned int face = 0; face < this->faces_per_cell; ++face)
           if (cell->face(face)->at_boundary())
             cell->face(face)->set_boundary_id(0);
-      this->boundary_types.resize(this->n_boundaries);
-      this->boundary_types[0].resize(this->n_components);
-      this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
+      this->boundary_conditions_type = "dirichlet";
       this->dirichlet_function_strings.resize(this->n_boundaries);
       this->dirichlet_function_strings[0].resize(this->n_components);
       this->dirichlet_function_strings[0][0] = "0";
-      this->use_exact_solution_as_BC = false;
+      this->use_exact_solution_as_dirichlet_bc = false;
 
       // initial conditions
       this->initial_conditions_strings[0] = "sin(2*pi*x)";
@@ -104,13 +102,11 @@ void Burgers<dim>::define_problem()
         for (unsigned int face = 0; face < this->faces_per_cell; ++face)
           if (cell->face(face)->at_boundary())
             cell->face(face)->set_boundary_id(0);
-      this->boundary_types.resize(this->n_boundaries);
-      this->boundary_types[0].resize(this->n_components);
-      this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
+      this->boundary_conditions_type = "dirichlet";
       this->dirichlet_function_strings.resize(this->n_boundaries);
       this->dirichlet_function_strings[0].resize(this->n_components);
       this->dirichlet_function_strings[0][0] = "if(x<0,1,0)";
-      this->use_exact_solution_as_BC = false;
+      this->use_exact_solution_as_dirichlet_bc = false;
 
       // initial conditions
       this->initial_conditions_strings[0] = "if(x<0,1,0)";
@@ -156,13 +152,11 @@ void Burgers<dim>::define_problem()
         for (unsigned int face = 0; face < this->faces_per_cell; ++face)
           if (cell->face(face)->at_boundary())
             cell->face(face)->set_boundary_id(0);
-      this->boundary_types.resize(this->n_boundaries);
-      this->boundary_types[0].resize(this->n_components);
-      this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
+      this->boundary_conditions_type = "dirichlet";
       this->dirichlet_function_strings.resize(this->n_boundaries);
       this->dirichlet_function_strings[0].resize(this->n_components);
       this->dirichlet_function_strings[0][0] = "if(x<0,0,1)";
-      this->use_exact_solution_as_BC = false;
+      this->use_exact_solution_as_dirichlet_bc = false;
 
       // initial conditions
       this->initial_conditions_strings[0] = "if(x<0,0,1)";
@@ -209,10 +203,8 @@ void Burgers<dim>::define_problem()
         for (unsigned int face = 0; face < this->faces_per_cell; ++face)
           if (cell->face(face)->at_boundary())
             cell->face(face)->set_boundary_id(0);
-      this->boundary_types.resize(this->n_boundaries);
-      this->boundary_types[0].resize(this->n_components);
-      this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
-      this->use_exact_solution_as_BC = true;
+      this->boundary_conditions_type = "dirichlet";
+      this->use_exact_solution_as_dirichlet_bc = true;
 
       // initial conditions
       this->initial_conditions_strings[0] = "if(x<0.5,";

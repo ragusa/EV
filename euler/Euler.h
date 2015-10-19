@@ -29,9 +29,7 @@ public:
   Euler(const EulerParameters<dim> & params);
 
 private:
-  /**
-   * \brief Typedef for cell iterators
-   */
+  /** \brief Typedef for cell iterators */
   using cell_iterator = typename ConservationLaw<dim>::cell_iterator;
 
   EulerParameters<dim> euler_parameters;
@@ -50,9 +48,7 @@ private:
   std::vector<DataComponentInterpretation::DataComponentInterpretation>
     get_component_interpretations();
 
-  void define_problem();
-
-  void output_solution(double time);
+  void define_problem() override;
 
   void compute_ss_residual(Vector<double> & solution) override;
 
@@ -60,13 +56,6 @@ private:
                                 FEFaceValues<dim> & fe_face_values,
                                 const cell_iterator & cell,
                                 Vector<double> & cell_residual);
-
-  /*
-    void compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
-                                  const typename
-    DoFHandler<dim>::active_cell_iterator &cell,
-                                  Vector<double> &cell_residual);
-  */
 
   // void compute_ss_jacobian();
 

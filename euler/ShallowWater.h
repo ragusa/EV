@@ -21,6 +21,7 @@
 #include "ShallowWaterParameters.h"
 #include "ShallowWaterPostProcessor.h"
 #include "ShallowWaterRiemannSolver.h"
+#include "ShallowWaterSubcriticalOpenBC1D.h"
 
 /**
  * \brief Class for solving the shallow water equations.

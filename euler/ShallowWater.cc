@@ -76,15 +76,20 @@ void ShallowWater<dim>::define_problem()
         for (unsigned int face = 0; face < this->faces_per_cell; ++face)
           if (cell->face(face)->at_boundary())
             cell->face(face)->set_boundary_id(0);
-      this->boundary_types.resize(this->n_boundaries);
-      this->boundary_types[0].resize(this->n_components);
-      this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
-      this->boundary_types[0][1] = ConservationLaw<dim>::dirichlet;
+
+      this->boundary_conditions_type = "dirichlet";
+
+      std::shared_ptr<DirichletBoundaryConditions<dim>>
+        derived_boundary_conditions =
+          std::make_shared<DirichletBoundaryConditions<dim>>(
+            this->fe, this->face_quadrature);
+      this->boundary_conditions = derived_boundary_conditions;
+
       this->dirichlet_function_strings.resize(this->n_boundaries);
       this->dirichlet_function_strings[0].resize(this->n_components);
       this->dirichlet_function_strings[0][0] = "if(x<0,3,1)";
       this->dirichlet_function_strings[0][1] = "0";
-      this->use_exact_solution_as_BC = false;
+      this->use_exact_solution_as_dirichlet_bc = false;
 
       // initial conditions
       this->initial_conditions_strings[0] = "if(x<0,3,1)";
@@ -175,15 +180,17 @@ void ShallowWater<dim>::define_problem()
         for (unsigned int face = 0; face < this->faces_per_cell; ++face)
           if (cell->face(face)->at_boundary())
             cell->face(face)->set_boundary_id(0);
-      this->boundary_types.resize(this->n_boundaries);
-      this->boundary_types[0].resize(this->n_components);
-      this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
-      this->boundary_types[0][1] = ConservationLaw<dim>::dirichlet;
+      this->boundary_conditions_type = "dirichlet";
+      std::shared_ptr<DirichletBoundaryConditions<dim>>
+        derived_boundary_conditions =
+          std::make_shared<DirichletBoundaryConditions<dim>>(
+            this->fe, this->face_quadrature);
+      this->boundary_conditions = derived_boundary_conditions;
       this->dirichlet_function_strings.resize(this->n_boundaries);
       this->dirichlet_function_strings[0].resize(this->n_components);
       this->dirichlet_function_strings[0][0] = "if(x<midpoint,h_left,h_right)";
       this->dirichlet_function_strings[0][1] = "0";
-      this->use_exact_solution_as_BC = false;
+      this->use_exact_solution_as_dirichlet_bc = false;
 
       // initial conditions
       this->initial_conditions_strings[0] =
@@ -236,15 +243,17 @@ void ShallowWater<dim>::define_problem()
         for (unsigned int face = 0; face < this->faces_per_cell; ++face)
           if (cell->face(face)->at_boundary())
             cell->face(face)->set_boundary_id(0);
-      this->boundary_types.resize(this->n_boundaries);
-      this->boundary_types[0].resize(this->n_components);
-      this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
-      this->boundary_types[0][1] = ConservationLaw<dim>::dirichlet;
+      this->boundary_conditions_type = "shallow_water_open_1d";
+      std::shared_ptr<ShallowWaterSubcriticalOpenBC1D<dim>>
+        derived_boundary_conditions =
+          std::make_shared<ShallowWaterSubcriticalOpenBC1D<dim>>(
+            this->fe, this->face_quadrature, this->gravity, 1.0, 1.0);
+      this->boundary_conditions = derived_boundary_conditions;
       this->dirichlet_function_strings.resize(this->n_boundaries);
       this->dirichlet_function_strings[0].resize(this->n_components);
       this->dirichlet_function_strings[0][0] = "1"; // height
       this->dirichlet_function_strings[0][1] = "0"; // momentum
-      this->use_exact_solution_as_BC = false;
+      this->use_exact_solution_as_dirichlet_bc = false;
 
       // initial conditions
       this->initial_conditions_strings[0] = "if(abs(x-10)<2,1-(4-(x-10)^2)/20,1)";
@@ -302,15 +311,17 @@ void ShallowWater<dim>::define_problem()
         for (unsigned int face = 0; face < this->faces_per_cell; ++face)
           if (cell->face(face)->at_boundary())
             cell->face(face)->set_boundary_id(0);
-      this->boundary_types.resize(this->n_boundaries);
-      this->boundary_types[0].resize(this->n_components);
-      this->boundary_types[0][0] = ConservationLaw<dim>::dirichlet;
-      this->boundary_types[0][1] = ConservationLaw<dim>::dirichlet;
+      this->boundary_conditions_type = "shallow_water_open_1d";
+      std::shared_ptr<ShallowWaterSubcriticalOpenBC1D<dim>>
+        derived_boundary_conditions =
+          std::make_shared<ShallowWaterSubcriticalOpenBC1D<dim>>(
+            this->fe, this->face_quadrature, this->gravity, 1.0, 1.0);
+      this->boundary_conditions = derived_boundary_conditions;
       this->dirichlet_function_strings.resize(this->n_boundaries);
       this->dirichlet_function_strings[0].resize(this->n_components);
       this->dirichlet_function_strings[0][0] = "1"; // height
       this->dirichlet_function_strings[0][1] = "0"; // momentum
-      this->use_exact_solution_as_BC = false;
+      this->use_exact_solution_as_dirichlet_bc = false;
 
       // initial conditions
       this->initial_conditions_strings[0] =
@@ -346,19 +357,6 @@ void ShallowWater<dim>::define_problem()
       this->default_end_time = 1.5;
 
       break;
-    }
-    default:
-    {
-      Assert(false, ExcNotImplemented());
-      break;
-    }
-  }
-
-  // create boundary conditions
-  switch (this->boundary_conditions_type)
-  {
-    case dirichlet:
-    {
     }
     default:
     {
@@ -566,7 +564,8 @@ void ShallowWater<dim>::compute_ss_residual(Vector<double> & f)
     }
 
     // apply boundary conditions
-    boundary_conditions.apply(cell, fe_values, this->new_solution, cell_residual);
+    this->boundary_conditions->apply(
+      cell, fe_values, this->new_solution, cell_residual);
 
     // aggregate local residual into global residual
     cell->get_dof_indices(local_dof_indices);

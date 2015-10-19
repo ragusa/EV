@@ -164,20 +164,12 @@ void ConservationLaw<dim>::initialize_system()
   else
     end_time = parameters.end_time;
 
-  // set flag to skip computing face residuals if all BC are Dirichlet
-  need_to_compute_face_residual = false;
-  bool at_least_one_dirichlet_BC = false;
-  for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
-    for (unsigned int component = 0; component < n_components; ++component)
-      if (boundary_types[boundary][component] == dirichlet)
-        at_least_one_dirichlet_BC = true;
-      else
-        need_to_compute_face_residual = true;
-
   // create constants used for parsed functions
   constants["pi"] = numbers::PI;
 
   // create string of variables to be used in function parser objects
+  std::string variables = FunctionParser<dim>::default_variable_names();
+  /*
   std::string variables;
   if (dim == 1)
     variables = "x";
@@ -187,12 +179,14 @@ void ConservationLaw<dim>::initialize_system()
     variables = "x,y,z";
   else
     Assert(false, ExcInvalidState());
+  */
 
   // add t for time-dependent function parser objects
   std::string time_dependent_variables = variables + ",t";
 
   // initialize Dirichlet boundary functions if needed
-  if (at_least_one_dirichlet_BC && !(use_exact_solution_as_BC))
+  if (boundary_conditions_type == "dirichlet" &&
+      !(use_exact_solution_as_dirichlet_bc))
   {
     dirichlet_function.resize(n_boundaries);
     for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
@@ -394,14 +388,15 @@ void ConservationLaw<dim>::setup_system()
   // hanging node constraints
   DoFTools::make_hanging_node_constraints(dof_handler, constraints);
   // Dirichlet contraints (for t = 0)
-  for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
-    for (unsigned int component = 0; component < n_components; ++component)
-      if (boundary_types[boundary][component] == dirichlet)
+  if (boundary_conditions_type == "dirichlet")
+  {
+    for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
+      for (unsigned int component = 0; component < n_components; ++component)
       {
         // specify to impose Dirichlet BC for all components of solution
         std::vector<bool> component_mask(n_components, true);
 
-        if (use_exact_solution_as_BC)
+        if (use_exact_solution_as_dirichlet_bc)
         {
           exact_solution_function->set_time(0.0);
           VectorTools::interpolate_boundary_values(dof_handler,
@@ -421,6 +416,7 @@ void ConservationLaw<dim>::setup_system()
             component_mask);
         }
       }
+  }
   constraints.close();
 
   // create sparsity patterns
@@ -527,8 +523,7 @@ void ConservationLaw<dim>::assemble_mass_matrix()
 
 /** \brief Applies Dirichlet boundary conditions at a particular time.
  *
- *  \param[in] time current time; Dirichlet BC may be time-dependent such as for
- *              the 2-D Burgers test problem.
+ *  \param[in] time current time; Dirichlet BC may be time-dependent.
  */
 template <int dim>
 void ConservationLaw<dim>::apply_Dirichlet_BC(const double & time)
@@ -536,17 +531,20 @@ void ConservationLaw<dim>::apply_Dirichlet_BC(const double & time)
   // map of global dof ID to boundary value, to be computed using provided
   // function
   std::map<unsigned int, double> boundary_values;
-  // loop over boundary IDs
-  for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
-    // loop over components
-    for (unsigned int component = 0; component < n_components; ++component)
-      if (boundary_types[boundary][component] == dirichlet)
+
+  if (boundary_conditions_type == "dirichlet")
+  {
+    // loop over boundary IDs
+    for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
+      // loop over components
+      for (unsigned int component = 0; component < n_components; ++component)
       {
         // mask other components
         std::vector<bool> component_mask(n_components, false);
         component_mask[component] = true;
+
         // fill boundary_values with boundary values
-        if (use_exact_solution_as_BC)
+        if (use_exact_solution_as_dirichlet_bc)
         {
           exact_solution_function->set_time(time);
           VectorTools::interpolate_boundary_values(dof_handler,
@@ -566,6 +564,7 @@ void ConservationLaw<dim>::apply_Dirichlet_BC(const double & time)
             component_mask);
         }
       }
+  }
   // apply boundary values to the solution
   for (std::map<unsigned int, double>::const_iterator it =
          boundary_values.begin();
@@ -1679,11 +1678,11 @@ void ConservationLaw<dim>::get_dirichlet_nodes()
   // clear Dirichlet nodes vector
   dirichlet_nodes.clear();
 
-  // loop over boundary IDs
-  for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
-    // loop over components
-    for (unsigned int component = 0; component < n_components; ++component)
-      if (boundary_types[boundary][component] == dirichlet)
+  if (boundary_conditions_type == "dirichlet")
+    // loop over boundary IDs
+    for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
+      // loop over components
+      for (unsigned int component = 0; component < n_components; ++component)
       {
         // create mask to prevent function from being applied to all components
         std::vector<bool> component_mask(n_components, false);

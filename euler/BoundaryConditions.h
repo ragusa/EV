@@ -28,16 +28,17 @@ public:
   typedef typename DoFHandler<dim>::face_iterator Face;
 
   BoundaryConditions(const FESystem<dim> & fe,
-                     const QGauss<dim> & face_quadrature);
+                     const QGauss<dim - 1> & face_quadrature);
 
   void apply(const Cell & cell,
              const FEValues<dim> & fe_values,
-             const Vector<double> & solution);
+             const Vector<double> & solution,
+             Vector<double> & cell_residual);
 
 private:
   virtual void apply_boundary_condition(const Cell & cell,
                                         const FEValues<dim> & fe_values_cell,
-                                        const FEValuesFace<dim> & fe_values_face,
+                                        const FEFaceValues<dim> & fe_values_face,
                                         const Vector<double> & solution,
                                         Vector<double> & cell_residual) = 0;
 

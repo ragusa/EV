@@ -67,13 +67,6 @@ private:
 
   void compute_ss_residual(Vector<double> & solution) override;
 
-  /*
-      void compute_face_ss_residual(
-        FEFaceValues<dim> &fe_face_values,
-        const typename DoFHandler<dim>::active_cell_iterator &cell,
-        Vector<double> &cell_residual) override;
-  */
-
   // void compute_ss_jacobian() override;
 
   void update_flux_speeds() override;

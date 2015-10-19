@@ -11,7 +11,7 @@ BoundaryConditions<dim>::BoundaryConditions(
     face_quadrature(face_quadrature_),
     fe_values_face(fe,
                    face_quadrature,
-                   update_values | update_gradients update_normal_vectors |
+                   update_values | update_gradients | update_normal_vectors |
                      update_JxW_values),
     faces_per_cell(GeometryInfo<dim>::faces_per_cell),
     dofs_per_cell(fe.dofs_per_cell),

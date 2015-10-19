@@ -79,19 +79,10 @@ void Euler<dim>::define_problem()
           if (cell->face(face)->at_boundary())
             cell->face(face)->set_boundary_id(0);
 
-      // set boundary conditions type for each boundary and component
-      this->boundary_types.resize(this->n_boundaries);
-      this->boundary_types[0].resize(this->n_components);
-      this->boundary_types[0][0] =
-        ConservationLaw<dim>::dirichlet; // density has Dirichlet BC
-      this->boundary_types[0][1] =
-        ConservationLaw<dim>::dirichlet; // x-momentum has Dirichlet BC
-      this->boundary_types[0][2] =
-        ConservationLaw<dim>::dirichlet; // energy has Dirichlet BC
-
+      this->boundary_conditions_type = "dirichlet";
       // set function strings to be parsed for dirichlet boundary condition
       // functions
-      this->use_exact_solution_as_BC = false;
+      this->use_exact_solution_as_dirichlet_bc = false;
       this->dirichlet_function_strings.resize(this->n_boundaries);
       for (unsigned int boundary = 0; boundary < this->n_boundaries; ++boundary)
       {
@@ -164,19 +155,10 @@ void Euler<dim>::define_problem()
           if (cell->face(face)->at_boundary())
             cell->face(face)->set_boundary_id(0);
 
-      // set boundary conditions type for each boundary and component
-      this->boundary_types.resize(this->n_boundaries);
-      this->boundary_types[0].resize(this->n_components);
-      this->boundary_types[0][0] =
-        ConservationLaw<dim>::dirichlet; // density has Dirichlet BC
-      this->boundary_types[0][1] =
-        ConservationLaw<dim>::dirichlet; // x-momentum has Dirichlet BC
-      this->boundary_types[0][2] =
-        ConservationLaw<dim>::dirichlet; // energy has Dirichlet BC
-
+      this->boundary_conditions_type = "dirichlet";
       // set function strings to be parsed for dirichlet boundary condition
       // functions
-      this->use_exact_solution_as_BC = false;
+      this->use_exact_solution_as_dirichlet_bc = false;
       this->dirichlet_function_strings.resize(this->n_boundaries);
       for (unsigned int boundary = 0; boundary < this->n_boundaries; ++boundary)
       {
@@ -206,160 +188,165 @@ void Euler<dim>::define_problem()
 
       break;
     }
+    /*
     case 2: // 2-D Noh Problem
     {
-      // this is a 2-D problem
-      Assert(dim == 2, ExcImpossibleInDim(dim));
+            // this is a 2-D problem
+            Assert(dim == 2, ExcImpossibleInDim(dim));
 
-      // name of problem
-      this->problem_name = "noh";
+            // name of problem
+            this->problem_name = "noh";
 
-      // create domain
-      this->domain_volume =
-        1.0; // domain is the unit hypercube, so domain volume is 1^dim
-      GridIn<dim> input_grid;
-      input_grid.attach_triangulation(this->triangulation);
-      std::ifstream input_file("mesh/unit_square.msh");
-      input_grid.read_msh(input_file);
+            // create domain
+            this->domain_volume =
+              1.0; // domain is the unit hypercube, so domain volume is 1^dim
+            GridIn<dim> input_grid;
+            input_grid.attach_triangulation(this->triangulation);
+            std::ifstream input_file("mesh/unit_square.msh");
+            input_grid.read_msh(input_file);
 
-      // four boundaries: each side of unit square
-      this->n_boundaries = 4;
+            // four boundaries: each side of unit square
+            this->n_boundaries = 4;
 
-      // set boundary indicators
-      double small_number = 1.0e-15;
-      typename Triangulation<dim>::cell_iterator cell =
-                                                   this->triangulation.begin(),
-                                                 endc = this->triangulation.end();
-      for (; cell != endc; ++cell)
-        for (unsigned int face = 0; face < this->faces_per_cell; ++face)
-          if (cell->face(face)->at_boundary())
-          {
-            Point<dim> face_center = cell->face(face)->center();
-            if (face_center(1) < small_number)
-            { // y = 0 boundary
-              cell->face(face)->set_boundary_id(0);
-            }
-            else if (face_center(0) > 1.0 - small_number)
-            { // x = 1 boundary
-              cell->face(face)->set_boundary_id(1);
-            }
-            else if (face_center(1) > 1.0 - small_number)
-            { // y = 1 boundary
-              cell->face(face)->set_boundary_id(2);
-            }
-            else if (face_center(0) < small_number)
-            { // x = 0 boundary
-              cell->face(face)->set_boundary_id(3);
-            }
-            else
+            // set boundary indicators
+            double small_number = 1.0e-15;
+            typename Triangulation<dim>::cell_iterator cell =
+                                                         this->triangulation.begin(),
+                                                       endc =
+         this->triangulation.end();
+            for (; cell != endc; ++cell)
+              for (unsigned int face = 0; face < this->faces_per_cell; ++face)
+                if (cell->face(face)->at_boundary())
+                {
+                  Point<dim> face_center = cell->face(face)->center();
+                  if (face_center(1) < small_number)
+                  { // y = 0 boundary
+                    cell->face(face)->set_boundary_id(0);
+                  }
+                  else if (face_center(0) > 1.0 - small_number)
+                  { // x = 1 boundary
+                    cell->face(face)->set_boundary_id(1);
+                  }
+                  else if (face_center(1) > 1.0 - small_number)
+                  { // y = 1 boundary
+                    cell->face(face)->set_boundary_id(2);
+                  }
+                  else if (face_center(0) < small_number)
+                  { // x = 0 boundary
+                    cell->face(face)->set_boundary_id(3);
+                  }
+                  else
+                  {
+                    // all faces should have satisfied one of the conditions
+                    std::cout << "x = " << face_center(0) << std::endl;
+                    std::cout << "y = " << face_center(1) << std::endl;
+                    Assert(false, ExcInternalError());
+                  }
+                }
+            this->boundary_conditions_type = "noh";
+            this->boundary_types.resize(this->n_boundaries);
+            this->dirichlet_function_strings.resize(this->n_boundaries);
+            for (unsigned int boundary = 0; boundary < this->n_boundaries;
+         ++boundary)
             {
-              // all faces should have satisfied one of the conditions
-              std::cout << "x = " << face_center(0) << std::endl;
-              std::cout << "y = " << face_center(1) << std::endl;
-              Assert(false, ExcInternalError());
+              this->boundary_types[boundary].resize(this->n_components);
+              this->dirichlet_function_strings[boundary].resize(this->n_components);
+              switch (boundary)
+              {
+                case 0: // y = 0 boundary
+                {
+                  // all are reflective (zero Neumann)
+                  for (unsigned int component = 0; component < this->n_components;
+                       ++component)
+                    this->boundary_types[boundary][component] =
+                      ConservationLaw<dim>::neumann;
+                  break;
+                }
+                case 1: // x = 1 boundary
+                {
+                  // all are Dirichlet
+                  for (unsigned int component = 0; component < this->n_components;
+                       ++component)
+                    this->boundary_types[boundary][component] =
+                      ConservationLaw<dim>::dirichlet;
+                  this->dirichlet_function_strings[boundary][0] =
+                    "if(sqrt(x^2+y^2)<t/3.0,16,1)"; // density
+                  this->dirichlet_function_strings[boundary][1] =
+                    "if(sqrt(x^2+y^2)<t/3.0,0,-x/sqrt(x^2+y^2))"; // mx
+                  this->dirichlet_function_strings[boundary][2] =
+                    "if(sqrt(x^2+y^2)<t/3.0,0,-y/sqrt(x^2+y^2))"; // my
+                  this->dirichlet_function_strings[boundary][3] =
+                    "if(sqrt(x^2+y^2)<t/3.0,16.0/3.0/(5.0/3.0-1),";
+                  this->dirichlet_function_strings[boundary][3] +=
+                    "1e-9/(5.0/3.0-1)+0.5)"; // energy
+                  break;
+                }
+                case 2: // y = 1 boundary
+                {
+                  // all are Dirichlet
+                  for (unsigned int component = 0; component < this->n_components;
+                       ++component)
+                    this->boundary_types[boundary][component] =
+                      ConservationLaw<dim>::dirichlet;
+                  this->dirichlet_function_strings[boundary][0] =
+                    "if(sqrt(x^2+y^2)<t/3.0,16,1)"; // density
+                  this->dirichlet_function_strings[boundary][1] =
+                    "if(sqrt(x^2+y^2)<t/3.0,0,-x/sqrt(x^2+y^2))"; // mx
+                  this->dirichlet_function_strings[boundary][2] =
+                    "if(sqrt(x^2+y^2)<t/3.0,0,-y/sqrt(x^2+y^2))"; // my
+                  this->dirichlet_function_strings[boundary][3] =
+                    "if(sqrt(x^2+y^2)<t/3.0,16.0/3.0/(5.0/3.0-1),";
+                  this->dirichlet_function_strings[boundary][3] +=
+                    "1e-9/(5.0/3.0-1)+0.5)"; // energy
+                  break;
+                }
+                case 3: // x = 0 boundary
+                {
+                  // all are reflective (zero Neumann)
+                  for (unsigned int component = 0; component < this->n_components;
+                       ++component)
+                    this->boundary_types[boundary][component] =
+                      ConservationLaw<dim>::neumann;
+                  break;
+                }
+                default:
+                {
+                  std::cout << "boundary indicator is " << boundary << std::endl;
+                  Assert(false, ExcInternalError());
+                  break;
+                }
+              }
             }
-          }
-      // set boundary conditions type for each boundary and component
-      this->boundary_types.resize(this->n_boundaries);
-      this->dirichlet_function_strings.resize(this->n_boundaries);
-      for (unsigned int boundary = 0; boundary < this->n_boundaries; ++boundary)
-      {
-        this->boundary_types[boundary].resize(this->n_components);
-        this->dirichlet_function_strings[boundary].resize(this->n_components);
-        switch (boundary)
-        {
-          case 0: // y = 0 boundary
-          {
-            // all are reflective (zero Neumann)
-            for (unsigned int component = 0; component < this->n_components;
-                 ++component)
-              this->boundary_types[boundary][component] =
-                ConservationLaw<dim>::neumann;
-            break;
-          }
-          case 1: // x = 1 boundary
-          {
-            // all are Dirichlet
-            for (unsigned int component = 0; component < this->n_components;
-                 ++component)
-              this->boundary_types[boundary][component] =
-                ConservationLaw<dim>::dirichlet;
-            this->dirichlet_function_strings[boundary][0] =
-              "if(sqrt(x^2+y^2)<t/3.0,16,1)"; // density
-            this->dirichlet_function_strings[boundary][1] =
+            this->use_exact_solution_as_dirichlet_bc = false;
+
+            // initial conditions for each solution component
+            this->initial_conditions_strings[0] = "1";
+            this->initial_conditions_strings[1] = "if(x==0,0,-x/sqrt(x^2+y^2))";
+            this->initial_conditions_strings[2] = "if(y==0,0,-y/sqrt(x^2+y^2))";
+            this->initial_conditions_strings[3] = "1e-9/(5.0/3.0-1)+0.5";
+
+            // exact solution
+            this->has_exact_solution = true;
+            this->exact_solution_strings[0] = "if(sqrt(x^2+y^2)<t/3.0,16,1)"; //
+         density
+            this->exact_solution_strings[1] =
               "if(sqrt(x^2+y^2)<t/3.0,0,-x/sqrt(x^2+y^2))"; // mx
-            this->dirichlet_function_strings[boundary][2] =
+            this->exact_solution_strings[2] =
               "if(sqrt(x^2+y^2)<t/3.0,0,-y/sqrt(x^2+y^2))"; // my
-            this->dirichlet_function_strings[boundary][3] =
+            this->exact_solution_strings[3] =
               "if(sqrt(x^2+y^2)<t/3.0,16.0/3.0/(5.0/3.0-1),";
-            this->dirichlet_function_strings[boundary][3] +=
-              "1e-9/(5.0/3.0-1)+0.5)"; // energy
+            this->exact_solution_strings[3] += "1e-9/(5.0/3.0-1)+0.5)"; // energy
+
+            // physical constants
+            gamma = 5.0 / 3.0;
+
+            // default end time
+            this->has_default_end_time = true;
+            this->default_end_time = 2.0;
+
             break;
           }
-          case 2: // y = 1 boundary
-          {
-            // all are Dirichlet
-            for (unsigned int component = 0; component < this->n_components;
-                 ++component)
-              this->boundary_types[boundary][component] =
-                ConservationLaw<dim>::dirichlet;
-            this->dirichlet_function_strings[boundary][0] =
-              "if(sqrt(x^2+y^2)<t/3.0,16,1)"; // density
-            this->dirichlet_function_strings[boundary][1] =
-              "if(sqrt(x^2+y^2)<t/3.0,0,-x/sqrt(x^2+y^2))"; // mx
-            this->dirichlet_function_strings[boundary][2] =
-              "if(sqrt(x^2+y^2)<t/3.0,0,-y/sqrt(x^2+y^2))"; // my
-            this->dirichlet_function_strings[boundary][3] =
-              "if(sqrt(x^2+y^2)<t/3.0,16.0/3.0/(5.0/3.0-1),";
-            this->dirichlet_function_strings[boundary][3] +=
-              "1e-9/(5.0/3.0-1)+0.5)"; // energy
-            break;
-          }
-          case 3: // x = 0 boundary
-          {
-            // all are reflective (zero Neumann)
-            for (unsigned int component = 0; component < this->n_components;
-                 ++component)
-              this->boundary_types[boundary][component] =
-                ConservationLaw<dim>::neumann;
-            break;
-          }
-          default:
-          {
-            std::cout << "boundary indicator is " << boundary << std::endl;
-            Assert(false, ExcInternalError());
-            break;
-          }
-        }
-      }
-      this->use_exact_solution_as_BC = false;
-
-      // initial conditions for each solution component
-      this->initial_conditions_strings[0] = "1";
-      this->initial_conditions_strings[1] = "if(x==0,0,-x/sqrt(x^2+y^2))";
-      this->initial_conditions_strings[2] = "if(y==0,0,-y/sqrt(x^2+y^2))";
-      this->initial_conditions_strings[3] = "1e-9/(5.0/3.0-1)+0.5";
-
-      // exact solution
-      this->has_exact_solution = true;
-      this->exact_solution_strings[0] = "if(sqrt(x^2+y^2)<t/3.0,16,1)"; // density
-      this->exact_solution_strings[1] =
-        "if(sqrt(x^2+y^2)<t/3.0,0,-x/sqrt(x^2+y^2))"; // mx
-      this->exact_solution_strings[2] =
-        "if(sqrt(x^2+y^2)<t/3.0,0,-y/sqrt(x^2+y^2))"; // my
-      this->exact_solution_strings[3] =
-        "if(sqrt(x^2+y^2)<t/3.0,16.0/3.0/(5.0/3.0-1),";
-      this->exact_solution_strings[3] += "1e-9/(5.0/3.0-1)+0.5)"; // energy
-
-      // physical constants
-      gamma = 5.0 / 3.0;
-
-      // default end time
-      this->has_default_end_time = true;
-      this->default_end_time = 2.0;
-
-      break;
-    }
+      */
     default:
     {
       Assert(false, ExcNotImplemented());
@@ -593,7 +580,8 @@ void Euler<dim>::compute_cell_ss_residual(FEValues<dim> & fe_values,
          local_solution);
                      double max_velocity = 0.0;
                      for (unsigned int q = 0; q < this->n_q_points_face; ++q)
-                        max_velocity = std::max( max_velocity, local_solution[q]);
+                        max_velocity = std::max( max_velocity,
+         local_solution[q]);
 
                      // compute first-order viscosity
                      double cell_diameter = cell->diameter();
@@ -949,15 +937,18 @@ energy);
                   fe_values[energy_extractor].value(j,q)
 
                   // conservation of x-momentum
-                  //+ fe_values[momentum_extractor].shape_grad_component(i,q,0) *
+                  //+ fe_values[momentum_extractor].shape_grad_component(i,q,0)
+*
 dfdu_mx_rho *
                   + fe_values.shape_grad_component(i,q,1) * dfdu_mx_rho *
                   fe_values[density_extractor].value(j,q)
-                  //+ fe_values[momentum_extractor].shape_grad_component(i,q,0) *
+                  //+ fe_values[momentum_extractor].shape_grad_component(i,q,0)
+*
 dfdu_mx_mx *
                   + fe_values.shape_grad_component(i,q,1) * dfdu_mx_mx *
                   fe_values.shape_value_component(j,q,1)
-                  //+ fe_values[momentum_extractor].shape_grad_component(i,q,0) *
+                  //+ fe_values[momentum_extractor].shape_grad_component(i,q,0)
+*
 dfdu_mx_E *
                   + fe_values.shape_grad_component(i,q,1) * dfdu_mx_E *
                   fe_values[energy_extractor].value(j,q)
@@ -978,7 +969,8 @@ dfdu_mx_E *
       // get dof indices
       cell->get_dof_indices(local_dof_indices);
       // aggregate cell matrix into global matrix
-      this->constraints.distribute_local_to_global(cell_matrix, local_dof_indices,
+      this->constraints.distribute_local_to_global(cell_matrix,
+local_dof_indices,
 this->system_matrix);
    }
 }
@@ -1105,7 +1097,8 @@ void Euler<dim>::compute_pressure(const std::vector<double> & density,
       (gamma - 1.0) * (energy[q] - 0.5 * momentum[q] * momentum[q] / density[q]);
 }
 
-/** \brief Computes pressure and pressure derivatives at each quadrature point in
+/** \brief Computes pressure and pressure derivatives at each quadrature point
+ * in
  * cell.
  *  \param[out] pressure pressure
  *  \param[out] dpdrho derivative of pressure with respect to density

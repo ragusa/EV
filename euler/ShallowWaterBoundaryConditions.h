@@ -9,6 +9,7 @@
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/lac/vector.h>
+#include "BoundaryConditions.h"
 
 using namespace dealii;
 
@@ -17,11 +18,11 @@ using namespace dealii;
  * \brief Base class for shallow water boundary conditions.
  */
 template <int dim>
-class ShallowWaterBoundaryConditions : BoundaryConditions<dim>
+class ShallowWaterBoundaryConditions : public BoundaryConditions<dim>
 {
 public:
-  /** \brief Typedef for cell iterators */
-  typedef typename DoFHandler<dim>::active_cell_iterator Cell;
+  /** \brief Typedef for cell iterator */
+  using Cell = typename BoundaryConditions<dim>::Cell;
 
   ShallowWaterBoundaryConditions(const FESystem<dim> & fe,
                                  const QGauss<dim> & face_quadrature,
@@ -34,6 +35,12 @@ private:
 
   /** \brief acceleration due to gravity */
   const double gravity;
+
+  /** \brief FE values extractor for height */
+  const FEValuesExtractors::Scalar height_extractor;
+
+  /** \brief FE values extractor for momentum */
+  const FEValuesExtractors::Vector momentum_extractor;
 };
 
 #include "ShallowWaterBoundaryConditions.cc"

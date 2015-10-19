@@ -12,7 +12,7 @@ end
 # 2 burgers_rarefaction
 # 3 burgers_2D
 subsection problem
-   set problem id = 1
+   set problem id = 0
 end
 
 subsection refinement

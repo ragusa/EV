@@ -35,7 +35,10 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/error_estimator.h>
+#include "BoundaryConditions.h"
 #include "ConservationLawParameters.h"
+#include "DirichletBoundaryConditions.h"
+#include "Exceptions.h"
 #include "PostProcessor.h"
 
 using namespace dealii;
@@ -58,8 +61,6 @@ public:
   ConservationLaw(const ConservationLawParameters<dim> & params);
   ~ConservationLaw();
   void run();
-
-  DeclException0(ExcNaNEncountered);
 
 protected:
   /** \brief Typedef for cell iterators */
@@ -297,31 +298,20 @@ protected:
 
   /** \brief number of boundaries */
   unsigned int n_boundaries;
-  /** \brief enumeration for types of boundary conditions */
-  enum BoundaryType
-  {
-    dirichlet,
-    neumann
-  };
-  /**
-   * \brief vector of types of boundary condition for each boundary ID and
-   *        component
-   */
-  std::vector<std::vector<BoundaryType>> boundary_types;
+  /** \brief type of boundary conditions */
+  std::string boundary_conditions_type;
+  /** \brief boundary conditions */
+  std::shared_ptr<BoundaryConditions<dim>> boundary_conditions;
+  /** \brief option to use exact solution function as Dirichlet boundary
+   *         conditions */
+  bool use_exact_solution_as_dirichlet_bc;
   /** \brief vector of Dirichlet BC function strings, which will be parsed */
   std::vector<std::vector<std::string>> dirichlet_function_strings;
   /** \brief vector of Dirichlet BC functions created from parsed strings */
   std::vector<FunctionParser<dim> *> dirichlet_function;
-  /** \brief option to use exact solution function as Dirichlet BC */
-  bool use_exact_solution_as_BC;
-  /** \brief option to skip computing the face residual if Dirichlet BCs used at
-   *  all boundaries */
-  bool need_to_compute_face_residual;
 
-  /**
-   * \brief initial conditions function strings for each component, which will
-   *        be parsed
-   */
+  /** \brief initial conditions function strings for each component, which will
+   *         be parsed */
   std::vector<std::string> initial_conditions_strings;
   /** \brief initial conditions functions */
   FunctionParser<dim> initial_conditions_function;
@@ -388,10 +378,8 @@ protected:
   /** \brief Maximum values for use in DMP */
   Vector<double> max_values;
 
-  /**
-   * \brief Vector of degrees of freedom subject to Dirichlet boundary
-   *        conditions.
-   */
+  /** \brief Vector of degrees of freedom subject to Dirichlet boundary
+   *         conditions. */
   std::vector<unsigned int> dirichlet_nodes;
 
   /** \brief Default end time for test problem */
