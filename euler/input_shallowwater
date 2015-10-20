@@ -12,7 +12,7 @@ end
 # 2 lake_at_rest
 # 3 lake_at_rest_perturbed
 subsection problem
-   set problem id = 3
+   set problem id = 2
 end
 
 subsection refinement
@@ -36,7 +36,7 @@ end
 
 subsection artificial viscosity
    # options are <none|constant|old_first_order|max_principle|entropy>
-   set viscosity type = old_first_order
+   set viscosity type = entropy
    set constant viscosity value = 0.01
    set first order viscosity coefficient = 0.5
    set multiply low order viscosity by froude = true
@@ -74,6 +74,7 @@ end
 
 subsection output
    set output period = 0
+   set max transient output size = 1.0e6
    set output mesh = false
    set output mass matrix = false
    set output viscosity = true

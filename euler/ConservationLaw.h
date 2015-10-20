@@ -76,7 +76,7 @@ protected:
   void refine_mesh();
   void update_cell_sizes();
   void assemble_mass_matrix();
-  void solve_runge_kutta();
+  void solve_runge_kutta(PostProcessor<dim> & postprocessor);
   double compute_dt_from_cfl_condition();
   double compute_cfl_number(const double & dt) const;
   void linear_solve(const SparseMatrix<double> & A,

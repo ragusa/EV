@@ -65,6 +65,10 @@ public:
                        const std::string & output_string,
                        const DataPostprocessor<dim> & data_postprocessor) const;
 
+  void output_solution_transient(const Vector<double> & solution,
+                                 const DoFHandler<dim> & dof_handler,
+                                 const std::string & output_string);
+
   void evaluate_error(const Vector<double> & solution,
                       const DoFHandler<dim> & dof_handler,
                       const Triangulation<dim> & triangulation);
@@ -86,7 +90,8 @@ private:
     const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
       component_interpretations,
     const DoFHandler<dim> & dof_handler,
-    const std::string & output_string) const;
+    const std::string & output_string,
+    const bool & output_1d_vtk) const;
 
   void output_at_dof_points(
     const Vector<double> & values,
@@ -95,7 +100,8 @@ private:
       component_interpretations,
     const DoFHandler<dim> & dof_handler,
     const std::string & output_string,
-    const DataPostprocessor<dim> & data_postprocessor) const;
+    const DataPostprocessor<dim> & data_postprocessor,
+    const bool & output_1d_vtk) const;
 
   void output_convergence_data();
 
@@ -154,6 +160,10 @@ private:
   DoFHandler<dim> fine_dof_handler;
   void createFineTriangulationAndDoFHandler(
     const Triangulation<dim> & triangulation);
+
+  /** \brief Counter for the transient solution, i.e., the time step index,
+   *         used in determining if a transient solution will be output */
+  unsigned int transient_counter;
 };
 
 #include "PostProcessor.cc"

@@ -212,6 +212,11 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
                       "Period of time steps for outputting the solution, e.g.,"
                       " 1 would output every time step,"
                       " and 2 would output every other time step, etc.");
+    prm.declare_entry("max transient output size",
+                      "1.0e6",
+                      Patterns::Double(),
+                      "Maximum number of bytes to use for transient output"
+                      " files");
     prm.declare_entry("output mesh",
                       "true",
                       Patterns::Bool(),
@@ -417,6 +422,7 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
   prm.enter_subsection("output");
   {
     output_period = prm.get_integer("output period");
+    max_transient_output_size = prm.get_double("max transient output size");
     output_mesh = prm.get_bool("output mesh");
     output_mass_matrix = prm.get_bool("output mass matrix");
     output_viscosity = prm.get_bool("output viscosity");

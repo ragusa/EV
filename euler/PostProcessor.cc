@@ -30,7 +30,8 @@ PostProcessor<dim>::PostProcessor(
     cell_quadrature(parameters.n_quadrature_points),
     current_cycle(0),
     is_last_cycle(false),
-    fine_dof_handler(fine_triangulation)
+    fine_dof_handler(fine_triangulation),
+    transient_counter(0)
 {
   // assert that a nonempty problem name was provided
   Assert(!problem_name.empty(), ExcInvalidState());
@@ -237,6 +238,44 @@ void PostProcessor<dim>::output_solution(
 }
 
 /**
+ * \brief Outputs the solution to a file if the user specified.
+ *
+ * The user supplies an output period for the transient; this function
+ * determines if this solution is scheduled to be output and outputs it
+ * if it does.
+ *
+ * \param[in] values a vector of values for the quantity.
+ * \param[in] dof_handler degrees of freedom handler.
+ * \param[in] output_string string for the output filename.
+ */
+template <int dim>
+void PostProcessor<dim>::output_solution_transient(
+  const Vector<double> & solution,
+  const DoFHandler<dim> & dof_handler,
+  const std::string & output_string)
+{
+  // determine if this solution is scheduled to be output based on the user-
+  // specified output period for the transient
+  if (transient_counter % parameters.output_period == 0)
+  {
+    std::cout << "Solution would be output here" << std::endl;
+  }
+
+  /*
+    // call function that outputs a vector of values to a file,
+    // with the solution component names and types lists
+    output_at_dof_points(solution,
+                         solution_component_names,
+                         solution_component_interpretations,
+                         dof_handler,
+                         output_string);
+  */
+
+  // increment transient counter
+  transient_counter++;
+}
+
+/**
  * \brief Outputs the exact solution to a file.
  */
 template <int dim>
@@ -264,6 +303,8 @@ void PostProcessor<dim>::output_exact_solution()
  *            of each component in the vector of values
  * \param[in] dof_handler degrees of freedom handler.
  * \param[in] output_string string for the output filename.
+ * \param[in] output_1d_vtk option to output 1-D data in VTK format instead
+ *            of GNUPLOT format
  */
 template <int dim>
 void PostProcessor<dim>::output_at_dof_points(
@@ -272,7 +313,8 @@ void PostProcessor<dim>::output_at_dof_points(
   const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
     component_interpretations,
   const DoFHandler<dim> & dof_handler,
-  const std::string & output_string) const
+  const std::string & output_string,
+  const bool & output_1d_vtk = false) const
 {
   // create output directory and subdirectory if they do not exist
   create_directory("output");
@@ -290,15 +332,30 @@ void PostProcessor<dim>::output_at_dof_points(
   // write GNUplot file for 1-D and .vtk file otherwise
   if (dim == 1)
   {
-    // create output filestream
-    std::stringstream filename_ss;
-    filename_ss << output_dir << output_string << ".gpl";
-    std::string filename = filename_ss.str();
-    std::ofstream output_filestream(filename.c_str());
-    output_filestream.precision(15);
+    if (output_1d_vtk)
+    {
+      // create output filestream
+      std::stringstream filename_ss;
+      filename_ss << output_dir << output_string << ".vtk";
+      std::string filename = filename_ss.str();
+      std::ofstream output_filestream(filename.c_str());
+      output_filestream.precision(15);
 
-    // write output file
-    data_out.write_gnuplot(output_filestream);
+      // write output file
+      data_out.write_vtk(output_filestream);
+    }
+    else
+    {
+      // create output filestream
+      std::stringstream filename_ss;
+      filename_ss << output_dir << output_string << ".gpl";
+      std::string filename = filename_ss.str();
+      std::ofstream output_filestream(filename.c_str());
+      output_filestream.precision(15);
+
+      // write output file
+      data_out.write_vtk(output_filestream);
+    }
   }
   else
   {
@@ -330,6 +387,8 @@ void PostProcessor<dim>::output_at_dof_points(
  * \param[in] output_string string for the output filename.
  * \param[in] data_postprocessor postprocessor for derived quantities to
  *            be output
+ * \param[in] output_1d_vtk option to output 1-D data in VTK format instead
+ *            of GNUPLOT format
  */
 template <int dim>
 void PostProcessor<dim>::output_at_dof_points(
@@ -339,7 +398,8 @@ void PostProcessor<dim>::output_at_dof_points(
     component_interpretations,
   const DoFHandler<dim> & dof_handler,
   const std::string & output_string,
-  const DataPostprocessor<dim> & data_postprocessor) const
+  const DataPostprocessor<dim> & data_postprocessor,
+  const bool & output_1d_vtk = false) const
 {
   // create output directory and subdirectory if they do not exist
   create_directory("output");
@@ -358,15 +418,30 @@ void PostProcessor<dim>::output_at_dof_points(
   // write GNUplot file for 1-D and .vtk file otherwise
   if (dim == 1)
   {
-    // create output filestream
-    std::stringstream filename_ss;
-    filename_ss << output_dir << output_string << ".gpl";
-    std::string filename = filename_ss.str();
-    std::ofstream output_filestream(filename.c_str());
-    output_filestream.precision(15);
+    if (output_1d_vtk)
+    {
+      // create output filestream
+      std::stringstream filename_ss;
+      filename_ss << output_dir << output_string << ".vtk";
+      std::string filename = filename_ss.str();
+      std::ofstream output_filestream(filename.c_str());
+      output_filestream.precision(15);
 
-    // write output file
-    data_out.write_gnuplot(output_filestream);
+      // write output file
+      data_out.write_vtk(output_filestream);
+    }
+    else
+    {
+      // create output filestream
+      std::stringstream filename_ss;
+      filename_ss << output_dir << output_string << ".gpl";
+      std::string filename = filename_ss.str();
+      std::ofstream output_filestream(filename.c_str());
+      output_filestream.precision(15);
+
+      // write output file
+      data_out.write_vtk(output_filestream);
+    }
   }
   else
   {

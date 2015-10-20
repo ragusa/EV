@@ -89,12 +89,15 @@ void ConservationLaw<dim>::run()
 
     // output initial solution
     postprocessor.output_solution(new_solution, dof_handler, "solution_initial");
+    if (parameters.output_period > 0)
+      postprocessor.output_solution_transient(
+        new_solution, dof_handler, "solution");
 
     // solve transient with selected time integrator
     switch (parameters.temporal_integrator)
     {
       case ConservationLawParameters<dim>::runge_kutta: // Runge-Kutta
-        solve_runge_kutta();
+        solve_runge_kutta(postprocessor);
         break;
       default:
         Assert(false, ExcNotImplemented());
@@ -683,7 +686,7 @@ void ConservationLaw<dim>::output_map(
  * transient using explicit Runge-Kutta:
  * \f[
  *   \mathbf{M} \mathbf{y}^{n+1} = \mathbf{M} \mathbf{y}^n
-     + \Delta t\sum\limits^s_{i=1}b_i \mathbf{r}_i
+ *   + \Delta t\sum\limits^s_{i=1}b_i \mathbf{r}_i
  * \f]
  * where
  * \f[
@@ -692,11 +695,13 @@ void ConservationLaw<dim>::output_map(
  * and \f$\mathbf{Y}_i\f$ is computed from the linear solve
  * \f[
  *   \mathbf{M} \mathbf{Y}_i = \mathbf{M} \mathbf{y}^n
-     + \Delta t\sum\limits^{i-1}_{j=1}a_{i,j} \mathbf{r}_i
+ *   + \Delta t\sum\limits^{i-1}_{j=1}a_{i,j} \mathbf{r}_i
  * \f]
+ *
+ * \param[inout] postprocessor Post-processor for outputting transient
  */
 template <int dim>
-void ConservationLaw<dim>::solve_runge_kutta()
+void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
 {
   old_time = 0.0;
   unsigned int n = 1; // time step index
@@ -874,6 +879,11 @@ void ConservationLaw<dim>::solve_runge_kutta()
       // step
       compute_ss_residual(rk.f[0]);
     }
+
+    // output solution transient if specified
+    if (parameters.output_period > 0)
+      postprocessor.output_solution_transient(
+        new_solution, dof_handler, "solution");
 
     // compute max principle min and max values
     compute_max_principle_quantities();

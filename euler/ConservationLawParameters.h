@@ -43,6 +43,7 @@ public:
   double steady_state_tolerance;
 
   unsigned int output_period;
+  double max_transient_output_size;
   bool output_mesh;
   bool output_mass_matrix;
   bool output_viscosity;
