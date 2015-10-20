@@ -19,7 +19,7 @@ using namespace dealii;
  *        equations
  */
 template <int dim>
-class ShallowWaterSubcriticalOpenBC1D : public BoundaryConditions<dim>
+class ShallowWaterSubcriticalOpenBC1D : public ShallowWaterBoundaryConditions<dim>
 {
 public:
   /** \brief Typedef for cell iterator */

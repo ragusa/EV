@@ -35,7 +35,7 @@ public:
              const Vector<double> & solution,
              Vector<double> & cell_residual);
 
-private:
+protected:
   virtual void apply_boundary_condition(const Cell & cell,
                                         const FEValues<dim> & fe_values_cell,
                                         const FEFaceValues<dim> & fe_values_face,

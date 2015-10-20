@@ -8,9 +8,12 @@
 template <int dim>
 ShallowWaterBoundaryConditions<dim>::ShallowWaterBoundaryConditions(
   const FESystem<dim> & fe_,
-  const QGauss<dim> & face_quadrature_,
+  const QGauss<dim - 1> & face_quadrature_,
   const double & gravity_)
-  : BoundaryConditions<dim>(fe_, face_quadrature_), gravity(gravity_)
+  : BoundaryConditions<dim>(fe_, face_quadrature_),
+    gravity(gravity_),
+    height_extractor(0),
+    momentum_extractor(1)
 {
 }
 
@@ -34,8 +37,8 @@ ShallowWaterBoundaryConditions<dim>::ShallowWaterBoundaryConditions(
 template <int dim>
 void ShallowWaterBoundaryConditions<dim>::integrate_face(
   const std::vector<double> & height,
-  const std::vector<Tensor<1, dim>> & momentum
-    Vector<double> & cell_residual) const
+  const std::vector<Tensor<1, dim>> & momentum,
+  Vector<double> & cell_residual) const
 {
   // identity tensor
   SymmetricTensor<2, dim> identity_tensor_sym = unit_symmetric_tensor<dim>();
@@ -43,9 +46,9 @@ void ShallowWaterBoundaryConditions<dim>::integrate_face(
 
   // get normal vectors
   std::vector<Tensor<1, dim>> normal_vectors =
-    fe_values_face.get_all_normal_vectors();
+    this->fe_values_face.get_all_normal_vectors();
 
-  for (unsigned int q = 0; q < n_quadrature_points_face; ++q)
+  for (unsigned int q = 0; q < this->n_quadrature_points_face; ++q)
   {
     // compute velocity
     Tensor<1, dim> velocity = momentum[q] / height[q];
@@ -55,11 +58,11 @@ void ShallowWaterBoundaryConditions<dim>::integrate_face(
       0.5 * gravity * std::pow(height[q], 2) * identity_tensor;
 
     // loop over DoFs in cell
-    for (unsigned int i = 0; i < dofs_per_cell; ++i)
-      cell_residual(i) +=
-        (fe_values_face[height_extractor].value(i, q) * momentum[q] +
-         fe_values_face[momentum_extractor].value(i, q) *
+    for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+      cell_residual(i) -=
+        (this->fe_values_face[height_extractor].value(i, q) * momentum[q] +
+         this->fe_values_face[momentum_extractor].value(i, q) *
            momentum_inviscid_flux) *
-        normal_vectors[q] * fe_values_face.JxW(q);
+        normal_vectors[q] * this->fe_values_face.JxW(q);
   }
 }

@@ -130,8 +130,14 @@ void ConservationLaw<dim>::run()
       case ConservationLawParameters<dim>::entropy:
         postprocessor.output_cell_map(
           first_order_viscosity, "loworderviscosity", dof_handler);
-        postprocessor.output_cell_map(
-          entropy_viscosity, "entropyviscosity", dof_handler);
+
+        // if low-order viscosity is used for first time step and only 1 time
+        // step is taken, then the size of the entropy viscosity map is 0,
+        // so that map cannot be output
+        if (entropy_viscosity.size() > 0)
+          postprocessor.output_cell_map(
+            entropy_viscosity, "entropyviscosity", dof_handler);
+
         postprocessor.output_cell_map(
           viscosity, "highorderviscosity", dof_handler);
         break;
@@ -837,14 +843,12 @@ void ConservationLaw<dim>::solve_runge_kutta()
 
     /* compute the solution using the computed f_i's:
      *
-     * M*y^{n+1} = M*y^n + dt*sum_{i=1}^s(b_i*f_i)
+     * M*y^{n+1} = M*y^n + dt*sum_{i=1}^s b_i*f_i
      */
     // if the next time step solution was already computed in the last stage,
-    // then
-    // there is no need to perform the linear combination of f's. Plus, since
-    // f[0]
-    // is always computed from the previous time step solution, re-use the end f
-    // as f[0] for the next time step
+    // then there is no need to perform the linear combination of f's. Plus,
+    // since f[0] is always computed from the previous time step solution,
+    // re-use the end f as f[0] for the next time step
     if (rk.solution_computed_in_last_stage)
     {
       // end of step residual can be used as beginning of step residual for next
@@ -853,7 +857,7 @@ void ConservationLaw<dim>::solve_runge_kutta()
     }
     else
     {
-      // solve M*y^{n+1} = M*y^n + dt*sum_{i=1}^s(b_i*f_i)
+      // solve M*y^{n+1} = M*y^n + dt*sum_{i=1}^s b_i*f_i
       system_rhs = 0.0;
       lumped_mass_matrix.vmult(system_rhs, old_solution);
       for (int i = 0; i < rk.s; ++i)
@@ -1113,18 +1117,21 @@ void ConservationLaw<dim>::update_viscosities(const double & dt,
     // entropy viscosity
     case ConservationLawParameters<dim>::entropy:
     {
-      // compute low-order viscosities
-      update_old_low_order_viscosity(false);
-
       cell_iterator cell, endc = dof_handler.end();
       if (parameters.use_low_order_viscosity_for_first_time_step && n == 1)
       {
+        // compute low-order viscosities
+        update_old_low_order_viscosity(true);
+
         // use low-order viscosities for first time step
         for (cell = dof_handler.begin_active(); cell != endc; ++cell)
           viscosity[cell] = first_order_viscosity[cell];
       }
       else
       {
+        // compute low-order viscosities
+        update_old_low_order_viscosity(false);
+
         // compute high-order viscosities
         update_entropy_viscosities(dt);
         for (cell = dof_handler.begin_active(); cell != endc; ++cell)

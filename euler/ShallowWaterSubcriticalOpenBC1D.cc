@@ -112,7 +112,7 @@ void ShallowWaterSubcriticalOpenBC1D<dim>::apply_boundary_condition(
   }
 
   // compute boundary momentum
-  Tensor<1, dim> momentum_bc();
+  Tensor<1, dim> momentum_bc;
   momentum_bc[0] = velocity_bc * height_bc;
 
   // convert values to vectors
@@ -120,5 +120,5 @@ void ShallowWaterSubcriticalOpenBC1D<dim>::apply_boundary_condition(
   std::vector<Tensor<1, dim>> momentum_vector(1, momentum_bc);
 
   // call integrate face function
-  integrate_face(height_vector, momentum_vector, cell_residual);
+  this->integrate_face(height_vector, momentum_vector, cell_residual);
 }

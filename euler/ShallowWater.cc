@@ -234,6 +234,9 @@ void ShallowWater<dim>::define_problem()
       GridGenerator::hyper_cube(
         this->triangulation, domain_start, domain_start + domain_width);
 
+      // problem parameters
+      gravity = 9.812;
+
       // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
       this->n_boundaries = 1;
       typename Triangulation<dim>::cell_iterator cell =
@@ -247,7 +250,7 @@ void ShallowWater<dim>::define_problem()
       std::shared_ptr<ShallowWaterSubcriticalOpenBC1D<dim>>
         derived_boundary_conditions =
           std::make_shared<ShallowWaterSubcriticalOpenBC1D<dim>>(
-            this->fe, this->face_quadrature, this->gravity, 1.0, 1.0);
+            this->fe, this->face_quadrature, gravity, 1.0, 1.0);
       this->boundary_conditions = derived_boundary_conditions;
       this->dirichlet_function_strings.resize(this->n_boundaries);
       this->dirichlet_function_strings[0].resize(this->n_components);
@@ -258,9 +261,6 @@ void ShallowWater<dim>::define_problem()
       // initial conditions
       this->initial_conditions_strings[0] = "if(abs(x-10)<2,1-(4-(x-10)^2)/20,1)";
       this->initial_conditions_strings[1] = "0";
-
-      // problem parameters
-      gravity = 9.812;
 
       // exact solution
       this->has_exact_solution = true;
@@ -302,6 +302,9 @@ void ShallowWater<dim>::define_problem()
       GridGenerator::hyper_cube(
         this->triangulation, domain_start, domain_start + domain_width);
 
+      // problem parameters
+      gravity = 9.812;
+
       // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
       this->n_boundaries = 1;
       typename Triangulation<dim>::cell_iterator cell =
@@ -315,7 +318,7 @@ void ShallowWater<dim>::define_problem()
       std::shared_ptr<ShallowWaterSubcriticalOpenBC1D<dim>>
         derived_boundary_conditions =
           std::make_shared<ShallowWaterSubcriticalOpenBC1D<dim>>(
-            this->fe, this->face_quadrature, this->gravity, 1.0, 1.0);
+            this->fe, this->face_quadrature, gravity, 1.0, 1.0);
       this->boundary_conditions = derived_boundary_conditions;
       this->dirichlet_function_strings.resize(this->n_boundaries);
       this->dirichlet_function_strings[0].resize(this->n_components);
@@ -328,9 +331,6 @@ void ShallowWater<dim>::define_problem()
         "if(abs(x-6)<0.25,1.01,"
         "if(abs(x-10)<2,1-(4-(x-10)^2)/20,1))";
       this->initial_conditions_strings[1] = "0";
-
-      // problem parameters
-      gravity = 9.812;
 
       // exact solution
       this->has_exact_solution = true;

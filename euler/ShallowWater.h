@@ -18,6 +18,7 @@
 #include "ConservationLaw.h"
 #include "ShallowWaterEntropyFluxFEValuesCell.h"
 #include "ShallowWaterEntropyFluxFEValuesFace.h"
+#include "ShallowWaterNoBC.h"
 #include "ShallowWaterParameters.h"
 #include "ShallowWaterPostProcessor.h"
 #include "ShallowWaterRiemannSolver.h"

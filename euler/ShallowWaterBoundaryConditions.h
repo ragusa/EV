@@ -25,10 +25,10 @@ public:
   using Cell = typename BoundaryConditions<dim>::Cell;
 
   ShallowWaterBoundaryConditions(const FESystem<dim> & fe,
-                                 const QGauss<dim> & face_quadrature,
+                                 const QGauss<dim - 1> & face_quadrature,
                                  const double & gravity);
 
-private:
+protected:
   void integrate_face(const std::vector<double> & height,
                       const std::vector<Tensor<1, dim>> & momentum,
                       Vector<double> & cell_residual) const;
