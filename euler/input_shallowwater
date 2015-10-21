@@ -11,6 +11,7 @@ end
 # 1 dam_break_bump
 # 2 lake_at_rest
 # 3 lake_at_rest_perturbed
+# 4 lake_at_rest_flat_perturbed
 subsection problem
    set problem id = 3
 end
@@ -28,7 +29,7 @@ subsection time
    # options are <constant_dt|cfl_condition>
    set time step size method = cfl_condition
    set use default end time = false
-   set final time = 5.0
+   set final time = 1.5
    set time step size = 0.1
    set cfl = 0.50
    set steady state tolerance = 1.0e-6
@@ -39,7 +40,7 @@ subsection artificial viscosity
    set viscosity type = old_first_order
    set constant viscosity value = 0.01
    set first order viscosity coefficient = 0.5
-   set multiply low order viscosity by froude = false
+   set multiply low order viscosity by froude = true
    set use low order viscosity for first time step = true
    set entropy viscosity coefficient = 1.0
    set jump coefficient = 1.0

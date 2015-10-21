@@ -358,6 +358,101 @@ void ShallowWater<dim>::define_problem()
 
       break;
     }
+    case 4: // 1-D lake at rest flat perturbed
+    {
+      Assert(dim == 1, ExcImpossibleInDim(dim));
+
+      // name of problem
+      this->problem_name = "lake_at_rest_flat_perturbed";
+
+      // domain
+      const double domain_start = 0.0;
+      const double domain_width = 20.0;
+      this->domain_volume = std::pow(domain_width, dim);
+      GridGenerator::hyper_cube(
+        this->triangulation, domain_start, domain_start + domain_width);
+
+      // constants for function parser
+      const double h_unperturbed = 1.0; // unperturbed height
+      const double h_perturbed = 2.0;   // perturbed height
+      this->constants["h_unperturbed"] = h_unperturbed;
+      this->constants["h_perturbed"] = h_perturbed;
+
+      // problem parameters
+      gravity = 9.812;
+
+      // set boundary IDs
+      this->n_boundaries = 1;
+      typename Triangulation<dim>::cell_iterator cell =
+        this->triangulation.begin();
+      typename Triangulation<dim>::cell_iterator endc = this->triangulation.end();
+      for (; cell != endc; ++cell)
+        for (unsigned int face = 0; face < this->faces_per_cell; ++face)
+          if (cell->face(face)->at_boundary())
+            cell->face(face)->set_boundary_id(0);
+
+      this->boundary_conditions_type = "shallow_water_open_1d";
+      std::shared_ptr<
+        ShallowWaterSubcriticalOpenBC1D<dim>> derived_boundary_conditions =
+        std::make_shared<ShallowWaterSubcriticalOpenBC1D<dim>>(
+          this->fe, this->face_quadrature, gravity, h_unperturbed, h_unperturbed);
+      this->boundary_conditions = derived_boundary_conditions;
+
+      /*
+            this->boundary_conditions_type = "dirichlet";
+            std::shared_ptr<DirichletBoundaryConditions<dim>>
+              derived_boundary_conditions =
+                std::make_shared<DirichletBoundaryConditions<dim>>(
+                  this->fe, this->face_quadrature);
+            this->boundary_conditions = derived_boundary_conditions;
+      */
+
+      /*
+            this->boundary_conditions_type = "shallow_water_none";
+            std::shared_ptr<ShallowWaterNoBC<dim>>
+              derived_boundary_conditions =
+                std::make_shared<ShallowWaterNoBC<dim>>(
+                  this->fe, this->face_quadrature, gravity);
+            this->boundary_conditions = derived_boundary_conditions;
+      */
+
+      this->dirichlet_function_strings.resize(this->n_boundaries);
+      this->dirichlet_function_strings[0].resize(this->n_components);
+      this->dirichlet_function_strings[0][0] = "h_unperturbed"; // height
+      this->dirichlet_function_strings[0][1] = "0";             // momentum
+      this->use_exact_solution_as_dirichlet_bc = false;
+
+      // initial conditions
+      this->initial_conditions_strings[0] =
+        "if(abs(x-10)<0.25,h_perturbed,h_unperturbed)";
+      this->initial_conditions_strings[1] = "0";
+
+      // exact solution
+      this->has_exact_solution = true;
+      this->exact_solution_strings[0] = "h_unperturbed";
+      this->exact_solution_strings[1] = "0";
+
+      // create and initialize function parser for exact solution
+      std::shared_ptr<FunctionParser<dim>> exact_solution_function_derived =
+        std::make_shared<FunctionParser<dim>>(this->parameters.n_components);
+      exact_solution_function_derived->initialize(
+        "x", this->exact_solution_strings, this->constants, false);
+      this->exact_solution_function = exact_solution_function_derived;
+
+      // initialize bathymetry function
+      std::shared_ptr<FunctionParser<dim>> bathymetry_function_derived =
+        std::make_shared<FunctionParser<dim>>();
+      std::string bathymetry_string = "0";
+      bathymetry_function_derived->initialize(
+        "x", bathymetry_string, this->constants, false);
+      bathymetry_function = bathymetry_function_derived;
+
+      // default end time
+      this->has_default_end_time = true;
+      this->default_end_time = 4.0;
+
+      break;
+    }
     default:
     {
       Assert(false, ExcNotImplemented());

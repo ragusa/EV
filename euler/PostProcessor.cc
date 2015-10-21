@@ -187,10 +187,11 @@ void PostProcessor<dim>::output_results(
   output_solution(solution, dof_handler, solution_filename, data_postprocessor);
 
   // output transient solution
-/*
-  if (transient_solution_not_output_this_step)
-    output_solution_transient(solution, dof_handler, solution_filename, data_postprocessor, true);
-*/
+  /*
+    if (transient_solution_not_output_this_step)
+      output_solution_transient(solution, dof_handler, solution_filename,
+    data_postprocessor, true);
+  */
 
   // output exact solution
   output_exact_solution();
@@ -283,11 +284,12 @@ void PostProcessor<dim>::output_solution_transient(
     {
       // make sure that transient counter is not too big for string format
       Assert(transient_counter < 10000, ExcTooManyTransientOutputFiles());
-  
+
       // create transient filename
-      const std::string transient_output_string = output_string + appendage_string + "-"
-       + Utilities::int_to_string(transient_file_number, 4);
-  
+      const std::string transient_output_string = output_string +
+        appendage_string + "-" +
+        Utilities::int_to_string(transient_file_number, 4);
+
       // call function that outputs a vector of values to a file,
       // with the solution component names and types lists
       output_at_dof_points(solution,
@@ -299,7 +301,7 @@ void PostProcessor<dim>::output_solution_transient(
 
       // signal that solution was output this step
       transient_solution_not_output_this_step = false;
-  
+
       // increment transient file number
       transient_file_number++;
     }
@@ -308,7 +310,7 @@ void PostProcessor<dim>::output_solution_transient(
       // signal that solution was not output this step
       transient_solution_not_output_this_step = true;
     }
-  
+
     // increment transient counter
     transient_counter++;
   }
@@ -393,7 +395,7 @@ void PostProcessor<dim>::output_at_dof_points(
       output_filestream.precision(15);
 
       // write output file
-      data_out.write_vtk(output_filestream);
+      data_out.write_gnuplot(output_filestream);
     }
   }
   else
@@ -479,7 +481,7 @@ void PostProcessor<dim>::output_at_dof_points(
       output_filestream.precision(15);
 
       // write output file
-      data_out.write_vtk(output_filestream);
+      data_out.write_gnuplot(output_filestream);
     }
   }
   else
