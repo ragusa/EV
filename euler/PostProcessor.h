@@ -18,6 +18,7 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <sys/stat.h>
 #include "ConservationLawParameters.h"
+#include "Exceptions.h"
 
 using namespace dealii;
 
@@ -67,7 +68,8 @@ public:
 
   void output_solution_transient(const Vector<double> & solution,
                                  const DoFHandler<dim> & dof_handler,
-                                 const std::string & output_string);
+                                 const std::string & output_string,
+                                 const bool & force_output = false);
 
   void evaluate_error(const Vector<double> & solution,
                       const DoFHandler<dim> & dof_handler,
@@ -91,7 +93,7 @@ private:
       component_interpretations,
     const DoFHandler<dim> & dof_handler,
     const std::string & output_string,
-    const bool & output_1d_vtk) const;
+    const bool & output_1d_vtk = false) const;
 
   void output_at_dof_points(
     const Vector<double> & values,
@@ -101,7 +103,7 @@ private:
     const DoFHandler<dim> & dof_handler,
     const std::string & output_string,
     const DataPostprocessor<dim> & data_postprocessor,
-    const bool & output_1d_vtk) const;
+    const bool & output_1d_vtk = false) const;
 
   void output_convergence_data();
 
@@ -161,9 +163,22 @@ private:
   void createFineTriangulationAndDoFHandler(
     const Triangulation<dim> & triangulation);
 
+  /** \brief Number used in the next transient solution file name */
+  unsigned int transient_file_number;
+
   /** \brief Counter for the transient solution, i.e., the time step index,
    *         used in determining if a transient solution will be output */
   unsigned int transient_counter;
+
+  /**
+   * \brief Flag to signal that the transient solution was not output this
+   *        time step.
+   *
+   * This is used because the final solution should be output in the transient,
+   * even if the time step number was not scheduled to be output by the
+   * user-specified output frequency.
+   */
+  bool transient_solution_not_output_this_step;
 };
 
 #include "PostProcessor.cc"

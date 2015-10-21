@@ -89,9 +89,8 @@ void ConservationLaw<dim>::run()
 
     // output initial solution
     postprocessor.output_solution(new_solution, dof_handler, "solution_initial");
-    if (parameters.output_period > 0)
-      postprocessor.output_solution_transient(
-        new_solution, dof_handler, "solution");
+    postprocessor.output_solution_transient(
+      new_solution, dof_handler, "solution");
 
     // solve transient with selected time integrator
     switch (parameters.temporal_integrator)
@@ -881,9 +880,8 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     }
 
     // output solution transient if specified
-    if (parameters.output_period > 0)
-      postprocessor.output_solution_transient(
-        new_solution, dof_handler, "solution");
+    postprocessor.output_solution_transient(
+      new_solution, dof_handler, "solution");
 
     // compute max principle min and max values
     compute_max_principle_quantities();

@@ -31,7 +31,9 @@ PostProcessor<dim>::PostProcessor(
     current_cycle(0),
     is_last_cycle(false),
     fine_dof_handler(fine_triangulation),
-    transient_counter(0)
+    transient_file_number(0),
+    transient_counter(0),
+    transient_solution_not_output_this_step(true)
 {
   // assert that a nonempty problem name was provided
   Assert(!problem_name.empty(), ExcInvalidState());
@@ -141,6 +143,10 @@ void PostProcessor<dim>::output_results(const Vector<double> & solution,
   std::string solution_filename = "solution" + appendage_string;
   output_solution(solution, dof_handler, solution_filename);
 
+  // output transient solution
+  if (transient_solution_not_output_this_step)
+    output_solution_transient(solution, dof_handler, solution_filename, true);
+
   // output exact solution
   output_exact_solution();
 
@@ -179,6 +185,12 @@ void PostProcessor<dim>::output_results(
   // output solution
   std::string solution_filename = "solution" + appendage_string;
   output_solution(solution, dof_handler, solution_filename, data_postprocessor);
+
+  // output transient solution
+/*
+  if (transient_solution_not_output_this_step)
+    output_solution_transient(solution, dof_handler, solution_filename, data_postprocessor, true);
+*/
 
   // output exact solution
   output_exact_solution();
@@ -247,32 +259,59 @@ void PostProcessor<dim>::output_solution(
  * \param[in] values a vector of values for the quantity.
  * \param[in] dof_handler degrees of freedom handler.
  * \param[in] output_string string for the output filename.
+ * \param[in] force_output option to force output if it is not scheduled.
  */
 template <int dim>
 void PostProcessor<dim>::output_solution_transient(
   const Vector<double> & solution,
   const DoFHandler<dim> & dof_handler,
-  const std::string & output_string)
+  const std::string & output_string,
+  const bool & force_output)
 {
-  // determine if this solution is scheduled to be output based on the user-
-  // specified output period for the transient
-  if (transient_counter % parameters.output_period == 0)
+  if (parameters.output_period > 0)
   {
-    std::cout << "Solution would be output here" << std::endl;
+    // determine if this solution is scheduled to be output based on the user-
+    // specified output period for the transient
+    bool output_is_scheduled;
+    if (transient_counter % parameters.output_period == 0)
+      output_is_scheduled = true;
+    else
+      output_is_scheduled = false;
+
+    // output transient solution if it is scheduled or being forced
+    if (output_is_scheduled || force_output)
+    {
+      // make sure that transient counter is not too big for string format
+      Assert(transient_counter < 10000, ExcTooManyTransientOutputFiles());
+  
+      // create transient filename
+      const std::string transient_output_string = output_string + appendage_string + "-"
+       + Utilities::int_to_string(transient_file_number, 4);
+  
+      // call function that outputs a vector of values to a file,
+      // with the solution component names and types lists
+      output_at_dof_points(solution,
+                           solution_component_names,
+                           solution_component_interpretations,
+                           dof_handler,
+                           transient_output_string,
+                           true);
+
+      // signal that solution was output this step
+      transient_solution_not_output_this_step = false;
+  
+      // increment transient file number
+      transient_file_number++;
+    }
+    else
+    {
+      // signal that solution was not output this step
+      transient_solution_not_output_this_step = true;
+    }
+  
+    // increment transient counter
+    transient_counter++;
   }
-
-  /*
-    // call function that outputs a vector of values to a file,
-    // with the solution component names and types lists
-    output_at_dof_points(solution,
-                         solution_component_names,
-                         solution_component_interpretations,
-                         dof_handler,
-                         output_string);
-  */
-
-  // increment transient counter
-  transient_counter++;
 }
 
 /**
@@ -314,7 +353,7 @@ void PostProcessor<dim>::output_at_dof_points(
     component_interpretations,
   const DoFHandler<dim> & dof_handler,
   const std::string & output_string,
-  const bool & output_1d_vtk = false) const
+  const bool & output_1d_vtk) const
 {
   // create output directory and subdirectory if they do not exist
   create_directory("output");
@@ -399,7 +438,7 @@ void PostProcessor<dim>::output_at_dof_points(
   const DoFHandler<dim> & dof_handler,
   const std::string & output_string,
   const DataPostprocessor<dim> & data_postprocessor,
-  const bool & output_1d_vtk = false) const
+  const bool & output_1d_vtk) const
 {
   // create output directory and subdirectory if they do not exist
   create_directory("output");

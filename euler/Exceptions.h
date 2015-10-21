@@ -17,4 +17,9 @@ DeclException2(ExcModulusNotZero, int, int, << arg1 << " % " << arg2 << " != 0")
 DeclException1(
   ExcFlowNotSubcritical, int, << "Flow not subcritical: Fr = " << arg1 << " > 1");
 
+/** \brief Exception for having too many transient output files, which are
+ *         numbered with 4 digits; therefore having 10001 output files is too
+ *         many. */
+DeclException0(ExcTooManyTransientOutputFiles);
+
 #endif
