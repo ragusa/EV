@@ -16,6 +16,9 @@
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/data_postprocessor.h>
 #include <deal.II/numerics/vector_tools.h>
+#include <cstdio>
+#include <dirent.h>
+#include <regex>
 #include <sys/stat.h>
 #include "ConservationLawParameters.h"
 #include "Exceptions.h"
@@ -48,28 +51,25 @@ public:
 
   ~PostProcessor();
 
-  void output_results(const Vector<double> & solution,
-                      const DoFHandler<dim> & dof_handler,
-                      const Triangulation<dim> & triangulation);
-
-  void output_results(const Vector<double> & solution,
-                      const DoFHandler<dim> & dof_handler,
-                      const Triangulation<dim> & triangulation,
-                      const DataPostprocessor<dim> & data_postprocessor);
-
-  void output_solution(const Vector<double> & solution,
-                       const DoFHandler<dim> & dof_handler,
-                       const std::string & output_string) const;
+  void output_results(
+    const Vector<double> & solution,
+    const DoFHandler<dim> & dof_handler,
+    const Triangulation<dim> & triangulation,
+    const std::shared_ptr<DataPostprocessor<dim>> data_postprocessor = nullptr);
 
   void output_solution(const Vector<double> & solution,
                        const DoFHandler<dim> & dof_handler,
                        const std::string & output_string,
-                       const DataPostprocessor<dim> & data_postprocessor) const;
+                       const bool & output_1d_vtk = false,
+                       const std::shared_ptr<DataPostprocessor<dim>>
+                         data_postprocessor = nullptr) const;
 
-  void output_solution_transient(const Vector<double> & solution,
-                                 const DoFHandler<dim> & dof_handler,
-                                 const std::string & output_string,
-                                 const bool & force_output = false);
+  void output_solution_transient(
+    const Vector<double> & solution,
+    const DoFHandler<dim> & dof_handler,
+    const std::string & output_string,
+    const bool & force_output = false,
+    const std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor = nullptr);
 
   void evaluate_error(const Vector<double> & solution,
                       const DoFHandler<dim> & dof_handler,
@@ -84,7 +84,8 @@ public:
                        const DoFHandler<dim> & dof_handler) const;
 
 private:
-  void output_exact_solution();
+  void output_exact_solution(const std::shared_ptr<DataPostprocessor<dim>>
+                               aux_postprocessor = nullptr) const;
 
   void output_at_dof_points(
     const Vector<double> & values,
@@ -93,17 +94,9 @@ private:
       component_interpretations,
     const DoFHandler<dim> & dof_handler,
     const std::string & output_string,
-    const bool & output_1d_vtk = false) const;
-
-  void output_at_dof_points(
-    const Vector<double> & values,
-    const std::vector<std::string> & component_names,
-    const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
-      component_interpretations,
-    const DoFHandler<dim> & dof_handler,
-    const std::string & output_string,
-    const DataPostprocessor<dim> & data_postprocessor,
-    const bool & output_1d_vtk = false) const;
+    const bool & output_1d_vtk = false,
+    const std::shared_ptr<DataPostprocessor<dim>> data_postprocessor =
+      nullptr) const;
 
   void output_convergence_data();
 
@@ -112,7 +105,9 @@ private:
     const std::vector<std::string> & component_names,
     const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
       component_interpretations,
-    const std::string & filename) const;
+    const std::string & filename,
+    const std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor =
+      nullptr) const;
 
   void output_function(
     Function<dim> & function,
@@ -120,11 +115,15 @@ private:
     const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
       component_interpretations,
     const std::string & filename,
-    const double & time) const;
+    const double & time,
+    const std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor =
+      nullptr) const;
 
   void output_grid(const Triangulation<dim> & triangulation) const;
 
   void create_directory(const std::string & dir) const;
+
+  void remove_vtk_files(const std::string & directory) const;
 
   const ConservationLawParameters<dim> parameters;
 

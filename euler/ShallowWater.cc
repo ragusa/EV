@@ -1186,19 +1186,13 @@ double ShallowWater<dim>::compute_max_entropy_jump(
 }
 
 /**
- * \brief Calls output function of postprocessor.
+ * \brief Returns a pointer to a shallow water auxiliary post-processor object
  *
- * \param[in] postprocessor post-processor
+ * \return pointer to a shallow water auxiliary post-processor object
  */
 template <int dim>
-void ShallowWater<dim>::output_results(PostProcessor<dim> & postprocessor) const
+std::shared_ptr<DataPostprocessor<dim>> ShallowWater<
+  dim>::create_auxiliary_postprocessor() const
 {
-  // create shallow water post-processor
-  ShallowWaterPostProcessor<dim> shallowwater_postprocessor(bathymetry_function);
-
-  // call post-processor
-  postprocessor.output_results(this->new_solution,
-                               this->dof_handler,
-                               this->triangulation,
-                               shallowwater_postprocessor);
+  return std::make_shared<ShallowWaterPostProcessor<dim>>(bathymetry_function);
 }

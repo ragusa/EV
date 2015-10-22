@@ -22,4 +22,9 @@ DeclException1(
  *         many. */
 DeclException0(ExcTooManyTransientOutputFiles);
 
+/** \brief Exception for a directory not being able to be opened */
+DeclException1(ExcDirectoryCannotBeOpened,
+               std::string,
+               << "The directory " << arg1 << " cannot be opened");
+
 #endif

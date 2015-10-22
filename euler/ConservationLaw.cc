@@ -57,6 +57,10 @@ void ConservationLaw<dim>::run()
                                    component_interpretations,
                                    triangulation);
 
+  // create data post-processor (for outputting auxiliary variables)
+  std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor =
+    create_auxiliary_postprocessor();
+
   // loop over adaptive refinement cycles
   for (unsigned int cycle = 0; cycle < parameters.n_refinement_cycles; ++cycle)
   {
@@ -88,15 +92,16 @@ void ConservationLaw<dim>::run()
     old_solution = new_solution;
 
     // output initial solution
-    postprocessor.output_solution(new_solution, dof_handler, "solution_initial");
+    postprocessor.output_solution(
+      new_solution, dof_handler, "solution_initial", false, aux_postprocessor);
     postprocessor.output_solution_transient(
-      new_solution, dof_handler, "solution");
+      new_solution, dof_handler, "solution", false, aux_postprocessor);
 
     // solve transient with selected time integrator
     switch (parameters.temporal_integrator)
     {
       case ConservationLawParameters<dim>::runge_kutta: // Runge-Kutta
-        solve_runge_kutta(postprocessor);
+        solve_runge_kutta(postprocessor, aux_postprocessor);
         break;
       default:
         Assert(false, ExcNotImplemented());
@@ -108,8 +113,9 @@ void ConservationLaw<dim>::run()
 
   } // end of refinement loop
 
-  // output grid and solution and print convergence results
-  output_results(postprocessor);
+  // call post-processor to output solution and convergence results
+  postprocessor.output_results(
+    new_solution, dof_handler, triangulation, aux_postprocessor);
 
   // output viscosity if requested
   if (parameters.output_viscosity)
@@ -177,17 +183,6 @@ void ConservationLaw<dim>::initialize_system()
 
   // create string of variables to be used in function parser objects
   std::string variables = FunctionParser<dim>::default_variable_names();
-  /*
-  std::string variables;
-  if (dim == 1)
-    variables = "x";
-  else if (dim == 2)
-    variables = "x,y";
-  else if (dim == 3)
-    variables = "x,y,z";
-  else
-    Assert(false, ExcInvalidState());
-  */
 
   // add t for time-dependent function parser objects
   std::string time_dependent_variables = variables + ",t";
@@ -697,10 +692,14 @@ void ConservationLaw<dim>::output_map(
  *   + \Delta t\sum\limits^{i-1}_{j=1}a_{i,j} \mathbf{r}_i
  * \f]
  *
- * \param[inout] postprocessor Post-processor for outputting transient
+ * \param[inout] postprocessor post-processor for outputting transient
+ * \param[in] data_postprocessor post-processor for derived quantities to
+ *            be output
  */
 template <int dim>
-void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
+void ConservationLaw<dim>::solve_runge_kutta(
+  PostProcessor<dim> & postprocessor,
+  const std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor)
 {
   old_time = 0.0;
   unsigned int n = 1; // time step index
@@ -881,7 +880,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
 
     // output solution transient if specified
     postprocessor.output_solution_transient(
-      new_solution, dof_handler, "solution");
+      new_solution, dof_handler, "solution", false, aux_postprocessor);
 
     // compute max principle min and max values
     compute_max_principle_quantities();
@@ -1720,12 +1719,17 @@ void ConservationLaw<dim>::get_dirichlet_nodes()
 }
 
 /**
- * \brief Outputs results.
+ * \brief Returns a pointer to an auxiliary post-processor object if there is
+ *        one; otherwise returns a nullptr
+ *
+ * Derived classes define this function if any additional quantities are
+ * desired to be output.
+ *
+ * \return pointer to the auxiliary post-processor object or nullptr
  */
 template <int dim>
-void ConservationLaw<dim>::output_results(
-  PostProcessor<dim> & postprocessor) const
+std::shared_ptr<DataPostprocessor<dim>> ConservationLaw<
+  dim>::create_auxiliary_postprocessor() const
 {
-  // call post-processor
-  postprocessor.output_results(new_solution, dof_handler, triangulation);
+  return nullptr;
 }

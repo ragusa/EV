@@ -119,7 +119,8 @@ private:
   std::vector<double> compute_sound_speed(
     const std::vector<double> & height) const;
 
-  void output_results(PostProcessor<dim> & postprocessor) const override;
+  std::shared_ptr<DataPostprocessor<dim>> create_auxiliary_postprocessor()
+    const override;
 
   /** \brief Parameters for shallow water equations */
   ShallowWaterParameters<dim> sw_parameters;

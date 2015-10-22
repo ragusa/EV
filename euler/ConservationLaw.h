@@ -32,6 +32,7 @@
 #include <deal.II/fe/mapping_q1.h>
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/data_component_interpretation.h>
+#include <deal.II/numerics/data_postprocessor.h>
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/error_estimator.h>
@@ -76,7 +77,9 @@ protected:
   void refine_mesh();
   void update_cell_sizes();
   void assemble_mass_matrix();
-  void solve_runge_kutta(PostProcessor<dim> & postprocessor);
+  void solve_runge_kutta(
+    PostProcessor<dim> & postprocessor,
+    const std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor = nullptr);
   double compute_dt_from_cfl_condition();
   double compute_cfl_number(const double & dt) const;
   void linear_solve(const SparseMatrix<double> & A,
@@ -177,15 +180,8 @@ protected:
   {
   }
 
-  /**
-   * \brief Outputs additional quantities other than the solution variables.
-   *
-   * Derived classes define this function if any additional quantities are
-   * desired to be output.
-   *
-   * \param[in] postprocessor the post-processor object
-   */
-  virtual void output_results(PostProcessor<dim> & postprocessor) const;
+  virtual std::shared_ptr<DataPostprocessor<dim>> create_auxiliary_postprocessor()
+    const;
 
   /**
    * \brief Returns the names of each component.

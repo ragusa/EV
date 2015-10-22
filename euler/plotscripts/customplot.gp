@@ -1,12 +1,10 @@
 output_file = "../output/customplot.pdf"
 
 # create plot
-set terminal postscript enhanced color
-set output "| ps2pdf - ".output_file
+set terminal pdfcairo
+set output output_file
 set ylabel "Solution"
 set xlabel "x"
-plot "../output/solution_none.gpl" using 1:2 title "none" with lines,\
-     "../output/solution_const.gpl" using 1:2 title "const" with lines,\
-     "../output/solution_first.gpl" using 1:2 title "first order" with lines,\
-     "../output/solution_ent.gpl" using 1:2 title "entropy" with lines,\
-     "../output/solution_jumps.gpl" using 1:2 title "entropy with jumps" with lines
+plot "../output/solution_Gal.gpl" using 1:2 title "no viscosity" with lines,\
+     "../output/solution_low.gpl" using 1:2 title "low-order viscosity" with lines,\
+     "../output/solution_EV.gpl" using 1:2 title "entropy viscosity" with lines
