@@ -29,8 +29,8 @@ public:
   Euler(const EulerParameters<dim> & params);
 
 private:
-  /** \brief Typedef for cell iterators */
-  using cell_iterator = typename ConservationLaw<dim>::cell_iterator;
+  /** \brief Typedef for cell iterator */
+  using Cell = typename ConservationLaw<dim>::Cell;
 
   EulerParameters<dim> euler_parameters;
 
@@ -54,7 +54,7 @@ private:
 
   void compute_cell_ss_residual(FEValues<dim> & fe_values,
                                 FEFaceValues<dim> & fe_face_values,
-                                const cell_iterator & cell,
+                                const Cell & cell,
                                 Vector<double> & cell_residual);
 
   // void compute_ss_jacobian();

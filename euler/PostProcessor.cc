@@ -106,6 +106,9 @@ PostProcessor<dim>::PostProcessor(
   output_dir_ss << "output/" << problem_name << "/";
   output_dir = output_dir_ss.str();
 
+  // create output subdirectory
+  create_directory(output_dir);
+
   // create fine triangulation and dof handler
   createFineTriangulationAndDoFHandler(triangulation_);
 
@@ -158,7 +161,7 @@ void PostProcessor<dim>::output_results(
   // output transient solution
   if (transient_solution_not_output_this_step)
     output_solution_transient(
-      solution, dof_handler, solution_filename, true, data_postprocessor);
+      solution, dof_handler, "solution", true, data_postprocessor);
 
   // output exact solution
   output_exact_solution(data_postprocessor);

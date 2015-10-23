@@ -23,6 +23,8 @@
 #include "ShallowWaterPostProcessor.h"
 #include "ShallowWaterRiemannSolver.h"
 #include "ShallowWaterSubcriticalOpenBC1D.h"
+#include "ShallowWaterSubcriticalWallBC1D.h"
+#include "ShallowWaterWallBC.h"
 
 /**
  * \brief Class for solving the shallow water equations.
@@ -50,8 +52,11 @@ public:
   ShallowWater(const ShallowWaterParameters<dim> & params);
 
 private:
-  /** \brief Typedef for cell iterators */
-  using Cell = typename ConservationLaw<dim>::cell_iterator;
+  /** \brief Typedef for cell iterator */
+  using Cell = typename ConservationLaw<dim>::Cell;
+
+  /** \brief Typedef for face iterator */
+  using Face = typename ConservationLaw<dim>::Face;
 
   std::vector<std::string> get_component_names() override;
 

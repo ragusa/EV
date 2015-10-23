@@ -364,8 +364,7 @@ void Euler<dim>::assemble_lumped_mass_matrix()
   std::vector<types::global_dof_index> local_dof_indices(this->dofs_per_cell);
   FullMatrix<double> local_mass(this->dofs_per_cell, this->dofs_per_cell);
 
-  cell_iterator cell = this->dof_handler.begin_active(),
-                endc = this->dof_handler.end();
+  Cell cell = this->dof_handler.begin_active(), endc = this->dof_handler.end();
   for (; cell != endc; ++cell)
   {
     fe_values.reinit(cell);
@@ -411,8 +410,7 @@ void Euler<dim>::compute_ss_residual(Vector<double> & f)
   std::vector<unsigned int> local_dof_indices(this->dofs_per_cell);
 
   // loop over cells
-  cell_iterator cell = this->dof_handler.begin_active(),
-                endc = this->dof_handler.end();
+  Cell cell = this->dof_handler.begin_active(), endc = this->dof_handler.end();
   for (; cell != endc; ++cell)
   {
     // reset cell residual
@@ -438,7 +436,7 @@ void Euler<dim>::compute_ss_residual(Vector<double> & f)
 template <int dim>
 void Euler<dim>::compute_cell_ss_residual(FEValues<dim> & fe_values,
                                           FEFaceValues<dim> & fe_face_values,
-                                          const cell_iterator & cell,
+                                          const Cell & cell,
                                           Vector<double> & cell_residual)
 {
   // reinitialize fe values for cell
@@ -703,7 +701,7 @@ void Euler<dim>::compute_viscous_fluxes(
 /*
 template <int dim>
 void Euler<dim>::compute_face_ss_residual(FEFaceValues<dim> &fe_face_values,
-                                          const cell_iterator &cell,
+                                          const Cell &cell,
                                           Vector<double> &cell_residual)
 {
    // loop over faces
@@ -877,7 +875,7 @@ momentum_symmetric_gradient(this->n_q_points_cell);
    // reset steady-state Jacobian to zero
    this->system_matrix = 0.0;
    // loop over cells
-   cell_iterator cell = this->dof_handler.begin_active(),
+   Cell cell = this->dof_handler.begin_active(),
       endc = this->dof_handler.end();
    for (; cell!=endc; ++cell)
    {
@@ -1186,8 +1184,7 @@ void Euler<dim>::update_flux_speeds()
   this->max_flux_speed = 0.0;
 
   // loop over cells to compute first order viscosity at each quadrature point
-  cell_iterator cell = this->dof_handler.begin_active(),
-                endc = this->dof_handler.end();
+  Cell cell = this->dof_handler.begin_active(), endc = this->dof_handler.end();
   for (; cell != endc; ++cell)
   {
     // get conservative variables

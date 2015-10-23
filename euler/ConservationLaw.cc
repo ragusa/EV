@@ -477,7 +477,7 @@ template <int dim>
 void ConservationLaw<dim>::update_cell_sizes()
 {
   // fill cell size map and find minimum cell size
-  cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
+  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
   // reset minimum cell size to an arbitrary cell size such as the first cell
   minimum_cell_diameter = cell->diameter();
 
@@ -596,7 +596,7 @@ void ConservationLaw<dim>::output_map(
 
     FEValues<dim> fe_values(fe, cell_quadrature, update_quadrature_points);
     unsigned int i = 0;
-    cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
+    Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
     for (; cell != endc; ++cell)
     {
       fe_values.reinit(cell);
@@ -646,7 +646,7 @@ void ConservationLaw<dim>::output_map(
 
     FEValues<dim> fe_values(fe, cell_quadrature, update_quadrature_points);
     unsigned int i = 0;
-    cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
+    Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
     for (; cell != endc; ++cell)
     {
       fe_values.reinit(cell);
@@ -992,7 +992,7 @@ void ConservationLaw<dim>::add_maximum_principle_viscosity_bilinear_form(
   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
 
   // loop over cells
-  cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
+  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
   for (; cell != endc; ++cell)
   {
     // reset cell residual
@@ -1094,7 +1094,7 @@ void ConservationLaw<dim>::update_viscosities(const double & dt,
     // no viscosity
     case ConservationLawParameters<dim>::none:
     {
-      cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
+      Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
       for (; cell != endc; ++cell)
         viscosity[cell] = 0.0;
       break;
@@ -1102,7 +1102,7 @@ void ConservationLaw<dim>::update_viscosities(const double & dt,
     // constant viscosity
     case ConservationLawParameters<dim>::constant:
     {
-      cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
+      Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
       for (; cell != endc; ++cell)
         viscosity[cell] = parameters.constant_viscosity_value;
       break;
@@ -1124,7 +1124,7 @@ void ConservationLaw<dim>::update_viscosities(const double & dt,
     // entropy viscosity
     case ConservationLawParameters<dim>::entropy:
     {
-      cell_iterator cell, endc = dof_handler.end();
+      Cell cell, endc = dof_handler.end();
       if (parameters.use_low_order_viscosity_for_first_time_step && n == 1)
       {
         // compute low-order viscosities
@@ -1174,7 +1174,7 @@ void ConservationLaw<dim>::update_old_low_order_viscosity(const bool &)
   double c_max = parameters.first_order_viscosity_coef;
 
   // loop over cells to compute first order viscosity at each quadrature point
-  cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
+  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
   for (; cell != endc; ++cell)
   {
     first_order_viscosity[cell] =
@@ -1196,7 +1196,7 @@ void ConservationLaw<dim>::update_max_principle_viscosity()
   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
 
   // loop over cells to compute first order viscosity at each quadrature point
-  cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
+  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
   for (; cell != endc; ++cell)
   {
     // get local dof indices
@@ -1245,7 +1245,7 @@ void ConservationLaw<dim>::compute_viscous_fluxes()
   std::vector<Tensor<1, dim>> dfdu(n_q_points_cell);
 
   // loop over cells
-  cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
+  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
   for (; cell != endc; ++cell)
   {
     fe_values.reinit(cell);
@@ -1290,7 +1290,7 @@ void ConservationLaw<dim>::compute_viscous_bilinear_forms()
   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
 
   // loop over cells
-  cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
+  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
   for (; cell != endc; ++cell)
   {
     // get local dof indices
@@ -1337,7 +1337,7 @@ void ConservationLaw<dim>::update_entropy_viscosities(const double & dt)
   const double jump_coefficient = parameters.jump_coef;
 
   // compute entropy viscosity for each cell
-  cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
+  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
   for (; cell != endc; ++cell)
   {
     // compute max entropy residual on cell
@@ -1375,7 +1375,7 @@ double ConservationLaw<dim>::compute_entropy_normalization(
   double domain_integral_entropy = 0.0;
 
   // loop over cells
-  cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
+  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
   for (; cell != endc; ++cell)
   {
     // reinitialize FE values
@@ -1438,7 +1438,7 @@ double ConservationLaw<dim>::compute_max_entropy_residual(
   const Vector<double> & new_solution,
   const Vector<double> & old_solution,
   const double & dt,
-  const cell_iterator & cell) const
+  const Cell & cell) const
 {
   // FE values
   FEValues<dim> fe_values(fe, cell_quadrature, update_values | update_gradients);
@@ -1478,7 +1478,7 @@ double ConservationLaw<dim>::compute_max_entropy_residual(
  */
 template <int dim>
 double ConservationLaw<dim>::compute_max_entropy_jump(
-  const Vector<double> & solution, const cell_iterator & cell) const
+  const Vector<double> & solution, const Cell & cell) const
 {
   FEFaceValues<dim> fe_values_face(fe,
                                    face_quadrature,
@@ -1657,7 +1657,7 @@ void ConservationLaw<dim>::compute_max_principle_quantities()
   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
 
   // loop over cells
-  cell_iterator cell = dof_handler.begin_active(), endc = dof_handler.end();
+  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
   for (; cell != endc; ++cell)
   {
     // find min and max values on cell - start by initializing to arbitrary cell

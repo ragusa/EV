@@ -64,11 +64,14 @@ public:
   void run();
 
 protected:
-  /** \brief Typedef for cell iterators */
-  typedef typename DoFHandler<dim>::active_cell_iterator cell_iterator;
+  /** \brief Typedef for cell iterator */
+  typedef typename DoFHandler<dim>::active_cell_iterator Cell;
+
+  /** \brief Typedef for face iterator */
+  typedef typename DoFHandler<dim>::active_face_iterator Face;
 
   /** \brief Typedef for cell iterator map to double */
-  typedef std::map<cell_iterator, double> cell_map;
+  typedef std::map<Cell, double> cell_map;
 
   void initialize_system();
   void initialize_runge_kutta();
@@ -97,7 +100,7 @@ protected:
   virtual double compute_max_entropy_residual(const Vector<double> & new_solution,
                                               const Vector<double> & old_solution,
                                               const double & dt,
-                                              const cell_iterator & cell) const;
+                                              const Cell & cell) const;
   void get_dirichlet_nodes();
   void check_nan();
   bool check_DMP(const unsigned int & n) const;
@@ -110,7 +113,7 @@ protected:
 
   virtual void update_entropy_viscosities(const double & dt);
   virtual double compute_max_entropy_jump(const Vector<double> & solution,
-                                          const cell_iterator & cell) const;
+                                          const Cell & cell) const;
 
   /**
    * \brief Computes the lumped mass matrix.

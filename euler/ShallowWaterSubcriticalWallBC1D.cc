@@ -4,19 +4,13 @@
  * \param[in] fe_ finite element system
  * \param[in] face_quadrature_ quadrature for face
  * \param[in] gravity_ acceleration due to gravity
- * \param[in] height_left_ left boundary value for height
- * \param[in] height_right_ right boundary value for height
  */
 template <int dim>
-ShallowWaterSubcriticalOpenBC1D<dim>::ShallowWaterSubcriticalOpenBC1D(
+ShallowWaterSubcriticalWallBC1D<dim>::ShallowWaterSubcriticalWallBC1D(
   const FESystem<dim> & fe_,
   const QGauss<dim - 1> & face_quadrature_,
-  const double & gravity_,
-  const double & height_left_,
-  const double & height_right_)
-  : ShallowWaterBoundaryConditions<dim>(fe_, face_quadrature_, gravity_),
-    height_left(height_left_),
-    height_right(height_right_)
+  const double & gravity_)
+  : ShallowWaterBoundaryConditions<dim>(fe_, face_quadrature_, gravity_)
 {
   // assert that this is 1-D
   Assert(dim == 1, ExcImpossibleInDim(dim));
@@ -35,7 +29,7 @@ ShallowWaterSubcriticalOpenBC1D<dim>::ShallowWaterSubcriticalOpenBC1D(
  * \param[inout] cell_residual steady-state residual for cell
  */
 template <int dim>
-void ShallowWaterSubcriticalOpenBC1D<dim>::apply_boundary_condition(
+void ShallowWaterSubcriticalWallBC1D<dim>::apply_boundary_condition(
   const Cell & cell,
   const FEValues<dim> &,
   const FEFaceValues<dim> & fe_values_face,
@@ -64,30 +58,14 @@ void ShallowWaterSubcriticalOpenBC1D<dim>::apply_boundary_condition(
   std::vector<unsigned int> dof_indices(this->dofs_per_cell);
   cell->get_dof_indices(dof_indices);
 
-  // get position of face
-  std::vector<Point<dim>> face_points = fe_values_face.get_quadrature_points();
-  const double face_position = face_points[0][0];
+  // set velocity boundary value from wall condition: u.n = 0
+  const double velocity_bc = 0.0;
 
-  double height_bc;
-  double velocity_bc;
+  double speed_of_sound_bc;
 
   // determine whether the boundary is the left or right
   if (normal_vectors[0][0] < 0.0) // left boundary
   {
-    // set height boundary value from problem definition
-    height_bc = height_left;
-
-    // compute speed of sound on boundary
-    const double speed_of_sound_bc = std::sqrt(this->gravity * height_bc);
-
-    // estimate exiting wave velocity
-    const double wave_velocity = velocity[0] - speed_of_sound;
-
-    // compute the position of the beginning of the characteristic to
-    // be integrated
-    // const double characteristic_origin_position = face_position +
-    // wave_velocity*dt;
-
     // get adjacent degree of freedom values from solution vector
     const double height_adjacent = solution[dof_indices[2]];
     const double momentum_adjacent = solution[dof_indices[3]];
@@ -97,18 +75,12 @@ void ShallowWaterSubcriticalOpenBC1D<dim>::apply_boundary_condition(
     const double speed_of_sound_adjacent =
       std::sqrt(this->gravity * height_adjacent);
 
-    // compute boundary velocity
-    velocity_bc =
-      velocity_adjacent + 2.0 * (speed_of_sound_bc - speed_of_sound_adjacent);
+    // compute boundary speed of sound
+    speed_of_sound_bc =
+      speed_of_sound_adjacent + 0.5 * (velocity_bc - velocity_adjacent);
   }
   else // right boundary
   {
-    // set height boundary value from problem definition
-    height_bc = height_right;
-
-    // compute speed of sound on boundary
-    const double speed_of_sound_bc = std::sqrt(this->gravity * height_bc);
-
     // get adjacent degree of freedom values from solution vector
     const double height_adjacent = solution[dof_indices[0]];
     const double momentum_adjacent = solution[dof_indices[1]];
@@ -118,10 +90,13 @@ void ShallowWaterSubcriticalOpenBC1D<dim>::apply_boundary_condition(
     const double speed_of_sound_adjacent =
       std::sqrt(this->gravity * height_adjacent);
 
-    // compute boundary velocity
-    velocity_bc =
-      velocity_adjacent + 2.0 * (speed_of_sound_adjacent - speed_of_sound_bc);
+    // compute boundary speed of sound
+    speed_of_sound_bc =
+      speed_of_sound_adjacent + 0.5 * (velocity_adjacent - velocity_bc);
   }
+
+  // compute boundary height value
+  const double height_bc = std::pow(speed_of_sound_bc, 2) / this->gravity;
 
   // compute boundary momentum
   Tensor<1, dim> momentum_bc;

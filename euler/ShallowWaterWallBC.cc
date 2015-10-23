@@ -6,9 +6,10 @@
  * \param[in] gravity_ acceleration due to gravity
  */
 template <int dim>
-ShallowWaterNoBC<dim>::ShallowWaterNoBC(const FESystem<dim> & fe_,
-                                        const QGauss<dim - 1> & face_quadrature_,
-                                        const double & gravity_)
+ShallowWaterWallBC<dim>::ShallowWaterWallBC(
+  const FESystem<dim> & fe_,
+  const QGauss<dim - 1> & face_quadrature_,
+  const double & gravity_)
   : ShallowWaterBoundaryConditions<dim>(fe_, face_quadrature_, gravity_)
 {
 }
@@ -23,19 +24,19 @@ ShallowWaterNoBC<dim>::ShallowWaterNoBC(const FESystem<dim> & fe_,
  * \param[inout] cell_residual steady-state residual for cell
  */
 template <int dim>
-void ShallowWaterNoBC<dim>::apply_boundary_condition(
+void ShallowWaterWallBC<dim>::apply_boundary_condition(
   const Cell &,
   const FEValues<dim> &,
   const FEFaceValues<dim> & fe_values_face,
   const Vector<double> & solution,
   Vector<double> & cell_residual)
 {
-  // get solution values on face
+  // get height values on face
   std::vector<double> height(this->n_quadrature_points_face);
   fe_values_face[this->height_extractor].get_function_values(solution, height);
+
+  // use zero momentum values
   std::vector<Tensor<1, dim>> momentum(this->n_quadrature_points_face);
-  fe_values_face[this->momentum_extractor].get_function_values(solution,
-                                                               momentum);
 
   // call integrate face function
   this->integrate_face(height, momentum, cell_residual);
