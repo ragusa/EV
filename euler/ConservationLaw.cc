@@ -840,7 +840,7 @@ void ConservationLaw<dim>::solve_runge_kutta(
       // (unless this is the first time step)
       if ((n == 1) || (i != 0))
       {
-        compute_ss_residual(rk.f[i]);
+        compute_ss_residual(dt, rk.f[i]);
       }
     }
 
@@ -875,7 +875,7 @@ void ConservationLaw<dim>::solve_runge_kutta(
 
       // end of step residual can be used as beginning of step residual for next
       // step
-      compute_ss_residual(rk.f[0]);
+      compute_ss_residual(dt, rk.f[0]);
     }
 
     // output solution transient if specified

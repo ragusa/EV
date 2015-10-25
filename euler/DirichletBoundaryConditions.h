@@ -38,6 +38,7 @@ private:
                                 const FEValues<dim> &,
                                 const FEFaceValues<dim> &,
                                 const Vector<double> &,
+                                const double &,
                                 Vector<double> &) override
   {
   }

@@ -5,9 +5,9 @@
 #ifndef ShallowWaterSubcriticalOpenBC1D_h
 #define ShallowWaterSubcriticalOpenBC1D_h
 
+#include <deal.II/base/quadrature.h>
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/dofs/dof_handler.h>
-#include <deal.II/fe/fe_system.h>
 #include <deal.II/lac/vector.h>
 #include "ShallowWaterBoundaryConditions.h"
 
@@ -36,7 +36,16 @@ private:
                                 const FEValues<dim> & fe_values_cell,
                                 const FEFaceValues<dim> & fe_values_face,
                                 const Vector<double> & solution,
+                                const double & dt,
                                 Vector<double> & cell_residual) override;
+
+  void get_interior_values(const double & face_position,
+                           const double & wave_velocity,
+                           const double & dt,
+                           const Cell & cell,
+                           const Vector<double> & solution,
+                           double & speed_of_sound_interior,
+                           double & velocity_interior) const;
 
   /** \brief left boundary value for height */
   const double height_left;

@@ -23,7 +23,7 @@
 #include "ShallowWaterPostProcessor.h"
 #include "ShallowWaterRiemannSolver.h"
 #include "ShallowWaterSubcriticalOpenBC1D.h"
-#include "ShallowWaterSubcriticalWallBC1D.h"
+//#include "ShallowWaterSubcriticalWallBC1D.h"
 #include "ShallowWaterWallBC.h"
 
 /**
@@ -69,7 +69,7 @@ private:
 
   void perform_additional_setup() override;
 
-  void compute_ss_residual(Vector<double> & solution) override;
+  void compute_ss_residual(const double & dt, Vector<double> & solution) override;
 
   void update_flux_speeds() override;
 

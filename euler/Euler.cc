@@ -393,7 +393,7 @@ void Euler<dim>::assemble_lumped_mass_matrix()
 }
 
 template <int dim>
-void Euler<dim>::compute_ss_residual(Vector<double> & f)
+void Euler<dim>::compute_ss_residual(const double &, Vector<double> & f)
 {
   // reset vector
   f = 0.0;

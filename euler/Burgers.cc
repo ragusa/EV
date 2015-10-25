@@ -321,10 +321,11 @@ void Burgers<dim>::assemble_lumped_mass_matrix()
  *   U_j b_K(\varphi_i, \varphi_j) .
  * \f]
  *
+ *  \param[in] dt time step size \f$\Delta t\f$
  *  \param[out] r steady-state residual \f$\mathbf{r}\f$
  */
 template <int dim>
-void Burgers<dim>::compute_ss_residual(Vector<double> & f)
+void Burgers<dim>::compute_ss_residual(const double &, Vector<double> & f)
 {
   // reset vector
   f = 0.0;

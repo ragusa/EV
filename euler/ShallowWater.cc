@@ -391,11 +391,13 @@ void ShallowWater<dim>::define_problem()
           if (cell->face(face)->at_boundary())
             cell->face(face)->set_boundary_id(0);
 
-      this->boundary_conditions_type = "shallow_water_wall_1d";
-      std::shared_ptr<ShallowWaterWallBC<dim>> derived_boundary_conditions =
-        std::make_shared<ShallowWaterWallBC<dim>>(
-          this->fe, this->face_quadrature, gravity);
-      this->boundary_conditions = derived_boundary_conditions;
+      /*
+            this->boundary_conditions_type = "shallow_water_wall_1d";
+            std::shared_ptr<ShallowWaterWallBC<dim>> derived_boundary_conditions =
+              std::make_shared<ShallowWaterWallBC<dim>>(
+                this->fe, this->face_quadrature, gravity);
+            this->boundary_conditions = derived_boundary_conditions;
+      */
 
       /*
             this->boundary_conditions_type = "shallow_water_wall_1d";
@@ -406,15 +408,12 @@ void ShallowWater<dim>::define_problem()
             this->boundary_conditions = derived_boundary_conditions;
       */
 
-      /*
-            this->boundary_conditions_type = "shallow_water_open_1d";
-            std::shared_ptr<
-              ShallowWaterSubcriticalOpenBC1D<dim>> derived_boundary_conditions =
-              std::make_shared<ShallowWaterSubcriticalOpenBC1D<dim>>(
-                this->fe, this->face_quadrature, gravity, h_unperturbed,
-         h_unperturbed);
-            this->boundary_conditions = derived_boundary_conditions;
-      */
+      this->boundary_conditions_type = "shallow_water_open_1d";
+      std::shared_ptr<
+        ShallowWaterSubcriticalOpenBC1D<dim>> derived_boundary_conditions =
+        std::make_shared<ShallowWaterSubcriticalOpenBC1D<dim>>(
+          this->fe, this->face_quadrature, gravity, h_unperturbed, h_unperturbed);
+      this->boundary_conditions = derived_boundary_conditions;
 
       /*
             this->boundary_conditions_type = "dirichlet";
@@ -581,10 +580,11 @@ void ShallowWater<dim>::assemble_lumped_mass_matrix()
  *   - \left(\varphi_i^{\mathbf{q}},g h_h\nabla b\right)_\Omega .
  * \f]
  *
+ *  \param[in] dt time step size \f$\Delta t\f$
  *  \param[out] r steady-state residual \f$\mathbf{r}\f$
  */
 template <int dim>
-void ShallowWater<dim>::compute_ss_residual(Vector<double> & f)
+void ShallowWater<dim>::compute_ss_residual(const double & dt, Vector<double> & f)
 {
   // reset vector
   f = 0.0;
@@ -678,7 +678,7 @@ void ShallowWater<dim>::compute_ss_residual(Vector<double> & f)
 
     // apply boundary conditions
     this->boundary_conditions->apply(
-      cell, fe_values, this->new_solution, cell_residual);
+      cell, fe_values, this->new_solution, dt, cell_residual);
 
     // aggregate local residual into global residual
     cell->get_dof_indices(local_dof_indices);

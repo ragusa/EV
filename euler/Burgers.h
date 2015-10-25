@@ -65,7 +65,7 @@ private:
 
   void define_problem() override;
 
-  void compute_ss_residual(Vector<double> & solution) override;
+  void compute_ss_residual(const double & dt, Vector<double> & solution) override;
 
   // void compute_ss_jacobian() override;
 

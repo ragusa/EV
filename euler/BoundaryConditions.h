@@ -33,6 +33,7 @@ public:
   void apply(const Cell & cell,
              const FEValues<dim> & fe_values,
              const Vector<double> & solution,
+             const double & dt,
              Vector<double> & cell_residual);
 
 protected:
@@ -40,6 +41,7 @@ protected:
                                         const FEValues<dim> & fe_values_cell,
                                         const FEFaceValues<dim> & fe_values_face,
                                         const Vector<double> & solution,
+                                        const double & dt,
                                         Vector<double> & cell_residual) = 0;
 
   /** \brief Finite element system */

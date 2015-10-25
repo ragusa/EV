@@ -13,7 +13,7 @@ end
 # 3 lake_at_rest_perturbed
 # 4 lake_at_rest_flat_perturbed
 subsection problem
-   set problem id = 0
+   set problem id = 4
 end
 
 subsection refinement
@@ -29,7 +29,7 @@ subsection time
    # options are <constant_dt|cfl_condition>
    set time step size method = cfl_condition
    set use default end time = false
-   set final time = 0.01
+   set final time = 4.00
    set time step size = 0.01
    set cfl = 0.50
    set steady state tolerance = 1.0e-6
@@ -74,7 +74,7 @@ subsection linear solver
 end
 
 subsection output
-   set output period = 0
+   set output period = 1
    set max transient output size = 1.0e6
    set output mesh = false
    set output mass matrix = false
