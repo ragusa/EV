@@ -20,6 +20,7 @@ ShallowWaterNoBC<dim>::ShallowWaterNoBC(const FESystem<dim> & fe_,
  * \param[in] fe_values_cell FE values for cell
  * \param[in] fe_values_face FE values for face
  * \param[in] solution solution vector
+ * \param[in] dt time step size \f$\Delta t\f$
  * \param[inout] cell_residual steady-state residual for cell
  */
 template <int dim>
@@ -28,6 +29,7 @@ void ShallowWaterNoBC<dim>::apply_boundary_condition(
   const FEValues<dim> &,
   const FEFaceValues<dim> & fe_values_face,
   const Vector<double> & solution,
+  const double & dt,
   Vector<double> & cell_residual)
 {
   // get solution values on face

@@ -314,12 +314,22 @@ void ShallowWater<dim>::define_problem()
         for (unsigned int face = 0; face < this->faces_per_cell; ++face)
           if (cell->face(face)->at_boundary())
             cell->face(face)->set_boundary_id(0);
+
+/*
       this->boundary_conditions_type = "shallow_water_open_1d";
       std::shared_ptr<ShallowWaterSubcriticalOpenBC1D<dim>>
         derived_boundary_conditions =
           std::make_shared<ShallowWaterSubcriticalOpenBC1D<dim>>(
             this->fe, this->face_quadrature, gravity, 1.0, 1.0);
       this->boundary_conditions = derived_boundary_conditions;
+*/
+
+            this->boundary_conditions_type = "shallow_water_none";
+            std::shared_ptr<ShallowWaterNoBC<dim>>
+              derived_boundary_conditions =
+                std::make_shared<ShallowWaterNoBC<dim>>(
+                  this->fe, this->face_quadrature, gravity);
+            this->boundary_conditions = derived_boundary_conditions;
       this->dirichlet_function_strings.resize(this->n_boundaries);
       this->dirichlet_function_strings[0].resize(this->n_components);
       this->dirichlet_function_strings[0][0] = "1"; // height
@@ -374,7 +384,7 @@ void ShallowWater<dim>::define_problem()
 
       // constants for function parser
       const double h_unperturbed = 1.0; // unperturbed height
-      const double h_perturbed = 2.0;   // perturbed height
+      const double h_perturbed = 1.1;   // perturbed height
       this->constants["h_unperturbed"] = h_unperturbed;
       this->constants["h_perturbed"] = h_perturbed;
 
@@ -399,12 +409,14 @@ void ShallowWater<dim>::define_problem()
             this->boundary_conditions = derived_boundary_conditions;
       */
 
+/*
             this->boundary_conditions_type = "shallow_water_wall_1d";
             std::shared_ptr<
               ShallowWaterSubcriticalWallBC1D<dim>> derived_boundary_conditions =
               std::make_shared<ShallowWaterSubcriticalWallBC1D<dim>>(
                 this->fe, this->face_quadrature, gravity);
             this->boundary_conditions = derived_boundary_conditions;
+*/
 
 /*
       this->boundary_conditions_type = "shallow_water_open_1d";
@@ -424,14 +436,12 @@ void ShallowWater<dim>::define_problem()
             this->boundary_conditions = derived_boundary_conditions;
       */
 
-      /*
             this->boundary_conditions_type = "shallow_water_none";
             std::shared_ptr<ShallowWaterNoBC<dim>>
               derived_boundary_conditions =
                 std::make_shared<ShallowWaterNoBC<dim>>(
                   this->fe, this->face_quadrature, gravity);
             this->boundary_conditions = derived_boundary_conditions;
-      */
 
       this->dirichlet_function_strings.resize(this->n_boundaries);
       this->dirichlet_function_strings[0].resize(this->n_components);

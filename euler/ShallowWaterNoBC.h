@@ -33,6 +33,7 @@ private:
                                 const FEValues<dim> & fe_values_cell,
                                 const FEFaceValues<dim> & fe_values_face,
                                 const Vector<double> & solution,
+                                const double & dt,
                                 Vector<double> & cell_residual) override;
 };
 
