@@ -185,9 +185,9 @@ void ShallowWaterSubcriticalOpenBC1D<dim>::get_interior_values(
   std::vector<double> height_interior(1);
   std::vector<Tensor<1, dim>> momentum_interior(1);
   fe_values_interior[this->height_extractor].get_function_values(solution,
-                                                           height_interior);
-  fe_values_interior[this->momentum_extractor].get_function_values(solution,
-                                                             momentum_interior);
+                                                                 height_interior);
+  fe_values_interior[this->momentum_extractor].get_function_values(
+    solution, momentum_interior);
 
   // compute adjacent velocity and speed of sound
   velocity_interior = momentum_interior[0][0] / height_interior[0];

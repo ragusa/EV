@@ -34,7 +34,16 @@ private:
                                 const FEValues<dim> & fe_values_cell,
                                 const FEFaceValues<dim> & fe_values_face,
                                 const Vector<double> & solution,
+                                const double & dt,
                                 Vector<double> & cell_residual) override;
+
+  void get_interior_values(const double & face_position,
+                           const double & wave_velocity,
+                           const double & dt,
+                           const Cell & cell,
+                           const Vector<double> & solution,
+                           double & speed_of_sound_interior,
+                           double & velocity_interior) const;
 };
 
 #include "ShallowWaterSubcriticalWallBC1D.cc"

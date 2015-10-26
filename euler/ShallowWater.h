@@ -23,7 +23,7 @@
 #include "ShallowWaterPostProcessor.h"
 #include "ShallowWaterRiemannSolver.h"
 #include "ShallowWaterSubcriticalOpenBC1D.h"
-//#include "ShallowWaterSubcriticalWallBC1D.h"
+#include "ShallowWaterSubcriticalWallBC1D.h"
 #include "ShallowWaterWallBC.h"
 
 /**

@@ -399,21 +399,21 @@ void ShallowWater<dim>::define_problem()
             this->boundary_conditions = derived_boundary_conditions;
       */
 
-      /*
             this->boundary_conditions_type = "shallow_water_wall_1d";
             std::shared_ptr<
               ShallowWaterSubcriticalWallBC1D<dim>> derived_boundary_conditions =
               std::make_shared<ShallowWaterSubcriticalWallBC1D<dim>>(
                 this->fe, this->face_quadrature, gravity);
             this->boundary_conditions = derived_boundary_conditions;
-      */
 
+/*
       this->boundary_conditions_type = "shallow_water_open_1d";
       std::shared_ptr<
         ShallowWaterSubcriticalOpenBC1D<dim>> derived_boundary_conditions =
         std::make_shared<ShallowWaterSubcriticalOpenBC1D<dim>>(
           this->fe, this->face_quadrature, gravity, h_unperturbed, h_unperturbed);
       this->boundary_conditions = derived_boundary_conditions;
+*/
 
       /*
             this->boundary_conditions_type = "dirichlet";
