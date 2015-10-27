@@ -1,0 +1,27 @@
+Marco and I met to discuss my questions asked by email, namely why the
+solution given by the method of characteristics at the boundary, which
+are at the new time value, $\timevalue^{\timeindex+1}$, are of interest,
+since we are using explicit Euler, which only is concerned with values
+at $\timevalue^{\timeindex}$. The answer is that Marco had intended that
+I strongly impose the values given by the characteristics, instead of
+using them to compute the boundary fluxes, as I had been doing previously.
+
+The other question I had was how to implement wall boundary conditions,
+namely the condition $\velocity\cdot\normalvector=0$ in 2-D; my confusion
+was that setting the normal component of the velocity only fixed one of
+two degrees of freedom for the velocity, so I didn't know what the other
+component was. The answer was that it didn't matter; the boundary fluxes
+only require knowledge of $\velocity\cdot\normalvector$. Therefore the
+wall condition cancels the continuity boundary fluxes and just leaves
+a ``pressure'' term in the momentum boundary fluxes.
+
+We also ran the code with entropy viscosity for the perturbed lake-at-rest
+problem and couldn't find parameters that allowed a steady-state
+to be achieved. It was suggested that I might try the following:
+\begin{enumerate}
+  \item Smoothing the perturbation profile instead of having a step function, and
+  \item Smoothing the viscosity variations between cells, e.g., take the viscosity
+    to be the maximum of it and its neighbors. This prevents oscillations in the
+    viscosity profile.
+\end{enumerate}
+

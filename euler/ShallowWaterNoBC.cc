@@ -29,7 +29,7 @@ void ShallowWaterNoBC<dim>::apply_boundary_condition(
   const FEValues<dim> &,
   const FEFaceValues<dim> & fe_values_face,
   const Vector<double> & solution,
-  const double & dt,
+  const double &,
   Vector<double> & cell_residual)
 {
   // get solution values on face

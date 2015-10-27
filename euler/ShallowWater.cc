@@ -51,441 +51,249 @@ std::vector<DataComponentInterpretation::DataComponentInterpretation>
 template <int dim>
 void ShallowWater<dim>::define_problem()
 {
+  // determine problem name
   switch (sw_parameters.problem_id)
   {
-    case 0: // 1-D dam break over flat bottom
-    {
-      Assert(dim == 1, ExcImpossibleInDim(dim));
-
-      // name of problem
+    case 0:
       this->problem_name = "dam_break_flat";
+      break;
+    case 1:
+      this->problem_name = "dam_break_bump";
+      break;
+    case 2:
+      this->problem_name = "lake_at_rest";
+      break;
+    case 3:
+      this->problem_name = "lake_at_rest_perturbed";
+      break;
+    case 4:
+      this->problem_name = "lake_at_rest_flat_perturbed";
+      break;
+    default:
+      Assert(false, ExcNotImplemented());
+      break;
+  }
 
-      // domain
-      const double domain_start = -5.0;
-      const double domain_width = 10.0;
-      this->domain_volume = std::pow(domain_width, dim);
-      GridGenerator::hyper_cube(
-        this->triangulation, domain_start, domain_start + domain_width);
+  // read problem parameters input file
+  ParameterHandler parameter_handler;
+  ShallowWaterProblemParameters<dim>::declare_parameters(parameter_handler);
+  parameter_handler.read_input("problems/shallow_water/" + this->problem_name);
+  ShallowWaterProblemParameters<dim> problem_parameters;
+  problem_parameters.get_parameters(parameter_handler);
 
-      // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
-      this->n_boundaries = 1;
-      typename Triangulation<dim>::cell_iterator cell =
-        this->triangulation.begin();
-      typename Triangulation<dim>::cell_iterator endc = this->triangulation.end();
-      for (; cell != endc; ++cell)
-        for (unsigned int face = 0; face < this->faces_per_cell; ++face)
-          if (cell->face(face)->at_boundary())
-            cell->face(face)->set_boundary_id(0);
+  // assert number of dimensions is valid
+  if (!problem_parameters.valid_in_1d)
+    Assert(dim != 1, ExcImpossibleInDim(dim));
+  if (!problem_parameters.valid_in_2d)
+    Assert(dim != 2, ExcImpossibleInDim(dim));
 
-      this->boundary_conditions_type = "dirichlet";
+  // domain
+  if (problem_parameters.domain_shape == "hyper_cube")
+  {
+    const double x_start = problem_parameters.x_start;
+    const double x_width = problem_parameters.x_width;
+    this->domain_volume = std::pow(x_width, dim);
+    GridGenerator::hyper_cube(this->triangulation, x_start, x_start + x_width);
+  }
+  else if (problem_parameters.domain_shape == "hyper_rectangle")
+  {
+    Point<dim> point_start;
+    Point<dim> point_end;
+    const double x_start = problem_parameters.x_start;
+    const double x_width = problem_parameters.x_width;
+    point_start[0] = x_start;
+    point_end[0] = x_start + x_width;
+    if (dim == 1)
+    {
+      this->domain_volume = x_width;
+    }
+    else
+    {
+      const double y_start = problem_parameters.y_start;
+      const double y_width = problem_parameters.y_width;
+      point_start[1] = y_start;
+      point_end[1] = y_start + y_width;
+      this->domain_volume = x_width * y_width;
+    }
+    GridGenerator::hyper_rectangle(this->triangulation, point_start, point_end);
+  }
+  else
+  {
+    Assert(false, ExcNotImplemented());
+  }
 
-      std::shared_ptr<DirichletBoundaryConditions<dim>>
-        derived_boundary_conditions =
-          std::make_shared<DirichletBoundaryConditions<dim>>(
-            this->fe, this->face_quadrature);
-      this->boundary_conditions = derived_boundary_conditions;
+  // constants
+  gravity = problem_parameters.gravity;
+  const double x_interface = problem_parameters.x_interface;
+  const double h_left = problem_parameters.h_left;
+  const double h_right = problem_parameters.h_right;
+  const double h_unperturbed = problem_parameters.h_unperturbed;
+  const double h_perturbed = problem_parameters.h_perturbed;
+  const double u_left = problem_parameters.u_left;
+  const double u_right = problem_parameters.u_right;
+  const double bump_height = problem_parameters.bump_height;
+  const double bump_x_center = problem_parameters.bump_x_center;
+  const double bump_x_width = problem_parameters.bump_x_width;
+  const double perturbation_x_center = problem_parameters.perturbation_x_center;
+  const double perturbation_x_width = problem_parameters.perturbation_x_width;
+  this->constants["x_interface"] = x_interface;
+  this->constants["h_left"] = h_left;
+  this->constants["h_right"] = h_right;
+  this->constants["h_unperturbed"] = h_unperturbed;
+  this->constants["h_perturbed"] = h_perturbed;
+  this->constants["u_left"] = u_left;
+  this->constants["u_right"] = u_right;
+  this->constants["bump_height"] = bump_height;
+  this->constants["bump_x_center"] = bump_x_center;
+  this->constants["bump_x_width"] = bump_x_width;
+  this->constants["bump_left"] = bump_x_center - 0.5 * bump_x_width;
+  this->constants["bump_right"] = bump_x_center + 0.5 * bump_x_width;
+  this->constants["perturbation_x_center"] = perturbation_x_center;
+  this->constants["perturbation_x_width"] = perturbation_x_width;
 
+  // set boundary indicators
+  this->n_boundaries = 1;
+  typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin();
+  typename Triangulation<dim>::cell_iterator endc = this->triangulation.end();
+  for (; cell != endc; ++cell)
+    for (unsigned int face = 0; face < this->faces_per_cell; ++face)
+      if (cell->face(face)->at_boundary())
+        cell->face(face)->set_boundary_id(0);
+
+  // set boundary conditions type
+  this->boundary_conditions_type = problem_parameters.boundary_conditions_type;
+
+  // create boundary conditions
+  if (this->boundary_conditions_type == "dirichlet")
+  {
+    std::shared_ptr<DirichletBoundaryConditions<dim>>
+      derived_boundary_conditions =
+        std::make_shared<DirichletBoundaryConditions<dim>>(this->fe,
+                                                           this->face_quadrature);
+    this->boundary_conditions = derived_boundary_conditions;
+
+    // option to use exact solution as Dirichlet BC
+    this->use_exact_solution_as_dirichlet_bc = false;
+
+    // get Dirichlet function strings
+    if (!this->use_exact_solution_as_dirichlet_bc)
+    {
       this->dirichlet_function_strings.resize(this->n_boundaries);
       this->dirichlet_function_strings[0].resize(this->n_components);
-      this->dirichlet_function_strings[0][0] = "if(x<0,3,1)";
-      this->dirichlet_function_strings[0][1] = "0";
-      this->use_exact_solution_as_dirichlet_bc = false;
+      this->dirichlet_function_strings[0][0] =
+        problem_parameters.dirichlet_function_height;
+      this->dirichlet_function_strings[0][1] =
+        problem_parameters.dirichlet_function_momentumx;
+      if (dim == 2)
+        this->dirichlet_function_strings[0][2] =
+          problem_parameters.dirichlet_function_momentumy;
+    }
+    else
+    {
+      Assert(false, ExcNotImplemented());
+    }
+  }
+  else if (this->boundary_conditions_type == "none")
+  {
+    std::shared_ptr<ShallowWaterNoBC<dim>> derived_boundary_conditions =
+      std::make_shared<ShallowWaterNoBC<dim>>(
+        this->fe, this->face_quadrature, gravity);
+    this->boundary_conditions = derived_boundary_conditions;
+  }
+  else if (this->boundary_conditions_type == "characteristic_open")
+  {
+    std::shared_ptr<ShallowWaterSubcriticalOpenBC1D<dim>>
+      derived_boundary_conditions =
+        std::make_shared<ShallowWaterSubcriticalOpenBC1D<dim>>(
+          this->fe, this->face_quadrature, gravity, h_unperturbed, h_unperturbed);
+    this->boundary_conditions = derived_boundary_conditions;
+  }
+  else if (this->boundary_conditions_type == "wall")
+  {
+    std::shared_ptr<ShallowWaterWallBC<dim>> derived_boundary_conditions =
+      std::make_shared<ShallowWaterWallBC<dim>>(
+        this->fe, this->face_quadrature, gravity);
+    this->boundary_conditions = derived_boundary_conditions;
+  }
+  else if (this->boundary_conditions_type == "characteristic_wall")
+  {
+    std::shared_ptr<ShallowWaterSubcriticalWallBC1D<dim>>
+      derived_boundary_conditions =
+        std::make_shared<ShallowWaterSubcriticalWallBC1D<dim>>(
+          this->fe, this->face_quadrature, gravity);
+    this->boundary_conditions = derived_boundary_conditions;
+  }
+  else
+  {
+    Assert(false, ExcNotImplemented());
+  }
 
-      // initial conditions
-      this->initial_conditions_strings[0] = "if(x<0,3,1)";
-      this->initial_conditions_strings[1] = "0";
+  // initial conditions
+  this->initial_conditions_strings[0] =
+    problem_parameters.initial_conditions_height;
+  this->initial_conditions_strings[1] =
+    problem_parameters.initial_conditions_momentumx;
+  if (dim == 2)
+    this->initial_conditions_strings[2] =
+      problem_parameters.initial_conditions_momentumy;
 
-      // problem parameters
-      const double h_left = 3.0;
-      const double u_left = 0.0;
-      const double h_right = 1.0;
-      const double u_right = 0.0;
-      gravity = 1.0;
-      const double x_interface = 0.0;
+  // exact solution
+  if (problem_parameters.has_exact_solution)
+  {
+    this->has_exact_solution = true;
 
-      // exact solution
-      this->has_exact_solution = true;
+    if (problem_parameters.exact_solution_type == "riemann")
+    {
       // create and initialize Riemann solver for exact solution
       std::shared_ptr<ShallowWaterRiemannSolver<dim>>
         exact_solution_function_derived =
           std::make_shared<ShallowWaterRiemannSolver<dim>>(
             h_left, u_left, h_right, u_right, gravity, x_interface);
-      // point base class pointer to derived class function object
       this->exact_solution_function = exact_solution_function_derived;
-
-      // initialize bathymetry function
-      std::shared_ptr<FunctionParser<dim>> bathymetry_function_derived =
-        std::make_shared<FunctionParser<dim>>();
-      std::map<std::string, double> constants;
-      std::string bathymetry_string = "0";
-      bathymetry_function_derived->initialize(
-        "x", bathymetry_string, this->constants, false);
-      bathymetry_function = bathymetry_function_derived;
-
-      // default end time
-      this->has_default_end_time = true;
-      this->default_end_time = 2.0;
-
-      break;
     }
-    case 1: // 1-D dam break over rectangular bump
+    else if (problem_parameters.exact_solution_type == "function")
     {
-      Assert(dim == 1, ExcImpossibleInDim(dim));
-
-      // NOTE: need to ensure that adaptive mesh refinement is not used for
-      // this problem because bump edges must be coincident with mesh edges;
-      // otherwise, the gradient of the discontinuity would be evaluated
-
-      // name of problem
-      this->problem_name = "dam_break_bump";
-
-      // domain
-      const double domain_start = 0.0;
-      const double domain_width = 1500.0;
-      this->domain_volume = std::pow(domain_width, dim);
-      GridGenerator::hyper_cube(
-        this->triangulation, domain_start, domain_start + domain_width);
-
-      // constants
-      const double midpoint = domain_start + 0.5 * domain_width;
-      const double bump_width = 375.0;
-      const double bump_left_nominal = midpoint - 0.5 * bump_width;
-      const double bump_right_nominal = midpoint + 0.5 * bump_width;
-
-      // determine actual bump left and right positions; they must be coincident
-      // with mesh edges
-      const unsigned int n_cells =
-        std::pow(2, this->parameters.initial_refinement_level);
-      const double dx = domain_width / n_cells;
-      const double bump_left =
-        std::round((bump_left_nominal - domain_start) / dx) * dx;
-      const double bump_right =
-        std::round((bump_right_nominal - domain_start) / dx) * dx;
-
-      // constants for function parser
-      this->constants["midpoint"] = midpoint;     // midpoint
-      this->constants["bump_width"] = bump_width; // width of bump
-      this->constants["bump_height"] = 8.0;       // height of bump
-      this->constants["bump_left"] = bump_left;   // left edge of bump
-      this->constants["bump_right"] = bump_right; // right edge of bump
-      this->constants["h_left"] = 20.0;
-      this->constants["h_right"] = 15.0;
-
-      // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
-      this->n_boundaries = 1;
-      typename Triangulation<dim>::cell_iterator cell =
-        this->triangulation.begin();
-      typename Triangulation<dim>::cell_iterator endc = this->triangulation.end();
-      for (; cell != endc; ++cell)
-        for (unsigned int face = 0; face < this->faces_per_cell; ++face)
-          if (cell->face(face)->at_boundary())
-            cell->face(face)->set_boundary_id(0);
-      this->boundary_conditions_type = "dirichlet";
-      std::shared_ptr<DirichletBoundaryConditions<dim>>
-        derived_boundary_conditions =
-          std::make_shared<DirichletBoundaryConditions<dim>>(
-            this->fe, this->face_quadrature);
-      this->boundary_conditions = derived_boundary_conditions;
-      this->dirichlet_function_strings.resize(this->n_boundaries);
-      this->dirichlet_function_strings[0].resize(this->n_components);
-      this->dirichlet_function_strings[0][0] = "if(x<midpoint,h_left,h_right)";
-      this->dirichlet_function_strings[0][1] = "0";
-      this->use_exact_solution_as_dirichlet_bc = false;
-
-      // initial conditions
-      this->initial_conditions_strings[0] =
-        "if(x<bump_left,h_left,"
-        "if(x<midpoint,h_left-bump_height,"
-        "if(x<=bump_right,h_right-bump_height,h_right)))";
-      this->initial_conditions_strings[1] = "0";
-
-      // problem parameters
-      gravity = 9.812;
-
-      // exact solution
-      this->has_exact_solution = false;
-
-      // initialize bathymetry function
-      std::shared_ptr<FunctionParser<dim>> bathymetry_function_derived =
-        std::make_shared<FunctionParser<dim>>();
-      std::string bathymetry_string = "if(x<bump_left,0,"
-                                      "if(x<=bump_right,bump_height,0))";
-      bathymetry_function_derived->initialize(
-        "x", bathymetry_string, this->constants, false);
-      bathymetry_function = bathymetry_function_derived;
-
-      // default end time
-      this->has_default_end_time = true;
-      this->default_end_time = 15.0;
-
-      break;
-    }
-    case 2: // 1-D lake at rest
-    {
-      Assert(dim == 1, ExcImpossibleInDim(dim));
-
-      // name of problem
-      this->problem_name = "lake_at_rest";
-
-      // domain
-      const double domain_start = 0.0;
-      const double domain_width = 20.0;
-      this->domain_volume = std::pow(domain_width, dim);
-      GridGenerator::hyper_cube(
-        this->triangulation, domain_start, domain_start + domain_width);
-
-      // problem parameters
-      gravity = 9.812;
-
-      // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
-      this->n_boundaries = 1;
-      typename Triangulation<dim>::cell_iterator cell =
-        this->triangulation.begin();
-      typename Triangulation<dim>::cell_iterator endc = this->triangulation.end();
-      for (; cell != endc; ++cell)
-        for (unsigned int face = 0; face < this->faces_per_cell; ++face)
-          if (cell->face(face)->at_boundary())
-            cell->face(face)->set_boundary_id(0);
-      this->boundary_conditions_type = "shallow_water_open_1d";
-      std::shared_ptr<ShallowWaterSubcriticalOpenBC1D<dim>>
-        derived_boundary_conditions =
-          std::make_shared<ShallowWaterSubcriticalOpenBC1D<dim>>(
-            this->fe, this->face_quadrature, gravity, 1.0, 1.0);
-      this->boundary_conditions = derived_boundary_conditions;
-      this->dirichlet_function_strings.resize(this->n_boundaries);
-      this->dirichlet_function_strings[0].resize(this->n_components);
-      this->dirichlet_function_strings[0][0] = "1"; // height
-      this->dirichlet_function_strings[0][1] = "0"; // momentum
-      this->use_exact_solution_as_dirichlet_bc = false;
-
-      // initial conditions
-      this->initial_conditions_strings[0] = "if(abs(x-10)<2,1-(4-(x-10)^2)/20,1)";
-      this->initial_conditions_strings[1] = "0";
-
-      // exact solution
-      this->has_exact_solution = true;
-      this->exact_solution_strings[0] = "if(abs(x-10)<2,1-(4-(x-10)^2)/20,1)";
-      this->exact_solution_strings[1] = "0";
+      this->exact_solution_strings[0] = problem_parameters.exact_solution_height;
+      this->exact_solution_strings[1] =
+        problem_parameters.exact_solution_momentumx;
+      if (dim == 2)
+        this->exact_solution_strings[2] =
+          problem_parameters.exact_solution_momentumy;
 
       // create and initialize function parser for exact solution
       std::shared_ptr<FunctionParser<dim>> exact_solution_function_derived =
         std::make_shared<FunctionParser<dim>>(this->parameters.n_components);
       exact_solution_function_derived->initialize(
-        "x", this->exact_solution_strings, this->constants, false);
+        FunctionParser<dim>::default_variable_names() + ",t",
+        this->exact_solution_strings,
+        this->constants,
+        true);
       this->exact_solution_function = exact_solution_function_derived;
-
-      // initialize bathymetry function
-      std::shared_ptr<FunctionParser<dim>> bathymetry_function_derived =
-        std::make_shared<FunctionParser<dim>>();
-      std::string bathymetry_string = "if(abs(x-10)<2,(4-(x-10)^2)/20,0)";
-      bathymetry_function_derived->initialize(
-        "x", bathymetry_string, this->constants, false);
-      bathymetry_function = bathymetry_function_derived;
-
-      // default end time
-      this->has_default_end_time = true;
-      this->default_end_time = 10.0;
-
-      break;
     }
-    case 3: // 1-D lake at rest perturbed
-    {
-      Assert(dim == 1, ExcImpossibleInDim(dim));
-
-      // name of problem
-      this->problem_name = "lake_at_rest_perturbed";
-
-      // domain
-      const double domain_start = 0.0;
-      const double domain_width = 20.0;
-      this->domain_volume = std::pow(domain_width, dim);
-      GridGenerator::hyper_cube(
-        this->triangulation, domain_start, domain_start + domain_width);
-
-      // problem parameters
-      gravity = 9.812;
-
-      // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
-      this->n_boundaries = 1;
-      typename Triangulation<dim>::cell_iterator cell =
-        this->triangulation.begin();
-      typename Triangulation<dim>::cell_iterator endc = this->triangulation.end();
-      for (; cell != endc; ++cell)
-        for (unsigned int face = 0; face < this->faces_per_cell; ++face)
-          if (cell->face(face)->at_boundary())
-            cell->face(face)->set_boundary_id(0);
-
-/*
-      this->boundary_conditions_type = "shallow_water_open_1d";
-      std::shared_ptr<ShallowWaterSubcriticalOpenBC1D<dim>>
-        derived_boundary_conditions =
-          std::make_shared<ShallowWaterSubcriticalOpenBC1D<dim>>(
-            this->fe, this->face_quadrature, gravity, 1.0, 1.0);
-      this->boundary_conditions = derived_boundary_conditions;
-*/
-
-            this->boundary_conditions_type = "shallow_water_none";
-            std::shared_ptr<ShallowWaterNoBC<dim>>
-              derived_boundary_conditions =
-                std::make_shared<ShallowWaterNoBC<dim>>(
-                  this->fe, this->face_quadrature, gravity);
-            this->boundary_conditions = derived_boundary_conditions;
-      this->dirichlet_function_strings.resize(this->n_boundaries);
-      this->dirichlet_function_strings[0].resize(this->n_components);
-      this->dirichlet_function_strings[0][0] = "1"; // height
-      this->dirichlet_function_strings[0][1] = "0"; // momentum
-      this->use_exact_solution_as_dirichlet_bc = false;
-
-      // initial conditions
-      this->initial_conditions_strings[0] =
-        "if(abs(x-6)<0.25,1.01,"
-        "if(abs(x-10)<2,1-(4-(x-10)^2)/20,1))";
-      this->initial_conditions_strings[1] = "0";
-
-      // exact solution
-      this->has_exact_solution = true;
-      this->exact_solution_strings[0] = "if(abs(x-10)<2,1-(4-(x-10)^2)/20,1)";
-      this->exact_solution_strings[1] = "0";
-
-      // create and initialize function parser for exact solution
-      std::shared_ptr<FunctionParser<dim>> exact_solution_function_derived =
-        std::make_shared<FunctionParser<dim>>(this->parameters.n_components);
-      exact_solution_function_derived->initialize(
-        "x", this->exact_solution_strings, this->constants, false);
-      this->exact_solution_function = exact_solution_function_derived;
-
-      // initialize bathymetry function
-      std::shared_ptr<FunctionParser<dim>> bathymetry_function_derived =
-        std::make_shared<FunctionParser<dim>>();
-      std::string bathymetry_string = "if(abs(x-10)<2,(4-(x-10)^2)/20,0)";
-      bathymetry_function_derived->initialize(
-        "x", bathymetry_string, this->constants, false);
-      bathymetry_function = bathymetry_function_derived;
-
-      // default end time
-      this->has_default_end_time = true;
-      this->default_end_time = 1.5;
-
-      break;
-    }
-    case 4: // 1-D lake at rest flat perturbed
-    {
-      Assert(dim == 1, ExcImpossibleInDim(dim));
-
-      // name of problem
-      this->problem_name = "lake_at_rest_flat_perturbed";
-
-      // domain
-      const double domain_start = 0.0;
-      const double domain_width = 20.0;
-      this->domain_volume = std::pow(domain_width, dim);
-      GridGenerator::hyper_cube(
-        this->triangulation, domain_start, domain_start + domain_width);
-
-      // constants for function parser
-      const double h_unperturbed = 1.0; // unperturbed height
-      const double h_perturbed = 1.1;   // perturbed height
-      this->constants["h_unperturbed"] = h_unperturbed;
-      this->constants["h_perturbed"] = h_perturbed;
-
-      // problem parameters
-      gravity = 9.812;
-
-      // set boundary IDs
-      this->n_boundaries = 1;
-      typename Triangulation<dim>::cell_iterator cell =
-        this->triangulation.begin();
-      typename Triangulation<dim>::cell_iterator endc = this->triangulation.end();
-      for (; cell != endc; ++cell)
-        for (unsigned int face = 0; face < this->faces_per_cell; ++face)
-          if (cell->face(face)->at_boundary())
-            cell->face(face)->set_boundary_id(0);
-
-      /*
-            this->boundary_conditions_type = "shallow_water_wall_1d";
-            std::shared_ptr<ShallowWaterWallBC<dim>> derived_boundary_conditions =
-              std::make_shared<ShallowWaterWallBC<dim>>(
-                this->fe, this->face_quadrature, gravity);
-            this->boundary_conditions = derived_boundary_conditions;
-      */
-
-/*
-            this->boundary_conditions_type = "shallow_water_wall_1d";
-            std::shared_ptr<
-              ShallowWaterSubcriticalWallBC1D<dim>> derived_boundary_conditions =
-              std::make_shared<ShallowWaterSubcriticalWallBC1D<dim>>(
-                this->fe, this->face_quadrature, gravity);
-            this->boundary_conditions = derived_boundary_conditions;
-*/
-
-/*
-      this->boundary_conditions_type = "shallow_water_open_1d";
-      std::shared_ptr<
-        ShallowWaterSubcriticalOpenBC1D<dim>> derived_boundary_conditions =
-        std::make_shared<ShallowWaterSubcriticalOpenBC1D<dim>>(
-          this->fe, this->face_quadrature, gravity, h_unperturbed, h_unperturbed);
-      this->boundary_conditions = derived_boundary_conditions;
-*/
-
-      /*
-            this->boundary_conditions_type = "dirichlet";
-            std::shared_ptr<DirichletBoundaryConditions<dim>>
-              derived_boundary_conditions =
-                std::make_shared<DirichletBoundaryConditions<dim>>(
-                  this->fe, this->face_quadrature);
-            this->boundary_conditions = derived_boundary_conditions;
-      */
-
-            this->boundary_conditions_type = "shallow_water_none";
-            std::shared_ptr<ShallowWaterNoBC<dim>>
-              derived_boundary_conditions =
-                std::make_shared<ShallowWaterNoBC<dim>>(
-                  this->fe, this->face_quadrature, gravity);
-            this->boundary_conditions = derived_boundary_conditions;
-
-      this->dirichlet_function_strings.resize(this->n_boundaries);
-      this->dirichlet_function_strings[0].resize(this->n_components);
-      this->dirichlet_function_strings[0][0] = "h_unperturbed"; // height
-      this->dirichlet_function_strings[0][1] = "0";             // momentum
-      this->use_exact_solution_as_dirichlet_bc = false;
-
-      // initial conditions
-      this->initial_conditions_strings[0] =
-        "if(abs(x-10)<0.25,h_perturbed,h_unperturbed)";
-      this->initial_conditions_strings[1] = "0";
-
-      // exact solution
-      this->has_exact_solution = true;
-      this->exact_solution_strings[0] = "h_unperturbed";
-      this->exact_solution_strings[1] = "0";
-
-      // create and initialize function parser for exact solution
-      std::shared_ptr<FunctionParser<dim>> exact_solution_function_derived =
-        std::make_shared<FunctionParser<dim>>(this->parameters.n_components);
-      exact_solution_function_derived->initialize(
-        "x", this->exact_solution_strings, this->constants, false);
-      this->exact_solution_function = exact_solution_function_derived;
-
-      // initialize bathymetry function
-      std::shared_ptr<FunctionParser<dim>> bathymetry_function_derived =
-        std::make_shared<FunctionParser<dim>>();
-      std::string bathymetry_string = "0";
-      bathymetry_function_derived->initialize(
-        "x", bathymetry_string, this->constants, false);
-      bathymetry_function = bathymetry_function_derived;
-
-      // default end time
-      this->has_default_end_time = true;
-      this->default_end_time = 4.0;
-
-      break;
-    }
-    default:
+    else
     {
       Assert(false, ExcNotImplemented());
-      break;
     }
   }
+  else
+  {
+    this->has_exact_solution = false;
+  }
+
+  // initialize bathymetry function
+  std::shared_ptr<FunctionParser<dim>> bathymetry_function_derived =
+    std::make_shared<FunctionParser<dim>>();
+  std::map<std::string, double> constants;
+  bathymetry_function_derived->initialize(
+    FunctionParser<dim>::default_variable_names(),
+    problem_parameters.bathymetry_function,
+    this->constants,
+    false);
+  bathymetry_function = bathymetry_function_derived;
+
+  // default end time
+  this->has_default_end_time = problem_parameters.has_default_end_time;
+  this->default_end_time = problem_parameters.default_end_time;
 }
 
 /**
