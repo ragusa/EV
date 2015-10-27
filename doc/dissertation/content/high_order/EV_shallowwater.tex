@@ -274,55 +274,73 @@ gives
 \end{equation}
 where $\mathbf{c}_1(\heightmomentum, \bathymetry)$ is a constant with respect
 to $\height$.  Taking the partial derivative of this expression with respect to
-$\heightmomentumletter_d$ gives
+$\heightmomentumx$ gives
 \begin{equation}
-  \partial_{\heightmomentumletter_d}\mathbf{\consfluxletter}^\entropy
-  = \pr{\frac{1}{2}\frac{\heightmomentum\cdot\heightmomentum}{\height^2}
-    + \gravity\height}\unitvector{d} + \pd{\mathbf{c}_1}{\heightmomentumletter_d}
+  \partial_{\heightmomentumx}\mathbf{\consfluxletter}^\entropy
+  = \gravity\height\unitvector{x}
+  + \frac{1}{2\height^2}\sq{\begin{array}{c}
+      3\heightmomentumx^2 + \heightmomentumy^2\\
+      2\heightmomentumx\heightmomentumy\\
+    \end{array}}
+  + \pd{\mathbf{c}_1}{\heightmomentumx}
   \eqc
 \end{equation}
 which when compared to Equation \eqref{eq:shallowwater_entropy_pd_momentum}
 gives
 \begin{equation}
-  \pd{\mathbf{c}_1}{\heightmomentumletter_d}
-  = \frac{\heightmomentumletter_d\heightmomentum}{\height^2}
-  + \half\gravity\bathymetry\unitvector{d}
+  \pd{\mathbf{c}_1}{\heightmomentumx}
+  = \half\gravity\bathymetry\unitvector{x}
   \eqp
 \end{equation}
-Taking $d=x$ and integrating gives
+Integrating gives
 \begin{equation}
   \mathbf{c}_1(\heightmomentum,\bathymetry)
-  = \frac{\heightmomentumletter_x\heightmomentum}{\height^2}
-  + \half\gravity\bathymetry\unitvector{x}
-  + \mathbf{c}_2(\heightmomentumletter_y,\bathymetry)
+  = \half\gravity\bathymetry\heightmomentumx\unitvector{x}
+  + \mathbf{c}_2(\heightmomentumy,\bathymetry)
   \eqp
 \end{equation}
 Making this substitution into Equation
 \eqref{eq:shallowwater_entropy_flux_with_constant}
-and taking the partial derivative with respect to $\heightmomentumletter_y$
+and taking the partial derivative with respect to $\heightmomentumy$
 gives
 \begin{equation}
-  \partial_{\heightmomentumletter_y}\mathbf{\consfluxletter}^\entropy
-  = \pr{\frac{1}{2}\frac{\heightmomentum\cdot\heightmomentum}{\height^2}
-    + \gravity\height}\unitvector{y}
-  + \frac{\heightmomentumletter_x\unitvector{y}}{\height^2}
-  + \pd{\mathbf{c}_2}{\heightmomentumletter_y}
-  \eqc
+  \partial_{\heightmomentumy}\mathbf{\consfluxletter}^\entropy
+  = \gravity\height\unitvector{y}
+  + \frac{1}{2\height^2}\sq{\begin{array}{c}
+      2\heightmomentumx\heightmomentumy\\
+      \heightmomentumx^2 + 3\heightmomentumy^2\\
+    \end{array}}
+  + \pd{\mathbf{c}_2}{\heightmomentumy}
+  \eqp
 \end{equation}
 Comparing this with Equation \eqref{eq:shallowwater_entropy_pd_momentum}
 gives
 \begin{equation}
   \pd{\mathbf{c}_2}{\heightmomentumletter_y}
-  = \frac{\heightmomentumletter_y\heightmomentum}{\height^2}
-  + \half\gravity\bathymetry\unitvector{y}
+  = \half\gravity\bathymetry\unitvector{y}
   \eqp
 \end{equation}
-Then taking the partial derivative of Equation
-\eqref{eq:shallowwater_entropy_flux_with_constant} with respect to $\bathymetry$
-and using the knowledge $c(\heightmomentum,\bathymetry)\rightarrow c(\bathymetry)$
-gives $\dd{c}{\bathymetry}=0\Rightarrow c(\bathymetry)=c$, where
-$c$ can just be chosen to be zero. Thus the final equation for the
-entropy flux is
+Integrating gives
+\begin{equation}
+  \mathbf{c}_2(\heightmomentumy,\bathymetry)
+  = \half\gravity\bathymetry\heightmomentumy\unitvector{y}
+  + \mathbf{c}_3(\bathymetry)
+  \eqp
+\end{equation}
+Making this substitution into Equation
+\eqref{eq:shallowwater_entropy_flux_with_constant}
+and taking the partial derivative with respect to $\bathymetry$
+gives
+\begin{equation}
+  \dd{\mathbf{c}_3}{\bathymetry} = \half\gravity\heightmomentum \eqc
+\end{equation}
+which gives
+\begin{equation}
+  \mathbf{c}_3(\bathymetry) = \half\gravity\bathymetry\heightmomentum
+  + \mathbf{c}_4 \eqc
+\end{equation}
+where $\mathbf{c}_4$ is set to zero.
+Thus the final equation for the entropy flux is
 \begin{equation}
   \mathbf{\consfluxletter}^\entropy(\vectorsolution,\bathymetry)
   = \gravity(\height + \bathymetry)\heightmomentum

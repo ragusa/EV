@@ -324,8 +324,9 @@ void ConservationLaw<dim>::initialize_runge_kutta()
       rk.solution_computed_in_last_stage = false;
 }
 
-/** \brief Computes error for adaptive mesh refinement for a time
- *         step and adds it to an error sum for all time steps.
+/**
+ * \brief Computes error for adaptive mesh refinement for a time
+ *        step and adds it to an error sum for all time steps.
  */
 template <int dim>
 void ConservationLaw<dim>::compute_error_for_refinement()

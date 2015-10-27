@@ -31,7 +31,7 @@ subsection time
    set use default end time = true
    set final time = 1000.00
    set time step size = 0.01
-   set cfl = 0.20
+   set cfl = 0.50
    set steady state tolerance = 1.0e-6
 end
 

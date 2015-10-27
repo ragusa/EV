@@ -1,0 +1,22 @@
+For wall boundary conditions, the normal component of velocity is set to zero:
+\begin{equation}
+  \velocity\cdot\normalvector = 0 \eqc
+\end{equation}
+and therefore the boundary fluxes reduce to the following:
+\begin{subequations}
+\begin{equation}
+  \intboundary{\testfunction_i^\height\approximate{\heightmomentum}\cdot\normalvector}
+  =
+  0 \eqc
+\end{equation}
+\begin{equation}
+  \intboundary{\testfunction_i^{\heightmomentumd}
+    \pr{\frac{\approximate{\heightmomentumd}}{\height}
+      \approximate{\heightmomentum}
+    + \frac{1}{2}\gravity\approximate{\height}^2\unitvector{d}}\cdot\normalvector}
+  =
+  \intboundary{\testfunction_i^{\heightmomentumd}
+    \pr{\frac{1}{2}\gravity\approximate{\height}^2\unitvector{d}}\cdot\normalvector}
+  \eqp
+\end{equation}
+\end{subequations}

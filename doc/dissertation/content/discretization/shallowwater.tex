@@ -13,64 +13,39 @@ Integrating by parts gives
   - \intboundary{\testfunction_i^\height\tilde{\heightmomentum}\cdot\normalvector}
   \eqp
 \end{equation}
-Rearranging the $x$-momentum equation, substituting the approximate FEM solution
-and testing with a test function $\testfunction_i^{\heightmomentumx}$
-gives its weak form for degree of freedom $i$:
-\begin{multline}
-  \intdomain{\testfunction_i^{\heightmomentumx}\ppt{\tilde{\heightmomentumx}}}
+Rearranging the momentum equation for the $d$ direction, substituting the
+approximate FEM solution, and testing with a test function
+$\testfunction_i^{\heightmomentumd}$ gives its weak form for degree of freedom
+$i$:
+\begin{equation}
+  \intdomain{\testfunction_i^{\heightmomentumd}\ppt{\tilde{\heightmomentumd}}}
   =
-  - \intdomain{\testfunction_i^{\heightmomentumx}
-      \pd{}{x}\pr{\frac{\tilde{\heightmomentumx}^2}{\height}
-      + \frac{1}{2}\gravity\tilde{\height}^2}}
-  \\
-  - \intdomain{\testfunction_i^{\heightmomentumx}
-      \pd{}{y}\pr{\frac{\tilde{\heightmomentumx}\tilde{\heightmomentumy}}
-        {\height}}}
-  - \intdomain{\testfunction_i^{\heightmomentumx}
-      \gravity\tilde{\height}\pd{\bathymetry}{x}}
+  - \intdomain{\testfunction_i^{\heightmomentumd}
+      \divergence\pr{\frac{\tilde{\heightmomentumd}}{\height}
+        \approximate{\heightmomentum}
+      + \frac{1}{2}\gravity\tilde{\height}^2\unitvector{d}}}
+  - \intdomain{\testfunction_i^{\heightmomentumd}
+      \gravity\tilde{\height}\pd{\bathymetry}{x_d}}
   \eqp
-\end{multline}
+\end{equation}
 Integrating by parts for the flux terms gives
 \begin{multline}\label{eq:shallowwater_momentumx_weak_form}
-  \intdomain{\testfunction_i^{\heightmomentumx}\ppt{\tilde{\heightmomentumx}}}
+  \intdomain{\testfunction_i^{\heightmomentumd}\ppt{\tilde{\heightmomentumd}}}
   =
-    \intdomain{\pd{\testfunction_i^{\heightmomentumx}}{x}
-      \pr{\frac{\tilde{\heightmomentumx}^2}{\height}
-      + \frac{1}{2}\gravity\tilde{\height}^2}}
-  - \intboundary{\testfunction_i^{\heightmomentumx}
-      \pr{\frac{\tilde{\heightmomentumx}^2}{\height}
-      + \frac{1}{2}\gravity\tilde{\height}^2}\normalx}
+  + \intdomain{\nabla\testfunction_i^{\heightmomentumd}
+      \cdot\pr{\frac{\tilde{\heightmomentumd}}{\height}
+        \approximate{\heightmomentum}
+      + \frac{1}{2}\gravity\tilde{\height}^2\unitvector{d}}}
   \\
-  + \intdomain{\pd{\testfunction_i^{\heightmomentumx}}{y}
-      \frac{\tilde{\heightmomentumx}\tilde{\heightmomentumy}}
-        {\height}}
-  - \intboundary{\testfunction_i^{\heightmomentumx}
-      \frac{\tilde{\heightmomentumx}\tilde{\heightmomentumy}}
-        {\height}\normaly}
-  - \intdomain{\testfunction_i^{\heightmomentumx}
-      \gravity\tilde{\height}\pd{\bathymetry}{x}}
+  - \intboundary{\testfunction_i^{\heightmomentumd}
+      \pr{\frac{\tilde{\heightmomentumd}}{\height}
+        \approximate{\heightmomentum}
+      + \frac{1}{2}\gravity\tilde{\height}^2\unitvector{d}}\cdot\normalvector}
+  - \intdomain{\testfunction_i^{\heightmomentumd}
+      \gravity\tilde{\height}\pd{\bathymetry}{x_d}}
   \eqp
 \end{multline}
-Applying the same procedure to the $y$-momentum equation gives
-\begin{multline}
-  \intdomain{\testfunction_i^{\heightmomentumy}\ppt{\tilde{\heightmomentumy}}}
-  =
-    \intdomain{\pd{\testfunction_i^{\heightmomentumy}}{x}
-      \frac{\tilde{\heightmomentumx}\tilde{\heightmomentumy}}{\height}}
-  - \intboundary{\testfunction_i^{\heightmomentumy}
-      \frac{\tilde{\heightmomentumx}\tilde{\heightmomentumy}}{\height}\normalx}
-  \\
-  + \intdomain{\pd{\testfunction_i^{\heightmomentumy}}{y}
-      \pr{\frac{\tilde{\heightmomentumy}^2}{\height}
-      + \frac{1}{2}\gravity\tilde{\height}^2}}
-  - \intboundary{\testfunction_i^{\heightmomentumy}
-      \pr{\frac{\tilde{\heightmomentumy}^2}{\height}
-      + \frac{1}{2}\gravity\tilde{\height}^2}\normaly}
-  - \intdomain{\testfunction_i^{\heightmomentumx}
-      \gravity\tilde{\height}\pd{\bathymetry}{x}}
-  \eqp
-\end{multline}
-In a more compact format, these two equations may be expressed as
+In a more compact vector format, the momentum equations may be expressed as
 \begin{multline}
   \intdomain{\testfunction_i^{\heightmomentum}\cdot\ppt{\tilde{\heightmomentum}}}
   = \intdomain{\nabla\testfunction_i^{\heightmomentum}:
