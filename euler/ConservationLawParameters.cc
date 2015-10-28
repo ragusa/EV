@@ -200,6 +200,10 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
                       "1.0",
                       Patterns::Double(),
                       "tuning constant value to be used with jumps");
+    prm.declare_entry("smooth entropy viscosity",
+                      "false",
+                      Patterns::Bool(),
+                      "Option to smooth entropy viscosity");
   }
   prm.leave_subsection();
 
@@ -415,6 +419,7 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
       prm.get_bool("use low order viscosity for first time step");
     entropy_viscosity_coef = prm.get_double("entropy viscosity coefficient");
     jump_coef = prm.get_double("jump coefficient");
+    smooth_entropy_viscosity = prm.get_bool("smooth entropy viscosity");
   }
   prm.leave_subsection();
 

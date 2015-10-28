@@ -80,10 +80,8 @@ for (my $i = 0; $i <= $#search_strings; $i++) {
 }
 
 # read input file to determine the test problem ID and time integrator
-my $in_problem_ID_section = 0;
-my %problem_names;
-my $problem_ID;
-my $problem_ID_found = 0;
+my $problem_name;
+my $problem_name_found = 0;
 my $time_discretization;
 my $time_discretization_found = 0;
 
@@ -96,34 +94,12 @@ while (<IN>)
   # remove newline character from line
   chomp($line);
 
-  # add to problem ID hash if in problem ID section
-  if ($in_problem_ID_section)
-  {
-    # remove flag if no longer in problem ID section
-    if ($line !~ /^# \d/)
-    {
-      $in_problem_ID_section = 0;
-    }
-    # add to problem ID hash
-    else
-    {
-      my @problem_ID_fields = split /\s+/, $line;
-      $problem_names{$problem_ID_fields[1]} = $problem_ID_fields[2];
-    }
-  }
-
-  # add flag if entering problem ID section
-  if ($line =~ /# Problem IDs:/)
-  {
-    $in_problem_ID_section = 1;
-  }
-
   # check for problem ID field
-  if ($line =~ /set problem id/)
+  if ($line =~ /set problem name/)
   {
     my @fields = split /\s+=\s+/, $line;
-    $problem_ID = $fields[1];
-    $problem_ID_found = 1;
+    $problem_name = $fields[1];
+    $problem_name_found = 1;
   }
 
   # check for time discretization field
@@ -136,13 +112,10 @@ while (<IN>)
 }
 
 # check that all fields were found
-if (not($problem_ID_found and $time_discretization_found))
+if (not($problem_name_found and $time_discretization_found))
 {
   die "Did not find all required input fields\n";
 }
-
-# get problem name from hash
-my $problem_name = $problem_names{$problem_ID};
 
 # call plot script
 my $function_call = "plot_explicit $conservation_law $problem_name ".

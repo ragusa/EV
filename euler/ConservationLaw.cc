@@ -1140,8 +1140,14 @@ void ConservationLaw<dim>::update_viscosities(const double & dt,
         // compute low-order viscosities
         update_old_low_order_viscosity(false);
 
-        // compute high-order viscosities
+        // compute entropy viscosities
         update_entropy_viscosities(dt);
+
+        // smooth entropy viscosity if chosen
+        if (parameters.smooth_entropy_viscosity)
+          smooth_entropy_viscosity();
+
+        // compute high-order viscosities
         for (cell = dof_handler.begin_active(); cell != endc; ++cell)
           viscosity[cell] =
             std::min(first_order_viscosity[cell], entropy_viscosity[cell]);
@@ -1538,6 +1544,39 @@ double ConservationLaw<dim>::compute_max_entropy_jump(
   }
 
   return max_jump_in_cell;
+}
+
+/**
+ * \brief Smooths the entropy visosity profile.
+ *
+ * The smoothing is achieved by taking the maximum viscosity of a cell
+ * and its neighbors. Note that this algorithm is non-deterministic; the
+ * resulting entropy viscosity profile is dependent on the order of traversal
+ * of the cells.
+ */
+template <int dim>
+void ConservationLaw<dim>::smooth_entropy_viscosity()
+{
+  // loop over cells
+  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
+  for (; cell != endc; ++cell)
+  {
+    // loop over faces in cell
+    for (unsigned int iface = 0; iface < faces_per_cell; ++iface)
+    {
+      // determine if face is interior
+      typename DoFHandler<dim>::face_iterator face = cell->face(iface);
+      if (face->at_boundary() == false)
+      {
+        // get the cell's neighbor through this interior face
+        Cell neighbor_cell = cell->neighbor(iface);
+
+        // take max of cell and its neighbor
+        entropy_viscosity[cell]
+          = std::max(entropy_viscosity[cell], entropy_viscosity[neighbor_cell]);
+      }
+    }
+  }
 }
 
 /** \brief Computes the negative of the transient residual and stores in

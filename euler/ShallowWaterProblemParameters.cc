@@ -183,10 +183,18 @@ void ShallowWaterProblemParameters<dim>::declare_parameters(
                                     "0.0",
                                     Patterns::Double(),
                                     "Center of perturbation in x-direction");
+    parameter_handler.declare_entry("perturbation_y_center",
+                                    "0.0",
+                                    Patterns::Double(),
+                                    "Center of perturbation in y-direction");
     parameter_handler.declare_entry("perturbation_x_width",
                                     "0.0",
                                     Patterns::Double(),
                                     "Width of perturbation in x-direction");
+    parameter_handler.declare_entry("perturbation_y_width",
+                                    "0.0",
+                                    Patterns::Double(),
+                                    "Width of perturbation in y-direction");
   }
   parameter_handler.leave_subsection();
 }
@@ -289,7 +297,9 @@ void ShallowWaterProblemParameters<dim>::get_parameters(
     bump_y_width = parameter_handler.get_double("bump_y_width");
     bump_height = parameter_handler.get_double("bump_height");
     perturbation_x_center = parameter_handler.get_double("perturbation_x_center");
+    perturbation_y_center = parameter_handler.get_double("perturbation_y_center");
     perturbation_x_width = parameter_handler.get_double("perturbation_x_width");
+    perturbation_y_width = parameter_handler.get_double("perturbation_y_width");
   }
   parameter_handler.leave_subsection();
 }

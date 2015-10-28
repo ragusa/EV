@@ -40,6 +40,7 @@ subsection artificial viscosity
    set use low order viscosity for first time step = true
    set entropy viscosity coefficient = 2.0
    set jump coefficient = 4.0
+   set smooth entropy viscosity = false
 end
 
 subsection temporal integration

@@ -22,6 +22,10 @@ DeclException1(
  *         many. */
 DeclException0(ExcTooManyTransientOutputFiles);
 
+/** \brief Exception for a file not existing */
+DeclException1(
+  ExcFileDoesNotExist, std::string, << "The file: " << arg1 << " does not exist");
+
 /** \brief Exception for a directory not being able to be opened */
 DeclException1(ExcDirectoryCannotBeOpened,
                std::string,

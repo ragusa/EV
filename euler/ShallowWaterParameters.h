@@ -6,6 +6,7 @@
 #define ShallowWaterParameters_h
 
 #include <iostream>
+#include <string>
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/function_parser.h>
 
@@ -25,7 +26,7 @@ public:
 
   void get_parameters(ParameterHandler & parameter_handler);
 
-  unsigned int problem_id;
+  std::string problem_name;
 
   bool use_local_entropy_normalization;
 

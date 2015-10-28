@@ -52,6 +52,8 @@ template <int dim>
 void ShallowWater<dim>::define_problem()
 {
   // determine problem name
+  this->problem_name = sw_parameters.problem_name;
+/*
   switch (sw_parameters.problem_id)
   {
     case 0:
@@ -69,15 +71,27 @@ void ShallowWater<dim>::define_problem()
     case 4:
       this->problem_name = "lake_at_rest_flat_perturbed";
       break;
+    case 5:
+      this->problem_name = "lake_at_rest_2d";
+      break;
+    case 6:
+      this->problem_name = "lake_at_rest_flat_perturbed_2d";
+      break;
     default:
       Assert(false, ExcNotImplemented());
       break;
   }
+*/
+  // create problem parameters file name and determine if it exists
+  std::string problem_parameters_file = "problems/shallow_water/" + this->problem_name;
+  struct stat buffer;
+  const bool file_exists = stat(problem_parameters_file.c_str(), &buffer) == 0;
+  Assert(file_exists, ExcFileDoesNotExist(problem_parameters_file));
 
   // read problem parameters input file
   ParameterHandler parameter_handler;
   ShallowWaterProblemParameters<dim>::declare_parameters(parameter_handler);
-  parameter_handler.read_input("problems/shallow_water/" + this->problem_name);
+  parameter_handler.read_input(problem_parameters_file);
   ShallowWaterProblemParameters<dim> problem_parameters;
   problem_parameters.get_parameters(parameter_handler);
 
@@ -133,9 +147,13 @@ void ShallowWater<dim>::define_problem()
   const double u_right = problem_parameters.u_right;
   const double bump_height = problem_parameters.bump_height;
   const double bump_x_center = problem_parameters.bump_x_center;
+  const double bump_y_center = problem_parameters.bump_y_center;
   const double bump_x_width = problem_parameters.bump_x_width;
+  const double bump_y_width = problem_parameters.bump_y_width;
   const double perturbation_x_center = problem_parameters.perturbation_x_center;
+  const double perturbation_y_center = problem_parameters.perturbation_y_center;
   const double perturbation_x_width = problem_parameters.perturbation_x_width;
+  const double perturbation_y_width = problem_parameters.perturbation_y_width;
   this->constants["x_interface"] = x_interface;
   this->constants["h_left"] = h_left;
   this->constants["h_right"] = h_right;
@@ -145,11 +163,15 @@ void ShallowWater<dim>::define_problem()
   this->constants["u_right"] = u_right;
   this->constants["bump_height"] = bump_height;
   this->constants["bump_x_center"] = bump_x_center;
+  this->constants["bump_y_center"] = bump_y_center;
   this->constants["bump_x_width"] = bump_x_width;
+  this->constants["bump_y_width"] = bump_y_width;
   this->constants["bump_left"] = bump_x_center - 0.5 * bump_x_width;
   this->constants["bump_right"] = bump_x_center + 0.5 * bump_x_width;
   this->constants["perturbation_x_center"] = perturbation_x_center;
+  this->constants["perturbation_y_center"] = perturbation_y_center;
   this->constants["perturbation_x_width"] = perturbation_x_width;
+  this->constants["perturbation_y_width"] = perturbation_y_width;
 
   // set boundary indicators
   this->n_boundaries = 1;

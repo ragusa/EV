@@ -15,6 +15,7 @@
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/fe/fe_values_extractors.h>
 #include <deal.II/lac/vector.h>
+#include <sys/stat.h>
 #include "ConservationLaw.h"
 #include "ShallowWaterEntropyFluxFEValuesCell.h"
 #include "ShallowWaterEntropyFluxFEValuesFace.h"

@@ -69,7 +69,9 @@ public:
   double bump_y_width;
   double bump_height;
   double perturbation_x_center;
+  double perturbation_y_center;
   double perturbation_x_width;
+  double perturbation_y_width;
 };
 
 #include "ShallowWaterProblemParameters.cc"

@@ -6,14 +6,16 @@ subsection quadrature
    set number of quadrature points = 5
 end
 
-# Problem IDs:
-# 0 dam_break_flat
-# 1 dam_break_bump
-# 2 lake_at_rest
-# 3 lake_at_rest_perturbed
-# 4 lake_at_rest_flat_perturbed
+# Problem Names:
+#   dam_break_flat
+#   dam_break_bump
+#   lake_at_rest
+#   lake_at_rest_perturbed
+#   lake_at_rest_flat_perturbed
+#   lake_at_rest_2d
+#   lake_at_rest_flat_perturbed_2d
 subsection problem
-   set problem id = 4
+   set problem name = dam_break_flat
 end
 
 subsection refinement
@@ -37,14 +39,15 @@ end
 
 subsection artificial viscosity
    # options are <none|constant|old_first_order|max_principle|entropy>
-   set viscosity type = old_first_order
+   set viscosity type = entropy
    set constant viscosity value = 0.01
    set first order viscosity coefficient = 0.5
-   set multiply low order viscosity by froude = false
+   set multiply low order viscosity by froude = true
    set use low order viscosity for first time step = true
    set entropy viscosity coefficient = 1.0
    set jump coefficient = 1.0
-   set use local entropy normalization = true
+   set use local entropy normalization = false
+   set smooth entropy viscosity = true
 end
 
 subsection temporal integration
