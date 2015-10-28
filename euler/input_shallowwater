@@ -15,13 +15,13 @@ end
 #   lake_at_rest_2d
 #   lake_at_rest_flat_perturbed_2d
 subsection problem
-   set problem name = dam_break_flat
+   set problem name = lake_at_rest_flat_perturbed_2d
 end
 
 subsection refinement
    # refinementlevel:n_cells
    # 5:32, 8:256, 9:512, 10:1024, 11:2048
-   set initial refinement level = 8
+   set initial refinement level = 6
    set refinement cycles = 1
    set refinement fraction = 0.3
    set coarsening fraction = 0.03
@@ -30,8 +30,8 @@ end
 subsection time
    # options are <constant_dt|cfl_condition>
    set time step size method = cfl_condition
-   set use default end time = true
-   set final time = 10.00
+   set use default end time = false
+   set final time = 0.01
    set time step size = 0.01
    set cfl = 0.50
    set steady state tolerance = 1.0e-6
@@ -47,7 +47,7 @@ subsection artificial viscosity
    set entropy viscosity coefficient = 1.0
    set jump coefficient = 1.0
    set use local entropy normalization = false
-   set entropy viscosity smoothing = average # none | max | average
+   set entropy viscosity smoothing = none # none | max | average
    set entropy viscosity smoothing weight = 1
 end
 
@@ -78,7 +78,7 @@ subsection linear solver
 end
 
 subsection output
-   set output period = 2
+   set output period = 0
    set max transient output size = 1e9
    set output mesh = false
    set output mass matrix = false

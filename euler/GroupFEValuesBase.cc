@@ -43,6 +43,9 @@ GroupFEValuesBase<dim, is_scalar>::GroupFEValuesBase(
   dof_handler.distribute_dofs(fe);
   n_dofs = dof_handler.n_dofs();
 
+  // compute number of support points
+  n_support_points = n_dofs / n_components_function;
+
   // map solution cell iterator to function cell iterator
   Cell solution_cell = solution_dof_handler_.begin_active(),
        solution_endc = solution_dof_handler_.end(),
@@ -63,7 +66,8 @@ GroupFEValuesBase<dim, is_scalar>::GroupFEValuesBase(
 template <int dim, bool is_scalar>
 void GroupFEValuesBase<dim, is_scalar>::compute_function_dof_values()
 {
-  for (unsigned int i = 0; i < n_dofs; ++i)
+  // loop over support points
+  for (unsigned int i = 0; i < n_support_points; ++i)
   {
     // extract all components of solution at DoF support point
     std::vector<double> solution_at_support_point(n_components_solution);

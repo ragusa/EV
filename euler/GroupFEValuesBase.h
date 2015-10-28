@@ -103,6 +103,9 @@ protected:
   /** \brief Number of DoFs for function */
   unsigned int n_dofs;
 
+  /** \brief Number of support points */
+  unsigned int n_support_points;
+
   /** \brief Function values at DoF support points */
   Vector<double> function_dof_values;
 
