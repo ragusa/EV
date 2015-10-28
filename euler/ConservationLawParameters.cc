@@ -200,10 +200,15 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
                       "1.0",
                       Patterns::Double(),
                       "tuning constant value to be used with jumps");
-    prm.declare_entry("smooth entropy viscosity",
-                      "false",
-                      Patterns::Bool(),
-                      "Option to smooth entropy viscosity");
+    prm.declare_entry("entropy viscosity smoothing",
+                      "none",
+                      Patterns::Anything(),
+                      "Type of smoothing to apply to entropy viscosity");
+    prm.declare_entry(
+      "entropy viscosity smoothing weight",
+      "2",
+      Patterns::Integer(),
+      "Weight for center of Laplacian smoothing for entropy viscosity");
   }
   prm.leave_subsection();
 
@@ -217,7 +222,7 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
                       " 1 would output every time step,"
                       " and 2 would output every other time step, etc.");
     prm.declare_entry("max transient output size",
-                      "1.0e6",
+                      "1e9",
                       Patterns::Double(),
                       "Maximum number of bytes to use for transient output"
                       " files");
@@ -419,7 +424,9 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
       prm.get_bool("use low order viscosity for first time step");
     entropy_viscosity_coef = prm.get_double("entropy viscosity coefficient");
     jump_coef = prm.get_double("jump coefficient");
-    smooth_entropy_viscosity = prm.get_bool("smooth entropy viscosity");
+    entropy_viscosity_smoothing = prm.get("entropy viscosity smoothing");
+    entropy_viscosity_smoothing_weight =
+      prm.get_integer("entropy viscosity smoothing weight");
   }
   prm.leave_subsection();
 

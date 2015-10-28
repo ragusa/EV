@@ -65,8 +65,7 @@ void ConservationLaw<dim>::run()
   for (unsigned int cycle = 0; cycle < parameters.n_refinement_cycles; ++cycle)
   {
     // set cycle for post-processor
-    if (cycle == parameters.n_refinement_cycles - 1)
-      postprocessor.set_cycle(cycle);
+    postprocessor.set_cycle(cycle);
 
     // refine mesh if not the first cycle
     if (cycle > 0)
@@ -1144,8 +1143,10 @@ void ConservationLaw<dim>::update_viscosities(const double & dt,
         update_entropy_viscosities(dt);
 
         // smooth entropy viscosity if chosen
-        if (parameters.smooth_entropy_viscosity)
-          smooth_entropy_viscosity();
+        if (parameters.entropy_viscosity_smoothing == "max")
+          smooth_entropy_viscosity_max();
+        else if (parameters.entropy_viscosity_smoothing == "average")
+          smooth_entropy_viscosity_average();
 
         // compute high-order viscosities
         for (cell = dof_handler.begin_active(); cell != endc; ++cell)
@@ -1547,16 +1548,15 @@ double ConservationLaw<dim>::compute_max_entropy_jump(
 }
 
 /**
- * \brief Smooths the entropy visosity profile.
- *
- * The smoothing is achieved by taking the maximum viscosity of a cell
- * and its neighbors. Note that this algorithm is non-deterministic; the
- * resulting entropy viscosity profile is dependent on the order of traversal
- * of the cells.
+ * \brief Smooths the entropy visosity profile using the maximum of the
+ *        cell and its neighbors.
  */
 template <int dim>
-void ConservationLaw<dim>::smooth_entropy_viscosity()
+void ConservationLaw<dim>::smooth_entropy_viscosity_max()
 {
+  // copy entropy viscosities
+  cell_map entropy_viscosity_unsmoothed = entropy_viscosity;
+
   // loop over cells
   Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
   for (; cell != endc; ++cell)
@@ -1572,10 +1572,55 @@ void ConservationLaw<dim>::smooth_entropy_viscosity()
         Cell neighbor_cell = cell->neighbor(iface);
 
         // take max of cell and its neighbor
-        entropy_viscosity[cell]
-          = std::max(entropy_viscosity[cell], entropy_viscosity[neighbor_cell]);
+        entropy_viscosity[cell] = std::max(
+          entropy_viscosity[cell], entropy_viscosity_unsmoothed[neighbor_cell]);
       }
     }
+  }
+}
+
+/**
+ * \brief Smooths the entropy visosity profile using a weighted average of the
+ *        cell and its neighbors.
+ */
+template <int dim>
+void ConservationLaw<dim>::smooth_entropy_viscosity_average()
+{
+  // copy entropy viscosities
+  cell_map entropy_viscosity_unsmoothed = entropy_viscosity;
+
+  // loop over cells
+  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
+  for (; cell != endc; ++cell)
+  {
+    // initialize sum for average
+    double sum = parameters.entropy_viscosity_smoothing_weight *
+      entropy_viscosity_unsmoothed[cell];
+
+    // initialize neighbor count
+    unsigned int neighbor_count = 0;
+
+    // loop over faces in cell
+    for (unsigned int iface = 0; iface < faces_per_cell; ++iface)
+    {
+      // determine if face is interior
+      typename DoFHandler<dim>::face_iterator face = cell->face(iface);
+      if (face->at_boundary() == false)
+      {
+        // get the cell's neighbor through this interior face
+        Cell neighbor_cell = cell->neighbor(iface);
+
+        // add to sum
+        sum += entropy_viscosity_unsmoothed[neighbor_cell];
+
+        // increment neighbor count
+        neighbor_count++;
+      }
+    }
+
+    // compute average, smoothed value
+    entropy_viscosity[cell] =
+      sum / (neighbor_count + parameters.entropy_viscosity_smoothing_weight);
   }
 }
 

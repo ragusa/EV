@@ -40,7 +40,8 @@ subsection artificial viscosity
    set use low order viscosity for first time step = true
    set entropy viscosity coefficient = 2.0
    set jump coefficient = 4.0
-   set smooth entropy viscosity = false
+   set entropy viscosity smoothing = none # none | max | average
+   set entropy viscosity smoothing weight = 4
 end
 
 subsection temporal integration

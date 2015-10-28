@@ -53,37 +53,38 @@ void ShallowWater<dim>::define_problem()
 {
   // determine problem name
   this->problem_name = sw_parameters.problem_name;
-/*
-  switch (sw_parameters.problem_id)
-  {
-    case 0:
-      this->problem_name = "dam_break_flat";
-      break;
-    case 1:
-      this->problem_name = "dam_break_bump";
-      break;
-    case 2:
-      this->problem_name = "lake_at_rest";
-      break;
-    case 3:
-      this->problem_name = "lake_at_rest_perturbed";
-      break;
-    case 4:
-      this->problem_name = "lake_at_rest_flat_perturbed";
-      break;
-    case 5:
-      this->problem_name = "lake_at_rest_2d";
-      break;
-    case 6:
-      this->problem_name = "lake_at_rest_flat_perturbed_2d";
-      break;
-    default:
-      Assert(false, ExcNotImplemented());
-      break;
-  }
-*/
+  /*
+    switch (sw_parameters.problem_id)
+    {
+      case 0:
+        this->problem_name = "dam_break_flat";
+        break;
+      case 1:
+        this->problem_name = "dam_break_bump";
+        break;
+      case 2:
+        this->problem_name = "lake_at_rest";
+        break;
+      case 3:
+        this->problem_name = "lake_at_rest_perturbed";
+        break;
+      case 4:
+        this->problem_name = "lake_at_rest_flat_perturbed";
+        break;
+      case 5:
+        this->problem_name = "lake_at_rest_2d";
+        break;
+      case 6:
+        this->problem_name = "lake_at_rest_flat_perturbed_2d";
+        break;
+      default:
+        Assert(false, ExcNotImplemented());
+        break;
+    }
+  */
   // create problem parameters file name and determine if it exists
-  std::string problem_parameters_file = "problems/shallow_water/" + this->problem_name;
+  std::string problem_parameters_file =
+    "problems/shallow_water/" + this->problem_name;
   struct stat buffer;
   const bool file_exists = stat(problem_parameters_file.c_str(), &buffer) == 0;
   Assert(file_exists, ExcFileDoesNotExist(problem_parameters_file));

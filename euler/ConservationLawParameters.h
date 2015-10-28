@@ -119,7 +119,8 @@ public:
   bool use_low_order_viscosity_for_first_time_step;
   double entropy_viscosity_coef;
   double jump_coef;
-  bool smooth_entropy_viscosity;
+  std::string entropy_viscosity_smoothing;
+  unsigned int entropy_viscosity_smoothing_weight;
 };
 
 #include "ConservationLawParameters.cc"

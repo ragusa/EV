@@ -28,10 +28,8 @@ void ShallowWaterParameters<dim>::declare_parameters(
   // problem
   parameter_handler.enter_subsection("problem");
   {
-    parameter_handler.declare_entry("problem name",
-                                    "default",
-                                    Patterns::Anything(),
-                                    "Problem name");
+    parameter_handler.declare_entry(
+      "problem name", "default", Patterns::Anything(), "Problem name");
   }
   parameter_handler.leave_subsection();
 

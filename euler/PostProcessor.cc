@@ -31,6 +31,7 @@ PostProcessor<dim>::PostProcessor(
     current_cycle(0),
     is_last_cycle(false),
     fine_dof_handler(fine_triangulation),
+    transient_output_size(0),
     transient_file_number(0),
     transient_counter(0),
     transient_solution_not_output_this_step(true)
@@ -241,26 +242,36 @@ void PostProcessor<dim>::output_solution_transient(
       // make sure that transient counter is not too big for string format
       Assert(transient_counter < 10000, ExcTooManyTransientOutputFiles());
 
-      // create transient filename
-      const std::string transient_output_string = output_string +
-        appendage_string + "-" +
-        Utilities::int_to_string(transient_file_number, 4);
+      if (transient_output_size < parameters.max_transient_output_size)
+      {
+        // increment transient output size estimate
+        transient_output_size += 30 * solution.size();
 
-      // call function that outputs a vector of values to a file,
-      // with the solution component names and types lists
-      output_at_dof_points(solution,
-                           solution_component_names,
-                           solution_component_interpretations,
-                           dof_handler,
-                           transient_output_string,
-                           true,
-                           aux_postprocessor);
+        // create transient filename
+        const std::string transient_output_string = output_string +
+          appendage_string + "-" +
+          Utilities::int_to_string(transient_file_number, 4);
 
-      // signal that solution was output this step
-      transient_solution_not_output_this_step = false;
+        // call function that outputs a vector of values to a file,
+        // with the solution component names and types lists
+        output_at_dof_points(solution,
+                             solution_component_names,
+                             solution_component_interpretations,
+                             dof_handler,
+                             transient_output_string,
+                             true,
+                             aux_postprocessor);
 
-      // increment transient file number
-      transient_file_number++;
+        // signal that solution was output this step
+        transient_solution_not_output_this_step = false;
+
+        // increment transient file number
+        transient_file_number++;
+      }
+      else
+        std::cout
+          << "Solution transient not output because total size limit exceeded."
+          << std::endl;
     }
     else
     {

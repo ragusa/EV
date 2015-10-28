@@ -162,6 +162,9 @@ private:
   void createFineTriangulationAndDoFHandler(
     const Triangulation<dim> & triangulation);
 
+  /** \brief Estimate of size of all transient output files */
+  unsigned int transient_output_size;
+
   /** \brief Number used in the next transient solution file name */
   unsigned int transient_file_number;
 

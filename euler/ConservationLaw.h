@@ -101,7 +101,8 @@ protected:
                                               const Vector<double> & old_solution,
                                               const double & dt,
                                               const Cell & cell) const;
-  void smooth_entropy_viscosity();
+  void smooth_entropy_viscosity_max();
+  void smooth_entropy_viscosity_average();
   void get_dirichlet_nodes();
   void check_nan();
   bool check_DMP(const unsigned int & n) const;
