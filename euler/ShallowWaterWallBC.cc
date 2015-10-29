@@ -37,9 +37,24 @@ void ShallowWaterWallBC<dim>::apply_boundary_condition(
   std::vector<double> height(this->n_quadrature_points_face);
   fe_values_face[this->height_extractor].get_function_values(solution, height);
 
-  // use zero momentum values
-  std::vector<Tensor<1, dim>> momentum(this->n_quadrature_points_face);
+  // identity tensor
+  SymmetricTensor<2, dim> identity_tensor_sym = unit_symmetric_tensor<dim>();
+  Tensor<2, dim> identity_tensor(identity_tensor_sym);
 
-  // call integrate face function
-  this->integrate_face(height, momentum, cell_residual);
+  // get normal vectors
+  std::vector<Tensor<1, dim>> normal_vectors =
+    this->fe_values_face.get_all_normal_vectors();
+
+  for (unsigned int q = 0; q < this->n_quadrature_points_face; ++q)
+  {
+    // compute inviscid flux for momentum with v.n = 0
+    Tensor<2, dim> momentum_inviscid_flux =
+      0.5 * this->gravity * std::pow(height[q], 2) * identity_tensor;
+
+    // loop over DoFs in cell
+    for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+      cell_residual(i) -=
+        this->fe_values_face[this->momentum_extractor].value(i, q) *
+        momentum_inviscid_flux * normal_vectors[q] * this->fe_values_face.JxW(q);
+  }
 }

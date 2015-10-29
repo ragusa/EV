@@ -91,10 +91,14 @@ void ConservationLaw<dim>::run()
     old_solution = new_solution;
 
     // output initial solution
-    postprocessor.output_solution(
-      new_solution, dof_handler, "solution_initial", false, aux_postprocessor);
+    postprocessor.output_solution(new_solution,
+                                  0.0,
+                                  dof_handler,
+                                  "solution_initial",
+                                  false,
+                                  aux_postprocessor);
     postprocessor.output_solution_transient(
-      new_solution, dof_handler, "solution", false, aux_postprocessor);
+      new_solution, 0.0, dof_handler, "solution", false, aux_postprocessor);
 
     // solve transient with selected time integrator
     switch (parameters.temporal_integrator)
@@ -127,26 +131,34 @@ void ConservationLaw<dim>::run()
       case ConservationLawParameters<dim>::constant:
         break;
       case ConservationLawParameters<dim>::old_first_order:
-        postprocessor.output_cell_map(
-          first_order_viscosity, "loworderviscosity", dof_handler);
+        postprocessor.output_cell_map(first_order_viscosity,
+                                      parameters.end_time,
+                                      "loworderviscosity",
+                                      dof_handler);
         break;
       case ConservationLawParameters<dim>::max_principle:
-        postprocessor.output_cell_map(
-          first_order_viscosity, "loworderviscosity", dof_handler);
+        postprocessor.output_cell_map(first_order_viscosity,
+                                      parameters.end_time,
+                                      "loworderviscosity",
+                                      dof_handler);
         break;
       case ConservationLawParameters<dim>::entropy:
-        postprocessor.output_cell_map(
-          first_order_viscosity, "loworderviscosity", dof_handler);
+        postprocessor.output_cell_map(first_order_viscosity,
+                                      parameters.end_time,
+                                      "loworderviscosity",
+                                      dof_handler);
 
         // if low-order viscosity is used for first time step and only 1 time
         // step is taken, then the size of the entropy viscosity map is 0,
         // so that map cannot be output
         if (entropy_viscosity.size() > 0)
-          postprocessor.output_cell_map(
-            entropy_viscosity, "entropyviscosity", dof_handler);
+          postprocessor.output_cell_map(entropy_viscosity,
+                                        parameters.end_time,
+                                        "entropyviscosity",
+                                        dof_handler);
 
         postprocessor.output_cell_map(
-          viscosity, "highorderviscosity", dof_handler);
+          viscosity, parameters.end_time, "highorderviscosity", dof_handler);
         break;
       default:
         Assert(false, ExcNotImplemented());
@@ -732,8 +744,22 @@ void ConservationLaw<dim>::solve_runge_kutta(
       in_transient = false;
     }
 
-    std::cout << "  time step " << n << ": t = "
-              << "\x1b[1;34m" << old_time + dt << "\x1b[0m" << std::endl;
+    // compute CFL number for printing
+    const double cfl = compute_cfl_number(dt);
+    const bool cfl_is_violated = cfl > parameters.cfl;
+
+    // print CFL in red if it violates CFL condition
+    if (cfl_is_violated)
+      printf("  time step %i: t = \x1b[1;34m%9.4f\x1b[0m, CFL = "
+             "\x1b[1;31m%6.2f\x1b[0m\n",
+             n,
+             old_time + dt,
+             cfl);
+    else
+      printf("  time step %i: t = \x1b[1;34m%9.4f\x1b[0m, CFL = %6.2f\n",
+             n,
+             old_time + dt,
+             cfl);
 
     update_viscosities(dt, n);
 
@@ -878,10 +904,6 @@ void ConservationLaw<dim>::solve_runge_kutta(
       compute_ss_residual(dt, rk.f[0]);
     }
 
-    // output solution transient if specified
-    postprocessor.output_solution_transient(
-      new_solution, dof_handler, "solution", false, aux_postprocessor);
-
     // compute max principle min and max values
     compute_max_principle_quantities();
 
@@ -889,6 +911,14 @@ void ConservationLaw<dim>::solve_runge_kutta(
     old_time += dt;
     current_time = old_time; // used in exact solution function in output_solution
     n++;
+
+    // output solution transient if specified
+    postprocessor.output_solution_transient(new_solution,
+                                            current_time,
+                                            dof_handler,
+                                            "solution",
+                                            false,
+                                            aux_postprocessor);
 
     // check that there are no NaNs in solution
     check_nan();

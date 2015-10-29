@@ -57,15 +57,17 @@ public:
     const Triangulation<dim> & triangulation,
     const std::shared_ptr<DataPostprocessor<dim>> data_postprocessor = nullptr);
 
-  void output_solution(const Vector<double> & solution,
-                       const DoFHandler<dim> & dof_handler,
-                       const std::string & output_string,
-                       const bool & output_1d_vtk = false,
-                       const std::shared_ptr<DataPostprocessor<dim>>
-                         data_postprocessor = nullptr) const;
+  void output_solution(
+    const Vector<double> & solution,
+    const double & time,
+    const DoFHandler<dim> & dof_handler,
+    const std::string & output_string,
+    const bool & output_1d_vtu = false,
+    const std::shared_ptr<DataPostprocessor<dim>> data_postprocessor = nullptr);
 
   void output_solution_transient(
     const Vector<double> & solution,
+    const double & time,
     const DoFHandler<dim> & dof_handler,
     const std::string & output_string,
     const bool & force_output = false,
@@ -80,50 +82,43 @@ public:
   void set_cycle(const unsigned int & cycle);
 
   void output_cell_map(const CellMap & cell_map,
+                       const double & time,
                        const std::string & quantity_string,
                        const DoFHandler<dim> & dof_handler) const;
 
 private:
-  void output_exact_solution(const std::shared_ptr<DataPostprocessor<dim>>
-                               aux_postprocessor = nullptr) const;
+  void output_exact_solution(const double & time,
+                             const std::shared_ptr<DataPostprocessor<dim>>
+                               aux_postprocessor = nullptr);
 
   void output_at_dof_points(
     const Vector<double> & values,
+    const double & time,
     const std::vector<std::string> & component_names,
     const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
       component_interpretations,
     const DoFHandler<dim> & dof_handler,
     const std::string & output_string,
-    const bool & output_1d_vtk = false,
-    const std::shared_ptr<DataPostprocessor<dim>> data_postprocessor =
-      nullptr) const;
+    const bool & output_1d_vtu = false,
+    const std::shared_ptr<DataPostprocessor<dim>> data_postprocessor = nullptr,
+    const std::string & transient_appendage = "");
 
   void output_convergence_data();
 
   void output_function(
-    const Function<dim> & function,
-    const std::vector<std::string> & component_names,
-    const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
-      component_interpretations,
-    const std::string & filename,
-    const std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor =
-      nullptr) const;
-
-  void output_function(
     Function<dim> & function,
+    const double & time,
     const std::vector<std::string> & component_names,
     const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
       component_interpretations,
     const std::string & filename,
-    const double & time,
-    const std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor =
-      nullptr) const;
+    const std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor = nullptr);
 
   void output_grid(const Triangulation<dim> & triangulation) const;
 
   void create_directory(const std::string & dir) const;
 
-  void remove_vtk_files(const std::string & directory) const;
+  void remove_vtu_files(const std::string & directory) const;
 
   const ConservationLawParameters<dim> parameters;
 
@@ -181,6 +176,9 @@ private:
    * user-specified output frequency.
    */
   bool transient_solution_not_output_this_step;
+
+  /** \brief vector of times and corresponding file names */
+  std::vector<std::pair<double, std::string>> times_and_filenames;
 };
 
 #include "PostProcessor.cc"

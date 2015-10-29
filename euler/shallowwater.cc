@@ -17,7 +17,7 @@ int main(int, char **)
     dealii::deallog.depth_console(0);
 
     // spatial dimensions
-    const int dimension = 2;
+    const int dimension = 1;
 
     // ensure dimension <= 2
     Assert(dimension <= 2, ExcImpossibleInDim(dimension));
