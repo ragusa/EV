@@ -16,7 +16,8 @@ PostProcessor<dim>::PostProcessor(
   const std::vector<std::string> & solution_component_names_,
   const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
     solution_component_interpretations_,
-  const Triangulation<dim> & triangulation_)
+  const Triangulation<dim> & triangulation_,
+  const std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor_)
   : parameters(parameters_),
     end_time(end_time_),
     problem_name(problem_name_),
@@ -34,7 +35,8 @@ PostProcessor<dim>::PostProcessor(
     transient_output_size(0),
     transient_file_number(0),
     transient_counter(0),
-    transient_solution_not_output_this_step(true)
+    transient_solution_not_output_this_step(true),
+    aux_postprocessor(aux_postprocessor_)
 {
   // assert that a nonempty problem name was provided
   Assert(!problem_name.empty(), ExcInvalidState());
@@ -115,7 +117,7 @@ PostProcessor<dim>::PostProcessor(
 
   // if outputting transient, remove older transient *.vtu files
   if (parameters.output_period > 0)
-    remove_vtu_files(output_dir);
+    remove_vtu_files(output_dir, "solution" + appendage_string);
 }
 
 /**
@@ -187,8 +189,6 @@ void PostProcessor<dim>::output_results(
  * \param[in] output_string string for the output filename.
  * \param[in] output_1d_vtu option to output 1-D data in VTU format instead
  *            of GNUPLOT format
- * \param[in] data_postprocessor postprocessor for derived quantities to
- *            be output
  */
 template <int dim>
 void PostProcessor<dim>::output_solution(
@@ -196,8 +196,7 @@ void PostProcessor<dim>::output_solution(
   const double & time,
   const DoFHandler<dim> & dof_handler,
   const std::string & output_string,
-  const bool & output_1d_vtu,
-  const std::shared_ptr<DataPostprocessor<dim>> data_postprocessor)
+  const bool & output_1d_vtu)
 {
   // call function that outputs a vector of values to a file,
   // with the solution component names and types lists
@@ -208,7 +207,7 @@ void PostProcessor<dim>::output_solution(
                        dof_handler,
                        output_string,
                        output_1d_vtu,
-                       data_postprocessor);
+                       aux_postprocessor);
 }
 
 /**
@@ -223,8 +222,6 @@ void PostProcessor<dim>::output_solution(
  * \param[in] dof_handler degrees of freedom handler.
  * \param[in] output_string string for the output filename.
  * \param[in] force_output option to force output if it is not scheduled.
- * \param[in] aux_postprocessor postprocessor for derived quantities to
- *            be output
  */
 template <int dim>
 void PostProcessor<dim>::output_solution_transient(
@@ -232,8 +229,7 @@ void PostProcessor<dim>::output_solution_transient(
   const double & time,
   const DoFHandler<dim> & dof_handler,
   const std::string & output_string,
-  const bool & force_output,
-  const std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor)
+  const bool & force_output)
 {
   if (parameters.output_period > 0)
   {
@@ -298,13 +294,10 @@ void PostProcessor<dim>::output_solution_transient(
  * \brief Outputs the exact solution to a file.
  *
  * \param[in] time time value
- * \param[in] data_postprocessor postprocessor for derived quantities to
- *            be output
  */
 template <int dim>
 void PostProcessor<dim>::output_exact_solution(
-  const double & time,
-  const std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor)
+  const double & time)
 {
   if (parameters.output_exact_solution and has_exact_solution)
   {
@@ -313,8 +306,7 @@ void PostProcessor<dim>::output_exact_solution(
                     time,
                     solution_component_names,
                     solution_component_interpretations,
-                    filename_exact,
-                    aux_postprocessor);
+                    filename_exact);
   }
 }
 
@@ -335,8 +327,6 @@ void PostProcessor<dim>::output_exact_solution(
  * \param[in] output_string string for the output filename.
  * \param[in] output_1d_vtu option to output 1-D data in VTU format instead
  *            of GNUPLOT format
- * \param[in] data_postprocessor postprocessor for derived quantities to
- *            be output
  * \param[in] transient_appendage string to be added onto the filename for
  *            transient files
  */
@@ -350,7 +340,6 @@ void PostProcessor<dim>::output_at_dof_points(
   const DoFHandler<dim> & dof_handler,
   const std::string & output_string,
   const bool & output_1d_vtu,
-  const std::shared_ptr<DataPostprocessor<dim>> data_postprocessor,
   const std::string & transient_appendage)
 {
   // create output directory and subdirectory if they do not exist
@@ -364,7 +353,7 @@ void PostProcessor<dim>::output_at_dof_points(
                            component_names,
                            DataOut<dim>::type_dof_data,
                            component_interpretations);
-  if (data_postprocessor != nullptr)
+  if (aux_postprocessor != nullptr)
     data_out.add_data_vector(values, *data_postprocessor);
   data_out.build_patches();
 
@@ -509,11 +498,11 @@ void PostProcessor<dim>::output_convergence_data()
  * \param[in] dof_handler degrees of freedom handler
  */
 template <int dim>
-void PostProcessor<dim>::output_cell_map(
-  const CellMap & cell_map,
-  const double & time,
-  const std::string & quantity_string,
-  const DoFHandler<dim> & dof_handler) const
+void PostProcessor<dim>::output_cell_map(const CellMap & cell_map,
+                                         const double & time,
+                                         const std::string & quantity_string,
+                                         const DoFHandler<dim> & dof_handler,
+                                         const bool & output_1d_vtu) const
 {
   // create output directory if it doesn't exist
   create_directory("output");
@@ -538,7 +527,10 @@ void PostProcessor<dim>::output_cell_map(
   // determine output file extension
   std::string filename_extension;
   if (dim == 1)
-    filename_extension = ".gpl";
+    if (output_1d_vtu)
+      filename_extension = ".vtu";
+    else
+      filename_extension = ".gpl";
   else
     filename_extension = ".vtu";
 
@@ -550,7 +542,10 @@ void PostProcessor<dim>::output_cell_map(
   // build patches and write to file
   data_out.build_patches();
   if (dim == 1)
-    data_out.write_gnuplot(out_stream);
+    if (output_1d_vtu)
+      data_out.write_vtu(out_stream);
+    else
+      data_out.write_gnuplot(out_stream);
   else
     data_out.write_vtu(out_stream);
 }
@@ -727,8 +722,6 @@ void PostProcessor<dim>::createFineTriangulationAndDoFHandler(
  * \param[in] component_interpretations list of types (scalar or vector)
  *            of each component in the vector of values
  * \param[in] filename the output filename
- * \param[in] data_postprocessor postprocessor for derived quantities to
- *            be output
  */
 template <int dim>
 void PostProcessor<dim>::output_function(
@@ -738,7 +731,7 @@ void PostProcessor<dim>::output_function(
   const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
     component_interpretations,
   const std::string & filename,
-  const std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor)
+  const bool & is_exact_solution_function)
 {
   // create FESystem object for function
   const unsigned int n_components_function = component_names.size();
@@ -754,14 +747,7 @@ void PostProcessor<dim>::output_function(
   VectorTools::interpolate(dof_handler, function, function_values);
 
   // output function values to file
-  if (aux_postprocessor == nullptr)
-    output_at_dof_points(function_values,
-                         time,
-                         component_names,
-                         component_interpretations,
-                         dof_handler,
-                         filename);
-  else
+  if (is_exact_solution_function)
     output_at_dof_points(function_values,
                          time,
                          component_names,
@@ -770,18 +756,29 @@ void PostProcessor<dim>::output_function(
                          filename,
                          false,
                          aux_postprocessor);
+  else
+    output_at_dof_points(function_values,
+                         time,
+                         component_names,
+                         component_interpretations,
+                         dof_handler,
+                         filename,
+                         false);
 }
 
 /**
- * \brief Removes all *.vtu files in a directory.
+ * \brief Removes all filename_base*.vtu files in a directory.
  *
- * \param[in] directory directory for which to delete *.vtu files
+ * \param[in] directory directory for which to delete .vtu files
+ * \param[in] filename_base filename base; any file matching filename*.vtu
+ *            is removed
  */
 template <int dim>
-void PostProcessor<dim>::remove_vtu_files(const std::string & directory) const
+void PostProcessor<dim>::remove_vtu_files(const std::string & directory,
+                                          const std::string & filename_base) const
 {
   // create a regular expression for *.vtu files
-  std::regex vtu_regex(".*\\.vtu");
+  std::regex vtu_regex(filename_base + ".*\\.vtu");
 
   // use dirent.h to read a directory's contents
   DIR * dir;

@@ -47,6 +47,10 @@ void ConservationLaw<dim>::run()
   // initialize system
   initialize_system();
 
+  // create data post-processor (for outputting auxiliary variables)
+  std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor =
+    create_auxiliary_postprocessor();
+
   // create post-processor object
   PostProcessor<dim> postprocessor(parameters,
                                    end_time,
@@ -55,11 +59,8 @@ void ConservationLaw<dim>::run()
                                    problem_name,
                                    component_names,
                                    component_interpretations,
-                                   triangulation);
-
-  // create data post-processor (for outputting auxiliary variables)
-  std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor =
-    create_auxiliary_postprocessor();
+                                   triangulation,
+aux_postprocessor);
 
   // loop over adaptive refinement cycles
   for (unsigned int cycle = 0; cycle < parameters.n_refinement_cycles; ++cycle)
@@ -95,16 +96,15 @@ void ConservationLaw<dim>::run()
                                   0.0,
                                   dof_handler,
                                   "solution_initial",
-                                  false,
-                                  aux_postprocessor);
+                                  false);
     postprocessor.output_solution_transient(
-      new_solution, 0.0, dof_handler, "solution", false, aux_postprocessor);
+      new_solution, 0.0, dof_handler, "solution", false);
 
     // solve transient with selected time integrator
     switch (parameters.temporal_integrator)
     {
       case ConservationLawParameters<dim>::runge_kutta: // Runge-Kutta
-        solve_runge_kutta(postprocessor, aux_postprocessor);
+        solve_runge_kutta(postprocessor);
         break;
       default:
         Assert(false, ExcNotImplemented());
@@ -118,7 +118,7 @@ void ConservationLaw<dim>::run()
 
   // call post-processor to output solution and convergence results
   postprocessor.output_results(
-    new_solution, dof_handler, triangulation, aux_postprocessor);
+    new_solution, dof_handler, triangulation);
 
   // output viscosity if requested
   if (parameters.output_viscosity)
@@ -134,19 +134,22 @@ void ConservationLaw<dim>::run()
         postprocessor.output_cell_map(first_order_viscosity,
                                       parameters.end_time,
                                       "loworderviscosity",
-                                      dof_handler);
+                                      dof_handler,
+                                      true);
         break;
       case ConservationLawParameters<dim>::max_principle:
         postprocessor.output_cell_map(first_order_viscosity,
                                       parameters.end_time,
                                       "loworderviscosity",
-                                      dof_handler);
+                                      dof_handler,
+                                      true);
         break;
       case ConservationLawParameters<dim>::entropy:
         postprocessor.output_cell_map(first_order_viscosity,
                                       parameters.end_time,
                                       "loworderviscosity",
-                                      dof_handler);
+                                      dof_handler,
+                                      true);
 
         // if low-order viscosity is used for first time step and only 1 time
         // step is taken, then the size of the entropy viscosity map is 0,
@@ -155,10 +158,14 @@ void ConservationLaw<dim>::run()
           postprocessor.output_cell_map(entropy_viscosity,
                                         parameters.end_time,
                                         "entropyviscosity",
-                                        dof_handler);
+                                        dof_handler,
+                                        true);
 
-        postprocessor.output_cell_map(
-          viscosity, parameters.end_time, "highorderviscosity", dof_handler);
+        postprocessor.output_cell_map(viscosity,
+                                      parameters.end_time,
+                                      "highorderviscosity",
+                                      dof_handler,
+                                      true);
         break;
       default:
         Assert(false, ExcNotImplemented());
@@ -705,13 +712,10 @@ void ConservationLaw<dim>::output_map(
  * \f]
  *
  * \param[inout] postprocessor post-processor for outputting transient
- * \param[in] data_postprocessor post-processor for derived quantities to
- *            be output
  */
 template <int dim>
 void ConservationLaw<dim>::solve_runge_kutta(
-  PostProcessor<dim> & postprocessor,
-  const std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor)
+  PostProcessor<dim> & postprocessor)
 {
   old_time = 0.0;
   unsigned int n = 1; // time step index
@@ -746,7 +750,7 @@ void ConservationLaw<dim>::solve_runge_kutta(
 
     // compute CFL number for printing
     const double cfl = compute_cfl_number(dt);
-    const bool cfl_is_violated = cfl > parameters.cfl;
+    const bool cfl_is_violated = cfl > parameters.cfl + 1.0e-15;
 
     // print CFL in red if it violates CFL condition
     if (cfl_is_violated)
@@ -917,8 +921,9 @@ void ConservationLaw<dim>::solve_runge_kutta(
                                             current_time,
                                             dof_handler,
                                             "solution",
-                                            false,
-                                            aux_postprocessor);
+                                            false);
+
+    // output viscosity transient if specified
 
     // check that there are no NaNs in solution
     check_nan();
@@ -943,6 +948,7 @@ void ConservationLaw<dim>::solve_runge_kutta(
                 << "\x1b[0m" << std::endl;
     }
 
+/*
     // check that DMP is satisfied at all time steps
     if (parameters.viscosity_type ==
         ConservationLawParameters<dim>::max_principle)
@@ -950,12 +956,14 @@ void ConservationLaw<dim>::solve_runge_kutta(
       bool DMP_satisfied_this_time_step = check_DMP(n);
       DMP_satisfied = DMP_satisfied and DMP_satisfied_this_time_step;
     }
+*/
 
     // compute error for adaptive mesh refinement
     compute_error_for_refinement();
 
   } // end of time loop
 
+/*
   // report if DMP was satisfied at all time steps
   if (parameters.viscosity_type == ConservationLawParameters<dim>::max_principle)
   {
@@ -964,6 +972,7 @@ void ConservationLaw<dim>::solve_runge_kutta(
     else
       std::cout << "DMP was NOT satisfied at all time steps" << std::endl;
   }
+*/
 }
 
 /** \brief Computes time step size using the CFL condition
