@@ -31,4 +31,10 @@ DeclException1(ExcDirectoryCannotBeOpened,
                std::string,
                << "The directory " << arg1 << " cannot be opened");
 
+/** \brief Exception for sizes being inconsistent */
+DeclException2(ExcSizesInconsistent,
+               unsigned int,
+               unsigned int,
+               << "Size " << arg1 << "does not match size " << arg2);
+
 #endif

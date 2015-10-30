@@ -52,24 +52,21 @@ public:
 
   ~PostProcessor();
 
-  void output_results(
-    const Vector<double> & solution,
-    const DoFHandler<dim> & dof_handler,
-    const Triangulation<dim> & triangulation);
+  void output_results(const Vector<double> & solution,
+                      const DoFHandler<dim> & dof_handler,
+                      const Triangulation<dim> & triangulation);
 
-  void output_solution(
-    const Vector<double> & solution,
-    const double & time,
-    const DoFHandler<dim> & dof_handler,
-    const std::string & output_string,
-    const bool & output_1d_vtu = false);
+  void output_solution(const Vector<double> & solution,
+                       const double & time,
+                       const DoFHandler<dim> & dof_handler,
+                       const std::string & output_string,
+                       const bool & output_1d_vtu = false);
 
-  void output_solution_transient(
-    const Vector<double> & solution,
-    const double & time,
-    const DoFHandler<dim> & dof_handler,
-    const std::string & output_string,
-    const bool & force_output = false);
+  void output_solution_transient(const Vector<double> & solution,
+                                 const double & time,
+                                 const DoFHandler<dim> & dof_handler,
+                                 const std::string & output_string,
+                                 const bool & force_output = false);
 
   void evaluate_error(const Vector<double> & solution,
                       const DoFHandler<dim> & dof_handler,
@@ -79,15 +76,15 @@ public:
 
   void set_cycle(const unsigned int & cycle);
 
-  void output_cell_map(const CellMap & cell_map,
-                       const double & time,
-                       const std::string & quantity_string,
-                       const DoFHandler<dim> & dof_handler,
-                       const bool & output_1d_vtu = false) const;
+  void output_cell_maps(const std::vector<CellMap *> & cell_maps,
+                        const std::vector<std::string> & names,
+                        const std::string & filename_base,
+                        const double & time,
+                        const DoFHandler<dim> & dof_handler,
+                        const bool & output_1d_vtu = false) const;
 
 private:
-  void output_exact_solution(
-    const double & time);
+  void output_exact_solution(const double & time);
 
   void output_at_dof_points(
     const Vector<double> & values,
@@ -98,6 +95,7 @@ private:
     const DoFHandler<dim> & dof_handler,
     const std::string & output_string,
     const bool & output_1d_vtu = false,
+    const bool & is_solution = true,
     const std::string & transient_appendage = "");
 
   void output_convergence_data();
@@ -109,6 +107,7 @@ private:
     const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
       component_interpretations,
     const std::string & filename,
+    const bool & is_solution = true);
 
   void output_grid(const Triangulation<dim> & triangulation) const;
 
@@ -178,7 +177,7 @@ private:
   std::vector<std::pair<double, std::string>> times_and_filenames;
 
   /** \brief post-processor for derived quantities */
-  std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor;
+  std::shared_ptr<DataPostprocessor<dim>> solution_aux_postprocessor;
 };
 
 #include "PostProcessor.cc"

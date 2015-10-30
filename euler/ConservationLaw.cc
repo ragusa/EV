@@ -60,7 +60,7 @@ void ConservationLaw<dim>::run()
                                    component_names,
                                    component_interpretations,
                                    triangulation,
-aux_postprocessor);
+                                   aux_postprocessor);
 
   // loop over adaptive refinement cycles
   for (unsigned int cycle = 0; cycle < parameters.n_refinement_cycles; ++cycle)
@@ -92,11 +92,8 @@ aux_postprocessor);
     old_solution = new_solution;
 
     // output initial solution
-    postprocessor.output_solution(new_solution,
-                                  0.0,
-                                  dof_handler,
-                                  "solution_initial",
-                                  false);
+    postprocessor.output_solution(
+      new_solution, 0.0, dof_handler, "solution_initial", false);
     postprocessor.output_solution_transient(
       new_solution, 0.0, dof_handler, "solution", false);
 
@@ -117,12 +114,15 @@ aux_postprocessor);
   } // end of refinement loop
 
   // call post-processor to output solution and convergence results
-  postprocessor.output_results(
-    new_solution, dof_handler, triangulation);
+  postprocessor.output_results(new_solution, dof_handler, triangulation);
 
   // output viscosity if requested
   if (parameters.output_viscosity)
   {
+    // create vector of shared pointers to cell maps of viscosity
+    std::vector<CellMap *> viscosities;
+    std::vector<std::string> viscosity_names;
+
     // output final viscosities if non-constant viscosity used
     switch (parameters.viscosity_type)
     {
@@ -131,46 +131,38 @@ aux_postprocessor);
       case ConservationLawParameters<dim>::constant:
         break;
       case ConservationLawParameters<dim>::old_first_order:
-        postprocessor.output_cell_map(first_order_viscosity,
-                                      parameters.end_time,
-                                      "loworderviscosity",
-                                      dof_handler,
-                                      true);
-        break;
-      case ConservationLawParameters<dim>::max_principle:
-        postprocessor.output_cell_map(first_order_viscosity,
-                                      parameters.end_time,
-                                      "loworderviscosity",
-                                      dof_handler,
-                                      true);
+        viscosities.push_back(&first_order_viscosity);
+        viscosity_names.push_back("low_order_viscosity");
         break;
       case ConservationLawParameters<dim>::entropy:
-        postprocessor.output_cell_map(first_order_viscosity,
-                                      parameters.end_time,
-                                      "loworderviscosity",
-                                      dof_handler,
-                                      true);
+        // low-order viscosity
+        viscosities.push_back(&first_order_viscosity);
+        viscosity_names.push_back("low_order_viscosity");
 
+        // entropy viscosity
         // if low-order viscosity is used for first time step and only 1 time
         // step is taken, then the size of the entropy viscosity map is 0,
         // so that map cannot be output
         if (entropy_viscosity.size() > 0)
-          postprocessor.output_cell_map(entropy_viscosity,
-                                        parameters.end_time,
-                                        "entropyviscosity",
-                                        dof_handler,
-                                        true);
+        {
+          viscosities.push_back(&entropy_viscosity);
+          viscosity_names.push_back("entropy_viscosity");
+        }
 
-        postprocessor.output_cell_map(viscosity,
-                                      parameters.end_time,
-                                      "highorderviscosity",
-                                      dof_handler,
-                                      true);
+        // high-order viscosity
+        viscosities.push_back(&viscosity);
+        viscosity_names.push_back("high_order_viscosity");
+
         break;
       default:
         Assert(false, ExcNotImplemented());
         break;
     }
+
+    // output the  viscosities
+    if (viscosities.size() > 0)
+      postprocessor.output_cell_maps(
+        viscosities, viscosity_names, "viscosity", end_time, dof_handler, true);
   }
 }
 
@@ -714,14 +706,13 @@ void ConservationLaw<dim>::output_map(
  * \param[inout] postprocessor post-processor for outputting transient
  */
 template <int dim>
-void ConservationLaw<dim>::solve_runge_kutta(
-  PostProcessor<dim> & postprocessor)
+void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
 {
   old_time = 0.0;
   unsigned int n = 1; // time step index
   double t_end = end_time;
   bool in_transient = true;
-  bool DMP_satisfied = true;
+  // bool DMP_satisfied = true;
   while (in_transient)
   {
     // update max speed for use in CFL computation
@@ -917,11 +908,8 @@ void ConservationLaw<dim>::solve_runge_kutta(
     n++;
 
     // output solution transient if specified
-    postprocessor.output_solution_transient(new_solution,
-                                            current_time,
-                                            dof_handler,
-                                            "solution",
-                                            false);
+    postprocessor.output_solution_transient(
+      new_solution, current_time, dof_handler, "solution", false);
 
     // output viscosity transient if specified
 
@@ -948,31 +936,32 @@ void ConservationLaw<dim>::solve_runge_kutta(
                 << "\x1b[0m" << std::endl;
     }
 
-/*
-    // check that DMP is satisfied at all time steps
-    if (parameters.viscosity_type ==
-        ConservationLawParameters<dim>::max_principle)
-    {
-      bool DMP_satisfied_this_time_step = check_DMP(n);
-      DMP_satisfied = DMP_satisfied and DMP_satisfied_this_time_step;
-    }
-*/
+    /*
+        // check that DMP is satisfied at all time steps
+        if (parameters.viscosity_type ==
+            ConservationLawParameters<dim>::max_principle)
+        {
+          bool DMP_satisfied_this_time_step = check_DMP(n);
+          DMP_satisfied = DMP_satisfied and DMP_satisfied_this_time_step;
+        }
+    */
 
     // compute error for adaptive mesh refinement
     compute_error_for_refinement();
 
   } // end of time loop
 
-/*
-  // report if DMP was satisfied at all time steps
-  if (parameters.viscosity_type == ConservationLawParameters<dim>::max_principle)
-  {
-    if (DMP_satisfied)
-      std::cout << "DMP was satisfied at all time steps" << std::endl;
-    else
-      std::cout << "DMP was NOT satisfied at all time steps" << std::endl;
-  }
-*/
+  /*
+    // report if DMP was satisfied at all time steps
+    if (parameters.viscosity_type ==
+    ConservationLawParameters<dim>::max_principle)
+    {
+      if (DMP_satisfied)
+        std::cout << "DMP was satisfied at all time steps" << std::endl;
+      else
+        std::cout << "DMP was NOT satisfied at all time steps" << std::endl;
+    }
+  */
 }
 
 /** \brief Computes time step size using the CFL condition
@@ -1594,7 +1583,7 @@ template <int dim>
 void ConservationLaw<dim>::smooth_entropy_viscosity_max()
 {
   // copy entropy viscosities
-  cell_map entropy_viscosity_unsmoothed = entropy_viscosity;
+  CellMap entropy_viscosity_unsmoothed = entropy_viscosity;
 
   // loop over cells
   Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
@@ -1626,7 +1615,7 @@ template <int dim>
 void ConservationLaw<dim>::smooth_entropy_viscosity_average()
 {
   // copy entropy viscosities
-  cell_map entropy_viscosity_unsmoothed = entropy_viscosity;
+  CellMap entropy_viscosity_unsmoothed = entropy_viscosity;
 
   // loop over cells
   Cell cell = dof_handler.begin_active(), endc = dof_handler.end();

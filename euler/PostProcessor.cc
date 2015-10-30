@@ -5,6 +5,9 @@
 
 /**
  * Constructor.
+ *
+ * \param[in] solution_aux_postprocessor postprocessor for derived quantities to
+ *            be output
  */
 template <int dim>
 PostProcessor<dim>::PostProcessor(
@@ -17,7 +20,7 @@ PostProcessor<dim>::PostProcessor(
   const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
     solution_component_interpretations_,
   const Triangulation<dim> & triangulation_,
-  const std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor_)
+  const std::shared_ptr<DataPostprocessor<dim>> solution_aux_postprocessor_)
   : parameters(parameters_),
     end_time(end_time_),
     problem_name(problem_name_),
@@ -36,7 +39,7 @@ PostProcessor<dim>::PostProcessor(
     transient_file_number(0),
     transient_counter(0),
     transient_solution_not_output_this_step(true),
-    aux_postprocessor(aux_postprocessor_)
+    solution_aux_postprocessor(solution_aux_postprocessor_)
 {
   // assert that a nonempty problem name was provided
   Assert(!problem_name.empty(), ExcInvalidState());
@@ -137,15 +140,11 @@ PostProcessor<dim>::~PostProcessor()
  * \param[in] solution solution vector
  * \param[in] dof_handler degree of freedom handler
  * \param[in] triangulation triangulation
- * \param[in] data_postprocessor postprocessor for derived quantities to
- *            be output
  */
 template <int dim>
-void PostProcessor<dim>::output_results(
-  const Vector<double> & solution,
-  const DoFHandler<dim> & dof_handler,
-  const Triangulation<dim> & triangulation,
-  const std::shared_ptr<DataPostprocessor<dim>> data_postprocessor)
+void PostProcessor<dim>::output_results(const Vector<double> & solution,
+                                        const DoFHandler<dim> & dof_handler,
+                                        const Triangulation<dim> & triangulation)
 {
   // create output directory if it doesn't exist
   create_directory("output");
@@ -162,16 +161,14 @@ void PostProcessor<dim>::output_results(
                   end_time,
                   dof_handler,
                   solution_filename,
-                  false,
-                  data_postprocessor);
+                  false /* output_1d_vtu */);
 
   // output transient solution
   if (transient_solution_not_output_this_step)
-    output_solution_transient(
-      solution, end_time, dof_handler, "solution", true, data_postprocessor);
+    output_solution_transient(solution, end_time, dof_handler, "solution", true);
 
   // output exact solution
-  output_exact_solution(end_time, data_postprocessor);
+  output_exact_solution(end_time);
 
   // output convergence data
   output_convergence_data();
@@ -191,12 +188,11 @@ void PostProcessor<dim>::output_results(
  *            of GNUPLOT format
  */
 template <int dim>
-void PostProcessor<dim>::output_solution(
-  const Vector<double> & solution,
-  const double & time,
-  const DoFHandler<dim> & dof_handler,
-  const std::string & output_string,
-  const bool & output_1d_vtu)
+void PostProcessor<dim>::output_solution(const Vector<double> & solution,
+                                         const double & time,
+                                         const DoFHandler<dim> & dof_handler,
+                                         const std::string & output_string,
+                                         const bool & output_1d_vtu)
 {
   // call function that outputs a vector of values to a file,
   // with the solution component names and types lists
@@ -207,7 +203,7 @@ void PostProcessor<dim>::output_solution(
                        dof_handler,
                        output_string,
                        output_1d_vtu,
-                       aux_postprocessor);
+                       true);
 }
 
 /**
@@ -264,8 +260,8 @@ void PostProcessor<dim>::output_solution_transient(
                              solution_component_interpretations,
                              dof_handler,
                              output_string + appendage_string,
-                             true,
-                             aux_postprocessor,
+                             true /* output_1d_vtu */,
+                             true /* is_solution */,
                              transient_appendage);
 
         // signal that solution was output this step
@@ -296,8 +292,7 @@ void PostProcessor<dim>::output_solution_transient(
  * \param[in] time time value
  */
 template <int dim>
-void PostProcessor<dim>::output_exact_solution(
-  const double & time)
+void PostProcessor<dim>::output_exact_solution(const double & time)
 {
   if (parameters.output_exact_solution and has_exact_solution)
   {
@@ -306,7 +301,8 @@ void PostProcessor<dim>::output_exact_solution(
                     time,
                     solution_component_names,
                     solution_component_interpretations,
-                    filename_exact);
+                    filename_exact,
+                    true /* is_solution */);
   }
 }
 
@@ -327,6 +323,8 @@ void PostProcessor<dim>::output_exact_solution(
  * \param[in] output_string string for the output filename.
  * \param[in] output_1d_vtu option to output 1-D data in VTU format instead
  *            of GNUPLOT format
+ * \param[in] is_solution flag to signal that the output quantity is the
+ *            solution
  * \param[in] transient_appendage string to be added onto the filename for
  *            transient files
  */
@@ -340,6 +338,7 @@ void PostProcessor<dim>::output_at_dof_points(
   const DoFHandler<dim> & dof_handler,
   const std::string & output_string,
   const bool & output_1d_vtu,
+  const bool & is_solution,
   const std::string & transient_appendage)
 {
   // create output directory and subdirectory if they do not exist
@@ -353,8 +352,8 @@ void PostProcessor<dim>::output_at_dof_points(
                            component_names,
                            DataOut<dim>::type_dof_data,
                            component_interpretations);
-  if (aux_postprocessor != nullptr)
-    data_out.add_data_vector(values, *data_postprocessor);
+  if (is_solution)
+    data_out.add_data_vector(values, *solution_aux_postprocessor);
   data_out.build_patches();
 
   // write GNUplot file for 1-D and .vtu file otherwise
@@ -490,39 +489,61 @@ void PostProcessor<dim>::output_convergence_data()
 }
 
 /**
- * \brief Outputs a cell map to file.
+ * \brief Outputs multiple cell maps to file.
  *
- * \param[in] cell_map map of cell to value in cell
+ * \param[in] cell_maps vector of pointers to cell maps
+ * \param[in] names vector of names of quantities in cell maps vector
+ * \param[in] filename_base base file name for output file
  * \param[in] time time value
- * \param[in] quantity_string string for naming the data vector and output file
  * \param[in] dof_handler degrees of freedom handler
+ * \param[in] output_1d_vtu option to output 1-D data in VTU format instead
+ *            of GNUPLOT format
  */
 template <int dim>
-void PostProcessor<dim>::output_cell_map(const CellMap & cell_map,
-                                         const double & time,
-                                         const std::string & quantity_string,
-                                         const DoFHandler<dim> & dof_handler,
-                                         const bool & output_1d_vtu) const
+void PostProcessor<dim>::output_cell_maps(
+  const std::vector<CellMap *> & cell_maps,
+  const std::vector<std::string> & names,
+  const std::string & filename_base,
+  const double & time,
+  const DoFHandler<dim> & dof_handler,
+  const bool & output_1d_vtu) const
 {
-  // create output directory if it doesn't exist
+  // create output directory if it does not exist
   create_directory("output");
 
-  // create output subdirectory if it doesn't exist
+  // create output subdirectory if it does not exist
   create_directory(output_dir);
 
-  // create data vector from map
-  Vector<double> cell_vector(cell_map.size());
-  typename CellMap::const_iterator it;
-  typename CellMap::const_iterator it_end = cell_map.end();
-  unsigned int i;
-  for (it = cell_map.begin(), i = 0; it != it_end; ++it, ++i)
-    cell_vector[i] = it->second;
-
-  // add to data out object
+  // create data out object and attach DoF handler
   DataOut<dim> data_out;
   data_out.attach_dof_handler(dof_handler);
-  data_out.add_data_vector(
-    cell_vector, quantity_string, DataOut<dim>::type_cell_data);
+
+  // get number of cells from size of cell map
+  const unsigned int n_cells = cell_maps[0]->size();
+
+  // loop over cell maps
+  const unsigned int n_cell_maps = cell_maps.size();
+  std::vector<Vector<double>> cell_vectors(n_cell_maps, Vector<double>(n_cells));
+  for (unsigned int i = 0; i < n_cell_maps; ++i)
+  {
+    // make sure the number of entries in each cell map is the same
+    Assert(cell_maps[i]->size() == n_cells,
+           ExcSizesInconsistent(cell_maps[i]->size(), n_cells));
+
+    // create data vector from map
+    typename CellMap::const_iterator it;
+    typename CellMap::const_iterator it_end = cell_maps[i]->end();
+    unsigned int j = 0;
+    for (it = cell_maps[i]->begin(); it != it_end; ++it, ++j)
+      cell_vectors[i][j] = it->second;
+
+    // add data vector
+    data_out.add_data_vector(
+      cell_vectors[i], names[i], DataOut<dim>::type_cell_data);
+  }
+
+  // build patches
+  data_out.build_patches();
 
   // determine output file extension
   std::string filename_extension;
@@ -536,11 +557,10 @@ void PostProcessor<dim>::output_cell_map(const CellMap & cell_map,
 
   // create output filestream
   std::string filename =
-    output_dir + quantity_string + "_" + timedisc_string + filename_extension;
+    output_dir + filename_base + appendage_string + filename_extension;
   std::ofstream out_stream(filename.c_str());
 
-  // build patches and write to file
-  data_out.build_patches();
+  // write to file
   if (dim == 1)
     if (output_1d_vtu)
       data_out.write_vtu(out_stream);
@@ -653,7 +673,10 @@ void PostProcessor<dim>::output_grid(
   }
 }
 
-/** \brief Update the time step size to be put in convergence table
+/**
+ * \brief Updates the time step size to be put in convergence table
+ *
+ * \param[in] dt_nominal nominal time step size for this cycle
  */
 template <int dim>
 void PostProcessor<dim>::update_dt(const double & dt)
@@ -661,7 +684,10 @@ void PostProcessor<dim>::update_dt(const double & dt)
   dt_nominal = dt;
 }
 
-/** \brief Check if a directory exists and create it if it doesn't.
+/**
+ * \brief Checks if a directory exists and creates it if it does not
+ *
+ * \param[in] directory path to directory to create if it does not exist
  */
 template <int dim>
 void PostProcessor<dim>::create_directory(const std::string & directory) const
@@ -687,6 +713,8 @@ void PostProcessor<dim>::create_directory(const std::string & directory) const
 
 /**
  * \brief Sets the current cycle and flags it if it is the last.
+ *
+ * \param[in] cycle current refinement cycle
  */
 template <int dim>
 void PostProcessor<dim>::set_cycle(const unsigned int & cycle)
@@ -697,6 +725,8 @@ void PostProcessor<dim>::set_cycle(const unsigned int & cycle)
 
 /**
  * \brief Creates fine triangulation and dof handler for outputting functions.
+ *
+ * \param[in] triangulation triangulation to copy for refining
  */
 template <int dim>
 void PostProcessor<dim>::createFineTriangulationAndDoFHandler(
@@ -722,6 +752,8 @@ void PostProcessor<dim>::createFineTriangulationAndDoFHandler(
  * \param[in] component_interpretations list of types (scalar or vector)
  *            of each component in the vector of values
  * \param[in] filename the output filename
+ * \param[in] is_solution flag to signal that the output quantity is the
+ *            solution
  */
 template <int dim>
 void PostProcessor<dim>::output_function(
@@ -731,7 +763,7 @@ void PostProcessor<dim>::output_function(
   const std::vector<DataComponentInterpretation::DataComponentInterpretation> &
     component_interpretations,
   const std::string & filename,
-  const bool & is_exact_solution_function)
+  const bool & is_solution)
 {
   // create FESystem object for function
   const unsigned int n_components_function = component_names.size();
@@ -747,23 +779,14 @@ void PostProcessor<dim>::output_function(
   VectorTools::interpolate(dof_handler, function, function_values);
 
   // output function values to file
-  if (is_exact_solution_function)
-    output_at_dof_points(function_values,
-                         time,
-                         component_names,
-                         component_interpretations,
-                         dof_handler,
-                         filename,
-                         false,
-                         aux_postprocessor);
-  else
-    output_at_dof_points(function_values,
-                         time,
-                         component_names,
-                         component_interpretations,
-                         dof_handler,
-                         filename,
-                         false);
+  output_at_dof_points(function_values,
+                       time,
+                       component_names,
+                       component_interpretations,
+                       dof_handler,
+                       filename,
+                       false /* output_1d_vtu */,
+                       is_solution);
 }
 
 /**

@@ -71,7 +71,7 @@ protected:
   typedef typename DoFHandler<dim>::active_face_iterator Face;
 
   /** \brief Typedef for cell iterator map to double */
-  typedef std::map<Cell, double> cell_map;
+  typedef std::map<Cell, double> CellMap;
 
   void initialize_system();
   void initialize_runge_kutta();
@@ -80,8 +80,7 @@ protected:
   void refine_mesh();
   void update_cell_sizes();
   void assemble_mass_matrix();
-  void solve_runge_kutta(
-    PostProcessor<dim> & postprocessor);
+  void solve_runge_kutta(PostProcessor<dim> & postprocessor);
   double compute_dt_from_cfl_condition();
   double compute_cfl_number(const double & dt) const;
   void linear_solve(const SparseMatrix<double> & A,
@@ -343,11 +342,11 @@ protected:
   double domain_volume;
 
   // maps
-  cell_map cell_diameter;
-  cell_map max_flux_speed_cell;
-  cell_map viscosity;
-  cell_map first_order_viscosity;
-  cell_map entropy_viscosity;
+  CellMap cell_diameter;
+  CellMap max_flux_speed_cell;
+  CellMap viscosity;
+  CellMap first_order_viscosity;
+  CellMap entropy_viscosity;
 
   /** \brief Flag to signal being in last adaptive refinement cycle */
   bool in_final_cycle;
