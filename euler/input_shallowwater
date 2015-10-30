@@ -21,7 +21,7 @@ end
 subsection refinement
    # refinementlevel:n_cells
    # 5:32, 8:256, 9:512, 10:1024, 11:2048
-   set initial refinement level = 5
+   set initial refinement level = 8
    set refinement cycles = 1
    set refinement fraction = 0.3
    set coarsening fraction = 0.03
@@ -31,8 +31,8 @@ subsection time
    # options are <constant_dt|cfl_condition>
    set time step size method = cfl_condition
    set use default end time = true
-   set final time = 0.0010
-   set time step size = 0.05
+   set final time = 0.05
+   set time step size = 0.01
    set cfl = 0.50
    set steady state tolerance = 1.0e-6
 end
@@ -83,6 +83,7 @@ subsection output
    set output mesh = false
    set output mass matrix = false
    set output viscosity = true
+   set output viscosity transient = true
    set exact solution refinement level = 7
    set save convergence results = false
 end

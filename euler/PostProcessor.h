@@ -68,6 +68,12 @@ public:
                                  const std::string & output_string,
                                  const bool & force_output = false);
 
+  void output_viscosity_transient(const std::vector<const CellMap *> & cell_maps,
+                                  const std::vector<std::string> & names,
+                                  const double & time,
+                                  const DoFHandler<dim> & dof_handler,
+                                  const bool & force_output = false);
+
   void evaluate_error(const Vector<double> & solution,
                       const DoFHandler<dim> & dof_handler,
                       const Triangulation<dim> & triangulation);
@@ -76,12 +82,13 @@ public:
 
   void set_cycle(const unsigned int & cycle);
 
-  void output_cell_maps(const std::vector<CellMap *> & cell_maps,
+  void output_cell_maps(const std::vector<const CellMap *> & cell_maps,
                         const std::vector<std::string> & names,
                         const std::string & filename_base,
                         const double & time,
                         const DoFHandler<dim> & dof_handler,
-                        const bool & output_1d_vtu = false) const;
+                        const bool & output_1d_vtu = false,
+                        const std::string & transient_appendage = "");
 
 private:
   void output_exact_solution(const double & time);
@@ -157,24 +164,31 @@ private:
   unsigned int transient_output_size;
 
   /** \brief Number used in the next transient solution file name */
-  unsigned int transient_file_number;
+  unsigned int transient_solution_file_number;
+
+  /** \brief Number used in the next transient viscosity file name */
+  unsigned int transient_viscosity_file_number;
 
   /** \brief Counter for the transient solution, i.e., the time step index,
    *         used in determining if a transient solution will be output */
   unsigned int transient_counter;
 
   /**
-   * \brief Flag to signal that the transient solution was not output this
-   *        time step.
+   * \brief Flag to signal that the transient solution and/or viscosity
+   *        was not output this time step.
    *
-   * This is used because the final solution should be output in the transient,
+   * This is used because the final solution and viscosity should be output
+   * in the transient,
    * even if the time step number was not scheduled to be output by the
    * user-specified output frequency.
    */
-  bool transient_solution_not_output_this_step;
+  bool transient_not_output_this_step;
 
-  /** \brief vector of times and corresponding file names */
-  std::vector<std::pair<double, std::string>> times_and_filenames;
+  /** \brief vector of times and corresponding solution file names */
+  std::vector<std::pair<double, std::string>> times_and_solution_filenames;
+
+  /** \brief vector of times and corresponding viscosity file names */
+  std::vector<std::pair<double, std::string>> times_and_viscosity_filenames;
 
   /** \brief post-processor for derived quantities */
   std::shared_ptr<DataPostprocessor<dim>> solution_aux_postprocessor;

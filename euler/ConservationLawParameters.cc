@@ -238,6 +238,10 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
                       "true",
                       Patterns::Bool(),
                       "option to output the viscosity to a file");
+    prm.declare_entry("output viscosity transient",
+                      "false",
+                      Patterns::Bool(),
+                      "option to output the viscosity transient");
     prm.declare_entry("output exact solution",
                       "true",
                       Patterns::Bool(),
@@ -438,6 +442,7 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
     output_mesh = prm.get_bool("output mesh");
     output_mass_matrix = prm.get_bool("output mass matrix");
     output_viscosity = prm.get_bool("output viscosity");
+    output_viscosity_transient = prm.get_bool("output viscosity transient");
     output_exact_solution = prm.get_bool("output exact solution");
     exact_solution_refinement_level =
       prm.get_integer("exact solution refinement level");

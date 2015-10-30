@@ -47,6 +47,7 @@ public:
   bool output_mesh;
   bool output_mass_matrix;
   bool output_viscosity;
+  bool output_viscosity_transient;
   bool output_exact_solution;
   unsigned int exact_solution_refinement_level;
   bool save_convergence_results;

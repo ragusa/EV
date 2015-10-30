@@ -36,9 +36,10 @@ PostProcessor<dim>::PostProcessor(
     is_last_cycle(false),
     fine_dof_handler(fine_triangulation),
     transient_output_size(0),
-    transient_file_number(0),
+    transient_solution_file_number(0),
+    transient_viscosity_file_number(0),
     transient_counter(0),
-    transient_solution_not_output_this_step(true),
+    transient_not_output_this_step(true),
     solution_aux_postprocessor(solution_aux_postprocessor_)
 {
   // assert that a nonempty problem name was provided
@@ -164,7 +165,7 @@ void PostProcessor<dim>::output_results(const Vector<double> & solution,
                   false /* output_1d_vtu */);
 
   // output transient solution
-  if (transient_solution_not_output_this_step)
+  if (transient_not_output_this_step)
     output_solution_transient(solution, end_time, dof_handler, "solution", true);
 
   // output exact solution
@@ -243,6 +244,7 @@ void PostProcessor<dim>::output_solution_transient(
       // make sure that transient counter is not too big for string format
       Assert(transient_counter < 10000, ExcTooManyTransientOutputFiles());
 
+      // make sure that total transient output size has not exceeded limit
       if (transient_output_size < parameters.max_transient_output_size)
       {
         // increment transient output size estimate
@@ -250,7 +252,7 @@ void PostProcessor<dim>::output_solution_transient(
 
         // create transient filename
         const std::string transient_appendage =
-          "-" + Utilities::int_to_string(transient_file_number, 4);
+          "-" + Utilities::int_to_string(transient_solution_file_number, 4);
 
         // call function that outputs a vector of values to a file,
         // with the solution component names and types lists
@@ -264,11 +266,11 @@ void PostProcessor<dim>::output_solution_transient(
                              true /* is_solution */,
                              transient_appendage);
 
-        // signal that solution was output this step
-        transient_solution_not_output_this_step = false;
+        // signal that transient was output this step
+        transient_not_output_this_step = false;
 
         // increment transient file number
-        transient_file_number++;
+        transient_solution_file_number++;
       }
       else
         std::cout
@@ -277,12 +279,79 @@ void PostProcessor<dim>::output_solution_transient(
     }
     else
     {
-      // signal that solution was not output this step
-      transient_solution_not_output_this_step = true;
+      // signal that transient was not output this step
+      transient_not_output_this_step = true;
     }
 
     // increment transient counter
     transient_counter++;
+  }
+}
+
+/**
+ * \brief Outputs the viscosity to a file if the user specified.
+ *
+ * The user supplies an output period for the transient; this function
+ * determines if this viscosity is scheduled to be output and outputs it
+ * if it does.
+ *
+ * \param[in] solution solution vector
+ * \param[in] time time value
+ * \param[in] dof_handler degrees of freedom handler.
+ * \param[in] force_output option to force output if it is not scheduled.
+ */
+template <int dim>
+void PostProcessor<dim>::output_viscosity_transient(
+  const std::vector<const CellMap *> & cell_maps,
+  const std::vector<std::string> & names,
+  const double & time,
+  const DoFHandler<dim> & dof_handler,
+  const bool & force_output)
+{
+  if (parameters.output_period > 0)
+  {
+    // determine if this solution is scheduled to be output based on the user-
+    // specified output period for the transient
+    bool output_is_scheduled;
+    if (transient_counter % parameters.output_period == 0)
+      output_is_scheduled = true;
+    else
+      output_is_scheduled = false;
+
+    // output transient solution if it is scheduled or being forced
+    if (output_is_scheduled || force_output)
+    {
+      // make sure that transient counter is not too big for string format
+      Assert(transient_counter < 10000, ExcTooManyTransientOutputFiles());
+
+      // make sure that total transient output size has not exceeded limit
+      if (transient_output_size < parameters.max_transient_output_size)
+      {
+        // increment transient output size estimate
+        transient_output_size += 30 * cell_maps[0]->size();
+
+        // create transient filename
+        const std::string transient_appendage =
+          "-" + Utilities::int_to_string(transient_viscosity_file_number, 4);
+
+        // call function that outputs a vector of values to a file,
+        // with the solution component names and types lists
+        output_cell_maps(cell_maps,
+                         names,
+                         "viscosity",
+                         time,
+                         dof_handler,
+                         true /* output_1d_vtu */,
+                         transient_appendage);
+
+        // increment transient file number
+        transient_viscosity_file_number++;
+      }
+      else
+        std::cout
+          << "Viscosity transient not output because total size limit exceeded."
+          << std::endl;
+    }
   }
 }
 
@@ -356,46 +425,14 @@ void PostProcessor<dim>::output_at_dof_points(
     data_out.add_data_vector(values, *solution_aux_postprocessor);
   data_out.build_patches();
 
-  // write GNUplot file for 1-D and .vtu file otherwise
-  if (dim == 1)
-  {
-    if (output_1d_vtu)
-    {
-      // create output filestream
-      std::string filename = output_string + transient_appendage + ".vtu";
-      std::stringstream filename_path_ss;
-      filename_path_ss << output_dir << filename;
-      std::string filename_path = filename_path_ss.str();
-      std::ofstream output_filestream(filename_path.c_str());
-      output_filestream.precision(15);
-
-      // write vtu file
-      data_out.write_vtu(output_filestream);
-
-      // write pvd file for associating time value to index
-      if (transient_appendage != "")
-      {
-        times_and_filenames.push_back(
-          std::pair<double, std::string>(time, filename));
-        std::string pvd_filename = output_dir + output_string + ".pvd";
-        std::ofstream pvd_filestream(pvd_filename);
-        data_out.write_pvd_record(pvd_filestream, times_and_filenames);
-      }
-    }
-    else
-    {
-      // create output filestream
-      std::stringstream filename_ss;
-      filename_ss << output_dir << output_string << ".gpl";
-      std::string filename = filename_ss.str();
-      std::ofstream output_filestream(filename.c_str());
-      output_filestream.precision(15);
-
-      // write output file
-      data_out.write_gnuplot(output_filestream);
-    }
-  }
+  // determine whether output format will be *.vtu or *.gpl
+  bool output_vtu;
+  if (dim > 1 || output_1d_vtu)
+    output_vtu = true;
   else
+    output_vtu = false;
+
+  if (output_vtu)
   {
     // create output filestream
     std::string filename = output_string + transient_appendage + ".vtu";
@@ -405,18 +442,30 @@ void PostProcessor<dim>::output_at_dof_points(
     std::ofstream output_filestream(filename_path.c_str());
     output_filestream.precision(15);
 
-    // write output file
+    // write vtu file
     data_out.write_vtu(output_filestream);
 
     // write pvd file for associating time value to index
     if (transient_appendage != "")
     {
-      times_and_filenames.push_back(
+      times_and_solution_filenames.push_back(
         std::pair<double, std::string>(time, filename));
       std::string pvd_filename = output_dir + output_string + ".pvd";
       std::ofstream pvd_filestream(pvd_filename);
-      data_out.write_pvd_record(pvd_filestream, times_and_filenames);
+      data_out.write_pvd_record(pvd_filestream, times_and_solution_filenames);
     }
+  }
+  else
+  {
+    // create output filestream
+    std::stringstream filename_ss;
+    filename_ss << output_dir << output_string << ".gpl";
+    std::string filename = filename_ss.str();
+    std::ofstream output_filestream(filename.c_str());
+    output_filestream.precision(15);
+
+    // write output file
+    data_out.write_gnuplot(output_filestream);
   }
 }
 
@@ -498,15 +547,18 @@ void PostProcessor<dim>::output_convergence_data()
  * \param[in] dof_handler degrees of freedom handler
  * \param[in] output_1d_vtu option to output 1-D data in VTU format instead
  *            of GNUPLOT format
+ * \param[in] transient_appendage string to be added onto the filename for
+ *            transient files
  */
 template <int dim>
 void PostProcessor<dim>::output_cell_maps(
-  const std::vector<CellMap *> & cell_maps,
+  const std::vector<const CellMap *> & cell_maps,
   const std::vector<std::string> & names,
   const std::string & filename_base,
   const double & time,
   const DoFHandler<dim> & dof_handler,
-  const bool & output_1d_vtu) const
+  const bool & output_1d_vtu,
+  const std::string & transient_appendage)
 {
   // create output directory if it does not exist
   create_directory("output");
@@ -545,29 +597,46 @@ void PostProcessor<dim>::output_cell_maps(
   // build patches
   data_out.build_patches();
 
+  // determine whether output format will be *.vtu or *.gpl
+  bool output_vtu;
+  if (dim > 1 || output_1d_vtu)
+    output_vtu = true;
+  else
+    output_vtu = false;
+
   // determine output file extension
   std::string filename_extension;
-  if (dim == 1)
-    if (output_1d_vtu)
-      filename_extension = ".vtu";
-    else
-      filename_extension = ".gpl";
-  else
+  if (output_vtu)
     filename_extension = ".vtu";
+  else
+    filename_extension = ".gpl";
 
   // create output filestream
-  std::string filename =
-    output_dir + filename_base + appendage_string + filename_extension;
-  std::ofstream out_stream(filename.c_str());
+  std::string filename = filename_base + appendage_string +
+    transient_appendage + filename_extension;
+  std::string full_filename = output_dir + filename;
+  std::ofstream output_filestream(full_filename.c_str());
 
-  // write to file
-  if (dim == 1)
-    if (output_1d_vtu)
-      data_out.write_vtu(out_stream);
-    else
-      data_out.write_gnuplot(out_stream);
+  // output files
+  if (output_vtu)
+  {
+    // output *.vtu file
+    data_out.write_vtu(output_filestream);
+
+    // write pvd file for associating time value to index
+    if (transient_appendage != "")
+    {
+      times_and_viscosity_filenames.push_back(
+        std::pair<double, std::string>(time, filename));
+      std::string pvd_filename =
+        output_dir + filename_base + appendage_string + ".pvd";
+      std::ofstream pvd_filestream(pvd_filename);
+      data_out.write_pvd_record(pvd_filestream, times_and_viscosity_filenames);
+    }
+  }
   else
-    data_out.write_vtu(out_stream);
+    // output *.gpl file
+    data_out.write_gnuplot(output_filestream);
 }
 
 /**

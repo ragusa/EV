@@ -1,0 +1,21 @@
+#!/bin/bash
+#
+# Cleans current directory and output directories; removes
+# 1) *.bak files in ./
+# 2) *.vtu *.gpl *.pdf *.pvd files in output directories
+#
+# Usage: clean
+#
+
+# remove *.bak files in the current directory if they exist
+rm ./*.bak 2>/dev/null
+
+# list of file extensions to remove from output directories
+rm_extensions=("vtu" "pvd" "pdf" "gpl")
+
+# remove files in output directories
+for dir in $(ls output); do
+  for ext in "${rm_extensions[@]}"; do
+    rm ./output/$dir/*.$ext 2>/dev/null
+  done
+done

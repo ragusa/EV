@@ -110,6 +110,9 @@ protected:
                       std::vector<double> & row_values,
                       std::vector<unsigned int> & row_indices,
                       unsigned int & n_col);
+  void output_viscosity(PostProcessor<dim> & postprocessor,
+                        const bool & is_transient = false,
+                        const double & time = 0.0) const;
 
   virtual void update_entropy_viscosities(const double & dt);
   virtual double compute_max_entropy_jump(const Vector<double> & solution,
@@ -265,9 +268,9 @@ protected:
 
   /** \brief solution step in Newton loop; vector for temporary storage */
   Vector<double> solution_step;
-  /** \brief current time */
-  double current_time;
-  /** \brief old time (beginning of each time step) */
+  /** \brief new time (end of time step) */
+  double new_time;
+  /** \brief old time (beginning of time step) */
   double old_time;
   /** \brief system right-hand side */
   Vector<double> system_rhs;

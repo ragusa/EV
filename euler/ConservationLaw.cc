@@ -118,52 +118,76 @@ void ConservationLaw<dim>::run()
 
   // output viscosity if requested
   if (parameters.output_viscosity)
+    output_viscosity(postprocessor);
+}
+
+/**
+ * \brief Outputs viscosities.
+ *
+ * \param[in] postprocessor postprocessor
+ * \param[in] is_transient flag signalling that this is to output as an
+ *            item in a transient
+ * \param[in] time current time value, which is used if this is output as an
+ *            item in a transient
+ */
+template <int dim>
+void ConservationLaw<dim>::output_viscosity(PostProcessor<dim> & postprocessor,
+                                            const bool & is_transient,
+                                            const double & time) const
+{
+  // create vector of shared pointers to cell maps of viscosity
+  std::vector<const CellMap *> viscosities;
+  std::vector<std::string> viscosity_names;
+
+  // output final viscosities if non-constant viscosity used
+  switch (parameters.viscosity_type)
   {
-    // create vector of shared pointers to cell maps of viscosity
-    std::vector<CellMap *> viscosities;
-    std::vector<std::string> viscosity_names;
+    case ConservationLawParameters<dim>::none:
+      break;
+    case ConservationLawParameters<dim>::constant:
+      break;
+    case ConservationLawParameters<dim>::old_first_order:
+      viscosities.push_back(&first_order_viscosity);
+      viscosity_names.push_back("low_order_viscosity");
+      break;
+    case ConservationLawParameters<dim>::entropy:
+      // low-order viscosity
+      viscosities.push_back(&first_order_viscosity);
+      viscosity_names.push_back("low_order_viscosity");
 
-    // output final viscosities if non-constant viscosity used
-    switch (parameters.viscosity_type)
-    {
-      case ConservationLawParameters<dim>::none:
-        break;
-      case ConservationLawParameters<dim>::constant:
-        break;
-      case ConservationLawParameters<dim>::old_first_order:
-        viscosities.push_back(&first_order_viscosity);
-        viscosity_names.push_back("low_order_viscosity");
-        break;
-      case ConservationLawParameters<dim>::entropy:
-        // low-order viscosity
-        viscosities.push_back(&first_order_viscosity);
-        viscosity_names.push_back("low_order_viscosity");
+      // entropy viscosity
+      // if low-order viscosity is used for first time step and only 1 time
+      // step is taken, then the size of the entropy viscosity map is 0,
+      // so that map cannot be output
+      if (entropy_viscosity.size() > 0)
+      {
+        viscosities.push_back(&entropy_viscosity);
+        viscosity_names.push_back("entropy_viscosity");
+      }
+      else
+      {
+        std::cout << "Need to initialize entropy visc to zero!" << std::endl;
+        std::exit(0);
+      }
 
-        // entropy viscosity
-        // if low-order viscosity is used for first time step and only 1 time
-        // step is taken, then the size of the entropy viscosity map is 0,
-        // so that map cannot be output
-        if (entropy_viscosity.size() > 0)
-        {
-          viscosities.push_back(&entropy_viscosity);
-          viscosity_names.push_back("entropy_viscosity");
-        }
+      // high-order viscosity
+      viscosities.push_back(&viscosity);
+      viscosity_names.push_back("high_order_viscosity");
 
-        // high-order viscosity
-        viscosities.push_back(&viscosity);
-        viscosity_names.push_back("high_order_viscosity");
-
-        break;
-      default:
-        Assert(false, ExcNotImplemented());
-        break;
-    }
-
-    // output the  viscosities
-    if (viscosities.size() > 0)
-      postprocessor.output_cell_maps(
-        viscosities, viscosity_names, "viscosity", end_time, dof_handler, true);
+      break;
+    default:
+      Assert(false, ExcNotImplemented());
+      break;
   }
+
+  // output the  viscosities
+  if (viscosities.size() > 0)
+    if (is_transient)
+      postprocessor.output_viscosity_transient(
+        viscosities, viscosity_names, time, dof_handler);
+    else
+      postprocessor.output_cell_maps(
+        viscosities, viscosity_names, "viscosity", time, dof_handler);
 }
 
 /**
@@ -587,103 +611,6 @@ void ConservationLaw<dim>::apply_Dirichlet_BC(const double & time)
     new_solution(it->first) = (it->second);
 }
 
-/** \brief Outputs a mapped quantity at all quadrature points.
- *  \param map map between cell iterator and vector of values at quadrature
- *         points within cell.
- *  \param output_filename_base string which forms the base (without extension)
- *         of the output file.
- */
-/*
-template <int dim>
-void ConservationLaw<dim>::output_map(
-  const cell_vector_map & map, const std::string & output_filename_base) const
-{
-  if (dim == 1)
-  {
-    // get data from maps into vector of point-data pairs
-    unsigned int n_cells = triangulation.n_active_cells();
-    unsigned int total_n_q_points = n_cells * n_q_points_cell;
-    std::vector<std::pair<double, double>> profile(total_n_q_points);
-
-    FEValues<dim> fe_values(fe, cell_quadrature, update_quadrature_points);
-    unsigned int i = 0;
-    Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
-    for (; cell != endc; ++cell)
-    {
-      fe_values.reinit(cell);
-
-      for (unsigned int q = 0; q < n_q_points_cell; ++q)
-      {
-        const Point<dim> q_point = fe_values.quadrature_point(q);
-        profile[i] = std::make_pair(q_point(0), map[cell](q));
-        ++i;
-      }
-    }
-
-    // sort data by quadrature point
-    std::sort(profile.begin(), profile.end());
-
-    // output vector to file
-    std::ofstream output;
-    std::string output_file = "output/" + output_filename_base + ".csv";
-    output.open(output_file.c_str(), std::ios::out);
-    for (i = 0; i < total_n_q_points; ++i)
-      output << profile[i].first << "," << profile[i].second << std::endl;
-    output.close();
-  }
-}
-*/
-
-/** \brief Outputs a mapped quantity at all cells, not all quadrature points
- * within cells
- *  \param map map between cell iterator and vector of values at quadrature
- * points
- * within cell.
- *  \param output_filename_base string which forms the base (without extension)
- * of
- * the output file.
- */
-/*
-template <int dim>
-void ConservationLaw<dim>::output_map(
-  const cell_double_map & map, const std::string & output_filename_base) const
-{
-  if (dim == 1)
-  {
-    // get data from maps into vector of point-data pairs
-    unsigned int n_cells = triangulation.n_active_cells();
-    unsigned int total_n_q_points = n_cells * n_q_points_cell;
-    std::vector<std::pair<double, double>> profile(total_n_q_points);
-
-    FEValues<dim> fe_values(fe, cell_quadrature, update_quadrature_points);
-    unsigned int i = 0;
-    Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
-    for (; cell != endc; ++cell)
-    {
-      fe_values.reinit(cell);
-
-      for (unsigned int q = 0; q < n_q_points_cell; ++q)
-      {
-        const Point<dim> q_point = fe_values.quadrature_point(q);
-        profile[i] = std::make_pair(q_point(0), map[cell]);
-        ++i;
-      }
-    }
-
-    // sort data by quadrature point
-    std::sort(profile.begin(), profile.end());
-
-    // output vector to file
-    std::ofstream output;
-    std::string output_file = "output/" + output_filename_base + ".csv";
-    output.open(output_file.c_str(), std::ios::out);
-    for (i = 0; i < total_n_q_points; ++i)
-      output << profile[i].first << "," << profile[i].second << std::endl;
-    output.close();
-  }
-}
-*/
-
 /**
  * \brief Solves transient using a Runge-Kutta scheme.
  *
@@ -739,6 +666,9 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
       in_transient = false;
     }
 
+    // compute new time
+    new_time = old_time + dt;
+
     // compute CFL number for printing
     const double cfl = compute_cfl_number(dt);
     const bool cfl_is_violated = cfl > parameters.cfl + 1.0e-15;
@@ -748,15 +678,20 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
       printf("  time step %i: t = \x1b[1;34m%9.4f\x1b[0m, CFL = "
              "\x1b[1;31m%6.2f\x1b[0m\n",
              n,
-             old_time + dt,
+             new_time,
              cfl);
     else
       printf("  time step %i: t = \x1b[1;34m%9.4f\x1b[0m, CFL = %6.2f\n",
              n,
-             old_time + dt,
+             new_time,
              cfl);
 
+    // compute viscosities
     update_viscosities(dt, n);
+
+    // output viscosity transient if specified
+    if (parameters.output_viscosity_transient)
+      output_viscosity(postprocessor, true /* is_transient */, old_time);
 
     // update old_solution to new_solution for next time step;
     // this is not done at the end of the previous time step because
@@ -769,7 +704,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     {
       std::cout << "    stage " << i + 1 << " of " << rk.s << std::endl;
       // compute stage time
-      current_time = old_time + rk.c[i] * dt;
+      const double stage_time = old_time + rk.c[i] * dt;
 
       if (rk.is_explicit) // explicit Runge-Kutta
       {
@@ -788,7 +723,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
 
         // ordinarily, Dirichlet BC need not be reapplied, but in general,
         // the Dirichlet BC can be time-dependent
-        apply_Dirichlet_BC(current_time);
+        apply_Dirichlet_BC(stage_time);
 
         // distribute hanging node constraints
         constraints.distribute(new_solution);
@@ -889,7 +824,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
       linear_solve(lumped_mass_matrix, system_rhs, new_solution);
 
       // apply Dirichlet constraints
-      apply_Dirichlet_BC(current_time);
+      apply_Dirichlet_BC(new_time);
 
       // distribute hanging node constraints
       constraints.distribute(new_solution);
@@ -902,16 +837,9 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     // compute max principle min and max values
     compute_max_principle_quantities();
 
-    // increment time
-    old_time += dt;
-    current_time = old_time; // used in exact solution function in output_solution
-    n++;
-
     // output solution transient if specified
     postprocessor.output_solution_transient(
-      new_solution, current_time, dof_handler, "solution", false);
-
-    // output viscosity transient if specified
+      new_solution, new_time, dof_handler, "solution", false);
 
     // check that there are no NaNs in solution
     check_nan();
@@ -949,6 +877,9 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     // compute error for adaptive mesh refinement
     compute_error_for_refinement();
 
+    // reset old time and increment time step index
+    old_time = new_time;
+    n++;
   } // end of time loop
 
   /*
@@ -1160,7 +1091,10 @@ void ConservationLaw<dim>::update_viscosities(const double & dt,
 
         // use low-order viscosities for first time step
         for (cell = dof_handler.begin_active(); cell != endc; ++cell)
+        {
+          entropy_viscosity[cell] = first_order_viscosity[cell];
           viscosity[cell] = first_order_viscosity[cell];
+        }
       }
       else
       {
