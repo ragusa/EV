@@ -1,17 +1,29 @@
 The solution of conservation law equations such as the neutron transport
-equation represents a number of unique challenges; in the vicinity of strong
+equation presents a number of unique challenges; in the vicinity of strong
 gradients and discontinuities, numerical solutions are prone to spurious
 oscillations that may generate unphysical values. For example, physically
 non-negative quantities such as scalar flux or angular flux may have negative
 numerical solution values if care is not taken in the numerical scheme.
 These negativities are not only undesirable because they are physically
-incorrect, but also because their presence in a simulation or analysis
-can cause drastic consequences due to the assumption of non-negativity;
-for instance, properties dependent on this quantity may be computed
-to be highly unphysical values, which then propagate further into
-a simulation. These inaccuracies can lead to poor conclusions being drawn
-from a simulation and thus lead to poor decisions being made by the analysts.
+incorrect, but also because often numerical algorithms completely break
+down, causing simulations to abort, or worse, altering results without
+discovery that unphysical values were encountered. The consequences of
+these results may lead to poor design choices, which can pose serious safety
+risks when a design is implemented.
 
 These issues of spurious oscillations and negativities are a well-known
-phenomenon, and attempts to address these issues have taken a number
+phenomenon in the simulation of hyperbolic partial differential equations,
+for example, linear advection, Burger's equation, the inviscid Euler equations
+of gas dynamics, and the shallow water (or Saint-Venant) equations.
+These PDEs result from taking the differential form of the corresponding integral
+conservation law equations; however, the differential forms of these equations
+are not physically correct - they do not hold in the differential case
+because they break down in the presence of a discontinuity.
+Moreover, some physics is omitted in these models, such as the
+lack of an entropy condition.
+The mathematical formulations for these problems
+do not always guarantee a unique solution; this is a manifestation of the
+neglect of physics in the underlying PDE model.
+
+Attempts to address these issues have taken a number
 of different approaches for different discretization schemes.
