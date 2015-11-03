@@ -8,12 +8,27 @@
 #include "Burgers.h"
 #include "BurgersParameters.h"
 
-using namespace dealii;
+#ifdef IS_PARALLEL
+#include <deal.II/base/conditional_ostream.h>
+#include <deal.II/base/index_set.h>
+#include <deal.II/distributed/tria.h>
+#include <deal.II/distributed/grid_refinement.h>
+#include <deal.II/lac/petsc_parallel_sparse_matrix.h>
+#include <deal.II/lac/petsc_parallel_vector.h>
+#include <deal.II/lac/petsc_solver.h>
+#include <deal.II/lac/petsc_precondition.h>
+#endif
 
 int main(int, char **)
 {
   try
   {
+    using namespace dealii;
+
+#ifdef IS_PARALLEL
+    Utilities::MPI::MPI_InitFinalize mpi_initialization(argc, argv, 1);
+#endif
+
     dealii::deallog.depth_console(0);
 
     // spatial dimensions

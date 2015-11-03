@@ -33,6 +33,7 @@ DEAL_II_INITIALIZE_CACHED_VARIABLES()
 
 PROJECT(myproject)
 
+# serial targets
 ADD_EXECUTABLE(burgers burgers.cc)
 DEAL_II_SETUP_TARGET(burgers)
 
@@ -41,6 +42,19 @@ DEAL_II_SETUP_TARGET(euler)
 
 ADD_EXECUTABLE(shallowwater shallowwater.cc)
 DEAL_II_SETUP_TARGET(shallowwater)
+
+# parallel targets
+ADD_EXECUTABLE(burgers_parallel burgers.cc)
+TARGET_COMPILE_DEFINITIONS(burgers_parallel PRIVATE IS_PARALLEL)
+DEAL_II_SETUP_TARGET(burgers_parallel)
+
+ADD_EXECUTABLE(euler_parallel euler.cc)
+TARGET_COMPILE_DEFINITIONS(euler_parallel PRIVATE IS_PARALLEL)
+DEAL_II_SETUP_TARGET(euler_parallel)
+
+ADD_EXECUTABLE(shallowwater_parallel euler.cc)
+TARGET_COMPILE_DEFINITIONS(shallowwater_parallel PRIVATE IS_PARALLEL)
+DEAL_II_SETUP_TARGET(shallowwater_parallel)
 
 # add debug target
 ADD_CUSTOM_TARGET(debug
