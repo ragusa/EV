@@ -1,10 +1,65 @@
-\section{Skew Void-to-Absorber Test Problem}
+This problem is a more general case of the test problem described in
+Section \ref{sec:void_to_absorber} in which the transport direction is
+not necessarily the $+x$ direction but instead is any direction for which
+$\Omega_i\ge 0,\forall i$.
+Table \ref{tab:void_to_absorber_skew} summarizes the test parameters,
+where the definition of $s$ is given below.
 
-In this section, results are presented for the skew void-to-absorber test
-problem described in Section \ref{sec:skew_void_to_absorber}, where
-``skew'' refers to the transport direction, which is no longer
-along the $+x$ direction, as in the non-skew void-to-absorber problem
-described in Section \ref{sec:void_to_absorber}.
+%-------------------------------------------------------------------------------
+\begin{table}[h]\caption{Skew Void-to-Absorber Test Problem Summary}
+\label{tab:void_to_absorber_skew}
+\centering
+\begin{tabular}{l l}\toprule
+\emph{Parameter} & \emph{Value}\\\midrule
+Domain & $\mathcal{D} = (0,1)^d$\\
+Initial Conditions & $u_0(\x)=0$\\
+Boundary Conditions & $u(\x,t)=1,\quad \x\in\partial\mathcal{D}^-,\quad t>0$,\\
+   & $\quad\partial\mathcal{D}^-=\{\x\in\partial\mathcal{D}:\mathbf{n}(\x)
+       \cdot\mathbf{\Omega}<0\}$\\
+Direction & $\mathbf{\Omega} = \left[\frac{1}{\sqrt{2}},\frac{1}{\sqrt{3}},
+   \frac{1}{\sqrt{6}}\right]$\\
+Cross Section & $\sigma(\x)=\left\{\begin{array}{c l}
+   10, & \x\in(\frac{1}{2},1)^d\\
+   0,  & \mbox{otherwise}\end{array}\right.$\\
+Source & $q(\x,t)=0$\\
+Speed & $c=1$\\
+Exact Solution & $u(\x,t)=\left\{\begin{array}{l l}
+   \scalarsolution_{\text{ss}}(\x), & \x-\mathbf{\Omega}t\notin\mathcal{D}\\
+   0, & \mbox{otherwise}
+   \end{array}\right.$ \\
+   & $\scalarsolution_{\text{ss}}(\x) =
+       \left\{\begin{array}{l l}
+         e^{-10s}, & x\ge\frac{1}{2}, y\ge\frac{1}{2}, z\ge\frac{1}{2}\\
+         1,        & \mbox{otherwise}
+       \end{array}\right.$\\
+\bottomrule\end{tabular}
+\end{table}
+%-------------------------------------------------------------------------------
+
+The condition $\x-\mathbf{\Omega}t\notin\mathcal{D}$ is equivalent to the
+following condition:
+\[
+   \x-\mathbf{\Omega}t\notin\mathcal{D} \Rightarrow
+   \exists i: x_i-\Omega_i t < 0,
+\]
+where $i$ denotes a coordinate direction index $x$, $y$, or $z$.
+The distance travelled in the absorber region, $s$, is computed
+by first determining which plane segment of the absorber region
+through which the line $\x-\mathbf{\Omega}t$ passes; the coordinate
+direction normal to this plane is denoted by $i$ and the other
+two by $j$ and $k$. This is determined as follows:
+\[
+   i: \frac{x_i-\frac{1}{2}}{\Omega_i} = \min\limits_j\left(
+      \frac{x_j-\frac{1}{2}}{\Omega_j}\right).
+\]
+Then, $s$ is computed as follows:
+\[
+   s=\sqrt{s_i^2 + s_j^2 + s_k^2}, \quad
+   s_i=x_i-\frac{1}{2}, \quad
+   s_j=\frac{\Omega_j}{\Omega_i}s_i, \quad
+   s_k=\frac{\Omega_k}{\Omega_i}s_i.
+\]
+
 Table \ref{tab:skew_void_to_absorber_run_parameters} shows the run parameters used
 to obtain these results, and Figure \ref{fig:skew_void_to_absorber_2D}
 shows 2-D and results for this problem.
@@ -54,32 +109,36 @@ Entropy Time Integrator & BE\\
 \begin{figure}[ht]
    \centering
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{skew_void_to_absorber/exact.png}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/skew_void_to_absorber/exact.png}
       \caption{Exact}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{skew_void_to_absorber/Gal.png}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/skew_void_to_absorber/Gal.png}
       \caption{Galerkin}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{skew_void_to_absorber/GalFCT.png}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/skew_void_to_absorber/GalFCT.png}
       \caption{Galerkin with FCT}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{skew_void_to_absorber/low.png}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/skew_void_to_absorber/low.png}
       \caption{Low-order}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{skew_void_to_absorber/EV.png}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/skew_void_to_absorber/EV.png}
       \caption{Entropy Viscosity}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{skew_void_to_absorber/EVFCT.png}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/skew_void_to_absorber/EVFCT.png}
       \caption{Entropy Viscosity with FCT}
    \end{subfigure}
    \caption{Comparison of Solutions for Skew Void-to-Absorber Test Problem}
    \label{fig:skew_void_to_absorber_2D}
 \end{figure}
 %-------------------------------------------------------------------------------
-\subsection{Code and Version}
-Deal.ii code, git commit hash bfa12b431d7fdad43ee166a30f3bd56562fc1fa0

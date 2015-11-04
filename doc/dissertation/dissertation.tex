@@ -18,12 +18,16 @@
 \usepackage{amsmath}
 \usepackage{amssymb}
 \usepackage{empheq} % for emphasizing certain equations
+\usepackage{booktabs}
+\usepackage{subcaption}
 \usepackage[hidelinks]{hyperref}
 
 % input user-defined commands
-%\input{content/newcommands}
 \input{content/newestcommands}
 \input{content/theorems_dissertation}
+
+% create path to content directory
+\newcommand{\contentdir}{content}
 
 % create black bar where there are "Overfull"s
 \overfullrule=1cm

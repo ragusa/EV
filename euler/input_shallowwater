@@ -78,7 +78,7 @@ subsection linear solver
 end
 
 subsection output
-   set output period = 1
+   set output period = 0
    set max transient output size = 1e9
    set output mesh = false
    set output mass matrix = false

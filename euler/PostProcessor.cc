@@ -422,7 +422,8 @@ void PostProcessor<dim>::output_at_dof_points(
                            DataOut<dim>::type_dof_data,
                            component_interpretations);
   if (is_solution)
-    data_out.add_data_vector(values, *solution_aux_postprocessor);
+    if (solution_aux_postprocessor != nullptr)
+      data_out.add_data_vector(values, *solution_aux_postprocessor);
   data_out.build_patches();
 
   // determine whether output format will be *.vtu or *.gpl

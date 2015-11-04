@@ -13,6 +13,7 @@
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/function_parser.h>
 #include <deal.II/base/convergence_table.h>
+#include <deal.II/base/timer.h>
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/sparsity_pattern.h>
@@ -112,7 +113,7 @@ protected:
                       unsigned int & n_col);
   void output_viscosity(PostProcessor<dim> & postprocessor,
                         const bool & is_transient = false,
-                        const double & time = 0.0) const;
+                        const double & time = 0.0);
 
   virtual void update_entropy_viscosities(const double & dt);
   virtual double compute_max_entropy_jump(const Vector<double> & solution,
@@ -391,6 +392,9 @@ protected:
   bool has_default_end_time;
   /** \brief Chosen end time */
   double end_time;
+
+  /** \brief Timer */
+  TimerOutput timer;
 };
 
 #include "ConservationLaw.cc"

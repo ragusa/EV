@@ -1,7 +1,37 @@
-\section{Void-to-Absorber Test Problem}
+This problem examines the angular flux travelling in the $+x$ direction,
+starting in a void and reaching a strong absorber region.
+Table \ref{tab:void_to_absorber} summarizes the test parameters.
 
-In this section, results are presented for the void-to-absorber test problem
-described in Section \ref{sec:void_to_absorber}.
+%-------------------------------------------------------------------------------
+\begin{table}[h]\caption{Void-to-Absorber Test Problem Summary}
+\label{tab:void_to_absorber}
+\centering
+\begin{tabular}{l l}\toprule
+\emph{Parameter} & \emph{Value}\\\midrule
+Domain & $\mathcal{D} = (0,1)^d$\\
+Initial Conditions & $u_0(\x)=0$\\
+Boundary Conditions & $u(\x,t)=1,\quad \x\in\partial\mathcal{D}^-,\quad t>0$,\\
+   & $\quad\partial\mathcal{D}^-=\{\x\in\partial\mathcal{D}:\mathbf{n}(\x)
+       \cdot\mathbf{\Omega}<0\}$\\
+Direction & $\mathbf{\Omega} = \mathbf{e}_x$\\
+Cross Section & $\sigma(\x)=\left\{\begin{array}{c l}
+   10, & \x\in(\frac{1}{2},1)^d\\
+   0,  & \mbox{otherwise}\end{array}\right.$\\
+Source & $q(\x,t)=0$\\
+Speed & $c=1$\\
+Exact Solution & $u(\x,t)=\left\{\begin{array}{l l}
+   \scalarsolution_{\text{ss}}(\x), & x-t<0\\
+   0, & \mbox{otherwise}
+   \end{array}\right.$ \\
+   & $\scalarsolution_{\text{ss}}(\x) =
+       \left\{\begin{array}{l l}
+          e^{-10(x-\frac{1}{2})}, & x\ge\frac{1}{2}, y\ge\frac{1}{2}, z\ge\frac{1}{2}\\
+          1,                      & \mbox{otherwise}
+       \end{array}\right.$\\
+\bottomrule\end{tabular}
+\end{table}
+%-------------------------------------------------------------------------------
+
 Table \ref{tab:void_to_absorber_run_parameters} shows the run parameters used
 to obtain these results, and Figures \ref{fig:void_to_absorber_2D}
 and \ref{fig:void_to_absorber_3D} show 2-D and 3-D results for this
@@ -67,27 +97,33 @@ Entropy Time Integrator & BE\\
 \begin{figure}[ht]
    \centering
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{void_to_absorber/exact.png}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/void_to_absorber/exact.png}
       \caption{Exact}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{void_to_absorber/Gal.png}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/void_to_absorber/Gal.png}
       \caption{Galerkin}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{void_to_absorber/GalFCT.png}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/void_to_absorber/GalFCT.png}
       \caption{Galerkin with FCT}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{void_to_absorber/low.png}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/void_to_absorber/low.png}
       \caption{Low-order}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{void_to_absorber/EV.png}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/void_to_absorber/EV.png}
       \caption{Entropy Viscosity}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{void_to_absorber/EVFCT.png}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/void_to_absorber/EVFCT.png}
       \caption{Entropy Viscosity with FCT}
    \end{subfigure}
    \caption{Comparison of Solutions for 2-D Void-to-Absorber Test Problem}
@@ -97,16 +133,16 @@ Entropy Time Integrator & BE\\
 \begin{figure}[ht]
    \centering
    \begin{subfigure}{0.45\textwidth}
-      \includegraphics[width=\textwidth]{void_to_absorber/Gal_3D.png}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/void_to_absorber/Gal_3D.png}
       \caption{Galerkin}
    \end{subfigure}
    \begin{subfigure}{0.45\textwidth}
-      \includegraphics[width=\textwidth]{void_to_absorber/GalFCT_3D.png}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/void_to_absorber/GalFCT_3D.png}
       \caption{Galerkin with FCT}
    \end{subfigure}
    \caption{Comparison of Solutions for the 3-D Void-to-Absorber Test Problem}
    \label{fig:void_to_absorber_3D}
 \end{figure}
 %-------------------------------------------------------------------------------
-\subsection{Code and Version}
-Deal.ii code, git commit hash eb86b4b97520531f7b13cee45d1514f9edfd2273

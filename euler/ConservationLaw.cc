@@ -26,7 +26,8 @@ ConservationLaw<dim>::ConservationLaw(
     initial_conditions_strings(params.n_components),
     initial_conditions_function(params.n_components),
     exact_solution_strings(params.n_components),
-    exact_solution_function()
+    exact_solution_function(),
+    timer(std::cout, TimerOutput::summary, TimerOutput::cpu_and_wall_times)
 {
 }
 
@@ -91,11 +92,17 @@ void ConservationLaw<dim>::run()
     // set old solution to the current solution
     old_solution = new_solution;
 
-    // output initial solution
-    postprocessor.output_solution(
-      new_solution, 0.0, dof_handler, "solution_initial", false);
-    postprocessor.output_solution_transient(
-      new_solution, 0.0, dof_handler, "solution", false);
+    // output block
+    {
+      // start timer for output
+      TimerOutput::Scope timer_section(timer, "Output");
+
+      // output initial solution
+      postprocessor.output_solution(
+        new_solution, 0.0, dof_handler, "solution_initial", false);
+      postprocessor.output_solution_transient(
+        new_solution, 0.0, dof_handler, "solution", false);
+    }
 
     // solve transient with selected time integrator
     switch (parameters.temporal_integrator)
@@ -108,14 +115,26 @@ void ConservationLaw<dim>::run()
         break;
     }
 
-    // evaluate errors for convergence study
-    postprocessor.evaluate_error(new_solution, dof_handler, triangulation);
+    // evaluate error block
+    {
+      // start timer for error evaluation
+      TimerOutput::Scope timer_section(timer, "Evaluate error");
+      
+      // evaluate errors for convergence study
+      postprocessor.evaluate_error(new_solution, dof_handler, triangulation);
+    }
 
   } // end of refinement loop
 
-  // call post-processor to output solution and convergence results
-  postprocessor.output_results(new_solution, dof_handler, triangulation);
-
+  // output block
+  {
+    // start timer for output
+    TimerOutput::Scope timer_section(timer, "Output");
+  
+    // call post-processor to output solution and convergence results
+    postprocessor.output_results(new_solution, dof_handler, triangulation);
+  }
+  
   // output viscosity if requested
   if (parameters.output_viscosity)
     output_viscosity(postprocessor);
@@ -133,8 +152,11 @@ void ConservationLaw<dim>::run()
 template <int dim>
 void ConservationLaw<dim>::output_viscosity(PostProcessor<dim> & postprocessor,
                                             const bool & is_transient,
-                                            const double & time) const
+                                            const double & time)
 {
+  // start timer for output
+  TimerOutput::Scope timer_section(timer, "Output");
+
   // create vector of shared pointers to cell maps of viscosity
   std::vector<const CellMap *> viscosities;
   std::vector<std::string> viscosity_names;
@@ -196,6 +218,9 @@ void ConservationLaw<dim>::output_viscosity(PostProcessor<dim> & postprocessor,
 template <int dim>
 void ConservationLaw<dim>::initialize_system()
 {
+  // start timer for initialize section
+  TimerOutput::Scope timer_section(timer, "Initialize");
+
   // get component names and interpretations
   component_names = get_component_names();
   component_interpretations = get_component_interpretations();
@@ -385,6 +410,9 @@ void ConservationLaw<dim>::compute_error_for_refinement()
 template <int dim>
 void ConservationLaw<dim>::refine_mesh()
 {
+  // start timer for refinement section
+  TimerOutput::Scope timer_section(timer, "Refinement");
+
   GridRefinement::refine_and_coarsen_fixed_number(triangulation,
                                                   estimated_error_per_cell,
                                                   parameters.refinement_fraction,
@@ -402,6 +430,9 @@ void ConservationLaw<dim>::refine_mesh()
 template <int dim>
 void ConservationLaw<dim>::setup_system()
 {
+  // start timer for setup section
+  TimerOutput::Scope timer_section(timer, "Setup");
+
   // clear maps
   cell_diameter.clear();
   max_flux_speed_cell.clear();
@@ -796,6 +827,9 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
       // (unless this is the first time step)
       if ((n == 1) || (i != 0))
       {
+        // start timer for compute steady-state residual function
+        TimerOutput::Scope timer_section(timer, "Compute steady-state residual");
+
         compute_ss_residual(dt, rk.f[i]);
       }
     }
@@ -829,17 +863,27 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
       // distribute hanging node constraints
       constraints.distribute(new_solution);
 
-      // end of step residual can be used as beginning of step residual for next
-      // step
-      compute_ss_residual(dt, rk.f[0]);
+      {
+        // start timer for compute steady-state residual function
+        TimerOutput::Scope timer_section(timer, "Compute steady-state residual");
+
+        // end of step residual can be used as beginning of step residual for next
+        // step
+        compute_ss_residual(dt, rk.f[0]);
+      }
     }
 
     // compute max principle min and max values
     compute_max_principle_quantities();
 
-    // output solution transient if specified
-    postprocessor.output_solution_transient(
-      new_solution, new_time, dof_handler, "solution", false);
+    {
+      // start timer for output
+      TimerOutput::Scope timer_section(timer, "Output");
+
+      // output solution transient if specified
+      postprocessor.output_solution_transient(
+        new_solution, new_time, dof_handler, "solution", false);
+    }
 
     // check that there are no NaNs in solution
     check_nan();
@@ -996,6 +1040,9 @@ void ConservationLaw<dim>::linear_solve(const SparseMatrix<double> & A,
                                         const Vector<double> & b,
                                         Vector<double> & x)
 {
+  // start timer for linear solve section
+  TimerOutput::Scope timer_section(timer, "Linear solve");
+
   switch (parameters.linear_solver)
   {
     // UMFPACK
@@ -1048,6 +1095,9 @@ template <int dim>
 void ConservationLaw<dim>::update_viscosities(const double & dt,
                                               const unsigned int & n)
 {
+  // start timer for compute viscosities section
+  TimerOutput::Scope timer_section(timer, "Compute viscosity");
+
   switch (parameters.viscosity_type)
   {
     // no viscosity
