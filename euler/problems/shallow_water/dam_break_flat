@@ -22,9 +22,12 @@ subsection boundary conditions
 end
 
 subsection initial conditions
-  set initial conditions height = if(x < x_interface, h_left, h_right)
-  set initial conditions momentumx = if(x < x_interface, h_left*u_left, \
-    h_right*u_right)
+  #set initial conditions height = if(x < x_interface, h_left, h_right)
+  #set initial conditions momentumx = if(x < x_interface, h_left*u_left, \
+  #  h_right*u_right)
+  set initial conditions height = if(x > x_interface, h_right, h_left)
+  set initial conditions momentumx = if(x > x_interface, h_right*u_right, \
+    h_left*u_left)
 end
 
 subsection exact solution

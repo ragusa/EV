@@ -30,7 +30,6 @@
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/fe/fe_system.h>
 #include <deal.II/fe/fe_q.h>
-#include <deal.II/fe/mapping_q1.h>
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/data_component_interpretation.h>
 #include <deal.II/numerics/data_postprocessor.h>
@@ -42,6 +41,18 @@
 #include "DirichletBoundaryConditions.h"
 #include "Exceptions.h"
 #include "PostProcessor.h"
+
+#ifdef IS_PARALLEL
+#include <deal.II/base/index_set.h>
+#include <deal.II/base/utilities.h>
+#include <deal.II/distributed/tria.h>
+#include <deal.II/distributed/grid_refinement.h>
+#include <deal.II/lac/petsc_parallel_sparse_matrix.h>
+#include <deal.II/lac/petsc_parallel_vector.h>
+#include <deal.II/lac/petsc_solver.h>
+#include <deal.II/lac/petsc_precondition.h>
+#include <deal.II/lac/sparsity_tools.h>
+#endif
 
 using namespace dealii;
 
@@ -65,6 +76,26 @@ public:
   void run();
 
 protected:
+#ifdef IS_PARALLEL
+  /** \brief Typedef for vector */
+  typedef LA::MPI::Vector LocalVector;
+
+  /** \brief Typedef for sparse matrix */
+  typedef LA::MPI::SparseMatrix LocalMatrix;
+
+  /** \brief Typedef for triangulation */
+  typedef parallel::distributed::Triangulation<dim> LocalTriangulation;
+#else
+  /** \brief Typedef for vector */
+  typedef Vector<double> LocalVector;
+
+  /** \brief Typedef for sparse matrix */
+  typedef SparseMatrix<double> LocalMatrix;
+
+  /** \brief Typedef for triangulation */
+  typedef Triangulation<dim> LocalTriangulation;
+#endif
+
   /** \brief Typedef for cell iterator */
   typedef typename DoFHandler<dim>::active_cell_iterator Cell;
 
@@ -221,6 +252,26 @@ protected:
    * \brief Performs additional setup required by a derived class.
    */
   virtual void perform_additional_setup() {}
+#ifdef IS_PARALLEL
+  /** \brief MPI communicator */
+  MPI_Comm mpi_communicator;
+
+  /** \brief Locally owned DoF index set */
+  IndexSet locally_owned_dofs;
+
+  /** \brief Locally relevant DoF index set */
+  IndexSet locally_relevant_dofs;
+#endif
+
+  /** \brief Conditional output stream, necessary for parallel computations */
+  ConditionalOStream cout;
+
+  /** \brief Timer */
+  TimerOutput timer;
+
+  /** \brief triangulation */
+  LocalTriangulation triangulation;
+
   /** \brief name of problem */
   std::string problem_name;
 
@@ -229,11 +280,6 @@ protected:
 
   /** \brief number of components in the system */
   const unsigned int n_components;
-
-  /** \brief triangulation */
-  Triangulation<dim> triangulation;
-  /** \brief mapping */
-  const MappingQ1<dim> mapping;
 
   /** \brief finite element system */
   const FESystem<dim> fe;
@@ -260,32 +306,31 @@ protected:
   const unsigned int n_q_points_face;
 
   /** \brief solution of current time step */
-  Vector<double> new_solution;
+  LocalVector new_solution;
   /** \brief solution of previous time step */
-  Vector<double> old_solution;
-
-  /** \brief exact solution of current time step */
-  Vector<double> exact_solution;
+  LocalVector old_solution;
 
   /** \brief solution step in Newton loop; vector for temporary storage */
-  Vector<double> solution_step;
+  LocalVector solution_step;
   /** \brief new time (end of time step) */
   double new_time;
   /** \brief old time (beginning of time step) */
   double old_time;
   /** \brief system right-hand side */
-  Vector<double> system_rhs;
+  LocalVector system_rhs;
 
   /** \brief constrained sparsity pattern */
   SparsityPattern constrained_sparsity_pattern;
   /** \brief unconstrained sparsity pattern */
   SparsityPattern unconstrained_sparsity_pattern;
   /** \brief consistent mass matrix */
-  SparseMatrix<double> consistent_mass_matrix;
+  LocalMatrix consistent_mass_matrix;
   /** \brief lumped mass matrix */
-  SparseMatrix<double> lumped_mass_matrix;
-  /** \brief system matrix; Jacobian matrix */
-  SparseMatrix<double> system_matrix;
+  LocalMatrix lumped_mass_matrix;
+  /** \brief mass matrix to be used */
+  const LocalMatrix * mass_matrix;
+  /** \brief system matrix */
+  LocalMatrix system_matrix;
   /**
    * \brief Matrix for the viscous bilinear forms, to be used in computing
    *        viscosity.
@@ -295,10 +340,10 @@ protected:
    *   B_{i,j} = \sum_{K\subset S_{i,j}}b_K(\varphi_i,\varphi_j)
    * \f]
    */
-  SparseMatrix<double> viscous_bilinear_forms;
+  LocalMatrix viscous_bilinear_forms;
 
   /** \brief Viscous fluxes */
-  SparseMatrix<double> viscous_fluxes;
+  LocalMatrix viscous_fluxes;
 
   /** \brief number of boundaries */
   unsigned int n_boundaries;
@@ -364,23 +409,23 @@ protected:
   struct RungeKuttaParameters
   {
     int s;
-    std::vector<Vector<double>> a;
+    std::vector<LocalVector> a;
     std::vector<double> b;
     std::vector<double> c;
 
     bool solution_computed_in_last_stage;
     bool is_explicit;
 
-    std::vector<Vector<double>> f;
+    std::vector<LocalVector> f;
   };
 
   /** \brief Runge-Kutta parameters */
   RungeKuttaParameters rk;
 
   /** \brief Minimum values for use in DMP */
-  Vector<double> min_values;
+  LocalVector min_values;
   /** \brief Maximum values for use in DMP */
-  Vector<double> max_values;
+  LocalVector max_values;
 
   /** \brief Vector of degrees of freedom subject to Dirichlet boundary
    *         conditions. */
@@ -392,9 +437,6 @@ protected:
   bool has_default_end_time;
   /** \brief Chosen end time */
   double end_time;
-
-  /** \brief Timer */
-  TimerOutput timer;
 };
 
 #include "ConservationLaw.cc"

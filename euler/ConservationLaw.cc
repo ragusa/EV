@@ -11,9 +11,25 @@
 template <int dim>
 ConservationLaw<dim>::ConservationLaw(
   const ConservationLawParameters<dim> & params)
-  : parameters(params),
+  :
+#ifdef IS_PARALLEL
+    mpi_communicator(MPI_COMM_WORLD),
+    cout(std::cout, Utilities::MPI::this_mpi_process(mpi_communicator) == 0),
+    timer(mpi_communicator,
+          cout,
+          TimerOutput::summary,
+          TimerOutput::cpu_and_wall_times),
+    triangulation(mpi_communicator,
+                  typename Triangulation<dim>::MeshSmoothing(
+                    Triangulation<dim>::smoothing_on_refinement |
+                    Triangulation<dim>::smoothing_on_coarsening)),
+#else
+    cout(std::cout, true),
+    timer(cout, TimerOutput::summary, TimerOutput::cpu_and_wall_times),
+    triangulation(),
+#endif
+    parameters(params),
     n_components(params.n_components),
-    mapping(),
     fe(FE_Q<dim>(params.degree), params.n_components),
     dofs_per_cell(fe.dofs_per_cell),
     faces_per_cell(GeometryInfo<dim>::faces_per_cell),
@@ -26,8 +42,7 @@ ConservationLaw<dim>::ConservationLaw(
     initial_conditions_strings(params.n_components),
     initial_conditions_function(params.n_components),
     exact_solution_strings(params.n_components),
-    exact_solution_function(),
-    timer(std::cout, TimerOutput::summary, TimerOutput::cpu_and_wall_times)
+    exact_solution_function()
 {
 }
 
@@ -77,11 +92,11 @@ void ConservationLaw<dim>::run()
     setup_system();
 
     // print information
-    std::cout << std::endl
-              << "Cycle " << cycle << " of " << parameters.n_refinement_cycles - 1
-              << ":" << std::endl;
-    std::cout << "  Number of active cells: " << triangulation.n_active_cells()
-              << std::endl;
+    cout << std::endl
+         << "Cycle " << cycle << " of " << parameters.n_refinement_cycles - 1
+         << ":" << std::endl;
+    cout << "  Number of active cells: " << triangulation.n_active_cells()
+         << std::endl;
 
     // interpolate the initial conditions to the grid, and apply constraints
     VectorTools::interpolate(
@@ -119,7 +134,7 @@ void ConservationLaw<dim>::run()
     {
       // start timer for error evaluation
       TimerOutput::Scope timer_section(timer, "Evaluate error");
-      
+
       // evaluate errors for convergence study
       postprocessor.evaluate_error(new_solution, dof_handler, triangulation);
     }
@@ -130,11 +145,11 @@ void ConservationLaw<dim>::run()
   {
     // start timer for output
     TimerOutput::Scope timer_section(timer, "Output");
-  
+
     // call post-processor to output solution and convergence results
     postprocessor.output_results(new_solution, dof_handler, triangulation);
   }
-  
+
   // output viscosity if requested
   if (parameters.output_viscosity)
     output_viscosity(postprocessor);
@@ -188,7 +203,7 @@ void ConservationLaw<dim>::output_viscosity(PostProcessor<dim> & postprocessor,
       }
       else
       {
-        std::cout << "Need to initialize entropy visc to zero!" << std::endl;
+        cout << "Need to initialize entropy visc to zero!" << std::endl;
         std::exit(0);
       }
 
@@ -270,6 +285,29 @@ void ConservationLaw<dim>::initialize_system()
   if (parameters.temporal_integrator ==
       ConservationLawParameters<dim>::runge_kutta)
     initialize_runge_kutta();
+
+  // determine mass matrix to be used based on method
+  switch (parameters.viscosity_type)
+  {
+    case ConservationLawParameters<dim>::none:
+      mass_matrix = &consistent_mass_matrix;
+      break;
+    case ConservationLawParameters<dim>::constant:
+      mass_matrix = &lumped_mass_matrix;
+      break;
+    case ConservationLawParameters<dim>::old_first_order:
+      mass_matrix = &lumped_mass_matrix;
+      break;
+    case ConservationLawParameters<dim>::max_principle:
+      mass_matrix = &lumped_mass_matrix;
+      break;
+    case ConservationLawParameters<dim>::entropy:
+      mass_matrix = &consistent_mass_matrix;
+      break;
+    default:
+      ExcNotImplemented();
+      break;
+  }
 }
 
 /** \brief Assigns Butcher tableau constants.
@@ -444,7 +482,15 @@ void ConservationLaw<dim>::setup_system()
   dof_handler.clear();
   dof_handler.distribute_dofs(fe);
   n_dofs = dof_handler.n_dofs();
-  std::cout << "Number of degrees of freedom: " << n_dofs << std::endl;
+  cout << "Number of degrees of freedom: " << n_dofs << std::endl;
+
+#ifdef IS_PARALLEL
+  // get index set of locally owned DoFs
+  locally_owned_dofs = dof_handler.locally_owned_dofs();
+
+  // get index set of locally relevant DoFs
+  DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
+#endif
 
   // determine Dirichlet nodes
   get_dirichlet_nodes();
@@ -454,6 +500,10 @@ void ConservationLaw<dim>::setup_system()
 
   // make constraints
   constraints.clear();
+#ifdef IS_PARALLEL
+  // tell constraint matrix the list of locally relevant DoFs
+  constraints.reinit(locally_relevant_dofs);
+#endif
   // hanging node constraints
   DoFTools::make_hanging_node_constraints(dof_handler, constraints);
   // Dirichlet contraints (for t = 0)
@@ -516,22 +566,38 @@ void ConservationLaw<dim>::setup_system()
   // assemble mass matrix
   assemble_mass_matrix();
 
-  // resize vectors
+// reinitialize vectors
+#ifdef IS_PARALLEL
+  old_solution.reinit(
+    locally_owned_dofs, locally_relevant_dofs, mpi_communicator);
+  new_solution.reinit(
+    locally_owned_dofs, locally_relevant_dofs, mpi_communicator);
+  solution_step.reinit(
+    locally_owned_dofs, locally_relevant_dofs, mpi_communicator);
+  system_rhs.reinit(locally_owned_dofs, mpi_communicator);
+  max_values.reinit(locally_owned_dofs, locally_relevant_dofs, mpi_communicator);
+  min_values.reinit(locally_owned_dofs, locally_relevant_dofs, mpi_communicator);
+  estimated_error_per_cell.reinit(triangulation.n_active_cells());
+#else
   old_solution.reinit(n_dofs);
   new_solution.reinit(n_dofs);
-  exact_solution.reinit(n_dofs);
   solution_step.reinit(n_dofs);
   system_rhs.reinit(n_dofs);
   max_values.reinit(n_dofs);
   min_values.reinit(n_dofs);
   estimated_error_per_cell.reinit(triangulation.n_active_cells());
+#endif
 
   // allocate memory for steady-state residual evaluations if Runge-Kutta is
   // used
   if (parameters.temporal_integrator ==
       ConservationLawParameters<dim>::runge_kutta)
     for (int i = 0; i < rk.s; ++i)
+#ifdef IS_PARALLEL
+      rk.f[i].reinit(locally_owned_dofs, locally_relevant_dofs, mpi_communicator);
+#else
       rk.f[i].reinit(n_dofs);
+#endif
 
   // perform additional setup required by derived classes
   perform_additional_setup();
@@ -733,7 +799,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     // compute each f_i
     for (int i = 0; i < rk.s; ++i)
     {
-      std::cout << "    stage " << i + 1 << " of " << rk.s << std::endl;
+      cout << "    stage " << i + 1 << " of " << rk.s << std::endl;
       // compute stage time
       const double stage_time = old_time + rk.c[i] * dt;
 
@@ -745,12 +811,14 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
          *
          */
         system_rhs = 0.0;
-        lumped_mass_matrix.vmult(system_rhs, old_solution);
+        //lumped_mass_matrix.vmult(system_rhs, old_solution);
+        mass_matrix->vmult(system_rhs, old_solution);
         for (int j = 0; j < i; ++j)
           system_rhs.add(dt * rk.a[i][j], rk.f[j]);
 
         // solve system M*Y_i = RHS
-        linear_solve(lumped_mass_matrix, system_rhs, new_solution);
+        //linear_solve(lumped_mass_matrix, system_rhs, new_solution);
+        linear_solve(*mass_matrix, system_rhs, new_solution);
 
         // ordinarily, Dirichlet BC need not be reapplied, but in general,
         // the Dirichlet BC can be time-dependent
@@ -801,7 +869,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
                        compute_tr_residual(i,dt);
                        // compute norm of transient residual
                        residual_norm = system_rhs.l2_norm();
-                       std::cout << "         nonlinear iteration " << iteration
+                       cout << "         nonlinear iteration " << iteration
                          << ": residual norm = " << residual_norm << std::endl;
                        // check convergence
                        if (residual_norm < nonlinear_tolerance)
@@ -814,7 +882,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
                     }
                     // exit program if solution did not converge
                     if (not converged) {
-                       std::cout << "Solution did not converge within maximum
+                       cout << "Solution did not converge within maximum
            number of
                          nonlinear iterations."
                           << " Program terminated." << std::endl;
@@ -852,10 +920,12 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     {
       // solve M*y^{n+1} = M*y^n + dt*sum_{i=1}^s b_i*f_i
       system_rhs = 0.0;
-      lumped_mass_matrix.vmult(system_rhs, old_solution);
+      //lumped_mass_matrix.vmult(system_rhs, old_solution);
+      mass_matrix->vmult(system_rhs, old_solution);
       for (int i = 0; i < rk.s; ++i)
         system_rhs.add(dt * rk.b[i], rk.f[i]);
-      linear_solve(lumped_mass_matrix, system_rhs, new_solution);
+      //linear_solve(lumped_mass_matrix, system_rhs, new_solution);
+      linear_solve(*mass_matrix, system_rhs, new_solution);
 
       // apply Dirichlet constraints
       apply_Dirichlet_BC(new_time);
@@ -898,14 +968,14 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
       steady_state_error = solution_change_norm;
     else
       steady_state_error = solution_change_norm / solution_normalization;
-    std::cout << "    Steady-state error = "
-              << "\x1b[1;35m" << steady_state_error << "\x1b[0m" << std::endl;
+    cout << "    Steady-state error = "
+         << "\x1b[1;35m" << steady_state_error << "\x1b[0m" << std::endl;
     if (steady_state_error < parameters.steady_state_tolerance)
     {
       in_transient = false;
-      std::cout << "\x1b[1;32m"
-                << "  Converged to steady-state."
-                << "\x1b[0m" << std::endl;
+      cout << "\x1b[1;32m"
+           << "  Converged to steady-state."
+           << "\x1b[0m" << std::endl;
     }
 
     /*
@@ -932,9 +1002,9 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     ConservationLawParameters<dim>::max_principle)
     {
       if (DMP_satisfied)
-        std::cout << "DMP was satisfied at all time steps" << std::endl;
+        cout << "DMP was satisfied at all time steps" << std::endl;
       else
-        std::cout << "DMP was NOT satisfied at all time steps" << std::endl;
+        cout << "DMP was NOT satisfied at all time steps" << std::endl;
     }
   */
 }
@@ -1724,14 +1794,14 @@ bool ConservationLaw<dim>::check_DMP(const unsigned int & n) const
       if (value_i < min_values(i))
       {
         DMP_satisfied = false;
-        std::cout << "Max principle violated at time step " << n << " with dof "
-                  << i << ": " << value_i << " < " << min_values(i) << std::endl;
+        cout << "Max principle violated at time step " << n << " with dof " << i
+             << ": " << value_i << " < " << min_values(i) << std::endl;
       }
       if (value_i > max_values(i))
       {
         DMP_satisfied = false;
-        std::cout << "Max principle violated at time step " << n << " with dof "
-                  << i << ": " << value_i << " > " << max_values(i) << std::endl;
+        cout << "Max principle violated at time step " << n << " with dof " << i
+             << ": " << value_i << " > " << max_values(i) << std::endl;
       }
     }
   }

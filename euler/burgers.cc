@@ -8,17 +8,6 @@
 #include "Burgers.h"
 #include "BurgersParameters.h"
 
-#ifdef IS_PARALLEL
-#include <deal.II/base/conditional_ostream.h>
-#include <deal.II/base/index_set.h>
-#include <deal.II/distributed/tria.h>
-#include <deal.II/distributed/grid_refinement.h>
-#include <deal.II/lac/petsc_parallel_sparse_matrix.h>
-#include <deal.II/lac/petsc_parallel_vector.h>
-#include <deal.II/lac/petsc_solver.h>
-#include <deal.II/lac/petsc_precondition.h>
-#endif
-
 int main(int, char **)
 {
   try

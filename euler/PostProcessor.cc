@@ -613,8 +613,8 @@ void PostProcessor<dim>::output_cell_maps(
     filename_extension = ".gpl";
 
   // create output filestream
-  std::string filename = filename_base + appendage_string +
-    transient_appendage + filename_extension;
+  std::string filename =
+    filename_base + appendage_string + transient_appendage + filename_extension;
   std::string full_filename = output_dir + filename;
   std::ofstream output_filestream(full_filename.c_str());
 
