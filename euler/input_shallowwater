@@ -3,7 +3,7 @@ subsection finite element
 end
 
 subsection quadrature
-   set number of quadrature points = 5
+   set number of quadrature points = 2
 end
 
 # Problem Names:
@@ -31,8 +31,8 @@ subsection time
    # options are <constant_dt|cfl_condition>
    set time step size method = cfl_condition
    set use default end time = true
-   set final time = 0.10
-   set time step size = 0.05
+   set final time = 0.05
+   set time step size = 0.01
    set cfl = 0.50
    set steady state tolerance = 1.0e-6
 end
@@ -40,7 +40,7 @@ end
 subsection artificial viscosity
    # options are <none|constant|old_first_order|max_principle|entropy>
    set viscosity type = entropy
-   set constant viscosity value = 0.01
+   set constant viscosity value = 1.25
    set first order viscosity coefficient = 0.5
    set multiply low order viscosity by froude = false
    set use low order viscosity for first time step = true
@@ -78,7 +78,7 @@ subsection linear solver
 end
 
 subsection output
-   set output period = 0
+   set output period = 1
    set max transient output size = 1e9
    set output mesh = false
    set output mass matrix = false

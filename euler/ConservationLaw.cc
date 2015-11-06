@@ -800,6 +800,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     for (int i = 0; i < rk.s; ++i)
     {
       cout << "    stage " << i + 1 << " of " << rk.s << std::endl;
+
       // compute stage time
       const double stage_time = old_time + rk.c[i] * dt;
 
@@ -811,13 +812,11 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
          *
          */
         system_rhs = 0.0;
-        //lumped_mass_matrix.vmult(system_rhs, old_solution);
         mass_matrix->vmult(system_rhs, old_solution);
         for (int j = 0; j < i; ++j)
           system_rhs.add(dt * rk.a[i][j], rk.f[j]);
 
         // solve system M*Y_i = RHS
-        //linear_solve(lumped_mass_matrix, system_rhs, new_solution);
         linear_solve(*mass_matrix, system_rhs, new_solution);
 
         // ordinarily, Dirichlet BC need not be reapplied, but in general,
@@ -829,71 +828,10 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
       }
       else
       { // implicit Runge-Kutta
-
         Assert(false, ExcNotImplemented());
-        /*
-                    // Newton solve
-                    new_solution = old_solution;
-                    // compute initial negative of transient residual: -F(y)
-                    compute_tr_residual(i,dt);
-                    // compute initial norm of transient residual - used in
-                    // convergence tolerance
-                    double residual_norm = system_rhs.l2_norm();
-                    // compute nonlinear tolerance based on provided ATOL and
-           RTOL
-                    double nonlinear_tolerance = parameters.nonlinear_atol +
-                       parameters.nonlinear_rtol * residual_norm;
-                    // initialize convergence flag
-                    bool converged = false;
-                    // begin Newton loop
-                    for (unsigned int iteration = 0;
-                      iteration < parameters.max_nonlinear_iterations;
-           ++iteration)
-                    {
-                       // compute steady-state Jacobian and store in
-           system_matrix
-                       compute_ss_jacobian();
-                       // compute transient Jacobian and store in system_matrix
-                       system_matrix *= rk.a[i][i]*dt;
-                       system_matrix.add(-1.0,lumped_mass_matrix);
-                       //compute_tr_Jacobian();
-                       // Solve for Newton step
-                       linear_solve(system_matrix, system_rhs, solution_step);
-                       // update solution
-                       new_solution += solution_step;
-                       // ordinarily, Dirichlet BC need not be reapplied, but in
-           this case,
-                       // the Dirichlet BC can be time-dependent
-                       apply_Dirichlet_BC(current_time);
-                       // compute negative of transient residual: -F(y)
-                       compute_tr_residual(i,dt);
-                       // compute norm of transient residual
-                       residual_norm = system_rhs.l2_norm();
-                       cout << "         nonlinear iteration " << iteration
-                         << ": residual norm = " << residual_norm << std::endl;
-                       // check convergence
-                       if (residual_norm < nonlinear_tolerance)
-                       {
-                          // set convergence flag
-                          converged = true;
-                          // break out of Newton loop
-                          break;
-                       }
-                    }
-                    // exit program if solution did not converge
-                    if (not converged) {
-                       cout << "Solution did not converge within maximum
-           number of
-                         nonlinear iterations."
-                          << " Program terminated." << std::endl;
-                       std::exit(1);
-                    }
-        */
       }
 
-      // residual from solution of previous step is reused in first stage
-      // (unless this is the first time step)
-      if ((n == 1) || (i != 0))
+      // compute steady-state residual
       {
         // start timer for compute steady-state residual function
         TimerOutput::Scope timer_section(timer, "Compute steady-state residual");
@@ -906,42 +844,20 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
      *
      * M*y^{n+1} = M*y^n + dt*sum_{i=1}^s b_i*f_i
      */
-    // if the next time step solution was already computed in the last stage,
-    // then there is no need to perform the linear combination of f's. Plus,
-    // since f[0] is always computed from the previous time step solution,
-    // re-use the end f as f[0] for the next time step
-    if (rk.solution_computed_in_last_stage)
-    {
-      // end of step residual can be used as beginning of step residual for next
-      // step
-      rk.f[0] = rk.f[rk.s - 1];
-    }
-    else
-    {
-      // solve M*y^{n+1} = M*y^n + dt*sum_{i=1}^s b_i*f_i
-      system_rhs = 0.0;
-      //lumped_mass_matrix.vmult(system_rhs, old_solution);
-      mass_matrix->vmult(system_rhs, old_solution);
-      for (int i = 0; i < rk.s; ++i)
-        system_rhs.add(dt * rk.b[i], rk.f[i]);
-      //linear_solve(lumped_mass_matrix, system_rhs, new_solution);
-      linear_solve(*mass_matrix, system_rhs, new_solution);
+    // solve M*y^{n+1} = M*y^n + dt*sum_{i=1}^s b_i*f_i
+    system_rhs = 0.0;
+    // lumped_mass_matrix.vmult(system_rhs, old_solution);
+    mass_matrix->vmult(system_rhs, old_solution);
+    for (int i = 0; i < rk.s; ++i)
+      system_rhs.add(dt * rk.b[i], rk.f[i]);
+    // linear_solve(lumped_mass_matrix, system_rhs, new_solution);
+    linear_solve(*mass_matrix, system_rhs, new_solution);
 
-      // apply Dirichlet constraints
-      apply_Dirichlet_BC(new_time);
+    // apply Dirichlet constraints
+    apply_Dirichlet_BC(new_time);
 
-      // distribute hanging node constraints
-      constraints.distribute(new_solution);
-
-      {
-        // start timer for compute steady-state residual function
-        TimerOutput::Scope timer_section(timer, "Compute steady-state residual");
-
-        // end of step residual can be used as beginning of step residual for next
-        // step
-        compute_ss_residual(dt, rk.f[0]);
-      }
-    }
+    // distribute hanging node constraints
+    constraints.distribute(new_solution);
 
     // compute max principle min and max values
     compute_max_principle_quantities();
