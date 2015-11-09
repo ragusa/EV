@@ -1,17 +1,139 @@
-\chapter{DERIVATION OF THE MAX WAVE SPEED FOR THE SHALLOW WATER EQUATIONS}
+\chapter{DERIVATION OF THE MAX WAVE SPEED FOR THE SHALLOW WATER EQUATIONS
 \label{app:shallow_water_max_wave_speed}}
 
 The maximum wave speed is the maximum of the absolute values of the
-left-most and right-most waves:
+left-most and right-most wave speeds:
 \begin{equation}
   \maxwavespeed(\vectorsolution_L, \vectorsolution_R)
-  = \max(|\wavespeed_1^-|,|\wavespeed_2^+|)
+  = \max(|\wavespeed_1^-(\vectorsolution_L, \vectorsolution_R)|
+  ,|\wavespeed_2^+(\vectorsolution_L, \vectorsolution_R)|)
   \eqc
 \end{equation}
 where the ``+'' and ``-'' allow for the differentiation of the head
 and tail speeds in the case of a rarefaction.
 
 For the 1-D shallow water equations, the Riemann problem divides the
-$(x-\timevalue)$ plane into 3 sectors
+$x$-$\timevalue$ plane into 3 sectors, separated by 2 waves, which
+each may be either a shock or rarefaction. The left sector shall be
+denoted with ``L'', the middle with ``*'', and the right with ``R''.
+The left-most and right-most wave speeds are
+
+\begin{equation}
+  \wavespeed_1^-(\vectorsolution_L, \vectorsolution_R)
+    = \velocityx_L - \speedofsound_L\pr{1 + \pr{
+    \frac{(\height_* - \height_L)(\height_* + 2\height_L)}{2\height_L^2}}_+}
+    \eqc
+\end{equation}
+\begin{equation}
+  \wavespeed_2^+(\vectorsolution_L, \vectorsolution_R)
+    = \velocityx_R + \speedofsound_R\pr{1 + \pr{
+    \frac{(\height_* - \height_R)(\height_* + 2\height_R)}{2\height_R^2}}_+}
+    \eqc
+\end{equation}
+
+where $(z)_+=\max(z,0)$. These definitions are completely general in that
+they apply to both shocks and rarefactions. In the case of a rarefaction
+for the left side, $\height_L \leq \height_*$, and similarly for the right
+side, $\height_R \leq \height_*$. The wave speed of the head of the rarefaction
+in each case is
+
+\begin{equation}
+  \wavespeed_1^-(\vectorsolution_L, \vectorsolution_R)
+    = \velocityx_L - \speedofsound_L
+    \eqc
+\end{equation}
+\begin{equation}
+  \wavespeed_2^+(\vectorsolution_L, \vectorsolution_R)
+    = \velocityx_R + \speedofsound_R
+    \eqp
+\end{equation}
+
+Otherwise (when $\height_L > \height_*$ or $\height_R > \height_*$), the
+wave is a shock, and the shock speed in each case is
+
+\begin{equation}
+  \wavespeed_1^-(\vectorsolution_L, \vectorsolution_R)
+    = \velocityx_L - \speedofsound_L\pr{1 + \pr{
+    \frac{(\height_* - \height_L)(\height_* + 2\height_L)}{2\height_L^2}}}
+    \eqc
+\end{equation}
+\begin{equation}
+  \wavespeed_2^+(\vectorsolution_L, \vectorsolution_R)
+    = \velocityx_R + \speedofsound_R\pr{1 + \pr{
+    \frac{(\height_* - \height_R)(\height_* + 2\height_R)}{2\height_R^2}}}
+    \eqp
+\end{equation}
+
+Combining these equations with the rarefaction speeds gives the general
+definitions of the left-most and right-most wave speeds.
+
+The height in the star (*) region is the solution of the nonlinear equation
+
+\begin{equation}
+  \phi(\height) \equiv
+    f_L(\height,\vectorsolution_L) + f_R(\height,\vectorsolution_R)
+    + \velocityx_R - \velocityx_L
+    = 0 \eqc
+\end{equation}
+
+where $f_L(\height,\vectorsolution_L)$ and $f_R(\height,\vectorsolution_R)$
+are the left and right wave strengths, each corresponding to either a shock
+or rarefaction. In the case of a shock,
+
+\begin{equation}
+  f_K(\height,\vectorsolution_K) = f_K^{\text{shock}} = 
+    (\height_* - \height_K)\sqrt{\half\gravity\frac{\height_* + \height_K}
+    {\height_*\height_K}}
+    \eqc
+\end{equation}
+
+while in the case of a rarefaction,
+
+\begin{equation}
+  f_K(\height,\vectorsolution_K) = f_K^{\text{rarefaction}} = 
+    2(\speedofsound_* - \speedofsound_K)
+    \eqp
+\end{equation}
+
+These wave strength functions are derived in the following sections.
+
+\section{Left Shock Wave}
+%------------------------------------------------------------------------------
+In the case of a shock, the discontinuous wave front moves with speed
+$\shockspeed_L$, separating the left solution $\vectorsolution_L$ and the right
+solution $\vectorsolution_*$. Transforming to a reference frame moving with the
+shock, the reference frame velocities are
+
+\begin{equation}
+  \hat{\velocityx}_L = \velocityx_L - \shockspeed_L \eqc
+\end{equation}
+\begin{equation}
+  \hat{\velocityx}_* = \velocityx_* - \shockspeed_L \eqp
+\end{equation}
+
+Applying the Rankine-Hugoniot condition for both the continuity equation and
+momentum equation gives
+
+\begin{equation}
+  \height_L\hat{\velocityx}_L = \height_*\hat{\velocityx}_* \eqc
+\end{equation}
+\begin{equation}\label{eq:RH_momentumL}
+  \height_L\hat{\velocityx}_L^2 + \pressure_L
+    = \height_*\hat{\velocityx}_*^2 + \pressure_* \eqc
+\end{equation}
+
+Defining the reference discharge as
+
+\begin{equation}
+  \hat{\discharge} = \height_L\hat{\velocityx}_L = \height_*\hat{\velocityx}_*
+\end{equation}
+
+and substituting into Equation \eqref{eq:RH_momentumL} gives
+
+\begin{equation}
+  \hat{\discharge} = -\frac{\pressure_* - \pressure_L}
+    {\hat{\velocityx}_* - \hat{\velocityx}_L}}
+    \eqp
+\end{equation}
 
 \pagebreak{}
