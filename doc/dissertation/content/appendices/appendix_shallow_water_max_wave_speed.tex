@@ -71,17 +71,19 @@ The height in the star (*) region is the solution of the nonlinear equation
 
 \begin{equation}
   \phi(\height) \equiv
-    f_L(\height,\vectorsolution_L) + f_R(\height,\vectorsolution_R)
+    \wavestrength_L(\height,\vectorsolution_L)
+    + \wavestrength_R(\height,\vectorsolution_R)
     + \velocityx_R - \velocityx_L
     = 0 \eqc
 \end{equation}
 
-where $f_L(\height,\vectorsolution_L)$ and $f_R(\height,\vectorsolution_R)$
+where $\wavestrength_L(\height,\vectorsolution_L)$ and
+$\wavestrength_R(\height,\vectorsolution_R)$
 are the left and right wave strengths, each corresponding to either a shock
 or rarefaction. In the case of a shock,
 
 \begin{equation}
-  f_K(\height,\vectorsolution_K) = f_K^{\text{shock}} = 
+  \wavestrength_K(\height,\vectorsolution_K) = \wavestrength_K^{\text{shock}} = 
     (\height_* - \height_K)\sqrt{\half\gravity\frac{\height_* + \height_K}
     {\height_*\height_K}}
     \eqc
@@ -90,24 +92,27 @@ or rarefaction. In the case of a shock,
 while in the case of a rarefaction,
 
 \begin{equation}
-  f_K(\height,\vectorsolution_K) = f_K^{\text{rarefaction}} = 
+  \wavestrength_K(\height,\vectorsolution_K) = \wavestrength_K^{\text{rarefaction}} = 
     2(\speedofsound_* - \speedofsound_K)
     \eqp
 \end{equation}
 
 These wave strength functions are derived in the following sections.
 
-\section{Left Shock Wave}
+\section{Shock Wave}
 %------------------------------------------------------------------------------
+This derivation will correspond to the left wave; the right wave derivation
+proceeds similarly.
+
 In the case of a shock, the discontinuous wave front moves with speed
 $\shockspeed_L$, separating the left solution $\vectorsolution_L$ and the right
 solution $\vectorsolution_*$. Transforming to a reference frame moving with the
 shock, the reference frame velocities are
 
-\begin{equation}
+\begin{equation}\label{eq:ref_vL}
   \hat{\velocityx}_L = \velocityx_L - \shockspeed_L \eqc
 \end{equation}
-\begin{equation}
+\begin{equation}\label{eq:ref_vstar}
   \hat{\velocityx}_* = \velocityx_* - \shockspeed_L \eqp
 \end{equation}
 
@@ -119,20 +124,132 @@ momentum equation gives
 \end{equation}
 \begin{equation}\label{eq:RH_momentumL}
   \height_L\hat{\velocityx}_L^2 + \pressure_L
-    = \height_*\hat{\velocityx}_*^2 + \pressure_* \eqc
+    = \height_*\hat{\velocityx}_*^2 + \pressure_*
+    \eqc
 \end{equation}
 
+where $\pressure = \half\gravity\height^2$.
 Defining the reference discharge as
 
 \begin{equation}
-  \hat{\discharge} = \height_L\hat{\velocityx}_L = \height_*\hat{\velocityx}_*
+  \hat{\dischargex}_L = \height_L\hat{\velocityx}_L = \height_*\hat{\velocityx}_*
 \end{equation}
 
 and substituting into Equation \eqref{eq:RH_momentumL} gives
 
+\begin{equation}\label{eq:dischargeL_hat}
+  \hat{\dischargex}_L = \frac{\pressure_L - \pressure_*}
+    {\hat{\velocityx}_* - \hat{\velocityx}_L}
+    \eqc
+\end{equation}
+
+which when combined with Equations \eqref{eq:ref_vL} and \eqref{eq:ref_vstar}
+gives
+
+\begin{equation}\label{eq:dischargeL_h}
+  \hat{\dischargex}_L = \sqrt{\frac{\height_*\height_L
+    (\pressure_L - \pressure_*)}
+    {\height_L - \height_*}}
+    \eqp
+\end{equation}
+
+Using $\hat{\velocityx}_* - \hat{\velocityx}_L = \velocityx_* - \velocityx_L$
+with Equation \eqref{eq:dischargeL_hat} gives
+
 \begin{equation}
-  \hat{\discharge} = -\frac{\pressure_* - \pressure_L}
-    {\hat{\velocityx}_* - \hat{\velocityx}_L}}
+  \hat{\dischargex}_L = \frac{\pressure_L - \pressure_*}
+    {\velocityx_* - \velocityx_L}
+\end{equation}
+
+and combining with Equation \eqref{eq:dischargeL_h} gives, after a bit of
+algebra,
+
+\begin{equation}\label{eq:ustarLshock}
+  \velocityx_* = \velocityx_L
+    - \wavestrength^{\text{shock}}_L(\height_*,\vectorsolution_L)
+    \eqc
+\end{equation}
+
+where
+
+\begin{equation}
+  \wavestrength^{\text{shock}}_L(\height_*,\vectorsolution_L)
+    = (\height_* - \height_L)
+    \sqrt{\half\gravity\frac{\height_* + \height_L}{\height_*\height_L}}
+    \eqp
+\end{equation}
+
+Performing a similar analysis for the right wave gives
+
+\begin{equation}\label{eq:ustarRshock}
+  \velocityx_* = \velocityx_R
+    + \wavestrength^{\text{shock}}_R(\height_*,\vectorsolution_R)
+    \eqc
+\end{equation}
+
+where
+
+\begin{equation}
+  \wavestrength^{\text{shock}}_R(\height_*,\vectorsolution_R)
+    = (\height_* - \height_R)
+    \sqrt{\half\gravity\frac{\height_* + \height_R}{\height_*\height_R}}
+    \eqp
+\end{equation}
+
+\section{Rarefaction Wave}
+%------------------------------------------------------------------------------
+\begin{equation}\label{eq:ustarLrarefaction}
+  \velocityx_* = \velocityx_L
+    - \wavestrength^{\text{rarefaction}}_L(\height_*,\vectorsolution_L)
+    \eqc
+\end{equation}
+
+where
+
+\begin{equation}
+  \wavestrength_L^{\text{rarefaction}}(\height_*,\vectorsolution_L)
+    = 2(\speedofsound_* - \speedofsound_L)
+\end{equation}
+
+Performing a similar analysis for the right wave gives
+
+\begin{equation}\label{eq:ustarRrarefaction}
+  \velocityx_* = \velocityx_R
+    + \wavestrength^{\text{rarefaction}}_R(\height_*,\vectorsolution_R)
+    \eqc
+\end{equation}
+
+where
+
+\begin{equation}
+  \wavestrength_R^{\text{rarefaction}}(\height_*,\vectorsolution_R)
+    = 2(\speedofsound_* - \speedofsound_R)
+\end{equation}
+
+\section{Obtaining the Solution in the Star Region}
+%------------------------------------------------------------------------------
+
+Combining Equation \eqref{eq:ustarLshock} or \eqref{eq:ustarLrarefaction}
+with \eqref{eq:ustarRshock} or \eqref{eq:ustarRrarefaction} by eliminating
+$\velocityx$ gives the nonlinear
+equation to solve for $\height_*$, where the LHS is defined to be $\phi(\height)$:
+
+\begin{equation}
+  \phi(\height) \equiv
+    \wavestrength_L(\height,\vectorsolution_L)
+    + \wavestrength_R(\height,\vectorsolution_R)
+    + \velocityx_R - \velocityx_L
+    = 0 \eqp
+\end{equation}
+
+Then adding either Equation \eqref{eq:ustarLshock} or \eqref{eq:ustarLrarefaction}
+with \eqref{eq:ustarRshock} or \eqref{eq:ustarRrarefaction} gives the equation
+for $\velocityx_*$:
+
+\begin{equation}
+  \velocityx_* = \half\pr{\velocityx_L + \velocityx_R
+    + \wavestrength_R(\height_*,\vectorsolution_R)
+    - \wavestrength_L(\height_*,\vectorsolution_L)}
     \eqp
 \end{equation}
 
