@@ -63,6 +63,7 @@ void ConservationLaw<dim>::run()
   // initialize system
   initialize_system();
 
+/*
   // create data post-processor (for outputting auxiliary variables)
   std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor =
     create_auxiliary_postprocessor();
@@ -153,6 +154,7 @@ void ConservationLaw<dim>::run()
   // output viscosity if requested
   if (parameters.output_viscosity)
     output_viscosity(postprocessor);
+*/
 }
 
 /**
@@ -240,6 +242,7 @@ void ConservationLaw<dim>::initialize_system()
   component_names = get_component_names();
   component_interpretations = get_component_interpretations();
 
+/*
   // define problem parameters
   define_problem();
 
@@ -308,6 +311,7 @@ void ConservationLaw<dim>::initialize_system()
       ExcNotImplemented();
       break;
   }
+*/
 }
 
 /** \brief Assigns Butcher tableau constants.
