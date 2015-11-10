@@ -36,11 +36,16 @@ void ShallowWaterParameters<dim>::declare_parameters(
   // artificial viscosity
   parameter_handler.enter_subsection("artificial viscosity");
   {
-    parameter_handler.declare_entry("use local entropy normalization",
-                                    "false",
-                                    Patterns::Bool(),
-                                    "Option to use a local normalization for"
-                                    " the entropy residual");
+    parameter_handler.declare_entry("entropy normalization",
+                                    "average",
+                                    Patterns::Anything(),
+                                    "Option for normalization of entropy"
+                                    " viscosity");
+    parameter_handler.declare_entry("constant entropy normalization coefficient",
+                                    "1.0",
+                                    Patterns::Double(),
+                                    "Entropy viscosity normalization value if"
+                                    " constant normalization option is chosen");
     parameter_handler.declare_entry("multiply low order viscosity by froude",
                                     "false",
                                     Patterns::Bool(),
@@ -73,8 +78,9 @@ void ShallowWaterParameters<dim>::get_parameters(
   // artificial viscosity
   parameter_handler.enter_subsection("artificial viscosity");
   {
-    use_local_entropy_normalization =
-      parameter_handler.get_bool("use local entropy normalization");
+    entropy_normalization = parameter_handler.get("entropy normalization");
+    constant_entropy_normalization_coefficient =
+      parameter_handler.get_double("constant entropy normalization coefficient");
     multiply_low_order_viscosity_by_froude =
       parameter_handler.get_bool("multiply low order viscosity by froude");
   }

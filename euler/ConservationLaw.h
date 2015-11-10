@@ -127,11 +127,16 @@ protected:
   void compute_viscous_bilinear_forms();
   void compute_viscous_fluxes();
   void add_maximum_principle_viscosity_bilinear_form(Vector<double> & solution);
-  double compute_entropy_normalization(const Vector<double> & solution) const;
-  virtual double compute_max_entropy_residual(const Vector<double> & new_solution,
-                                              const Vector<double> & old_solution,
-                                              const double & dt,
-                                              const Cell & cell) const;
+  double compute_average_entropy(const Vector<double> & solution) const;
+  std::vector<double> compute_entropy_normalization(
+    const Vector<double> & solution,
+    const double & average_entropy,
+    const Cell & cell) const;
+  virtual std::vector<double> compute_entropy_residual(
+    const Vector<double> & new_solution,
+    const Vector<double> & old_solution,
+    const double & dt,
+    const Cell & cell) const;
   void smooth_entropy_viscosity_max();
   void smooth_entropy_viscosity_average();
   void get_dirichlet_nodes();

@@ -192,14 +192,14 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
                       Patterns::Bool(),
                       "option to use low-order viscosity for first time step"
                       " of entropy viscosity method");
-    prm.declare_entry("entropy viscosity coefficient",
-                      "1e-3",
-                      Patterns::Double(),
-                      "tuning constant value to be used with entropy viscosity");
-    prm.declare_entry("jump coefficient",
+    prm.declare_entry("entropy residual coefficient",
                       "1.0",
                       Patterns::Double(),
-                      "tuning constant value to be used with jumps");
+                      "tuning constant value to be used with entropy residual");
+    prm.declare_entry("entropy jump coefficient",
+                      "1.0",
+                      Patterns::Double(),
+                      "tuning constant value to be used with entropy jumps");
     prm.declare_entry("entropy viscosity smoothing",
                       "none",
                       Patterns::Anything(),
@@ -426,8 +426,8 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
       prm.get_double("first order viscosity coefficient");
     use_low_order_viscosity_for_first_time_step =
       prm.get_bool("use low order viscosity for first time step");
-    entropy_viscosity_coef = prm.get_double("entropy viscosity coefficient");
-    jump_coef = prm.get_double("jump coefficient");
+    entropy_residual_coef = prm.get_double("entropy residual coefficient");
+    entropy_jump_coef = prm.get_double("entropy jump coefficient");
     entropy_viscosity_smoothing = prm.get("entropy viscosity smoothing");
     entropy_viscosity_smoothing_weight =
       prm.get_integer("entropy viscosity smoothing weight");

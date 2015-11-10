@@ -803,15 +803,14 @@ template <int dim>
 void ShallowWater<dim>::update_entropy_viscosities(const double & dt)
 {
   // compute normalization constant for entropy viscosity
-  double uniform_entropy_normalization = 1.0e15;
-  if (!sw_parameters.use_local_entropy_normalization)
-    uniform_entropy_normalization =
-      this->compute_entropy_normalization(this->new_solution);
+  double entropy_average = 1.0e15;
+  if (sw_parameters.entropy_normalization == "average")
+    entropy_average = this->compute_average_entropy(this->new_solution);
 
   // get tuning parameters
   const double entropy_residual_coefficient =
-    this->parameters.entropy_viscosity_coef;
-  const double jump_coefficient = this->parameters.jump_coef;
+    this->parameters.entropy_residual_coef;
+  const double jump_coefficient = this->parameters.entropy_jump_coef;
 
   // FE values for entropy flux
   ShallowWaterEntropyFluxFEValuesCell<dim> entropy_flux_fe_values_cell(
@@ -837,52 +836,63 @@ void ShallowWater<dim>::update_entropy_viscosities(const double & dt)
     // reinitialized in compute_max_entropy_jump())
     entropy_flux_fe_values_cell.reinit(cell);
 
-    // compute local entropy normalization if requested
-    double entropy_normalization;
-    if (sw_parameters.use_local_entropy_normalization)
+    // compute entropy normalization
+    std::vector<double> entropy_normalization(this->n_q_points_cell);
+    if (sw_parameters.entropy_normalization == "average")
+      entropy_normalization = this->compute_entropy_normalization(
+        this->new_solution, entropy_average, cell);
+    else if (sw_parameters.entropy_normalization == "local")
       entropy_normalization =
         compute_local_entropy_normalization(this->new_solution, cell);
+    else if (sw_parameters.entropy_normalization == "constant")
+      for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+        entropy_normalization[q] =
+          sw_parameters.constant_entropy_normalization_coefficient;
     else
-      entropy_normalization = uniform_entropy_normalization;
+      ExcNotImplemented();
 
-    // compute max entropy residual on cell
-    const double max_entropy_residual =
-      this->compute_max_entropy_residual(this->new_solution,
-                                         this->old_solution,
-                                         entropy_flux_fe_values_cell,
-                                         dt,
-                                         cell);
+    // compute entropy residual at each quadrature point on cell
+    const std::vector<double> entropy_residual =
+      this->compute_entropy_residual(this->new_solution,
+                                     this->old_solution,
+                                     entropy_flux_fe_values_cell,
+                                     dt,
+                                     cell);
 
     // compute max entropy flux jump
     const double max_entropy_jump =
       compute_max_entropy_jump(entropy_flux_fe_values_face, cell);
 
     // compute entropy viscosity
-    double aux = std::pow(this->cell_diameter[cell], 2) / entropy_normalization;
-    this->entropy_viscosity[cell] =
-      aux * (entropy_residual_coefficient * max_entropy_residual +
-             jump_coefficient * max_entropy_jump);
+    double h2 = std::pow(this->cell_diameter[cell], 2);
+    this->entropy_viscosity[cell] = 0.0;
+    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+      this->entropy_viscosity[cell] = std::max(
+        this->entropy_viscosity[cell],
+        h2 * (entropy_residual_coefficient * std::abs(entropy_residual[q]) +
+              jump_coefficient * max_entropy_jump) /
+          entropy_normalization[q]);
   }
 }
 
 /**
  * \brief Computes the local entropy viscosity normalization coefficient
- *        \f$gh^2\f$ for a cell.
+ *        \f$gh^2\f$ for each quadrature point in a cell.
  *
- * The cell value for \f$gh^2\f$ is chosen to be the minimum quadrature
- * point value:
+ * The local entropy viscosity normalization coefficient is computed as
  *
  * \f[
- *   c^{\mbox{normalization}}_K = \min\limits_{q} g h_q^2
+ *   c^{\mbox{normalization}}_q = g h_q^2
  * \f]
  *
  * \param[in] solution solution vector
  * \param[in] cell cell iterator
  *
- * \return local entropy viscosity normalization coefficient for a cell
+ * \return vector of entropy viscosity normalization coefficient for each
+ *         quadrature point in cell
  */
 template <int dim>
-double ShallowWater<dim>::compute_local_entropy_normalization(
+std::vector<double> ShallowWater<dim>::compute_local_entropy_normalization(
   const Vector<double> & solution, const Cell & cell) const
 {
   // get height values
@@ -891,16 +901,16 @@ double ShallowWater<dim>::compute_local_entropy_normalization(
   std::vector<double> height(this->n_q_points_cell);
   fe_values[height_extractor].get_function_values(solution, height);
 
-  // loop over quadrature points to determine minimum
-  double normalization = 1.0e15;
+  // compute normalization at each quadrature point
+  std::vector<double> normalization(this->n_q_points_cell);
   for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-    normalization = std::max(normalization, gravity * std::pow(height[q], 2));
+    normalization[q] = gravity * std::pow(height[q], 2);
 
   return normalization;
 }
 
 /**
- * \brief Computes the max entropy residual in a cell.
+ * \brief Computes the entropy residual at each quadrature point in a cell.
  *
  * \param[in] new_solution new solution
  * \param[in] old_solution old solution
@@ -908,10 +918,10 @@ double ShallowWater<dim>::compute_local_entropy_normalization(
  * \param[in] dt time step size
  * \param[in] cell cell iterator
  *
- * \return max entropy residual in a cell
+ * \return vector of entropy residual for each quadrature point in cell
  */
 template <int dim>
-double ShallowWater<dim>::compute_max_entropy_residual(
+std::vector<double> ShallowWater<dim>::compute_entropy_residual(
   const Vector<double> & new_solution,
   const Vector<double> & old_solution,
   const ShallowWaterEntropyFluxFEValuesCell<dim> & entropy_flux_fe_values,
@@ -925,7 +935,7 @@ double ShallowWater<dim>::compute_max_entropy_residual(
 
   Vector<double> entropy_new(this->n_q_points_cell);
   Vector<double> entropy_old(this->n_q_points_cell);
-  Vector<double> entropy_residual(this->n_q_points_cell);
+  std::vector<double> entropy_residual(this->n_q_points_cell);
 
   // compute entropy of current and old solutions
   compute_entropy(new_solution, fe_values, entropy_new);
@@ -934,18 +944,14 @@ double ShallowWater<dim>::compute_max_entropy_residual(
     entropy_flux_fe_values.get_function_divergences();
 
   // compute entropy residual at each quadrature point on cell
-  double max_entropy_residual = 0.0;
   for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
   {
     // compute entropy residual
     double dsdt = (entropy_new[q] - entropy_old[q]) / dt;
-    entropy_residual[q] = std::abs(dsdt + divergence_entropy_flux[q]);
-
-    // update maximum entropy residual
-    max_entropy_residual = std::max(max_entropy_residual, entropy_residual[q]);
+    entropy_residual[q] = dsdt + divergence_entropy_flux[q];
   }
 
-  return max_entropy_residual;
+  return entropy_residual;
 }
 
 /**

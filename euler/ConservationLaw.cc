@@ -1365,49 +1365,55 @@ template <int dim>
 void ConservationLaw<dim>::update_entropy_viscosities(const double & dt)
 {
   // compute normalization constant for entropy viscosity
-  const double entropy_normalization =
-    compute_entropy_normalization(new_solution);
+  const double entropy_average = compute_average_entropy(new_solution);
 
   // get tuning parameters
-  const double entropy_residual_coefficient = parameters.entropy_viscosity_coef;
-  const double jump_coefficient = parameters.jump_coef;
+  const double entropy_residual_coefficient = parameters.entropy_residual_coef;
+  const double jump_coefficient = parameters.entropy_jump_coef;
 
   // compute entropy viscosity for each cell
   Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
   for (; cell != endc; ++cell)
   {
-    // compute max entropy residual on cell
-    const double max_entropy_residual =
-      compute_max_entropy_residual(new_solution, old_solution, dt, cell);
+    // compute entropy residuals at each quadrature point in cell
+    const std::vector<double> entropy_residual =
+      compute_entropy_residual(new_solution, old_solution, dt, cell);
+
+    // compute max entropy gradient jump in cell
     const double max_entropy_jump = compute_max_entropy_jump(new_solution, cell);
 
+    // compute normalization at each quadrature point in cell
+    const std::vector<double> entropy_normalization =
+      compute_entropy_normalization(new_solution, entropy_average, cell);
+
     // compute entropy viscosity
-    double aux = std::pow(cell_diameter[cell], 2) / entropy_normalization;
-    entropy_viscosity[cell] =
-      aux * (entropy_residual_coefficient * max_entropy_residual +
-             jump_coefficient * max_entropy_jump);
+    double h2 = std::pow(cell_diameter[cell], 2);
+    entropy_viscosity[cell] = 0.0;
+    for (unsigned int q = 0; q < n_q_points_cell; ++q)
+      entropy_viscosity[cell] = std::max(
+        entropy_viscosity[cell],
+        h2 * (entropy_residual_coefficient * std::abs(entropy_residual[q]) +
+              jump_coefficient * max_entropy_jump) /
+          entropy_normalization[q]);
   }
 }
 
 /**
- * Computes the domain-averaged entropy and the max entropy deviation in the
- * domain.
+ * Computes the average of the entropy over the domain.
  *
  * \param[in] solution solution with which to calculate entropy for the
  *            normalization constant
  *
- * \return normalization constant for entropy viscosity
+ * \return average entropy in domain
  */
 template <int dim>
-double ConservationLaw<dim>::compute_entropy_normalization(
+double ConservationLaw<dim>::compute_average_entropy(
   const Vector<double> & solution) const
 {
   FEValues<dim> fe_values(fe, cell_quadrature, update_values | update_JxW_values);
 
   Vector<double> entropy(n_q_points_cell);
 
-  // compute domain-averaged entropy
-  //--------------------------------
   double domain_integral_entropy = 0.0;
 
   // loop over cells
@@ -1430,47 +1436,56 @@ double ConservationLaw<dim>::compute_entropy_normalization(
   // domain-averaged entropy_values
   const double domain_averaged_entropy = domain_integral_entropy / domain_volume;
 
-  // compute max deviation of entropy_values from domain-averaged entropy
-  //--------------------------------------------------------------
-  double normalization_constant = 0.0;
+  return domain_averaged_entropy;
+}
 
-  // loop over cells
-  for (cell = dof_handler.begin_active(); cell != endc; ++cell)
-  {
-    // reinitialize FE values
-    fe_values.reinit(cell);
+/**
+ * \brief Computes the entropy deviation from the average at each quadrature
+ *        point in a cell.
+ *
+ * \param[in] solution solution with which to calculate entropy for the
+ *            normalization constant
+ * \param[in] entropy_average average entropy in domain
+ *
+ * \return vector of entropy deviations at each quadrature point in cell
+ */
+template <int dim>
+std::vector<double> ConservationLaw<dim>::compute_entropy_normalization(
+  const Vector<double> & solution,
+  const double & entropy_average,
+  const Cell & cell) const
+{
+  FEValues<dim> fe_values(fe, cell_quadrature, update_values);
 
-    // compute entropy
-    compute_entropy(solution, fe_values, entropy);
+  Vector<double> entropy(n_q_points_cell);
 
-    // loop over quadrature points
-    for (unsigned int q = 0; q < n_q_points_cell; ++q)
-    {
-      // update max deviation for the normalization constant
-      normalization_constant = std::max(
-        normalization_constant, std::abs(entropy[q] - domain_averaged_entropy));
-    }
-  }
+  std::vector<double> normalization_constant(n_q_points_cell);
 
-  // guard against division by zero
-  if (normalization_constant == 0.0)
-    normalization_constant = 1.0;
+  // reinitialize FE values
+  fe_values.reinit(cell);
+
+  // compute entropy
+  compute_entropy(solution, fe_values, entropy);
+
+  // loop over quadrature points
+  for (unsigned int q = 0; q < n_q_points_cell; ++q)
+    normalization_constant[q] = std::abs(entropy[q] - entropy_average);
 
   return normalization_constant;
 }
 
 /**
- * \brief Computes the max entropy residual in a cell.
+ * \brief Computes the entropy residual at each quadrature point in a cell.
  *
  * \param[in] new_solution new solution
  * \param[in] old_solution old solution
  * \param[in] dt time step size
  * \param[in] cell cell iterator
  *
- * \return max entropy residual in a cell
+ * \return vector of entropy residuals at each quadrature point in a cell
  */
 template <int dim>
-double ConservationLaw<dim>::compute_max_entropy_residual(
+std::vector<double> ConservationLaw<dim>::compute_entropy_residual(
   const Vector<double> & new_solution,
   const Vector<double> & old_solution,
   const double & dt,
@@ -1483,7 +1498,7 @@ double ConservationLaw<dim>::compute_max_entropy_residual(
   Vector<double> entropy_new(n_q_points_cell);
   Vector<double> entropy_old(n_q_points_cell);
   Vector<double> divergence_entropy_flux(n_q_points_cell);
-  Vector<double> entropy_residual(n_q_points_cell);
+  std::vector<double> entropy_residual(n_q_points_cell);
 
   // compute entropy of current and old solutions
   compute_entropy(new_solution, fe_values, entropy_new);
@@ -1492,18 +1507,14 @@ double ConservationLaw<dim>::compute_max_entropy_residual(
     new_solution, fe_values, divergence_entropy_flux);
 
   // compute entropy residual at each quadrature point on cell
-  double max_entropy_residual = 0.0;
   for (unsigned int q = 0; q < n_q_points_cell; ++q)
   {
     // compute entropy residual
     double dsdt = (entropy_new[q] - entropy_old[q]) / dt;
     entropy_residual[q] = std::abs(dsdt + divergence_entropy_flux[q]);
-
-    // update maximum entropy residual
-    max_entropy_residual = std::max(max_entropy_residual, entropy_residual[q]);
   }
 
-  return max_entropy_residual;
+  return entropy_residual;
 }
 
 /**

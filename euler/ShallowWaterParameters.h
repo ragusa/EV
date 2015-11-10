@@ -28,7 +28,9 @@ public:
 
   std::string problem_name;
 
-  bool use_local_entropy_normalization;
+  std::string entropy_normalization;
+
+  double constant_entropy_normalization_coefficient;
 
   bool multiply_low_order_viscosity_by_froude;
 };

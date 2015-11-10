@@ -80,8 +80,8 @@ private:
                        Vector<double> & entropy) const override;
 
   // eliminate virtual overload warning
-  using ConservationLaw<dim>::compute_max_entropy_residual;
-  double compute_max_entropy_residual(
+  using ConservationLaw<dim>::compute_entropy_residual;
+  std::vector<double> compute_entropy_residual(
     const Vector<double> & new_solution,
     const Vector<double> & old_solution,
     const ShallowWaterEntropyFluxFEValuesCell<dim> & entropy_flux_fe_values,
@@ -93,8 +93,8 @@ private:
 
   void update_entropy_viscosities(const double & dt) override;
 
-  double compute_local_entropy_normalization(const Vector<double> & solution,
-                                             const Cell & cell) const;
+  std::vector<double> compute_local_entropy_normalization(
+    const Vector<double> & solution, const Cell & cell) const;
 
   // eliminate virtual overload warning
   using ConservationLaw<dim>::compute_max_entropy_jump;

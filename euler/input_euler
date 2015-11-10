@@ -41,8 +41,8 @@ subsection artificial viscosity
    set constant viscosity value = 0.01
    set first order viscosity coefficient = 0.1
    set use low order viscosity for first time step = true
-   set entropy viscosity coefficient = 5.0
-   set jump coefficient = 1.0
+   set entropy residual coefficient = 5.0
+   set entropy jump coefficient = 1.0
    set entropy viscosity smoothing = none # none | max | average
    set entropy viscosity smoothing weight = 4
 end
