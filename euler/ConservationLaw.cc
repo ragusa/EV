@@ -63,7 +63,6 @@ void ConservationLaw<dim>::run()
   // initialize system
   initialize_system();
 
-/*
   // create data post-processor (for outputting auxiliary variables)
   std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor =
     create_auxiliary_postprocessor();
@@ -154,7 +153,6 @@ void ConservationLaw<dim>::run()
   // output viscosity if requested
   if (parameters.output_viscosity)
     output_viscosity(postprocessor);
-*/
 }
 
 /**
@@ -242,7 +240,6 @@ void ConservationLaw<dim>::initialize_system()
   component_names = get_component_names();
   component_interpretations = get_component_interpretations();
 
-/*
   // define problem parameters
   define_problem();
 
@@ -311,7 +308,6 @@ void ConservationLaw<dim>::initialize_system()
       ExcNotImplemented();
       break;
   }
-*/
 }
 
 /** \brief Assigns Butcher tableau constants.
@@ -542,30 +538,60 @@ void ConservationLaw<dim>::setup_system()
   }
   constraints.close();
 
-  // create sparsity patterns
-  DynamicSparsityPattern dynamic_constrained_sparsity_pattern(n_dofs);
-  DynamicSparsityPattern dynamic_unconstrained_sparsity_pattern(n_dofs);
-  DoFTools::make_sparsity_pattern(
-    dof_handler, dynamic_constrained_sparsity_pattern, constraints, false);
-  DoFTools::make_sparsity_pattern(dof_handler,
-                                  dynamic_unconstrained_sparsity_pattern);
-  constrained_sparsity_pattern.copy_from(dynamic_constrained_sparsity_pattern);
-  unconstrained_sparsity_pattern.copy_from(
-    dynamic_unconstrained_sparsity_pattern);
+// make dynamic sparsity pattern
+#ifdef IS_PARALLEL
+  DynamicSparsityPattern dsp_constrained(locally_relevant_dofs);
+  DynamicSparsityPattern dsp_unconstrained(locally_relevant_dofs);
+#else
+  DynamicSparsityPattern dsp_constrained(n_dofs);
+  DynamicSparsityPattern dsp_unconstrained(n_dofs);
+#endif
 
+  // make sparsity pattern
+  DoFTools::make_sparsity_pattern(
+    dof_handler, dsp_constrained, constraints, false);
+  DoFTools::make_sparsity_pattern(dof_handler, dsp_unconstrained);
+  constrained_sparsity_pattern.copy_from(dsp_constrained);
+  unconstrained_sparsity_pattern.copy_from(dsp_unconstrained);
+
+#ifdef IS_PARALLEL
+  // distribute sparsity pattern
+  SparsityTools::distribute_sparsity_pattern(
+    dsp_constrained,
+    dof_handler.n_locally_owned_dofs_per_processor(),
+    mpi_communicator,
+    locally_relevant_dofs);
+  SparsityTools::distribute_sparsity_pattern(
+    dsp_unconstrained,
+    dof_handler.n_locally_owned_dofs_per_processor(),
+    mpi_communicator,
+    locally_relevant_dofs);
+
+  // reinitialize matrices with sparsity pattern
+  consistent_mass_matrix.reinit(
+    locally_owned_dofs, locally_owned_dofs, dsp_constrained, mpi_communicator);
+  lumped_mass_matrix.reinit(
+    locally_owned_dofs, locally_owned_dofs, dsp_constrained, mpi_communicator);
+  system_matrix.reinit(
+    locally_owned_dofs, locally_owned_dofs, dsp_constrained, mpi_communicator);
+#else
   // reinitialize matrices with sparsity pattern
   consistent_mass_matrix.reinit(constrained_sparsity_pattern);
   lumped_mass_matrix.reinit(constrained_sparsity_pattern);
   system_matrix.reinit(constrained_sparsity_pattern);
+#endif
 
-  // if using maximum-principle preserving definition of first-order viscosity,
-  // then compute bilinear forms and viscous fluxes
-  if (parameters.viscosity_type == ConservationLawParameters<dim>::max_principle)
-  {
-    viscous_bilinear_forms.reinit(unconstrained_sparsity_pattern);
-    compute_viscous_bilinear_forms();
-    viscous_fluxes.reinit(unconstrained_sparsity_pattern);
-  }
+  /*
+    // if using maximum-principle preserving definition of first-order viscosity,
+    // then compute bilinear forms and viscous fluxes
+    if (parameters.viscosity_type ==
+    ConservationLawParameters<dim>::max_principle)
+    {
+      viscous_bilinear_forms.reinit(unconstrained_sparsity_pattern);
+      compute_viscous_bilinear_forms();
+      viscous_fluxes.reinit(unconstrained_sparsity_pattern);
+    }
+  */
 
   // assemble mass matrix
   assemble_mass_matrix();

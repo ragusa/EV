@@ -47,6 +47,7 @@
 #include <deal.II/base/utilities.h>
 #include <deal.II/distributed/tria.h>
 #include <deal.II/distributed/grid_refinement.h>
+#include <deal.II/lac/generic_linear_algebra.h>
 #include <deal.II/lac/petsc_parallel_sparse_matrix.h>
 #include <deal.II/lac/petsc_parallel_vector.h>
 #include <deal.II/lac/petsc_solver.h>
@@ -78,10 +79,10 @@ public:
 protected:
 #ifdef IS_PARALLEL
   /** \brief Typedef for vector */
-  typedef LA::MPI::Vector LocalVector;
+  typedef LinearAlgebraPETSc::MPI::Vector LocalVector;
 
   /** \brief Typedef for sparse matrix */
-  typedef LA::MPI::SparseMatrix LocalMatrix;
+  typedef LinearAlgebraPETSc::MPI::SparseMatrix LocalMatrix;
 
   /** \brief Typedef for triangulation */
   typedef parallel::distributed::Triangulation<dim> LocalTriangulation;
