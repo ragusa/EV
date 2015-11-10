@@ -64,11 +64,11 @@ Note that the shallow water equations are only valid in 1-D or 2-D, not 3-D,
 since they are depth-integrated equations.
 
 Viscous regularization of the shallow water equations is achieved by adding
-viscous fluxes:
+artificial viscous fluxes:
 \begin{equation}
 \begin{gathered}
   \ppt{\vectorsolution} + \nabla\cdot\consfluxvector
-  + \highlightgreen{\nabla\cdot\viscconsfluxvector}
+  + \nabla\cdot\viscconsfluxvector
   = \conssource \eqc
 \\
   \viscconsfluxvector

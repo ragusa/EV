@@ -21,7 +21,7 @@ end
 subsection refinement
    # refinementlevel:n_cells
    # 5:32, 8:256, 9:512, 10:1024, 11:2048
-   set initial refinement level = 8
+   set initial refinement level = 3
    set refinement cycles = 1
    set refinement fraction = 0.3
    set coarsening fraction = 0.03
@@ -31,7 +31,7 @@ subsection time
    # options are <constant_dt|cfl_condition>
    set time step size method = constant_dt
    set use default end time = false
-   set final time = 0.20
+   set final time = 0.03
    set time step size = 0.01
    set cfl = 0.50
    set steady state tolerance = 1.0e-6
@@ -45,7 +45,7 @@ subsection artificial viscosity
    set multiply low order viscosity by froude = false
    set use low order viscosity for first time step = true
    set entropy residual coefficient = 1.0
-   set entropy jump coefficient = 0.0
+   set entropy jump coefficient = 1.0
    set entropy normalization = local # constant | average | local
    set constant entropy normalization coefficient = 0.1
    set entropy viscosity smoothing = none # none | max | average

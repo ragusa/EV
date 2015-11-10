@@ -11,19 +11,18 @@ discovery that unphysical values were encountered. The consequences of
 these results may lead to poor design choices, which can pose serious safety
 risks when a design is implemented.
 
-These issues of spurious oscillations and negativities are a well-known
-phenomenon in the simulation of hyperbolic partial differential equations (PDEs),
-for example, linear advection, Burger's equation, the inviscid Euler equations
-of gas dynamics, and the shallow water (or Saint-Venant) equations.
-These PDEs result from manipulating the corresponding integral
-conservation law equations; however, these manipulations are only valid when
-the solution is smooth - in the presence of shocks, the PDE form breaks down
-\cite{leveque2002}\refsec{11.6}. Thus it becomes necessary to work with
-these equations in a weak form, which holds in the presence of shocks.
-However, the mathematical formulations for these problems
-do not necessarily yield unique weak solutions; this is a manifestation of the
-neglect of physics in the underlying hyperbolic PDE model
-\cite{leveque2002}\refsec{11.13}.
+The formation of spurious oscillations and negativities is a well-known issue
+in the simulation of hyperbolic partial differential equations (PDEs), which
+include, for example, linear advection, Burger's equation, the inviscid Euler
+equations of gas dynamics, and the shallow water (or Saint-Venant) equations.
+These PDEs result from manipulating the corresponding integral conservation law
+equations; however, these manipulations are only valid when the solution is
+smooth - in the presence of shocks, the PDE form breaks down
+\cite{leveque2002}\refsec{11.6}. Thus it becomes necessary to work with these
+equations in a weak form, which holds in the presence of shocks.  However, the
+mathematical formulations for these problems do not necessarily yield unique
+weak solutions; this is a manifestation of the neglect of physics in the
+underlying hyperbolic PDE model \cite{leveque2002}\refsec{11.13}.
 
 Attempts to address these issues have taken a number
 of different approaches for different discretization schemes.

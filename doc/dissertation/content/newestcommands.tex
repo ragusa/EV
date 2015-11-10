@@ -31,6 +31,7 @@
 
 % domain and FEM
 \newcommand{\domain}{\mathcal{D}}
+\newcommand{\celldomain}{\mathcal{D}_\cell}
 \newcommand{\domainboundary}{\partial\domain}
 \newcommand{\cellindex}{K}
 \newcommand{\cell}{K}
@@ -42,10 +43,10 @@
 
 % local viscous bilinear form
 \newcommand{\localviscbilinearform}[3]{b_#1(\testfunction_#2, \testfunction_#3)}
-\newcommand{\cellvolume}{\volume_\cellindex}
+\newcommand{\cellvolume}{|\celldomain|}
 \newcommand{\cardinality}[1][]{\ifthenelse{\equal{#1}{}}{n_\cell}{n_#1}}
-\newcommand{\indicescell}[1][]{\ifthenelse{\equal{#1}{}}{\mathcal{I}(\cell)}
-  {\mathcal{I}(#1)}}
+\newcommand{\indicescell}[1][]{\ifthenelse{\equal{#1}{}}{\mathcal{I}_{\cell}}
+  {\mathcal{I}_{#1}}}
 
 % entropy viscosity
 \newcommand{\entropy}{\eta}
@@ -53,6 +54,7 @@
 \newcommand{\entropyresidual}{\mathcal{R}}
 \newcommand{\entropyresidualcoef}{c_\entropyresidual}
 \newcommand{\entropyjumpcoef}{c_\entropyjump}
+\newcommand{\entropynormalization}{\alpha}
 
 % conservation law
 \newcommand{\consfluxletter}{f}
@@ -195,8 +197,8 @@
 \renewcommand{\ij}{_{i,j}}
 \newcommand{\sumj}{\sum\limits_j}
 \newcommand{\sumjnoti}{\sum\limits_{j\ne i}}
-\newcommand{\sumKSi}{\sum\limits_{\cellindex\subset\support_i}}
-\newcommand{\sumKSij}{\sum\limits_{\cellindex\subset\support_{i,j}}}
+\newcommand{\sumKSi}{\sum\limits_{\cell:\celldomain\subset\support_i}}
+\newcommand{\sumKSij}{\sum\limits_{\cell:\celldomain\subset\support_{i,j}}}
 \newcommand{\intdomain}[1]{\int\limits_\domain #1 \,d\volume}
 \newcommand{\intboundary}[1]{\int\limits_{\domainboundary} #1 \,d\area}
 \newcommand{\intSi}{\int\limits_{\support_i}}
