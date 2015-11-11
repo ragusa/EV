@@ -414,12 +414,10 @@ void ShallowWater<dim>::compute_ss_residual(const double & dt, Vector<double> & 
   std::vector<unsigned int> local_dof_indices(this->dofs_per_cell);
 
   // loop over cells
-unsigned int i_cell = 0;
   Cell cell = this->dof_handler.begin_active(), endc = this->dof_handler.end(),
        cell_bathymetry = dof_handler_bathymetry.begin_active();
-  for (; cell != endc; ++cell, ++cell_bathymetry, ++i_cell)
+  for (; cell != endc; ++cell, ++cell_bathymetry)
   {
-std::cout << "visc[" << i_cell << "] = " << this->viscosity[cell] << std::endl;
     // reset cell residual
     cell_residual = 0;
 
@@ -459,7 +457,6 @@ std::cout << "visc[" << i_cell << "] = " << this->viscosity[cell] << std::endl;
     compute_viscous_fluxes(this->viscosity[cell],
                            height_gradient,
                            momentum_gradient,
-                           bathymetry_gradient,
                            height_viscous_flux,
                            momentum_viscous_flux);
 
@@ -550,7 +547,6 @@ void ShallowWater<dim>::compute_viscous_fluxes(
   const double & viscosity,
   const std::vector<Tensor<1, dim>> & height_gradient,
   const std::vector<Tensor<2, dim>> & momentum_gradient,
-  const std::vector<Tensor<1, dim>> & bathymetry_gradient,
   std::vector<Tensor<1, dim>> & height_viscous_flux,
   std::vector<Tensor<2, dim>> & momentum_viscous_flux) const
 {
@@ -562,7 +558,7 @@ void ShallowWater<dim>::compute_viscous_fluxes(
   {
     // density viscous flux
     height_viscous_flux[q] =
-      -viscosity * (height_gradient[q] + 0 * bathymetry_gradient[q]);
+      -viscosity * height_gradient[q];
 
     // momentum viscous flux
     momentum_viscous_flux[q] = -viscosity * momentum_gradient[q];
@@ -831,9 +827,8 @@ void ShallowWater<dim>::update_entropy_viscosities(const double & dt)
     gravity);
 
   // compute entropy viscosity for each cell
-unsigned int i_cell = 0;
   Cell cell = this->dof_handler.begin_active(), endc = this->dof_handler.end();
-  for (; cell != endc; ++cell, ++i_cell)
+  for (; cell != endc; ++cell)
   {
     // reinitialize entropy flux FE values for cell (face values will need be
     // reinitialized in compute_max_entropy_jump())
@@ -865,7 +860,6 @@ unsigned int i_cell = 0;
     // compute max entropy flux jump
     const double max_entropy_jump =
       compute_max_entropy_jump(entropy_flux_fe_values_face, cell);
-std::cout << "jump[" << i_cell << "] = " << max_entropy_jump << std::endl;
 
     // compute entropy viscosity
     double h2 = std::pow(this->cell_diameter[cell], 2);
