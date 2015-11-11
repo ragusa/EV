@@ -414,10 +414,12 @@ void ShallowWater<dim>::compute_ss_residual(const double & dt, Vector<double> & 
   std::vector<unsigned int> local_dof_indices(this->dofs_per_cell);
 
   // loop over cells
+unsigned int i_cell = 0;
   Cell cell = this->dof_handler.begin_active(), endc = this->dof_handler.end(),
        cell_bathymetry = dof_handler_bathymetry.begin_active();
-  for (; cell != endc; ++cell, ++cell_bathymetry)
+  for (; cell != endc; ++cell, ++cell_bathymetry, ++i_cell)
   {
+std::cout << "visc[" << i_cell << "] = " << this->viscosity[cell] << std::endl;
     // reset cell residual
     cell_residual = 0;
 
@@ -829,8 +831,9 @@ void ShallowWater<dim>::update_entropy_viscosities(const double & dt)
     gravity);
 
   // compute entropy viscosity for each cell
+unsigned int i_cell = 0;
   Cell cell = this->dof_handler.begin_active(), endc = this->dof_handler.end();
-  for (; cell != endc; ++cell)
+  for (; cell != endc; ++cell, ++i_cell)
   {
     // reinitialize entropy flux FE values for cell (face values will need be
     // reinitialized in compute_max_entropy_jump())
@@ -862,6 +865,7 @@ void ShallowWater<dim>::update_entropy_viscosities(const double & dt)
     // compute max entropy flux jump
     const double max_entropy_jump =
       compute_max_entropy_jump(entropy_flux_fe_values_face, cell);
+std::cout << "jump[" << i_cell << "] = " << max_entropy_jump << std::endl;
 
     // compute entropy viscosity
     double h2 = std::pow(this->cell_diameter[cell], 2);

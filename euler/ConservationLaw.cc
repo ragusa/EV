@@ -1117,7 +1117,7 @@ void ConservationLaw<dim>::update_viscosities(const double & dt,
   switch (parameters.viscosity_type)
   {
     // no viscosity
-    case ConservationLawParameters<dim>::none:
+    case ConservationLawParameters<dim>::ViscosityType::none:
     {
       Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
       for (; cell != endc; ++cell)
@@ -1125,7 +1125,7 @@ void ConservationLaw<dim>::update_viscosities(const double & dt,
       break;
     }
     // constant viscosity
-    case ConservationLawParameters<dim>::constant:
+    case ConservationLawParameters<dim>::ViscosityType::constant:
     {
       Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
       for (; cell != endc; ++cell)
@@ -1133,21 +1133,27 @@ void ConservationLaw<dim>::update_viscosities(const double & dt,
       break;
     }
     // old first order viscosity
-    case ConservationLawParameters<dim>::old_first_order:
+    case ConservationLawParameters<dim>::ViscosityType::old_first_order:
     {
       update_old_low_order_viscosity(true);
       viscosity = first_order_viscosity;
       break;
     }
     // max principle viscosity
-    case ConservationLawParameters<dim>::max_principle:
+    case ConservationLawParameters<dim>::ViscosityType::max_principle:
     {
       update_max_principle_viscosity();
       viscosity = first_order_viscosity;
       break;
     }
+    // invariant domain viscosity
+    case ConservationLawParameters<dim>::ViscosityType::invariant_domain:
+    {
+      ExcNotImplemented();
+      break;
+    }
     // entropy viscosity
-    case ConservationLawParameters<dim>::entropy:
+    case ConservationLawParameters<dim>::ViscosityType::entropy:
     {
       Cell cell, endc = dof_handler.end();
       if (parameters.use_low_order_viscosity_for_first_time_step && n == 1)
@@ -1309,14 +1315,14 @@ void ConservationLaw<dim>::compute_viscous_fluxes()
   }
 }
 
-/** \brief Computes viscous bilinear forms, to be used in the computation of
+/**
+ * \brief Computes viscous bilinear forms, to be used in the computation of
  *         maximum-principle preserving first order viscosity.
  *
- *         Each element of the resulting matrix, \f$B_{i,j}\f$ is computed as
- *         follows:
- *         \f[
- *            B_{i,j} = \sum_{K\subset S_{i,j}}b_K(\varphi_i,\varphi_j)
- *         \f]
+ * Each element of the resulting matrix, \f$B_{i,j}\f$ is computed as follows:
+ * \f[
+ *   B_{i,j} = \sum_{K:D_K\subset S_{i,j}}b_K(\varphi_i,\varphi_j)
+ * \f]
  */
 template <int dim>
 void ConservationLaw<dim>::compute_viscous_bilinear_forms()

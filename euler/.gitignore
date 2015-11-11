@@ -8,6 +8,5 @@ euler
 euler_parallel
 shallowwater
 shallowwater_parallel
-html
-latex
+doxygen_output
 *.bak

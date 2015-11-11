@@ -112,6 +112,7 @@ public:
     constant,
     old_first_order,
     max_principle,
+    invariant_domain,
     entropy
   };
   ViscosityType viscosity_type;
