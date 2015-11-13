@@ -1,0 +1,96 @@
+subsection finite element
+   set degree = 1
+end
+
+subsection quadrature
+   set number of quadrature points = 2
+end
+
+# Problem Names:
+#   dam_break_flat
+#   dam_break_bump
+#   lake_at_rest
+#   lake_at_rest_perturbed
+#   lake_at_rest_flat_perturbed
+#   lake_at_rest_2d
+#   lake_at_rest_flat_perturbed_2d
+subsection problem
+   set problem name = dam_break_flat
+end
+
+subsection refinement
+   # refinementlevel:n_cells
+   # 5:32, 8:256, 9:512, 10:1024, 11:2048
+   set initial refinement level = 3
+   set refinement cycles = 1
+   set refinement fraction = 0.3
+   set coarsening fraction = 0.03
+end
+
+subsection time
+   # options are <constant_dt|cfl_condition>
+   set time step size method = constant_dt
+   set use default end time = false
+   set final time = 0.03
+   set time step size = 0.01
+   set cfl = 0.50
+   set steady state tolerance = 1.0e-6
+end
+
+subsection artificial viscosity
+   # options are <none|constant|old_first_order|max_principle|invariant_domain|entropy>
+   set viscosity type = entropy
+   set constant viscosity value = 1.25
+   set first order viscosity coefficient = 0.5
+   set multiply low order viscosity by froude = false
+   set use low order viscosity for first time step = true
+   set entropy residual coefficient = 1.0
+   set entropy jump coefficient = 1.0
+   set entropy normalization = local # constant | average | local
+   set constant entropy normalization coefficient = 0.1
+   set entropy viscosity smoothing = none # none | max | average
+   set entropy viscosity smoothing weight = 1
+end
+
+subsection temporal integration
+   # options are <runge_kutta>
+   set temporal integrator = runge_kutta
+   # options are <ERK1|ERK2|ERK3|ERK4|SDIRK22>
+   set runge kutta method = ERK1
+end
+
+# this section is not yet applicable
+subsection nonlinear solver
+   set nonlinear verbosity = verbose
+   set nonlinear method = newton
+   set nonlinear absolute tolerance = 1e-8
+   set nonlinear relative tolerance = 1e-8
+   set max nonlinear iterations = 100
+   set damping = 0.9
+end
+
+subsection linear solver
+   set linear verbosity = verbose
+   set linear method = direct
+   set mass matrix linear method = direct
+   set linear absolute tolerance = 1e-10
+   set linear relative tolerance = 1e-10
+   set max linear iterations = 150
+end
+
+subsection output
+   set output period = 0
+   set max transient output size = 1e9
+   set output mesh = false
+   set output mass matrix = false
+   set output viscosity = true
+   set output viscosity transient = true
+   set exact solution refinement level = 7
+   set save convergence results = false
+   set print final solution = true
+
+   # verbosity level:
+   # 0: print only required info
+   # 1: print cycle, time step, and stage info
+   set verbosity level = 0
+end

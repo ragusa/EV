@@ -85,7 +85,7 @@ my $problem_name_found = 0;
 my $time_discretization;
 my $time_discretization_found = 0;
 
-open(IN, '<', "input_$conservation_law") or die $!;
+open(IN, '<', "$conservation_law.prm") or die $!;
 while (<IN>)
 {
   # get line

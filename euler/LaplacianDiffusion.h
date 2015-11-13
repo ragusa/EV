@@ -18,11 +18,11 @@ class LaplacianDiffusion : public ArtificialDiffusion<dim>
 {
 public:
   LaplacianDiffusion(
-  const std::vector<FEValuesExtractors::Scalar> & scalar_extractors_,
-  const std::vector<FEValuesExtractors::Vector> & vector_extractors_,
-  const Viscosity<dim> * const viscosity,
-  const unsigned int & n_quadrature_points_,
-  const unsigned int & dofs_per_cell_);
+    const std::vector<FEValuesExtractors::Scalar> & scalar_extractors_,
+    const std::vector<FEValuesExtractors::Vector> & vector_extractors_,
+    const Viscosity<dim> * const viscosity,
+    const unsigned int & n_quadrature_points_,
+    const unsigned int & dofs_per_cell_);
 
   void apply(const Vector<double> & solution,
              const Cell & cell,

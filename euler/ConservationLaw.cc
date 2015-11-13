@@ -24,7 +24,7 @@ ConservationLaw<dim>::ConservationLaw(
                     Triangulation<dim>::smoothing_on_refinement |
                     Triangulation<dim>::smoothing_on_coarsening)),
 #else
-    cout(std::cout, true),
+    cout(std::cout, params.verbosity_level > 0),
     timer(cout, TimerOutput::summary, TimerOutput::cpu_and_wall_times),
     triangulation(),
 #endif
@@ -153,6 +153,16 @@ void ConservationLaw<dim>::run()
   // output viscosity if requested
   if (parameters.output_viscosity)
     output_viscosity(postprocessor);
+
+  // print final solution if requested
+  if (parameters.print_final_solution)
+  {
+    std::cout.precision(10);
+    std::cout.setf(std::ios::scientific);
+
+    for (unsigned int i = 0; i < n_dofs; ++i)
+      std::cout << new_solution[i] << std::endl;
+  }
 }
 
 /**
@@ -802,16 +812,13 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
 
     // print CFL in red if it violates CFL condition
     if (cfl_is_violated)
-      printf("  time step %i: t = \x1b[1;34m%9.4f\x1b[0m, CFL = "
-             "\x1b[1;31m%6.2f\x1b[0m\n",
-             n,
-             new_time,
-             cfl);
+      cout << std::fixed << std::setprecision(2) << "  time step " << n
+           << ": t = \x1b[1;34m" << new_time << "\x1b[0m, CFL = \x1b[1;31m" << cfl
+           << "\x1b[0m" << std::endl;
     else
-      printf("  time step %i: t = \x1b[1;34m%9.4f\x1b[0m, CFL = %6.2f\n",
-             n,
-             new_time,
-             cfl);
+      cout << std::fixed << std::setprecision(2) << "  time step " << n
+           << ": t = \x1b[1;34m" << new_time << "\x1b[0m, CFL = " << cfl
+           << std::endl;
 
     // compute viscosities
     update_viscosities(dt, n);
@@ -914,12 +921,12 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
       steady_state_error = solution_change_norm;
     else
       steady_state_error = solution_change_norm / solution_normalization;
-    cout << "    Steady-state error = "
+    cout << std::scientific << std::setprecision(4) << "    Steady-state error = "
          << "\x1b[1;35m" << steady_state_error << "\x1b[0m" << std::endl;
     if (steady_state_error < parameters.steady_state_tolerance)
     {
       in_transient = false;
-      cout << "\x1b[1;32m"
+      cout << std::scientific << std::setprecision(4) << "\x1b[1;32m"
            << "  Converged to steady-state."
            << "\x1b[0m" << std::endl;
     }

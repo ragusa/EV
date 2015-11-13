@@ -15,7 +15,7 @@
 
 using namespace dealii;
 
-int main(int, char **)
+int main(int argc, char * argv[])
 {
   try
   {
@@ -30,7 +30,10 @@ int main(int, char **)
 #if defined(BURGERS)
     // read input and declare problem
     BurgersParameters<dimension>::declare_burgers_parameters(parameter_handler);
-    parameter_handler.read_input("input_burgers");
+    if (argc > 1)
+      parameter_handler.read_input(argv[1]);
+    else
+      parameter_handler.read_input("burgers.prm");
     BurgersParameters<dimension> burgers_parameters;
     burgers_parameters.get_burgers_parameters(parameter_handler);
 
@@ -39,7 +42,10 @@ int main(int, char **)
 #elif defined(EULER)
     // read input and declare problem
     EulerParameters<dimension>::declare_parameters(parameter_handler);
-    parameter_handler.read_input("input_euler");
+    if (argc > 1)
+      parameter_handler.read_input(argv[1]);
+    else
+      parameter_handler.read_input("euler.prm");
     EulerParameters<dimension> parameters;
     parameters.get_parameters(parameter_handler);
     Euler<dimension> problem(parameters);
@@ -49,7 +55,10 @@ int main(int, char **)
 
     // read input and declare problem
     ShallowWaterParameters<dimension>::declare_parameters(parameter_handler);
-    parameter_handler.read_input("input_shallowwater");
+    if (argc > 1)
+      parameter_handler.read_input(argv[1]);
+    else
+      parameter_handler.read_input("shallowwater.prm");
     ShallowWaterParameters<dimension> parameters;
     parameters.get_parameters(parameter_handler);
     ShallowWater<dimension> problem(parameters);

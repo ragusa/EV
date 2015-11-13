@@ -254,6 +254,12 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
                       "7",
                       Patterns::Integer(),
                       "refinement level to be used for the exact solution");
+    prm.declare_entry("print final solution",
+                      "false",
+                      Patterns::Bool(),
+                      "option to print final solution");
+    prm.declare_entry(
+      "verbosity level", "1", Patterns::Integer(), "level of verbosity");
   }
   prm.leave_subsection();
 }
@@ -449,6 +455,8 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
     exact_solution_refinement_level =
       prm.get_integer("exact solution refinement level");
     save_convergence_results = prm.get_bool("save convergence results");
+    print_final_solution = prm.get_bool("print final solution");
+    verbosity_level = prm.get_integer("verbosity level");
   }
   prm.leave_subsection();
 }

@@ -18,15 +18,14 @@ LaplacianDiffusion<dim>::LaplacianDiffusion(
   const std::vector<FEValuesExtractors::Vector> & vector_extractors_,
   const Viscosity<dim> * const viscosity,
   const unsigned int & n_quadrature_points_,
-  const unsigned int & dofs_per_cell_,
-)
+  const unsigned int & dofs_per_cell_, )
   : ArtificialDiffusion<dim>(),
-  scalar_extractors(scalar_extractors_),
-  vector_extractors(vector_extractors_),
-  n_scalar_components(scalar_extractors_.size()),
-  n_vector_components(vector_extractors_.size()),
-  n_quadrature_points(n_quadrature_points_),
-  dofs_per_cell(dofs_per_cell_)
+    scalar_extractors(scalar_extractors_),
+    vector_extractors(vector_extractors_),
+    n_scalar_components(scalar_extractors_.size()),
+    n_vector_components(vector_extractors_.size()),
+    n_quadrature_points(n_quadrature_points_),
+    dofs_per_cell(dofs_per_cell_)
 {
 }
 

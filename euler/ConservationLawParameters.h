@@ -51,6 +51,8 @@ public:
   bool output_exact_solution;
   unsigned int exact_solution_refinement_level;
   bool save_convergence_results;
+  bool print_final_solution;
+  unsigned int verbosity_level;
 
   enum TemporalDiscretization
   {

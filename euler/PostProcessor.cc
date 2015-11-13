@@ -520,8 +520,11 @@ void PostProcessor<dim>::output_convergence_data()
     }
 
     // print convergence table to console
-    std::cout << std::endl;
-    convergence_table.write_text(std::cout);
+    if (parameters.verbosity_level > 0)
+    {
+      std::cout << std::endl;
+      convergence_table.write_text(std::cout);
+    }
 
     // save convergence results to file
     if (parameters.save_convergence_results)
