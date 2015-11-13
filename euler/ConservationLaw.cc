@@ -995,8 +995,9 @@ double ConservationLaw<dim>::compute_cfl_number(const double & dt) const
   return dt * max_flux_speed / minimum_cell_diameter;
 }
 
-/** \brief Adds the viscous bilinear form for maximum-principle preserving
- * viscosity
+/**
+ * \brief Adds the viscous bilinear form for maximum-principle preserving
+ *        viscosity
  */
 template <int dim>
 void ConservationLaw<dim>::add_maximum_principle_viscosity_bilinear_form(

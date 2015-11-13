@@ -557,8 +557,7 @@ void ShallowWater<dim>::compute_viscous_fluxes(
   for (unsigned int q = 0; q < n; ++q)
   {
     // density viscous flux
-    height_viscous_flux[q] =
-      -viscosity * height_gradient[q];
+    height_viscous_flux[q] = -viscosity * height_gradient[q];
 
     // momentum viscous flux
     momentum_viscous_flux[q] = -viscosity * momentum_gradient[q];
