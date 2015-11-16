@@ -1,0 +1,52 @@
+\newcommand{\x}{\mathbf{x}}   % x vector
+\newcommand{\xt}{(\x,t)}      % (x,t)
+\newcommand{\dt}{\Delta t}    % time step size
+\newcommand{\dom}{\mathcal{D}} % domain
+\newcommand{\g}{\mathbf{g}}   % conservation law flux
+\newcommand{\U}{\mathbf{U}}   % solution vector
+\newcommand{\A}{\mathbf{A}}   % steady-state matrix
+\newcommand{\B}{\mathbf{B}}   % lhs matrix
+\newcommand{\D}{\mathbf{D}}   % diffusion matrix
+\newcommand{\M}{\mathbf{M}}   % mass matrix
+\renewcommand{\b}{\mathbf{b}} % rhs vector
+\renewcommand{\r}{\mathbf{r}} % steady-state residual vector
+\newcommand{\s}{\mathbf{s}}   % transient rhs vector
+\renewcommand{\v}{\mathbf{v}} % velocity field
+\renewcommand{\O}{\mathbf{\Omega}} % transport direction
+\newcommand{\f}{\mathbf{f}}   % antidiffusive flux vector
+\newcommand{\F}{\mathbf{F}}   % antidiffusive flux matrix
+\renewcommand{\L}{\mathbf{L}} % limiting coefficient matrix
+\newcommand{\LF}{\L\cdot\F}   % limited flux sum vector
+
+\renewcommand{\ij}{_{i,j}} % _{i,j}
+\newcommand{\sumj}{\sum\limits_j}            % sum over all j
+\newcommand{\sumjnoti}{\sum\limits_{j\ne i}} % sum over all j not i
+\newcommand{\sumKSi}{\sum\limits_{K\subset S_i}} % sum over K in Si
+\newcommand{\sumKSij}{\sum\limits_{K\subset S_{i,j}}} % sum over K in Sij
+\newcommand{\intSi}{\int\limits_{S_i}}       % integral over support Si
+\newcommand{\intSij}{\int\limits_{S_{i,j}}}  % integral over dual support Sij
+
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}} % partial derivative
+\newcommand{\ddt}[1]{\frac{d#1}{dt}} % ordinary derivative w.r.t. time
+\newcommand{\ppt}[1]{\frac{\partial #1}{\partial t}}
+
+\newcommand{\pr}[1]{\left(#1\right)} % parentheses
+\newcommand{\tab}{\hspace*{0.5cm}}   % tab for verbatim evironments
+
+\newcommand{\eqp}{\,.} % equation period
+\newcommand{\eqc}{\,,} % equation comma
+
+% QED symbol command
+\newcommand{\qed}{\nobreak \ifvmode \relax \else
+      \ifdim\lastskip<1.5em \hskip-\lastskip
+      \hskip1.5em plus0em minus0.5em \fi \nobreak
+      \vrule height0.75em width0.5em depth0.25em\fi}
+
+% math environments
+\newenvironment{proof}[1][Proof]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+\newenvironment{example}[1][Example]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+\newenvironment{remark}[1][Remark]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+

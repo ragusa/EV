@@ -2,85 +2,85 @@
 If the CFL-like condition
 \begin{equation}\label{eq:theta_cfl}
    \timestepsize \leq \frac{\massmatrixletter^L_{i,i}}{(1-\theta)
-     \ssmatrixletter_{i,i}^L}\quad\forall i
+     \ssmatrixletter_{i,i}^{L,\timeindex}}\quad\forall i
    \qquad\Longleftrightarrow\qquad
    1 - \frac{(1-\theta)\timestepsize}{\massmatrixletter^L_{i,i}}
-     \ssmatrixletter_{i,i}^L
+     \ssmatrixletter_{i,i}^{L,\timeindex}
      \geq 0\quad\forall i
 \end{equation}
 is satisfied, then the low-order solution obtained using the Theta scheme
 satisfies the following discrete maximum principle:
 \begin{equation}\label{eq:theta_dmp}
-  \DMPbound_i^-\leq \solutionletter_i^{L,n+1}\leq \DMPbound_i^+
+  \DMPbound_i^-\leq \solutionletter_i^{L,\timeindex+1}\leq \DMPbound_i^+
   \quad\forall i \eqc
 \end{equation}
 where
 \begin{multline}\label{eq:theta_bounds}
    \DMPbound_i^\pm
    \equiv \frac{1}{1+\frac{\theta\timestepsize}{\massmatrixletter^L_{i,i}}
-     \ssmatrixletter_{i,i}^L}\Bigg[\pr{1
+     \ssmatrixletter_{i,i}^{L,\timeindex+1}}\Bigg[\pr{1
      - \frac{(1-\theta)\timestepsize}{\massmatrixletter^L_{i,i}}
-       \sumj\ssmatrixletter_{i,j}^L}\solutionletter_{\substack{\max\\\min},i}^n
+       \sumj\ssmatrixletter_{i,j}^{L,\timeindex}}\solutionletter_{\substack{\max\\\min},i}^\timeindex
      - \frac{\theta\timestepsize}{\massmatrixletter^L_{i,i}}
-       \sumjnoti\ssmatrixletter_{i,j}^L
-       \solutionletter_{\substack{\max\\\min},i}^{L,n+1}
+       \sumjnoti\ssmatrixletter_{i,j}^{L,\timeindex+1}
+       \solutionletter_{\substack{\max\\\min},i}^{L,\timeindex+1}
      \\
      + \frac{\timestepsize}{\massmatrixletter^L_{i,i}}\pr{(1-\theta)
-       \ssrhsletter_i^n + \theta\ssrhsletter_i^{n+1}}\Bigg] \eqc
+       \ssrhsletter_i^\timeindex + \theta\ssrhsletter_i^{\timeindex+1}}\Bigg] \eqc
 \end{multline}
 \[
-  \solutionletter_{\substack{\max\\\min},i}^n
+  \solutionletter_{\substack{\max\\\min},i}^\timeindex
   = \substack{\max\\\min\limits_{j\in\indicescell[\support_i]}}
-    \solutionletter_j^n
+    \solutionletter_j^\timeindex
   \eqc \quad
-  \solutionletter_{\substack{\max\\\min},i}^{L,n+1}
+  \solutionletter_{\substack{\max\\\min},i}^{L,\timeindex+1}
   = \substack{\max\\\min\limits_{j\in\indicescell[\support_i]}}
-  \solutionletter_j^{L,n+1}
+  \solutionletter_j^{L,\timeindex+1}
   \eqc
 \]
 and $\indicescell[\support_i]$ is the set of indices of degrees of freedom in the
 support of degree of freedom $i$.
 \end{theorem}
 \begin{proof}
-Evaluating row $i$ the low-order Theta system, given by Equation
+Evaluating row $i$ of the low-order Theta system, given by Equation
 \eqref{eq:low_theta},
 \[
-  \massmatrixletter^L_{i,i}\frac{\solutionletter_i^{L,n+1}-\solutionletter_i^n}
-    {\timestepsize} + \sumj\ssmatrixletter_{i,j}^L \pr{(1-\theta)
-     \solutionletter_j^n
-  + \theta\solutionletter_j^{L,n+1}}
-  = (1-\theta)\ssrhsletter_i^n + \theta \ssrhsletter_i^{n+1},
+  \massmatrixletter^L_{i,i}\frac{\solutionletter_i^{L,\timeindex+1}-\solutionletter_i^\timeindex}
+    {\timestepsize}
+  + (1-\theta)\sumj\ssmatrixletter_{i,j}^{L,\timeindex}\solutionletter_j^\timeindex
+  + \theta\sumj\ssmatrixletter_{i,j}^{L,\timeindex+1}\solutionletter_j^{L,\timeindex+1}
+  = (1-\theta)\ssrhsletter_i^\timeindex + \theta \ssrhsletter_i^{\timeindex+1},
 \]
 and rearranging,
 \begin{multline*}
-   \solutionletter_i^{L,n+1}
+   \solutionletter_i^{L,\timeindex+1}
    = \frac{1}{1+\frac{\theta\timestepsize}{\massmatrixletter^L_{i,i}}
-       \ssmatrixletter_{i,i}^L}
+       \ssmatrixletter_{i,i}^{L,\timeindex+1}}
      \Bigg[\pr{1 - \frac{(1-\theta)\timestepsize}{\massmatrixletter^L_{i,i}}
-     \ssmatrixletter_{i,i}^L}\solutionletter_i^n
+     \ssmatrixletter_{i,i}^{L,\timeindex}}\solutionletter_i^\timeindex
      \\
-     - \frac{\timestepsize}{\massmatrixletter^L_{i,i}}\sumjnoti
-       \ssmatrixletter_{i,j}^L
-     \pr{\theta\solutionletter_j^{L,n+1} + (1-\theta)\solutionletter_j^n}
+     - \frac{\timestepsize}{\massmatrixletter^L_{i,i}}\pr{
+       (1-\theta)\sumjnoti\ssmatrixletter_{i,j}^{L,\timeindex}\solutionletter_j^\timeindex
+       + \theta\sumjnoti\ssmatrixletter_{i,j}^{L,\timeindex+1}\solutionletter_j^{\timeindex+1}}
      + \frac{\timestepsize}{\massmatrixletter^L_{i,i}}
-       \pr{(1-\theta)\ssrhsletter_i^n + \theta\ssrhsletter_i^{n+1}}\Bigg] \eqp
+       \pr{(1-\theta)\ssrhsletter_i^\timeindex + \theta\ssrhsletter_i^{\timeindex+1}}\Bigg] \eqp
 \end{multline*}
 By Lemma \ref{lem:offdiagonalnegative}, it is known that the off-diagonal
-elements $\ssmatrixletter^L_{i,j}, j\ne i$, are non-positive, and by Equation
+elements $\ssmatrixletter^{L,\timeindex}_{i,j}, j\ne i$, are non-positive, and by Equation
 \eqref{eq:theta_cfl} the term $1 -
-\frac{(1-\theta)\timestepsize}{\massmatrixletter^L_{i,i}}\ssmatrixletter_{i,i}^L$
+\frac{(1-\theta)\timestepsize}{\massmatrixletter^L_{i,i}}\ssmatrixletter_{i,i}^{L,\timeindex}$
 is non-negative. Thus, the following inequality is able to be applied:
 \begin{multline*}
-   \solutionletter_i^L
+   \solutionletter_i^{L,\timeindex+1}
    \le \frac{1}{1+\frac{\theta\timestepsize}{\massmatrixletter^L_{i,i}}
-     \ssmatrixletter_{i,i}^L}
+     \ssmatrixletter_{i,i}^{L,\timeindex+1}}
      \Bigg[\pr{1 - \frac{(1-\theta)\timestepsize}{\massmatrixletter^L_{i,i}}
-       \sumj\ssmatrixletter_{i,j}^L}\solutionletter_{\max,i}^n
+       \sumj\ssmatrixletter_{i,j}^{L,\timeindex}}\solutionletter_{\max,i}^\timeindex
        - \frac{\theta\timestepsize}{\massmatrixletter^L_{i,i}}
-         \sumjnoti\ssmatrixletter_{i,j}^L \solutionletter_{\max,i}^{L,n+1}
+         \sumjnoti\ssmatrixletter_{i,j}^{L,\timeindex+1}\solutionletter_{\max,i}^{L,\timeindex+1}
      \\
        + \frac{\timestepsize}{\massmatrixletter^L_{i,i}}
-         \pr{(1-\theta)\ssrhsletter_i^n + \theta\ssrhsletter_i^{n+1}}\Bigg] \eqc
+         \pr{(1-\theta)\ssrhsletter_i^\timeindex + \theta\ssrhsletter_i^{\timeindex+1}}\Bigg] \eqc
 \end{multline*}
 and similarly for the lower bound.\qed
 \end{proof}

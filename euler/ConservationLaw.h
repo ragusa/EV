@@ -6,10 +6,11 @@
 #ifndef ConservationLaw_h
 #define ConservationLaw_h
 
+#include <algorithm>
 #include <iostream>
 #include <iomanip>
 #include <fstream>
-#include <algorithm>
+#include <sstream>
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/function_parser.h>

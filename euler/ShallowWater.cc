@@ -54,9 +54,15 @@ void ShallowWater<dim>::define_problem()
   // determine problem name
   this->problem_name = sw_parameters.problem_name;
 
+  // get path of source directory from #define created by CMake
+  std::stringstream source_path_ss;
+  source_path_ss << SOURCE_PATH;
+  std::string source_path;
+  source_path_ss >> source_path;
+
   // create problem parameters file name and determine if it exists
   std::string problem_parameters_file =
-    "problems/shallow_water/" + this->problem_name;
+    source_path + "/problems/shallow_water/" + this->problem_name;
   struct stat buffer;
   const bool file_exists = stat(problem_parameters_file.c_str(), &buffer) == 0;
   Assert(file_exists, ExcFileDoesNotExist(problem_parameters_file));

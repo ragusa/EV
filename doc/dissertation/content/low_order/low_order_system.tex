@@ -3,25 +3,36 @@ to include the low-order diffusion matrix. Definitions of the low-order
 diffusion matrix and low-order system matrix follow.
 %--------------------------------------------------------------------------------
 \begin{definition}{Low-Order Artificial Diffusion Matrix}
-   The low-order artificial diffusion matrix $\loworderdiffusionmatrix$
+   The low-order artificial diffusion matrix $\loworderdiffusionmatrix[\timeindex]$
    is assembled using the low-order viscosity and local viscous bilinear
    form introduced in Section \ref{sec:low_order_viscosity}:
    \begin{equation}\label{eq:low_order_diffusion_matrix}
-     \diffusionmatrixletter\ij^L \equiv \sumKSij\lowordercellviscosity
-     \localviscbilinearform{\cell}{j}{i} \eqp
+     \diffusionmatrixletter\ij^{L,\timeindex} \equiv
+       \sumKSij\mkern-20mu\lowordercellviscosity[\timeindex]
+       \localviscbilinearform{\cell}{j}{i} \eqp
    \end{equation}
 \end{definition}
 %--------------------------------------------------------------------------------
 \begin{definition}{Low-Order Steady-State System Matrix}
    The low-order steady-state system matrix is the sum of the inviscid 
-   steady-state system matrix $\ssmatrix$ and the low-order diffusion
-   matrix $\loworderdiffusionmatrix$:
+   steady-state system matrix $\ssmatrix[\timeindex]$ and the low-order diffusion
+   matrix $\loworderdiffusionmatrix[\timeindex]$:
    \begin{equation}\label{eq:low_order_ss_matrix}
-      \loworderssmatrix \equiv \ssmatrix + \loworderdiffusionmatrix \eqp
+      \loworderssmatrix[\timeindex] \equiv
+        \ssmatrix[\timeindex] + \loworderdiffusionmatrix[\timeindex] \eqp
    \end{equation}
 \end{definition}
 %--------------------------------------------------------------------------------
-For the low-order system, the mass matrix is lumped, and the low-order
+For the low-order system, the mass matrix is lumped, i.e.,
+$\consistentmassmatrix\rightarrow\lumpedmassmatrix$, where
+\begin{equation}
+  \massmatrixletter^L_{i,j} = \left\{\begin{array}{l l}
+    \sum\limits_k \massmatrixletter^C_{i,k} & j = i\\
+    0                                       & \mbox{otherwise}
+    \end{array}\right.
+    \eqc
+\end{equation}
+and the low-order
 steady-state system matrix defined in Equation \eqref{eq:low_order_ss_matrix}
 is used. The low-order system for different time discretizations follows:
 \begin{center}{\textbf{Steady-state scheme}:}\end{center}

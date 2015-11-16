@@ -1,0 +1,3 @@
+// This file is to be used by CMake to create a header file
+
+#define SOURCE_PATH "@SOURCE_PATH@"

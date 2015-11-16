@@ -2,27 +2,29 @@
   Maximum Principle}
 If the CFL-like condition
 \begin{equation}\label{eq:explicit_cfl}
-   \timestepsize \leq \frac{\massmatrixletter_{i,i}^L}{\ssmatrixletter_{i,i}^L}
-   \quad\forall i
-   \qquad\Longleftrightarrow\qquad
-   1 - \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssmatrixletter_{i,i}^L
-     \geq 0\quad\forall i \eqc
+  \timestepsize \leq \frac{\massmatrixletter_{i,i}^{L,\timeindex}}
+    {\ssmatrixletter_{i,i}^{L,\timeindex}}
+  \quad\forall i
+  \qquad\Longleftrightarrow\qquad
+  1 - \frac{\timestepsize}{\massmatrixletter_{i,i}^{L,\timeindex}}
+    \ssmatrixletter_{i,i}^{L,\timeindex}
+    \geq 0\quad\forall i \eqc
 \end{equation}
 is satisfied, then the low-order solution obtained using the Explicit Euler
 method satisfies the following discrete maximum principle:
 \begin{equation}\label{eq:explicit_dmp}
-   \DMPbound_i^-\leq \solutionletter_i^{L,n+1}\leq \DMPbound_i^+\quad\forall i
+   \DMPbound_i^-\leq \solutionletter_i^{L,\timeindex+1}\leq \DMPbound_i^+\quad\forall i
    \eqc
 \end{equation}
 where
 \begin{equation}\label{eq:explicit_bounds}
-   \DMPbound_i^\pm\equiv \solutionletter_{\substack{\max\\\min},i}^n
+   \DMPbound_i^\pm\equiv \solutionletter_{\substack{\max\\\min},i}^\timeindex
      \pr{1-\frac{\timestepsize}{\massmatrixletter_{i,i}^L}
-       \sumj\ssmatrixletter^L_{i,j}}
-     + \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssrhsletter_i^n \eqc
+       \sumj\ssmatrixletter^{L,\timeindex}_{i,j}}
+     + \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssrhsletter_i^\timeindex \eqc
 \end{equation}
-where $\solutionletter_{\substack{\max\\\min},i}^n =
-\substack{\max\\\min\limits_{j\in\indicescell[\support_i]}}\solutionletter_j^n$,
+where $\solutionletter_{\substack{\max\\\min},i}^\timeindex =
+\substack{\max\\\min\limits_{j\in\indicescell[\support_i]}}\solutionletter_j^\timeindex$,
 and $\indicescell[\support_i]$ is the set of indices of degrees of freedom in the
 support of degree of freedom $i$.
 \end{theorem}
@@ -31,33 +33,33 @@ support of degree of freedom $i$.
 Evaluating row $i$ of the low-order Explicit Euler system, given by Equation
 \eqref{eq:low_explicit_euler}, and rearranging,
 \[
-   \solutionletter_i^{L,n+1}
-   = \solutionletter_i^n
+   \solutionletter_i^{L,\timeindex+1}
+   = \solutionletter_i^\timeindex
    - \frac{\timestepsize}{\massmatrixletter_{i,i}^L}
-       \sumj\solutionletter_j^n \ssmatrixletter^L_{i,j}
-   + \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssrhsletter_i^n \eqc
+       \sumj\solutionletter_j^\timeindex \ssmatrixletter^{L,\timeindex}_{i,j}
+   + \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssrhsletter_i^\timeindex \eqc
 \]
 where $\massmatrixletter_{i,i}^L$ is the $i$th element of the lumped mass matrix.
 Rearranging this equation,
 \[
-   \solutionletter_i^{L,n+1}
+   \solutionletter_i^{L,\timeindex+1}
    = \left(1-\frac{\timestepsize}{\massmatrixletter_{i,i}^L}
-       \ssmatrixletter^L_{i,i}\right)\solutionletter_i^n
+       \ssmatrixletter^{L,\timeindex}_{i,i}\right)\solutionletter_i^\timeindex
    - \frac{\timestepsize}{\massmatrixletter_{i,i}^L}
-       \sumjnoti\solutionletter_j^n \ssmatrixletter^L_{i,j}
-   + \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssrhsletter_i^n \eqc
+       \sumjnoti\solutionletter_j^\timeindex \ssmatrixletter^{L,\timeindex}_{i,j}
+   + \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssrhsletter_i^\timeindex \eqc
 \]
 The CFL-like condition in Equation \eqref{eq:explicit_cfl} gives that
-$1-\frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssmatrixletter^L_{i,i} \ge
+$1-\frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssmatrixletter^{L,\timeindex}_{i,i} \ge
 0$, and by Lemma \ref{lem:offdiagonalnegative}, it is known that the
-off-diagonal elements $\ssmatrixletter^L_{i,j}, j\ne i$, are non-positive.
+off-diagonal elements $\ssmatrixletter^{L,\timeindex}_{i,j}, j\ne i$, are non-positive.
 Thus, the following inequality is able to be applied:
 \[
-   \solutionletter_i^{L,n+1}
-   \le \solutionletter_{\max,i}^n
+   \solutionletter_i^{L,\timeindex+1}
+   \le \solutionletter_{\max,i}^\timeindex
          \pr{1-\frac{\timestepsize}{\massmatrixletter_{i,i}^L}
-         \sumj\ssmatrixletter^L_{i,j}}
-   + \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssrhsletter_i^n \eqc
+         \sumj\ssmatrixletter^{L,\timeindex}_{i,j}}
+   + \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssrhsletter_i^\timeindex \eqc
 \]
 and similarly for the lower bound.\qed
 \end{proof}

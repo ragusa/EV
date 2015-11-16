@@ -6,6 +6,8 @@
 #include <iostream>
 #include <deal.II/base/logstream.h>
 
+#include "CMakeVars.h"
+
 #include "Burgers.h"
 #include "BurgersParameters.h"
 #include "Euler.h"

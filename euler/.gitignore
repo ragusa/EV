@@ -1,5 +1,7 @@
 CMakeCache.txt
 CMakeFiles
+CMakeVars.h
+CTestTestfile.cmake
 Makefile
 cmake_install.cmake
 burgers
@@ -10,3 +12,4 @@ shallowwater
 shallowwater_parallel
 doxygen_output
 *.bak
+Testing

@@ -110,11 +110,8 @@ PostProcessor<dim>::PostProcessor(
 
   // create name of output subdirectory
   std::stringstream output_dir_ss;
-  output_dir_ss << "output/" << problem_name << "/";
+  output_dir_ss << SOURCE_PATH << "/output/" << problem_name << "/";
   output_dir = output_dir_ss.str();
-
-  // create output subdirectory
-  create_directory(output_dir);
 
   // create fine triangulation and dof handler
   createFineTriangulationAndDoFHandler(triangulation_);
@@ -147,9 +144,6 @@ void PostProcessor<dim>::output_results(const Vector<double> & solution,
                                         const DoFHandler<dim> & dof_handler,
                                         const Triangulation<dim> & triangulation)
 {
-  // create output directory if it doesn't exist
-  create_directory("output");
-
   // create output subdirectory if it doesn't exist
   create_directory(output_dir);
 
@@ -411,7 +405,6 @@ void PostProcessor<dim>::output_at_dof_points(
   const std::string & transient_appendage)
 {
   // create output directory and subdirectory if they do not exist
-  create_directory("output");
   create_directory(output_dir);
 
   // create DataOut object for quantity
@@ -564,9 +557,6 @@ void PostProcessor<dim>::output_cell_maps(
   const bool & output_1d_vtu,
   const std::string & transient_appendage)
 {
-  // create output directory if it does not exist
-  create_directory("output");
-
   // create output subdirectory if it does not exist
   create_directory(output_dir);
 
@@ -723,9 +713,6 @@ void PostProcessor<dim>::output_grid(
   {
     if (dim > 1)
     {
-      // create output directory if it doesn't exist
-      create_directory("output");
-
       // create output subdirectory if it doesn't exist
       create_directory(output_dir);
 

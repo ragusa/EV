@@ -2,15 +2,15 @@ To construct a high-order scheme, the concept of entropy viscosity is used in
 conjunction with the bilinear form introduced in Equation
 \eqref{eq:bilinearform}.  The high-order viscosity
 $\highordercellviscosity[\timeindex]$ is computed as the minimum of the
-low-order viscosity $\lowordercellviscosity$ and the entropy viscosity
+low-order viscosity $\lowordercellviscosity[\timeindex]$ and the entropy viscosity
 $\entropycellviscosity[\timeindex]$:
 \begin{equation}\label{eq:high_order_viscosity}
-   \highordercellviscosity[\timeindex] = \min(\lowordercellviscosity,
+   \highordercellviscosity[\timeindex] = \min(\lowordercellviscosity[\timeindex],
    \entropycellviscosity[\timeindex]) \eqc
 \end{equation}
 where the entropy viscosity is defined as
 \begin{equation}
-   \entropycellviscosity[n] = \frac{\entropyresidualcoef
+   \entropycellviscosity[\timeindex] = \frac{\entropyresidualcoef
    \entropyresidual_\cellindex^\timeindex
    + \entropyjumpcoef\entropyjump_\cell^\timeindex}
    {\|\entropy(\approximatescalarsolution^\timeindex)
