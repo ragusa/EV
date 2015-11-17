@@ -209,6 +209,10 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
       "2",
       Patterns::Integer(),
       "Weight for center of Laplacian smoothing for entropy viscosity");
+    prm.declare_entry("diffusion type",
+                      "laplacian",
+                      Patterns::Anything(),
+                      "choice for type of diffusion");
   }
   prm.leave_subsection();
 
@@ -320,9 +324,9 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
   {
     const std::string time_choice = prm.get("time step size method");
     if (time_choice == "constant_dt")
-      time_step_size_method = constant_dt;
+      time_step_size_method = TimeStepSizeMethod::constant_dt;
     else if (time_choice == "cfl_condition")
-      time_step_size_method = cfl_condition;
+      time_step_size_method = TimeStepSizeMethod::cfl_condition;
     else
       Assert(false, ExcNotImplemented());
 
@@ -339,21 +343,21 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
   {
     const std::string temporal_choice = prm.get("temporal integrator");
     if (temporal_choice == "runge_kutta")
-      temporal_integrator = runge_kutta;
+      temporal_integrator = TemporalIntegrator::runge_kutta;
     else
       Assert(false, ExcNotImplemented());
 
     const std::string rk_choice = prm.get("runge kutta method");
     if (rk_choice == "ERK1")
-      time_discretization = ERK1;
+      time_discretization = TemporalDiscretization::ERK1;
     else if (rk_choice == "ERK2")
-      time_discretization = ERK2;
+      time_discretization = TemporalDiscretization::ERK2;
     else if (rk_choice == "ERK3")
-      time_discretization = ERK3;
+      time_discretization = TemporalDiscretization::ERK3;
     else if (rk_choice == "ERK4")
-      time_discretization = ERK4;
+      time_discretization = TemporalDiscretization::ERK4;
     else if (rk_choice == "SDIRK22")
-      time_discretization = SDIRK22;
+      time_discretization = TemporalDiscretization::SDIRK22;
     else
       Assert(false, ExcNotImplemented());
   }
@@ -364,13 +368,13 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
   {
     const std::string verbosity = prm.get("nonlinear verbosity");
     if (verbosity == "verbose")
-      nonlinear_verbosity = verbose;
+      nonlinear_verbosity = Verbosity::verbose;
     if (verbosity == "quiet")
-      nonlinear_verbosity = quiet;
+      nonlinear_verbosity = Verbosity::quiet;
 
     const std::string solver = prm.get("nonlinear method");
     if (solver == "newton")
-      nonlinear_solver = newton;
+      nonlinear_solver = NonlinearSolverType::newton;
 
     nonlinear_atol = prm.get_double("nonlinear absolute tolerance");
     nonlinear_rtol = prm.get_double("nonlinear relative tolerance");
@@ -384,25 +388,25 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
   {
     const std::string verbosity = prm.get("linear verbosity");
     if (verbosity == "verbose")
-      linear_verbosity = verbose;
+      linear_verbosity = Verbosity::verbose;
     if (verbosity == "quiet")
-      linear_verbosity = quiet;
+      linear_verbosity = Verbosity::quiet;
 
     const std::string solver = prm.get("linear method");
     if (solver == "direct")
-      linear_solver = direct;
+      linear_solver = LinearSolverType::direct;
     else if (solver == "gmres")
-      linear_solver = gmres;
+      linear_solver = LinearSolverType::gmres;
     else if (solver == "cg")
-      linear_solver = cg;
+      linear_solver = LinearSolverType::cg;
 
     const std::string mass_solver = prm.get("mass matrix linear method");
     if (mass_solver == "direct")
-      mass_matrix_linear_solver = direct;
+      mass_matrix_linear_solver = LinearSolverType::direct;
     else if (mass_solver == "gmres")
-      mass_matrix_linear_solver = gmres;
+      mass_matrix_linear_solver = LinearSolverType::gmres;
     else if (mass_solver == "cg")
-      mass_matrix_linear_solver = cg;
+      mass_matrix_linear_solver = LinearSolverType::cg;
 
     linear_atol = prm.get_double("linear absolute tolerance");
     linear_rtol = prm.get_double("linear relative tolerance");
@@ -415,17 +419,17 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
   {
     const std::string viscosity_choice = prm.get("viscosity type");
     if (viscosity_choice == "none")
-      viscosity_type = none;
+      viscosity_type = ViscosityType::none;
     else if (viscosity_choice == "constant")
-      viscosity_type = constant;
+      viscosity_type = ViscosityType::constant;
     else if (viscosity_choice == "old_first_order")
-      viscosity_type = old_first_order;
+      viscosity_type = ViscosityType::old_first_order;
     else if (viscosity_choice == "max_principle")
-      viscosity_type = max_principle;
+      viscosity_type = ViscosityType::max_principle;
     else if (viscosity_choice == "invariant_domain")
-      viscosity_type = invariant_domain;
+      viscosity_type = ViscosityType::invariant_domain;
     else if (viscosity_choice == "entropy")
-      viscosity_type = entropy;
+      viscosity_type = ViscosityType::entropy;
     else
       Assert(false, ExcNotImplemented());
 
@@ -439,6 +443,16 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
     entropy_viscosity_smoothing = prm.get("entropy viscosity smoothing");
     entropy_viscosity_smoothing_weight =
       prm.get_integer("entropy viscosity smoothing weight");
+
+    const std::string diffusion_choice = prm.get("diffusion type");
+    if (diffusion_choice == "none")
+      diffusion_type = DiffusionType::none;
+    else if (diffusion_choice == "laplacian")
+      diffusion_type = DiffusionType::laplacian;
+    else if (diffusion_choice == "graphtheoretic")
+      diffusion_type = DiffusionType::graphtheoretic;
+    else
+      ExcNotImplemented();
   }
   prm.leave_subsection();
 

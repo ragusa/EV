@@ -40,7 +40,7 @@ end
 subsection artificial viscosity
    # options are <none|constant|old_first_order|max_principle|invariant_domain|entropy>
    set viscosity type = constant
-   set constant viscosity value = 10.00
+   set constant viscosity value = 1.00
    set first order viscosity coefficient = 0.5
    set multiply low order viscosity by froude = false
    set use low order viscosity for first time step = true

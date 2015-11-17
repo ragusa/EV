@@ -83,7 +83,11 @@ ADD_CUSTOM_TARGET(release
   COMMENT "Switch CMAKE_BUILD_TYPE to Release"
   )
 
+# testing
 ENABLE_TESTING()
 ADD_SUBDIRECTORY(tests/group_fe_values)
 ADD_SUBDIRECTORY(tests/quadrature)
+ADD_SUBDIRECTORY(tests/shallowwater_galerkin_solution)
+ADD_SUBDIRECTORY(tests/shallowwater_constant_solution)
+ADD_SUBDIRECTORY(tests/shallowwater_low_solution)
 ADD_SUBDIRECTORY(tests/shallowwater_ev_solution)

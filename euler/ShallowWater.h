@@ -65,6 +65,10 @@ private:
   std::vector<DataComponentInterpretation::DataComponentInterpretation>
     get_component_interpretations() override;
 
+  void get_fe_extractors(
+    std::vector<FEValuesExtractors::Scalar> & scalar_extractors,
+    std::vector<FEValuesExtractors::Vector> & vector_extractors) const override;
+
   void assemble_lumped_mass_matrix() override;
 
   void define_problem() override;

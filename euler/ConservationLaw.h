@@ -38,6 +38,12 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/error_estimator.h>
+
+#include "Viscosity.h"
+#include "ConstantViscosity.h"
+#include "ArtificialDiffusion.h"
+#include "NoDiffusion.h"
+#include "LaplacianDiffusion.h"
 #include "BoundaryConditions.h"
 #include "ConservationLawParameters.h"
 #include "DirichletBoundaryConditions.h"
@@ -107,6 +113,17 @@ protected:
 
   /** \brief Typedef for cell iterator map to double */
   typedef std::map<Cell, double> CellMap;
+
+  using TimeStepSizeMethod =
+    typename ConservationLawParameters<dim>::TimeStepSizeMethod;
+  using TemporalIntegrator =
+    typename ConservationLawParameters<dim>::TemporalIntegrator;
+  using TemporalDiscretization =
+    typename ConservationLawParameters<dim>::TemporalDiscretization;
+  using ViscosityType = typename ConservationLawParameters<dim>::ViscosityType;
+  using DiffusionType = typename ConservationLawParameters<dim>::DiffusionType;
+  using LinearSolverType =
+    typename ConservationLawParameters<dim>::LinearSolverType;
 
   void initialize_system();
   void initialize_runge_kutta();
@@ -197,10 +214,6 @@ protected:
    */
   virtual void compute_ss_residual(const double & dt, Vector<double> & r) = 0;
 
-  // virtual void compute_ss_jacobian() = 0;
-
-  // void compute_tr_residual(unsigned int i, double dt);
-
   /**
    * \brief Computes entropy for each quadrature point on a cell or face.
    *
@@ -248,6 +261,16 @@ protected:
    */
   virtual std::vector<DataComponentInterpretation::DataComponentInterpretation>
     get_component_interpretations() = 0;
+
+  /**
+   * \brief Returns vectors of the scalar and vector FE extractors.
+   *
+   * \param[out] vector of the scalar extractors
+   * \param[out] vector of the vector extractors
+   */
+  virtual void get_fe_extractors(
+    std::vector<FEValuesExtractors::Scalar> & scalar_extractors,
+    std::vector<FEValuesExtractors::Vector> & vector_extractors) const = 0;
 
   /**
    * \brief Creates the domain, computes volume, defines initial
@@ -401,9 +424,16 @@ protected:
   // maps
   CellMap cell_diameter;
   CellMap max_flux_speed_cell;
-  CellMap viscosity;
-  CellMap first_order_viscosity;
-  CellMap entropy_viscosity;
+
+  // viscosity
+  // std::unique_ptr<Entropy> entropy;
+  std::shared_ptr<Viscosity<dim>> viscosity;
+  std::shared_ptr<Viscosity<dim>> constant_viscosity;
+  CellMap viscosity_map;
+  CellMap first_order_viscosity_map;
+  CellMap entropy_viscosity_map;
+
+  std::unique_ptr<ArtificialDiffusion<dim>> artificial_diffusion;
 
   /** \brief Flag to signal being in last adaptive refinement cycle */
   bool in_final_cycle;

@@ -122,7 +122,7 @@ void ConservationLaw<dim>::run()
     // solve transient with selected time integrator
     switch (parameters.temporal_integrator)
     {
-      case ConservationLawParameters<dim>::runge_kutta: // Runge-Kutta
+      case TemporalIntegrator::runge_kutta: // Runge-Kutta
         solve_runge_kutta(postprocessor);
         break;
       default:
@@ -189,26 +189,26 @@ void ConservationLaw<dim>::output_viscosity(PostProcessor<dim> & postprocessor,
   // output final viscosities if non-constant viscosity used
   switch (parameters.viscosity_type)
   {
-    case ConservationLawParameters<dim>::none:
+    case ViscosityType::none:
       break;
-    case ConservationLawParameters<dim>::constant:
+    case ViscosityType::constant:
       break;
-    case ConservationLawParameters<dim>::old_first_order:
-      viscosities.push_back(&first_order_viscosity);
+    case ViscosityType::old_first_order:
+      viscosities.push_back(&first_order_viscosity_map);
       viscosity_names.push_back("low_order_viscosity");
       break;
-    case ConservationLawParameters<dim>::entropy:
+    case ViscosityType::entropy:
       // low-order viscosity
-      viscosities.push_back(&first_order_viscosity);
+      viscosities.push_back(&first_order_viscosity_map);
       viscosity_names.push_back("low_order_viscosity");
 
       // entropy viscosity
       // if low-order viscosity is used for first time step and only 1 time
       // step is taken, then the size of the entropy viscosity map is 0,
       // so that map cannot be output
-      if (entropy_viscosity.size() > 0)
+      if (entropy_viscosity_map.size() > 0)
       {
-        viscosities.push_back(&entropy_viscosity);
+        viscosities.push_back(&entropy_viscosity_map);
         viscosity_names.push_back("entropy_viscosity");
       }
       else
@@ -218,7 +218,7 @@ void ConservationLaw<dim>::output_viscosity(PostProcessor<dim> & postprocessor,
       }
 
       // high-order viscosity
-      viscosities.push_back(&viscosity);
+      viscosities.push_back(&viscosity_map);
       viscosity_names.push_back("high_order_viscosity");
 
       break;
@@ -292,26 +292,25 @@ void ConservationLaw<dim>::initialize_system()
     variables, initial_conditions_strings, constants, false);
 
   // initialize Runge-Kutta data if RK is being used
-  if (parameters.temporal_integrator ==
-      ConservationLawParameters<dim>::runge_kutta)
+  if (parameters.temporal_integrator == TemporalIntegrator::runge_kutta)
     initialize_runge_kutta();
 
   // determine mass matrix to be used based on method
   switch (parameters.viscosity_type)
   {
-    case ConservationLawParameters<dim>::none:
+    case ViscosityType::none:
       mass_matrix = &consistent_mass_matrix;
       break;
-    case ConservationLawParameters<dim>::constant:
+    case ViscosityType::constant:
       mass_matrix = &lumped_mass_matrix;
       break;
-    case ConservationLawParameters<dim>::old_first_order:
+    case ViscosityType::old_first_order:
       mass_matrix = &lumped_mass_matrix;
       break;
-    case ConservationLawParameters<dim>::max_principle:
+    case ViscosityType::max_principle:
       mass_matrix = &lumped_mass_matrix;
       break;
-    case ConservationLawParameters<dim>::entropy:
+    case ViscosityType::entropy:
       mass_matrix = &consistent_mass_matrix;
       break;
     default:
@@ -329,19 +328,19 @@ void ConservationLaw<dim>::initialize_runge_kutta()
   rk.s = 0;
   switch (parameters.time_discretization)
   {
-    case ConservationLawParameters<dim>::ERK1:
+    case TemporalDiscretization::ERK1:
       rk.s = 1;
       break;
-    case ConservationLawParameters<dim>::ERK2:
+    case TemporalDiscretization::ERK2:
       rk.s = 2;
       break;
-    case ConservationLawParameters<dim>::ERK3:
+    case TemporalDiscretization::ERK3:
       rk.s = 3;
       break;
-    case ConservationLawParameters<dim>::ERK4:
+    case TemporalDiscretization::ERK4:
       rk.s = 4;
       break;
-    case ConservationLawParameters<dim>::SDIRK22:
+    case TemporalDiscretization::SDIRK22:
       rk.s = 2;
       break;
     default:
@@ -360,12 +359,12 @@ void ConservationLaw<dim>::initialize_runge_kutta()
   double gamma, sigma;
   switch (parameters.time_discretization)
   {
-    case ConservationLawParameters<dim>::ERK1:
+    case TemporalDiscretization::ERK1:
       rk.b[0] = 1;
       rk.c[0] = 0;
       rk.is_explicit = true;
       break;
-    case ConservationLawParameters<dim>::ERK2:
+    case TemporalDiscretization::ERK2:
       rk.a[1][0] = 0.5;
       rk.b[0] = 0;
       rk.b[1] = 1;
@@ -373,7 +372,7 @@ void ConservationLaw<dim>::initialize_runge_kutta()
       rk.c[1] = 0.5;
       rk.is_explicit = true;
       break;
-    case ConservationLawParameters<dim>::ERK3:
+    case TemporalDiscretization::ERK3:
       rk.a[1][0] = 1.0;
       rk.a[2][0] = 0.25;
       rk.a[2][1] = 0.25;
@@ -385,7 +384,7 @@ void ConservationLaw<dim>::initialize_runge_kutta()
       rk.c[2] = 0.5;
       rk.is_explicit = true;
       break;
-    case ConservationLawParameters<dim>::ERK4:
+    case TemporalDiscretization::ERK4:
       rk.a[1][0] = 0.5;
       rk.a[2][0] = 0;
       rk.a[2][1] = 0.5;
@@ -402,7 +401,7 @@ void ConservationLaw<dim>::initialize_runge_kutta()
       rk.c[3] = 1;
       rk.is_explicit = true;
       break;
-    case ConservationLawParameters<dim>::SDIRK22:
+    case TemporalDiscretization::SDIRK22:
       gamma = 1.0 - 1.0 / std::sqrt(2.0);
       sigma = 1.0 - gamma;
       rk.a[0][0] = gamma;
@@ -484,9 +483,9 @@ void ConservationLaw<dim>::setup_system()
   // clear maps
   cell_diameter.clear();
   max_flux_speed_cell.clear();
-  viscosity.clear();
-  first_order_viscosity.clear();
-  entropy_viscosity.clear();
+  viscosity_map.clear();
+  first_order_viscosity_map.clear();
+  entropy_viscosity_map.clear();
 
   // clear and distribute dofs
   dof_handler.clear();
@@ -595,7 +594,7 @@ void ConservationLaw<dim>::setup_system()
     // if using maximum-principle preserving definition of first-order viscosity,
     // then compute bilinear forms and viscous fluxes
     if (parameters.viscosity_type ==
-    ConservationLawParameters<dim>::max_principle)
+    max_principle)
     {
       viscous_bilinear_forms.reinit(unconstrained_sparsity_pattern);
       compute_viscous_bilinear_forms();
@@ -630,14 +629,78 @@ void ConservationLaw<dim>::setup_system()
 
   // allocate memory for steady-state residual evaluations if Runge-Kutta is
   // used
-  if (parameters.temporal_integrator ==
-      ConservationLawParameters<dim>::runge_kutta)
+  if (parameters.temporal_integrator == TemporalIntegrator::runge_kutta)
     for (int i = 0; i < rk.s; ++i)
 #ifdef IS_PARALLEL
       rk.f[i].reinit(locally_owned_dofs, locally_relevant_dofs, mpi_communicator);
 #else
       rk.f[i].reinit(n_dofs);
 #endif
+
+  // create viscosity
+  switch (parameters.viscosity_type)
+  {
+    // no viscosity
+    case ViscosityType::none:
+    {
+      auto tmp_viscosity =
+        std::make_shared<ConstantViscosity<dim>>(0.0, dof_handler);
+      constant_viscosity = tmp_viscosity;
+      viscosity = tmp_viscosity;
+      break;
+    }
+    // constant viscosity
+    case ViscosityType::constant:
+    {
+      auto tmp_viscosity = std::make_shared<ConstantViscosity<dim>>(
+        parameters.constant_viscosity_value, dof_handler);
+      constant_viscosity = tmp_viscosity;
+      viscosity = tmp_viscosity;
+      break;
+    }
+    default:
+    {
+      Assert(false, ExcNotImplemented());
+      break;
+    }
+  }
+
+  // create artificial diffusion
+  switch (parameters.diffusion_type)
+  {
+    // no diffusion
+    case DiffusionType::none:
+    {
+      auto tmp_artificial_diffusion = std::make_unique<NoDiffusion<dim>>();
+      artificial_diffusion = std::move(tmp_artificial_diffusion);
+      break;
+    }
+    // Laplacian diffusion
+    case DiffusionType::laplacian:
+    {
+      // get extractors
+      std::vector<FEValuesExtractors::Scalar> scalar_extractors;
+      std::vector<FEValuesExtractors::Vector> vector_extractors;
+      get_fe_extractors(scalar_extractors, vector_extractors);
+
+      auto tmp_artificial_diffusion = std::make_unique<LaplacianDiffusion<dim>>(
+        scalar_extractors, vector_extractors, n_q_points_cell, dofs_per_cell);
+      artificial_diffusion = std::move(tmp_artificial_diffusion);
+      break;
+    }
+    // graph-theoretic diffusion
+    case DiffusionType::graphtheoretic:
+    {
+      ExcNotImplemented();
+      break;
+    }
+    // else
+    default:
+    {
+      ExcNotImplemented();
+      break;
+    }
+  }
 
   // perform additional setup required by derived classes
   perform_additional_setup();
@@ -786,10 +849,10 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     double dt;
     switch (parameters.time_step_size_method)
     {
-      case ConservationLawParameters<dim>::constant_dt:
+      case TimeStepSizeMethod::constant_dt:
         dt = parameters.time_step_size;
         break;
-      case ConservationLawParameters<dim>::cfl_condition:
+      case TimeStepSizeMethod::cfl_condition:
         dt = compute_dt_from_cfl_condition();
         break;
       default:
@@ -934,7 +997,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     /*
         // check that DMP is satisfied at all time steps
         if (parameters.viscosity_type ==
-            ConservationLawParameters<dim>::max_principle)
+            max_principle)
         {
           bool DMP_satisfied_this_time_step = check_DMP(n);
           DMP_satisfied = DMP_satisfied and DMP_satisfied_this_time_step;
@@ -952,7 +1015,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
   /*
     // report if DMP was satisfied at all time steps
     if (parameters.viscosity_type ==
-    ConservationLawParameters<dim>::max_principle)
+    max_principle)
     {
       if (DMP_satisfied)
         cout << "DMP was satisfied at all time steps" << std::endl;
@@ -1043,7 +1106,7 @@ void ConservationLaw<dim>::add_maximum_principle_viscosity_bilinear_form(
       }
       // add viscous term for dof i; note 0 is used for quadrature point
       // because viscosity is the same for all quadrature points on a cell
-      cell_residual(i) += viscosity[cell] * b_i;
+      cell_residual(i) += viscosity_map[cell] * b_i;
     }
 
     // aggregate local residual into global residual
@@ -1070,7 +1133,7 @@ void ConservationLaw<dim>::linear_solve(const SparseMatrix<double> & A,
   switch (parameters.linear_solver)
   {
     // UMFPACK
-    case ConservationLawParameters<dim>::direct:
+    case LinearSolverType::direct:
     {
       SparseDirectUMFPACK A_umfpack;
       A_umfpack.initialize(A);
@@ -1078,13 +1141,13 @@ void ConservationLaw<dim>::linear_solve(const SparseMatrix<double> & A,
       break;
     }
     // GMRes
-    case ConservationLawParameters<dim>::gmres:
+    case LinearSolverType::gmres:
     {
       Assert(false, ExcNotImplemented());
       break;
     }
     // CG with SSOR
-    case ConservationLawParameters<dim>::cg:
+    case LinearSolverType::cg:
     {
       SolverControl solver_control(parameters.max_linear_iterations,
                                    parameters.linear_atol);
@@ -1125,43 +1188,43 @@ void ConservationLaw<dim>::update_viscosities(const double & dt,
   switch (parameters.viscosity_type)
   {
     // no viscosity
-    case ConservationLawParameters<dim>::ViscosityType::none:
+    case ViscosityType::none:
     {
       Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
       for (; cell != endc; ++cell)
-        viscosity[cell] = 0.0;
+        viscosity_map[cell] = 0.0;
       break;
     }
     // constant viscosity
-    case ConservationLawParameters<dim>::ViscosityType::constant:
+    case ViscosityType::constant:
     {
       Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
       for (; cell != endc; ++cell)
-        viscosity[cell] = parameters.constant_viscosity_value;
+        viscosity_map[cell] = parameters.constant_viscosity_value;
       break;
     }
     // old first order viscosity
-    case ConservationLawParameters<dim>::ViscosityType::old_first_order:
+    case ViscosityType::old_first_order:
     {
       update_old_low_order_viscosity(true);
-      viscosity = first_order_viscosity;
+      viscosity_map = first_order_viscosity_map;
       break;
     }
     // max principle viscosity
-    case ConservationLawParameters<dim>::ViscosityType::max_principle:
+    case ViscosityType::max_principle:
     {
       update_max_principle_viscosity();
-      viscosity = first_order_viscosity;
+      viscosity_map = first_order_viscosity_map;
       break;
     }
     // invariant domain viscosity
-    case ConservationLawParameters<dim>::ViscosityType::invariant_domain:
+    case ViscosityType::invariant_domain:
     {
       ExcNotImplemented();
       break;
     }
     // entropy viscosity
-    case ConservationLawParameters<dim>::ViscosityType::entropy:
+    case ViscosityType::entropy:
     {
       Cell cell, endc = dof_handler.end();
       if (parameters.use_low_order_viscosity_for_first_time_step && n == 1)
@@ -1172,8 +1235,8 @@ void ConservationLaw<dim>::update_viscosities(const double & dt,
         // use low-order viscosities for first time step
         for (cell = dof_handler.begin_active(); cell != endc; ++cell)
         {
-          entropy_viscosity[cell] = first_order_viscosity[cell];
-          viscosity[cell] = first_order_viscosity[cell];
+          entropy_viscosity_map[cell] = first_order_viscosity_map[cell];
+          viscosity_map[cell] = first_order_viscosity_map[cell];
         }
       }
       else
@@ -1192,8 +1255,8 @@ void ConservationLaw<dim>::update_viscosities(const double & dt,
 
         // compute high-order viscosities
         for (cell = dof_handler.begin_active(); cell != endc; ++cell)
-          viscosity[cell] =
-            std::min(first_order_viscosity[cell], entropy_viscosity[cell]);
+          viscosity_map[cell] = std::min(first_order_viscosity_map[cell],
+                                         entropy_viscosity_map[cell]);
       }
       break;
     }
@@ -1227,7 +1290,7 @@ void ConservationLaw<dim>::update_old_low_order_viscosity(const bool &)
   Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
   for (; cell != endc; ++cell)
   {
-    first_order_viscosity[cell] =
+    first_order_viscosity_map[cell] =
       std::abs(c_max * cell_diameter[cell] * max_flux_speed_cell[cell]);
   }
 }
@@ -1252,15 +1315,15 @@ void ConservationLaw<dim>::update_max_principle_viscosity()
     // get local dof indices
     cell->get_dof_indices(local_dof_indices);
 
-    first_order_viscosity[cell] = 0.0;
+    first_order_viscosity_map[cell] = 0.0;
     for (unsigned int i = 0; i < dofs_per_cell; ++i)
     {
       for (unsigned int j = 0; j < dofs_per_cell; ++j)
       {
         if (i != j)
         {
-          first_order_viscosity[cell] = std::max(
-            first_order_viscosity[cell],
+          first_order_viscosity_map[cell] = std::max(
+            first_order_viscosity_map[cell],
             std::abs(viscous_fluxes(local_dof_indices[i], local_dof_indices[j])) /
               (-viscous_bilinear_forms(local_dof_indices[i],
                                        local_dof_indices[j])));
@@ -1402,10 +1465,10 @@ void ConservationLaw<dim>::update_entropy_viscosities(const double & dt)
 
     // compute entropy viscosity
     double h2 = std::pow(cell_diameter[cell], 2);
-    entropy_viscosity[cell] = 0.0;
+    entropy_viscosity_map[cell] = 0.0;
     for (unsigned int q = 0; q < n_q_points_cell; ++q)
-      entropy_viscosity[cell] = std::max(
-        entropy_viscosity[cell],
+      entropy_viscosity_map[cell] = std::max(
+        entropy_viscosity_map[cell],
         h2 * (entropy_residual_coefficient * std::abs(entropy_residual[q]) +
               jump_coefficient * max_entropy_jump) /
           entropy_normalization[q]);
@@ -1608,7 +1671,7 @@ template <int dim>
 void ConservationLaw<dim>::smooth_entropy_viscosity_max()
 {
   // copy entropy viscosities
-  CellMap entropy_viscosity_unsmoothed = entropy_viscosity;
+  CellMap entropy_viscosity_unsmoothed = entropy_viscosity_map;
 
   // loop over cells
   Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
@@ -1625,8 +1688,9 @@ void ConservationLaw<dim>::smooth_entropy_viscosity_max()
         Cell neighbor_cell = cell->neighbor(iface);
 
         // take max of cell and its neighbor
-        entropy_viscosity[cell] = std::max(
-          entropy_viscosity[cell], entropy_viscosity_unsmoothed[neighbor_cell]);
+        entropy_viscosity_map[cell] =
+          std::max(entropy_viscosity_map[cell],
+                   entropy_viscosity_unsmoothed[neighbor_cell]);
       }
     }
   }
@@ -1640,7 +1704,7 @@ template <int dim>
 void ConservationLaw<dim>::smooth_entropy_viscosity_average()
 {
   // copy entropy viscosities
-  CellMap entropy_viscosity_unsmoothed = entropy_viscosity;
+  CellMap entropy_viscosity_unsmoothed = entropy_viscosity_map;
 
   // loop over cells
   Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
@@ -1672,7 +1736,7 @@ void ConservationLaw<dim>::smooth_entropy_viscosity_average()
     }
 
     // compute average, smoothed value
-    entropy_viscosity[cell] =
+    entropy_viscosity_map[cell] =
       sum / (neighbor_count + parameters.entropy_viscosity_smoothing_weight);
   }
 }

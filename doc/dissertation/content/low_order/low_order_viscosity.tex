@@ -6,11 +6,11 @@ bilinear form is employed in the low-order scheme:
    The local viscous bilinear form for cell $\cell$ is defined as follows:
    \begin{equation}\label{eq:bilinearform}
      \localviscbilinearform{\cell}{j}{i} \equiv \left\{\begin{array}{l l}
-       -\frac{1}{\cardinality - 1}\cellvolume & i\ne j
-       \quad i,j\in \indicescell \\
-       \cellvolume & i = j \eqc \quad i,j\in \indicescell \\
-       0           & i\notin\indicescell \quad | \quad j\notin\indicescell
-     \end{array}\right. \eqc
+       -\frac{1}{\cardinality - 1}\cellvolume\eqc & i\ne j\eqc
+       \quad i,j\in \indicescell\eqc \\
+       \cellvolume\eqc & i = j \eqc \quad i,j\in \indicescell\eqc \\
+       0          \eqc & \mbox{otherwise}\eqc
+     \end{array}\right.
    \end{equation}
    with $\indicescell$ being the set of indices corresponding to degrees of
    freedom in the support of cell $\cell$:

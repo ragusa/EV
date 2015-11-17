@@ -17,14 +17,16 @@ template <int dim>
 class LaplacianDiffusion : public ArtificialDiffusion<dim>
 {
 public:
+  using Cell = typename ArtificialDiffusion<dim>::Cell;
+
   LaplacianDiffusion(
     const std::vector<FEValuesExtractors::Scalar> & scalar_extractors_,
     const std::vector<FEValuesExtractors::Vector> & vector_extractors_,
-    const Viscosity<dim> * const viscosity,
     const unsigned int & n_quadrature_points_,
     const unsigned int & dofs_per_cell_);
 
-  void apply(const Vector<double> & solution,
+  void apply(std::shared_ptr<Viscosity<dim>> viscosity,
+             const Vector<double> & solution,
              const Cell & cell,
              const FEValues<dim> & fe_values,
              Vector<double> & cell_residual) const override;
@@ -41,9 +43,6 @@ private:
 
   /** \brief Number of vector components in solution */
   const unsigned int n_vector_components;
-
-  /** \brief Viscosity */
-  const Viscosity<dim> * const viscosity;
 
   /** \brief Number of quadrature points in cell */
   const unsigned int n_quadrature_points;

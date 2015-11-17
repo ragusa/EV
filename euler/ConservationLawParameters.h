@@ -19,7 +19,7 @@ public:
   unsigned int n_components;
 
   // refinement parameters
-  enum RefinementMode
+  enum class RefinementMode
   {
     space,
     time
@@ -30,7 +30,7 @@ public:
   double refinement_fraction;
   double coarsening_fraction;
 
-  enum TimeStepSizeMethod
+  enum class TimeStepSizeMethod
   {
     constant_dt,
     cfl_condition
@@ -54,7 +54,7 @@ public:
   bool print_final_solution;
   unsigned int verbosity_level;
 
-  enum TemporalDiscretization
+  enum class TemporalDiscretization
   {
     SS,
     ERK1,
@@ -64,19 +64,19 @@ public:
     SDIRK22
   };
   TemporalDiscretization time_discretization;
-  enum TemporalIntegrator
+  enum class TemporalIntegrator
   {
     runge_kutta
   };
   TemporalIntegrator temporal_integrator;
 
-  enum NonlinearSolverType
+  enum class NonlinearSolverType
   {
     newton
   };
   NonlinearSolverType nonlinear_solver;
 
-  enum LinearSolverType
+  enum class LinearSolverType
   {
     direct,
     gmres,
@@ -85,7 +85,7 @@ public:
   LinearSolverType linear_solver;
   LinearSolverType mass_matrix_linear_solver;
 
-  enum Verbosity
+  enum class Verbosity
   {
     quiet,
     verbose
@@ -108,7 +108,7 @@ public:
   unsigned int degree;
   unsigned int n_quadrature_points;
 
-  enum ViscosityType
+  enum class ViscosityType
   {
     none,
     constant,
@@ -125,6 +125,14 @@ public:
   double entropy_jump_coef;
   std::string entropy_viscosity_smoothing;
   unsigned int entropy_viscosity_smoothing_weight;
+
+  enum class DiffusionType
+  {
+    none,
+    laplacian,
+    graphtheoretic
+  };
+  DiffusionType diffusion_type;
 };
 
 #include "ConservationLawParameters.cc"

@@ -49,6 +49,18 @@ std::vector<DataComponentInterpretation::DataComponentInterpretation>
 }
 
 template <int dim>
+void ShallowWater<dim>::get_fe_extractors(
+  std::vector<FEValuesExtractors::Scalar> & scalar_extractors,
+  std::vector<FEValuesExtractors::Vector> & vector_extractors) const
+{
+  scalar_extractors.resize(1);
+  scalar_extractors[0] = height_extractor;
+
+  vector_extractors.resize(1);
+  vector_extractors[0] = momentum_extractor;
+}
+
+template <int dim>
 void ShallowWater<dim>::define_problem()
 {
   // determine problem name
@@ -167,10 +179,9 @@ void ShallowWater<dim>::define_problem()
   // create boundary conditions
   if (this->boundary_conditions_type == "dirichlet")
   {
-    std::shared_ptr<DirichletBoundaryConditions<dim>>
-      derived_boundary_conditions =
-        std::make_shared<DirichletBoundaryConditions<dim>>(this->fe,
-                                                           this->face_quadrature);
+    auto derived_boundary_conditions =
+      std::make_shared<DirichletBoundaryConditions<dim>>(this->fe,
+                                                         this->face_quadrature);
     this->boundary_conditions = derived_boundary_conditions;
 
     // option to use exact solution as Dirichlet BC
@@ -296,6 +307,19 @@ void ShallowWater<dim>::define_problem()
   this->has_default_end_time = problem_parameters.has_default_end_time;
   this->default_end_time = problem_parameters.default_end_time;
 }
+
+/**
+ * \brief Creates an entropy object.
+ *
+ * \return pointer to created entropy object
+ */
+/*
+std::unique_ptr<Entropy<dim>> ShallowWater<dim>::create_entropy()
+{
+  auto entropy = std::make_unique<Entropy<dim>>();
+  return entropy;
+}
+*/
 
 /**
  * \brief Interpolates the bathymetry FE vector from its function.
@@ -460,7 +484,7 @@ void ShallowWater<dim>::compute_ss_residual(const double & dt, Vector<double> & 
     // compute viscous fluxes
     std::vector<Tensor<1, dim>> height_viscous_flux(this->n_q_points_cell);
     std::vector<Tensor<2, dim>> momentum_viscous_flux(this->n_q_points_cell);
-    compute_viscous_fluxes(this->viscosity[cell],
+    compute_viscous_fluxes(this->viscosity_map[cell],
                            height_gradient,
                            momentum_gradient,
                            height_viscous_flux,
@@ -478,14 +502,13 @@ void ShallowWater<dim>::compute_ss_residual(const double & dt, Vector<double> & 
       {
         cell_residual(i) +=
           (
-            // height inviscid flux
-            fe_values[height_extractor].gradient(i, q) *
-              (height_inviscid_flux[q] + height_viscous_flux[q])
-            // momentum inviscid flux
+            // height flux
+            fe_values[height_extractor].gradient(i, q) * height_inviscid_flux[q]
+            // momentum flux
             +
             double_contract<0, 0, 1, 1>(
               fe_values[momentum_extractor].gradient(i, q),
-              momentum_inviscid_flux[q] + momentum_viscous_flux[q])
+              momentum_inviscid_flux[q])
             // bathymetry source term
             -
             fe_values[momentum_extractor].value(i, q) * gravity * height[q] *
@@ -493,6 +516,26 @@ void ShallowWater<dim>::compute_ss_residual(const double & dt, Vector<double> & 
           fe_values.JxW(q);
       }
     }
+
+    /*
+        for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+          for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+          {
+            double mysum = (
+                fe_values[height_extractor].gradient(i, q) *
+       height_viscous_flux[q] +
+                double_contract<0, 0, 1, 1>(
+                  fe_values[momentum_extractor].gradient(i, q),
+                  momentum_viscous_flux[q])) *
+              fe_values.JxW(q);
+
+            cell_residual(i) += mysum;
+          }
+    */
+
+    // apply artificial diffusion
+    this->artificial_diffusion->apply(
+      this->viscosity, this->new_solution, cell, fe_values, cell_residual);
 
     // apply boundary conditions
     this->boundary_conditions->apply(
@@ -781,7 +824,7 @@ void ShallowWater<dim>::update_old_low_order_viscosity(
       for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
         froude = std::max(froude, speed[q] / sound_speed[q]);
 
-      this->first_order_viscosity[cell] =
+      this->first_order_viscosity_map[cell] =
         std::abs(c_max * froude * this->cell_diameter[cell] *
                  this->max_flux_speed_cell[cell]);
     }
@@ -791,7 +834,7 @@ void ShallowWater<dim>::update_old_low_order_viscosity(
     // compute low-order viscosity for each cell
     for (; cell != endc; ++cell)
     {
-      this->first_order_viscosity[cell] = std::abs(
+      this->first_order_viscosity_map[cell] = std::abs(
         c_max * this->cell_diameter[cell] * this->max_flux_speed_cell[cell]);
     }
   }
@@ -868,10 +911,10 @@ void ShallowWater<dim>::update_entropy_viscosities(const double & dt)
 
     // compute entropy viscosity
     double h2 = std::pow(this->cell_diameter[cell], 2);
-    this->entropy_viscosity[cell] = 0.0;
+    this->entropy_viscosity_map[cell] = 0.0;
     for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-      this->entropy_viscosity[cell] = std::max(
-        this->entropy_viscosity[cell],
+      this->entropy_viscosity_map[cell] = std::max(
+        this->entropy_viscosity_map[cell],
         h2 * (entropy_residual_coefficient * std::abs(entropy_residual[q]) +
               jump_coefficient * max_entropy_jump) /
           entropy_normalization[q]);
