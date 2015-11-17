@@ -422,12 +422,12 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
       viscosity_type = ViscosityType::none;
     else if (viscosity_choice == "constant")
       viscosity_type = ViscosityType::constant;
-    else if (viscosity_choice == "old_first_order")
-      viscosity_type = ViscosityType::old_first_order;
-    else if (viscosity_choice == "max_principle")
-      viscosity_type = ViscosityType::max_principle;
-    else if (viscosity_choice == "invariant_domain")
-      viscosity_type = ViscosityType::invariant_domain;
+    else if (viscosity_choice == "low")
+      viscosity_type = ViscosityType::low;
+    else if (viscosity_choice == "DMP_low")
+      viscosity_type = ViscosityType::DMP_low;
+    else if (viscosity_choice == "DI_low")
+      viscosity_type = ViscosityType::DI_low;
     else if (viscosity_choice == "entropy")
       viscosity_type = ViscosityType::entropy;
     else

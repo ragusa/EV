@@ -166,78 +166,6 @@ void ConservationLaw<dim>::run()
 }
 
 /**
- * \brief Outputs viscosities.
- *
- * \param[in] postprocessor postprocessor
- * \param[in] is_transient flag signalling that this is to output as an
- *            item in a transient
- * \param[in] time current time value, which is used if this is output as an
- *            item in a transient
- */
-template <int dim>
-void ConservationLaw<dim>::output_viscosity(PostProcessor<dim> & postprocessor,
-                                            const bool & is_transient,
-                                            const double & time)
-{
-  // start timer for output
-  TimerOutput::Scope timer_section(timer, "Output");
-
-  // create vector of shared pointers to cell maps of viscosity
-  std::vector<const CellMap *> viscosities;
-  std::vector<std::string> viscosity_names;
-
-  // output final viscosities if non-constant viscosity used
-  switch (parameters.viscosity_type)
-  {
-    case ViscosityType::none:
-      break;
-    case ViscosityType::constant:
-      break;
-    case ViscosityType::old_first_order:
-      viscosities.push_back(&first_order_viscosity_map);
-      viscosity_names.push_back("low_order_viscosity");
-      break;
-    case ViscosityType::entropy:
-      // low-order viscosity
-      viscosities.push_back(&first_order_viscosity_map);
-      viscosity_names.push_back("low_order_viscosity");
-
-      // entropy viscosity
-      // if low-order viscosity is used for first time step and only 1 time
-      // step is taken, then the size of the entropy viscosity map is 0,
-      // so that map cannot be output
-      if (entropy_viscosity_map.size() > 0)
-      {
-        viscosities.push_back(&entropy_viscosity_map);
-        viscosity_names.push_back("entropy_viscosity");
-      }
-      else
-      {
-        cout << "Need to initialize entropy visc to zero!" << std::endl;
-        std::exit(0);
-      }
-
-      // high-order viscosity
-      viscosities.push_back(&viscosity_map);
-      viscosity_names.push_back("high_order_viscosity");
-
-      break;
-    default:
-      Assert(false, ExcNotImplemented());
-      break;
-  }
-
-  // output the  viscosities
-  if (viscosities.size() > 0)
-    if (is_transient)
-      postprocessor.output_viscosity_transient(
-        viscosities, viscosity_names, time, dof_handler);
-    else
-      postprocessor.output_cell_maps(
-        viscosities, viscosity_names, "viscosity", time, dof_handler);
-}
-
-/**
  * \brief Initializes system.
  */
 template <int dim>
@@ -304,10 +232,10 @@ void ConservationLaw<dim>::initialize_system()
     case ViscosityType::constant:
       mass_matrix = &lumped_mass_matrix;
       break;
-    case ViscosityType::old_first_order:
+    case ViscosityType::low:
       mass_matrix = &lumped_mass_matrix;
       break;
-    case ViscosityType::max_principle:
+    case ViscosityType::DMP_low:
       mass_matrix = &lumped_mass_matrix;
       break;
     case ViscosityType::entropy:
@@ -483,9 +411,11 @@ void ConservationLaw<dim>::setup_system()
   // clear maps
   cell_diameter.clear();
   max_flux_speed_cell.clear();
-  viscosity_map.clear();
-  first_order_viscosity_map.clear();
-  entropy_viscosity_map.clear();
+  /*
+    viscosity_map.clear();
+    first_order_viscosity_map.clear();
+    entropy_viscosity_map.clear();
+  */
 
   // clear and distribute dofs
   dof_handler.clear();
@@ -500,9 +430,6 @@ void ConservationLaw<dim>::setup_system()
   // get index set of locally relevant DoFs
   DoFTools::extract_locally_relevant_dofs(dof_handler, locally_relevant_dofs);
 #endif
-
-  // determine Dirichlet nodes
-  get_dirichlet_nodes();
 
   // update cell sizes and minimum cell size
   update_cell_sizes();
@@ -590,18 +517,6 @@ void ConservationLaw<dim>::setup_system()
   system_matrix.reinit(constrained_sparsity_pattern);
 #endif
 
-  /*
-    // if using maximum-principle preserving definition of first-order viscosity,
-    // then compute bilinear forms and viscous fluxes
-    if (parameters.viscosity_type ==
-    max_principle)
-    {
-      viscous_bilinear_forms.reinit(unconstrained_sparsity_pattern);
-      compute_viscous_bilinear_forms();
-      viscous_fluxes.reinit(unconstrained_sparsity_pattern);
-    }
-  */
-
   // assemble mass matrix
   assemble_mass_matrix();
 
@@ -614,16 +529,12 @@ void ConservationLaw<dim>::setup_system()
   solution_step.reinit(
     locally_owned_dofs, locally_relevant_dofs, mpi_communicator);
   system_rhs.reinit(locally_owned_dofs, mpi_communicator);
-  max_values.reinit(locally_owned_dofs, locally_relevant_dofs, mpi_communicator);
-  min_values.reinit(locally_owned_dofs, locally_relevant_dofs, mpi_communicator);
   estimated_error_per_cell.reinit(triangulation.n_active_cells());
 #else
   old_solution.reinit(n_dofs);
   new_solution.reinit(n_dofs);
   solution_step.reinit(n_dofs);
   system_rhs.reinit(n_dofs);
-  max_values.reinit(n_dofs);
-  min_values.reinit(n_dofs);
   estimated_error_per_cell.reinit(triangulation.n_active_cells());
 #endif
 
@@ -643,21 +554,69 @@ void ConservationLaw<dim>::setup_system()
     // no viscosity
     case ViscosityType::none:
     {
-      auto tmp_viscosity =
+      auto zero_viscosity_tmp =
         std::make_shared<ConstantViscosity<dim>>(0.0, dof_handler);
-      constant_viscosity = tmp_viscosity;
-      viscosity = tmp_viscosity;
+      viscosity = zero_viscosity_tmp;
       break;
     }
     // constant viscosity
     case ViscosityType::constant:
     {
-      auto tmp_viscosity = std::make_shared<ConstantViscosity<dim>>(
+      auto constant_viscosity_tmp = std::make_shared<ConstantViscosity<dim>>(
         parameters.constant_viscosity_value, dof_handler);
-      constant_viscosity = tmp_viscosity;
-      viscosity = tmp_viscosity;
+      viscosity = constant_viscosity_tmp;
       break;
     }
+    // low-order viscosity
+    case ViscosityType::low:
+    {
+      auto low_order_viscosity_tmp = std::make_shared<LowOrderViscosity<dim>>(
+        parameters.first_order_viscosity_coef,
+        cell_diameter,
+        max_flux_speed_cell,
+        dof_handler);
+      low_order_viscosity = low_order_viscosity_tmp;
+
+      viscosity = low_order_viscosity_tmp;
+
+      break;
+    }
+    /*
+        // entropy viscosity
+        case ViscosityType::entropy:
+        {
+          // create entropy
+          auto entropy = create_entropy();
+
+          // create low-order viscosity
+          auto low_order_viscosity_tmp = std::make_shared<LowOrderViscosity<dim>>(
+            parameters.first_order_viscosity_coef,
+            cell_diameter,
+            max_flux_speed_cell,
+            dof_handler);
+          low_order_viscosity = low_order_viscosity_tmp;
+
+          // create entropy viscosity
+          auto entropy_viscosity_tmp = std::make_shared<EntropyViscosity<dim>>(
+            parameters,
+            entropy,
+            cell_diameter,
+            dof_handler);
+          entropy_viscosity = entropy_viscosity_tmp;
+
+          // create high-order viscosity
+          auto high_order_viscosity_tmp =
+       std::make_shared<HighOrderViscosity<dim>>(
+            parameters,
+            low_order_viscosity,
+            entropy_viscosity,
+            dof_handler);
+
+          viscosity = high_order_viscosity_tmp;
+
+          break;
+        }
+    */
     default:
     {
       Assert(false, ExcNotImplemented());
@@ -959,9 +918,6 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     // distribute hanging node constraints
     constraints.distribute(new_solution);
 
-    // compute max principle min and max values
-    compute_max_principle_quantities();
-
     {
       // start timer for output
       TimerOutput::Scope timer_section(timer, "Output");
@@ -1015,7 +971,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
   /*
     // report if DMP was satisfied at all time steps
     if (parameters.viscosity_type ==
-    max_principle)
+    ViscosityType::DMP_low)
     {
       if (DMP_satisfied)
         cout << "DMP was satisfied at all time steps" << std::endl;
@@ -1063,56 +1019,6 @@ template <int dim>
 double ConservationLaw<dim>::compute_cfl_number(const double & dt) const
 {
   return dt * max_flux_speed / minimum_cell_diameter;
-}
-
-/**
- * \brief Adds the viscous bilinear form for maximum-principle preserving
- *        viscosity
- */
-template <int dim>
-void ConservationLaw<dim>::add_maximum_principle_viscosity_bilinear_form(
-  Vector<double> & f)
-{
-  FEValues<dim> fe_values(
-    fe, cell_quadrature, update_values | update_gradients | update_JxW_values);
-
-  // allocate memory needed for cell residual and aggregation into global
-  // residual
-  Vector<double> cell_residual(dofs_per_cell);
-  std::vector<unsigned int> local_dof_indices(dofs_per_cell);
-
-  // loop over cells
-  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
-  for (; cell != endc; ++cell)
-  {
-    // reset cell residual
-    cell_residual = 0;
-
-    // add viscous bilinear form
-    double cell_volume = cell->measure();
-    for (unsigned int i = 0; i < dofs_per_cell; ++i)
-    {
-      // compute b_K(u,\varphi_i)
-      double b_i = 0.0;
-      for (unsigned int j = 0; j < dofs_per_cell; ++j)
-      {
-        double b_K; // local viscous bilinear form
-        if (j == i)
-          b_K = cell_volume;
-        else
-          b_K = -1.0 / (dofs_per_cell - 1.0) * cell_volume;
-
-        b_i += new_solution(local_dof_indices[j]) * b_K;
-      }
-      // add viscous term for dof i; note 0 is used for quadrature point
-      // because viscosity is the same for all quadrature points on a cell
-      cell_residual(i) += viscosity_map[cell] * b_i;
-    }
-
-    // aggregate local residual into global residual
-    cell->get_dof_indices(local_dof_indices);
-    constraints.distribute_local_to_global(cell_residual, local_dof_indices, f);
-  } // end cell loop
 }
 
 /**
@@ -1185,739 +1091,91 @@ void ConservationLaw<dim>::update_viscosities(const double & dt,
   // start timer for compute viscosities section
   TimerOutput::Scope timer_section(timer, "Compute viscosity");
 
-  switch (parameters.viscosity_type)
-  {
-    // no viscosity
-    case ViscosityType::none:
-    {
-      Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
-      for (; cell != endc; ++cell)
-        viscosity_map[cell] = 0.0;
-      break;
-    }
-    // constant viscosity
-    case ViscosityType::constant:
-    {
-      Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
-      for (; cell != endc; ++cell)
-        viscosity_map[cell] = parameters.constant_viscosity_value;
-      break;
-    }
-    // old first order viscosity
-    case ViscosityType::old_first_order:
-    {
-      update_old_low_order_viscosity(true);
-      viscosity_map = first_order_viscosity_map;
-      break;
-    }
-    // max principle viscosity
-    case ViscosityType::max_principle:
-    {
-      update_max_principle_viscosity();
-      viscosity_map = first_order_viscosity_map;
-      break;
-    }
-    // invariant domain viscosity
-    case ViscosityType::invariant_domain:
-    {
-      ExcNotImplemented();
-      break;
-    }
-    // entropy viscosity
-    case ViscosityType::entropy:
-    {
-      Cell cell, endc = dof_handler.end();
-      if (parameters.use_low_order_viscosity_for_first_time_step && n == 1)
-      {
-        // compute low-order viscosities
-        update_old_low_order_viscosity(true);
+  // update viscosity
+  viscosity->update();
 
-        // use low-order viscosities for first time step
-        for (cell = dof_handler.begin_active(); cell != endc; ++cell)
-        {
-          entropy_viscosity_map[cell] = first_order_viscosity_map[cell];
-          viscosity_map[cell] = first_order_viscosity_map[cell];
-        }
+  /*
+    switch (parameters.viscosity_type)
+    {
+      // no viscosity
+      case ViscosityType::none:
+      {
+        Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
+        for (; cell != endc; ++cell)
+          viscosity_map[cell] = 0.0;
+        break;
       }
-      else
+      // constant viscosity
+      case ViscosityType::constant:
       {
-        // compute low-order viscosities
-        update_old_low_order_viscosity(false);
-
-        // compute entropy viscosities
-        update_entropy_viscosities(dt);
-
-        // smooth entropy viscosity if chosen
-        if (parameters.entropy_viscosity_smoothing == "max")
-          smooth_entropy_viscosity_max();
-        else if (parameters.entropy_viscosity_smoothing == "average")
-          smooth_entropy_viscosity_average();
-
-        // compute high-order viscosities
-        for (cell = dof_handler.begin_active(); cell != endc; ++cell)
-          viscosity_map[cell] = std::min(first_order_viscosity_map[cell],
-                                         entropy_viscosity_map[cell]);
+        Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
+        for (; cell != endc; ++cell)
+          viscosity_map[cell] = parameters.constant_viscosity_value;
+        break;
       }
-      break;
-    }
-    default:
-    {
-      Assert(false, ExcNotImplemented());
-      break;
-    }
-  }
-}
-
-/**
- * \brief Computes low-order viscosity for each cell.
- *
- * The low-order viscosity is computed as
- * \f[
- *   \nu_K^L = c_{max} h_K \lambda_{K,max} \,,
- * \f]
- * where \f$\lambda_{K,max}\f$ is the maximum flux speed on cell \f$K\f$.
- *
- * \param[in] use_low_order_scheme flag that the low-order viscosities are
- *            are used in a low-order scheme as opposed to an entropy
- *            viscosity scheme
- */
-template <int dim>
-void ConservationLaw<dim>::update_old_low_order_viscosity(const bool &)
-{
-  double c_max = parameters.first_order_viscosity_coef;
-
-  // loop over cells to compute first order viscosity at each quadrature point
-  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
-  for (; cell != endc; ++cell)
-  {
-    first_order_viscosity_map[cell] =
-      std::abs(c_max * cell_diameter[cell] * max_flux_speed_cell[cell]);
-  }
-}
-
-/**
- * \brief Computes the maximum-principle preserving first order viscosity
- *        for each cell.
- */
-template <int dim>
-void ConservationLaw<dim>::update_max_principle_viscosity()
-{
-  // compute viscous fluxes
-  compute_viscous_fluxes();
-
-  // local dof indices
-  std::vector<unsigned int> local_dof_indices(dofs_per_cell);
-
-  // loop over cells to compute first order viscosity at each quadrature point
-  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
-  for (; cell != endc; ++cell)
-  {
-    // get local dof indices
-    cell->get_dof_indices(local_dof_indices);
-
-    first_order_viscosity_map[cell] = 0.0;
-    for (unsigned int i = 0; i < dofs_per_cell; ++i)
-    {
-      for (unsigned int j = 0; j < dofs_per_cell; ++j)
+      // low-order viscosity
+      case ViscosityType::low:
       {
-        if (i != j)
-        {
-          first_order_viscosity_map[cell] = std::max(
-            first_order_viscosity_map[cell],
-            std::abs(viscous_fluxes(local_dof_indices[i], local_dof_indices[j])) /
-              (-viscous_bilinear_forms(local_dof_indices[i],
-                                       local_dof_indices[j])));
-        }
+        // update_old_low_order_viscosity(true);
+        viscosity_map = first_order_viscosity_map;
+        break;
       }
-    }
-  }
-}
-
-/** \brief Computes viscous fluxes, to be used in the computation of
- *         maximum-principle preserving first order viscosity.
- *
- *         Each element of the resulting matrix, \f$V_{i,j}\f$ is computed as
- *         follows:
- *         \f[
- *            V_{i,j} =
- *\int_{S_{ij}}(\mathbf{f}'(u)\cdot\nabla\varphi_j)\varphi_i
- * d\mathbf{x}
- *         \f]
- */
-template <int dim>
-void ConservationLaw<dim>::compute_viscous_fluxes()
-{
-  viscous_fluxes = 0; // zero out matrix
-
-  // local dof indices
-  std::vector<unsigned int> local_dof_indices(dofs_per_cell);
-
-  FEValues<dim> fe_values(
-    fe, cell_quadrature, update_values | update_gradients | update_JxW_values);
-  std::vector<double> solution_values(n_q_points_cell);
-  std::vector<Tensor<1, dim>> dfdu(n_q_points_cell);
-
-  // loop over cells
-  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
-  for (; cell != endc; ++cell)
-  {
-    fe_values.reinit(cell);
-    fe_values.get_function_values(new_solution, solution_values);
-
-    // get local dof indices
-    cell->get_dof_indices(local_dof_indices);
-
-    // add local viscous fluxes to global matrix
-    for (unsigned int q = 0; q < n_q_points_cell; ++q)
-    {
-      for (int d = 0; d < dim; ++d)
-        dfdu[q][d] = solution_values[q];
-      for (unsigned int i = 0; i < dofs_per_cell; ++i)
+      // discrete max principle low-order viscosity
+      case ViscosityType::DMP_low:
       {
-        for (unsigned int j = 0; j < dofs_per_cell; ++j)
-        {
-          viscous_fluxes.add(local_dof_indices[i],
-                             local_dof_indices[j],
-                             dfdu[q] * fe_values.shape_grad(j, q) *
-                               fe_values.shape_value(i, q) * fe_values.JxW(q));
-        }
+        viscosity_map = first_order_viscosity_map;
+        break;
       }
-    }
-  }
-}
-
-/**
- * \brief Computes viscous bilinear forms, to be used in the computation of
- *         maximum-principle preserving first order viscosity.
- *
- * Each element of the resulting matrix, \f$B_{i,j}\f$ is computed as follows:
- * \f[
- *   B_{i,j} = \sum_{K:D_K\subset S_{i,j}}b_K(\varphi_i,\varphi_j)
- * \f]
- */
-template <int dim>
-void ConservationLaw<dim>::compute_viscous_bilinear_forms()
-{
-  viscous_bilinear_forms = 0; // zero out matrix
-  // local dof indices
-  std::vector<unsigned int> local_dof_indices(dofs_per_cell);
-
-  // loop over cells
-  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
-  for (; cell != endc; ++cell)
-  {
-    // get local dof indices
-    cell->get_dof_indices(local_dof_indices);
-
-    // query cell volume
-    double cell_volume = cell->measure();
-
-    // add local bilinear forms to global matrix
-    for (unsigned int i = 0; i < dofs_per_cell; ++i)
-    {
-      for (unsigned int j = 0; j < dofs_per_cell; ++j)
+      // domain-invariant low-order viscosity
+      case ViscosityType::DI_low:
       {
-        double b_cell = 0.0;
-        if (j == i)
+        ExcNotImplemented();
+        break;
+      }
+      // entropy viscosity
+      case ViscosityType::entropy:
+      {
+        Cell cell, endc = dof_handler.end();
+        if (parameters.use_low_order_viscosity_for_first_time_step && n == 1)
         {
-          b_cell = cell_volume;
+          // compute low-order viscosities
+          // update_old_low_order_viscosity(true);
+
+          // use low-order viscosities for first time step
+          for (cell = dof_handler.begin_active(); cell != endc; ++cell)
+          {
+            entropy_viscosity_map[cell] = first_order_viscosity_map[cell];
+            viscosity_map[cell] = first_order_viscosity_map[cell];
+          }
         }
         else
         {
-          b_cell = -1.0 / (dofs_per_cell - 1.0) * cell_volume;
+          // compute low-order viscosities
+          //update_old_low_order_viscosity(false);
+
+          // compute entropy viscosities
+          update_entropy_viscosities(dt);
+
+          // smooth entropy viscosity if chosen
+          if (parameters.entropy_viscosity_smoothing == "max")
+            smooth_entropy_viscosity_max();
+          else if (parameters.entropy_viscosity_smoothing == "average")
+            smooth_entropy_viscosity_average();
+
+          // compute high-order viscosities
+          for (cell = dof_handler.begin_active(); cell != endc; ++cell)
+            viscosity_map[cell] = std::min(first_order_viscosity_map[cell],
+                                           entropy_viscosity_map[cell]);
         }
-        viscous_bilinear_forms.add(
-          local_dof_indices[i], local_dof_indices[j], b_cell);
+        break;
       }
-    }
-  }
-}
-
-/**
- * \brief Computes entropy viscosity for each cell.
- *
- * \param[in] dt time step size
- */
-template <int dim>
-void ConservationLaw<dim>::update_entropy_viscosities(const double & dt)
-{
-  // compute normalization constant for entropy viscosity
-  const double entropy_average = compute_average_entropy(new_solution);
-
-  // get tuning parameters
-  const double entropy_residual_coefficient = parameters.entropy_residual_coef;
-  const double jump_coefficient = parameters.entropy_jump_coef;
-
-  // compute entropy viscosity for each cell
-  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
-  for (; cell != endc; ++cell)
-  {
-    // compute entropy residuals at each quadrature point in cell
-    const std::vector<double> entropy_residual =
-      compute_entropy_residual(new_solution, old_solution, dt, cell);
-
-    // compute max entropy gradient jump in cell
-    const double max_entropy_jump = compute_max_entropy_jump(new_solution, cell);
-
-    // compute normalization at each quadrature point in cell
-    const std::vector<double> entropy_normalization =
-      compute_entropy_normalization(new_solution, entropy_average, cell);
-
-    // compute entropy viscosity
-    double h2 = std::pow(cell_diameter[cell], 2);
-    entropy_viscosity_map[cell] = 0.0;
-    for (unsigned int q = 0; q < n_q_points_cell; ++q)
-      entropy_viscosity_map[cell] = std::max(
-        entropy_viscosity_map[cell],
-        h2 * (entropy_residual_coefficient * std::abs(entropy_residual[q]) +
-              jump_coefficient * max_entropy_jump) /
-          entropy_normalization[q]);
-  }
-}
-
-/**
- * Computes the average of the entropy over the domain.
- *
- * \param[in] solution solution with which to calculate entropy for the
- *            normalization constant
- *
- * \return average entropy in domain
- */
-template <int dim>
-double ConservationLaw<dim>::compute_average_entropy(
-  const Vector<double> & solution) const
-{
-  FEValues<dim> fe_values(fe, cell_quadrature, update_values | update_JxW_values);
-
-  Vector<double> entropy(n_q_points_cell);
-
-  double domain_integral_entropy = 0.0;
-
-  // loop over cells
-  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
-  for (; cell != endc; ++cell)
-  {
-    // reinitialize FE values
-    fe_values.reinit(cell);
-
-    // compute entropy
-    compute_entropy(solution, fe_values, entropy);
-
-    // loop over quadrature points
-    for (unsigned int q = 0; q < n_q_points_cell; ++q)
-    {
-      // add contribution of quadrature point to entropy integral
-      domain_integral_entropy += entropy[q] * fe_values.JxW(q);
-    }
-  }
-  // domain-averaged entropy_values
-  const double domain_averaged_entropy = domain_integral_entropy / domain_volume;
-
-  return domain_averaged_entropy;
-}
-
-/**
- * \brief Computes the entropy deviation from the average at each quadrature
- *        point in a cell.
- *
- * \param[in] solution solution with which to calculate entropy for the
- *            normalization constant
- * \param[in] entropy_average average entropy in domain
- *
- * \return vector of entropy deviations at each quadrature point in cell
- */
-template <int dim>
-std::vector<double> ConservationLaw<dim>::compute_entropy_normalization(
-  const Vector<double> & solution,
-  const double & entropy_average,
-  const Cell & cell) const
-{
-  FEValues<dim> fe_values(fe, cell_quadrature, update_values);
-
-  Vector<double> entropy(n_q_points_cell);
-
-  std::vector<double> normalization_constant(n_q_points_cell);
-
-  // reinitialize FE values
-  fe_values.reinit(cell);
-
-  // compute entropy
-  compute_entropy(solution, fe_values, entropy);
-
-  // loop over quadrature points
-  for (unsigned int q = 0; q < n_q_points_cell; ++q)
-    normalization_constant[q] = std::abs(entropy[q] - entropy_average);
-
-  return normalization_constant;
-}
-
-/**
- * \brief Computes the entropy residual at each quadrature point in a cell.
- *
- * \param[in] new_solution new solution
- * \param[in] old_solution old solution
- * \param[in] dt time step size
- * \param[in] cell cell iterator
- *
- * \return vector of entropy residuals at each quadrature point in a cell
- */
-template <int dim>
-std::vector<double> ConservationLaw<dim>::compute_entropy_residual(
-  const Vector<double> & new_solution,
-  const Vector<double> & old_solution,
-  const double & dt,
-  const Cell & cell) const
-{
-  // FE values
-  FEValues<dim> fe_values(fe, cell_quadrature, update_values | update_gradients);
-  fe_values.reinit(cell);
-
-  Vector<double> entropy_new(n_q_points_cell);
-  Vector<double> entropy_old(n_q_points_cell);
-  Vector<double> divergence_entropy_flux(n_q_points_cell);
-  std::vector<double> entropy_residual(n_q_points_cell);
-
-  // compute entropy of current and old solutions
-  compute_entropy(new_solution, fe_values, entropy_new);
-  compute_entropy(old_solution, fe_values, entropy_old);
-  compute_divergence_entropy_flux(
-    new_solution, fe_values, divergence_entropy_flux);
-
-  // compute entropy residual at each quadrature point on cell
-  for (unsigned int q = 0; q < n_q_points_cell; ++q)
-  {
-    // compute entropy residual
-    double dsdt = (entropy_new[q] - entropy_old[q]) / dt;
-    entropy_residual[q] = std::abs(dsdt + divergence_entropy_flux[q]);
-  }
-
-  return entropy_residual;
-}
-
-/**
- * \brief Computes the max entropy jump in a cell.
- *
- * \param[in] solution solution vector
- * \param[in] cell cell iterator
- */
-template <int dim>
-double ConservationLaw<dim>::compute_max_entropy_jump(
-  const Vector<double> & solution, const Cell & cell) const
-{
-  FEFaceValues<dim> fe_values_face(fe,
-                                   face_quadrature,
-                                   update_values | update_gradients |
-                                     update_normal_vectors);
-
-  std::vector<Tensor<1, dim>> gradients_face(n_q_points_face);
-  std::vector<Tensor<1, dim>> gradients_face_neighbor(n_q_points_face);
-  std::vector<Tensor<1, dim>> normal_vectors(n_q_points_face);
-  Vector<double> entropy(n_q_points_face);
-
-  double max_jump_in_cell = 0.0;
-
-  // loop over faces
-  for (unsigned int iface = 0; iface < faces_per_cell; ++iface)
-  {
-    // determine if face is interior
-    typename DoFHandler<dim>::face_iterator face = cell->face(iface);
-    if (face->at_boundary() == false)
-    {
-      // get gradients from this cell
-      fe_values_face.reinit(cell, iface);
-      fe_values_face.get_function_gradients(solution, gradients_face);
-
-      // compute entropy at each quadrature point on face
-      compute_entropy(solution, fe_values_face, entropy);
-
-      // get normal vectors
-      normal_vectors = fe_values_face.get_all_normal_vectors();
-
-      // get iterator to neighboring cell and face index of this face
-      Assert(cell->neighbor(iface).state() == IteratorState::valid,
-             ExcInternalError());
-      typename DoFHandler<dim>::cell_iterator neighbor = cell->neighbor(iface);
-      const unsigned int ineighbor = cell->neighbor_of_neighbor(iface);
-      Assert(ineighbor < faces_per_cell, ExcInternalError());
-
-      // get gradients from neighboring cell
-      fe_values_face.reinit(neighbor, ineighbor);
-      fe_values_face.get_function_gradients(solution, gradients_face_neighbor);
-
-      // loop over face quadrature points to determine max jump on face
-      double max_jump_on_face = 0.0;
-      for (unsigned int q = 0; q < n_q_points_face; ++q)
+      default:
       {
-        // compute difference in gradients across face
-        gradients_face[q] -= gradients_face_neighbor[q];
-        double jump_on_face =
-          std::abs((gradients_face[q] * normal_vectors[q]) * entropy[q]);
-        max_jump_on_face = std::max(max_jump_on_face, jump_on_face);
-      }
-
-      // update max jump in cell
-      max_jump_in_cell = std::max(max_jump_in_cell, max_jump_on_face);
-    }
-  }
-
-  return max_jump_in_cell;
-}
-
-/**
- * \brief Smooths the entropy visosity profile using the maximum of the
- *        cell and its neighbors.
- */
-template <int dim>
-void ConservationLaw<dim>::smooth_entropy_viscosity_max()
-{
-  // copy entropy viscosities
-  CellMap entropy_viscosity_unsmoothed = entropy_viscosity_map;
-
-  // loop over cells
-  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
-  for (; cell != endc; ++cell)
-  {
-    // loop over faces in cell
-    for (unsigned int iface = 0; iface < faces_per_cell; ++iface)
-    {
-      // determine if face is interior
-      typename DoFHandler<dim>::face_iterator face = cell->face(iface);
-      if (face->at_boundary() == false)
-      {
-        // get the cell's neighbor through this interior face
-        Cell neighbor_cell = cell->neighbor(iface);
-
-        // take max of cell and its neighbor
-        entropy_viscosity_map[cell] =
-          std::max(entropy_viscosity_map[cell],
-                   entropy_viscosity_unsmoothed[neighbor_cell]);
+        Assert(false, ExcNotImplemented());
+        break;
       }
     }
-  }
-}
-
-/**
- * \brief Smooths the entropy visosity profile using a weighted average of the
- *        cell and its neighbors.
- */
-template <int dim>
-void ConservationLaw<dim>::smooth_entropy_viscosity_average()
-{
-  // copy entropy viscosities
-  CellMap entropy_viscosity_unsmoothed = entropy_viscosity_map;
-
-  // loop over cells
-  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
-  for (; cell != endc; ++cell)
-  {
-    // initialize sum for average
-    double sum = parameters.entropy_viscosity_smoothing_weight *
-      entropy_viscosity_unsmoothed[cell];
-
-    // initialize neighbor count
-    unsigned int neighbor_count = 0;
-
-    // loop over faces in cell
-    for (unsigned int iface = 0; iface < faces_per_cell; ++iface)
-    {
-      // determine if face is interior
-      typename DoFHandler<dim>::face_iterator face = cell->face(iface);
-      if (face->at_boundary() == false)
-      {
-        // get the cell's neighbor through this interior face
-        Cell neighbor_cell = cell->neighbor(iface);
-
-        // add to sum
-        sum += entropy_viscosity_unsmoothed[neighbor_cell];
-
-        // increment neighbor count
-        neighbor_count++;
-      }
-    }
-
-    // compute average, smoothed value
-    entropy_viscosity_map[cell] =
-      sum / (neighbor_count + parameters.entropy_viscosity_smoothing_weight);
-  }
-}
-
-/** \brief Computes the negative of the transient residual and stores in
- *         system_rhs
- *  \param i current stage of Runge-Kutta step
- *  \param dt current time step size
- */
-/*
-template <int dim>
-void ConservationLaw<dim>::compute_tr_residual(unsigned int i, double dt)
-{
-   // the negative of the transient residual is
-   // M*(y_current - y_old) - sum{a_ij*dt*f_j}_j=1..i
-
-   // use solution_step to temporarily hold the quantity (y_current - y_old)
-   solution_step = new_solution;
-   solution_step.add(-1.0,old_solution);
-
-   // store M*(y_current - y_old) in system_rhs
-   lumped_mass_matrix.vmult(system_rhs,solution_step);
-
-   // subtract sum{a_ij*dt*f_j}_j=1..i
-   for (unsigned int j = 0; j < i; ++j)
-      system_rhs.add(-rk.a[i][j]*dt, rk.f[j]);
-}
-*/
-
-/** \brief Checks that there are no NaNs in the solution vector
- *
- *         The NaN check is performed by comparing a value to itself
- *         since an equality comparison with NaN always returns false.
- */
-template <int dim>
-void ConservationLaw<dim>::check_nan()
-{
-  unsigned int n = n_dofs;
-  for (unsigned int i = 0; i < n; ++i)
-    Assert(new_solution(i) == new_solution(i), ExcNaNEncountered());
-}
-
-/** \brief Gets the values and indices of nonzero elements in a sparse matrix.
- *  \param [in] matrix sparse matrix whose row will be retrieved
- *  \param [in] i index of row to be retrieved
- *  \param [out] row_values vector of values of nonzero entries of row i
- *  \param [out] row_indices vector of indices of nonzero entries of row i
- *  \param [out] n_col number of nonzero entries of row i
- */
-template <int dim>
-void ConservationLaw<dim>::get_matrix_row(const SparseMatrix<double> & matrix,
-                                          const unsigned int & i,
-                                          std::vector<double> & row_values,
-                                          std::vector<unsigned int> & row_indices,
-                                          unsigned int & n_col)
-{
-  // get first and one-past-last iterator for row
-  SparseMatrix<double>::const_iterator matrix_iterator = matrix.begin(i);
-  SparseMatrix<double>::const_iterator matrix_iterator_end = matrix.end(i);
-
-  // compute number of entries in row and then allocate memory
-  n_col = matrix_iterator_end - matrix_iterator;
-  row_values.reserve(n_col);
-  row_indices.reserve(n_col);
-
-  // loop over columns in row
-  for (; matrix_iterator != matrix_iterator_end; ++matrix_iterator)
-  {
-    row_values.push_back(matrix_iterator->value());
-    row_indices.push_back(matrix_iterator->column());
-  }
-}
-
-/**
- * \brief Checks that the local discrete max principle is satisfied.
- * \param[in] n time step index, used for reporting violations
- */
-template <int dim>
-bool ConservationLaw<dim>::check_DMP(const unsigned int & n) const
-{
-  // check that each dof value is bounded by its neighbors
-  bool DMP_satisfied = true;
-  for (unsigned int i = 0; i < n_dofs; ++i)
-  {
-    // check if dof is a Dirichlet node or not
-    if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) ==
-        dirichlet_nodes.end())
-    {
-      double value_i = new_solution(i);
-      if (value_i < min_values(i))
-      {
-        DMP_satisfied = false;
-        cout << "Max principle violated at time step " << n << " with dof " << i
-             << ": " << value_i << " < " << min_values(i) << std::endl;
-      }
-      if (value_i > max_values(i))
-      {
-        DMP_satisfied = false;
-        cout << "Max principle violated at time step " << n << " with dof " << i
-             << ": " << value_i << " > " << max_values(i) << std::endl;
-      }
-    }
-  }
-
-  return DMP_satisfied;
-}
-
-/** \brief Computes min and max quantities for max principle
- */
-template <int dim>
-void ConservationLaw<dim>::compute_max_principle_quantities()
-{
-  // initialize min and max values
-  for (unsigned int i = 0; i < n_dofs; ++i)
-  {
-    max_values(i) = old_solution(i);
-    min_values(i) = old_solution(i);
-  }
-
-  std::vector<unsigned int> local_dof_indices(dofs_per_cell);
-
-  // loop over cells
-  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
-  for (; cell != endc; ++cell)
-  {
-    // find min and max values on cell - start by initializing to arbitrary cell
-    double max_cell = old_solution(local_dof_indices[0]);
-    double min_cell = old_solution(local_dof_indices[0]);
-    for (unsigned int j = 0; j < dofs_per_cell; ++j)
-    {
-      double value_j = old_solution(local_dof_indices[j]);
-      max_cell = std::max(max_cell, value_j);
-      min_cell = std::min(min_cell, value_j);
-    }
-
-    // update the max and min values of neighborhood of each dof
-    for (unsigned int j = 0; j < dofs_per_cell; ++j)
-    {
-      unsigned int i = local_dof_indices[j]; // global index
-      max_values(i) = std::max(max_values(i), max_cell);
-      min_values(i) = std::min(min_values(i), min_cell);
-    }
-  }
-}
-
-/**
- * \brief Gets a list of dofs subject to Dirichlet boundary conditions.
- */
-template <int dim>
-void ConservationLaw<dim>::get_dirichlet_nodes()
-{
-  // get map of Dirichlet dof indices to Dirichlet values
-  std::map<unsigned int, double> boundary_values;
-
-  // clear Dirichlet nodes vector
-  dirichlet_nodes.clear();
-
-  if (boundary_conditions_type == "dirichlet")
-    // loop over boundary IDs
-    for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
-      // loop over components
-      for (unsigned int component = 0; component < n_components; ++component)
-      {
-        // create mask to prevent function from being applied to all components
-        std::vector<bool> component_mask(n_components, false);
-        component_mask[component] = true;
-
-        // get boundary values map using interpolate_boundary_values function
-        VectorTools::interpolate_boundary_values(dof_handler,
-                                                 boundary,
-                                                 ZeroFunction<dim>(n_components),
-                                                 boundary_values,
-                                                 component_mask);
-
-        // extract dof indices from map
-        for (std::map<unsigned int, double>::iterator it =
-               boundary_values.begin();
-             it != boundary_values.end();
-             ++it)
-          dirichlet_nodes.push_back(it->first);
-      }
+  */
 }
 
 /**
@@ -1934,4 +1192,77 @@ std::shared_ptr<DataPostprocessor<dim>> ConservationLaw<
   dim>::create_auxiliary_postprocessor() const
 {
   return nullptr;
+}
+
+/**
+ * \brief Outputs viscosities.
+ *
+ * \param[in] postprocessor postprocessor
+ * \param[in] is_transient flag signalling that this is to output as an
+ *            item in a transient
+ * \param[in] time current time value, which is used if this is output as an
+ *            item in a transient
+ */
+template <int dim>
+void ConservationLaw<dim>::output_viscosity(PostProcessor<dim> & postprocessor,
+                                            const bool & is_transient,
+                                            const double & time)
+{
+  // start timer for output
+  TimerOutput::Scope timer_section(timer, "Output");
+
+  // create vector of pointers to cell maps of viscosity
+  std::vector<std::shared_ptr<Viscosity<dim>>> viscosities;
+  std::vector<std::string> viscosity_names;
+
+  // output final viscosities if non-constant viscosity used
+  switch (parameters.viscosity_type)
+  {
+    case ViscosityType::none:
+      break;
+    case ViscosityType::constant:
+      break;
+    case ViscosityType::low:
+      viscosities.push_back(low_order_viscosity);
+      viscosity_names.push_back("low_order_viscosity");
+      break;
+    case ViscosityType::entropy:
+      // low-order viscosity
+      viscosities.push_back(low_order_viscosity);
+      viscosity_names.push_back("low_order_viscosity");
+      // entropy viscosity
+      viscosities.push_back(entropy_viscosity);
+      viscosity_names.push_back("entropy_viscosity");
+      // high-order viscosity
+      viscosities.push_back(viscosity);
+      viscosity_names.push_back("high_order_viscosity");
+
+      break;
+    default:
+      Assert(false, ExcNotImplemented());
+      break;
+  }
+
+  // output the  viscosities
+  if (viscosities.size() > 0)
+    if (is_transient)
+      postprocessor.output_viscosity_transient(
+        viscosities, viscosity_names, time, dof_handler);
+    else
+      postprocessor.output_viscosity(
+        viscosities, viscosity_names, time, dof_handler);
+}
+
+/**
+ * \brief Checks that there are no NaNs in the solution vector
+ *
+ * The NaN check is performed by comparing a value to itself
+ * since an equality comparison with NaN always returns false.
+ */
+template <int dim>
+void ConservationLaw<dim>::check_nan()
+{
+  unsigned int n = n_dofs;
+  for (unsigned int i = 0; i < n; ++i)
+    Assert(new_solution(i) == new_solution(i), ExcNaNEncountered());
 }

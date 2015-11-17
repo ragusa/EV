@@ -112,9 +112,9 @@ public:
   {
     none,
     constant,
-    old_first_order,
-    max_principle,
-    invariant_domain,
+    low,
+    DMP_low,
+    DI_low,
     entropy
   };
   ViscosityType viscosity_type;

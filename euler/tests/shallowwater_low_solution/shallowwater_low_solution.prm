@@ -38,8 +38,8 @@ subsection time
 end
 
 subsection artificial viscosity
-   # options are <none|constant|old_first_order|max_principle|invariant_domain|entropy>
-   set viscosity type = old_first_order
+   # options are <none|constant|low|DMP_low|DI_low|entropy>
+   set viscosity type = low
    set constant viscosity value = 1.25
    set first order viscosity coefficient = 0.5
    set multiply low order viscosity by froude = false

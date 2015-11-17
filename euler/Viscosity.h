@@ -31,6 +31,10 @@ public:
 
   double & operator[](const Cell & cell);
 
+  unsigned int size() const;
+
+  CellMap get_values() const;
+
 protected:
   /** \brief Map of cell iterator to viscosity value */
   CellMap values;

@@ -6,6 +6,10 @@
 #ifndef PostProcessor_cc
 #define PostProcessor_cc
 
+#include <cstdio>
+#include <dirent.h>
+#include <regex>
+#include <sys/stat.h>
 #include <deal.II/base/convergence_table.h>
 #include <deal.II/base/function_parser.h>
 #include <deal.II/base/quadrature_lib.h>
@@ -16,10 +20,6 @@
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/data_postprocessor.h>
 #include <deal.II/numerics/vector_tools.h>
-#include <cstdio>
-#include <dirent.h>
-#include <regex>
-#include <sys/stat.h>
 #include "ConservationLawParameters.h"
 #include "Exceptions.h"
 
@@ -68,11 +68,12 @@ public:
                                  const std::string & output_string,
                                  const bool & force_output = false);
 
-  void output_viscosity_transient(const std::vector<const CellMap *> & cell_maps,
-                                  const std::vector<std::string> & names,
-                                  const double & time,
-                                  const DoFHandler<dim> & dof_handler,
-                                  const bool & force_output = false);
+  void output_viscosity_transient(
+    const std::vector<std::shared_ptr<Viscosity<dim>>> & viscosities,
+    const std::vector<std::string> & names,
+    const double & time,
+    const DoFHandler<dim> & dof_handler,
+    const bool & force_output = false);
 
   void evaluate_error(const Vector<double> & solution,
                       const DoFHandler<dim> & dof_handler,
@@ -82,13 +83,21 @@ public:
 
   void set_cycle(const unsigned int & cycle);
 
-  void output_cell_maps(const std::vector<const CellMap *> & cell_maps,
+  void output_cell_maps(const std::vector<CellMap *> & cell_maps,
                         const std::vector<std::string> & names,
                         const std::string & filename_base,
                         const double & time,
                         const DoFHandler<dim> & dof_handler,
                         const bool & output_1d_vtu = false,
                         const std::string & transient_appendage = "");
+
+  void output_viscosity(
+    const std::vector<std::shared_ptr<Viscosity<dim>>> & viscosity,
+    const std::vector<std::string> & names,
+    const double & time,
+    const DoFHandler<dim> & dof_handler,
+    const bool & output_1d_vtu = false,
+    const std::string & transient_appendage = "");
 
 private:
   void output_exact_solution(const double & time);

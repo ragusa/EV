@@ -14,7 +14,6 @@
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/function_parser.h>
-#include <deal.II/base/convergence_table.h>
 #include <deal.II/base/timer.h>
 #include <deal.II/lac/vector.h>
 #include <deal.II/lac/sparse_matrix.h>
@@ -39,8 +38,10 @@
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/error_estimator.h>
 
+//#include "Entropy.h"
 #include "Viscosity.h"
 #include "ConstantViscosity.h"
+#include "LowOrderViscosity.h"
 #include "ArtificialDiffusion.h"
 #include "NoDiffusion.h"
 #include "LaplacianDiffusion.h"
@@ -140,40 +141,32 @@ protected:
                     Vector<double> & x);
   void apply_Dirichlet_BC(const double & time);
   void update_viscosities(const double & dt, const unsigned int & n);
-  virtual void update_old_low_order_viscosity(
-    const bool & using_low_order_scheme);
-  void update_max_principle_viscosity();
-  void compute_viscous_bilinear_forms();
-  void compute_viscous_fluxes();
-  void add_maximum_principle_viscosity_bilinear_form(Vector<double> & solution);
-  double compute_average_entropy(const Vector<double> & solution) const;
-  std::vector<double> compute_entropy_normalization(
-    const Vector<double> & solution,
-    const double & average_entropy,
-    const Cell & cell) const;
-  virtual std::vector<double> compute_entropy_residual(
-    const Vector<double> & new_solution,
-    const Vector<double> & old_solution,
-    const double & dt,
-    const Cell & cell) const;
-  void smooth_entropy_viscosity_max();
-  void smooth_entropy_viscosity_average();
-  void get_dirichlet_nodes();
+  /*
+    virtual void update_old_low_order_viscosity(
+      const bool & using_low_order_scheme);
+    double compute_average_entropy(const Vector<double> & solution) const;
+    std::vector<double> compute_entropy_normalization(
+      const Vector<double> & solution,
+      const double & average_entropy,
+      const Cell & cell) const;
+    virtual std::vector<double> compute_entropy_residual(
+      const Vector<double> & new_solution,
+      const Vector<double> & old_solution,
+      const double & dt,
+      const Cell & cell) const;
+    void smooth_entropy_viscosity_max();
+    void smooth_entropy_viscosity_average();
+  */
   void check_nan();
-  bool check_DMP(const unsigned int & n) const;
-  void compute_max_principle_quantities();
-  void get_matrix_row(const SparseMatrix<double> & matrix,
-                      const unsigned int & i,
-                      std::vector<double> & row_values,
-                      std::vector<unsigned int> & row_indices,
-                      unsigned int & n_col);
   void output_viscosity(PostProcessor<dim> & postprocessor,
                         const bool & is_transient = false,
                         const double & time = 0.0);
 
-  virtual void update_entropy_viscosities(const double & dt);
-  virtual double compute_max_entropy_jump(const Vector<double> & solution,
-                                          const Cell & cell) const;
+  /*
+    virtual void update_entropy_viscosities(const double & dt);
+    virtual double compute_max_entropy_jump(const Vector<double> & solution,
+                                            const Cell & cell) const;
+  */
 
   /**
    * \brief Computes the lumped mass matrix.
@@ -222,9 +215,11 @@ protected:
    * \param[out] entropy entropy values at each quadrature point on
    *             cell or face
    */
-  virtual void compute_entropy(const Vector<double> & solution,
-                               const FEValuesBase<dim> & fe_values,
-                               Vector<double> & entropy) const = 0;
+  /*
+    virtual void compute_entropy(const Vector<double> & solution,
+                                 const FEValuesBase<dim> & fe_values,
+                                 Vector<double> & entropy) const = 0;
+  */
 
   /**
    * \brief Computes divergence of entropy flux at each quadrature point in cell.
@@ -362,19 +357,6 @@ protected:
   const LocalMatrix * mass_matrix;
   /** \brief system matrix */
   LocalMatrix system_matrix;
-  /**
-   * \brief Matrix for the viscous bilinear forms, to be used in computing
-   *        viscosity.
-   *
-   * Each element of this matrix, \f$B_{i,j}\f$ is the following:
-   * \f[
-   *   B_{i,j} = \sum_{K\subset S_{i,j}}b_K(\varphi_i,\varphi_j)
-   * \f]
-   */
-  LocalMatrix viscous_bilinear_forms;
-
-  /** \brief Viscous fluxes */
-  LocalMatrix viscous_fluxes;
 
   /** \brief number of boundaries */
   unsigned int n_boundaries;
@@ -405,8 +387,6 @@ protected:
   std::vector<std::string> exact_solution_strings;
   /** \brief Exact solution function */
   std::shared_ptr<Function<dim>> exact_solution_function;
-  /** \brief Convergence table for errors computed in each refinement cycle **/
-  ConvergenceTable convergence_table;
 
   /** \brief Vector of component names */
   std::vector<std::string> component_names;
@@ -426,12 +406,16 @@ protected:
   CellMap max_flux_speed_cell;
 
   // viscosity
-  // std::unique_ptr<Entropy> entropy;
+  // std::shared_ptr<Entropy<dim>> entropy;
   std::shared_ptr<Viscosity<dim>> viscosity;
   std::shared_ptr<Viscosity<dim>> constant_viscosity;
-  CellMap viscosity_map;
-  CellMap first_order_viscosity_map;
-  CellMap entropy_viscosity_map;
+  std::shared_ptr<Viscosity<dim>> low_order_viscosity;
+  std::shared_ptr<Viscosity<dim>> entropy_viscosity;
+  /*
+    CellMap viscosity_map;
+    CellMap first_order_viscosity_map;
+    CellMap entropy_viscosity_map;
+  */
 
   std::unique_ptr<ArtificialDiffusion<dim>> artificial_diffusion;
 
@@ -459,15 +443,6 @@ protected:
 
   /** \brief Runge-Kutta parameters */
   RungeKuttaParameters rk;
-
-  /** \brief Minimum values for use in DMP */
-  LocalVector min_values;
-  /** \brief Maximum values for use in DMP */
-  LocalVector max_values;
-
-  /** \brief Vector of degrees of freedom subject to Dirichlet boundary
-   *         conditions. */
-  std::vector<unsigned int> dirichlet_nodes;
 
   /** \brief Default end time for test problem */
   double default_end_time;

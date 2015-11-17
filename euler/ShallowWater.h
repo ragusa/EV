@@ -17,8 +17,8 @@
 #include <deal.II/lac/vector.h>
 #include <sys/stat.h>
 #include "ConservationLaw.h"
-#include "ShallowWaterEntropyFluxFEValuesCell.h"
-#include "ShallowWaterEntropyFluxFEValuesFace.h"
+//#include "ShallowWaterEntropyFluxFEValuesCell.h"
+//#include "ShallowWaterEntropyFluxFEValuesFace.h"
 #include "ShallowWaterNoBC.h"
 #include "ShallowWaterParameters.h"
 #include "ShallowWaterPostProcessor.h"
@@ -79,6 +79,7 @@ private:
 
   void update_flux_speeds() override;
 
+  /*
   void compute_entropy(const Vector<double> & solution,
                        const FEValuesBase<dim> & fe_values,
                        Vector<double> & entropy) const override;
@@ -92,8 +93,8 @@ private:
     const double & dt,
     const Cell & cell) const;
 
-  void update_old_low_order_viscosity(
-    const bool & using_low_order_scheme) override;
+    void update_old_low_order_viscosity(
+      const bool & using_low_order_scheme) override;
 
   void update_entropy_viscosities(const double & dt) override;
 
@@ -105,18 +106,21 @@ private:
   double compute_max_entropy_jump(
     ShallowWaterEntropyFluxFEValuesFace<dim> & fe_values,
     const Cell & cell) const;
+*/
 
   void compute_inviscid_fluxes(const std::vector<double> & height,
                                const std::vector<Tensor<1, dim>> & momentum,
                                std::vector<Tensor<1, dim>> & height_flux,
                                std::vector<Tensor<2, dim>> & momentum_flux) const;
 
-  void compute_viscous_fluxes(
-    const double & viscosity,
-    const std::vector<Tensor<1, dim>> & height_gradient,
-    const std::vector<Tensor<2, dim>> & momentum_gradient,
-    std::vector<Tensor<1, dim>> & height_viscous_flux,
-    std::vector<Tensor<2, dim>> & momentum_viscous_flux) const;
+  /*
+    void compute_viscous_fluxes(
+      const double & viscosity,
+      const std::vector<Tensor<1, dim>> & height_gradient,
+      const std::vector<Tensor<2, dim>> & momentum_gradient,
+      std::vector<Tensor<1, dim>> & height_viscous_flux,
+      std::vector<Tensor<2, dim>> & momentum_viscous_flux) const;
+  */
 
   std::vector<Tensor<1, dim>> compute_velocity(
     const std::vector<double> & height,

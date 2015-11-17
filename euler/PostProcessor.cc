@@ -79,14 +79,14 @@ PostProcessor<dim>::PostProcessor(
       viscosity_string = "constant";
       break;
     }
-    case ConservationLawParameters<dim>::ViscosityType::old_first_order:
+    case ConservationLawParameters<dim>::ViscosityType::low:
     {
       viscosity_string = "low";
       break;
     }
-    case ConservationLawParameters<dim>::ViscosityType::max_principle:
+    case ConservationLawParameters<dim>::ViscosityType::DMP_low:
     {
-      viscosity_string = "newlow";
+      viscosity_string = "DMPlow";
       break;
     }
     case ConservationLawParameters<dim>::ViscosityType::entropy:
@@ -289,14 +289,15 @@ void PostProcessor<dim>::output_solution_transient(
  * determines if this viscosity is scheduled to be output and outputs it
  * if it does.
  *
- * \param[in] solution solution vector
+ * \param[in] viscosities vector of pointers to viscosities
+ * \param[in] names names of each viscosity
  * \param[in] time time value
  * \param[in] dof_handler degrees of freedom handler.
  * \param[in] force_output option to force output if it is not scheduled.
  */
 template <int dim>
 void PostProcessor<dim>::output_viscosity_transient(
-  const std::vector<const CellMap *> & cell_maps,
+  const std::vector<std::shared_ptr<Viscosity<dim>>> & viscosities,
   const std::vector<std::string> & names,
   const double & time,
   const DoFHandler<dim> & dof_handler,
@@ -322,7 +323,7 @@ void PostProcessor<dim>::output_viscosity_transient(
       if (transient_output_size < parameters.max_transient_output_size)
       {
         // increment transient output size estimate
-        transient_output_size += 30 * cell_maps[0]->size();
+        transient_output_size += 30 * viscosities[0]->size();
 
         // create transient filename
         const std::string transient_appendage =
@@ -330,13 +331,8 @@ void PostProcessor<dim>::output_viscosity_transient(
 
         // call function that outputs a vector of values to a file,
         // with the solution component names and types lists
-        output_cell_maps(cell_maps,
-                         names,
-                         "viscosity",
-                         time,
-                         dof_handler,
-                         true /* output_1d_vtu */,
-                         transient_appendage);
+        output_viscosity(
+          viscosities, names, time, dof_handler, true, transient_appendage);
 
         // increment transient file number
         transient_viscosity_file_number++;
@@ -549,7 +545,7 @@ void PostProcessor<dim>::output_convergence_data()
  */
 template <int dim>
 void PostProcessor<dim>::output_cell_maps(
-  const std::vector<const CellMap *> & cell_maps,
+  const std::vector<CellMap *> & cell_maps,
   const std::vector<std::string> & names,
   const std::string & filename_base,
   const double & time,
@@ -631,6 +627,47 @@ void PostProcessor<dim>::output_cell_maps(
   else
     // output *.gpl file
     data_out.write_gnuplot(output_filestream);
+}
+
+/**
+ * \brief Outputs multiple viscosities to file.
+ *
+ * \param[in] viscosities vector of pointers to viscosities
+ * \param[in] names vector of names of quantities in cell maps vector
+ * \param[in] time time value
+ * \param[in] dof_handler degrees of freedom handler
+ * \param[in] output_1d_vtu option to output 1-D data in VTU format instead
+ *            of GNUPLOT format
+ * \param[in] transient_appendage string to be added onto the filename for
+ *            transient files
+ */
+template <int dim>
+void PostProcessor<dim>::output_viscosity(
+  const std::vector<std::shared_ptr<Viscosity<dim>>> & viscosities,
+  const std::vector<std::string> & names,
+  const double & time,
+  const DoFHandler<dim> & dof_handler,
+  const bool & output_1d_vtu,
+  const std::string & transient_appendage)
+{
+  // create a vector of cell maps to pass to output_cell_maps()
+  std::vector<CellMap> cell_maps;
+  std::vector<CellMap *> cell_maps_ptrs;
+  const unsigned int n_viscosities = viscosities.size();
+  for (unsigned int i = 0; i < n_viscosities; ++i)
+  {
+    cell_maps.push_back(viscosities[i]->get_values());
+    cell_maps_ptrs.push_back(&cell_maps[i]);
+  }
+
+  // call output_cell_maps
+  output_cell_maps(cell_maps_ptrs,
+                   names,
+                   "viscosity",
+                   time,
+                   dof_handler,
+                   output_1d_vtu,
+                   transient_appendage);
 }
 
 /**

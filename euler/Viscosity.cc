@@ -26,3 +26,25 @@ double & Viscosity<dim>::operator[](const Cell & cell)
 {
   return values[cell];
 }
+
+/**
+ * \brief Returns the size of the viscosity map
+ *
+ * \return size of the viscosity map
+ */
+template <int dim>
+unsigned int Viscosity<dim>::size() const
+{
+  return values.size();
+}
+
+/**
+ * \brief Returns the cell map of viscosity values
+ *
+ * \return cell map of viscosity values
+ */
+template <int dim>
+typename Viscosity<dim>::CellMap Viscosity<dim>::get_values() const
+{
+  return values;
+}
