@@ -27,7 +27,10 @@ public:
 
   Viscosity(const DoFHandler<dim> & dof_handler);
 
-  virtual void update() = 0;
+  virtual void update(const Vector<double> & new_solution,
+                      const Vector<double> & old_solution,
+                      const double & dt,
+                      const unsigned int & n) = 0;
 
   double & operator[](const Cell & cell);
 

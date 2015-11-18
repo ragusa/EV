@@ -11,7 +11,6 @@
  * \param[in] solution_dof_handler_ DoF handler for solution
  * \param[in] triangulation_ triangulation
  * \param[in] face_quadrature_ face quadrature
- * \param[in] solution_ solution vector
  * \param[in] aux_vector_ optional auxiliary vector
  */
 template <int dim, bool is_scalar>
@@ -21,13 +20,11 @@ GroupFEValuesFace<dim, is_scalar>::GroupFEValuesFace(
   const DoFHandler<dim> & solution_dof_handler_,
   const Triangulation<dim> & triangulation_,
   const QGauss<dim - 1> & face_quadrature_,
-  const Vector<double> & solution_,
   const Vector<double> & aux_vector_)
   : GroupFEValuesBase<dim, is_scalar>(n_components_solution_,
                                       n_components_function_,
                                       solution_dof_handler_,
                                       triangulation_,
-                                      solution_,
                                       aux_vector_),
     face_quadrature(face_quadrature_),
     n_quadrature_points(face_quadrature.size()),
@@ -64,6 +61,9 @@ template <int dim, bool is_scalar>
 void GroupFEValuesFace<dim, is_scalar>::get_function_values(
   std::vector<ValueType> & function_values) const
 {
+  // assert that function values are initialized
+  Assert(this->function_values_initialized, ExcNotInitialized());
+
   function_fe_values_face[this->function_extractor].get_function_values(
     this->function_dof_values, function_values);
 }
@@ -78,6 +78,9 @@ template <int dim, bool is_scalar>
 void GroupFEValuesFace<dim, is_scalar>::get_function_gradients(
   std::vector<GradientType> & function_gradients) const
 {
+  // assert that function values are initialized
+  Assert(this->function_values_initialized, ExcNotInitialized());
+
   function_fe_values_face[this->function_extractor].get_function_gradients(
     this->function_dof_values, function_gradients);
 }
@@ -92,5 +95,8 @@ std::vector<Tensor<1, dim>> GroupFEValuesFace<dim,
                                               is_scalar>::get_normal_vectors()
   const
 {
+  // assert that function values are initialized
+  Assert(this->function_values_initialized, ExcNotInitialized());
+
   return function_fe_values_face.get_all_normal_vectors();
 }

@@ -23,7 +23,6 @@ public:
     const DoFHandler<dim> & solution_dof_handler,
     const Triangulation<dim> & triangulation,
     const QGauss<dim> & cell_quadrature,
-    const Vector<double> & solution,
     const Vector<double> & bathymetry_vector,
     const double & gravity)
     : GroupFEValuesCell<dim, false>(dim + 1,
@@ -31,11 +30,9 @@ public:
                                     solution_dof_handler,
                                     triangulation,
                                     cell_quadrature,
-                                    solution,
                                     bathymetry_vector),
       gravity(gravity)
   {
-    this->compute_function_dof_values();
   }
 
 protected:

@@ -5,6 +5,7 @@
 #ifndef GroupFEValuesBase_h
 #define GroupFEValuesBase_h
 
+#include <deal.II/base/exceptions.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/fe/fe_system.h>
@@ -55,10 +56,11 @@ public:
                     const unsigned int & n_components_function,
                     const DoFHandler<dim> & solution_dof_handler,
                     const Triangulation<dim> & triangulation,
-                    const Vector<double> & solution,
                     const Vector<double> & aux_vector = Vector<double>());
 
   Vector<double> get_function_dof_values() const;
+
+  void reinitialize(const Vector<double> & solution);
 
 protected:
   /**
@@ -73,8 +75,6 @@ protected:
    */
   virtual std::vector<double> function(const std::vector<double> & solution,
                                        const double & aux = 0.0) const = 0;
-
-  void compute_function_dof_values();
 
   /** \brief Number of solution components */
   const unsigned int n_components_solution;
@@ -109,11 +109,11 @@ protected:
   /** \brief Function values at DoF support points */
   Vector<double> function_dof_values;
 
-  /** \brief Pointer to solution vector */
-  const Vector<double> * const solution;
-
   /** \brief Pointer to optional auxiliary vector */
   const Vector<double> * const aux_vector;
+
+  /** \brief Flag to signal that function DoF values have been initialized */
+  bool function_values_initialized;
 };
 
 #include "GroupFEValuesBase.cc"

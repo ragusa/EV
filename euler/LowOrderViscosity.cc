@@ -24,7 +24,10 @@ LowOrderViscosity<dim>::LowOrderViscosity(const double & c_max_,
 }
 
 template <int dim>
-void LowOrderViscosity<dim>::update()
+void LowOrderViscosity<dim>::update(const Vector<double> &,
+                                    const Vector<double> &,
+                                    const double &,
+                                    const unsigned int &)
 {
   // loop over cells to compute low-order viscosity at each quadrature point
   Cell cell = this->dof_handler->begin_active(), endc = this->dof_handler->end();

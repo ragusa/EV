@@ -41,17 +41,14 @@ public:
                              const DoFHandler<dim> & solution_dof_handler,
                              const Triangulation<dim> & triangulation,
                              const QGauss<dim> & cell_quadrature,
-                             const Vector<double> & solution,
                              const Vector<double> & aux_vector = Vector<double>())
     : GroupFEValuesCell<dim>(n_components_solution,
                              1,
                              solution_dof_handler,
                              triangulation,
                              cell_quadrature,
-                             solution,
                              aux_vector)
   {
-    this->compute_function_dof_values();
   }
 
 private:
@@ -75,17 +72,14 @@ public:
                              const DoFHandler<dim> & solution_dof_handler,
                              const Triangulation<dim> & triangulation,
                              const QGauss<dim> & cell_quadrature,
-                             const Vector<double> & solution,
                              const Vector<double> & aux_vector = Vector<double>())
     : GroupFEValuesCell<dim,false>(n_components_solution,
                              dim,
                              solution_dof_handler,
                              triangulation,
                              cell_quadrature,
-                             solution,
                              aux_vector)
   {
-    this->compute_function_dof_values();
   }
 
 private:
@@ -351,7 +345,8 @@ void test()
 
   // create scalar function FE values
   ScalarFunctionFEValuesCell<dim> scalar_function_fe_values(
-    n_components, dof_handler, triangulation, cell_quadrature, solution);
+    n_components, dof_handler, triangulation, cell_quadrature);
+  scalar_function_fe_values.reinitialize(solution);
 
   // get scalar function DoFs
   Vector<double> scalar_function_dofs =
@@ -374,25 +369,12 @@ void test()
 
   // create vector function FE values
   VectorFunctionFEValuesCell<dim> vector_function_fe_values(
-    n_components, dof_handler, triangulation, cell_quadrature, solution);
+    n_components, dof_handler, triangulation, cell_quadrature);
+  vector_function_fe_values.reinitialize(solution);
 
   // get vector function DoFs
   Vector<double> vector_function_dofs =
     vector_function_fe_values.get_function_dof_values();
-
-/*
-  // print table of function at DoF support points
-  print_function_at_dof_points<dim>(
-    n_components, unique_real_support_points, solution_function, vector_function_dofs);
-
-  // print table of function at quadrature points
-  print_function_at_quadrature_points<dim>(cell_quadrature,
-                                           triangulation,
-                                           n_q_points_cell,
-                                           dof_handler,
-                                           vector_function_fe_values,
-                                           vector_function_dofs);
-*/
 }
 
 int main(int, char **)

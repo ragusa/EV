@@ -7,18 +7,12 @@
  * \brief Constructor.
  *
  * In addition to construction, this function distributes DoFs and maps
- * solution cell iterators to function cell iterators. Derived classes must
- * compute the function DoF values (it is convenient to do this in their
- * constructors) by calling compute_function_dof_values(). This cannot
- * be called in the base class constructor because it would be called
- * before the function is defined, which occurs later in the construction
- * of the derived class.
+ * solution cell iterators to function cell iterators.
  *
  * \param[in] n_components_solution_ number of solution components
  * \param[in] n_components_function_ number of function components
  * \param[in] solution_dof_handler_ DoF handler for solution
  * \param[in] triangulation_ triangulation
- * \param[in] solution_ solution vector
  * \param[in] aux_vector_ optional auxiliary vector
  */
 template <int dim, bool is_scalar>
@@ -27,7 +21,6 @@ GroupFEValuesBase<dim, is_scalar>::GroupFEValuesBase(
   const unsigned int & n_components_function_,
   const DoFHandler<dim> & solution_dof_handler_,
   const Triangulation<dim> & triangulation_,
-  const Vector<double> & solution_,
   const Vector<double> & aux_vector_)
   : n_components_solution(n_components_solution_),
     n_components_function(n_components_function_),
@@ -36,8 +29,8 @@ GroupFEValuesBase<dim, is_scalar>::GroupFEValuesBase(
     dof_handler(triangulation_),
     n_function_dofs_per_cell(fe.dofs_per_cell),
     n_solution_dofs_per_cell(n_function_dofs_per_cell * n_components_solution),
-    solution(&solution_),
-    aux_vector(&aux_vector_)
+    aux_vector(&aux_vector_),
+    function_values_initialized(false)
 {
   // distribute DoFs and initialize cell iterators
   dof_handler.distribute_dofs(fe);
@@ -58,21 +51,25 @@ GroupFEValuesBase<dim, is_scalar>::GroupFEValuesBase(
 }
 
 /**
- * \brief Computes the function DoF values.
+ * \brief Computes the function DoF values. This function must be called
+ *        before any get-values functions are called.
  *
- * This function must be called by the derived class (it is best to do so in
- * the constructor).
+ * \param[in] solution solution vector
  */
 template <int dim, bool is_scalar>
-void GroupFEValuesBase<dim, is_scalar>::compute_function_dof_values()
+void GroupFEValuesBase<dim, is_scalar>::reinitialize(
+  const Vector<double> & solution)
 {
+  // set flag to signal that function DoF values have been initialized
+  function_values_initialized = true;
+
   // loop over support points
   for (unsigned int i = 0; i < n_support_points; ++i)
   {
     // extract all components of solution at DoF support point
     std::vector<double> solution_at_support_point(n_components_solution);
     for (unsigned int j = 0; j < n_components_solution; ++j)
-      solution_at_support_point[j] = (*solution)[i * n_components_solution + j];
+      solution_at_support_point[j] = solution[i * n_components_solution + j];
 
     // compute function at DoF support point
     std::vector<double> function_at_support_point =
@@ -91,5 +88,8 @@ void GroupFEValuesBase<dim, is_scalar>::compute_function_dof_values()
 template <int dim, bool is_scalar>
 Vector<double> GroupFEValuesBase<dim, is_scalar>::get_function_dof_values() const
 {
+  // assert that function values are initialized
+  Assert(function_values_initialized, ExcNotInitialized());
+
   return function_dof_values;
 }

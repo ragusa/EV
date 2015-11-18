@@ -32,7 +32,6 @@ public:
                     const DoFHandler<dim> & solution_dof_handler,
                     const Triangulation<dim> & triangulation,
                     const QGauss<dim> & cell_quadrature,
-                    const Vector<double> & solution,
                     const Vector<double> & aux_vector = Vector<double>());
 
   void reinit(const Cell & solution_cell);

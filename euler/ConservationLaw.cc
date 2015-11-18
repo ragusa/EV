@@ -1092,7 +1092,7 @@ void ConservationLaw<dim>::update_viscosities(const double & dt,
   TimerOutput::Scope timer_section(timer, "Compute viscosity");
 
   // update viscosity
-  viscosity->update();
+  viscosity->update(new_solution, old_solution, dt, n);
 
   /*
     switch (parameters.viscosity_type)

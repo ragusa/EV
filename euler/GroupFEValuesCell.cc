@@ -11,7 +11,6 @@
  * \param[in] solution_dof_handler_ DoF handler for solution
  * \param[in] triangulation_ triangulation
  * \param[in] cell_quadrature_ cell quadrature
- * \param[in] solution_ solution vector
  * \param[in] aux_vector_ optional auxiliary vector
  */
 template <int dim, bool is_scalar>
@@ -21,13 +20,11 @@ GroupFEValuesCell<dim, is_scalar>::GroupFEValuesCell(
   const DoFHandler<dim> & solution_dof_handler_,
   const Triangulation<dim> & triangulation_,
   const QGauss<dim> & cell_quadrature_,
-  const Vector<double> & solution_,
   const Vector<double> & aux_vector_)
   : GroupFEValuesBase<dim, is_scalar>(n_components_solution_,
                                       n_components_function_,
                                       solution_dof_handler_,
                                       triangulation_,
-                                      solution_,
                                       aux_vector_),
     cell_quadrature(cell_quadrature_),
     n_quadrature_points(cell_quadrature.size()),
@@ -60,6 +57,9 @@ template <int dim, bool is_scalar>
 void GroupFEValuesCell<dim, is_scalar>::get_function_values(
   std::vector<ValueType> & function_values) const
 {
+  // assert that function values are initialized
+  Assert(this->function_values_initialized, ExcNotInitialized());
+
   function_fe_values_cell[this->function_extractor].get_function_values(
     this->function_dof_values, function_values);
 }
@@ -74,6 +74,9 @@ template <int dim, bool is_scalar>
 void GroupFEValuesCell<dim, is_scalar>::get_function_gradients(
   std::vector<GradientType> & function_gradients) const
 {
+  // assert that function values are initialized
+  Assert(this->function_values_initialized, ExcNotInitialized());
+
   function_fe_values_cell[this->function_extractor].get_function_gradients(
     this->function_dof_values, function_gradients);
 }
@@ -87,6 +90,9 @@ template <int dim, bool is_scalar>
 std::vector<double> GroupFEValuesCell<dim, is_scalar>::get_function_divergences()
   const
 {
+  // assert that function values are initialized
+  Assert(this->function_values_initialized, ExcNotInitialized());
+
   std::vector<double> function_divergences(n_quadrature_points);
   function_fe_values_cell[this->function_extractor].get_function_divergences(
     this->function_dof_values, function_divergences);

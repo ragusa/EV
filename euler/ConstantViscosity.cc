@@ -21,8 +21,16 @@ ConstantViscosity<dim>::ConstantViscosity(const double & constant_value_,
 
 /**
  * \brief Does nothing, as values are constant and already set.
+ *
+ * \param[in] new_solution new solution
+ * \param[in] old_solution old solution
+ * \param[in] dt time step size
+ * \param[in] n time index
  */
 template <int dim>
-void ConstantViscosity<dim>::update()
+void ConstantViscosity<dim>::update(const Vector<double> &,
+                                    const Vector<double> &,
+                                    const double &,
+                                    const unsigned int &)
 {
 }

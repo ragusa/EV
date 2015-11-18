@@ -23,7 +23,10 @@ public:
   ConstantViscosity(const double & constant_value,
                     const DoFHandler<dim> & dof_handler);
 
-  void update() override;
+  void update(const Vector<double> & new_solution,
+              const Vector<double> & old_solution,
+              const double & dt,
+              const unsigned int & n) override;
 
 private:
   const double constant_value;

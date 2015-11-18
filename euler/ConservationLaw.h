@@ -42,6 +42,8 @@
 #include "Viscosity.h"
 #include "ConstantViscosity.h"
 #include "LowOrderViscosity.h"
+//#include "EntropyViscosity.h"
+//#include "HighOrderViscosity.h"
 #include "ArtificialDiffusion.h"
 #include "NoDiffusion.h"
 #include "LaplacianDiffusion.h"
