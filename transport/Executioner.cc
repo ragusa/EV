@@ -43,10 +43,10 @@ Executioner<dim>::Executioner(const TransportParameters<dim> & parameters_,
   constraints.close();
 
   // create sparsity pattern
-  CompressedSparsityPattern compressed_constrained_sparsity_pattern(n_dofs);
+  DynamicSparsityPattern dsp(n_dofs);
   DoFTools::make_sparsity_pattern(dof_handler,
-    compressed_constrained_sparsity_pattern, constraints, false);
-  constrained_sparsity_pattern.copy_from(compressed_constrained_sparsity_pattern);
+    dsp, constraints, false);
+  constrained_sparsity_pattern.copy_from(dsp);
 
   // initialize sparse matrices
   system_matrix.reinit(constrained_sparsity_pattern);
@@ -234,7 +234,7 @@ void Executioner<dim>::setBoundaryIndicators()
     for (unsigned int face = 0; face < GeometryInfo < dim > ::faces_per_cell;
         ++face)
       if (cell->face(face)->at_boundary())
-        cell->face(face)->set_boundary_indicator(0);
+        cell->face(face)->set_boundary_id(0);
 
   // FE face values
   FEFaceValues<dim> fe_face_values(fe, face_quadrature,
@@ -259,7 +259,7 @@ void Executioner<dim>::setBoundaryIndicators()
         if (fe_face_values.normal_vector(0) * transport_direction < small)
         {
           // mark boundary as incoming flux boundary: indicator 1
-          cell->face(face)->set_boundary_indicator(1);
+          cell->face(face)->set_boundary_id(1);
         }
       }
     }

@@ -32,6 +32,16 @@ public:
               const unsigned int & n) override;
 
 private:
+  std::vector<double> compute_entropy_residual(
+    const Vector<double> & new_solution,
+    const Vector<double> & old_solution,
+    const double & dt,
+    const Cell & cell) const;
+
+  void smooth_entropy_viscosity_max();
+
+  void smooth_entropy_viscosity_average();
+
   std::shared_ptr<Entropy<dim>> entropy;
 
   const double residual_coefficient;

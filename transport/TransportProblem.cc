@@ -9,7 +9,7 @@ TransportProblem<dim>::TransportProblem(
     parameters(parameters),
     is_time_dependent(
       !(parameters.time_discretization_option == TransportParameters<dim>::SS)),
-    transport_direction(0.0),
+    transport_direction(),
     exact_solution_option(ExactSolutionOption::none),
     has_exact_solution(false),
     timer(std::cout, TimerOutput::summary, TimerOutput::wall_times)
@@ -168,7 +168,7 @@ void TransportProblem<dim>::processProblemID()
         // 3-D
         cross_section_string = "if(x>=x_mid, if(y>=x_mid, if(z>=x_mid,"
           "sigma, 0), 0), 0)";
-      function_parser_constants["sigma"] = 10.0;
+      function_parser_constants["sigma"] = 100.0;
 
       source_time_dependent = false;
       source_string = "0";

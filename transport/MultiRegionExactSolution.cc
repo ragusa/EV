@@ -28,7 +28,7 @@ MultiRegionExactSolution<dim>::MultiRegionExactSolution(
 template<int dim>
 double MultiRegionExactSolution<dim>::value(
    const Point<dim>   &p,
-   const unsigned int component) const
+   const unsigned int) const
 {
    // get time
    double t = this->get_time();

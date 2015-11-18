@@ -14,9 +14,9 @@ LowOrderViscosity<dim>::LowOrderViscosity(
    //dof_handler(&dof_handler)
 {
    // create sparse matrix for viscous bilinear forms
-   CompressedSparsityPattern c_sparsity_pattern(this->n_dofs);
-   DoFTools::make_sparsity_pattern(dof_handler, c_sparsity_pattern);
-   sparsity_pattern.copy_from(c_sparsity_pattern);
+   DynamicSparsityPattern dsp(this->n_dofs);
+   DoFTools::make_sparsity_pattern(dof_handler, dsp);
+   sparsity_pattern.copy_from(dsp);
    viscous_bilinear_forms.reinit(sparsity_pattern);
 
    // compute viscous bilinear forms

@@ -18,11 +18,15 @@ template <int dim>
 class ShallowWaterEntropy : public Entropy<dim>
 {
 public:
+  /** \brief Alias for cell iterator */
+  using Cell = typename Entropy<dim>::Cell;
+
   ShallowWaterEntropy();
 
   std::vector<double> compute_entropy() const override;
 
-  std::vector<double> compute_divergence_entropy_flux() const override;
+  std::vector<double> compute_divergence_entropy_flux(
+    const Cell & cell) const override;
 
   void reinitialize_group_fe_values(const Vector<double> & solution) override;
 

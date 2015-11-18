@@ -411,11 +411,6 @@ void ConservationLaw<dim>::setup_system()
   // clear maps
   cell_diameter.clear();
   max_flux_speed_cell.clear();
-  /*
-    viscosity_map.clear();
-    first_order_viscosity_map.clear();
-    entropy_viscosity_map.clear();
-  */
 
   // clear and distribute dofs
   dof_handler.clear();

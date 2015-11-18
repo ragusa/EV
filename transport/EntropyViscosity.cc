@@ -244,7 +244,7 @@ void EntropyViscosity<dim>::compute_entropy_viscosity(
   std::vector<double> dsdu_older(n_q_points_cell);
 
   // face values
-  std::vector<Point<dim> > normal(n_q_points_face);
+  std::vector<Tensor<1,dim> > normal(n_q_points_face);
   std::vector<double> u_old_face(n_q_points_face);
   std::vector<double> u_old_face_neighbor(n_q_points_face);
   std::vector<Tensor<1, dim> > dudx_old_face(n_q_points_face);
@@ -357,7 +357,7 @@ void EntropyViscosity<dim>::compute_entropy_viscosity(
           dudx_old_face_neighbor);
 
         // get normal vectors
-        normal = fe_values_face.get_normal_vectors();
+        normal = fe_values_face.get_all_normal_vectors();
 
         // compute entropy at each quadrature point on face
         for (unsigned int q = 0; q < n_q_points_face; ++q)

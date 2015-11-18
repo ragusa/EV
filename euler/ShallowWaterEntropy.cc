@@ -69,10 +69,15 @@ std::vector<double> ShallowWaterEntropy<dim>::compute_entropy(
 }
 
 template <int dim>
-std::vector<double> ShallowWaterEntropy<dim>::compute_divergence_entropy_flux()
+std::vector<double> ShallowWaterEntropy<dim>::compute_divergence_entropy_flux(
+  const Cell & cell)
 {
+  // reinitialize values for cell
+  entropy_flux_fe_values_cell.reinit(cell);
+
+  // get divergence of entropy flux
   auto divergence_entropy_flux =
-    entropy_flux_fe_values.get_function_divergences();
+    entropy_flux_fe_values_cell.get_function_divergences();
 
   return divergence_entropy_flux;
 }

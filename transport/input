@@ -17,10 +17,10 @@ subsection problem
 end
 
 subsection time
-   set End time = 0.3
+   set End time = 2.0
    set Time step size = 1.0
    set CFL limit = 0.5
-   set Time discretization option = SS  # <SS|FE|CN|BE|SSP2|SSP3>
+   set Time discretization option = FE  # <SS|FE|CN|BE|SSP2|SSP3>
 end
 
 subsection viscosity
@@ -48,7 +48,7 @@ subsection refinement
    set Refinement mode = space # <space|time>
    set Time refinement factor = 0.5
    set Use adaptive refinement = false
-   set Initial refinement level = 5
+   set Initial refinement level = 7
    set Number of refinement cycles = 1
 end
 
