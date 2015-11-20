@@ -576,42 +576,42 @@ void ConservationLaw<dim>::setup_system()
 
       break;
     }
-    /*
-        // entropy viscosity
-        case ViscosityType::entropy:
-        {
-          // create entropy
-          auto entropy = create_entropy();
+    // entropy viscosity
+    case ViscosityType::entropy:
+    {
+      // create entropy
+      auto entropy = create_entropy();
 
-          // create low-order viscosity
-          auto low_order_viscosity_tmp = std::make_shared<LowOrderViscosity<dim>>(
-            parameters.first_order_viscosity_coef,
-            cell_diameter,
-            max_flux_speed_cell,
-            dof_handler);
-          low_order_viscosity = low_order_viscosity_tmp;
+      // create low-order viscosity
+      auto low_order_viscosity_tmp = std::make_shared<LowOrderViscosity<dim>>(
+        parameters.first_order_viscosity_coef,
+        cell_diameter,
+        max_flux_speed_cell,
+        dof_handler);
+      low_order_viscosity = low_order_viscosity_tmp;
 
-          // create entropy viscosity
-          auto entropy_viscosity_tmp = std::make_shared<EntropyViscosity<dim>>(
-            parameters,
-            entropy,
-            cell_diameter,
-            dof_handler);
-          entropy_viscosity = entropy_viscosity_tmp;
+      // create entropy viscosity
+      auto entropy_viscosity_tmp =
+        std::make_shared<EntropyViscosity<dim>>(parameters,
+                                                entropy,
+                                                cell_diameter,
+                                                fe,
+                                                dof_handler,
+                                                cell_quadrature,
+                                                face_quadrature);
+      entropy_viscosity = entropy_viscosity_tmp;
 
-          // create high-order viscosity
-          auto high_order_viscosity_tmp =
-       std::make_shared<HighOrderViscosity<dim>>(
-            parameters,
-            low_order_viscosity,
-            entropy_viscosity,
-            dof_handler);
+      // create high-order viscosity
+      auto high_order_viscosity_tmp = std::make_shared<HighOrderViscosity<dim>>(
+        low_order_viscosity,
+        entropy_viscosity,
+        parameters.use_low_order_viscosity_for_first_time_step,
+        dof_handler);
 
-          viscosity = high_order_viscosity_tmp;
+      viscosity = high_order_viscosity_tmp;
 
-          break;
-        }
-    */
+      break;
+    }
     default:
     {
       Assert(false, ExcNotImplemented());
@@ -838,7 +838,13 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
            << std::endl;
 
     // compute viscosities
-    update_viscosities(dt, n);
+    {
+      // start timer for compute viscosities section
+      TimerOutput::Scope timer_section(timer, "Compute viscosity");
+
+      // update viscosity
+      viscosity->update(new_solution, old_solution, dt, n);
+    }
 
     // output viscosity transient if specified
     if (parameters.output_viscosity_transient)
@@ -1071,106 +1077,6 @@ void ConservationLaw<dim>::linear_solve(const SparseMatrix<double> & A,
 
   // distribute constraints
   constraints.distribute(x);
-}
-
-/**
- * \brief Updates viscosity at each quadrature point in each cell.
- *
- * \param[in] dt time step size
- * \param[in] n time index
- */
-template <int dim>
-void ConservationLaw<dim>::update_viscosities(const double & dt,
-                                              const unsigned int & n)
-{
-  // start timer for compute viscosities section
-  TimerOutput::Scope timer_section(timer, "Compute viscosity");
-
-  // update viscosity
-  viscosity->update(new_solution, old_solution, dt, n);
-
-  /*
-    switch (parameters.viscosity_type)
-    {
-      // no viscosity
-      case ViscosityType::none:
-      {
-        Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
-        for (; cell != endc; ++cell)
-          viscosity_map[cell] = 0.0;
-        break;
-      }
-      // constant viscosity
-      case ViscosityType::constant:
-      {
-        Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
-        for (; cell != endc; ++cell)
-          viscosity_map[cell] = parameters.constant_viscosity_value;
-        break;
-      }
-      // low-order viscosity
-      case ViscosityType::low:
-      {
-        // update_old_low_order_viscosity(true);
-        viscosity_map = first_order_viscosity_map;
-        break;
-      }
-      // discrete max principle low-order viscosity
-      case ViscosityType::DMP_low:
-      {
-        viscosity_map = first_order_viscosity_map;
-        break;
-      }
-      // domain-invariant low-order viscosity
-      case ViscosityType::DI_low:
-      {
-        ExcNotImplemented();
-        break;
-      }
-      // entropy viscosity
-      case ViscosityType::entropy:
-      {
-        Cell cell, endc = dof_handler.end();
-        if (parameters.use_low_order_viscosity_for_first_time_step && n == 1)
-        {
-          // compute low-order viscosities
-          // update_old_low_order_viscosity(true);
-
-          // use low-order viscosities for first time step
-          for (cell = dof_handler.begin_active(); cell != endc; ++cell)
-          {
-            entropy_viscosity_map[cell] = first_order_viscosity_map[cell];
-            viscosity_map[cell] = first_order_viscosity_map[cell];
-          }
-        }
-        else
-        {
-          // compute low-order viscosities
-          //update_old_low_order_viscosity(false);
-
-          // compute entropy viscosities
-          update_entropy_viscosities(dt);
-
-          // smooth entropy viscosity if chosen
-          if (parameters.entropy_viscosity_smoothing == "max")
-            smooth_entropy_viscosity_max();
-          else if (parameters.entropy_viscosity_smoothing == "average")
-            smooth_entropy_viscosity_average();
-
-          // compute high-order viscosities
-          for (cell = dof_handler.begin_active(); cell != endc; ++cell)
-            viscosity_map[cell] = std::min(first_order_viscosity_map[cell],
-                                           entropy_viscosity_map[cell]);
-        }
-        break;
-      }
-      default:
-      {
-        Assert(false, ExcNotImplemented());
-        break;
-      }
-    }
-  */
 }
 
 /**

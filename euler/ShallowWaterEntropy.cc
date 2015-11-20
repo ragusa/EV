@@ -5,18 +5,40 @@
 
 /**
  * \brief Constructor.
+ *
+ * \param[in] parameters_ parameters
+ * \param[in] height_extractor_ FE value extractor for height
+ * \param[in] momentum_extractor_ FE value extractor for momentum
+ * \param[in] gravity_ acceleration due to gravity
+ * \param[in] bathymetry_vector_ bathymetry vector
+ * \param[in] entropy_normalization_option_ entropy normalization option
+ * \param[in] domain_volume_ volume of domain
+ * \param[in] dof_handler_ degree of freedom handler
+ * \param[in] fe_ finite element system
+ * \param[in] triangulation_ triangulation
+ * \param[in] cell_quadrature_ cell quadrature
+ * \param[in] face_quadrature_ face quadrature
  */
 template <int dim>
 ShallowWaterEntropy<dim>::ShallowWaterEntropy(
+  const ShallowWaterParameters<dim> & parameters_,
   const FEValuesExtractors::Scalar & height_extractor_,
   const FEValuesExtractors::Vector & momentum_extractor_,
   const double & gravity_,
   const Vector<double> & bathymetry_vector_,
+  const double & domain_volume_,
   const DoFHandler<dim> & dof_handler_,
+  const FESystem<dim> & fe_,
   const Triangulation<dim> & triangulation_,
   const QGauss<dim> & cell_quadrature_,
   const QGauss<dim - 1> & face_quadrature_)
-  : Entropy<dim>(),
+  : Entropy<dim>(parameters_.entropy_normalization == "average",
+                 domain_volume_,
+                 dof_handler_,
+                 fe_,
+                 cell_quadrature_,
+                 face_quadrature_),
+    compute_entropy_normalization_ptr(nullptr),
     height_extractor(height_extractor_),
     momentum_extractor(momentum_extractor_),
     gravity(gravity_),
@@ -30,11 +52,17 @@ ShallowWaterEntropy<dim>::ShallowWaterEntropy(
                                 face_quadrature_,
                                 bathymetry_vector_,
                                 gravity_),
-    cell_quadrature(cell_quadrature_),
-    face_quadrature(face_quadrature_),
-    n_q_points_cell(cell_quadrature_.size()),
-    n_q_points_face(face_quadrature_.size())
+    entropy_normalization_option(parameters_.entropy_normalization)
 {
+  // determine which function to use to compute entropy normalization
+  if (entropy_normalization_option == "average")
+    compute_entropy_normalization_ptr =
+      &ShallowWaterEntropy<dim>::compute_max_entropy_deviation_normalization;
+  else if (entropy_normalization_option == "local")
+    compute_entropy_normalization_ptr =
+      &ShallowWaterEntropy<dim>::compute_local_entropy_normalization;
+  else
+    ExcNotImplemented();
 }
 
 /**
@@ -68,6 +96,15 @@ std::vector<double> ShallowWaterEntropy<dim>::compute_entropy(
   return entropy;
 }
 
+/**
+ * \brief Computes divergence of entropy flux at each quadrature point in cell.
+ *
+ * This function uses group FEM values for entropy flux to interpolate values.
+ *
+ * \param[in] cell cell iterator
+ *
+ * \return vector of divergence of entropy flux at each quadrature point in cell.
+ */
 template <int dim>
 std::vector<double> ShallowWaterEntropy<dim>::compute_divergence_entropy_flux(
   const Cell & cell)
@@ -80,6 +117,67 @@ std::vector<double> ShallowWaterEntropy<dim>::compute_divergence_entropy_flux(
     entropy_flux_fe_values_cell.get_function_divergences();
 
   return divergence_entropy_flux;
+}
+
+/**
+ * \brief Computes gradients of entropy flux at each quadrature point in face.
+ *
+ * This function uses group FEM values for entropy flux to interpolate values.
+ *
+ * \param[in] cell cell iterator
+ * \param[in] i_face index of face on cell
+ *
+ * \return vector of gradients of entropy flux at each quadrature point in cell.
+ */
+template <int dim>
+std::vector<Tensor<2, dim>> ShallowWaterEntropy<
+  dim>::compute_entropy_flux_gradients_face(const Cell & cell,
+                                            const unsigned int & i_face)
+{
+  // reinitialize values for face
+  entropy_flux_fe_values_face.reinit(cell, i_face);
+
+  // get gradients of entropy flux
+  std::vector<Tensor<2, dim>> entropy_flux_gradients(this->n_q_points_face);
+  entropy_flux_fe_values_face.get_function_gradients(entropy_flux_gradients);
+
+  return entropy_flux_gradients;
+}
+
+/**
+ * \brief Gets normal vectors at each quadrature point in face.
+ *
+ * \param[in] cell cell iterator
+ * \param[in] i_face index of face on cell
+ *
+ * \return vector of normal vectors at each quadrature point in face
+ */
+template <int dim>
+std::vector<Tensor<1, dim>> ShallowWaterEntropy<dim>::get_normal_vectors(
+  const Cell & cell, const unsigned int & i_face)
+{
+  // reinitialize values for face
+  entropy_flux_fe_values_face.reinit(cell, i_face);
+
+  return entropy_flux_fe_values_face.get_normal_vectors();
+}
+
+/**
+ * \brief Computes the entropy viscosity normalization coefficient
+ *        for each quadrature point in a cell using a function pointer.
+ *
+ * \param[in] solution solution vector
+ * \param[in] cell cell iterator
+ *
+ * \return vector of entropy viscosity normalization coefficient for each
+ *         quadrature point in cell
+ */
+template <int dim>
+std::vector<double> ShallowWaterEntropy<dim>::compute_entropy_normalization(
+  const Vector<double> & solution, const Cell & cell) const
+{
+  // call function pointer
+  return (this->*compute_entropy_normalization_ptr)(solution, cell);
 }
 
 /**
@@ -137,6 +235,7 @@ std::vector<double> ShallowWater<dim>::compute_entropy_residual(
  *
  * \return max entropy jump in cell
  */
+/*
 template <int dim>
 double ShallowWater<dim>::compute_max_entropy_jump(
   ShallowWaterEntropyFluxFEValuesFace<dim> & fe_values, const Cell & cell) const
@@ -196,6 +295,7 @@ double ShallowWater<dim>::compute_max_entropy_jump(
 
   return max_jump_in_cell;
 }
+*/
 
 /**
  * \brief Computes the local entropy viscosity normalization coefficient
@@ -218,7 +318,7 @@ std::vector<double> ShallowWaterEntropy<dim>::compute_local_entropy_normalizatio
   const Vector<double> & solution, const Cell & cell) const
 {
   // get height values
-  FEValues<dim> fe_values(this->fe, this->cell_quadrature, update_values);
+  FEValues<dim> fe_values(*(this->fe), *(this->cell_quadrature), update_values);
   fe_values.reinit(cell);
   std::vector<double> height(this->n_q_points_cell);
   fe_values[height_extractor].get_function_values(solution, height);

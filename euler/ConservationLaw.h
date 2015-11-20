@@ -38,12 +38,12 @@
 #include <deal.II/numerics/matrix_tools.h>
 #include <deal.II/numerics/error_estimator.h>
 
-//#include "Entropy.h"
+#include "Entropy.h"
 #include "Viscosity.h"
 #include "ConstantViscosity.h"
 #include "LowOrderViscosity.h"
-//#include "EntropyViscosity.h"
-//#include "HighOrderViscosity.h"
+#include "EntropyViscosity.h"
+#include "HighOrderViscosity.h"
 #include "ArtificialDiffusion.h"
 #include "NoDiffusion.h"
 #include "LaplacianDiffusion.h"
@@ -142,23 +142,6 @@ protected:
                     const Vector<double> & b,
                     Vector<double> & x);
   void apply_Dirichlet_BC(const double & time);
-  void update_viscosities(const double & dt, const unsigned int & n);
-  /*
-    virtual void update_old_low_order_viscosity(
-      const bool & using_low_order_scheme);
-    double compute_average_entropy(const Vector<double> & solution) const;
-    std::vector<double> compute_entropy_normalization(
-      const Vector<double> & solution,
-      const double & average_entropy,
-      const Cell & cell) const;
-    virtual std::vector<double> compute_entropy_residual(
-      const Vector<double> & new_solution,
-      const Vector<double> & old_solution,
-      const double & dt,
-      const Cell & cell) const;
-    void smooth_entropy_viscosity_max();
-    void smooth_entropy_viscosity_average();
-  */
   void check_nan();
   void output_viscosity(PostProcessor<dim> & postprocessor,
                         const bool & is_transient = false,
@@ -210,20 +193,6 @@ protected:
   virtual void compute_ss_residual(const double & dt, Vector<double> & r) = 0;
 
   /**
-   * \brief Computes entropy for each quadrature point on a cell or face.
-   *
-   * \param[in] solution solution
-   * \param[in] fe_values FE values, either for a cell or a face
-   * \param[out] entropy entropy values at each quadrature point on
-   *             cell or face
-   */
-  /*
-    virtual void compute_entropy(const Vector<double> & solution,
-                                 const FEValuesBase<dim> & fe_values,
-                                 Vector<double> & entropy) const = 0;
-  */
-
-  /**
    * \brief Computes divergence of entropy flux at each quadrature point in cell.
    *
    * \param[in] solution solution
@@ -237,8 +206,22 @@ protected:
   {
   }
 
+  /**
+   * \brief Creates an auxiliary post-processor object and returns the pointer.
+   *
+   * This default version returns a null pointer.
+   *
+   * \return pointer to created auxiliary post-processor object
+   */
   virtual std::shared_ptr<DataPostprocessor<dim>> create_auxiliary_postprocessor()
     const;
+
+  /**
+   * \brief Creates an entropy object and returns the pointer.
+   *
+   * \return pointer to created entropy object
+   */
+  virtual std::shared_ptr<Entropy<dim>> create_entropy() const = 0;
 
   /**
    * \brief Returns the names of each component.

@@ -35,6 +35,6 @@ DeclException1(ExcDirectoryCannotBeOpened,
 DeclException2(ExcSizesInconsistent,
                unsigned int,
                unsigned int,
-               << "Size " << arg1 << "does not match size " << arg2);
+               << "Size " << arg1 << " does not match size " << arg2);
 
 #endif

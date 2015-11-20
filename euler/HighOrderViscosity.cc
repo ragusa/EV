@@ -35,14 +35,17 @@ HighOrderViscosity<dim>::HighOrderViscosity(
  */
 template <int dim>
 void HighOrderViscosity<dim>::update(const Vector<double> & new_solution,
-                                   const Vector<double> & old_solution,
-                                   const double & dt,
-const unsigned int & n,
+                                     const Vector<double> & old_solution,
+                                     const double & dt,
+                                     const unsigned int & n)
 {
   if (use_low_order_for_first_step && n == 1)
   {
     // update the low-order viscosity
     low_order_viscosity->update(new_solution, old_solution, dt, n);
+
+    // update the entropy viscosity, just for outputting viscosities
+    entropy_viscosity->update(new_solution, old_solution, dt, n);
 
     // copy the low-order viscosity values
     Cell cell = this->dof_handler->begin_active(),

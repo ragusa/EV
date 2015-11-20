@@ -32,6 +32,7 @@ PostProcessor<dim>::PostProcessor(
                     ConservationLawParameters<dim>::TemporalDiscretization::SS),
     fe(FE_Q<dim>(parameters.degree), parameters_.n_components),
     cell_quadrature(parameters.n_quadrature_points),
+    n_cells(triangulation_.n_active_cells()),
     current_cycle(0),
     is_last_cycle(false),
     fine_dof_handler(fine_triangulation),
@@ -560,9 +561,6 @@ void PostProcessor<dim>::output_cell_maps(
   DataOut<dim> data_out;
   data_out.attach_dof_handler(dof_handler);
 
-  // get number of cells from size of cell map
-  const unsigned int n_cells = cell_maps[0]->size();
-
   // loop over cell maps
   const unsigned int n_cell_maps = cell_maps.size();
   std::vector<Vector<double>> cell_vectors(n_cell_maps, Vector<double>(n_cells));
@@ -651,13 +649,13 @@ void PostProcessor<dim>::output_viscosity(
   const std::string & transient_appendage)
 {
   // create a vector of cell maps to pass to output_cell_maps()
-  std::vector<CellMap> cell_maps;
-  std::vector<CellMap *> cell_maps_ptrs;
   const unsigned int n_viscosities = viscosities.size();
+  std::vector<CellMap> cell_maps(n_viscosities);
+  std::vector<CellMap *> cell_maps_ptrs(n_viscosities);
   for (unsigned int i = 0; i < n_viscosities; ++i)
   {
-    cell_maps.push_back(viscosities[i]->get_values());
-    cell_maps_ptrs.push_back(&cell_maps[i]);
+    cell_maps[i] = viscosities[i]->get_values();
+    cell_maps_ptrs[i] = &(cell_maps[i]);
   }
 
   // call output_cell_maps

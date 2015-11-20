@@ -161,6 +161,8 @@ private:
 
   const QGauss<dim> cell_quadrature;
 
+  const unsigned int n_cells;
+
   unsigned int current_cycle;
   bool is_last_cycle;
 

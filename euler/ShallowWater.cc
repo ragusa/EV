@@ -313,13 +313,23 @@ void ShallowWater<dim>::define_problem()
  *
  * \return pointer to created entropy object
  */
-/*
-std::unique_ptr<Entropy<dim>> ShallowWater<dim>::create_entropy()
+template <int dim>
+std::shared_ptr<Entropy<dim>> ShallowWater<dim>::create_entropy() const
 {
-  auto entropy = std::make_unique<Entropy<dim>>();
+  auto entropy =
+    std::make_shared<ShallowWaterEntropy<dim>>(sw_parameters,
+                                               height_extractor,
+                                               momentum_extractor,
+                                               gravity,
+                                               bathymetry_vector,
+                                               this->domain_volume,
+                                               this->dof_handler,
+                                               this->fe,
+                                               this->triangulation,
+                                               this->cell_quadrature,
+                                               this->face_quadrature);
   return entropy;
 }
-*/
 
 /**
  * \brief Interpolates the bathymetry FE vector from its function.
