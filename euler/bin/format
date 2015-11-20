@@ -1,0 +1,48 @@
+#!/bin/bash
+#
+# Formats file using a code-formatter
+#
+# Usage: format <filename>
+#        format all
+#
+# "format all" will format all *.cc and *.h files in the current directory
+
+if [ $# -ne 1 ]; then
+  echo "USAGE: format <file>"
+else
+  if [ $1 == "all" ]; then
+    # create a list of *.cc and *.h files
+    cc_file_list=`find . -name '*.cc' -print`
+    h_file_list=`find . -name '*.h' -print`
+    file_list="$cc_file_list $h_file_list"
+
+    # loop over *.cc and *.h files
+    for file in $file_list; do
+      # create backup and run clang-format on file
+      cp $file $file.bak
+      clang-format -style=file $file.bak > $file
+
+      # diff new file with its backup to determine if changes were made
+      nlines=`diff $file $file.bak | wc -l`
+      if [ $nlines -gt 0 ]; then
+        echo "Formatted $file."
+      fi
+
+      # remove backup
+      rm $file.bak
+    done
+  else
+    # create backup and run clang-format on file
+    cp $1 $1.bak
+    clang-format -style=file $1.bak > $1
+
+    # diff new file with its backup to determine if changes were made
+    nlines=`diff $1 $1.bak | wc -l`
+    if [ $nlines -gt 0 ]; then
+      echo "Formatted $1."
+    fi
+
+    # remove backup
+    rm $1.bak
+  fi
+fi

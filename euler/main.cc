@@ -6,14 +6,13 @@
 #include <iostream>
 #include <deal.II/base/logstream.h>
 
-#include "CMakeVars.h"
-
-#include "Burgers.h"
-#include "BurgersParameters.h"
-#include "Euler.h"
-#include "EulerParameters.h"
-#include "ShallowWater.h"
-#include "ShallowWaterParameters.h"
+#include "include/other/CMakeVars.h"
+#include "include/base/Burgers.h"
+#include "include/base/Euler.h"
+#include "include/base/ShallowWater.h"
+#include "include/parameters/BurgersParameters.h"
+#include "include/parameters/EulerParameters.h"
+#include "include/parameters/ShallowWaterParameters.h"
 
 using namespace dealii;
 
@@ -35,7 +34,7 @@ int main(int argc, char * argv[])
     if (argc > 1)
       parameter_handler.read_input(argv[1]);
     else
-      parameter_handler.read_input("burgers.prm");
+      parameter_handler.read_input("input/burgers.prm");
     BurgersParameters<dimension> burgers_parameters;
     burgers_parameters.get_burgers_parameters(parameter_handler);
 
@@ -47,7 +46,7 @@ int main(int argc, char * argv[])
     if (argc > 1)
       parameter_handler.read_input(argv[1]);
     else
-      parameter_handler.read_input("euler.prm");
+      parameter_handler.read_input("input/euler.prm");
     EulerParameters<dimension> parameters;
     parameters.get_parameters(parameter_handler);
     Euler<dimension> problem(parameters);
@@ -60,7 +59,7 @@ int main(int argc, char * argv[])
     if (argc > 1)
       parameter_handler.read_input(argv[1]);
     else
-      parameter_handler.read_input("shallowwater.prm");
+      parameter_handler.read_input("input/shallowwater.prm");
     ShallowWaterParameters<dimension> parameters;
     parameters.get_parameters(parameter_handler);
     ShallowWater<dimension> problem(parameters);

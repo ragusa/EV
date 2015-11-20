@@ -18,6 +18,6 @@ public:
   NewClass();
 };
 
-#include "NewClass.cc"
+#include "src/DIRECTORY/NewClass.cc"
 
 #endif

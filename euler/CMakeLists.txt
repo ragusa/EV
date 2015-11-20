@@ -36,8 +36,8 @@ PROJECT(myproject)
 # a
 SET(SOURCE_PATH ${CMAKE_CURRENT_SOURCE_DIR})
 CONFIGURE_FILE(
-  "${PROJECT_SOURCE_DIR}/CMakeVars.h.in"
-  "${PROJECT_BINARY_DIR}/CMakeVars.h")
+  "${PROJECT_SOURCE_DIR}/include/other/CMakeVars.h.in"
+  "${PROJECT_BINARY_DIR}/include/other/CMakeVars.h")
 INCLUDE_DIRECTORIES("${PROJECT_BINARY_DIR}")
 
 # serial targets

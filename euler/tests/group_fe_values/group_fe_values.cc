@@ -16,7 +16,7 @@
 #include <deal.II/grid/grid_refinement.h>
 #include <deal.II/grid/tria.h>
 #include <deal.II/numerics/vector_tools.h>
-#include "../../GroupFEValuesCell.h"
+#include "include/fe/GroupFEValuesCell.h"
 
 using namespace dealii;
 
@@ -65,7 +65,7 @@ private:
 
 // vector function FE values class
 template <int dim>
-class VectorFunctionFEValuesCell : public GroupFEValuesCell<dim,false>
+class VectorFunctionFEValuesCell : public GroupFEValuesCell<dim, false>
 {
 public:
   VectorFunctionFEValuesCell(const unsigned int & n_components_solution,
@@ -73,12 +73,12 @@ public:
                              const Triangulation<dim> & triangulation,
                              const QGauss<dim> & cell_quadrature,
                              const Vector<double> & aux_vector = Vector<double>())
-    : GroupFEValuesCell<dim,false>(n_components_solution,
-                             dim,
-                             solution_dof_handler,
-                             triangulation,
-                             cell_quadrature,
-                             aux_vector)
+    : GroupFEValuesCell<dim, false>(n_components_solution,
+                                    dim,
+                                    solution_dof_handler,
+                                    triangulation,
+                                    cell_quadrature,
+                                    aux_vector)
   {
   }
 
@@ -89,7 +89,7 @@ private:
     std::vector<double> function_value(this->n_components_function, 1.0);
     for (unsigned int i = 0; i < solution.size(); ++i)
       for (unsigned int j = 0; j < this->n_components_function; ++j)
-        function_value[j] *= solution[i]*(j+1.0);
+        function_value[j] *= solution[i] * (j + 1.0);
     return function_value;
   }
 };
@@ -353,8 +353,10 @@ void test()
     scalar_function_fe_values.get_function_dof_values();
 
   // print table of function at DoF support points
-  print_function_at_dof_points<dim>(
-    n_components, unique_real_support_points, solution_function, scalar_function_dofs);
+  print_function_at_dof_points<dim>(n_components,
+                                    unique_real_support_points,
+                                    solution_function,
+                                    scalar_function_dofs);
 
   // print table of function at quadrature points
   print_function_at_quadrature_points<dim>(cell_quadrature,

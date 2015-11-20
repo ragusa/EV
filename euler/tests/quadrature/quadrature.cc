@@ -32,7 +32,7 @@ int main(int, char **)
     // create dummy quadrature for evaluation point
     const double eval_point = 7.3;
     const unsigned int eval_cell = 5; // cell number of evaluation point
-    const double unit_cell_position = (eval_point - eval_cell*dx) / dx;
+    const double unit_cell_position = (eval_point - eval_cell * dx) / dx;
     const std::vector<Point<1>> point(1, Point<1>(unit_cell_position));
     const Quadrature<1> quadrature(point);
 
@@ -44,12 +44,12 @@ int main(int, char **)
     const double left_value = 32.4;
     const double right_value = 12.8;
     solution[eval_cell] = left_value;
-    solution[eval_cell+1] = right_value;
+    solution[eval_cell + 1] = right_value;
 
     // loop over cells to evaluate solution at evaluation point
-    typename DoFHandler<1>::active_cell_iterator
-      cell = dof_handler.begin_active(),
-      endc = dof_handler.end();
+    typename DoFHandler<1>::active_cell_iterator cell =
+                                                   dof_handler.begin_active(),
+                                                 endc = dof_handler.end();
     for (unsigned int i_cell = 0; cell != endc; ++cell, ++i_cell)
     {
       if (i_cell == eval_cell)
@@ -60,14 +60,14 @@ int main(int, char **)
         fe_values.get_function_values(solution, solution_values);
 
         // compute expected value
-        const double left_basis_value  = 1.0 - unit_cell_position;
+        const double left_basis_value = 1.0 - unit_cell_position;
         const double right_basis_value = unit_cell_position;
         const double expected_value =
-          left_value*left_basis_value + right_value*right_basis_value;
+          left_value * left_basis_value + right_value * right_basis_value;
 
         std::cout << "Evaluation point: " << eval_point << std::endl;
-        std::cout << "Left cell point: " << i_cell*dx << std::endl;
-        std::cout << "Right cell point: " << (i_cell+1)*dx << std::endl;
+        std::cout << "Left cell point: " << i_cell * dx << std::endl;
+        std::cout << "Right cell point: " << (i_cell + 1) * dx << std::endl;
         std::cout << "Left solution value: " << left_value << std::endl;
         std::cout << "Right solution value: " << right_value << std::endl;
         std::cout << "Expected value: " << expected_value << std::endl;
