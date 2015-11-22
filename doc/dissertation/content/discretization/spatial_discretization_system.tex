@@ -40,9 +40,29 @@ Alternately, one may view each solution component as its own expansion:
 \end{equation}
 where $\dofindex(k,m)$ is the global degree of freedom index associated
 with node $k$ and solution component $m$.
+As opposed to the scalar case, in the vector case, the conservation law flux
+is interpolated $\consfluxvector(\approximatevectorsolution) \rightarrow
+\Pi\consfluxvector(\approximatevectorsolution)$:
+\begin{equation}
+  \Pi\consfluxvector(\vectorsolution\xt) 
+    = \sumj\vectortestfunction_j(\x)\mathbf{\consfluxletter}
+      (\vectorsolution(\x_{\nodeindex(j)},\timevalue))
+  \eqc
+\end{equation}
+where hereafter, $\mathbf{\consfluxletter}(\vectorsolution(\x_{\nodeindex(j)},\timevalue))$
+is shortened to $\mathbf{\consfluxletter}_j$.
 Substituting the approximate
-solution into Equation \eqref{eq:scalar_transport} and testing with basis
-function $\testfunction_i(\x)$ gives
+solution into Equation \eqref{eq:conservation_law_system} and testing with basis
+function $\vectortestfunction_i(\x)$ gives
+\begin{equation}
+   \sumj\intSij\vectortestfunction_i\transpose(\x)\vectortestfunction_j(\x) d\volume
+     \ddt{\solutionletter_j}
+     + \sumj\intSij\vectortestfunction_i\transpose(\x)\nabla\vectortestfunction_j(\x)
+     d\volume\cdot\mathbf{\consfluxletter}_j = \mathbf{0} \eqp
+\end{equation}
+
+
+
 \begin{equation}
    \intSi\ppt{\approximatescalarsolution}\testfunction_i(\x) d\volume
       + \intSi\left(\divergence\consfluxscalar[\approximatescalarsolution]
