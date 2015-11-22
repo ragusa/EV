@@ -14,7 +14,13 @@
 \newcommand{\normalvector}{\mathbf{\normalvectorletter}}
 \newcommand{\normalx}{\normalvectorletter_x}
 \newcommand{\normaly}{\normalvectorletter_y}
-\newcommand{\ndimensions}{n_\text{dim}}
+\newcommand{\ndimensions}{N_\text{dim}}
+\newcommand{\ncomponents}{N_\text{comp}}
+\newcommand{\ndofs}{N_\text{dof}}
+\newcommand{\nnodes}{N_\text{node}}
+\newcommand{\dofindex}{j}
+\newcommand{\nodeindex}{k}
+\newcommand{\componentindex}{m}
 
 % solution
 \newcommand{\scalarsolution}{u}
@@ -38,6 +44,8 @@
 \newcommand{\volume}{V}
 \newcommand{\area}{A}
 \newcommand{\testfunction}{\varphi}
+\newcommand{\vectortestfunctionscalar}{\Phi}
+\newcommand{\vectortestfunction}{\mathbf{\vectortestfunctionscalar}}
 \newcommand{\support}{S}
 \newcommand{\maxdof}{N}
 \newcommand{\interpolant}{\Pi}
@@ -230,7 +238,7 @@
 % miscellaneous
 \newcommand{\xt}{\pr{\x,\timevalue}}
 \newcommand{\divergence}{\nabla\cdot}
-\newcommand{\unitvector}[1]{\hat{\mathbf{e}}_#1}
+\newcommand{\unitvector}[1]{\hat{\mathbf{e}}_{#1}}
 
 % command to highlight term in equation
 \newcommand{\highlightblue}[1]{

@@ -1,0 +1,102 @@
+This section gives the spatial discretization for conservation law systems.
+Again, CGFEM is used for
+spatial discretization, so the numerical solution (now vector-valued:
+$\approximatevectorsolution$) is again approximated using an expansion of basis
+functions. However, since there are now multiple degrees of freedom at each
+node, some discussion on notation is given here to distinguish between node
+indexing and degree of freedom indexing.  First, let the number of
+\emph{scalar} solution components be denoted by $\ncomponents$.  Thus, as an
+example, the 2-D shallow water equations, which consist of a continuity
+equation and a conservation of momentum equation, have $\ncomponents=3$ because
+the multi-dimensional conservation of momentum equation is comprised of two
+scalar conservation of momentum equations.  There are a number of ways to view
+the basis function expansion of the approximate solution. For example, one may
+use vector-valued basis functions:
+\begin{equation}
+  \approximatevectorsolution\xt = \sum\limits_{j=1}^{\ndofs}
+    \solutionletter_j(\timevalue)\vectortestfunction_j(\x) \eqc
+\end{equation}
+where the coefficients $\solutionletter_j(\timevalue)$ are the basis function
+expansion coefficients at time $\timevalue$, and $\vectortestfunction_j(\x)$
+are the vector-valued basis functions
+\begin{equation}
+  \vectortestfunction_j(\x) = 
+    \unitvector{\componentindex(j)}
+      \testfunction^{\componentindex(j)}_{\nodeindex(j)}(\x)
+  \eqc
+\end{equation}
+where $\unitvector{\componentindex(j)}$ is the unit vector for dimension
+$\componentindex(j)$, $\componentindex(j)$ returns the component index associated with degree
+of freedom $j$, and $\nodeindex(j)$ returns the node index associated with
+degree of freedom $j$. The basis function $\vectortestfunction_j$ is thus
+zero for all components except the one corresponding to $j$ which uses
+the scalar component basis function corresponding to component $\componentindex(j)$ of
+the solution at node $\nodeindex(j)$.
+Alternately, one may view each solution component as its own expansion:
+\begin{equation}
+  \approximatescalarsolution^m\xt = \sum\limits_{k=1}^{\nnodes}
+    \solutionletter_{\dofindex(k,m)}(\timevalue)\testfunction^m_k(\x)
+  \eqc
+\end{equation}
+where $\dofindex(k,m)$ is the global degree of freedom index associated
+with node $k$ and solution component $m$.
+Substituting the approximate
+solution into Equation \eqref{eq:scalar_transport} and testing with basis
+function $\testfunction_i(\x)$ gives
+\begin{equation}
+   \intSi\ppt{\approximatescalarsolution}\testfunction_i(\x) d\volume
+      + \intSi\left(\divergence\consfluxscalar[\approximatescalarsolution]
+      + \reactioncoef(\x)\approximatescalarsolution\xt\right)
+      \testfunction_i(\x) d\volume
+      = \intSi \scalarsource\xt \testfunction_i(\x) d\volume \eqc
+\end{equation}
+where $\support_i$ is the support of $\testfunction_i(\x)$. If the flux
+function $\consfluxscalar$ is linear with respect to $\scalarsolution$, i.e.,
+$\consfluxscalar = \velocity\scalarsolution$ for some uniform velocity field
+$\velocity$, then the system to be solved is linear:
+\begin{equation}\label{eq:semidiscrete}
+  \consistentmassmatrix\ddt{\solutionvector}+\ssmatrix\solutionvector(t)
+  = \ssrhs(\timevalue) \eqc
+\end{equation}
+with the elements of $\ssmatrix$ being the following:
+\begin{equation}\label{eq:Aij}
+  \ssmatrixletter\ij \equiv \intSij\left(
+  \velocity\cdot\nabla\testfunction_j(\x) +
+  \reactioncoef(\x)\testfunction_j(\x)\right)\testfunction_i(\x) d\volume \eqc
+\end{equation}
+where $\support\ij$ is the dual support of $\testfunction_i(\x)$ and
+$\testfunction_j(\x)$.
+If the flux function $\consfluxscalar$ is nonlinear, then the system is
+nonlinear, but it may be expressed in a quasilinear form:
+\begin{equation}\label{eq:semi_quasilinear}
+   \consistentmassmatrix\ddt{\solutionvector}
+   + \ssmatrix(\approximatescalarsolution)\solutionvector(\timevalue)
+   = \ssrhs(\timevalue) \eqc
+\end{equation}
+where $\approximatescalarsolution\xt$ is the numerical solution, and the
+quasilinear matrix (i.e., the Jacobian matrix) entries are
+\begin{equation}\label{eq:Aij_nonlinear}
+  \ssmatrixletter\ij(\approximatescalarsolution) \equiv \intSij\left(
+  \mathbf{\consfluxletter}'(\approximatescalarsolution)\cdot\nabla
+  \testfunction_j(\x) +
+  \reactioncoef(\x)\testfunction_j(\x)\right)
+  \testfunction_i(\x) d\volume \eqp
+\end{equation}
+The elements of $\ssrhs(\timevalue)$ are
+\begin{equation}
+  \ssrhsletter_i(\timevalue) \equiv \intSi \scalarsource\xt\testfunction_i(\x)
+  d\volume \eqp
+\end{equation}
+$\consistentmassmatrix$ is the consistent mass matrix, which has the entries
+\begin{equation}\label{eq:massmatrix}
+  \massmatrixletter^C\ij \equiv \intSij
+  \testfunction_j(\x)\testfunction_i(\x) d\volume \eqp
+\end{equation}
+Similarly, for the linear steady-state case, the linear system is
+\begin{equation}
+  \ssmatrix\solutionvector = \ssrhs \eqc
+\end{equation}
+or for the nonlinear case,
+\begin{equation}
+  \ssmatrix(\approximatescalarsolution)\solutionvector = \ssrhs \eqp
+\end{equation}
