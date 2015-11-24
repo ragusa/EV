@@ -52,11 +52,15 @@
 \newcommand{\interpolant}{\Pi}
 
 % local viscous bilinear form
-\newcommand{\localviscbilinearform}[3]{b_#1(\testfunction_#2, \testfunction_#3)}
+\newcommand{\localvisc}{b}
+\newcommand{\localviscbilinearform}[3]{\localvisc_#1(\testfunction_#2, \testfunction_#3)}
 \newcommand{\cellvolume}{|\celldomain|}
 \newcommand{\cardinality}[1][]{\ifthenelse{\equal{#1}{}}{n_\cell}{n_#1}}
-\newcommand{\indicescell}[1][]{\ifthenelse{\equal{#1}{}}{\mathcal{I}_{\cell}}
-  {\mathcal{I}_{#1}}}
+\newcommand{\cardsystem}{\bar{n}}
+\newcommand{\indices}{\mathcal{I}}
+\newcommand{\indicesnode}{\indices^{\text{node}}_\cell}
+\newcommand{\indicescell}[1][]{\ifthenelse{\equal{#1}{}}{\indices_{\cell}}
+  {\indices_{#1}}}
 
 % entropy viscosity
 \newcommand{\entropy}{\eta}
@@ -70,6 +74,7 @@
 \newcommand{\consfluxletter}{f}
 \newcommand{\consfluxscalar}[1][\scalarsolution]{\mathbf{\consfluxletter}(#1)}
 \newcommand{\consfluxvector}{\mathbf{\MakeUppercase{\consfluxletter}}}
+\newcommand{\consfluxinterpolant}{\mathscr{F}}
 \newcommand{\conssource}{\mathbf{s}(\vectorsolution)}
 
 % viscosity
@@ -96,8 +101,14 @@
 \newcommand{\massmatrixletter}{M}
 \newcommand{\massmatrix}{\mathbf{\massmatrixletter}}
 \newcommand{\consistentmassmatrix}{\massmatrix^C}
+\newcommand{\consistentmassentry}{\massmatrixletter^C_{i,j}}
 \newcommand{\lumpedmassmatrix}{\massmatrix^L}
 \newcommand{\lumpedmassentry}{\massmatrixletter^L_{i,i}}
+
+% gradient matrix (for conservation law systems)
+\newcommand{\gradientmatrixletter}{c}
+\newcommand{\gradientmatrix}{\mathbf{\MakeUppercase{\gradientmatrixletter}}}
+\newcommand{\gradiententry}{\mathbf{\gradientmatrixletter}\ij}
 
 % steady-state system matrix and rhs
 \newcommand{\ssmatrixletter}{A}
@@ -209,6 +220,7 @@
 \newcommand{\sumKSi}{\sum\limits_{\cell:\celldomain\subset\support_i}}
 \newcommand{\sumKSij}[1][\cell]
   {\sum\limits_{#1:\celldomain[#1]\subset\support_{i,j}}}
+\newcommand{\sumallcells}{\sum\limits_{\cell}}
 \newcommand{\intdomain}[1]{\int\limits_\domain #1 \,d\volume}
 \newcommand{\intboundary}[1]{\int\limits_{\domainboundary} #1 \,d\area}
 \newcommand{\intSi}{\int\limits_{\support_i}}

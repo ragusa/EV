@@ -1,0 +1,2 @@
+# undo exclude pattern of parent directory
+!*.cc

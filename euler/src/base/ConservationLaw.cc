@@ -629,6 +629,13 @@ void ConservationLaw<dim>::setup_system()
       artificial_diffusion = std::move(tmp_artificial_diffusion);
       break;
     }
+    // algebraic diffusion
+    case DiffusionType::algebraic:
+    {
+      auto tmp_artificial_diffusion = std::make_unique<AlgebraicDiffusion<dim>>();
+      artificial_diffusion = std::move(tmp_artificial_diffusion);
+      break;
+    }
     // Laplacian diffusion
     case DiffusionType::laplacian:
     {

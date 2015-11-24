@@ -1,15 +1,24 @@
+# cmake files
 CMakeCache.txt
 CMakeFiles
-include/other/CMakeVars.h
 CTestTestfile.cmake
 Makefile
 cmake_install.cmake
+Testing
+
+# executables
 burgers
 burgers_parallel
 euler
 euler_parallel
 shallowwater
 shallowwater_parallel
+
+# doxygen directory
 doxygen
+
+# backup files and symbolic links
 *.bak
-Testing
+*.cc
+*.h
+!main.cc

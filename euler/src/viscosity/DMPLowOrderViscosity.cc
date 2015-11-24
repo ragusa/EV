@@ -12,56 +12,6 @@ DMPLowOrderViscosity<dim>::DMPLowOrderViscosity()
 }
 
 /**
- * \brief Adds the viscous bilinear form for maximum-principle preserving
- *        viscosity
- */
-template <int dim>
-void ConservationLaw<dim>::add_maximum_principle_viscosity_bilinear_form(
-  Vector<double> & f)
-{
-  FEValues<dim> fe_values(
-    fe, cell_quadrature, update_values | update_gradients | update_JxW_values);
-
-  // allocate memory needed for cell residual and aggregation into global
-  // residual
-  Vector<double> cell_residual(dofs_per_cell);
-  std::vector<unsigned int> local_dof_indices(dofs_per_cell);
-
-  // loop over cells
-  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
-  for (; cell != endc; ++cell)
-  {
-    // reset cell residual
-    cell_residual = 0;
-
-    // add viscous bilinear form
-    double cell_volume = cell->measure();
-    for (unsigned int i = 0; i < dofs_per_cell; ++i)
-    {
-      // compute b_K(u,\varphi_i)
-      double b_i = 0.0;
-      for (unsigned int j = 0; j < dofs_per_cell; ++j)
-      {
-        double b_K; // local viscous bilinear form
-        if (j == i)
-          b_K = cell_volume;
-        else
-          b_K = -1.0 / (dofs_per_cell - 1.0) * cell_volume;
-
-        b_i += new_solution(local_dof_indices[j]) * b_K;
-      }
-      // add viscous term for dof i; note 0 is used for quadrature point
-      // because viscosity is the same for all quadrature points on a cell
-      cell_residual(i) += viscosity_map[cell] * b_i;
-    }
-
-    // aggregate local residual into global residual
-    cell->get_dof_indices(local_dof_indices);
-    constraints.distribute_local_to_global(cell_residual, local_dof_indices, f);
-  } // end cell loop
-}
-
-/**
  * \brief Computes the maximum-principle preserving first order viscosity
  *        for each cell.
  */
@@ -99,16 +49,15 @@ void ConservationLaw<dim>::update_max_principle_viscosity()
   }
 }
 
-/** \brief Computes viscous fluxes, to be used in the computation of
- *         maximum-principle preserving first order viscosity.
+/**
+ * \brief Computes viscous fluxes, to be used in the computation of
+ *        maximum-principle preserving first order viscosity.
  *
- *         Each element of the resulting matrix, \f$V_{i,j}\f$ is computed as
- *         follows:
- *         \f[
- *            V_{i,j} =
- *\int_{S_{ij}}(\mathbf{f}'(u)\cdot\nabla\varphi_j)\varphi_i
- * d\mathbf{x}
- *         \f]
+ * Each element of the resulting matrix, \f$V_{i,j}\f$ is computed as follows:
+ * \f[
+ *   V_{i,j} =
+ *     \int_{S_{i,j}}(\mathbf{f}'(u)\cdot\nabla\varphi_j)\varphi_i d\mathbf{x}
+ * \f]
  */
 template <int dim>
 void ConservationLaw<dim>::compute_viscous_fluxes()
@@ -147,53 +96,6 @@ void ConservationLaw<dim>::compute_viscous_fluxes()
                              dfdu[q] * fe_values.shape_grad(j, q) *
                                fe_values.shape_value(i, q) * fe_values.JxW(q));
         }
-      }
-    }
-  }
-}
-
-/**
- * \brief Computes viscous bilinear forms, to be used in the computation of
- *         maximum-principle preserving first order viscosity.
- *
- * Each element of the resulting matrix, \f$B_{i,j}\f$ is computed as follows:
- * \f[
- *   B_{i,j} = \sum_{K:D_K\subset S_{i,j}}b_K(\varphi_i,\varphi_j)
- * \f]
- */
-template <int dim>
-void ConservationLaw<dim>::compute_viscous_bilinear_forms()
-{
-  viscous_bilinear_forms = 0; // zero out matrix
-  // local dof indices
-  std::vector<unsigned int> local_dof_indices(dofs_per_cell);
-
-  // loop over cells
-  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
-  for (; cell != endc; ++cell)
-  {
-    // get local dof indices
-    cell->get_dof_indices(local_dof_indices);
-
-    // query cell volume
-    double cell_volume = cell->measure();
-
-    // add local bilinear forms to global matrix
-    for (unsigned int i = 0; i < dofs_per_cell; ++i)
-    {
-      for (unsigned int j = 0; j < dofs_per_cell; ++j)
-      {
-        double b_cell = 0.0;
-        if (j == i)
-        {
-          b_cell = cell_volume;
-        }
-        else
-        {
-          b_cell = -1.0 / (dofs_per_cell - 1.0) * cell_volume;
-        }
-        viscous_bilinear_forms.add(
-          local_dof_indices[i], local_dof_indices[j], b_cell);
       }
     }
   }

@@ -40,83 +40,51 @@ Alternately, one may view each solution component as its own expansion:
 \end{equation}
 where $\dofindex(k,m)$ is the global degree of freedom index associated
 with node $k$ and solution component $m$.
-As opposed to the scalar case, in the vector case, the conservation law flux
-is interpolated $\consfluxvector(\approximatevectorsolution) \rightarrow
-\Pi\consfluxvector(\approximatevectorsolution)$:
+As opposed to the scalar conservation law case, the vector case interpolates
+the conservation law flux between nodal values:
 \begin{equation}
+  \consfluxvector(\vectorsolution\xt) \rightarrow
   \Pi\consfluxvector(\vectorsolution\xt) 
-    = \sumj\vectortestfunction_j(\x)\mathbf{\consfluxletter}
+    \equiv \sumj\vectortestfunction_j(\x)\mathbf{\consfluxletter}
       (\vectorsolution(\x_{\nodeindex(j)},\timevalue))
   \eqc
 \end{equation}
-where hereafter, $\mathbf{\consfluxletter}(\vectorsolution(\x_{\nodeindex(j)},\timevalue))$
-is shortened to $\mathbf{\consfluxletter}_j$.
+where hereafter the nodal flux values used as interpolation values,
+$\mathbf{\consfluxletter}(\vectorsolution(\x_{\nodeindex(j)},\timevalue))$,
+will be denoted as $\consfluxinterpolant_j(\timevalue)$.
 Substituting the approximate
-solution into Equation \eqref{eq:conservation_law_system} and testing with basis
+solution into Equation \eqref{eq:conservation_law_system_homo} and testing with basis
 function $\vectortestfunction_i(\x)$ gives
-\begin{equation}
+\begin{equation}\label{eq:vector_weak_form_long}
    \sumj\intSij\vectortestfunction_i\transpose(\x)\vectortestfunction_j(\x) d\volume
      \ddt{\solutionletter_j}
      + \sumj\intSij\vectortestfunction_i\transpose(\x)\nabla\vectortestfunction_j(\x)
-     d\volume\cdot\mathbf{\consfluxletter}_j = \mathbf{0} \eqp
+     d\volume\cdot\consfluxinterpolant_j(\timevalue) = \mathbf{0} \eqp
 \end{equation}
-
-
-
+Again, a mass matrix $\consistentmassmatrix$ is defined:
 \begin{equation}
-   \intSi\ppt{\approximatescalarsolution}\testfunction_i(\x) d\volume
-      + \intSi\left(\divergence\consfluxscalar[\approximatescalarsolution]
-      + \reactioncoef(\x)\approximatescalarsolution\xt\right)
-      \testfunction_i(\x) d\volume
-      = \intSi \scalarsource\xt \testfunction_i(\x) d\volume \eqc
+  \consistentmassentry \equiv
+    \intSij\vectortestfunction_i\transpose(\x)\vectortestfunction_j(\x) d\volume
 \end{equation}
-where $\support_i$ is the support of $\testfunction_i(\x)$. If the flux
-function $\consfluxscalar$ is linear with respect to $\scalarsolution$, i.e.,
-$\consfluxscalar = \velocity\scalarsolution$ for some uniform velocity field
-$\velocity$, then the system to be solved is linear:
-\begin{equation}\label{eq:semidiscrete}
-  \consistentmassmatrix\ddt{\solutionvector}+\ssmatrix\solutionvector(t)
-  = \ssrhs(\timevalue) \eqc
-\end{equation}
-with the elements of $\ssmatrix$ being the following:
-\begin{equation}\label{eq:Aij}
-  \ssmatrixletter\ij \equiv \intSij\left(
-  \velocity\cdot\nabla\testfunction_j(\x) +
-  \reactioncoef(\x)\testfunction_j(\x)\right)\testfunction_i(\x) d\volume \eqc
-\end{equation}
-where $\support\ij$ is the dual support of $\testfunction_i(\x)$ and
-$\testfunction_j(\x)$.
-If the flux function $\consfluxscalar$ is nonlinear, then the system is
-nonlinear, but it may be expressed in a quasilinear form:
-\begin{equation}\label{eq:semi_quasilinear}
-   \consistentmassmatrix\ddt{\solutionvector}
-   + \ssmatrix(\approximatescalarsolution)\solutionvector(\timevalue)
-   = \ssrhs(\timevalue) \eqc
-\end{equation}
-where $\approximatescalarsolution\xt$ is the numerical solution, and the
-quasilinear matrix (i.e., the Jacobian matrix) entries are
-\begin{equation}\label{eq:Aij_nonlinear}
-  \ssmatrixletter\ij(\approximatescalarsolution) \equiv \intSij\left(
-  \mathbf{\consfluxletter}'(\approximatescalarsolution)\cdot\nabla
-  \testfunction_j(\x) +
-  \reactioncoef(\x)\testfunction_j(\x)\right)
-  \testfunction_i(\x) d\volume \eqp
-\end{equation}
-The elements of $\ssrhs(\timevalue)$ are
+as well a 3rd-order tensor $\gradientmatrix$, which will here be viewed as a
+matrix with vector entries:
 \begin{equation}
-  \ssrhsletter_i(\timevalue) \equiv \intSi \scalarsource\xt\testfunction_i(\x)
-  d\volume \eqp
+  \gradiententry =
+    \intSij\vectortestfunction_i\transpose(\x)
+      \nabla\vectortestfunction_j(\x) d\volume
+  \eqp
 \end{equation}
-$\consistentmassmatrix$ is the consistent mass matrix, which has the entries
-\begin{equation}\label{eq:massmatrix}
-  \massmatrixletter^C\ij \equiv \intSij
-  \testfunction_j(\x)\testfunction_i(\x) d\volume \eqp
+Making these substitutions into Equation \eqref{eq:vector_weak_form_long} gives
+\begin{equation}\label{eq:vector_weak_form}
+   \sumj\consistentmassentry\ddt{\solutionletter_j}
+     + \sumj\gradiententry\cdot\consfluxinterpolant_j(\timevalue)
+     = \mathbf{0} \eqc
 \end{equation}
-Similarly, for the linear steady-state case, the linear system is
+and expressing this as a system gives
 \begin{equation}
-  \ssmatrix\solutionvector = \ssrhs \eqc
+  \consistentmassmatrix\ddt{\solutionvector}
+    + \gradientmatrix\consfluxinterpolant(\timevalue) = \mathbf{0}
+  \eqp
 \end{equation}
-or for the nonlinear case,
-\begin{equation}
-  \ssmatrix(\approximatescalarsolution)\solutionvector = \ssrhs \eqp
-\end{equation}
+where $\consfluxinterpolant(\timevalue)$ is the vector of nodal flux interpolant values
+$\consfluxinterpolant_j(\timevalue)$.

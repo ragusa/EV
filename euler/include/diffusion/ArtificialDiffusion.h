@@ -25,11 +25,23 @@ public:
 
   ArtificialDiffusion();
 
+  void reinitialize(const SparsityPattern & sparsity,
+                    const DoFHandler<dim> & dof_handler) override;
+
+  virtual void update(const Vector<double> & solution);
+
   virtual void apply(std::shared_ptr<Viscosity<dim>> viscosity,
                      const Vector<double> & solution,
                      const Cell & cell,
                      const FEValues<dim> & fe_values,
                      Vector<double> & cell_residual) const = 0;
+
+  virtual void apply_algebraic_diffusion(const Vector<double> & solution,
+                                         Vector<double> & ss_residual);
+
+protected:
+  /** \brief Diffusion matrix */
+  SparseMatrix<double> diffusion_matrix;
 };
 
 #include "src/diffusion/ArtificialDiffusion.cc"

@@ -43,4 +43,11 @@ It assumes that Google Chrome and "wmctrl" are installed:
 
 $ dox
 
+=================================================================================
+File and directory listing
+=================================================================================
+The main function is located in src/base/main.cc.
+
+include/ contains all header (.h) files
+src/     contains all source (*.cc) files
 

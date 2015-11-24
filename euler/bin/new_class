@@ -44,4 +44,8 @@ else
   sed -i "s/NewClass/$new_class/g" $h_file
   sed -i "s/DIRECTORY/$dir_name/g" $h_file
   sed -i "s/NewClass/$new_class/g" $cc_file
+
+  # create symbolic links in base directory
+  ln -s $h_file $base_dir/$new_class.h
+  ln -s $cc_file $base_dir/$new_class.cc
 fi

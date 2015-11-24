@@ -491,17 +491,6 @@ void ShallowWater<dim>::compute_ss_residual(const double & dt, Vector<double> & 
     compute_inviscid_fluxes(
       height, momentum, height_inviscid_flux, momentum_inviscid_flux);
 
-    // compute viscous fluxes
-    /*
-        std::vector<Tensor<1, dim>> height_viscous_flux(this->n_q_points_cell);
-        std::vector<Tensor<2, dim>> momentum_viscous_flux(this->n_q_points_cell);
-        compute_viscous_fluxes(this->viscosity_map[cell],
-                               height_gradient,
-                               momentum_gradient,
-                               height_viscous_flux,
-                               momentum_viscous_flux);
-    */
-
     // get quadrature points on cell
     std::vector<Point<dim>> points(this->n_q_points_cell);
     points = fe_values.get_quadrature_points();
@@ -542,6 +531,9 @@ void ShallowWater<dim>::compute_ss_residual(const double & dt, Vector<double> & 
     this->constraints.distribute_local_to_global(
       cell_residual, local_dof_indices, f);
   } // end cell loop
+
+  // if artificial diffusion is algebraic, then apply it here
+  this->artificial_diffusion->apply_algebraic_diffusion(this->new_solution, f);
 }
 
 /**

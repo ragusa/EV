@@ -1,0 +1,3 @@
+# undo exclude pattern of parent directory
+!*.h
+CMakeVars.h

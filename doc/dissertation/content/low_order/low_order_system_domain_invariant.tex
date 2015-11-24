@@ -1,0 +1,25 @@
+Starting with Equation \eqref{eq:vector_weak_form}, the low-order scheme
+lumps the mass matrix and adds a viscous bilinear form:
+\begin{equation}
+   \lumpedmassentry\ddt{\solutionletter_i}
+     + \sumj\gradiententry\cdot\consfluxinterpolant_j(\timevalue)
+     + \sumallcells\cellviscosity
+       \sum\limits_{j\in\indices(\cell)}
+         \solutionletter_j\localvisc^{\componentindex(i)}_\cell
+           (\vectortestfunction_j, \vectortestfunction_i)
+     = \mathbf{0} \eqc
+\end{equation}
+%--------------------------------------------------------------------------------
+\begin{definition}{Low-Order Artificial Diffusion Matrix}
+   The low-order artificial diffusion matrix $\loworderdiffusionmatrix[\timeindex]$
+   is assembled using the low-order viscosity and local viscous bilinear
+   form introduced in Section \ref{sec:low_order_viscosity_system}:
+   \begin{equation}\label{eq:low_order_diffusion_matrix_system}
+     \diffusionmatrixletter\ij^{L,\timeindex} \equiv
+       \sumKSij\mkern-20mu\lowordercellviscosity[\timeindex]
+       \localvisc^{\componentindex(i)}(\vectortestfunction_i,
+         \vectortestfunction_j)
+     \eqp
+   \end{equation}
+\end{definition}
+%--------------------------------------------------------------------------------

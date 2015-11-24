@@ -17,6 +17,7 @@ template <int dim>
 class LaplacianDiffusion : public ArtificialDiffusion<dim>
 {
 public:
+  /** \brief Alias for cell iterator */
   using Cell = typename ArtificialDiffusion<dim>::Cell;
 
   LaplacianDiffusion(

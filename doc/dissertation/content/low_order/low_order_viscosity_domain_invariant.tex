@@ -1,0 +1,72 @@
+For assembly of the low-order system, a modification of the
+the local viscous bilinear form introduced in Section \ref{sec:low_order_viscosity}
+is defined.
+%--------------------------------------------------------------------------------
+\begin{definition}{Local Viscous Bilinear Form for Systems}
+   The local viscous bilinear form for cell $\cell$ and solution component
+   $m$ is defined as follows:
+   \begin{equation}\label{eq:bilinearform_system}
+     \localvisc_{\cell}^m(\vectortestfunction_j,\vectortestfunction_i)
+       \equiv \left\{\begin{array}{l l}
+         -\frac{1}{\cardsystem_\cell - 1}\cellvolume\eqc & i\ne j\eqc
+       \quad i,j\in \indicescell^m\eqc \\
+       \cellvolume\eqc & i = j \eqc \quad i,j\in \indicescell^m\eqc \\
+       0          \eqc & \mbox{otherwise}\eqc
+     \end{array}\right.
+   \end{equation}
+   with $\indicescell^m$ being the set of indices of degrees of
+   freedom corresponding to solution component $m$ whose basis functions
+   have support on cell $\cell$:
+   \begin{equation}
+     \indicescell^m \equiv \{ j :
+       \componentindex(j) = m \eqc \quad|\support_j\cap \celldomain|\ne 0\}
+     \eqc
+   \end{equation}
+   $\cardsystem_\cell$ being the number of elements in the set $\indicescell^m$
+   (for any $m$), i.e., the set's cardinality:
+   \begin{equation}
+     \cardsystem_\cell \equiv \textup{card}(\indicescell^m) \eqc
+   \end{equation} 
+   and $\cellvolume$ being the cell volume.
+\end{definition}
+%--------------------------------------------------------------------------------
+However, for the computation of the low-order viscosity, it is more convenient
+to use a scalar version of this bilinear form, given in the following definition.
+%--------------------------------------------------------------------------------
+\begin{definition}{Scalar Version of the Local Viscous Bilinear Form for Systems}
+   The local viscous bilinear form for cell $\cell$ and solution component
+   $m$ is defined as follows:
+   \begin{equation}\label{eq:bilinearform_system}
+     \localvisc_{\cell}(\testfunction_j,\testfunction_i)
+       \equiv \left\{\begin{array}{l l}
+         -\frac{1}{\cardsystem_\cell - 1}\cellvolume\eqc & i\ne j\eqc
+       \quad i,j\in \indicesnode\eqc \\
+       \cellvolume\eqc & i = j \eqc \quad i,j\in \indicesnode\eqc \\
+       0          \eqc & \mbox{otherwise}\eqc
+     \end{array}\right.
+   \end{equation}
+   with $\indicesnode$ being the set of node indices, not degree of
+   freedom indices, whose scalar basis functions have support on cell $\cell$:
+   \begin{equation}
+     \indicesnode \equiv \{ j :
+       |\support(\testfunction_j)\cap \celldomain|\ne 0\}
+     \eqp
+   \end{equation}
+\end{definition}
+%--------------------------------------------------------------------------------
+The definition of the low-order viscosity follows.
+%--------------------------------------------------------------------------------
+\begin{definition}{Low-Order Viscosity}
+   The low-order viscosity for cell $\cell$ is defined as follows:
+   \begin{equation}
+     \lowordercellviscosity[\timeindex] \equiv
+       \max\limits_{i\ne j\in\indicesnode}
+         \frac{\maxwavespeed(\normalvector_{i,j},\vectorsolution^\timeindex_i,
+           \vectorsolution^\timeindex_j)\|\gradiententry\|_{\ell^2}}
+         {-\mkern-20mu\sumKSij[T]\mkern-20mu\localviscbilinearform{T}{j}{i}}
+     \eqc
+   \end{equation}
+   where $\support\ij=\support_i\cap \support_j$ is the dual-support of test
+   functions $\testfunction_i$ and $\testfunction_j$.
+\end{definition}
+%--------------------------------------------------------------------------------

@@ -130,6 +130,7 @@ public:
   enum class DiffusionType
   {
     none,
+    algebraic,
     laplacian,
     graphtheoretic
   };

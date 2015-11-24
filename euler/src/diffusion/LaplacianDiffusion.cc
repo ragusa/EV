@@ -8,7 +8,6 @@
  *
  * \param[in] scalar_extractors_ vector of scalar extractors
  * \param[in] vector_extractors_ vector of vector extractors
- * \param[in] viscosity_ pointer to viscosity
  * \param[in] n_quadrature_points_ number of quadrature points in cell
  * \param[in] dofs_per_cell_ number of degrees of freedom per cell
  */

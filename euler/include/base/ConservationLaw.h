@@ -391,16 +391,10 @@ protected:
   CellMap max_flux_speed_cell;
 
   // viscosity
-  // std::shared_ptr<Entropy<dim>> entropy;
   std::shared_ptr<Viscosity<dim>> viscosity;
   std::shared_ptr<Viscosity<dim>> constant_viscosity;
   std::shared_ptr<Viscosity<dim>> low_order_viscosity;
   std::shared_ptr<Viscosity<dim>> entropy_viscosity;
-  /*
-    CellMap viscosity_map;
-    CellMap first_order_viscosity_map;
-    CellMap entropy_viscosity_map;
-  */
 
   std::unique_ptr<ArtificialDiffusion<dim>> artificial_diffusion;
 
