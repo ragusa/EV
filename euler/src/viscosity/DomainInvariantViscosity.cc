@@ -1,6 +1,7 @@
 /**
  * \file DomainInvariantViscosity.cc
- * \brief Provides the function definitions for the DomainInvariantViscosity class.
+ * \brief Provides the function definitions for the DomainInvariantViscosity
+ *        class.
  */
 
 /**
@@ -8,9 +9,11 @@
  */
 template <int dim>
 DomainInvariantViscosity<dim>::DomainInvariantViscosity(
-  const Triangulation<dim> & triangulation) :
-  dof_handler(triangulation_),
-  triangulation(&triangulation_)
+  const Triangulation<dim> & triangulation)
+  : fe(1),
+    dof_handler(triangulation_),
+    triangulation(&triangulation_),
+    lines_per_cell(GeometryInfo<dim>::lines_per_cell)
 {
   // reinitialize here?
 }
@@ -40,39 +43,11 @@ void DomainInvariantViscosity<dim>::reinitialize()
   sparsity.copy_from(dsp);
   viscous_sums.reinit(sparsity);
 
+  // compute viscous bilinear form sum matrix
+  compute_graph_theoretic_sums();
+
   // compute gradients
-  //---------------------------------------------------------------------------
-  // FE values
-  FEValues<dim> fe_values(fe,
-                          cell_quadrature,
-                          update_values | update_gradients |
-                            update_JxW_values);
-
-  // reset line flags
-  triangulation->clear_user_flags_line();
-
-  Cell cell = dof_handler->begin_active(), endc = dof_handler->end();
-  for (; cell != endc; ++cell, ++i_cell)
-  {
-    // loop over lines of cell
-    for (unsigned int line = 0; line < GeometryInfo<dim>::lines_per_cell;
-         ++line, ++i_line)
-    {
-      // skip line if it has already been traversed
-      if (!cell->line(line)->user_flag_set())
-      {
-        // mark line to signal it has been traversed
-        cell->line(line)->set_user_flag();
-
-        // get dof indices on line
-        cell->line(line)->get_dof_indices(local_dof_indices);
-        const unsigned int i = local_dof_indices[0];
-        const unsigned int j = local_dof_indices[1];
-
-        //
-      }
-    }
-  }
+  compute_gradients_and_normals();
 }
 
 /**
@@ -85,38 +60,36 @@ void DomainInvariantViscosity<dim>::reinitialize()
  */
 template <int dim>
 void DomainInvariantViscosity<dim>::update(const Vector<double> & new_solution,
-                                   const Vector<double> & old_solution,
-                                   const double & dt,
-                                   const unsigned int &)
+                                           const Vector<double> & old_solution,
+                                           const double & dt,
+                                           const unsigned int &)
 {
   // currently this is only valid for 1-D because in 2-D a line may
   // correspond to more than 1 cell
   Assert(dim == 1, ExcInvalidInDimension(dim))
 
-  // reset line flags
-  triangulation->clear_user_flags_line();
+    // dof indices for a line
+    std::vector<unsigned int> local_dof_indices(2);
 
-  // dof indices for a line
-  std::vector<unsigned int> local_dof_indices(2 * n_components);
+  // clear max viscosity map
+  max_viscosity.clear();
 
   // loop over cells
-  unsigned int i_cell = 0;
-  unsigned int i_line = 0;
-  Cell cell = dof_handler->begin_active(), endc = dof_handler->end();
-  for (; cell != endc; ++cell, ++i_cell)
+  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
+  for (; cell != endc; ++cell)
   {
     // loop over lines of cell
-    for (unsigned int line = 0; line < GeometryInfo<dim>::lines_per_cell;
-         ++line, ++i_line)
+    for (unsigned int line = 0; line < lines_per_cell; ++line)
     {
-      // skip line if it has already been traversed
-      if (!cell->line(line)->user_flag_set())
-      {
-        // mark line to signal it has been traversed
-        cell->line(line)->set_user_flag();
+      // get line iterator
+      const Line line_iterator = cell->line(line);
 
+      // determine if line iterator exists in map; if not, need to
+      // compute viscosity
+      if (max_viscosity.find(line_iterator) == max_viscosity.end())
+      {
         // get dof indices on line
-        cell->line(line)->get_dof_indices(local_dof_indices);
+        line_iterator->get_dof_indices(local_dof_indices);
         const unsigned int i = local_dof_indices[0];
         const unsigned int j = local_dof_indices[1];
 
@@ -125,28 +98,35 @@ void DomainInvariantViscosity<dim>::update(const Vector<double> & new_solution,
         std::vector<double> solution_j(n_components);
         for (unsigned int m = 0; m < n_components; ++m)
         {
-          solution_i[m] = new_solution[i*n_components + m];
-          solution_j[m] = new_solution[j*n_components + m];
+          solution_i[m] = new_solution[i * n_components + m];
+          solution_j[m] = new_solution[j * n_components + m];
         }
 
         // compute normal vectors
-        const Tensor<1,dim> normal_ij[i_line] = c_ij[i_line] / c_ij[i_line].norm();
-        const Tensor<1,dim> normal_ji[i_line] = c_ji[i_line] / c_ji[i_line].norm();
+        const Tensor<1, dim> normal_ij[i_line] =
+          c_ij[i_line] / c_ij[i_line].norm();
+        const Tensor<1, dim> normal_ji[i_line] =
+          c_ji[i_line] / c_ji[i_line].norm();
 
         // compute maximum wave speeds
-        const double max_wave_speed_ij = compute_max_wave_speed(normal_ij[i_line], solution_i, solution_j);
-        const double max_wave_speed_ji = compute_max_wave_speed(normal_ji[i_line], solution_j, solution_i);
+        const double max_wave_speed_ij =
+          compute_max_wave_speed(normal_ij[i_line], solution_i, solution_j);
+        const double max_wave_speed_ji =
+          compute_max_wave_speed(normal_ji[i_line], solution_j, solution_i);
 
         // compute viscosities
-        const double viscosity_ij = -(max_wave_speed_ij*c_ij_norm[i_line]) / viscous_sums(i,j);
-        const double viscosity_ji = -(max_wave_speed_ji*c_ji_norm[i_line]) / viscous_sums(j,i);
-        const double viscosity_max = std::max(viscosity_ij, viscosity_ji);
+        const double viscosity_ij =
+          -(max_wave_speed_ij * c_ij_norm[i_line]) / viscous_sums(i, j);
+        const double viscosity_ji =
+          -(max_wave_speed_ji * c_ji_norm[i_line]) / viscous_sums(j, i);
 
-        // update max viscosity for this cell
-        this->values[cell] = std::max(this->values[cell], viscosity_max);
-
-        // update max viscosity for ajacent cell(s), if any
+        // store max viscosity in line map
+        max_viscosity[line_iterator] = std::max(viscosity_ij, viscosity_ji);
       }
+
+      // update max viscosity for this cell
+      this->values[cell] =
+        std::max(this->values[cell], max_viscosity[line_iterator]);
     }
   }
 }
@@ -158,8 +138,6 @@ void DomainInvariantViscosity<dim>::update(const Vector<double> & new_solution,
  * \f[
  *   B_{i,j} = \sum_{K:D_K\subset S_{i,j}}b_K(\varphi_i,\varphi_j)
  * \f]
- * These sums are used in the computation of DMP-preserving and
- * domain-invariant viscosities.
  */
 template <int dim>
 void DomainInvariantViscosity<dim>::compute_graph_theoretic_sums()
@@ -197,4 +175,12 @@ void DomainInvariantViscosity<dim>::compute_graph_theoretic_sums()
       }
     }
   }
+}
+
+/**
+ * \brief Computes gradients and normal vectors along each edge.
+ */
+template <int dim>
+void DomainInvariantViscosity<dim>::compute_gradients_and_normals()
+{
 }

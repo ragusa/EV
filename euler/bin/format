@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Formats file using a code-formatter
+# Formats file(s) using a code-formatter
 #
 # Usage: format <filename>
 #        format all
