@@ -28,20 +28,14 @@ void DomainInvariantViscosity<dim>::reinitialize()
   dof_handler.clear();
   dof_handler.distribute_dofs(fe);
 
-  // resize vectors
-  n_lines = triangulation->n_active_lines();
-  c_ij.resize(n_lines);
-  c_ji.resize(n_lines);
-  c_ij_norm.resize(n_lines);
-  c_ji_norm.resize(n_lines);
-  normal_ij.resize(n_lines);
-  normal_ji.resize(n_lines);
-
-  // create sparsity pattern and reinitialize sparse matrix
+  // create sparsity pattern and reinitialize sparse matrices
   DynamicSparsityPattern dsp(n_dofs);
   DoFTools::make_sparsity_pattern(dof_handler.n_dofs(), dsp);
   sparsity.copy_from(dsp);
   viscous_sums.reinit(sparsity);
+  for (unsigned int d = 0; d < dim; ++d)
+    gradients[d].reinit(sparsity);
+  gradient_norms.reinit(sparsity);
 
   // compute viscous bilinear form sum matrix
   compute_graph_theoretic_sums();
@@ -110,9 +104,9 @@ void DomainInvariantViscosity<dim>::update(const Vector<double> & new_solution,
 
         // compute maximum wave speeds
         const double max_wave_speed_ij =
-          compute_max_wave_speed(normal_ij[i_line], solution_i, solution_j);
+          max_wave_speed->compute(normal_ij[i_line], solution_i, solution_j);
         const double max_wave_speed_ji =
-          compute_max_wave_speed(normal_ji[i_line], solution_j, solution_i);
+          max_wave_speed->compute(normal_ji[i_line], solution_j, solution_i);
 
         // compute viscosities
         const double viscosity_ij =
@@ -183,4 +177,45 @@ void DomainInvariantViscosity<dim>::compute_graph_theoretic_sums()
 template <int dim>
 void DomainInvariantViscosity<dim>::compute_gradients_and_normals()
 {
+  FEValues<dim> fe_values(
+    fe, cell_quadrature, update_values | update_gradients | update_JxW_values);
+
+  std::vector<unsigned int> local_dof_indices(dofs_per_cell);
+
+  // loop over cells
+  Cell cell = dof_handler.begin_active(), endc = dof_handler.end();
+  for (; cell != endc; ++cell)
+  {
+    // reinitialize fe values for cell
+    fe_values.reinit(cell);
+
+    // get DoF indices
+    cell->get_dof_indices(local_dof_indices);
+
+    // loop over dimension
+    for (unsigned int d = 0; d < dim; ++d)
+      // loop over test function i
+      for (unsigned int i = 0; i < dofs_per_cell; ++i)
+        // loop over test function j
+        for (unsigned int j = 0; j < dofs_per_cell; ++j)
+        {
+          // initialize integral to zero
+          double entry_cell_i_j = 0.0;
+
+          // loop over quadrature points
+          for (unsigned int q = 0; q < n_q_points_cell; ++q)
+            entry_cell_i_j += fe_values.shape_value(i, q) *
+              fe_values.shape_grad(j, q)[d] * fe_values.JxW(q);
+
+          // add contribution to global matrix
+          gradients[d].add(
+            local_dof_indices[i], local_dof_indices[j], entry_cell_i_j);
+        }
+  }
+
+  // compute normals of each gradient entry
+  SparsityPattern::const_iterator it = sparsity.begin(), it_end = sparsity.end();
+  for (; it != it_end; ++it)
+  {
+  }
 }

@@ -13,6 +13,7 @@
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/vector.h>
 
+#include "include/viscosity/MaxWaveSpeed.h"
 #include "include/viscosity/Viscosity.h"
 
 using namespace dealii;
@@ -39,11 +40,6 @@ public:
               const unsigned int & n);
 
 protected:
-  virtual double compute_max_wave_speed(
-    const Tensor<1, dim> normal,
-    const std::vector<double> solution_i,
-    const std::vector<double> solution_j) const = 0;
-
   void compute_graph_theoretic_sums();
 
   void compute_gradients_and_normals();
@@ -76,23 +72,14 @@ protected:
   /** \brief Number of lines in triangulation */
   unsigned int n_lines;
 
-  /** \brief Vector of gradient tensors from 1st node on each line */
-  std::vector<Tensor<1, dim>> c_ij;
+  /** \brief Pointer to max wave speed object */
+  std::shared_ptr<MaxWaveSpeed<dim>> max_wave_speed;
 
-  /** \brief Vector of gradient tensors from 2nd node on each line */
-  std::vector<Tensor<1, dim>> c_ji;
+  /** \brief Array of matrices for each component of gradient tensor matrix */
+  SparseMatrix<double> gradients[dim];
 
-  /** \brief Vector of norm of gradient tensors from 1st node on each line */
-  std::vector<double> c_ij_norm;
-
-  /** \brief Vector of norm of gradient tensors from 2nd node on each line */
-  std::vector<double> c_ji_norm;
-
-  /** \brief Vector of normal vectors from 1st node on each line */
-  std::vector<Tensor<1, dim>> normal_ij;
-
-  /** \brief Vector of normal vectors from 2nd node on each line */
-  std::vector<Tensor<1, dim>> normal_ji;
+  /** \brief Sparse matrix of L2-norm of each C matrix entry */
+  SparseMatrix<double> gradient_norms;
 };
 
 #include "src/viscosity/DomainInvariantViscosity.cc"
