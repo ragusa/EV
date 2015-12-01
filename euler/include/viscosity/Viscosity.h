@@ -32,6 +32,8 @@ public:
                       const double & dt,
                       const unsigned int & n) = 0;
 
+  virtual void reinitialize();
+
   double & operator[](const Cell & cell);
 
   unsigned int size() const;

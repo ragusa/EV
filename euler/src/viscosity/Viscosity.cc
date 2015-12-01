@@ -15,6 +15,14 @@ Viscosity<dim>::Viscosity(const DoFHandler<dim> & dof_handler_)
 }
 
 /**
+ * \brief Reinitializes after refinement.
+ */
+template <int dim>
+void Viscosity<dim>::reinitialize()
+{
+}
+
+/**
  * \brief Accesses the viscosity value for the given cell
  *
  * \param[in] cell cell iterator

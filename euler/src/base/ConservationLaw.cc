@@ -97,6 +97,7 @@ void ConservationLaw<dim>::run()
          << ":" << std::endl;
     cout << "  Number of active cells: " << triangulation.n_active_cells()
          << std::endl;
+    cout << "  Number of degrees of freedom: " << n_dofs << std::endl;
 
     // interpolate the initial conditions to the grid, and apply constraints
     VectorTools::interpolate(
@@ -174,6 +175,8 @@ void ConservationLaw<dim>::initialize_system()
   // start timer for initialize section
   TimerOutput::Scope timer_section(timer, "Initialize");
 
+  cout << "Initializing system..." << std::endl;
+
   // get component names and interpretations
   component_names = get_component_names();
   component_interpretations = get_component_interpretations();
@@ -233,6 +236,9 @@ void ConservationLaw<dim>::initialize_system()
       mass_matrix = &lumped_mass_matrix;
       break;
     case ViscosityType::low:
+      mass_matrix = &lumped_mass_matrix;
+      break;
+    case ViscosityType::DI_low:
       mass_matrix = &lumped_mass_matrix;
       break;
     case ViscosityType::DMP_low:
@@ -416,7 +422,6 @@ void ConservationLaw<dim>::setup_system()
   dof_handler.clear();
   dof_handler.distribute_dofs(fe);
   n_dofs = dof_handler.n_dofs();
-  cout << "Number of degrees of freedom: " << n_dofs << std::endl;
 
 #ifdef IS_PARALLEL
   // get index set of locally owned DoFs
@@ -565,6 +570,10 @@ void ConservationLaw<dim>::setup_system()
     // low-order viscosity
     case ViscosityType::low:
     {
+      Assert(parameters.diffusion_type == DiffusionType::none ||
+               parameters.diffusion_type == DiffusionType::laplacian,
+             ExcInvalidDiffusionType());
+
       auto low_order_viscosity_tmp = std::make_shared<LowOrderViscosity<dim>>(
         parameters.first_order_viscosity_coef,
         cell_diameter,
@@ -576,9 +585,37 @@ void ConservationLaw<dim>::setup_system()
 
       break;
     }
+    // domain-invariant low-order viscosity
+    case ViscosityType::DI_low:
+    {
+      // ensure diffusion type is compatible
+      Assert(parameters.diffusion_type == DiffusionType::none ||
+               parameters.diffusion_type == DiffusionType::graphtheoretic,
+             ExcInvalidDiffusionType());
+
+      // create max wave speed
+      auto max_wave_speed = create_max_wave_speed();
+
+      // create domain-invariant viscosity
+      auto low_order_viscosity_tmp =
+        std::make_shared<DomainInvariantViscosity<dim>>(max_wave_speed,
+                                                        dof_handler,
+                                                        triangulation,
+                                                        cell_quadrature,
+                                                        n_components);
+      low_order_viscosity = low_order_viscosity_tmp;
+
+      viscosity = low_order_viscosity_tmp;
+
+      break;
+    }
     // entropy viscosity
     case ViscosityType::entropy:
     {
+      Assert(parameters.diffusion_type == DiffusionType::none ||
+               parameters.diffusion_type == DiffusionType::laplacian,
+             ExcInvalidDiffusionType());
+
       // create entropy
       auto entropy = create_entropy();
 
@@ -629,13 +666,6 @@ void ConservationLaw<dim>::setup_system()
       artificial_diffusion = std::move(tmp_artificial_diffusion);
       break;
     }
-    // algebraic diffusion
-    case DiffusionType::algebraic:
-    {
-      auto tmp_artificial_diffusion = std::make_unique<AlgebraicDiffusion<dim>>();
-      artificial_diffusion = std::move(tmp_artificial_diffusion);
-      break;
-    }
     // Laplacian diffusion
     case DiffusionType::laplacian:
     {
@@ -652,7 +682,10 @@ void ConservationLaw<dim>::setup_system()
     // graph-theoretic diffusion
     case DiffusionType::graphtheoretic:
     {
-      ExcNotImplemented();
+      auto tmp_artificial_diffusion =
+        std::make_unique<GraphTheoreticDiffusion<dim>>(dofs_per_cell,
+                                                       n_components);
+      artificial_diffusion = std::move(tmp_artificial_diffusion);
       break;
     }
     // else
@@ -1133,6 +1166,10 @@ void ConservationLaw<dim>::output_viscosity(PostProcessor<dim> & postprocessor,
     case ViscosityType::low:
       viscosities.push_back(low_order_viscosity);
       viscosity_names.push_back("low_order_viscosity");
+      break;
+    case ViscosityType::DI_low:
+      viscosities.push_back(low_order_viscosity);
+      viscosity_names.push_back("di_low_order_viscosity");
       break;
     case ViscosityType::entropy:
       // low-order viscosity

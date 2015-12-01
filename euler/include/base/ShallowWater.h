@@ -5,6 +5,8 @@
 #ifndef ShallowWater_h
 #define ShallowWater_h
 
+#include <sys/stat.h>
+
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/grid/tria_accessor.h>
@@ -15,7 +17,7 @@
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/fe/fe_values_extractors.h>
 #include <deal.II/lac/vector.h>
-#include <sys/stat.h>
+
 #include "include/base/ConservationLaw.h"
 #include "include/bc/ShallowWaterNoBC.h"
 #include "include/bc/ShallowWaterSubcriticalOpenBC1D.h"
@@ -27,6 +29,8 @@
 #include "include/parameters/ShallowWaterProblemParameters.h"
 #include "include/postprocessing/ShallowWaterPostProcessor.h"
 #include "include/postprocessing/ShallowWaterRiemannSolver.h"
+#include "include/viscosity/MaxWaveSpeed.h"
+#include "include/viscosity/ShallowWaterMaxWaveSpeed.h"
 
 /**
  * \brief Class for solving the shallow water equations.
@@ -96,6 +100,8 @@ private:
     const std::vector<double> & height) const;
 
   std::shared_ptr<Entropy<dim>> create_entropy() const;
+
+  std::shared_ptr<MaxWaveSpeed<dim>> create_max_wave_speed() const;
 
   std::shared_ptr<DataPostprocessor<dim>> create_auxiliary_postprocessor()
     const override;

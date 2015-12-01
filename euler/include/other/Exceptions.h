@@ -37,4 +37,7 @@ DeclException2(ExcSizesInconsistent,
                unsigned int,
                << "Size " << arg1 << " does not match size " << arg2);
 
+/** \brief Exception for diffusion type being invalid */
+DeclException0(ExcInvalidDiffusionType);
+
 #endif

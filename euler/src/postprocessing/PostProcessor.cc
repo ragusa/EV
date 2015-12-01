@@ -90,6 +90,11 @@ PostProcessor<dim>::PostProcessor(
       viscosity_string = "DMPlow";
       break;
     }
+    case ConservationLawParameters<dim>::ViscosityType::DI_low:
+    {
+      viscosity_string = "DIlow";
+      break;
+    }
     case ConservationLawParameters<dim>::ViscosityType::entropy:
     {
       viscosity_string = "EV";

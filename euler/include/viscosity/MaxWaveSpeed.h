@@ -16,8 +16,7 @@ template <int dim>
 class MaxWaveSpeed
 {
 public:
-  MaxWaveSpeed();
-
+  MaxWaveSpeed() {}
   virtual double compute(const std::vector<double> & solution_left,
                          const std::vector<double> & solution_right,
                          const Tensor<1, dim> & normal_vector) const = 0;

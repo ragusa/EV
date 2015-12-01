@@ -32,7 +32,7 @@ void ArtificialDiffusion<dim>::reinitialize(const SparsityPattern & sparsity,
  * \param[in] solution solution vector
  */
 template <int dim>
-void ArtificialDiffusion<dim>::update(const Vector<double> & solution)
+void ArtificialDiffusion<dim>::update(const Vector<double> &)
 {
 }
 

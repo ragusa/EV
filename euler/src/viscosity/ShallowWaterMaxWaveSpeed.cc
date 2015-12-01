@@ -28,7 +28,7 @@ template <int dim>
 double ShallowWaterMaxWaveSpeed<dim>::compute(
   const std::vector<double> & solution_left,
   const std::vector<double> & solution_right,
-  const Tensor<1, dim> & normal_vector)
+  const Tensor<1, dim> & normal_vector) const
 {
   // extract solution components from solution vector
   const double height_left = solution_left[0];
@@ -95,7 +95,7 @@ double ShallowWaterMaxWaveSpeed<dim>::compute_height_star(
   const double a_right = std::sqrt(gravity * h_right);
 
   // compute initial guess for height - start with 2-rarefaction solution
-  h_star =
+  double h_star =
     std::pow(0.5 * (a_left + a_right) - 0.25 * (u_right - u_left), 2) / gravity;
 
   double h_min = std::min(h_left, h_right);

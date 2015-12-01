@@ -332,6 +332,20 @@ std::shared_ptr<Entropy<dim>> ShallowWater<dim>::create_entropy() const
 }
 
 /**
+ * \brief Creates a max wave speed object
+ *
+ * \return pointer to created max wave speed object
+ */
+template <int dim>
+std::shared_ptr<MaxWaveSpeed<dim>> ShallowWater<dim>::create_max_wave_speed()
+  const
+{
+  auto max_wave_speed = std::make_shared<ShallowWaterMaxWaveSpeed<dim>>(gravity);
+
+  return max_wave_speed;
+}
+
+/**
  * \brief Interpolates the bathymetry FE vector from its function.
  */
 template <int dim>

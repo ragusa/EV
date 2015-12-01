@@ -29,29 +29,51 @@ public:
   /** \brief Alias for cell iterator */
   using Cell = typename Viscosity<dim>::Cell;
 
-  /** \brief Alias for line iterator */
-  using Line = typename DoFHandler<dim>::line_iterator;
+  DomainInvariantViscosity(
+    const std::shared_ptr<MaxWaveSpeed<dim>> & max_wave_speed_,
+    const DoFHandler<dim> & dof_handler_,
+    const Triangulation<dim> & triangulation_,
+    const QGauss<dim> & cell_quadrature_,
+    const unsigned int & n_components);
 
-  DomainInvariantViscosity(const Triangulation<dim> & triangulation);
+  void reinitialize() override;
 
   void update(const Vector<double> & new_solution,
               const Vector<double> & old_solution,
               const double & dt,
-              const unsigned int & n);
+              const unsigned int & n) override;
 
 protected:
   void compute_graph_theoretic_sums();
 
   void compute_gradients_and_normals();
 
+  /** \brief Pointer to max wave speed object */
+  const std::shared_ptr<MaxWaveSpeed<dim>> max_wave_speed;
+
   /** \brief Scalar 1st-order Lagrangian finite element */
   const FE_Q<dim> fe;
 
-  /** \brief Degree of freedom handler for a scalar */
-  DoFHandler<dim> dof_handler;
+  /** \brief Degree of freedom handler for scalar case */
+  DoFHandler<dim> dof_handler_scalar;
 
-  /** \brief Pointer to triangulation */
-  const Triangulation<dim> * const triangulation;
+  /** \brief Degree of freedom handler for scalar case */
+  const DoFHandler<dim> * const dof_handler;
+
+  /** \brief Pointer to cell quadrature */
+  const QGauss<dim> * const cell_quadrature;
+
+  /** \brief Number of solution components */
+  const unsigned int n_components;
+
+  /** \brief Number of degrees of freedom for the scalar case */
+  const unsigned int n_dofs_scalar;
+
+  /** \brief Number of degrees of freedom per cell for the scalar case */
+  const unsigned int dofs_per_cell_scalar;
+
+  /** \brief Number of quadrature points per cell */
+  const unsigned int n_q_points_cell;
 
   /** \brief Sparsity pattern for viscous bilinear form sum matrix */
   SparsityPattern sparsity;
@@ -65,15 +87,6 @@ protected:
    * \f]
    */
   SparseMatrix<double> viscous_sums;
-
-  /** \brief Map of line iterator to max viscosity along line */
-  std::map<Line, double> max_viscosity;
-
-  /** \brief Number of lines in triangulation */
-  unsigned int n_lines;
-
-  /** \brief Pointer to max wave speed object */
-  std::shared_ptr<MaxWaveSpeed<dim>> max_wave_speed;
 
   /** \brief Array of matrices for each component of gradient tensor matrix */
   SparseMatrix<double> gradients[dim];

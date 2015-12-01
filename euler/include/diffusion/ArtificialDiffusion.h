@@ -25,8 +25,8 @@ public:
 
   ArtificialDiffusion();
 
-  void reinitialize(const SparsityPattern & sparsity,
-                    const DoFHandler<dim> & dof_handler) override;
+  virtual void reinitialize(const SparsityPattern & sparsity,
+                            const DoFHandler<dim> & dof_handler);
 
   virtual void update(const Vector<double> & solution);
 

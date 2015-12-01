@@ -42,16 +42,19 @@
 #include "include/bc/DirichletBoundaryConditions.h"
 #include "include/diffusion/ArtificialDiffusion.h"
 #include "include/diffusion/NoDiffusion.h"
+#include "include/diffusion/GraphTheoreticDiffusion.h"
 #include "include/diffusion/LaplacianDiffusion.h"
 #include "include/entropy/Entropy.h"
 #include "include/other/Exceptions.h"
 #include "include/parameters/ConservationLawParameters.h"
 #include "include/postprocessing/PostProcessor.h"
-#include "include/viscosity/Viscosity.h"
 #include "include/viscosity/ConstantViscosity.h"
-#include "include/viscosity/LowOrderViscosity.h"
+#include "include/viscosity/DomainInvariantViscosity.h"
 #include "include/viscosity/EntropyViscosity.h"
 #include "include/viscosity/HighOrderViscosity.h"
+#include "include/viscosity/LowOrderViscosity.h"
+#include "include/viscosity/MaxWaveSpeed.h"
+#include "include/viscosity/Viscosity.h"
 
 #ifdef IS_PARALLEL
 #include <deal.II/base/index_set.h>
@@ -222,6 +225,13 @@ protected:
    * \return pointer to created entropy object
    */
   virtual std::shared_ptr<Entropy<dim>> create_entropy() const = 0;
+
+  /**
+   * \brief Creates a max wave speed object and returns the pointer.
+   *
+   * \return pointer to created max wave speed object
+   */
+  virtual std::shared_ptr<MaxWaveSpeed<dim>> create_max_wave_speed() const = 0;
 
   /**
    * \brief Returns the names of each component.

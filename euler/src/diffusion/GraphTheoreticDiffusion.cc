@@ -33,9 +33,13 @@ void GraphTheoreticDiffusion<dim>::apply(
   std::shared_ptr<Viscosity<dim>> viscosity,
   const Vector<double> & solution,
   const Cell & cell,
-  const FEValues<dim> & fe_values,
-  Vector<double> & cell_residual) const;
+  const FEValues<dim> &,
+  Vector<double> & cell_residual) const
 {
+  // get global degree of freedom indices
+  std::vector<unsigned int> local_dof_indices(dofs_per_cell);
+  cell->get_dof_indices(local_dof_indices);
+
   // get cell volume
   double cell_volume = cell->measure();
 
@@ -63,6 +67,6 @@ void GraphTheoreticDiffusion<dim>::apply(
         b_i += solution(local_dof_indices[j]) * b_K;
       }
     }
-    cell_residual(i) -= viscosity[cell] * b_i;
+    cell_residual(i) -= (*viscosity)[cell] * b_i;
   }
 }
