@@ -3,11 +3,11 @@ lumps the mass matrix and adds a viscous bilinear form:
 \begin{equation}
    \lumpedmassentry\ddt{\solutionletter_i}
      + \sumj\gradiententry\cdot\consfluxinterpolant_j(\timevalue)
-     + \sumallcells\cellviscosity
+     + \sumallcells\cellviscosity(\timevalue)
        \sum\limits_{j\in\indices(\cell)}
-         \solutionletter_j\localvisc^{\componentindex(i)}_\cell
+         \solutionletter_j(\timevalue)\localvisc^{\componentindex(i)}_\cell
            (\vectortestfunction_j, \vectortestfunction_i)
-     = \mathbf{0} \eqc
+     = 0 \eqc
 \end{equation}
 %--------------------------------------------------------------------------------
 \begin{definition}{Low-Order Artificial Diffusion Matrix}

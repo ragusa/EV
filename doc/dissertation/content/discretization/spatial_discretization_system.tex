@@ -22,20 +22,20 @@ are the vector-valued basis functions
 \begin{equation}
   \vectortestfunction_j(\x) = 
     \unitvector{\componentindex(j)}
-      \testfunction^{\componentindex(j)}_{\nodeindex(j)}(\x)
+      \testfunction_{\nodeindex(j)}(\x)
   \eqc
 \end{equation}
-where $\unitvector{\componentindex(j)}$ is the unit vector for dimension
-$\componentindex(j)$, $\componentindex(j)$ returns the component index associated with degree
+where $\componentindex(j)$ returns the component index associated with degree
 of freedom $j$, and $\nodeindex(j)$ returns the node index associated with
-degree of freedom $j$. The basis function $\vectortestfunction_j$ is thus
+degree of freedom $j$, and $\unitvector{\componentindex(j)}$ is the unit vector for dimension
+$\componentindex(j)$. The basis function $\vectortestfunction_j$ is thus
 zero for all components except the one corresponding to $j$ which uses
-the scalar component basis function corresponding to component $\componentindex(j)$ of
-the solution at node $\nodeindex(j)$.
+the scalar component basis function
+at node $\nodeindex(j)$, $\testfunction_{\nodeindex(j)}(\x)$.
 Alternately, one may view each solution component as its own expansion:
 \begin{equation}
   \approximatescalarsolution^m\xt = \sum\limits_{k=1}^{\nnodes}
-    \solutionletter_{\dofindex(k,m)}(\timevalue)\testfunction^m_k(\x)
+    \solutionletter_{\dofindex(k,m)}(\timevalue)\testfunction_k(\x)
   \eqc
 \end{equation}
 where $\dofindex(k,m)$ is the global degree of freedom index associated
@@ -69,7 +69,7 @@ Again, a mass matrix $\consistentmassmatrix$ is defined:
 as well a 3rd-order tensor $\gradientmatrix$, which will here be viewed as a
 matrix with vector entries:
 \begin{equation}
-  \gradiententry =
+  \gradiententry \equiv
     \intSij\vectortestfunction_i\transpose(\x)
       \nabla\vectortestfunction_j(\x) d\volume
   \eqp

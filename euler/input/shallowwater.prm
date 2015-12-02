@@ -29,9 +29,9 @@ end
 
 subsection time
    # options are <constant_dt|cfl_condition>
-   set time step size method = cfl_condition
-   set use default end time = true
-   set final time = 0.03
+   set time step size method = constant_dt
+   set use default end time = false
+   set final time = 0.01
    set time step size = 0.01
    set cfl = 0.50
    set steady state tolerance = 1.0e-6
@@ -39,7 +39,7 @@ end
 
 subsection artificial viscosity
    # options are <none|constant|low|DMP_low|DI_low|entropy>
-   set viscosity type = low
+   set viscosity type = DI_low
    set constant viscosity value = 10.00
    set first order viscosity coefficient = 0.5
    set multiply low order viscosity by froude = false
@@ -52,7 +52,7 @@ subsection artificial viscosity
    set entropy viscosity smoothing weight = 1
 
    # options are <none|laplacian|graphtheoretic>
-   set diffusion type = laplacian
+   set diffusion type = graphtheoretic
 end
 
 subsection temporal integration

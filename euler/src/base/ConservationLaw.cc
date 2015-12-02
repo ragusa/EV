@@ -570,9 +570,11 @@ void ConservationLaw<dim>::setup_system()
     // low-order viscosity
     case ViscosityType::low:
     {
+/*
       Assert(parameters.diffusion_type == DiffusionType::none ||
                parameters.diffusion_type == DiffusionType::laplacian,
              ExcInvalidDiffusionType());
+*/
 
       auto low_order_viscosity_tmp = std::make_shared<LowOrderViscosity<dim>>(
         parameters.first_order_viscosity_coef,

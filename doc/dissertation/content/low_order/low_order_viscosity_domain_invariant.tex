@@ -6,11 +6,11 @@ is defined.
    The local viscous bilinear form for cell $\cell$ and solution component
    $m$ is defined as follows:
    \begin{equation}\label{eq:bilinearform_system}
-     \localvisc_{\cell}^m(\vectortestfunction_j,\vectortestfunction_i)
+     \localvisc_{\cell}^m(\vectortestfunction_i,\vectortestfunction_j)
        \equiv \left\{\begin{array}{l l}
-         -\frac{1}{\cardsystem_\cell - 1}\cellvolume\eqc & i\ne j\eqc
+         -\frac{1}{\cardsystem_\cell - 1}\cellvolume\eqc & j\ne i\eqc
        \quad i,j\in \indicescell^m\eqc \\
-       \cellvolume\eqc & i = j \eqc \quad i,j\in \indicescell^m\eqc \\
+       \cellvolume\eqc & j = i \eqc \quad i,j\in \indicescell^m\eqc \\
        0          \eqc & \mbox{otherwise}\eqc
      \end{array}\right.
    \end{equation}
@@ -25,7 +25,9 @@ is defined.
    $\cardsystem_\cell$ being the number of elements in the set $\indicescell^m$
    (for any $m$), i.e., the set's cardinality:
    \begin{equation}
-     \cardsystem_\cell \equiv \textup{card}(\indicescell^m) \eqc
+     \cardsystem_\cell \equiv \textup{card}(\indicescell^m) =
+       \frac{\cardinality}{\ncomponents}
+     \eqc
    \end{equation} 
    and $\cellvolume$ being the cell volume.
 \end{definition}
@@ -34,14 +36,13 @@ However, for the computation of the low-order viscosity, it is more convenient
 to use a scalar version of this bilinear form, given in the following definition.
 %--------------------------------------------------------------------------------
 \begin{definition}{Scalar Version of the Local Viscous Bilinear Form for Systems}
-   The local viscous bilinear form for cell $\cell$ and solution component
-   $m$ is defined as follows:
+   The local viscous bilinear form for cell $\cell$ is
    \begin{equation}\label{eq:bilinearform_system}
-     \localvisc_{\cell}(\testfunction_j,\testfunction_i)
+     \localvisc_{\cell}(\testfunction_i,\testfunction_j)
        \equiv \left\{\begin{array}{l l}
-         -\frac{1}{\cardsystem_\cell - 1}\cellvolume\eqc & i\ne j\eqc
+         -\frac{1}{\cardsystem_\cell - 1}\cellvolume\eqc & j\ne i\eqc
        \quad i,j\in \indicesnode\eqc \\
-       \cellvolume\eqc & i = j \eqc \quad i,j\in \indicesnode\eqc \\
+       \cellvolume\eqc & j = i \eqc \quad i,j\in \indicesnode\eqc \\
        0          \eqc & \mbox{otherwise}\eqc
      \end{array}\right.
    \end{equation}
@@ -60,10 +61,10 @@ The definition of the low-order viscosity follows.
    The low-order viscosity for cell $\cell$ is defined as follows:
    \begin{equation}
      \lowordercellviscosity[\timeindex] \equiv
-       \max\limits_{i\ne j\in\indicesnode}
+       \max\limits_{j\ne i\in\indicesnode}
          \frac{\maxwavespeed(\normalvector_{i,j},\vectorsolution^\timeindex_i,
            \vectorsolution^\timeindex_j)\|\gradiententry\|_{\ell^2}}
-         {-\mkern-20mu\sumKSij[T]\mkern-20mu\localviscbilinearform{T}{j}{i}}
+         {-\mkern-20mu\sumKSij[T]\mkern-20mu\localviscbilinearform{T}{i}{j}}
      \eqc
    \end{equation}
    where $\support\ij=\support_i\cap \support_j$ is the dual-support of test

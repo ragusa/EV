@@ -1,12 +1,29 @@
-The maximum wave speed is the maximum of the absolute values of the
-left-most and right-most wave speeds:
+The maximum wave speed in a multidimensional problem is equal to
+the maximum wave speed of the one-dimensional problem in the direction
+given by the normal vector $\normalvector$:
 \begin{equation}
+  \maxwavespeed(\normalvector,
+    [\height,\heightmomentum]_L\transpose,
+    [\height,\heightmomentum]_R\transpose)
+  = 
+  \maxwavespeed(
+    [\height,\heightmomentumletter_n]_L\transpose,
+    [\height,\heightmomentumletter_n]_R\transpose)
+  \eqc
+\end{equation}
+where $\heightmomentumletter_n\equiv\heightmomentum\cdot\normalvector$
+denotes the component of $\heightmomentum$ along $\normalvector$.
+The maximum wave speed in the one-dimensional Riemann problem
+is the maximum of the absolute values of the
+left-most and right-most wave speeds:
+\begin{equation}\label{eq:maxwavespeed}
   \maxwavespeed(\vectorsolution_L, \vectorsolution_R)
   = \max(|\wavespeed_1^-(\vectorsolution_L, \vectorsolution_R)|
   ,|\wavespeed_2^+(\vectorsolution_L, \vectorsolution_R)|)
   \eqc
 \end{equation}
-where the ``+'' and ``-'' allow for the differentiation of the head
+where $\vectorsolution_K\equiv[\height,\heightmomentumletter_n]_K\transpose$,
+and the ``+'' and ``-'' allow for the differentiation of the head
 and tail speeds in the case of a rarefaction.
 
 For the 1-D shallow water equations, the Riemann problem divides the
@@ -14,86 +31,76 @@ $x$-$\timevalue$ plane into 3 sectors, separated by 2 waves, which
 each may be either a shock or rarefaction. The left sector shall be
 denoted with ``L'', the middle with ``*'', and the right with ``R''.
 The left-most and right-most wave speeds are
-
-\begin{equation}
+\begin{equation}\label{eq:left_wave_speed}
   \wavespeed_1^-(\vectorsolution_L, \vectorsolution_R)
     = \velocityx_L - \speedofsound_L\pr{1 + \pr{
-    \frac{(\height_* - \height_L)(\height_* + 2\height_L)}{2\height_L^2}}_+}
+    \frac{(\height_* - \height_L)(\height_* + 2\height_L)}{2\height_L^2}}_+}^{\frac{1}{2}}
     \eqc
 \end{equation}
-\begin{equation}
+\begin{equation}\label{eq:right_wave_speed}
   \wavespeed_2^+(\vectorsolution_L, \vectorsolution_R)
     = \velocityx_R + \speedofsound_R\pr{1 + \pr{
-    \frac{(\height_* - \height_R)(\height_* + 2\height_R)}{2\height_R^2}}_+}
+    \frac{(\height_* - \height_R)(\height_* + 2\height_R)}{2\height_R^2}}_+}^{\frac{1}{2}}
     \eqc
 \end{equation}
-
 where $(z)_+=\max(z,0)$. These definitions are completely general in that
 they apply to both shocks and rarefactions. In the case of a rarefaction
 for the left side, $\height_L \leq \height_*$, and similarly for the right
 side, $\height_R \leq \height_*$. The wave speed of the head of the rarefaction
 in each case is
-
-\begin{equation}
+\begin{equation}\label{eq:leftwavespeed_rarefaction}
   \wavespeed_1^-(\vectorsolution_L, \vectorsolution_R)
     = \velocityx_L - \speedofsound_L
     \eqc
 \end{equation}
-\begin{equation}
+\begin{equation}\label{eq:rightwavespeed_rarefaction}
   \wavespeed_2^+(\vectorsolution_L, \vectorsolution_R)
     = \velocityx_R + \speedofsound_R
     \eqp
 \end{equation}
-
 Otherwise (when $\height_L > \height_*$ or $\height_R > \height_*$), the
 wave is a shock, and the shock speed in each case is
-
-\begin{equation}
+\begin{equation}\label{eq:left_shockspeed}
   \wavespeed_1^-(\vectorsolution_L, \vectorsolution_R)
     = \velocityx_L - \speedofsound_L\pr{1 + \pr{
-    \frac{(\height_* - \height_L)(\height_* + 2\height_L)}{2\height_L^2}}}
+    \frac{(\height_* - \height_L)(\height_* + 2\height_L)}{2\height_L^2}}}^{\frac{1}{2}}
     \eqc
 \end{equation}
 \begin{equation}
   \wavespeed_2^+(\vectorsolution_L, \vectorsolution_R)
     = \velocityx_R + \speedofsound_R\pr{1 + \pr{
-    \frac{(\height_* - \height_R)(\height_* + 2\height_R)}{2\height_R^2}}}
+    \frac{(\height_* - \height_R)(\height_* + 2\height_R)}{2\height_R^2}}}^{\frac{1}{2}}
     \eqp
 \end{equation}
-
 Combining these equations with the rarefaction speeds gives the general
 definitions of the left-most and right-most wave speeds.
 
 The height in the star (*) region is the solution of the nonlinear equation
-
-\begin{equation}
+\begin{equation}\label{eq:objective_function}
   \phi(\height) \equiv
     \wavestrength_L(\height,\vectorsolution_L)
     + \wavestrength_R(\height,\vectorsolution_R)
     + \velocityx_R - \velocityx_L
     = 0 \eqc
 \end{equation}
-
 where $\wavestrength_L(\height,\vectorsolution_L)$ and
 $\wavestrength_R(\height,\vectorsolution_R)$
 are the left and right wave strengths, each corresponding to either a shock
-or rarefaction. In the case of a shock,
+or rarefaction. The derivation of this equation is given in Section \ref{sec:solution_star}.
 
+In the case of a shock,
 \begin{equation}
   \wavestrength_K(\height,\vectorsolution_K) = \wavestrength_K^{\text{shock}} = 
-    (\height_* - \height_K)\sqrt{\half\gravity\frac{\height_* + \height_K}
-    {\height_*\height_K}}
+    (\height - \height_K)\sqrt{\half\gravity\frac{\height + \height_K}
+    {\height\height_K}}
     \eqc
 \end{equation}
-
 while in the case of a rarefaction,
-
 \begin{equation}
   \wavestrength_K(\height,\vectorsolution_K) = \wavestrength_K^{\text{rarefaction}} = 
-    2(\speedofsound_* - \speedofsound_K)
+    2(\speedofsound - \speedofsound_K)
     \eqp
 \end{equation}
-
 These wave strength functions are derived in the following sections.
 
 \section{Shock Wave}
@@ -105,17 +112,14 @@ In the case of a shock, the discontinuous wave front moves with speed
 $\shockspeed_L$, separating the left solution $\vectorsolution_L$ and the right
 solution $\vectorsolution_*$. Transforming to a reference frame moving with the
 shock, the reference frame velocities are
-
 \begin{equation}\label{eq:ref_vL}
   \hat{\velocityx}_L = \velocityx_L - \shockspeed_L \eqc
 \end{equation}
 \begin{equation}\label{eq:ref_vstar}
   \hat{\velocityx}_* = \velocityx_* - \shockspeed_L \eqp
 \end{equation}
-
 Applying the Rankine-Hugoniot condition for both the continuity equation and
 momentum equation gives
-
 \begin{equation}
   \height_L\hat{\velocityx}_L = \height_*\hat{\velocityx}_* \eqc
 \end{equation}
@@ -124,72 +128,61 @@ momentum equation gives
     = \height_*\hat{\velocityx}_*^2 + \pressure_*
     \eqc
 \end{equation}
-
 where $\pressure = \half\gravity\height^2$.
 Defining the reference discharge as
-
-\begin{equation}
+\begin{equation}\label{eq:ref_qL}
   \hat{\dischargex}_L = \height_L\hat{\velocityx}_L = \height_*\hat{\velocityx}_*
 \end{equation}
-
 and substituting into Equation \eqref{eq:RH_momentumL} gives
-
 \begin{equation}\label{eq:dischargeL_hat}
   \hat{\dischargex}_L = \frac{\pressure_L - \pressure_*}
     {\hat{\velocityx}_* - \hat{\velocityx}_L}
     \eqc
 \end{equation}
-
 which when combined with Equations \eqref{eq:ref_vL} and \eqref{eq:ref_vstar}
 gives
-
 \begin{equation}\label{eq:dischargeL_h}
   \hat{\dischargex}_L = \sqrt{\frac{\height_*\height_L
     (\pressure_L - \pressure_*)}
     {\height_L - \height_*}}
     \eqp
 \end{equation}
-
+\begin{remark}
+Combining Equations \eqref{eq:ref_vL}, \eqref{eq:ref_qL}, and \eqref{eq:dischargeL_h}
+and performing some algebra gives the expression for the shock speed $\shockspeed_L$
+given by Equation \eqref{eq:left_shockspeed}.
+\end{remark}
 Using $\hat{\velocityx}_* - \hat{\velocityx}_L = \velocityx_* - \velocityx_L$
 with Equation \eqref{eq:dischargeL_hat} gives
-
 \begin{equation}
   \hat{\dischargex}_L = \frac{\pressure_L - \pressure_*}
     {\velocityx_* - \velocityx_L}
 \end{equation}
-
 and combining with Equation \eqref{eq:dischargeL_h} gives, after a bit of
 algebra,
-
 \begin{equation}\label{eq:ustarLshock}
   \velocityx_* = \velocityx_L
     - \wavestrength^{\text{shock}}_L(\height_*,\vectorsolution_L)
     \eqc
 \end{equation}
-
 where
-
 \begin{equation}
-  \wavestrength^{\text{shock}}_L(\height_*,\vectorsolution_L)
-    = (\height_* - \height_L)
-    \sqrt{\half\gravity\frac{\height_* + \height_L}{\height_*\height_L}}
+  \wavestrength^{\text{shock}}_L(\height,\vectorsolution_L)
+    = (\height - \height_L)
+    \sqrt{\half\gravity\frac{\height + \height_L}{\height\height_L}}
     \eqp
 \end{equation}
-
 Performing a similar analysis for the right wave gives
-
 \begin{equation}\label{eq:ustarRshock}
   \velocityx_* = \velocityx_R
     + \wavestrength^{\text{shock}}_R(\height_*,\vectorsolution_R)
     \eqc
 \end{equation}
-
 where
-
 \begin{equation}
-  \wavestrength^{\text{shock}}_R(\height_*,\vectorsolution_R)
-    = (\height_* - \height_R)
-    \sqrt{\half\gravity\frac{\height_* + \height_R}{\height_*\height_R}}
+  \wavestrength^{\text{shock}}_R(\height,\vectorsolution_R)
+    = (\height - \height_R)
+    \sqrt{\half\gravity\frac{\height + \height_R}{\height\height_R}}
     \eqp
 \end{equation}
 
@@ -200,54 +193,221 @@ where
     - \wavestrength^{\text{rarefaction}}_L(\height_*,\vectorsolution_L)
     \eqc
 \end{equation}
-
 where
-
 \begin{equation}
-  \wavestrength_L^{\text{rarefaction}}(\height_*,\vectorsolution_L)
-    = 2(\speedofsound_* - \speedofsound_L)
+  \wavestrength_L^{\text{rarefaction}}(\height,\vectorsolution_L)
+    = 2(\speedofsound - \speedofsound_L)
 \end{equation}
-
 Performing a similar analysis for the right wave gives
-
 \begin{equation}\label{eq:ustarRrarefaction}
   \velocityx_* = \velocityx_R
     + \wavestrength^{\text{rarefaction}}_R(\height_*,\vectorsolution_R)
     \eqc
 \end{equation}
-
 where
-
 \begin{equation}
-  \wavestrength_R^{\text{rarefaction}}(\height_*,\vectorsolution_R)
-    = 2(\speedofsound_* - \speedofsound_R)
+  \wavestrength_R^{\text{rarefaction}}(\height,\vectorsolution_R)
+    = 2(\speedofsound - \speedofsound_R)
 \end{equation}
 
-\section{Obtaining the Solution in the Star Region}
+\section{Obtaining the Solution in the Star Region}\label{sec:solution_star}
 %------------------------------------------------------------------------------
 
 Combining Equation \eqref{eq:ustarLshock} or \eqref{eq:ustarLrarefaction}
 with \eqref{eq:ustarRshock} or \eqref{eq:ustarRrarefaction} by eliminating
 $\velocityx$ gives the nonlinear
-equation to solve for $\height_*$, where the LHS is defined to be $\phi(\height)$:
-
-\begin{equation}
-  \phi(\height) \equiv
-    \wavestrength_L(\height,\vectorsolution_L)
-    + \wavestrength_R(\height,\vectorsolution_R)
-    + \velocityx_R - \velocityx_L
-    = 0 \eqp
-\end{equation}
+equation to solve for $\height_*$, where the LHS is defined to be $\phi(\height)$
+this is Equation \eqref{eq:objective_function}.
 
 Then adding either Equation \eqref{eq:ustarLshock} or \eqref{eq:ustarLrarefaction}
 with \eqref{eq:ustarRshock} or \eqref{eq:ustarRrarefaction} gives the equation
 for $\velocityx_*$:
-
 \begin{equation}
   \velocityx_* = \half\pr{\velocityx_L + \velocityx_R
     + \wavestrength_R(\height_*,\vectorsolution_R)
     - \wavestrength_L(\height_*,\vectorsolution_L)}
     \eqp
+\end{equation}
+
+\section{Fast Estimate of Maximum Wave Speed}
+%------------------------------------------------------------------------------
+
+The fast algorithm given in this section attempts to ease the computational
+burden of computing the height in the star region $\height_*$ (which requires
+a nonlinear solve that may require several iterations), which is needed
+in the computation of the wave speeds given by Equations \eqref{eq:left_wave_speed}
+\eqref{eq:right_wave_speed}.
+
+The first condition needed by this algorithm is that the objective function
+$\phi(\height)$ defined in Equation \eqref{eq:objective_function} be monotone
+increasing. This is given in the following theorem.
+\begin{theorem}{Monotonicity of the Objective Function}
+The objective function $\phi(\height)$ defined in Equation
+\eqref{eq:objective_function} is monotone increasing: $\phi'(\height) \geq 0$.
+\end{theorem}
+\begin{proof}
+It is sufficient to prove that
+each wave strength function $\wavestrength_K^{\text{rarefaction}}$ and
+$\wavestrength_K^{\text{shock}}$ are monotone increasing with respect to
+$\height$. This is trivial to prove for rarefaction waves:
+\begin{equation}
+  \pd{\wavestrength_K^{\text{rarefaction}}}{\height} = \sqrt{\frac{\gravity}{\height}} \geq 0 \eqp
+\end{equation}
+For shock waves, the proof is more complicated. To simplify algebra, the following
+definition is made:
+\begin{equation}
+  \alpha \equiv \sqrt{\half\gravity\pr{\frac{1}{\height} + \frac{1}{\height_K}}}
+  \eqc
+\end{equation}
+making the expression for wave strength the following:
+\begin{equation}
+  \wavestrength_K^{\text{shock}} = \pr{\height - \height_K}\alpha
+  \eqp
+\end{equation}
+Taking the derivative gives
+\begin{eqnarray*}
+  \pd{\wavestrength_K^{\text{shock}}}{\height} & = &
+    \alpha + \pr{\height - \height_K}\pd{\alpha}{\height} \eqc\\
+  \pd{\wavestrength_K^{\text{shock}}}{\height} & = &
+    \alpha - \fourth\gravity\frac{\height - \height_K}{\height^2}\frac{1}{\alpha}
+  \eqp
+\end{eqnarray*}
+This proof now proceeds by assumption that $\pd{\wavestrength_K^{\text{shock}}}{\height}\geq0$:
+\begin{eqnarray*}
+  \alpha - \fourth\gravity\frac{\height - \height_K}{\height^2}\frac{1}{\alpha}
+    & \geq & 0 \eqc\\
+  \alpha^2 & \geq & \fourth\gravity\frac{\height - \height_K}{\height^2} \eqp
+\end{eqnarray*}
+Note that the last equation assumes that $\alpha\geq0$.
+\begin{eqnarray*}
+  \half\gravity\frac{\height + \height_K}{\height\height_K} & \geq &
+    \fourth\gravity\frac{\height - \height_K}{\height^2} \eqc\\
+  \height^3 + \height_K\height^2 & \geq &
+    \half\pr{\height_K\height^2 - \height_K^2\height} \eqc\\
+  \height^3 + \half\height_K\height^2 + \half\height_K^2\height & \geq & 0 \eqp
+\end{eqnarray*}
+This last statement is proved using the entropy condition. Thus
+the assumption $\pd{\wavestrength_K^{\text{shock}}}{\height}\geq0$
+is verified, and the proof is complete.\qed
+\end{proof}
+
+\begin{algorithm}[htb]
+\caption{Initialization}
+\begin{algorithmic}
+\State $\hmin\gets \min(\height_L,\height_R)$
+\State $\hmax\gets \max(\height_L,\height_R)$
+\If{$\objective(\hmin) \geq 0$} \Comment{Both waves are rarefactions}
+  \State Compute $\maxwavespeed$ using Equations
+    \eqref{eq:maxwavespeed},
+    \eqref{eq:leftwavespeed_rarefaction}, and \eqref{eq:rightwavespeed_rarefaction}
+  \State \Return
+\EndIf
+\If{$\objective(\hmax) = 0$} \Comment{$\height_*$ is already known to be $\hmax$}
+  \State $\height_*\gets \hmax$
+  \State Compute $\maxwavespeed$ using Equations
+    \eqref{eq:maxwavespeed}, \eqref{eq:left_wave_speed},
+    and \eqref{eq:right_wave_speed}
+  \State \Return
+\ElsIf{$\objective(\hmax) < 0$} \Comment{Both waves are shocks}
+  \State $\hhigh^{(0)}\gets \hrarefaction$
+  \State $\hlow^{(0)}\gets \max\pr{\hmax,\hhigh^{(0)}
+    - \frac{\objective(\hhigh^{(0)})}{\objective'(\hhigh^{(0)})}}$
+  \State Call Algorithm \ref{alg:computemaxwavespeed}
+    with $(\hlow^{(0)},\hhigh^{(0)})$
+  \State \Return
+\Else \Comment{One wave is rarefaction, one wave is shock}
+  \State $\hhigh^{(0)}\gets \min\pr{\hmax,\hrarefaction}$
+  \State $\hlow^{(0)}\gets \max\pr{\hmin,\hhigh^{(0)}
+    - \frac{\objective(\hhigh^{(0)})}{\objective'(\hhigh^{(0)})}}$
+  \State Call Algorithm \ref{alg:computemaxwavespeed}
+    with $(\hlow^{(0)},\hhigh^{(0)})$
+  \State \Return
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+\begin{algorithm}[htb]
+\caption{Computation of $\maxwavespeed$}
+\label{alg:computemaxwavespeed}
+\begin{algorithmic}
+\State Input: $(\hlow^{(0)},\hhigh^{(0)},\tol)$
+\Loop
+  \State Compute $\maxwavespeed^{(k)}$ using Equation \eqref{eq:maxwavespeedbound}
+  \State Compute $\minwavespeed^{(k)}$ using Equation \eqref{eq:minwavespeedbound}
+  \If{$\minwavespeed^{(0)} > 0$}
+    \If{$\frac{\maxwavespeed^{(k)}}{\minwavespeed^{(k)}} - 1 \leq \tol$}
+      \State \Return
+    \EndIf
+  \EndIf
+  \If{$\objective(\hlow^{(k)}) > 0$ or $\objective(\hhigh^{(k)}) < 0$}
+    \State \Return
+  \EndIf
+  \State $\hlow^{(k+1)}\gets \hinterplow(\hlow^{(k)},\hhigh^{(k)})$
+  \State $\hhigh^{(k+1)}\gets \hinterphigh(\hlow^{(k)},\hhigh^{(k)})$
+\EndLoop
+\State $\maxwavespeed\gets \maxwavespeed^{(k)}$
+\end{algorithmic}
+\end{algorithm}
+
+\begin{equation}\label{eq:maxwavespeedbound}
+  \maxwavespeed^{(k)} = \max\pr{(\highwavespeedtwo^{(k)})_+,
+    (\lowwavespeedone^{(k)})_-}
+  \eqc
+\end{equation}
+\begin{equation}\label{eq:minwavespeedbound}
+  \minwavespeed^{(k)} = \pr{\max\pr{(\lowwavespeedtwo^{(k)})_+,
+    (\highwavespeedone^{(k)})_-}}_+
+  \eqc
+\end{equation}
+where $z_+\equiv\max(z,0)$, $z_-\equiv\max(-z,0)$, and the bounds on the individual
+wave speeds are given by the following equations:
+\begin{equation}
+  \lowwavespeedone^{(k)}
+    = \velocityx_L - \speedofsound_L\pr{1 + \pr{
+    \frac{(\hhigh^{(k)} - \height_L)(\hhigh^{(k)}
+    + 2\height_L)}{2\height_L^2}}_+}^{\frac{1}{2}}
+    \eqc
+\end{equation}
+\begin{equation}
+  \highwavespeedone^{(k)}
+    = \velocityx_L - \speedofsound_L\pr{1 + \pr{
+    \frac{(\hlow^{(k)} - \height_L)(\hlow^{(k)}
+    + 2\height_L)}{2\height_L^2}}_+}^{\frac{1}{2}}
+    \eqc
+\end{equation}
+\begin{equation}
+  \lowwavespeedtwo^{(k)}
+    = \velocityx_R + \speedofsound_R\pr{1 + \pr{
+    \frac{(\hlow^{(k)} - \height_R)(\hlow^{(k)}
+    + 2\height_R)}{2\height_R^2}}_+}^{\frac{1}{2}}
+    \eqc
+\end{equation}
+\begin{equation}
+  \highwavespeedtwo^{(k)}
+    = \velocityx_R + \speedofsound_R\pr{1 + \pr{
+    \frac{(\hhigh^{(k)} - \height_R)(\hhigh^{(k)}
+    + 2\height_R)}{2\height_R^2}}_+}^{\frac{1}{2}}
+    \eqc
+\end{equation}
+The interpolant functions $\hinterplow$ and $\hinterphigh$ are given by
+the following equations:
+\begin{equation}
+  \hinterplow(\height_1,\height_2) = \height_1
+    - \frac{2\objective(\height_1)}{\objective'(\height_1)
+    + \sqrt{\objective'(\height_1)^2 - 4\objective(\height_1)\objective[\height_1,\height_1,\height_2]}}
+  \eqc
+\end{equation}
+\begin{equation}
+  \hinterphigh(\height_1,\height_2) = \height_2
+    - \frac{2\objective(\height_2)}{\objective'(\height_2)
+    + \sqrt{\objective'(\height_2)^2 - 4\objective(\height_2)\objective[\height_1,\height_2,\height_2]}}
+  \eqc
+\end{equation}
+where $\objective[x,y,z]$ denotes divided differences:
+\begin{equation}
+  \objective[x,y,z] = \frac{\frac{1}{x-y}\pr{\objective(x)-\objective(y)}
+    - \frac{1}{y-z}\pr{\objective(y)-\objective(z)}}{x-z}
+  \eqp
 \end{equation}
 
 \pagebreak{}
