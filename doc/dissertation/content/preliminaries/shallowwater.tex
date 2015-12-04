@@ -8,7 +8,7 @@ scale. Depth-integrating the conservation equations gives the shallow
 water equations\cite{toro2009}\cite{leveque2002}:
 \begin{equation}
 \begin{gathered}
-  \ppt{\vectorsolution} + \nabla\cdot\consfluxvector
+  \ppt{\vectorsolution} + \nabla\cdot\consfluxvector(\vectorsolution)
   = \conssource \eqc
 \\
   \vectorsolution
@@ -18,7 +18,7 @@ water equations\cite{toro2009}\cite{leveque2002}:
         \heightmomentumy
       \end{array}\right]
   \eqc\quad
-  \consfluxvector
+  \consfluxvector(\vectorsolution)
   = \left[\begin{array}{c c}
       \heightmomentumx & \heightmomentumy\\
       \frac{\heightmomentumx^2}{\height} + \half\gravity\height^2
@@ -41,7 +41,7 @@ written more concisely as
   \vectorsolution
     = \left[\begin{array}{c}\height\\\heightmomentum\end{array}\right]
   \eqc\quad
-  \consfluxvector
+  \consfluxvector(\vectorsolution)
   = \left[\begin{array}{c}\heightmomentum\\
       \frac{\heightmomentum\otimes\heightmomentum}{\height}
       + \half\gravity\height^2\identity
@@ -67,7 +67,7 @@ Viscous regularization of the shallow water equations is achieved by adding
 artificial viscous fluxes:
 \begin{equation}
 \begin{gathered}
-  \ppt{\vectorsolution} + \nabla\cdot\consfluxvector
+  \ppt{\vectorsolution} + \nabla\cdot\consfluxvector(\vectorsolution)
   + \nabla\cdot\viscconsfluxvector
   = \conssource \eqc
 \\

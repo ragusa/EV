@@ -1,0 +1,72 @@
+In this section, characteristics are considered for the shallow water equations.
+The 1-D shallow water equations (with flat bottom topography) can be expressed as
+\begin{equation}\label{eq:1dshallowwater}
+  \ppt{\vectorsolution} + \pd{\consfluxvector}{x}
+  = \mathbf{0} \eqc \quad
+  \vectorsolution = \sq{\begin{array}{c}\height\\\heightmomentumx\end{array}} \eqc \quad
+  \consfluxvector(\vectorsolution)
+    = \left[\begin{array}{c}
+      \heightmomentumx\\
+      \frac{\heightmomentumx^2}{\height} + \half\gravity\height^2
+    \end{array}\right]
+  \eqp
+\end{equation}
+The spatial derivative of the flux function can be evaluated using chain rule, giving
+\begin{equation}
+  \ppt{\vectorsolution} + \jacobianx(\vectorsolution)\pd{\vectorsolution}{x}
+  = \mathbf{0} \eqc \quad
+  \jacobianx(\vectorsolution) \equiv \pd{\consfluxvector}{\vectorsolution} =
+    \sq{\begin{array}{c c}0 & 1\\
+      \speedofsound^2-\velocityx^2 & 2\velocityx\end{array}} \eqc
+\end{equation}
+where $\jacobianx(\vectorsolution)$ is referred to as the Jacobian matrix. The
+eigenvalues and corresponding eigenvectors of this matrix are
+\begin{equation}
+  \eigenvalue_1(\vectorsolution) = \velocityx - \speedofsound \eqc \quad
+  \eigenvalue_2(\vectorsolution) = \velocityx + \speedofsound \eqc \quad
+\end{equation}
+\begin{equation}
+  \eigenvector_1(\vectorsolution) = \sq{\begin{array}{c}
+    1\\\velocityx-\speedofsound\end{array}} \eqc \quad
+  \eigenvector_2(\vectorsolution) = \sq{\begin{array}{c}
+    1\\\velocityx+\speedofsound\end{array}} \eqp
+\end{equation}
+Forming a matrix $\eigenvectormatrix(\vectorsolution)$ using the eigenvectors
+as columns and then taking its inverse gives
+\begin{equation}
+  \eigenvectormatrix(\vectorsolution) = \sq{\begin{array}{c c}
+    1 & 1\\\velocityx-\speedofsound & \velocityx+\speedofsound\end{array}} \eqc \quad
+  \eigenvectormatrix(\vectorsolution)^{-1} = \sq{\begin{array}{c c}
+    \frac{\velocityx+\speedofsound}{2\speedofsound} & -\frac{1}{2\speedofsound}\\
+    \frac{\speedofsound-\velocityx}{2\speedofsound} & \frac{1}{2\speedofsound}
+    \end{array}} \eqp
+\end{equation}
+Applying $\eigenvectormatrix(\vectorsolution)^{-1}$ from the left to Equation
+\eqref{eq:1dshallowwater} gives
+\begin{equation}
+  \eigenvectormatrix(\vectorsolution)^{-1}\ppt{\vectorsolution}
+    + \eigenvectormatrix(\vectorsolution)^{-1}\jacobianx(\vectorsolution)
+    \eigenvectormatrix(\vectorsolution)\eigenvectormatrix(\vectorsolution)^{-1}
+    \pd{\vectorsolution}{x}
+  = \mathbf{0} \eqc
+\end{equation}
+\begin{equation}
+  \ppt{\characteristicsolution}
+    + \eigenvaluematrix(\vectorsolution)\pd{\characteristicsolution}{x}
+  = \mathbf{0} \eqc
+\end{equation}
+where $\characteristicsolution(\vectorsolution)$ is the vector of
+characteristic variables, and $\eigenvaluematrix(\vectorsolution)$ is a
+diagonal matrix with the eigenvalues as the diagonal entries:
+\begin{equation}
+  \characteristicsolution(\vectorsolution) =
+    \eigenvectormatrix(\vectorsolution)^{-1}\vectorsolution \eqc \quad
+  \eigenvaluematrix(\vectorsolution) =
+    \eigenvectormatrix(\vectorsolution)^{-1}\jacobianx(\vectorsolution)
+    \eigenvectormatrix(\vectorsolution) =
+      \sq{\begin{array}{c c}\eigenvalue_1(\vectorsolution) & 0\\
+        0 & \eigenvalue_2(\vectorsolution)\end{array}} \eqp
+\end{equation}
+
+
+

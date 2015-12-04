@@ -591,33 +591,6 @@ void ShallowWater<dim>::compute_inviscid_fluxes(
 }
 
 /**
- * \brief Computes the viscous fluxes.
- */
-/*
-template <int dim>
-void ShallowWater<dim>::compute_viscous_fluxes(
-  const double & viscosity,
-  const std::vector<Tensor<1, dim>> & height_gradient,
-  const std::vector<Tensor<2, dim>> & momentum_gradient,
-  std::vector<Tensor<1, dim>> & height_viscous_flux,
-  std::vector<Tensor<2, dim>> & momentum_viscous_flux) const
-{
-  // get number of vector elements
-  const unsigned int n = height_gradient.size();
-
-  // loop over vector elements
-  for (unsigned int q = 0; q < n; ++q)
-  {
-    // density viscous flux
-    height_viscous_flux[q] = -viscosity * height_gradient[q];
-
-    // momentum viscous flux
-    momentum_viscous_flux[q] = -viscosity * momentum_gradient[q];
-  }
-}
-*/
-
-/**
  * \brief Computes a vector of velocity values.
  *
  * \param[in] height   vector of height values
