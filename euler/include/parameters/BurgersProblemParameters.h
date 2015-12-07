@@ -5,6 +5,9 @@
 #ifndef BurgersProblemParameters_h
 #define BurgersProblemParameters_h
 
+#include <deal.II/base/parameter_handler.h>
+#include "include/parameters/ProblemParameters.h"
+
 using namespace dealii;
 
 /**
@@ -12,7 +15,7 @@ using namespace dealii;
  * \brief Class for parameters related to Burgers problems.
  */
 template <int dim>
-class BurgersProblemParameters
+class BurgersProblemParameters : public ProblemParameters<dim>
 {
 public:
   BurgersProblemParameters();

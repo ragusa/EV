@@ -24,16 +24,26 @@ LowOrderViscosity<dim>::LowOrderViscosity(const double & c_max_,
 }
 
 template <int dim>
-void LowOrderViscosity<dim>::update(const Vector<double> &,
+void LowOrderViscosity<dim>::update(const Vector<double> & new_solution,
                                     const Vector<double> &,
                                     const double &,
                                     const unsigned int &)
 {
+  // FE values
+  FEValues<dim> fe_values(this->fe, this->cell_quadrature, update_values);
+
   // loop over cells to compute low-order viscosity at each quadrature point
   Cell cell = this->dof_handler->begin_active(), endc = this->dof_handler->end();
   for (; cell != endc; ++cell)
   {
+    // reinitialize FE values
+    fe_values.reinit(cell);
+
+    // get multiplier
+    const double multiplier = viscosity_multiplier->get_multiplier(fe_values, new_solution);
+
+    // compute viscosity value
     this->values[cell] =
-      std::abs(c_max * (*cell_diameter)[cell] * (*max_flux_speed)[cell]);
+      std::abs(c_max * (*cell_diameter)[cell] * (*max_flux_speed)[cell]) * multiplier;
   }
 }

@@ -55,6 +55,7 @@
 #include "include/viscosity/LowOrderViscosity.h"
 #include "include/viscosity/MaxWaveSpeed.h"
 #include "include/viscosity/Viscosity.h"
+#include "include/viscosity/ViscosityMultiplier.h"
 
 #ifdef IS_PARALLEL
 #include <deal.II/base/index_set.h>
@@ -218,6 +219,13 @@ protected:
    */
   virtual std::shared_ptr<DataPostprocessor<dim>> create_auxiliary_postprocessor()
     const;
+
+  /**
+   * \brief Creates a viscosity multiplier object and returns the pointer.
+   *
+   * \return pointer to created viscosity multiplier object
+   */
+  virtual std::shared_ptr<ViscosityMultiplier<dim>> create_viscosity_multiplier() const;
 
   /**
    * \brief Creates an entropy object and returns the pointer.

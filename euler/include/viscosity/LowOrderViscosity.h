@@ -6,6 +6,7 @@
 #define LowOrderViscosity_h
 
 #include "include/viscosity/Viscosity.h"
+#include "include/viscosity/ViscosityMultiplier.h"
 
 using namespace dealii;
 
@@ -32,7 +33,8 @@ public:
   LowOrderViscosity(const double & c_max,
                     CellMap & cell_diameter,
                     CellMap & max_flux_speed,
-                    const DoFHandler<dim> & dof_handler);
+                    const DoFHandler<dim> & dof_handler,
+                    const ViscosityMultiplier<dim> & viscosity_multiplier);
 
   void update(const Vector<double> & new_solution,
               const Vector<double> & old_solution,

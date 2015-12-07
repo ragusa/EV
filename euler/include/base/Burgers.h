@@ -17,6 +17,7 @@
 #include <deal.II/lac/vector.h>
 #include "include/base/ConservationLaw.h"
 #include "include/parameters/BurgersParameters.h"
+#include "include/parameters/BurgersProblemParameters.h"
 
 /**
  * \brief Class for solving the Burgers equation.

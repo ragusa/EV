@@ -570,17 +570,21 @@ void ConservationLaw<dim>::setup_system()
     // low-order viscosity
     case ViscosityType::low:
     {
-/*
+      // ensure diffusion type is compatible
       Assert(parameters.diffusion_type == DiffusionType::none ||
                parameters.diffusion_type == DiffusionType::laplacian,
              ExcInvalidDiffusionType());
-*/
 
+      // create viscosity multiplier
+      auto viscosity_multiplier = create_viscosity_multiplier();
+
+      // create low-order viscosity
       auto low_order_viscosity_tmp = std::make_shared<LowOrderViscosity<dim>>(
         parameters.first_order_viscosity_coef,
         cell_diameter,
         max_flux_speed_cell,
-        dof_handler);
+        dof_handler,
+        viscosity_multiplier);
       low_order_viscosity = low_order_viscosity_tmp;
 
       viscosity = low_order_viscosity_tmp;
@@ -595,6 +599,9 @@ void ConservationLaw<dim>::setup_system()
                parameters.diffusion_type == DiffusionType::graphtheoretic,
              ExcInvalidDiffusionType());
 
+      // create viscosity multiplier
+      auto viscosity_multiplier = create_viscosity_multiplier();
+
       // create max wave speed
       auto max_wave_speed = create_max_wave_speed();
 
@@ -604,7 +611,8 @@ void ConservationLaw<dim>::setup_system()
                                                         dof_handler,
                                                         triangulation,
                                                         cell_quadrature,
-                                                        n_components);
+                                                        n_components,
+viscosity_multiplier);
       low_order_viscosity = low_order_viscosity_tmp;
 
       viscosity = low_order_viscosity_tmp;
@@ -617,6 +625,9 @@ void ConservationLaw<dim>::setup_system()
       Assert(parameters.diffusion_type == DiffusionType::none ||
                parameters.diffusion_type == DiffusionType::laplacian,
              ExcInvalidDiffusionType());
+
+      // create viscosity multiplier
+      auto viscosity_multiplier = create_viscosity_multiplier();
 
       // create entropy
       auto entropy = create_entropy();
@@ -1213,3 +1224,17 @@ void ConservationLaw<dim>::check_nan()
   for (unsigned int i = 0; i < n; ++i)
     Assert(new_solution(i) == new_solution(i), ExcNaNEncountered());
 }
+
+/**
+ * \brief Creates a default viscosity multiplier object, which uses the number
+ *        1 as the multiplier.
+ *
+ * \return pointer to created viscosity multiplier
+ */
+template <int dim>
+std::shared_ptr<ViscosityMultiplier<dim>> ConservationLaw<dim>::create_viscosity_multiplier()
+{
+  auto viscosity_multiplier = std::make_shared<UnityViscosityMultiplier<dim>>();
+  return viscosity_multiplier;
+}
+
