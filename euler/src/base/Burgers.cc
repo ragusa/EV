@@ -136,8 +136,7 @@ void Burgers<dim>::define_problem()
   }
 
   // initial conditions
-  this->initial_conditions_strings[0] =
-    problem_parameters.initial_conditions;
+  this->initial_conditions_strings[0] = problem_parameters.initial_conditions;
 
   // exact solution
   if (problem_parameters.has_exact_solution)

@@ -30,11 +30,14 @@ public:
   /** \brief Alias for cell iterator map to double */
   using CellMap = typename Viscosity<dim>::CellMap;
 
-  LowOrderViscosity(const double & c_max,
-                    CellMap & cell_diameter,
-                    CellMap & max_flux_speed,
-                    const DoFHandler<dim> & dof_handler,
-                    const ViscosityMultiplier<dim> & viscosity_multiplier);
+  LowOrderViscosity(
+    const double & c_max,
+    CellMap & cell_diameter,
+    CellMap & max_flux_speed,
+    const FESystem<dim> & fe,
+    const DoFHandler<dim> & dof_handler,
+    const QGauss<dim> & cell_quadrature,
+    const std::shared_ptr<ViscosityMultiplier<dim>> & viscosity_multiplier);
 
   void update(const Vector<double> & new_solution,
               const Vector<double> & old_solution,
@@ -47,6 +50,15 @@ private:
   CellMap * const cell_diameter;
 
   CellMap * const max_flux_speed;
+
+  /** \brief Pointer to finite element system */
+  const FESystem<dim> * fe;
+
+  /** \brief Pointer to cell quadrature */
+  const QGauss<dim> * cell_quadrature;
+
+  /** \brief Pointer to viscosity multiplier */
+  std::shared_ptr<ViscosityMultiplier<dim>> viscosity_multiplier;
 };
 
 #include "src/viscosity/LowOrderViscosity.cc"

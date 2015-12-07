@@ -15,7 +15,7 @@ end
 #   lake_at_rest_2d
 #   lake_at_rest_flat_perturbed_2d
 subsection problem
-   set problem name = dam_break_flat
+   set problem name = lake_at_rest
 end
 
 subsection refinement
@@ -29,8 +29,8 @@ end
 
 subsection time
    # options are <constant_dt|cfl_condition>
-   set time step size method = constant_dt
-   set use default end time = false
+   set time step size method = cfl_condition
+   set use default end time = true
    set final time = 0.01
    set time step size = 0.01
    set cfl = 0.50

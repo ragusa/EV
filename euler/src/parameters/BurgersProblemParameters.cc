@@ -1,6 +1,7 @@
 /**
  * \file BurgersProblemParameters.cc
- * \brief Provides the function definitions for the BurgersProblemParameters class.
+ * \brief Provides the function definitions for the BurgersProblemParameters
+ * class.
  */
 
 /**
@@ -26,30 +27,24 @@ void BurgersProblemParameters<dim>::declare_parameters(
   // boundary conditions
   parameter_handler.enter_subsection("boundary conditions");
   {
-    parameter_handler.declare_entry("dirichlet function",
-                                    "0",
-                                    Patterns::Anything(),
-                                    "Dirichlet function");
+    parameter_handler.declare_entry(
+      "dirichlet function", "0", Patterns::Anything(), "Dirichlet function");
   }
   parameter_handler.leave_subsection();
 
   // initial conditions
   parameter_handler.enter_subsection("initial conditions");
   {
-    parameter_handler.declare_entry("initial conditions",
-                                    "0",
-                                    Patterns::Anything(),
-                                    "Initial conditions");
+    parameter_handler.declare_entry(
+      "initial conditions", "0", Patterns::Anything(), "Initial conditions");
   }
   parameter_handler.leave_subsection();
 
   // exact solution
   parameter_handler.enter_subsection("exact solution");
   {
-    parameter_handler.declare_entry("exact solution",
-                                    "1",
-                                    Patterns::Anything(),
-                                    "Exact solution");
+    parameter_handler.declare_entry(
+      "exact solution", "1", Patterns::Anything(), "Exact solution");
   }
   parameter_handler.leave_subsection();
 
@@ -81,16 +76,14 @@ void BurgersProblemParameters<dim>::get_parameters(
   // boundary conditions
   parameter_handler.enter_subsection("boundary conditions");
   {
-    dirichlet_function =
-      parameter_handler.get("dirichlet function");
+    dirichlet_function = parameter_handler.get("dirichlet function");
   }
   parameter_handler.leave_subsection();
 
   // initial conditions
   parameter_handler.enter_subsection("initial conditions");
   {
-    initial_conditions =
-      parameter_handler.get("initial conditions");
+    initial_conditions = parameter_handler.get("initial conditions");
   }
   parameter_handler.leave_subsection();
 

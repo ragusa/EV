@@ -726,3 +726,31 @@ std::shared_ptr<DataPostprocessor<dim>> ShallowWater<
 {
   return std::make_shared<ShallowWaterPostProcessor<dim>>(bathymetry_function);
 }
+
+/**
+ * \brief Creates a viscosity multiplier object that uses the local Froude
+ *        number as the multiplier.
+ *
+ * \return pointer to created viscosity multiplier
+ */
+template <int dim>
+std::shared_ptr<ViscosityMultiplier<dim>> ShallowWater<
+  dim>::create_viscosity_multiplier() const
+{
+  /*
+    auto viscosity_multiplier =
+      std::make_shared<ShallowWaterViscosityMultiplier<dim>>(gravity);
+  */
+  std::shared_ptr<ViscosityMultiplier<dim>> viscosity_multiplier;
+  if (sw_parameters.multiply_low_order_viscosity_by_froude)
+  {
+    viscosity_multiplier =
+      std::make_shared<ShallowWaterViscosityMultiplier<dim>>(gravity);
+  }
+  else
+  {
+    viscosity_multiplier = std::make_shared<ViscosityMultiplier<dim>>();
+  }
+
+  return viscosity_multiplier;
+}

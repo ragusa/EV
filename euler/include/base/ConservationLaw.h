@@ -225,7 +225,8 @@ protected:
    *
    * \return pointer to created viscosity multiplier object
    */
-  virtual std::shared_ptr<ViscosityMultiplier<dim>> create_viscosity_multiplier() const;
+  virtual std::shared_ptr<ViscosityMultiplier<dim>> create_viscosity_multiplier()
+    const;
 
   /**
    * \brief Creates an entropy object and returns the pointer.

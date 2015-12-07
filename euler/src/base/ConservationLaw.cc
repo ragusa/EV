@@ -583,7 +583,9 @@ void ConservationLaw<dim>::setup_system()
         parameters.first_order_viscosity_coef,
         cell_diameter,
         max_flux_speed_cell,
+        fe,
         dof_handler,
+        cell_quadrature,
         viscosity_multiplier);
       low_order_viscosity = low_order_viscosity_tmp;
 
@@ -606,16 +608,19 @@ void ConservationLaw<dim>::setup_system()
       auto max_wave_speed = create_max_wave_speed();
 
       // create domain-invariant viscosity
-      auto low_order_viscosity_tmp =
-        std::make_shared<DomainInvariantViscosity<dim>>(max_wave_speed,
-                                                        dof_handler,
-                                                        triangulation,
-                                                        cell_quadrature,
-                                                        n_components,
-viscosity_multiplier);
-      low_order_viscosity = low_order_viscosity_tmp;
+      Assert(false, ExcNotImplemented());
+      /*
+            auto low_order_viscosity_tmp =
+              std::make_shared<DomainInvariantViscosity<dim>>(max_wave_speed,
+                                                              dof_handler,
+                                                              triangulation,
+                                                              cell_quadrature,
+                                                              n_components,
+      viscosity_multiplier);
+            low_order_viscosity = low_order_viscosity_tmp;
 
-      viscosity = low_order_viscosity_tmp;
+            viscosity = low_order_viscosity_tmp;
+      */
 
       break;
     }
@@ -637,7 +642,10 @@ viscosity_multiplier);
         parameters.first_order_viscosity_coef,
         cell_diameter,
         max_flux_speed_cell,
-        dof_handler);
+        fe,
+        dof_handler,
+        cell_quadrature,
+        viscosity_multiplier);
       low_order_viscosity = low_order_viscosity_tmp;
 
       // create entropy viscosity
@@ -1232,9 +1240,9 @@ void ConservationLaw<dim>::check_nan()
  * \return pointer to created viscosity multiplier
  */
 template <int dim>
-std::shared_ptr<ViscosityMultiplier<dim>> ConservationLaw<dim>::create_viscosity_multiplier()
+std::shared_ptr<ViscosityMultiplier<dim>> ConservationLaw<
+  dim>::create_viscosity_multiplier() const
 {
-  auto viscosity_multiplier = std::make_shared<UnityViscosityMultiplier<dim>>();
+  auto viscosity_multiplier = std::make_shared<ViscosityMultiplier<dim>>();
   return viscosity_multiplier;
 }
-

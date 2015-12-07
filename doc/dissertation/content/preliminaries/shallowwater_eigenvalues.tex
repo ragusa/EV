@@ -48,8 +48,10 @@ Applying $\eigenvectormatrix(\vectorsolution)^{-1}$ from the left to Equation
     + \eigenvectormatrix(\vectorsolution)^{-1}\jacobianx(\vectorsolution)
     \eigenvectormatrix(\vectorsolution)\eigenvectormatrix(\vectorsolution)^{-1}
     \pd{\vectorsolution}{x}
-  = \mathbf{0} \eqc
+  = \mathbf{0} \eqp
 \end{equation}
+Multiplying the first equation by $-\frac{2\gravity}{\speedofsound}$ and the 
+second by $\frac{2\gravity}{\speedofsound}$ gives
 \begin{equation}
   \ppt{\characteristicsolution}
     + \eigenvaluematrix(\vectorsolution)\pd{\characteristicsolution}{x}
@@ -59,14 +61,18 @@ where $\characteristicsolution(\vectorsolution)$ is the vector of
 characteristic variables, and $\eigenvaluematrix(\vectorsolution)$ is a
 diagonal matrix with the eigenvalues as the diagonal entries:
 \begin{equation}
-  \characteristicsolution(\vectorsolution) =
-    \eigenvectormatrix(\vectorsolution)^{-1}\vectorsolution \eqc \quad
+  \characteristicsolution(\vectorsolution) = \sq{\begin{array}{c}
+    \velocityx - 2\speedofsound\\
+    \velocityx + 2\speedofsound
+    \end{array}}
+    \eqc \quad
   \eigenvaluematrix(\vectorsolution) =
     \eigenvectormatrix(\vectorsolution)^{-1}\jacobianx(\vectorsolution)
     \eigenvectormatrix(\vectorsolution) =
       \sq{\begin{array}{c c}\eigenvalue_1(\vectorsolution) & 0\\
         0 & \eigenvalue_2(\vectorsolution)\end{array}} \eqp
 \end{equation}
+
 
 
 

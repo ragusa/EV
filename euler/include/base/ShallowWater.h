@@ -31,6 +31,8 @@
 #include "include/postprocessing/ShallowWaterRiemannSolver.h"
 #include "include/viscosity/MaxWaveSpeed.h"
 #include "include/viscosity/ShallowWaterMaxWaveSpeed.h"
+#include "include/viscosity/ViscosityMultiplier.h"
+#include "include/viscosity/ShallowWaterViscosityMultiplier.h"
 
 /**
  * \brief Class for solving the shallow water equations.
@@ -102,6 +104,9 @@ private:
   std::shared_ptr<Entropy<dim>> create_entropy() const;
 
   std::shared_ptr<MaxWaveSpeed<dim>> create_max_wave_speed() const;
+
+  std::shared_ptr<ViscosityMultiplier<dim>> create_viscosity_multiplier()
+    const override;
 
   std::shared_ptr<DataPostprocessor<dim>> create_auxiliary_postprocessor()
     const override;
