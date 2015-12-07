@@ -37,220 +37,140 @@ std::vector<DataComponentInterpretation::DataComponentInterpretation> Burgers<
 template <int dim>
 void Burgers<dim>::define_problem()
 {
-  switch (burgers_parameters.problem_id)
+  // determine problem name
+  this->problem_name = burgers_parameters.problem_name;
+
+  // get path of source directory from #define created by CMake
+  std::stringstream source_path_ss;
+  source_path_ss << SOURCE_PATH;
+  std::string source_path;
+  source_path_ss >> source_path;
+
+  // create problem parameters file name and determine if it exists
+  std::string problem_parameters_file =
+    source_path + "/problems/burgers/" + this->problem_name;
+  struct stat buffer;
+  const bool file_exists = stat(problem_parameters_file.c_str(), &buffer) == 0;
+  Assert(file_exists, ExcFileDoesNotExist(problem_parameters_file));
+
+  // read problem parameters input file
+  ParameterHandler parameter_handler;
+  BurgersProblemParameters<dim>::declare_parameters(parameter_handler);
+  parameter_handler.read_input(problem_parameters_file);
+  BurgersProblemParameters<dim> problem_parameters;
+  problem_parameters.get_parameters(parameter_handler);
+
+  // assert number of dimensions is valid
+  if (!problem_parameters.valid_in_1d)
+    Assert(dim != 1, ExcImpossibleInDim(dim));
+  if (!problem_parameters.valid_in_2d)
+    Assert(dim != 2, ExcImpossibleInDim(dim));
+  if (!problem_parameters.valid_in_3d)
+    Assert(dim != 3, ExcImpossibleInDim(dim));
+
+  // domain
+  if (problem_parameters.domain_shape == "hyper_cube")
   {
-    case 0: // 1-D, Dirichlet boundary conditions, sin(2*pi*x)
+    const double x_start = problem_parameters.x_start;
+    const double x_width = problem_parameters.x_width;
+    this->domain_volume = std::pow(x_width, dim);
+    GridGenerator::hyper_cube(this->triangulation, x_start, x_start + x_width);
+  }
+  else
+  {
+    Assert(false, ExcNotImplemented());
+  }
+
+  // constants
+  const double x_interface = problem_parameters.x_interface;
+  const double u_left = problem_parameters.u_left;
+  const double u_right = problem_parameters.u_right;
+  this->constants["x_interface"] = x_interface;
+  this->constants["u_left"] = u_left;
+  this->constants["u_right"] = u_right;
+
+  // set boundary indicators
+  this->n_boundaries = 1;
+  typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin();
+  typename Triangulation<dim>::cell_iterator endc = this->triangulation.end();
+  for (; cell != endc; ++cell)
+    for (unsigned int face = 0; face < this->faces_per_cell; ++face)
+      if (cell->face(face)->at_boundary())
+        cell->face(face)->set_boundary_id(0);
+
+  // set boundary conditions type
+  this->boundary_conditions_type = problem_parameters.boundary_conditions_type;
+
+  // create boundary conditions
+  if (this->boundary_conditions_type == "dirichlet")
+  {
+    auto derived_boundary_conditions =
+      std::make_shared<DirichletBoundaryConditions<dim>>(this->fe,
+                                                         this->face_quadrature);
+    this->boundary_conditions = derived_boundary_conditions;
+
+    // option to use exact solution as Dirichlet BC
+    this->use_exact_solution_as_dirichlet_bc = false;
+
+    // get Dirichlet function strings
+    if (!this->use_exact_solution_as_dirichlet_bc)
     {
-      Assert(dim == 1, ExcImpossibleInDim(dim));
-
-      // name of problem
-      this->problem_name = "burgers_sin";
-
-      // domain
-      double domain_start = 0;
-      double domain_width = 1.0;
-      this->domain_volume = std::pow(domain_width, dim);
-      GridGenerator::hyper_cube(
-        this->triangulation, domain_start, domain_start + domain_width);
-
-      // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
-      this->n_boundaries = 1;
-      typename Triangulation<dim>::cell_iterator cell =
-                                                   this->triangulation.begin(),
-                                                 endc = this->triangulation.end();
-      for (; cell != endc; ++cell)
-        for (unsigned int face = 0; face < this->faces_per_cell; ++face)
-          if (cell->face(face)->at_boundary())
-            cell->face(face)->set_boundary_id(0);
-      this->boundary_conditions_type = "dirichlet";
       this->dirichlet_function_strings.resize(this->n_boundaries);
       this->dirichlet_function_strings[0].resize(this->n_components);
-      this->dirichlet_function_strings[0][0] = "0";
-      this->use_exact_solution_as_dirichlet_bc = false;
-
-      // initial conditions
-      this->initial_conditions_strings[0] = "sin(2*pi*x)";
-
-      // exact solution
-      this->has_exact_solution = false;
-
-      // default end time
-      this->has_default_end_time = false;
-
-      break;
+      this->dirichlet_function_strings[0][0] =
+        problem_parameters.dirichlet_function_height;
+      this->dirichlet_function_strings[0][1] =
+        problem_parameters.dirichlet_function_momentumx;
+      if (dim == 2)
+        this->dirichlet_function_strings[0][2] =
+          problem_parameters.dirichlet_function_momentumy;
     }
-    case 1: // 1-D Riemann problem, shock wave (u_left > u_right)
-    {
-      Assert(dim == 1, ExcImpossibleInDim(dim));
-
-      // name of problem
-      this->problem_name = "burgers_shock";
-
-      // domain
-      double domain_start = -1.0;
-      double domain_width = 2.0;
-      this->domain_volume = std::pow(domain_width, dim);
-      GridGenerator::hyper_cube(
-        this->triangulation, domain_start, domain_start + domain_width);
-
-      // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
-      this->n_boundaries = 1;
-      typename Triangulation<dim>::cell_iterator cell =
-                                                   this->triangulation.begin(),
-                                                 endc = this->triangulation.end();
-      for (; cell != endc; ++cell)
-        for (unsigned int face = 0; face < this->faces_per_cell; ++face)
-          if (cell->face(face)->at_boundary())
-            cell->face(face)->set_boundary_id(0);
-      this->boundary_conditions_type = "dirichlet";
-      this->dirichlet_function_strings.resize(this->n_boundaries);
-      this->dirichlet_function_strings[0].resize(this->n_components);
-      this->dirichlet_function_strings[0][0] = "if(x<0,1,0)";
-      this->use_exact_solution_as_dirichlet_bc = false;
-
-      // initial conditions
-      this->initial_conditions_strings[0] = "if(x<0,1,0)";
-
-      // exact solution
-      this->has_exact_solution = true;
-      this->exact_solution_strings[0] = "if(x-0.5*t<0,1,0)";
-
-      // create and initialize function parser for exact solution
-      std::shared_ptr<FunctionParser<dim>> exact_solution_function_derived =
-        std::make_shared<FunctionParser<dim>>(this->parameters.n_components);
-      std::map<std::string, double> constants;
-      exact_solution_function_derived->initialize(
-        "x,t", this->exact_solution_strings, constants, true);
-      // point base class pointer to derived class function object
-      this->exact_solution_function = exact_solution_function_derived;
-
-      // default end time
-      this->has_default_end_time = false;
-
-      break;
-    }
-    case 2: // 1-D Riemann problem, rarefaction wave (u_left < u_right)
-    {
-      Assert(dim == 1, ExcImpossibleInDim(dim));
-
-      // name of problem
-      this->problem_name = "burgers_rarefaction";
-
-      // domain
-      double domain_start = -1.0;
-      double domain_width = 2.0;
-      this->domain_volume = std::pow(domain_width, dim);
-      GridGenerator::hyper_cube(
-        this->triangulation, domain_start, domain_start + domain_width);
-
-      // only 1 type of BC: zero Dirichlet; leave boundary indicators as zero
-      this->n_boundaries = 1;
-      typename Triangulation<dim>::cell_iterator cell =
-                                                   this->triangulation.begin(),
-                                                 endc = this->triangulation.end();
-      for (; cell != endc; ++cell)
-        for (unsigned int face = 0; face < this->faces_per_cell; ++face)
-          if (cell->face(face)->at_boundary())
-            cell->face(face)->set_boundary_id(0);
-      this->boundary_conditions_type = "dirichlet";
-      this->dirichlet_function_strings.resize(this->n_boundaries);
-      this->dirichlet_function_strings[0].resize(this->n_components);
-      this->dirichlet_function_strings[0][0] = "if(x<0,0,1)";
-      this->use_exact_solution_as_dirichlet_bc = false;
-
-      // initial conditions
-      this->initial_conditions_strings[0] = "if(x<0,0,1)";
-
-      // exact solution
-      this->has_exact_solution = true;
-      this->exact_solution_strings[0] =
-        "if(t>0,if(x/t<0,0,if(x/t<1,x/t,1)),if(x<0,0,1))";
-
-      // create and initialize function parser for exact solution
-      std::shared_ptr<FunctionParser<dim>> exact_solution_function_derived =
-        std::make_shared<FunctionParser<dim>>(this->parameters.n_components);
-      std::map<std::string, double> constants;
-      exact_solution_function_derived->initialize(
-        "x,t", this->exact_solution_strings, constants, true);
-      // point base class pointer to derived class function object
-      this->exact_solution_function = exact_solution_function_derived;
-
-      // default end time
-      this->has_default_end_time = false;
-
-      break;
-    }
-    case 3: // Guermond 2-d test problem
-    {
-      Assert(dim == 2, ExcImpossibleInDim(dim));
-
-      // name of problem
-      this->problem_name = "burgers_2d";
-
-      // domain
-      this->domain_volume = 1.0;
-      GridIn<dim> input_grid;
-      input_grid.attach_triangulation(this->triangulation);
-      std::ifstream input_file("mesh/unit_square.msh");
-      input_grid.read_msh(input_file);
-
-      // only 1 type of BC: Dirichlet with exact solution
-      this->n_boundaries = 1;
-      typename Triangulation<dim>::cell_iterator cell =
-                                                   this->triangulation.begin(),
-                                                 endc = this->triangulation.end();
-      for (; cell != endc; ++cell)
-        for (unsigned int face = 0; face < this->faces_per_cell; ++face)
-          if (cell->face(face)->at_boundary())
-            cell->face(face)->set_boundary_id(0);
-      this->boundary_conditions_type = "dirichlet";
-      this->use_exact_solution_as_dirichlet_bc = true;
-
-      // initial conditions
-      this->initial_conditions_strings[0] = "if(x<0.5,";
-      this->initial_conditions_strings[0] += "if(y>0.5,";
-      this->initial_conditions_strings[0] += "-0.2,0.5),";
-      this->initial_conditions_strings[0] += "if(y<0.5,";
-      this->initial_conditions_strings[0] += "0.8,-1))";
-
-      // exact solution
-      this->has_exact_solution = true;
-      this->exact_solution_strings[0] = "if(x<0.5-0.6*t,";
-      this->exact_solution_strings[0] += "if(y>0.5+0.15*t,";
-      this->exact_solution_strings[0] += "-0.2,0.5),";
-      this->exact_solution_strings[0] += "if(x<0.5-0.25*t,";
-      this->exact_solution_strings[0] += "if(y>-8./7.*x+15./14.-15./28.*t,";
-      this->exact_solution_strings[0] += "-1.0,0.5),";
-      this->exact_solution_strings[0] += "if(x<0.5+0.5*t,";
-      this->exact_solution_strings[0] += "if(y>x/6.+5./12.-5./24.*t,";
-      this->exact_solution_strings[0] += "-1.0,0.5),";
-      this->exact_solution_strings[0] += "if(x<0.5+0.8*t,";
-      this->exact_solution_strings[0] += "if(y>x-5./(18.*t)*(x+t-0.5)^2,";
-      this->exact_solution_strings[0] += "-1.0,(2*x-1)/(2.*t)),";
-      this->exact_solution_strings[0] += "if(y>0.5-0.1*t,";
-      this->exact_solution_strings[0] += "-1.0,0.8)";
-      this->exact_solution_strings[0] += "))))";
-
-      // create and initialize function parser for exact solution
-      std::shared_ptr<FunctionParser<dim>> exact_solution_function_derived =
-        std::make_shared<FunctionParser<dim>>(this->parameters.n_components);
-      std::map<std::string, double> constants;
-      exact_solution_function_derived->initialize(
-        "x,y,t", this->exact_solution_strings, constants, true);
-      // point base class pointer to derived class function object
-      this->exact_solution_function = exact_solution_function_derived;
-
-      // default end time
-      this->has_default_end_time = true;
-      this->default_end_time = 0.5;
-
-      break;
-    }
-    default:
+    else
     {
       Assert(false, ExcNotImplemented());
-      break;
     }
+  }
+  else
+  {
+    Assert(false, ExcNotImplemented());
+  }
+
+  // initial conditions
+  this->initial_conditions_strings[0] =
+    problem_parameters.initial_conditions;
+
+  // exact solution
+  if (problem_parameters.has_exact_solution)
+  {
+    this->has_exact_solution = true;
+
+    if (problem_parameters.exact_solution_type == "function")
+    {
+      this->exact_solution_strings[0] = problem_parameters.exact_solution_height;
+      this->exact_solution_strings[1] =
+        problem_parameters.exact_solution_momentumx;
+      if (dim == 2)
+        this->exact_solution_strings[2] =
+          problem_parameters.exact_solution_momentumy;
+
+      // create and initialize function parser for exact solution
+      std::shared_ptr<FunctionParser<dim>> exact_solution_function_derived =
+        std::make_shared<FunctionParser<dim>>(this->parameters.n_components);
+      exact_solution_function_derived->initialize(
+        FunctionParser<dim>::default_variable_names() + ",t",
+        this->exact_solution_strings,
+        this->constants,
+        true);
+      this->exact_solution_function = exact_solution_function_derived;
+    }
+    else
+    {
+      Assert(false, ExcNotImplemented());
+    }
+  }
+  else
+  {
+    this->has_exact_solution = false;
   }
 }
 
