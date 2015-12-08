@@ -294,7 +294,8 @@ protected:
 #endif
 
   /** \brief Conditional output stream, necessary for parallel computations */
-  ConditionalOStream cout;
+  ConditionalOStream cout1;
+  ConditionalOStream cout2;
 
   /** \brief Timer */
   TimerOutput timer;

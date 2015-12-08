@@ -14,7 +14,7 @@ ConservationLaw<dim>::ConservationLaw(
   :
 #ifdef IS_PARALLEL
     mpi_communicator(MPI_COMM_WORLD),
-    cout(std::cout, Utilities::MPI::this_mpi_process(mpi_communicator) == 0),
+    cout1(std::cout, Utilities::MPI::this_mpi_process(mpi_communicator) == 0),
     timer(mpi_communicator,
           cout,
           TimerOutput::summary,
@@ -24,8 +24,9 @@ ConservationLaw<dim>::ConservationLaw(
                     Triangulation<dim>::smoothing_on_refinement |
                     Triangulation<dim>::smoothing_on_coarsening)),
 #else
-    cout(std::cout, params.verbosity_level > 0),
-    timer(cout, TimerOutput::summary, TimerOutput::cpu_and_wall_times),
+    cout1(std::cout, params.verbosity_level >= 1),
+    cout2(std::cout, params.verbosity_level >= 2),
+    timer(cout2, TimerOutput::summary, TimerOutput::cpu_and_wall_times),
     triangulation(),
 #endif
     parameters(params),
@@ -92,12 +93,12 @@ void ConservationLaw<dim>::run()
     setup_system();
 
     // print information
-    cout << std::endl
+    cout1 << std::endl
          << "Cycle " << cycle << " of " << parameters.n_refinement_cycles - 1
          << ":" << std::endl;
-    cout << "  Number of active cells: " << triangulation.n_active_cells()
+    cout1 << "  Number of active cells: " << triangulation.n_active_cells()
          << std::endl;
-    cout << "  Number of degrees of freedom: " << n_dofs << std::endl;
+    cout1 << "  Number of degrees of freedom: " << n_dofs << std::endl;
 
     // interpolate the initial conditions to the grid, and apply constraints
     VectorTools::interpolate(
@@ -175,7 +176,7 @@ void ConservationLaw<dim>::initialize_system()
   // start timer for initialize section
   TimerOutput::Scope timer_section(timer, "Initialize");
 
-  cout << "Initializing system..." << std::endl;
+  cout2 << "Initializing system..." << std::endl;
 
   // get component names and interpretations
   component_names = get_component_names();
@@ -890,11 +891,11 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
 
     // print CFL in red if it violates CFL condition
     if (cfl_is_violated)
-      cout << std::fixed << std::setprecision(2) << "  time step " << n
+      cout1 << std::fixed << std::setprecision(2) << "  time step " << n
            << ": t = \x1b[1;34m" << new_time << "\x1b[0m, CFL = \x1b[1;31m" << cfl
            << "\x1b[0m" << std::endl;
     else
-      cout << std::fixed << std::setprecision(2) << "  time step " << n
+      cout1 << std::fixed << std::setprecision(2) << "  time step " << n
            << ": t = \x1b[1;34m" << new_time << "\x1b[0m, CFL = " << cfl
            << std::endl;
 
@@ -920,7 +921,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     // compute each f_i
     for (int i = 0; i < rk.s; ++i)
     {
-      cout << "    stage " << i + 1 << " of " << rk.s << std::endl;
+      cout1 << "    stage " << i + 1 << " of " << rk.s << std::endl;
 
       // compute stage time
       const double stage_time = old_time + rk.c[i] * dt;
@@ -1002,12 +1003,12 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
       steady_state_error = solution_change_norm;
     else
       steady_state_error = solution_change_norm / solution_normalization;
-    cout << std::scientific << std::setprecision(4) << "    Steady-state error = "
+    cout1 << std::scientific << std::setprecision(4) << "    Steady-state error = "
          << "\x1b[1;35m" << steady_state_error << "\x1b[0m" << std::endl;
     if (steady_state_error < parameters.steady_state_tolerance)
     {
       in_transient = false;
-      cout << std::scientific << std::setprecision(4) << "\x1b[1;32m"
+      cout1 << std::scientific << std::setprecision(4) << "\x1b[1;32m"
            << "  Converged to steady-state."
            << "\x1b[0m" << std::endl;
     }
