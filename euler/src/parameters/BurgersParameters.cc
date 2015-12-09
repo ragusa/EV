@@ -16,7 +16,7 @@ BurgersParameters<dim>::BurgersParameters()
  * \param parameter_handler parameter handler for the Burgers class
  */
 template <int dim>
-void BurgersParameters<dim>::declare_burgers_parameters(
+void BurgersParameters<dim>::declare_parameters(
   ParameterHandler & parameter_handler)
 {
   // declare conservation law parameters
@@ -26,10 +26,8 @@ void BurgersParameters<dim>::declare_burgers_parameters(
   // problem
   parameter_handler.enter_subsection("problem");
   {
-    parameter_handler.declare_entry("problem id",
-                                    "0",
-                                    Patterns::Integer(),
-                                    "ID for description of the problem");
+    parameter_handler.declare_entry(
+      "problem name", "default", Patterns::Anything(), "Problem name");
   }
   parameter_handler.leave_subsection();
 }
@@ -39,7 +37,7 @@ void BurgersParameters<dim>::declare_burgers_parameters(
  * \param parameter_handler parameter handler for the Burgers class
  */
 template <int dim>
-void BurgersParameters<dim>::get_burgers_parameters(
+void BurgersParameters<dim>::get_parameters(
   ParameterHandler & parameter_handler)
 {
   // get conservation law parameters
@@ -49,7 +47,7 @@ void BurgersParameters<dim>::get_burgers_parameters(
   // problem
   parameter_handler.enter_subsection("problem");
   {
-    problem_id = parameter_handler.get_integer("problem id");
+    problem_name = parameter_handler.get("problem name");
   }
   parameter_handler.leave_subsection();
 }

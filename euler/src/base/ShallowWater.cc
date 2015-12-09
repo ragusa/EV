@@ -505,10 +505,6 @@ void ShallowWater<dim>::compute_ss_residual(const double & dt, Vector<double> & 
     compute_inviscid_fluxes(
       height, momentum, height_inviscid_flux, momentum_inviscid_flux);
 
-    // get quadrature points on cell
-    std::vector<Point<dim>> points(this->n_q_points_cell);
-    points = fe_values.get_quadrature_points();
-
     // loop over quadrature points
     for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
     {

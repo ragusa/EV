@@ -22,11 +22,11 @@ class BurgersParameters : public ConservationLawParameters<dim>
 public:
   BurgersParameters();
 
-  static void declare_burgers_parameters(ParameterHandler & parameter_handler);
+  static void declare_parameters(ParameterHandler & parameter_handler);
 
-  void get_burgers_parameters(ParameterHandler & parameter_handler);
+  void get_parameters(ParameterHandler & parameter_handler);
 
-  unsigned int problem_id;
+  std::string problem_name;
 };
 
 #include "src/parameters/BurgersParameters.cc"

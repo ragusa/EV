@@ -101,9 +101,9 @@ private:
   std::vector<double> compute_sound_speed(
     const std::vector<double> & height) const;
 
-  std::shared_ptr<Entropy<dim>> create_entropy() const;
+  std::shared_ptr<Entropy<dim>> create_entropy() const override;
 
-  std::shared_ptr<MaxWaveSpeed<dim>> create_max_wave_speed() const;
+  std::shared_ptr<MaxWaveSpeed<dim>> create_max_wave_speed() const override;
 
   std::shared_ptr<ViscosityMultiplier<dim>> create_viscosity_multiplier()
     const override;

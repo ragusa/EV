@@ -35,6 +35,15 @@ std::vector<DataComponentInterpretation::DataComponentInterpretation> Burgers<
 }
 
 template <int dim>
+void Burgers<dim>::get_fe_extractors(
+  std::vector<FEValuesExtractors::Scalar> & scalar_extractors,
+  std::vector<FEValuesExtractors::Vector> &) const
+{
+  scalar_extractors.resize(1);
+  scalar_extractors[0] = velocity_extractor;
+}
+
+template <int dim>
 void Burgers<dim>::define_problem()
 {
   // determine problem name
@@ -118,12 +127,7 @@ void Burgers<dim>::define_problem()
       this->dirichlet_function_strings.resize(this->n_boundaries);
       this->dirichlet_function_strings[0].resize(this->n_components);
       this->dirichlet_function_strings[0][0] =
-        problem_parameters.dirichlet_function_height;
-      this->dirichlet_function_strings[0][1] =
-        problem_parameters.dirichlet_function_momentumx;
-      if (dim == 2)
-        this->dirichlet_function_strings[0][2] =
-          problem_parameters.dirichlet_function_momentumy;
+        problem_parameters.dirichlet_function;
     }
     else
     {
@@ -145,12 +149,7 @@ void Burgers<dim>::define_problem()
 
     if (problem_parameters.exact_solution_type == "function")
     {
-      this->exact_solution_strings[0] = problem_parameters.exact_solution_height;
-      this->exact_solution_strings[1] =
-        problem_parameters.exact_solution_momentumx;
-      if (dim == 2)
-        this->exact_solution_strings[2] =
-          problem_parameters.exact_solution_momentumy;
+      this->exact_solution_strings[0] = problem_parameters.exact_solution;
 
       // create and initialize function parser for exact solution
       std::shared_ptr<FunctionParser<dim>> exact_solution_function_derived =
@@ -244,7 +243,7 @@ void Burgers<dim>::assemble_lumped_mass_matrix()
  *  \param[out] r steady-state residual \f$\mathbf{r}\f$
  */
 template <int dim>
-void Burgers<dim>::compute_ss_residual(const double &, Vector<double> & f)
+void Burgers<dim>::compute_ss_residual(const double & dt, Vector<double> & f)
 {
   // reset vector
   f = 0.0;
@@ -259,9 +258,6 @@ void Burgers<dim>::compute_ss_residual(const double &, Vector<double> & f)
   std::vector<Tensor<1, dim>> solution_gradients(this->n_q_points_cell);
   std::vector<Tensor<1, dim>> dfdu(this->n_q_points_cell);
 
-  //============================================================================
-  // inviscid terms
-  //============================================================================
   // loop over cells
   typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler
                                                           .begin_active(),
@@ -286,6 +282,7 @@ void Burgers<dim>::compute_ss_residual(const double &, Vector<double> & f)
       // compute derivative of flux
       for (int d = 0; d < dim; ++d)
         dfdu[q][d] = solution_values[q];
+
       // loop over test functions
       for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
       {
@@ -294,54 +291,19 @@ void Burgers<dim>::compute_ss_residual(const double &, Vector<double> & f)
       }
     }
 
+    // apply artificial diffusion
+    this->artificial_diffusion->apply(
+      this->viscosity, this->new_solution, cell, fe_values, cell_residual);
+
+    // apply boundary conditions
+    this->boundary_conditions->apply(
+      cell, fe_values, this->new_solution, dt, cell_residual);
+
     // aggregate local residual into global residual
     cell->get_dof_indices(local_dof_indices);
     this->constraints.distribute_local_to_global(
       cell_residual, local_dof_indices, f);
   } // end cell loop
-
-  //============================================================================
-  // viscous terms
-  //============================================================================
-  // if using maximum-principle preserving artificial viscosity, add its
-  // bilinear form else use the usual viscous flux contribution
-  if (this->parameters.viscosity_type ==
-      ConservationLawParameters<dim>::max_principle)
-  {
-    this->add_maximum_principle_viscosity_bilinear_form(f);
-  }
-  else
-  {
-    // loop over cells
-    for (cell = this->dof_handler.begin_active(); cell != endc; ++cell)
-    {
-      // reset cell residual
-      cell_residual = 0;
-
-      // reinitialize fe values for cell
-      fe_values.reinit(cell);
-
-      // get current solution gradients
-      fe_values[velocity_extractor].get_function_gradients(this->new_solution,
-                                                           solution_gradients);
-
-      // loop over quadrature points
-      for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
-      {
-        // loop over test functions
-        for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
-        {
-          cell_residual(i) += -fe_values[velocity_extractor].gradient(i, q) *
-            this->viscosity[cell] * solution_gradients[q] * fe_values.JxW(q);
-        }
-      }
-
-      // aggregate local residual into global residual
-      cell->get_dof_indices(local_dof_indices);
-      this->constraints.distribute_local_to_global(
-        cell_residual, local_dof_indices, f);
-    } // end cell loop
-  }
 }
 
 template <int dim>
@@ -379,48 +341,32 @@ void Burgers<dim>::update_flux_speeds()
   }
 }
 
+/**
+ * \brief Creates an entropy object.
+ *
+ * \return pointer to created entropy object
+ */
 template <int dim>
-void Burgers<dim>::compute_entropy(const Vector<double> & solution,
-                                   const FEValuesBase<dim> & fe_values,
-                                   Vector<double> & entropy) const
+std::shared_ptr<Entropy<dim>> Burgers<dim>::create_entropy() const
 {
-  // get number of quadrature points
-  const unsigned int n = entropy.size();
-
-  std::vector<double> velocity(n);
-  fe_values[velocity_extractor].get_function_values(solution, velocity);
-
-  for (unsigned int q = 0; q < n; ++q)
-    entropy(q) = 0.5 * velocity[q] * velocity[q];
+  auto entropy = std::make_shared<ScalarEntropy<dim>>(
+                this->domain_volume,
+                this->dof_handler,
+                this->fe,
+                this->triangulation,
+                this->cell_quadrature,
+                this->face_quadrature);
+  return entropy;
 }
 
+/**
+ * \brief Creates a max wave speed object
+ *
+ * \return pointer to created max wave speed object
+ */
 template <int dim>
-void Burgers<dim>::compute_divergence_entropy_flux(
-  const Vector<double> & solution,
-  const FEValuesBase<dim> & fe_values,
-  Vector<double> & divergence_entropy_flux) const
+std::shared_ptr<MaxWaveSpeed<dim>> Burgers<dim>::create_max_wave_speed() const
 {
-  // get number of quadrature points
-  const unsigned int n = divergence_entropy_flux.size();
-
-  std::vector<double> velocity(n);
-  std::vector<Tensor<1, dim>> velocity_gradient(n);
-
-  fe_values[velocity_extractor].get_function_values(solution, velocity);
-  fe_values[velocity_extractor].get_function_gradients(solution,
-                                                       velocity_gradient);
-
-  // constant field v = (1,1,1) (3-D)
-  Tensor<1, dim> v;
-  for (unsigned int d = 0; d < dim; ++d)
-    v[d] = 1.0;
-
-  for (unsigned int q = 0; q < n; ++q)
-  {
-    // compute dot product of constant field v with gradient of u
-    double v_dot_velocity_gradient = v * velocity_gradient[q];
-
-    divergence_entropy_flux(q) =
-      velocity[q] * velocity[q] * v_dot_velocity_gradient;
-  }
+  auto max_wave_speed = std::make_shared<BurgersMaxWaveSpeed<dim>>();
+  return max_wave_speed;
 }

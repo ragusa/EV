@@ -94,10 +94,10 @@ void ConservationLaw<dim>::run()
 
     // print information
     cout1 << std::endl
-         << "Cycle " << cycle << " of " << parameters.n_refinement_cycles - 1
-         << ":" << std::endl;
+          << "Cycle " << cycle << " of " << parameters.n_refinement_cycles - 1
+          << ":" << std::endl;
     cout1 << "  Number of active cells: " << triangulation.n_active_cells()
-         << std::endl;
+          << std::endl;
     cout1 << "  Number of degrees of freedom: " << n_dofs << std::endl;
 
     // interpolate the initial conditions to the grid, and apply constraints
@@ -892,12 +892,12 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     // print CFL in red if it violates CFL condition
     if (cfl_is_violated)
       cout1 << std::fixed << std::setprecision(2) << "  time step " << n
-           << ": t = \x1b[1;34m" << new_time << "\x1b[0m, CFL = \x1b[1;31m" << cfl
-           << "\x1b[0m" << std::endl;
+            << ": t = \x1b[1;34m" << new_time << "\x1b[0m, CFL = \x1b[1;31m"
+            << cfl << "\x1b[0m" << std::endl;
     else
       cout1 << std::fixed << std::setprecision(2) << "  time step " << n
-           << ": t = \x1b[1;34m" << new_time << "\x1b[0m, CFL = " << cfl
-           << std::endl;
+            << ": t = \x1b[1;34m" << new_time << "\x1b[0m, CFL = " << cfl
+            << std::endl;
 
     // compute viscosities
     {
@@ -1003,14 +1003,15 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
       steady_state_error = solution_change_norm;
     else
       steady_state_error = solution_change_norm / solution_normalization;
-    cout1 << std::scientific << std::setprecision(4) << "    Steady-state error = "
-         << "\x1b[1;35m" << steady_state_error << "\x1b[0m" << std::endl;
+    cout1 << std::scientific << std::setprecision(4)
+          << "    Steady-state error = "
+          << "\x1b[1;35m" << steady_state_error << "\x1b[0m" << std::endl;
     if (steady_state_error < parameters.steady_state_tolerance)
     {
       in_transient = false;
       cout1 << std::scientific << std::setprecision(4) << "\x1b[1;32m"
-           << "  Converged to steady-state."
-           << "\x1b[0m" << std::endl;
+            << "  Converged to steady-state."
+            << "\x1b[0m" << std::endl;
     }
 
     /*

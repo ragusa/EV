@@ -6,13 +6,13 @@ subsection quadrature
    set number of quadrature points = 3
 end
 
-# Problem IDs:
-# 0 burgers_sin
-# 1 burgers_shock
-# 2 burgers_rarefaction
-# 3 burgers_2D
+# Problem names:
+# burgers_sin
+# burgers_shock
+# burgers_rarefaction
+# burgers_2D
 subsection problem
-   set problem id = 0
+   set problem name = burgers_shock
 end
 
 subsection refinement

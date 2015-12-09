@@ -30,16 +30,14 @@ int main(int argc, char * argv[])
 
 #if defined(BURGERS)
     // read input and declare problem
-    BurgersParameters<dimension>::declare_burgers_parameters(parameter_handler);
+    BurgersParameters<dimension>::declare_parameters(parameter_handler);
     if (argc > 1)
       parameter_handler.read_input(argv[1]);
     else
       parameter_handler.read_input("input/burgers.prm");
-    BurgersParameters<dimension> burgers_parameters;
-    burgers_parameters.get_burgers_parameters(parameter_handler);
-
-    // run problem
-    Burgers<dimension> burgers_problem(burgers_parameters);
+    BurgersParameters<dimension> parameters;
+    parameters.get_parameters(parameter_handler);
+    Burgers<dimension> problem(parameters);
 #elif defined(EULER)
     // read input and declare problem
     EulerParameters<dimension>::declare_parameters(parameter_handler);

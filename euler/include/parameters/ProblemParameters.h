@@ -26,12 +26,15 @@ public:
 
   bool valid_in_1d;
   bool valid_in_2d;
+  bool valid_in_3d;
 
   std::string domain_shape;
   double x_start;
   double y_start;
+  double z_start;
   double x_width;
   double y_width;
+  double z_width;
 
   std::string boundary_conditions_type;
   bool use_exact_solution_as_dirichlet_bc;

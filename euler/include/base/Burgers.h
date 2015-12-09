@@ -16,8 +16,10 @@
 #include <deal.II/fe/fe_values_extractors.h>
 #include <deal.II/lac/vector.h>
 #include "include/base/ConservationLaw.h"
+#include "include/entropy/ScalarEntropy.h"
 #include "include/parameters/BurgersParameters.h"
 #include "include/parameters/BurgersProblemParameters.h"
+#include "include/viscosity/BurgersMaxWaveSpeed.h"
 
 /**
  * \brief Class for solving the Burgers equation.
@@ -62,24 +64,21 @@ private:
   std::vector<DataComponentInterpretation::DataComponentInterpretation>
     get_component_interpretations() override;
 
+  void get_fe_extractors(
+    std::vector<FEValuesExtractors::Scalar> & scalar_extractors,
+    std::vector<FEValuesExtractors::Vector> & vector_extractors) const override;
+
   void assemble_lumped_mass_matrix() override;
 
   void define_problem() override;
 
   void compute_ss_residual(const double & dt, Vector<double> & solution) override;
 
-  // void compute_ss_jacobian() override;
-
   void update_flux_speeds() override;
 
-  void compute_entropy(const Vector<double> & solution,
-                       const FEValuesBase<dim> & fe_values,
-                       Vector<double> & entropy) const override;
+  std::shared_ptr<Entropy<dim>> create_entropy() const override;
 
-  void compute_divergence_entropy_flux(
-    const Vector<double> & solution,
-    const FEValuesBase<dim> & fe_values,
-    Vector<double> & divergence_entropy_flux) const override;
+  std::shared_ptr<MaxWaveSpeed<dim>> create_max_wave_speed() const override;
 };
 
 #include "src/base/Burgers.cc"
