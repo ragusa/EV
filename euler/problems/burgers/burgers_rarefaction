@@ -21,9 +21,9 @@ subsection initial conditions
 end
 
 subsection exact solution
-  set has exact solution = false
+  set has exact solution = true
   set exact solution type = function
-  set exact solution function = if(t>0,if(x/t<0,0,if(x/t<1,x/t,1)),if(x<0,0,1))
+  set exact solution = if(t>0,if(x/t<0,0,if(x/t<1,x/t,1)),if(x<0,0,1))
 end
 
 subsection default end time

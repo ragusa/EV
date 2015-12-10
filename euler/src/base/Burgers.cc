@@ -170,6 +170,10 @@ void Burgers<dim>::define_problem()
   {
     this->has_exact_solution = false;
   }
+
+  // default end time
+  this->has_default_end_time = problem_parameters.has_default_end_time;
+  this->default_end_time = problem_parameters.default_end_time;
 }
 
 template <int dim>
@@ -349,13 +353,12 @@ void Burgers<dim>::update_flux_speeds()
 template <int dim>
 std::shared_ptr<Entropy<dim>> Burgers<dim>::create_entropy() const
 {
-  auto entropy = std::make_shared<ScalarEntropy<dim>>(
-                this->domain_volume,
-                this->dof_handler,
-                this->fe,
-                this->triangulation,
-                this->cell_quadrature,
-                this->face_quadrature);
+  auto entropy = std::make_shared<ScalarEntropy<dim>>(this->domain_volume,
+                                                      this->dof_handler,
+                                                      this->fe,
+                                                      this->triangulation,
+                                                      this->cell_quadrature,
+                                                      this->face_quadrature);
   return entropy;
 }
 

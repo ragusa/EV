@@ -31,6 +31,10 @@ void ProblemParameters<dim>::declare_common_parameters(
                                     "false",
                                     Patterns::Bool(),
                                     "Flag signalling problem is valid in 2-D");
+    parameter_handler.declare_entry("valid in 3d",
+                                    "false",
+                                    Patterns::Bool(),
+                                    "Flag signalling problem is valid in 3-D");
   }
   parameter_handler.leave_subsection();
 
@@ -46,9 +50,13 @@ void ProblemParameters<dim>::declare_common_parameters(
     parameter_handler.declare_entry(
       "y start", "0.0", Patterns::Double(), "Start of domain in y-direction");
     parameter_handler.declare_entry(
+      "z start", "0.0", Patterns::Double(), "Start of domain in z-direction");
+    parameter_handler.declare_entry(
       "x width", "1.0", Patterns::Double(), "Width of domain in x-direction");
     parameter_handler.declare_entry(
       "y width", "1.0", Patterns::Double(), "Width of domain in y-direction");
+    parameter_handler.declare_entry(
+      "z width", "1.0", Patterns::Double(), "Width of domain in z-direction");
   }
   parameter_handler.leave_subsection();
 
@@ -109,6 +117,7 @@ void ProblemParameters<dim>::get_common_parameters(
   {
     valid_in_1d = parameter_handler.get_bool("valid in 1d");
     valid_in_2d = parameter_handler.get_bool("valid in 2d");
+    valid_in_3d = parameter_handler.get_bool("valid in 3d");
   }
   parameter_handler.leave_subsection();
 
@@ -118,8 +127,10 @@ void ProblemParameters<dim>::get_common_parameters(
     domain_shape = parameter_handler.get("domain shape");
     x_start = parameter_handler.get_double("x start");
     y_start = parameter_handler.get_double("y start");
+    z_start = parameter_handler.get_double("z start");
     x_width = parameter_handler.get_double("x width");
     y_width = parameter_handler.get_double("y width");
+    z_width = parameter_handler.get_double("z width");
   }
   parameter_handler.leave_subsection();
 

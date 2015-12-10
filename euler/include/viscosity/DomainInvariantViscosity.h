@@ -8,6 +8,7 @@
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/fe/fe_q.h>
+#include <deal.II/fe/fe_system.h>
 #include <deal.II/grid/tria.h>
 #include <deal.II/lac/compressed_sparsity_pattern.h>
 #include <deal.II/lac/sparse_matrix.h>
@@ -15,6 +16,7 @@
 
 #include "include/viscosity/MaxWaveSpeed.h"
 #include "include/viscosity/Viscosity.h"
+#include "include/viscosity/ViscosityMultiplier.h"
 
 using namespace dealii;
 
@@ -31,10 +33,12 @@ public:
 
   DomainInvariantViscosity(
     const std::shared_ptr<MaxWaveSpeed<dim>> & max_wave_speed_,
+    const FESystem<dim> & fe,
     const DoFHandler<dim> & dof_handler_,
     const Triangulation<dim> & triangulation_,
     const QGauss<dim> & cell_quadrature_,
-    const unsigned int & n_components);
+    const unsigned int & n_components,
+    const std::shared_ptr<ViscosityMultiplier<dim>> & viscosity_multiplier);
 
   void reinitialize() override;
 
@@ -52,7 +56,10 @@ protected:
   const std::shared_ptr<MaxWaveSpeed<dim>> max_wave_speed;
 
   /** \brief Scalar 1st-order Lagrangian finite element */
-  const FE_Q<dim> fe;
+  const FE_Q<dim> fe_scalar;
+
+  /** \brief Pointer to finite element system */
+  const FESystem<dim> * fe;
 
   /** \brief Degree of freedom handler for scalar case */
   DoFHandler<dim> dof_handler_scalar;
@@ -93,6 +100,9 @@ protected:
 
   /** \brief Sparse matrix of L2-norm of each C matrix entry */
   SparseMatrix<double> gradient_norms;
+
+  /** \brief Pointer to viscosity multiplier */
+  std::shared_ptr<ViscosityMultiplier<dim>> viscosity_multiplier;
 };
 
 #include "src/viscosity/DomainInvariantViscosity.cc"

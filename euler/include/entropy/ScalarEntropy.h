@@ -25,7 +25,7 @@ public:
   ScalarEntropy(const double & domain_volume,
                 const DoFHandler<dim> & dof_handler,
                 const FESystem<dim> & fe,
-  const Triangulation<dim> & triangulation,
+                const Triangulation<dim> & triangulation,
                 const QGauss<dim> & cell_quadrature,
                 const QGauss<dim - 1> & face_quadrature);
 

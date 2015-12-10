@@ -26,22 +26,25 @@ subsection time
    # options are <constant_dt|cfl_condition>
    set time step size method = cfl_condition
    set use default end time = true
-   set final time = 0.5
-   set time step size = 0.001
-   set cfl = 0.50
+   set final time = 0.05
+   set time step size = 0.01
+   set cfl = 0.10
    set steady state tolerance = 1.0e-6
 end
 
 subsection artificial viscosity
-   # options are <none|constant|old_first_order|max_principle|entropy>
-   set viscosity type = none
+   # options are <none|constant|low|DMP_low|DI_low|entropy>
+   set viscosity type = entropy
    set constant viscosity value = 0.02
    set first order viscosity coefficient = 0.5
    set use low order viscosity for first time step = true
-   set entropy residual coefficient = 2.0
-   set entropy jump coefficient = 4.0
+   set entropy residual coefficient = 1.0
+   set entropy jump coefficient = 1.0
    set entropy viscosity smoothing = none # none | max | average
    set entropy viscosity smoothing weight = 4
+
+   # options are <none|laplacian|graphtheoretic>
+   set diffusion type = laplacian
 end
 
 subsection temporal integration
@@ -70,10 +73,19 @@ subsection linear solver
 end
 
 subsection output
-   set output period = 0
+   set output period = 1
+   set max transient output size = 1e9
    set output mesh = false
    set output mass matrix = false
-   set output viscosity = false
+   set output viscosity = true
+   set output viscosity transient = true
    set exact solution refinement level = 7
    set save convergence results = false
+   set print final solution = false
+
+   # verbosity level:
+   # 0: print only required info
+   # 1: print cycle, time step, stage info
+   # 2: print cycle, time step, stage info, timer summary, and extra info
+   set verbosity level = 2
 end

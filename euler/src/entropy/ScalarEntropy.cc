@@ -17,11 +17,15 @@ template <int dim>
 ScalarEntropy<dim>::ScalarEntropy(const double & domain_volume_,
                                   const DoFHandler<dim> & dof_handler_,
                                   const FESystem<dim> & fe_,
-  const Triangulation<dim> & triangulation_,
+                                  const Triangulation<dim> & triangulation_,
                                   const QGauss<dim> & cell_quadrature_,
                                   const QGauss<dim - 1> & face_quadrature_)
-  : Entropy<dim>(
-      true, domain_volume_, dof_handler_, fe_, cell_quadrature_, face_quadrature_),
+  : Entropy<dim>(true,
+                 domain_volume_,
+                 dof_handler_,
+                 fe_,
+                 cell_quadrature_,
+                 face_quadrature_),
     entropy_flux_fe_values_cell(dof_handler_, triangulation_, cell_quadrature_),
     entropy_flux_fe_values_face(dof_handler_, triangulation_, face_quadrature_)
 {

@@ -37,7 +37,7 @@ double BurgersMaxWaveSpeed<dim>::compute(
   if (uL <= uR) // rarefaction
     max_wave_speed = std::max(std::abs(uL), std::abs(uR));
   else // shock
-    max_wave_speed = 0.5 * (uR*uR - uL*uL) / (uR - uL);
+    max_wave_speed = 0.5 * (uR * uR - uL * uL) / (uR - uL);
 
   return max_wave_speed;
 }

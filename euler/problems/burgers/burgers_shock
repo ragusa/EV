@@ -21,13 +21,13 @@ subsection initial conditions
 end
 
 subsection exact solution
-  set has exact solution = false
+  set has exact solution = true
   set exact solution type = function
-  set exact solution function = if(x-0.5*t<0, u_left, u_right)
+  set exact solution = if(x-0.5*t<0, u_left, u_right)
 end
 
 subsection default end time
-  set has default end time = false
+  set has default end time = true
   set default end time = 1.0
 end
 

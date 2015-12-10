@@ -8,28 +8,34 @@
  * \brief Constructor.
  *
  * \param[in] max_wave_speed_ max wave speed object
+ * \param[in] fe_ finite element system
  * \param[in] dof_handler_ degree of freedom handler
  * \param[in] triangulation_ triangulation
  * \param[in] cell_quadrature_ cell quadrature
  * \param[in] n_components_ number of solution components
+ * \param[in] viscosity_multiplier_ viscosity multiplier
  */
 template <int dim>
 DomainInvariantViscosity<dim>::DomainInvariantViscosity(
   const std::shared_ptr<MaxWaveSpeed<dim>> & max_wave_speed_,
+  const FESystem<dim> & fe_,
   const DoFHandler<dim> & dof_handler_,
   const Triangulation<dim> & triangulation_,
   const QGauss<dim> & cell_quadrature_,
-  const unsigned int & n_components_)
+  const unsigned int & n_components_,
+  const std::shared_ptr<ViscosityMultiplier<dim>> & viscosity_multiplier_)
   : Viscosity<dim>(dof_handler_),
     max_wave_speed(max_wave_speed_),
-    fe(1),
+    fe_scalar(1),
+    fe(&fe_),
     dof_handler_scalar(triangulation_),
     dof_handler(&dof_handler_),
     cell_quadrature(&cell_quadrature_),
     n_components(n_components_),
     n_dofs_scalar(dof_handler->n_dofs() / n_components),
-    dofs_per_cell_scalar(fe.dofs_per_cell),
-    n_q_points_cell(cell_quadrature_.size())
+    dofs_per_cell_scalar(fe_scalar.dofs_per_cell),
+    n_q_points_cell(cell_quadrature_.size()),
+    viscosity_multiplier(viscosity_multiplier_)
 {
   // reinitialize
   reinitialize();
@@ -43,7 +49,7 @@ void DomainInvariantViscosity<dim>::reinitialize()
 {
   // distribute degrees of freedom for scalar case
   dof_handler_scalar.clear();
-  dof_handler_scalar.distribute_dofs(fe);
+  dof_handler_scalar.distribute_dofs(fe_scalar);
 
   // create sparsity pattern and reinitialize sparse matrices
   DynamicSparsityPattern dsp(n_dofs_scalar);
@@ -75,6 +81,9 @@ void DomainInvariantViscosity<dim>::update(const Vector<double> & new_solution,
                                            const double &,
                                            const unsigned int &)
 {
+  // FE values
+  FEValues<dim> fe_values(*fe, *cell_quadrature, update_values);
+
   // global degree of freedom indices
   std::vector<unsigned int> local_dof_indices(dofs_per_cell_scalar);
 
@@ -84,8 +93,15 @@ void DomainInvariantViscosity<dim>::update(const Vector<double> & new_solution,
   Cell cell = this->dof_handler->begin_active();
   for (; cell_scalar != endc_scalar; ++cell_scalar, ++cell)
   {
+    // get multiplier
+    const double multiplier =
+      viscosity_multiplier->get_multiplier(fe_values, new_solution);
+
     // get global degree of freedom indices
     cell_scalar->get_dof_indices(local_dof_indices);
+
+    // reset viscosity for max() function
+    this->values[cell] = 0.0;
 
     // loop over pairs of local degrees of freedom
     for (unsigned int i_local = 0; i_local < dofs_per_cell_scalar; ++i_local)
@@ -116,7 +132,8 @@ void DomainInvariantViscosity<dim>::update(const Vector<double> & new_solution,
 
           // compute viscosity
           const double viscosity =
-            -(max_wave_speed_value * gradient_norms(i, j)) / viscous_sums(i, j);
+            -(max_wave_speed_value * gradient_norms(i, j)) / viscous_sums(i, j) *
+            multiplier;
 
           // update max viscosity for this cell
           this->values[cell] = std::max(this->values[cell], viscosity);
@@ -181,8 +198,9 @@ void DomainInvariantViscosity<dim>::compute_gradients_and_normals()
     gradients[d] = 0;
   gradient_norms = 0;
 
-  FEValues<dim> fe_values(
-    fe, *cell_quadrature, update_values | update_gradients | update_JxW_values);
+  FEValues<dim> fe_values(fe_scalar,
+                          *cell_quadrature,
+                          update_values | update_gradients | update_JxW_values);
 
   std::vector<unsigned int> local_dof_indices(dofs_per_cell_scalar);
 

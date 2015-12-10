@@ -609,19 +609,17 @@ void ConservationLaw<dim>::setup_system()
       auto max_wave_speed = create_max_wave_speed();
 
       // create domain-invariant viscosity
-      Assert(false, ExcNotImplemented());
-      /*
-            auto low_order_viscosity_tmp =
-              std::make_shared<DomainInvariantViscosity<dim>>(max_wave_speed,
-                                                              dof_handler,
-                                                              triangulation,
-                                                              cell_quadrature,
-                                                              n_components,
-      viscosity_multiplier);
-            low_order_viscosity = low_order_viscosity_tmp;
+      auto low_order_viscosity_tmp =
+        std::make_shared<DomainInvariantViscosity<dim>>(max_wave_speed,
+                                                        fe,
+                                                        dof_handler,
+                                                        triangulation,
+                                                        cell_quadrature,
+                                                        n_components,
+                                                        viscosity_multiplier);
+      low_order_viscosity = low_order_viscosity_tmp;
 
-            viscosity = low_order_viscosity_tmp;
-      */
+      viscosity = low_order_viscosity_tmp;
 
       break;
     }
