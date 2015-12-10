@@ -74,7 +74,7 @@ void ShallowWater<dim>::define_problem()
 
   // create problem parameters file name and determine if it exists
   std::string problem_parameters_file =
-    source_path + "/problems/shallow_water/" + this->problem_name;
+    source_path + "/problems/shallowwater/" + this->problem_name;
   struct stat buffer;
   const bool file_exists = stat(problem_parameters_file.c_str(), &buffer) == 0;
   Assert(file_exists, ExcFileDoesNotExist(problem_parameters_file));

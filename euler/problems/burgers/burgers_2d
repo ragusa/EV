@@ -1,0 +1,44 @@
+subsection dimension
+  set valid in 1d = false
+  set valid in 2d = true
+  set valid in 3d = false
+end
+
+subsection domain
+  set domain shape = hyper_cube
+  set x start = 0.0
+  set x width = 1.0
+end
+
+subsection boundary conditions
+  set boundary conditions type = dirichlet
+  set use exact solution as dirichlet bc = true
+  set dirichlet function = 0
+end
+
+subsection initial conditions
+  set initial conditions = \
+    if(x<0.5, if(y>0.5, -0.2, 0.5), if(y<0.5, 0.8, -1))
+end
+
+subsection exact solution
+  set has exact solution = true
+  set exact solution type = function
+  set exact solution = \
+    if(x<0.5-0.6*t, if(y>0.5+0.15*t, -0.2, 0.5), if(x<0.5-0.25*t, \
+    if(y>-8./7.*x+15./14.-15./28.*t, -1.0, 0.5), if(x<0.5+0.5*t, \
+    if(y>x/6.+5./12.-5./24.*t, -1.0, 0.5), if(x<0.5+0.8*t, \
+    if(y>x-5./(18.*t)*(x+t-0.5)^2, -1.0, (2*x-1)/(2.*t)), if(y>0.5-0.1*t, \
+    -1.0, 0.8)))))
+end
+
+subsection default end time
+  set has default end time = true
+  set default end time = 0.5
+end
+
+subsection constants
+  set x_interface = 0.0
+  set u_left  = 0.0
+  set u_right = 1.0
+end
