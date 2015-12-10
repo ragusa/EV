@@ -48,30 +48,24 @@ The entropy jump for a face $F$ is defined to be
     \cdot\normalvector\cdot\normalvector
   \right\|_{L^\infty(F)} \eqp
 \end{equation}
-Finally, the entropy viscosity is computed as in the scalar case but with
-more generality in the normalization constant $\entropynormalization^\timeindex_q$:
+For the conservation law system case, opposed to the scalar conservation
+law case, an entropy \emph{viscosity} is not computed; instead an entropy diffusion
+matrix is computed directly. This is because the domain-invariant low-order scheme
+described in Section \ref{sec:low_order_system_domain_invariant} also makes
+this approach, and the low-order scheme diffusion must be used as an upper bound
+for the high-order diffusion. The entropy diffusion matrix is computed as
 \begin{equation}
-   \entropycellviscosity[n]
-     = \max\limits_{\x_q\in \mathcal{Q}_\cell}\pr{\frac{\entropyresidualcoef
-     |\entropyresidual_q^\timeindex|
-     + \entropyjumpcoef\entropyjump_\cell^\timeindex}
-     {\entropynormalization^\timeindex_q}}
-   \eqc
+  \diffusionmatrixletter^{\entropy,\timeindex}\ij \equiv
+    \entropyresidual\ij
+  \eqc
 \end{equation}
-where $\mathcal{Q}_\cell$ is the set of quadrature points in cell $\cell$.
-As in the scalar case, one may normalize using the deviation from the average
-entropy:
+where
 \begin{equation}
-  \entropynormalization^\timeindex_q
-    = \entropy(\approximatevectorsolution^\timeindex(\x_q))
-   -\bar{\entropy}(\approximatevectorsolution^\timeindex)
+  \entropyresidual\ij \equiv \left|
+    \int\limits_{\support\ij}\entropyresidual(\vectorsolution)
+      \vectortestfunction_i(\x)\vectortestfunction_j(\x) d\volume
+    \right|
   \eqp
 \end{equation}
-Alternately, for the shallow water equations, the following local normalization
-constant may be used:
-\begin{equation}
-  \entropynormalization^\timeindex_q
-  = \gravity (\approximate{h}^\timeindex(\x_q))^2
-  \eqp
-\end{equation}
+
 

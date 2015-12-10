@@ -187,7 +187,7 @@ std::vector<double> ShallowWaterEntropy<dim>::compute_entropy_normalization(
  * The local entropy viscosity normalization coefficient is computed as
  *
  * \f[
- *   c^{\mbox{normalization}}_q = g h_q^2
+ *   c^{norm}_q = g h_q^2
  * \f]
  *
  * \param[in] solution solution vector

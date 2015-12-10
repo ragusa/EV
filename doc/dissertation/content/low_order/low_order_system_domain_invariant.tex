@@ -1,25 +1,34 @@
 Starting with Equation \eqref{eq:vector_weak_form}, the low-order scheme
-lumps the mass matrix and adds a viscous bilinear form:
+lumps the mass matrix and adds a low-order artificial diffusion term:
 \begin{equation}
    \lumpedmassentry\ddt{\solutionletter_i}
      + \sumj\gradiententry\cdot\consfluxinterpolant_j(\timevalue)
-     + \sumallcells\cellviscosity(\timevalue)
-       \sum\limits_{j\in\indices(\cell)}
-         \solutionletter_j(\timevalue)\localvisc^{\componentindex(i)}_\cell
-           (\vectortestfunction_j, \vectortestfunction_i)
+     + \sumj\diffusionmatrixletter\ij^{L}(\timevalue)\solutionletter_j
      = 0 \eqc
 \end{equation}
 %--------------------------------------------------------------------------------
 \begin{definition}{Low-Order Artificial Diffusion Matrix}
    The low-order artificial diffusion matrix $\loworderdiffusionmatrix[\timeindex]$
-   is assembled using the low-order viscosity and local viscous bilinear
-   form introduced in Section \ref{sec:low_order_viscosity_system}:
+   is defined as
    \begin{equation}\label{eq:low_order_diffusion_matrix_system}
      \diffusionmatrixletter\ij^{L,\timeindex} \equiv
-       \sumKSij\mkern-20mu\lowordercellviscosity[\timeindex]
-       \localvisc^{\componentindex(i)}(\vectortestfunction_i,
-         \vectortestfunction_j)
-     \eqp
+       \max(\maxwavespeed(\normalvector_{\nodeindex(i),\nodeindex(j)},
+         \vectorsolution_{\nodeindex(i)}^\timeindex,
+         \vectorsolution_{\nodeindex(j)}^\timeindex)
+         \|\mathbf{\gradientmatrixletter}_{\nodeindex(i),\nodeindex(j)}\|_{L^2},
+         \maxwavespeed(\normalvector_{\nodeindex(j),\nodeindex(i)},
+         \vectorsolution_{\nodeindex(j)}^\timeindex,
+         \vectorsolution_{\nodeindex(i)}^\timeindex)
+         \|\mathbf{\gradientmatrixletter}_{\nodeindex(j),\nodeindex(i)}\|_{L^2}
+       )
+     \eqc
    \end{equation}
+  where $\maxwavespeed(\normalvector_{\nodeindex(i),\nodeindex(j)},
+         \vectorsolution_{\nodeindex(i)}^\timeindex,
+         \vectorsolution_{\nodeindex(j)}^\timeindex)$
+  is the maximum wave speed in the 1-D Riemann problem in the direction
+  $\normalvector_{\nodeindex(i),\nodeindex(j)}$ with left state
+  $\vectorsolution_{\nodeindex(i)}^\timeindex$ and right state
+  $\vectorsolution_{\nodeindex(j)}^\timeindex$.
 \end{definition}
 %--------------------------------------------------------------------------------

@@ -102,6 +102,13 @@ void Entropy<dim>::compute_average_entropy(const Vector<double> & solution)
  * \brief Computes the max entropy deviation from the average of each quadrature
  *        point in the domain.
  *
+ * This computes the maximum deviation of the
+ * entropy from the average \f$\bar{\eta}\f$ in the domain \f$D\f$,
+ * which is used as a normalization constant \f$c^{norm}_q\f$:
+ * \f[
+ *   c^{norm}_q = \|\eta_q - \bar{\eta}\|_{L^\infty(D)} \,.
+ * \f]
+ *
  * \param[in] solution solution with which to calculate entropy for the
  *            normalization constant
  */
@@ -133,6 +140,12 @@ void Entropy<dim>::compute_max_entropy_deviation(const Vector<double> & solution
 /**
  * \brief Returns the maximum entropy deviation from the average as a uniform
  *        vector, to be used as the entropy normalization constant.
+ *
+ * This normalization constant is computed as the maximum deviation of the
+ * entropy from the average \f$\bar{\eta}\f$ in the domain \f$D\f$:
+ * \f[
+ *   c^{norm}_q = \|\eta_q - \bar{\eta}\|_{L^\infty(D)} \,.
+ * \f]
  *
  * \param[in] solution solution with which to calculate entropy for the
  *            normalization constant
