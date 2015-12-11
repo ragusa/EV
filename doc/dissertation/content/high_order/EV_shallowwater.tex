@@ -36,8 +36,9 @@ following:
 The entropy residual is defined to be the left hand side of 
 Equation \eqref{eq:shallowwater_entropy_equality}:
 \begin{equation}
-  \entropyresidual(\vectorsolution) \equiv \partial_\timevalue\entropy
-  + \divergence\mathbf{\consfluxletter}^\entropy
+  \entropyresidual(\vectorsolution^\timeindex, \vectorsolution^{\timeindex-1})
+    \equiv \frac{\entropy(\vectorsolution^\timeindex) - \entropy()}{\timestepsize^{\timeindex-1}}
+    + \divergence\mathbf{\consfluxletter}^\entropy
   \eqp
 \end{equation}
 The entropy jump for a face $F$ is defined to be
@@ -56,14 +57,16 @@ this approach, and the low-order scheme diffusion must be used as an upper bound
 for the high-order diffusion. The entropy diffusion matrix is computed as
 \begin{equation}
   \diffusionmatrixletter^{\entropy,\timeindex}\ij \equiv
-    \entropyresidual\ij
+    \frac{\entropyresidualcoef\entropyresidual\ij + \entropyjumpcoef\entropyjump}
+      {\entropynormalization}
   \eqc
 \end{equation}
 where
 \begin{equation}
-  \entropyresidual\ij \equiv \left|
-    \int\limits_{\support\ij}\entropyresidual(\vectorsolution)
-      \vectortestfunction_i(\x)\vectortestfunction_j(\x) d\volume
+  \entropyresidual\ij^\timeindex \equiv \left|
+    \int\limits_{\support\nodeij}\entropyresidual(\vectorsolution^\timeindex,
+      \vectorsolution^{\timeindex-1})
+      \testfunction\nodei(\x)\testfunction\nodej(\x) d\volume
     \right|
   \eqp
 \end{equation}

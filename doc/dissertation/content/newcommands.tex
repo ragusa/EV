@@ -68,7 +68,7 @@
 \newcommand{\entropyresidual}{\mathcal{R}}
 \newcommand{\entropyresidualcoef}{c_\entropyresidual}
 \newcommand{\entropyjumpcoef}{c_\entropyjump}
-\newcommand{\entropynormalization}{\alpha}
+\newcommand{\entropynormalization}{c^{\text{norm}}}
 
 % conservation law
 \newcommand{\consfluxletter}{f}
@@ -223,6 +223,10 @@
 % sums and integrals
 \renewcommand{\ij}{_{i,j}}
 \newcommand{\ji}{_{j,i}}
+\newcommand{\nodei}{_{\nodeindex(i)}}
+\newcommand{\nodej}{_{\nodeindex(j)}}
+\newcommand{\nodeij}{_{\nodeindex(i),\nodeindex(j)}}
+\newcommand{\nodeji}{_{\nodeindex(j),\nodeindex(i)}}
 \newcommand{\sumj}{\sum\limits_j}
 \newcommand{\sumjnoti}{\sum\limits_{j\ne i}}
 \newcommand{\sumKSi}{\sum\limits_{\cell:\celldomain\subset\support_i}}

@@ -10,19 +10,19 @@ lumps the mass matrix and adds a low-order artificial diffusion term:
 \begin{definition}{Low-Order Artificial Diffusion Matrix}
    The low-order artificial diffusion matrix $\loworderdiffusionmatrix[\timeindex]$
    is defined as
-   \begin{equation}\label{eq:low_order_diffusion_matrix_system}
+   \begin{multline}\label{eq:low_order_diffusion_matrix_system}
      \diffusionmatrixletter\ij^{L,\timeindex} \equiv
        \max(\maxwavespeed(\normalvector_{\nodeindex(i),\nodeindex(j)},
          \vectorsolution_{\nodeindex(i)}^\timeindex,
          \vectorsolution_{\nodeindex(j)}^\timeindex)
-         \|\mathbf{\gradientmatrixletter}_{\nodeindex(i),\nodeindex(j)}\|_{L^2},
+         \|\mathbf{\gradientmatrixletter}_{\nodeindex(i),\nodeindex(j)}\|_{L^2},\\
          \maxwavespeed(\normalvector_{\nodeindex(j),\nodeindex(i)},
          \vectorsolution_{\nodeindex(j)}^\timeindex,
          \vectorsolution_{\nodeindex(i)}^\timeindex)
          \|\mathbf{\gradientmatrixletter}_{\nodeindex(j),\nodeindex(i)}\|_{L^2}
        )
      \eqc
-   \end{equation}
+   \end{multline}
   where $\maxwavespeed(\normalvector_{\nodeindex(i),\nodeindex(j)},
          \vectorsolution_{\nodeindex(i)}^\timeindex,
          \vectorsolution_{\nodeindex(j)}^\timeindex)$
