@@ -145,7 +145,10 @@ protected:
   void linear_solve(const SparseMatrix<double> & A,
                     const Vector<double> & b,
                     Vector<double> & x);
-  void apply_Dirichlet_BC(const double & time);
+  void apply_dirichlet_bc(SparseMatrix<double> & A,
+                          Vector<double> & x,
+                          Vector<double> & b,
+                          const double & time);
   void check_nan();
   void output_viscosity(PostProcessor<dim> & postprocessor,
                         const bool & is_transient = false,
@@ -191,10 +194,13 @@ protected:
    *      U_j b_K(\varphi_i, \varphi_j) .
    *  \f]
    *
+   *  \param[in] t time at which to evaluate residual \f$t\f$
    *  \param[in] dt time step size \f$\Delta t\f$
    *  \param[out] r steady-state residual \f$\mathbf{r}\f$
    */
-  virtual void compute_ss_residual(const double & dt, Vector<double> & r) = 0;
+  virtual void compute_ss_residual(const double & t,
+                                   const double & dt,
+                                   Vector<double> & r) = 0;
 
   /**
    * \brief Computes divergence of entropy flux at each quadrature point in cell.
@@ -354,11 +360,17 @@ protected:
   SparsityPattern constrained_sparsity_pattern;
   /** \brief unconstrained sparsity pattern */
   SparsityPattern unconstrained_sparsity_pattern;
-  /** \brief consistent mass matrix */
+  /** \brief consistent mass matrix with constraints */
+  LocalMatrix consistent_mass_matrix_constrained;
+  /** \brief consistent mass matrix without constraints */
   LocalMatrix consistent_mass_matrix;
-  /** \brief lumped mass matrix */
+  /** \brief lumped mass matrix with constraints */
+  LocalMatrix lumped_mass_matrix_constrained;
+  /** \brief lumped mass matrix without constraints */
   LocalMatrix lumped_mass_matrix;
-  /** \brief mass matrix to be used */
+  /** \brief pointer to mass matrix to be used on right hand side */
+  const LocalMatrix * mass_matrix_constrained;
+  /** \brief pointer to mass matrix to be used on right hand side */
   const LocalMatrix * mass_matrix;
   /** \brief system matrix */
   LocalMatrix system_matrix;

@@ -32,7 +32,8 @@ TransportParameters<dim>::TransportParameters() :
     exact_solution_refinement_level(5),
     output_initial_solution(false),
     output_DMP_bounds(false),
-    save_convergence_results(false)
+    save_convergence_results(false),
+    print_solution(false)
 {
 }
 
@@ -156,7 +157,9 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler &prm)
     prm.declare_entry("Output DMP bounds", "false", Patterns::Bool(),
         "Option to output DMP bounds");
     prm.declare_entry("Save convergence results", "false", Patterns::Bool(),
-        "Option save convegence results");
+        "Option to save convegence results");
+    prm.declare_entry("Print solution", "false", Patterns::Bool(),
+        "Option to print final solution");
   }
   prm.leave_subsection();
 
@@ -319,6 +322,7 @@ void TransportParameters<dim>::get_parameters(ParameterHandler &prm)
     output_initial_solution = prm.get_bool("Output initial solution");
     output_DMP_bounds = prm.get_bool("Output DMP bounds");
     save_convergence_results = prm.get_bool("Save convergence results");
+    print_solution = prm.get_bool("Print solution");
   }
   prm.leave_subsection();
 

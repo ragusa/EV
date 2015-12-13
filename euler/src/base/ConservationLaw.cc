@@ -103,7 +103,6 @@ void ConservationLaw<dim>::run()
     // interpolate the initial conditions to the grid, and apply constraints
     VectorTools::interpolate(
       dof_handler, initial_conditions_function, new_solution);
-    apply_Dirichlet_BC(0.0);
     constraints.distribute(new_solution);
 
     // set old solution to the current solution
@@ -231,21 +230,27 @@ void ConservationLaw<dim>::initialize_system()
   switch (parameters.viscosity_type)
   {
     case ViscosityType::none:
+      mass_matrix_constrained = &consistent_mass_matrix_constrained;
       mass_matrix = &consistent_mass_matrix;
       break;
     case ViscosityType::constant:
+      mass_matrix_constrained = &lumped_mass_matrix_constrained;
       mass_matrix = &lumped_mass_matrix;
       break;
     case ViscosityType::low:
+      mass_matrix_constrained = &lumped_mass_matrix_constrained;
       mass_matrix = &lumped_mass_matrix;
       break;
     case ViscosityType::DI_low:
+      mass_matrix_constrained = &lumped_mass_matrix_constrained;
       mass_matrix = &lumped_mass_matrix;
       break;
     case ViscosityType::DMP_low:
+      mass_matrix_constrained = &lumped_mass_matrix_constrained;
       mass_matrix = &lumped_mass_matrix;
       break;
     case ViscosityType::entropy:
+      mass_matrix_constrained = &consistent_mass_matrix_constrained;
       mass_matrix = &consistent_mass_matrix;
       break;
     default:
@@ -508,17 +513,23 @@ void ConservationLaw<dim>::setup_system()
     locally_relevant_dofs);
 
   // reinitialize matrices with sparsity pattern
+  consistent_mass_matrix_constrained.reinit(
+    locally_owned_dofs, locally_owned_dofs, dsp_constrained, mpi_communicator);
   consistent_mass_matrix.reinit(
+    locally_owned_dofs, locally_owned_dofs, dsp_unconstrained, mpi_communicator);
+  lumped_mass_matrix_constrained.reinit(
     locally_owned_dofs, locally_owned_dofs, dsp_constrained, mpi_communicator);
   lumped_mass_matrix.reinit(
-    locally_owned_dofs, locally_owned_dofs, dsp_constrained, mpi_communicator);
+    locally_owned_dofs, locally_owned_dofs, dsp_unconstrained, mpi_communicator);
   system_matrix.reinit(
-    locally_owned_dofs, locally_owned_dofs, dsp_constrained, mpi_communicator);
+    locally_owned_dofs, locally_owned_dofs, dsp_unconstrained, mpi_communicator);
 #else
   // reinitialize matrices with sparsity pattern
-  consistent_mass_matrix.reinit(constrained_sparsity_pattern);
-  lumped_mass_matrix.reinit(constrained_sparsity_pattern);
-  system_matrix.reinit(constrained_sparsity_pattern);
+  consistent_mass_matrix_constrained.reinit(constrained_sparsity_pattern);
+  consistent_mass_matrix.reinit(unconstrained_sparsity_pattern);
+  lumped_mass_matrix_constrained.reinit(constrained_sparsity_pattern);
+  lumped_mass_matrix.reinit(unconstrained_sparsity_pattern);
+  system_matrix.reinit(unconstrained_sparsity_pattern);
 #endif
 
   // assemble mass matrix
@@ -743,18 +754,20 @@ void ConservationLaw<dim>::update_cell_sizes()
 template <int dim>
 void ConservationLaw<dim>::assemble_mass_matrix()
 {
-  // assemble lumped mass matrix
+  // assemble lumped mass matrices (constrained and unconstrained)
   //----------------------------
   assemble_lumped_mass_matrix();
 
-  // assemble consistent mass matrix
+  // assemble consistent mass matrices (constrained and unconstrained)
   //----------------------------
   Function<dim> * dummy_function = 0;
   MatrixTools::create_mass_matrix(dof_handler,
                                   cell_quadrature,
-                                  consistent_mass_matrix,
+                                  consistent_mass_matrix_constrained,
                                   dummy_function,
                                   constraints);
+  MatrixTools::create_mass_matrix(
+    dof_handler, cell_quadrature, consistent_mass_matrix, dummy_function);
 
   // output mass matrix
   if (parameters.output_mass_matrix)
@@ -778,7 +791,10 @@ void ConservationLaw<dim>::assemble_mass_matrix()
  *  \param[in] time current time; Dirichlet BC may be time-dependent.
  */
 template <int dim>
-void ConservationLaw<dim>::apply_Dirichlet_BC(const double & time)
+void ConservationLaw<dim>::apply_dirichlet_bc(SparseMatrix<double> & A,
+                                              Vector<double> & x,
+                                              Vector<double> & b,
+                                              const double & time)
 {
   // map of global dof ID to boundary value, to be computed using provided
   // function
@@ -817,12 +833,9 @@ void ConservationLaw<dim>::apply_Dirichlet_BC(const double & time)
         }
       }
   }
-  // apply boundary values to the solution
-  for (std::map<unsigned int, double>::const_iterator it =
-         boundary_values.begin();
-       it != boundary_values.end();
-       ++it)
-    new_solution(it->first) = (it->second);
+
+  // apply boundary values to linear system
+  MatrixTools::apply_boundary_values(boundary_values, A, x, b);
 }
 
 /**
@@ -879,6 +892,10 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
       dt = t_end - old_time;
       in_transient = false;
     }
+
+    // log the time step size for computing average time step size for
+    // convergence table
+    postprocessor.log_time_step_size(dt);
 
     // compute new time
     new_time = old_time + dt;
@@ -938,25 +955,18 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
 
         // solve system M*Y_i = RHS
         linear_solve(*mass_matrix, system_rhs, new_solution);
-
-        // ordinarily, Dirichlet BC need not be reapplied, but in general,
-        // the Dirichlet BC can be time-dependent
-        apply_Dirichlet_BC(stage_time);
-
-        // distribute hanging node constraints
-        constraints.distribute(new_solution);
       }
       else
       { // implicit Runge-Kutta
         Assert(false, ExcNotImplemented());
       }
 
-      // compute steady-state residual
+      // compute steady-state residual f(Y_i)
       {
         // start timer for compute steady-state residual function
         TimerOutput::Scope timer_section(timer, "Compute steady-state residual");
 
-        compute_ss_residual(dt, rk.f[i]);
+        compute_ss_residual(stage_time, dt, rk.f[i]);
       }
     }
 
@@ -966,18 +976,19 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
      */
     // solve M*y^{n+1} = M*y^n + dt*sum_{i=1}^s b_i*f_i
     system_rhs = 0.0;
-    // lumped_mass_matrix.vmult(system_rhs, old_solution);
     mass_matrix->vmult(system_rhs, old_solution);
+    // mass_matrix_constrained->vmult(system_rhs, old_solution);
     for (int i = 0; i < rk.s; ++i)
       system_rhs.add(dt * rk.b[i], rk.f[i]);
-    // linear_solve(lumped_mass_matrix, system_rhs, new_solution);
-    linear_solve(*mass_matrix, system_rhs, new_solution);
+
+    // copy mass matrix before modification
+    system_matrix.copy_from(*mass_matrix);
 
     // apply Dirichlet constraints
-    apply_Dirichlet_BC(new_time);
+    apply_dirichlet_bc(system_matrix, new_solution, system_rhs, new_time);
 
-    // distribute hanging node constraints
-    constraints.distribute(new_solution);
+    // linear_solve(*mass_matrix_constrained, system_rhs, new_solution);
+    linear_solve(system_matrix, system_rhs, new_solution);
 
     {
       // start timer for output
@@ -1097,6 +1108,11 @@ void ConservationLaw<dim>::linear_solve(const SparseMatrix<double> & A,
 {
   // start timer for linear solve section
   TimerOutput::Scope timer_section(timer, "Linear solve");
+
+  // set constrained DoFs to zero, see deal.II module on constrained degrees of
+  // freedom - treatment of inhomogeneous constraints, approach 1; iterative
+  // solvers might stop prematurely if this is not done
+  this->constraints.set_zero(x);
 
   switch (parameters.linear_solver)
   {

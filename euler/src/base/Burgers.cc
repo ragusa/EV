@@ -234,11 +234,14 @@ void Burgers<dim>::assemble_lumped_mass_matrix()
  *   r_i = - \left(\varphi_i,u_h\mathbf{v}\cdot\nabla u_h\right)_\Omega
  * \f]
  *
+ *  \param[in] t time at which to evaluate residual \f$t\f$
  *  \param[in] dt time step size \f$\Delta t\f$
  *  \param[out] r steady-state residual \f$\mathbf{r}\f$
  */
 template <int dim>
-void Burgers<dim>::compute_ss_residual(const double & dt, Vector<double> & f)
+void Burgers<dim>::compute_ss_residual(const double &,
+                                       const double & dt,
+                                       Vector<double> & f)
 {
   // reset vector
   f = 0.0;

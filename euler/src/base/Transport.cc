@@ -242,7 +242,13 @@ void Transport<dim>::assemble_lumped_mass_matrix()
 
     // add to global mass matrix with contraints
     this->constraints.distribute_local_to_global(
-      local_mass, local_dof_indices, this->lumped_mass_matrix);
+      local_mass, local_dof_indices, this->lumped_mass_matrix_constrained);
+
+    // add to global mass matrix without constraints
+    for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+      for (unsigned int j = 0; j < this->dofs_per_cell; ++j)
+        this->lumped_mass_matrix.add(
+          local_dof_indices[i], local_dof_indices[j], local_mass(i, j));
   }
 }
 
@@ -278,7 +284,8 @@ void Transport<dim>::set_boundary_ids()
         cell->face(face)->set_boundary_id(1);
 
   // FE face values
-  FEFaceValues<dim> fe_face_values(this->fe, this->face_quadrature, update_normal_vectors);
+  FEFaceValues<dim> fe_face_values(
+    this->fe, this->face_quadrature, update_normal_vectors);
 
   // loop over cells
   for (cell = this->dof_handler.begin_active(); cell != endc; ++cell)
@@ -337,11 +344,14 @@ void Transport<dim>::set_boundary_ids()
  *     \right] \,.
  * \f]
  *
+ *  \param[in] t time at which to evaluate residual \f$t\f$
  *  \param[in] dt time step size \f$\Delta t\f$
  *  \param[out] r steady-state residual \f$\mathbf{r}\f$
  */
 template <int dim>
-void Transport<dim>::compute_ss_residual(const double & dt, Vector<double> & f)
+void Transport<dim>::compute_ss_residual(const double & t,
+                                         const double & dt,
+                                         Vector<double> & f)
 {
   // reset vector
   f = 0.0;
@@ -355,7 +365,9 @@ void Transport<dim>::compute_ss_residual(const double & dt, Vector<double> & f)
   std::vector<unsigned int> local_dof_indices(this->dofs_per_cell);
   std::vector<double> solution_values(this->n_q_points_cell);
   std::vector<Tensor<1, dim>> solution_gradients(this->n_q_points_cell);
-  std::vector<Tensor<1, dim>> dfdu(this->n_q_points_cell);
+
+  // set time for source function
+  source_function.set_time(t);
 
   // loop over cells
   typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler
@@ -405,8 +417,12 @@ void Transport<dim>::compute_ss_residual(const double & dt, Vector<double> & f)
 
     // aggregate local residual into global residual
     cell->get_dof_indices(local_dof_indices);
-    this->constraints.distribute_local_to_global(
-      cell_residual, local_dof_indices, f);
+    for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+      f(local_dof_indices[i]) += cell_residual(i);
+    /*
+        this->constraints.distribute_local_to_global(
+          cell_residual, local_dof_indices, f);
+    */
   } // end cell loop
 
   // if artificial diffusion is algebraic, then apply it here

@@ -79,8 +79,6 @@ public:
                       const DoFHandler<dim> & dof_handler,
                       const Triangulation<dim> & triangulation);
 
-  void update_dt(const double & dt);
-
   void set_cycle(const unsigned int & cycle);
 
   void output_cell_maps(const std::vector<CellMap *> & cell_maps,
@@ -98,6 +96,8 @@ public:
     const DoFHandler<dim> & dof_handler,
     const bool & output_1d_vtu = false,
     const std::string & transient_appendage = "");
+
+  void log_time_step_size(const double & dt);
 
 private:
   void output_exact_solution(const double & time);
@@ -149,6 +149,7 @@ private:
   const std::vector<DataComponentInterpretation::DataComponentInterpretation>
     solution_component_interpretations;
 
+  unsigned int n_time_steps;
   double dt_nominal;
   const bool is_steady_state;
 

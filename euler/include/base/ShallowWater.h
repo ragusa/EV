@@ -81,7 +81,9 @@ private:
 
   void perform_nonstandard_setup() override;
 
-  void compute_ss_residual(const double & dt, Vector<double> & solution) override;
+  void compute_ss_residual(const double & t,
+                           const double & dt,
+                           Vector<double> & solution) override;
 
   void update_flux_speeds() override;
 

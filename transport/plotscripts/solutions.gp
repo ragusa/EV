@@ -42,7 +42,7 @@ title_list = "Initial\
               DMP-max-Gal-FCT\
               DMP-min-EV-FCT\
               DMP-max-EV-FCT"
-linetypes = "1 1 1 1 1 1 1 2 2 2 2 4 4"
+linetypes = "2 1 1 1 1 1 1 2 2 2 2 4 4"
 linecolors = "7 -1 1 2 3 4 5 -1 -1 -1 -1 -1 -1"
 symboltypes = "-1 -2 1 2 3 4 6 -2 -2 -2 -2 -2 -2"
 

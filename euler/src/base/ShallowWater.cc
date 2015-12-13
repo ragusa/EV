@@ -447,11 +447,14 @@ void ShallowWater<dim>::assemble_lumped_mass_matrix()
  *   - \left(\varphi_i^{\mathbf{q}},g h_h\nabla b\right)_\Omega .
  * \f]
  *
+ *  \param[in] t time at which to evaluate residual \f$t\f$
  *  \param[in] dt time step size \f$\Delta t\f$
  *  \param[out] r steady-state residual \f$\mathbf{r}\f$
  */
 template <int dim>
-void ShallowWater<dim>::compute_ss_residual(const double & dt, Vector<double> & f)
+void ShallowWater<dim>::compute_ss_residual(const double &,
+                                            const double & dt,
+                                            Vector<double> & f)
 {
   // reset vector
   f = 0.0;

@@ -50,7 +50,9 @@ private:
 
   void define_problem() override;
 
-  void compute_ss_residual(const double & dt, Vector<double> & solution) override;
+  void compute_ss_residual(const double & t,
+                           const double & dt,
+                           Vector<double> & solution) override;
 
   void compute_cell_ss_residual(FEValues<dim> & fe_values,
                                 FEFaceValues<dim> & fe_face_values,

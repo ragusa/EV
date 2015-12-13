@@ -76,6 +76,7 @@ public:
   bool output_initial_solution; // option to output initial solution
   bool output_DMP_bounds; // option to output DMP bounds
   bool save_convergence_results; // option to save convergence results
+  bool print_solution; // option to print final solution
 };
 
 #include "TransportParameters.cc"

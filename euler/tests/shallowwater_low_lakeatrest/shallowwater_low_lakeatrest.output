@@ -7,8 +7,8 @@ Cycle 0 of 0:
     Steady-state error = [1;35m3.9984e-17[0m
 [1;32m  Converged to steady-state.[0m
 
-cycle cells dofs    dx        dt     1/dt  L1 error    L2 error   
-    0    32   66 6.250e-01 0.000e+00  inf 2.734e-02 - 1.686e-02 - 
+cycle cells dofs    dx        dt        1/dt     L1 error    L2 error   
+    0    32   66 6.250e-01 9.976e-02 1.0024e+01 2.734e-02 - 1.686e-02 - 
 1.0000000000e+00
 0.0000000000e+00
 1.0000000000e+00

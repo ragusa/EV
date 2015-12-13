@@ -37,19 +37,27 @@ TransientExecutioner<dim>::TransientExecutioner(
   initial_conditions_function->set_time(0.0);
   VectorTools::interpolate(this->dof_handler, *initial_conditions_function,
     this->new_solution);
+  // impose Dirichlet BC on initial conditions
+  std::map<unsigned int, double> boundary_values;
+  VectorTools::interpolate_boundary_values(
+     this->dof_handler,
+     1,
+     *(this->incoming_function),
+     boundary_values);
+  for (std::map<unsigned int, double>::const_iterator it = boundary_values.begin();
+    it != boundary_values.end(); ++it)
+    this->new_solution(it->first) = (it->second);
+  // impose other constraints such as hanging nodes on initial conditions
   this->constraints.distribute(this->new_solution);
 
-  // if last cycle, output initial conditions if user requested
-  /*
-   if ((cycle == parameters.n_refinement_cycles - 1)
-   and (parameters.output_initial_solution))
-   {
-   std::stringstream IC_filename_ss;
-   IC_filename_ss << "solution_" << parameters.problem_id << "_initial";
-   postprocessor.output_solution(new_solution, dof_handler,
-   IC_filename_ss.str());
-   }
-   */
+  // output initial conditions if user requested
+  if (parameters_.output_initial_solution)
+  {
+    std::stringstream IC_filename_ss;
+    IC_filename_ss << "solution_" << parameters_.problem_id << "_initial";
+    postprocessor_.output_solution(this->new_solution, this->dof_handler,
+      IC_filename_ss.str());
+  }
 
   // initialize transient solution vectors
   old_solution.reinit(this->n_dofs);
@@ -191,6 +199,18 @@ void TransientExecutioner<dim>::run()
   // output grid and solution and print convergence results
   this->postprocessor->output_results(this->new_solution, this->dof_handler,
     *this->triangulation);
+
+  // print final solution if specified
+  if (this->parameters.print_solution)
+  {
+    // set precision and format
+    std::cout.precision(10);
+    std::cout.setf(std::ios::scientific);
+
+    // print each value of solution
+    for (unsigned int j = 0; j < this->n_dofs; ++j)
+      std::cout << this->new_solution[j] << std::endl;
+  }
 }
 
 /**

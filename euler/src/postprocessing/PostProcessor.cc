@@ -732,6 +732,10 @@ void PostProcessor<dim>::evaluate_error(const Vector<double> & solution,
     convergence_table.add_value("dx", avg_cell_volume);
     if (not is_steady_state)
     {
+      // finish computing average time step size for this cycle
+      dt_nominal /= n_time_steps;
+
+      // add time step size to convergence table
       convergence_table.add_value("dt", dt_nominal);
       convergence_table.add_value("1/dt", 1.0 / dt_nominal);
     }
@@ -774,17 +778,6 @@ void PostProcessor<dim>::output_grid(
 }
 
 /**
- * \brief Updates the time step size to be put in convergence table
- *
- * \param[in] dt_nominal nominal time step size for this cycle
- */
-template <int dim>
-void PostProcessor<dim>::update_dt(const double & dt)
-{
-  dt_nominal = dt;
-}
-
-/**
  * \brief Checks if a directory exists and creates it if it does not
  *
  * \param[in] directory path to directory to create if it does not exist
@@ -821,6 +814,10 @@ void PostProcessor<dim>::set_cycle(const unsigned int & cycle)
 {
   current_cycle = cycle;
   is_last_cycle = (cycle == parameters.n_refinement_cycles - 1);
+
+  // reset time step count and time step size sum
+  n_time_steps = 0;
+  dt_nominal = 0.0;
 }
 
 /**
@@ -929,4 +926,19 @@ void PostProcessor<dim>::remove_vtu_files(const std::string & directory,
   }
   // close the directory
   closedir(dir);
+}
+
+/**
+ * \brief Adds time step size to sum for computing average time step size.
+ *
+ * \param[in] dt time step size
+ */
+template <int dim>
+void PostProcessor<dim>::log_time_step_size(const double & dt)
+{
+  // add to sum of time step sizes
+  dt_nominal += dt;
+
+  // increment time step count
+  n_time_steps++;
 }
