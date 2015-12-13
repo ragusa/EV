@@ -15,7 +15,19 @@ Individual matrix entries are denoted by the non-boldface equivalent of
 the matrix symbol, with two subscripted indices, and individual vector entries
 are denoted by the non-boldface equivalent, with one subscripted index.
 Symbols used for degree of freedom indices include $i$, $j$, $k$, and $\ell$,
-and cell indices are usually denoted by $\cell$. Temporal indices
+and cell indices are usually denoted by $\cell$.
+In the case of conservation law systems, as opposed to scalar conservation laws,
+there are multiple degrees of freedom at each support point (which happens to
+be the nodes of the mesh for 1st-order Lagrangian finite elements). Thus, distinction
+is often needed between node indices and degree of freedom indices. For example,
+there are some quantities that are identical for all solution components,
+so rather than store that quantity multiple times, it can be stored once
+instead of duplicating it $\ncomponents$ times. To distinguish between
+quantities that use degree-of-freedom indexing and support-point indexing,
+the symbol for the latter is modified: $A\ij\rightarrow \nodequantity{A}\nodeij$,
+where $\nodeindex(i)$ denotes the index of the support point supporting
+degree of freedom $i$.
+Temporal indices
 use $\timeindex$ as a superscript, and iteration indices use $(\ell)$
 as a superscript. Other symbols appearing in subscripts or superscripts
 are typically descriptors, e.g., to distinguish a function for different
@@ -32,7 +44,7 @@ to $\sumj$.
 The notation $\mathbf{a}\otimes\mathbf{b}$ denotes a tensor product, otherwise
 known as an outer product, of column vectors $\mathbf{a}$ and $\mathbf{b}$,
 i.e., $\mathbf{a}\otimes\mathbf{b}\equiv\mathbf{a}\mathbf{b}^T$. Thus,
-$(\mathbf{a}\otimes\mathbf{b})\ij = a_i b_j$
+$(\mathbf{a}\otimes\mathbf{b})\ij = a_i b_j$.
 
 Functions of time often omit the time argument and instead take the time index
 as a superscript, e.g., $f(\timevalue^\timeindex)$ is abbreviated as
@@ -40,6 +52,7 @@ $f^\timeindex$. Similarly, functions of a time-dependent solution or other
 time-dependent arguments are sometimes abbreviated by dropping the dependence
 on the argument and adopting the time index as a superscript, e.g.,
 $f(\approximatescalarsolution^\timeindex)$ becomes $f^\timeindex$.
+
 
 \begin{mytable}{Abbreviations Used in Dissertation}{abbreviations}{l l}
 {\emph{Abbreviation} & \emph{Description}}

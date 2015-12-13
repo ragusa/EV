@@ -12,6 +12,16 @@ using namespace dealii;
 /**
  * \class LaplacianDiffusion
  * \brief Class for applying Laplacian diffusion.
+ *
+ * This class adds a standard Laplacian diffusion term:
+ * \f[
+ *   u_t + \nabla\cdot \mathbf{f}(u) - \nabla(\nu\nabla u) = 0 \,,
+ * \f]
+ * which makes the following contribution to the steady-state residual for
+ * degree of freedom \f$i\f$, \f$r_i\f$:
+ * \f[
+ *   r_i = r_i + \int\limits_{S_i}\varphi_i\nabla(\nu\nabla u)dV \,,
+ * \f]
  */
 template <int dim>
 class LaplacianDiffusion : public ArtificialDiffusion<dim>

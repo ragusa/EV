@@ -19,6 +19,15 @@ using namespace dealii;
  *   \nu_K^L = c_{max} h_K \lambda_{K,max} \,,
  * \f]
  * where \f$\lambda_{K,max}\f$ is the maximum flux speed on cell \f$K\f$.
+ * This viscosity is to be used in a standard Laplacian diffusion term:
+ * \f[
+ *   u_t + \nabla\cdot \mathbf{f}(u) - \nabla(\nu^L\nabla u) = 0 \,,
+ * \f]
+ * which makes the following contribution to the steady-state residual for
+ * degree of freedom \f$i\f$, \f$r_i\f$:
+ * \f[
+ *   r_i = r_i + \int\limits_{S_i}\varphi_i\nabla(\nu\nabla u)dV \,.
+ * \f]
  */
 template <int dim>
 class LowOrderViscosity : public Viscosity<dim>

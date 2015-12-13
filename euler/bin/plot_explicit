@@ -3,7 +3,7 @@
 # Plots solution or convergence.
 #
 # USAGE: plot_explicit <phys> <name> <disc> <type>
-#   <phys> conservation law: burgers|euler|shallowwater
+#   <phys> conservation law: burgers|euler|shallowwater|transport
 #   <name> name of problem (directory in ./output)
 #   <disc> time discretization identifier: erk1|erk2|erk3|erk4|sdirk22
 #   <type> type of plot: sol|conv|visc
@@ -16,7 +16,7 @@ my $croppdf = 1;
 # check for correct number of input arguments
 if ($#ARGV != 3) {
    die "USAGE: plot <phys> <name> <disc> <type>
-   <phys> conservation law: burgers|euler|shallowwater
+   <phys> conservation law: burgers|euler|shallowwater|transport
    <name> name of problem (directory in ./output)
    <disc> time discretization identifier: ERK1|ERK2|ERK3|ERK4|SDIRK22
    <type> type of plot: sol|conv|visc\n";
@@ -101,6 +101,11 @@ else
      #@column = (2,3,5);
      #@column = (2,3);
      #@column = (5);
+  }
+  elsif ($conservation_law eq "transport")
+  {
+     @quantity = ("angularflux");
+     @column = (2);
   }
   else
   {

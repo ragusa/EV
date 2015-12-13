@@ -37,7 +37,8 @@ void TransportParameters<dim>::declare_parameters(
  * \param parameter_handler parameter handler for the Transport class
  */
 template <int dim>
-void TransportParameters<dim>::get_parameters(ParameterHandler & parameter_handler)
+void TransportParameters<dim>::get_parameters(
+  ParameterHandler & parameter_handler)
 {
   // get conservation law parameters
   this->get_conservation_law_parameters(parameter_handler);

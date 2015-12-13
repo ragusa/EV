@@ -104,9 +104,11 @@ if (quantity eq "velocity") {
    quantity_ylabel = "Height"
 } else { if (quantity eq "waterlevel") {
    quantity_ylabel = "Water Level"
+} else { if (quantity eq "angularflux") {
+   quantity_ylabel = "Angular Flux"
 } else {
    quantity_ylabel = "Unknown"
-}}}}}}
+}}}}}}}
 
 set terminal postscript enhanced color
 output_file = outdir.quantity."_".timeintegrator.".pdf"

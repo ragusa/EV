@@ -11,8 +11,16 @@ using namespace dealii;
 
 /**
  * \class AlgebraicDiffusion
- * \brief Class for artificial diffusion that is expressed using a diffusion
+ * \brief Base class for artificial diffusion that is expressed using a diffusion
  *        matrix instead of artificial viscosities.
+ *
+ * This class adds artificial diffusion at the fully discrete level using
+ * an artificial diffusion matrix \f$\mathbf{D}\f$:
+ * \f[
+ *   \mathbf{M}\frac{\mathbf{U}^{n+1}-\mathbf{U}^n}{\Delta t}
+ *   + \mathbf{A}\mathbf{U} + \mathbf{D}\mathbf{U} = \mathbf{0} \,.
+ * \f]
+ * Derived classes are responsible for computing this matrix.
  */
 template <int dim>
 class AlgebraicDiffusion : public ArtificialDiffusion<dim>

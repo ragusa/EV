@@ -3,16 +3,15 @@
 %===============================================================================
 \section{Model Equations}
 %===============================================================================
-\subsection{Conservation Law Systems}
+\subsection{Conservation Law Systems\label{sec:conservation_laws}}
   \input{content/preliminaries/conservation_laws}
-\subsection{Scalar Conservation Laws}
+\subsection{Scalar Conservation Laws\label{sec:scalar}}
   \input{content/preliminaries/scalar}
-\subsection{The Burgers Equation}
-%  \input{content/preliminaries/burgers}
 \subsection{The Shallow Water Equations\label{sec:shallowwater}}
   \input{content/preliminaries/shallowwater}
-  \subsubsection{Characteristics Analysis for the Shallow Water Equations}
-    \input{content/preliminaries/shallowwater_eigenvalues}
+  \subsubsection{Characteristics Analysis for the Shallow Water Equations
+    \label{sec:shallowwater_characteristics}}
+    \input{content/preliminaries/shallowwater_characteristics}
 %===============================================================================
 \section{Discretization}
 %===============================================================================
@@ -22,10 +21,11 @@
 \subsection{Spatial Discretization for Conservation Law Systems
   \label{sec:spatial_discretization_system}}
   \input{content/discretization/spatial_discretization_system}
-  \subsubsection{The Shallow Water Equations}
-  \input{content/discretization/shallowwater}
+  \subsubsection{The Shallow Water Equations
+    \label{sec:spatial_discretization_shallowwater}}
+    \input{content/discretization/spatial_discretization_shallowwater}
 \subsection{Temporal Discretization\label{sec:temporal_discretization}}
-  \subsubsection{Explicit Euler Scheme}
+  \subsubsection{Explicit Euler Scheme\label{sec:explicit_euler}}
     \input{content/discretization/explicit_euler}
   \subsubsection{Strong Stability-Preserving Runge-Kutta (SSPRK)
     Schemes\label{sec:ssprk}}
@@ -35,11 +35,11 @@
 %===============================================================================
 \section{Low-Order Scheme for Scalar Conservation Laws}  
 %===============================================================================
-\subsection{Low-Order Viscosity\label{sec:low_order_viscosity}}
-  \input{content/low_order/low_order_viscosity}
-\subsection{The Low-Order System\label{sec:low_order_system}}
-  \input{content/low_order/low_order_system}
-\subsection{M-Matrix Property}
+\subsection{Low-Order Viscosity\label{sec:low_order_viscosity_scalar}}
+  \input{content/low_order/low_order_viscosity_scalar}
+\subsection{The Low-Order System\label{sec:low_order_scheme_scalar}}
+  \input{content/low_order/low_order_scheme_scalar}
+\subsection{M-Matrix Property\label{sec:m_matrix}}
   \input{content/low_order/m_matrix}
 \subsection{Discrete Maximum Principles\label{sec:DMP}}
   \input{content/low_order/steadystate_DMP}
@@ -48,32 +48,34 @@
 %===============================================================================
 \section{Low-Order Scheme for Conservation Law Systems}  
 %===============================================================================
-%\subsection{Low-Order Viscosity\label{sec:low_order_viscosity_domain_invariant}}
-%  \input{content/low_order/low_order_viscosity_domain_invariant}
-\subsection{The Low-Order System\label{sec:low_order_system_domain_invariant}}
-  \input{content/low_order/low_order_system_domain_invariant}
+\subsection{The Low-Order Scheme\label{sec:low_order_scheme_system}}
+  \input{content/low_order/low_order_scheme_system}
 %===============================================================================
-\section{High-Order Schemes}  
+\section{High-Order Scheme for Scalar Conservation Laws
+  \label{sec:high_order_scalar}}  
 %===============================================================================
-\subsection{Entropy Viscosity\label{sec:entropy_viscosity}}
-  \subsubsection{Entropy Viscosity for Scalar Conservation Law Equations
-    \label{sec:entropy_viscosity_scalar}}
-    \input{content/high_order/EV_scalar}
-  \subsubsection{Entropy Viscosity for the Shallow Water Equations
-    \label{sec:shallowwater_entropy_viscosity}}
-    \input{content/high_order/EV_shallowwater}
-\subsection{The High-Order System}
-  \input{content/high_order/high_order_system}
+\subsection{Entropy Viscosity\label{sec:entropy_viscosity_scalar}}
+    \input{content/high_order/entropy_viscosity_scalar}
+\subsection{The High-Order Scheme\label{sec:high_order_scheme_scalar}}
+  \input{content/high_order/high_order_scheme_scalar}
 %===============================================================================
-\section{FCT Schemes}  
+\section{High-Order Scheme for Conservation Law Systems
+  \label{sec:high_order_system}}  
 %===============================================================================
-\subsection{The FCT System}
-  \input{content/fct/fct_system}
-\subsection{Limiting Coefficients\label{sec:limiting_coefficients}}
+\subsection{Entropy Viscosity\label{sec:entropy_viscosity_system}}
+    \input{content/high_order/entropy_viscosity_system}
+\subsection{The High-Order Scheme\label{sec:high_order_scheme_system}}
+  \input{content/high_order/high_order_scheme_system}
+%===============================================================================
+\section{FCT Scheme for Scalar Conservation Laws\label{sec:fct_scalar}}
+%===============================================================================
+\subsection{The FCT Scheme\label{sec:fct_scheme_scalar}}
+  \input{content/fct/fct_scheme_scalar}
+\subsection{Limiting Coefficients\label{sec:limiting_coefficients_scalar}}
   \input{content/fct/limiting_coefficients}
   \input{content/fct/limited_flux_bounds_steady_state}
   \input{content/fct/limited_flux_bounds_explicit_euler}
   \input{content/fct/limited_flux_bounds_theta}
 %===============================================================================
-\section{Implementation}  
+\section{Implementation\label{sec:implementation}}
 %===============================================================================

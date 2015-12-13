@@ -165,7 +165,7 @@ void ShallowWater<dim>::define_problem()
   this->constants["perturbation_y_width"] = perturbation_y_width;
 
   // set boundary indicators
-  this->n_boundaries = 1;
+  this->n_dirichlet_boundaries = 1;
   typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin();
   typename Triangulation<dim>::cell_iterator endc = this->triangulation.end();
   for (; cell != endc; ++cell)
@@ -190,7 +190,7 @@ void ShallowWater<dim>::define_problem()
     // get Dirichlet function strings
     if (!this->use_exact_solution_as_dirichlet_bc)
     {
-      this->dirichlet_function_strings.resize(this->n_boundaries);
+      this->dirichlet_function_strings.resize(this->n_dirichlet_boundaries);
       this->dirichlet_function_strings[0].resize(this->n_components);
       this->dirichlet_function_strings[0][0] =
         problem_parameters.dirichlet_function_height;
@@ -349,7 +349,7 @@ std::shared_ptr<MaxWaveSpeed<dim>> ShallowWater<dim>::create_max_wave_speed()
  * \brief Interpolates the bathymetry FE vector from its function.
  */
 template <int dim>
-void ShallowWater<dim>::perform_additional_setup()
+void ShallowWater<dim>::perform_nonstandard_setup()
 {
   // interpolate bathymetry vector
   dof_handler_bathymetry.clear();

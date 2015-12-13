@@ -79,7 +79,7 @@ private:
 
   void define_problem() override;
 
-  void perform_additional_setup() override;
+  void perform_nonstandard_setup() override;
 
   void compute_ss_residual(const double & dt, Vector<double> & solution) override;
 

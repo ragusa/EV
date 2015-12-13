@@ -99,7 +99,7 @@ void Burgers<dim>::define_problem()
   this->constants["u_right"] = u_right;
 
   // set boundary indicators
-  this->n_boundaries = 1;
+  this->n_dirichlet_boundaries = 1;
   typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin();
   typename Triangulation<dim>::cell_iterator endc = this->triangulation.end();
   for (; cell != endc; ++cell)
@@ -124,7 +124,7 @@ void Burgers<dim>::define_problem()
     // get Dirichlet function strings
     if (!this->use_exact_solution_as_dirichlet_bc)
     {
-      this->dirichlet_function_strings.resize(this->n_boundaries);
+      this->dirichlet_function_strings.resize(this->n_dirichlet_boundaries);
       this->dirichlet_function_strings[0].resize(this->n_components);
       this->dirichlet_function_strings[0][0] =
         problem_parameters.dirichlet_function;
@@ -224,13 +224,6 @@ void Burgers<dim>::assemble_lumped_mass_matrix()
  *   \left(\varphi_i,\frac{\partial u_h}{\partial t}\right)_\Omega
  *   = - \left(\varphi_i,u_h\mathbf{v}\cdot\nabla u_h\right)_\Omega .
  * \f]
- * Adding a viscous bilinear form,
- * \f[
- *   \left(\varphi_i,\frac{\partial u_h}{\partial t}\right)_\Omega
- *   = - \left(\varphi_i,u_h\mathbf{v}\cdot\nabla u_h\right)_\Omega
- *   - \sum\limits_{K\subset S_i}\nu_K\sum\limits_j
- *   U_j b_K(\varphi_i, \varphi_j) .
- * \f]
  * This yields a discrete system
  * \f[
  *   \mathbf{M}\frac{d\mathbf{U}}{dt} = \mathbf{r} ,
@@ -239,8 +232,6 @@ void Burgers<dim>::assemble_lumped_mass_matrix()
  * \f$\mathbf{r}\f$ is given by
  * \f[
  *   r_i = - \left(\varphi_i,u_h\mathbf{v}\cdot\nabla u_h\right)_\Omega
- *   - \sum\limits_{K\subset S_i}\nu_K\sum\limits_j
- *   U_j b_K(\varphi_i, \varphi_j) .
  * \f]
  *
  *  \param[in] dt time step size \f$\Delta t\f$
@@ -308,6 +299,9 @@ void Burgers<dim>::compute_ss_residual(const double & dt, Vector<double> & f)
     this->constraints.distribute_local_to_global(
       cell_residual, local_dof_indices, f);
   } // end cell loop
+
+  // if artificial diffusion is algebraic, then apply it here
+  this->artificial_diffusion->apply_algebraic_diffusion(this->new_solution, f);
 }
 
 template <int dim>

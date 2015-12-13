@@ -10,7 +10,7 @@
 #        $ plot [type] [conservation law]
 #
 #        where
-#          [conservation law]: burgers|euler|shallowwater
+#          [conservation law]: burgers|euler|shallowwater|transport
 #          [type]:             sol|conv|visc
 #
 #        If no conservation law is given, then the conservation law is
@@ -32,7 +32,8 @@ my %arg_identity = (
   "visc" => "type",
   "burgers" => "conservationlaw",
   "euler" => "conservationlaw",
-  "shallowwater" => "conservationlaw"
+  "shallowwater" => "conservationlaw",
+  "transport" => "conservationlaw"
 );
 
 my $found_conservationlaw = 0;

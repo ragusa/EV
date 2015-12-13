@@ -20,15 +20,23 @@ using namespace dealii;
  *
  * The entropy viscosity for cell \f$K\f$ at time \f$n\f$ is computed as
  * \f[
- *   \nu^n_K \equiv h_K^2 \max\limits_{q\in Q}\left(
- *     \frac{c_R |R_q^n| + c_J J_K^n}{c^{norm}_q}
+ *   \nu^{\eta,n}_K \equiv h_K^2 \max\limits_{q\in Q}\left(
+ *     \frac{c_R |R_q^n| + c_J J_K^n}{\hat{\eta}_q}
  *     \right)\,.
  * \f]
  * where \f$h_K\f$ is the diameter of cell \f$K\f$, and \f$c^{norm}_q\f$ is
  * a normalization constant. Note that in this form, the viscosity is valid
- * for the Laplacian bilinear form of artificial diffusion but not the
- * graph-theoretic form; in that case, the leading \f$h_K^2\f$ needs to be
- * removed.
+ * for the Laplacian form of artificial diffusion:
+ * \f[
+ *   u_t + \nabla\cdot \mathbf{f}(u) - \nabla(\nu^\eta\nabla u) = 0 \,,
+ * \f]
+ * which makes the following contribution to the steady-state residual for
+ * degree of freedom \f$i\f$, \f$r_i\f$:
+ * \f[
+ *   r_i = r_i + \int\limits_{S_i}\varphi_i\nabla(\nu^\eta\nabla u)dV \,,
+ * \f]
+ * To use this viscosity with the graph-theoretic form of diffusion,
+ * the leading \f$h_K^2\f$ needs to be removed by using a viscosity multiplier.
  */
 template <int dim>
 class EntropyViscosity : public Viscosity<dim>

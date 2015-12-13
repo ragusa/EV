@@ -13,6 +13,15 @@ using namespace dealii;
 /**
  * \class GraphTheoreticDiffusion
  * \brief Class for graph-theoretic diffusion.
+ *
+ * This class adds a graph-theoretic diffusion term, which
+ * makes the following contribution to the steady-state residual:
+ * \f[
+ *   r_i = r_i - \sum\limits_K\nu_K\sum\limits_{j\in J(K)}
+ *     U_j b_K(\varphi_i, \varphi_j) \,,
+ * \f]
+ * where \f$b_K(\varphi_i, \varphi_j)\f$ is the local viscous bilinear form
+ * for cell \f$K\f$.
  */
 template <int dim>
 class GraphTheoreticDiffusion : public ArtificialDiffusion<dim>

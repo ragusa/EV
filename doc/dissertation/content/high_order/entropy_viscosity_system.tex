@@ -1,0 +1,115 @@
+The entropy function for the shallow water equations is defined to be
+the sum of the kinetic and potential energy terms, in terms of the
+conservative variables and the bathymetry function $\bathymetry$:
+\begin{equation}
+  \entropy(\vectorsolution,\bathymetry)
+  = \half\frac{\heightmomentum\cdot\heightmomentum}
+  {\height} + \half\gravity\height\pr{\height+\bathymetry}
+  \eqp
+\end{equation}
+% REMARK ======================================================================
+\begin{remark}
+Omission of the bathymetry term in the potential energy
+term in the entropy definition has no effect on either the entropy
+residual or entropy jump due to the assumption that $\bathymetry$ is
+not a function of time. Thus in implementation, the following definition
+can be used:
+\begin{equation}
+  \entropy(\vectorsolution)
+  = \half\frac{\heightmomentum\cdot\heightmomentum}
+  {\height} + \half\gravity\height^2
+  \eqc
+\end{equation}
+which is often more convenient since it is a function of the conservative
+variables only.
+\end{remark}
+%==============================================================================
+The entropy flux, derived in Appendix \ref{sec:shallow_water_entropy_flux}, is the
+following:
+\begin{equation}
+  \mathbf{\consfluxletter}^\entropy(\vectorsolution,\bathymetry)
+  = \gravity(\height + \bathymetry)\heightmomentum
+  + \half\frac{\pr{\heightmomentum\cdot\heightmomentum}\heightmomentum} 
+  {\height^2}
+  \eqp
+\end{equation}
+The entropy residual is defined to be the left hand side of 
+Equation \eqref{eq:shallowwater_entropy_equality}:
+\begin{equation}
+  \entropyresidual(\vectorsolution^\timeindex, \vectorsolution^{\timeindex-1})
+    \equiv \frac{\entropy(\vectorsolution^\timeindex)
+      - \entropy(\vectorsolution^{\timeindex-1})}{\timestepsize^{\timeindex-1}}
+    + \divergence\mathbf{\consfluxletter}^\entropy(\vectorsolution^\timeindex)
+  \eqp
+\end{equation}
+The entropy jump for a face $F$ is defined to be
+\begin{equation}
+  \entropyjump_F(\vectorsolution)
+  \equiv \left|
+    \jumpbrackets{\nabla\mathbf{\consfluxletter}^\entropy(\vectorsolution)}
+    \cdot\normalvector_F\cdot\normalvector_F
+  \right| \eqp
+\end{equation}
+For the conservation law system case, opposed to the scalar conservation
+law case, an entropy \emph{viscosity} is not computed; instead an entropy diffusion
+matrix is computed directly. This is because the domain-invariant low-order scheme
+described in Section \ref{sec:low_order_scheme_system} also makes
+this approach, and the low-order scheme diffusion must be used as an upper bound
+for the high-order diffusion. The entropy diffusion matrix is computed as
+\begin{subequations}
+\begin{equation}
+  \diffusionmatrixletter^{\entropy,\timeindex}\ij \equiv
+    \nodequantity{\diffusionmatrixletter}^{\entropy,\timeindex}\nodeij \eqc
+\end{equation}
+\begin{equation}
+  \nodequantity{\diffusionmatrixletter}^{\entropy,\timeindex}\kl \equiv
+    \frac{\entropyresidualcoef\nodequantity{\entropyresidual}\kl +
+      \entropyjumpcoef\nodequantity{\entropyjump}\kl}
+      {\nodequantity{\entropynormalization}^\timeindex\kl}
+  \eqc
+\end{equation}
+\end{subequations}
+where
+\begin{equation}
+  \nodequantity{\entropyresidual}\kl^\timeindex \equiv \left|
+    \int\limits_{\nodequantity{\support}\kl}
+      \entropyresidual(\vectorsolution^\timeindex,\vectorsolution^{\timeindex-1})
+      \nodequantity{\testfunction}_k(\x)
+      \nodequantity{\testfunction}_\ell(\x) \dvolume
+    \right|
+  \eqc
+\end{equation}
+% TODO: I think the following quantity is always zero because the product
+% of the supports on the faces are zero, so the jumps may need
+% to be redefined or omitted.
+\begin{equation}
+  \nodequantity{\entropyjump}\kl^\timeindex \equiv \maxcelldiameter
+    \sum\limits_{F:\facedomain_F\subset\nodequantity{\support}\kl} \,
+    \int\limits_{\facedomain_F}\entropyjump_F(\vectorsolution^\timeindex)
+      \nodequantity{\testfunction}_k(\x)
+      \nodequantity{\testfunction}_\ell(\x) \darea
+  \eqc
+\end{equation}
+\begin{equation}
+  \nodequantity{\entropynormalization}^\timeindex\kl \equiv
+    \max\limits_{\cell:\celldomain\subset\nodequantity{\support}\kl}
+    \max\limits_{\qpoint\in\quadraturepoints(\celldomain)}
+    \entropynormalization(\vectorsolution^\timeindex(\qpoint))
+  \eqp
+\end{equation}
+Similarly to the scalar case, the high-order diffusion uses the low-order
+diffusion as an upper bound:
+\begin{subequations}
+\begin{equation}
+  \diffusionmatrixletter^{\high,\timeindex}\ij \equiv
+    \nodequantity{\diffusionmatrixletter}^{\high,\timeindex}\nodeij \eqc
+\end{equation}
+\begin{equation}
+  \nodequantity{\diffusionmatrixletter}^{\high,\timeindex}\kl \equiv
+    \max\pr{\nodequantity{\diffusionmatrixletter}^{\entropy,\timeindex}\kl,
+      \nodequantity{\diffusionmatrixletter}^{\low,\timeindex}\kl}
+  \eqc
+\end{equation}
+\end{subequations}
+
+

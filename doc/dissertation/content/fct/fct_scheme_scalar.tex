@@ -2,8 +2,8 @@ The crux of the flux-corrected transport scheme is to define an antidiffusive
 correction flux $\correctionfluxvector$ from a monotone, low-order scheme to a
 high-order scheme.  Thus to define $\correctionfluxvector$ for a particular
 temporal discretization, $\correctionfluxvector$ is added as a source to the
-respective low-order system given in Section \ref{sec:low_order_system}, except
-that the solution at $\timeindex+1$ is no longer the low-order solution
+respective low-order system given in Section \ref{sec:low_order_scheme_scalar},
+except that the solution at $\timeindex+1$ is no longer the low-order solution
 $\lowordersolution$, but instead, the high-order solution $\highordersolution$.
 The systems defining $\correctionfluxvector$ for each temporal discretization
 follow.
@@ -175,4 +175,4 @@ the limiting coefficients are zero, then the low-order solution
 $\lowordersolution$ is recovered, and if all of the limiting coeffients are
 one, then the high-order solution $\highordersolution$ is recovered. The
 definition of the limiting coefficients is given in Section
-\ref{sec:limiting_coefficients}.
+\ref{sec:limiting_coefficients_scalar}.

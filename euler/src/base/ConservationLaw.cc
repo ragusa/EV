@@ -207,8 +207,8 @@ void ConservationLaw<dim>::initialize_system()
   if (boundary_conditions_type == "dirichlet" &&
       !(use_exact_solution_as_dirichlet_bc))
   {
-    dirichlet_function.resize(n_boundaries);
-    for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
+    dirichlet_function.resize(n_dirichlet_boundaries);
+    for (unsigned int boundary = 0; boundary < n_dirichlet_boundaries; ++boundary)
     {
       dirichlet_function[boundary] = new FunctionParser<dim>(n_components);
       dirichlet_function[boundary]->initialize(
@@ -424,6 +424,9 @@ void ConservationLaw<dim>::setup_system()
   dof_handler.distribute_dofs(fe);
   n_dofs = dof_handler.n_dofs();
 
+  // perform non-standard setup required by derived classes
+  perform_nonstandard_setup();
+
 #ifdef IS_PARALLEL
   // get index set of locally owned DoFs
   locally_owned_dofs = dof_handler.locally_owned_dofs();
@@ -446,7 +449,7 @@ void ConservationLaw<dim>::setup_system()
   // Dirichlet contraints (for t = 0)
   if (boundary_conditions_type == "dirichlet")
   {
-    for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
+    for (unsigned int boundary = 0; boundary < n_dirichlet_boundaries; ++boundary)
       for (unsigned int component = 0; component < n_components; ++component)
       {
         // specify to impose Dirichlet BC for all components of solution
@@ -715,9 +718,6 @@ void ConservationLaw<dim>::setup_system()
       break;
     }
   }
-
-  // perform additional setup required by derived classes
-  perform_additional_setup();
 }
 
 /** \brief Updates the cell sizes map and minimum cell size.
@@ -787,7 +787,7 @@ void ConservationLaw<dim>::apply_Dirichlet_BC(const double & time)
   if (boundary_conditions_type == "dirichlet")
   {
     // loop over boundary IDs
-    for (unsigned int boundary = 0; boundary < n_boundaries; ++boundary)
+    for (unsigned int boundary = 0; boundary < n_dirichlet_boundaries; ++boundary)
       // loop over components
       for (unsigned int component = 0; component < n_components; ++component)
       {

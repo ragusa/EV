@@ -68,7 +68,7 @@ void Euler<dim>::define_problem()
         this->triangulation, domain_start, domain_start + domain_width);
 
       // only 1 type of BC: zero Dirichlet
-      this->n_boundaries = 1;
+      this->n_dirichlet_boundaries = 1;
 
       // set all boundary indicators to zero
       typename Triangulation<dim>::cell_iterator cell =
@@ -83,8 +83,9 @@ void Euler<dim>::define_problem()
       // set function strings to be parsed for dirichlet boundary condition
       // functions
       this->use_exact_solution_as_dirichlet_bc = false;
-      this->dirichlet_function_strings.resize(this->n_boundaries);
-      for (unsigned int boundary = 0; boundary < this->n_boundaries; ++boundary)
+      this->dirichlet_function_strings.resize(this->n_dirichlet_boundaries);
+      for (unsigned int boundary = 0; boundary < this->n_dirichlet_boundaries;
+           ++boundary)
       {
         this->dirichlet_function_strings[boundary].resize(this->n_components);
         this->dirichlet_function_strings[boundary][0] =
@@ -144,7 +145,7 @@ void Euler<dim>::define_problem()
         this->triangulation, domain_start, domain_start + domain_width);
 
       // only 1 type of BC: zero Dirichlet
-      this->n_boundaries = 1;
+      this->n_dirichlet_boundaries = 1;
 
       // set all boundary indicators to zero
       typename Triangulation<dim>::cell_iterator cell =
@@ -159,8 +160,9 @@ void Euler<dim>::define_problem()
       // set function strings to be parsed for dirichlet boundary condition
       // functions
       this->use_exact_solution_as_dirichlet_bc = false;
-      this->dirichlet_function_strings.resize(this->n_boundaries);
-      for (unsigned int boundary = 0; boundary < this->n_boundaries; ++boundary)
+      this->dirichlet_function_strings.resize(this->n_dirichlet_boundaries);
+      for (unsigned int boundary = 0; boundary < this->n_dirichlet_boundaries;
+           ++boundary)
       {
         this->dirichlet_function_strings[boundary].resize(this->n_components);
         this->dirichlet_function_strings[boundary][0] =
@@ -206,7 +208,7 @@ void Euler<dim>::define_problem()
             input_grid.read_msh(input_file);
 
             // four boundaries: each side of unit square
-            this->n_boundaries = 4;
+            this->n_dirichlet_boundaries = 4;
 
             // set boundary indicators
             double small_number = 1.0e-15;
@@ -244,9 +246,10 @@ void Euler<dim>::define_problem()
                   }
                 }
             this->boundary_conditions_type = "noh";
-            this->boundary_types.resize(this->n_boundaries);
-            this->dirichlet_function_strings.resize(this->n_boundaries);
-            for (unsigned int boundary = 0; boundary < this->n_boundaries;
+            this->boundary_types.resize(this->n_dirichlet_boundaries);
+            this->dirichlet_function_strings.resize(this->n_dirichlet_boundaries);
+            for (unsigned int boundary = 0; boundary <
+    this->n_dirichlet_boundaries;
          ++boundary)
             {
               this->boundary_types[boundary].resize(this->n_components);

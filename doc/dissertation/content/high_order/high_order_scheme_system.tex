@@ -1,46 +1,34 @@
 The high-order steady-state system matrix $\highorderssmatrix$ is defined as
 the sum of the inviscid steady-state matrix $\ssmatrix$ and a high-order
 artificial diffusion matrix $\highorderdiffusionmatrix$:
-\begin{equation}\label{eq:high_order_ss_matrix}
-  \highorderssmatrix[\timeindex] = \ssmatrix
+\begin{equation}\label{eq:high_order_ss_matrix_system}
+  \highorderssmatrix[\timeindex] = \ssmatrix^\timeindex
   + \highorderdiffusionmatrix[\timeindex] \eqc
 \end{equation}
-where the high-order diffusion matrix is assembled in an identical manner as
-the low-order diffusion matrix but using the high-order viscosity defined in
-Equation \eqref{eq:high_order_viscosity} instead of the low-order viscosity:
-\begin{equation}
-  \diffusionmatrixletter^{H,\timeindex}_{i,j}
-  = \sumKSij\highordercellviscosity[\timeindex]
-  \localviscbilinearform{\cellindex}{j}{i} \eqp
-\end{equation}
-Alternatively, one could choose to use no viscosity for the high-order scheme,
-i.e., use the standard CGFEM scheme, in which case the diffusion matrix
-would be a zero matrix; however, this approach is not recommended for general use
-for the reasons discussed in Section \ref{sec:entropy_viscosity}.
 
 Unlike the low-order system, the high-order system does not lump the
 mass matrix, and it uses the high-order steady-state system matrix
-defined in Equation \eqref{eq:high_order_ss_matrix}. The high-order
+defined in Equation \eqref{eq:high_order_ss_matrix_system}. The high-order
 system for different time discretizations follows:
 \begin{center}{\textbf{Steady-state scheme}:}\end{center}
-\begin{equation}\label{eq:high_ss}
+\begin{equation}\label{eq:high_ss_system}
    \highorderssmatrix\highordersolution = \ssrhs
 \end{equation}
 \begin{center}{\textbf{Semidiscrete scheme}:}\end{center}
-\begin{equation}\label{eq:high_semidiscrete}
+\begin{equation}\label{eq:high_semidiscrete_system}
    \consistentmassmatrix\ddt{\highordersolution}
     + \highorderssmatrix(\timevalue)\highordersolution(\timevalue) 
     = \ssrhs(\timevalue)
 \end{equation}
 \begin{center}{\textbf{Explicit Euler scheme}:}\end{center}
-\begin{equation}\label{eq:high_FE}
+\begin{equation}\label{eq:high_FE_system}
   \consistentmassmatrix\frac{\highordersolution-\solutionvector^{\timeindex}}
   {\timestepsize}
   + \highorderssmatrix[\timeindex]\solutionvector^{\timeindex}
   = \ssrhs^\timeindex
 \end{equation}
 \begin{center}{\textbf{Theta scheme}:}\end{center}
-\begin{equation}\label{eq:high_theta}
+\begin{equation}\label{eq:high_theta_system}
   \consistentmassmatrix\frac{\highordersolution-\solutionvector^\timeindex}
   {\timestepsize}
   + (1-\theta)\highorderssmatrix[\timeindex]\solutionvector^\timeindex

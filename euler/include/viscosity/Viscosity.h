@@ -14,6 +14,27 @@ using namespace dealii;
 /**
  * \class Viscosity
  * \brief Class for artificial viscosity.
+ *
+ * The artificial viscosity \f$\nu\f$ derived from this class may be either the
+ * type used by a standard Laplacian diffusion term:
+ * \f[
+ *   u_t + \nabla\cdot \mathbf{f}(u) - \nabla(\nu\nabla u) = 0 \,,
+ * \f]
+ * which makes the following contribution to the steady-state residual for
+ * degree of freedom \f$i\f$, \f$r_i\f$:
+ * \f[
+ *   r_i = r_i + \int\limits_{S_i}\varphi_i\nabla(\nu\nabla u)dV \,,
+ * \f]
+ * or it may be the type used by a graph-theoretic diffusion term, which
+ * makes the following contribution to the steady-state residual:
+ * \f[
+ *   r_i = r_i - \sum\limits_K\nu_K\sum\limits_{j\in J(K)}
+ *     U_j b_K(\varphi_i, \varphi_j) \,,
+ * \f]
+ * where \f$b_K(\varphi_i, \varphi_j)\f$ is the local viscous bilinear form
+ * for cell \f$K\f$. These viscosities differ by a factor of \f$h^2\f$; this
+ * factor may be supplied as a viscosity multiplier if a viscosity is to
+ * be used with its non-default diffusion type.
  */
 template <int dim>
 class Viscosity

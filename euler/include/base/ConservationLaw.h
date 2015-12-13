@@ -279,9 +279,9 @@ protected:
   virtual void define_problem() = 0;
 
   /**
-   * \brief Performs additional setup required by a derived class.
+   * \brief Performs non-standard setup required by a derived class.
    */
-  virtual void perform_additional_setup() {}
+  virtual void perform_nonstandard_setup() {}
 #ifdef IS_PARALLEL
   /** \brief MPI communicator */
   MPI_Comm mpi_communicator;
@@ -363,8 +363,8 @@ protected:
   /** \brief system matrix */
   LocalMatrix system_matrix;
 
-  /** \brief number of boundaries */
-  unsigned int n_boundaries;
+  /** \brief number of Dirichlet boundaries */
+  unsigned int n_dirichlet_boundaries;
   /** \brief type of boundary conditions */
   std::string boundary_conditions_type;
   /** \brief boundary conditions */

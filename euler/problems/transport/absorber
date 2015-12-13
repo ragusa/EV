@@ -1,0 +1,52 @@
+subsection dimension
+  set valid in 1d = true
+  set valid in 2d = true
+  set valid in 3d = true
+end
+
+subsection physics
+  set transport speed = 1.0
+  set transport direction x = 1.0
+  set transport direction y = 0.0
+  set transport direction z = 0.0
+  set cross section = sigma  # see constants section for value
+  set source = source        # see constants section for value
+end
+
+subsection constants
+  set incoming value = 1.0      # called "incoming"
+  set cross section value = 1.0 # called "sigma"
+  set source value = 0.0        # called "source"
+end
+
+subsection domain
+  set domain shape = hyper_cube
+  set x start = 0.0
+  set x width = 1.0
+  set y start = 0.0
+  set y width = 1.0
+  set z start = 0.0
+  set z width = 1.0
+end
+
+subsection boundary conditions
+  set boundary conditions type = dirichlet
+  set use exact solution as dirichlet bc = false
+  set dirichlet function = incoming
+end
+
+subsection initial conditions
+  set initial condition = 0
+end
+
+subsection exact solution
+  set has exact solution = true
+  set exact solution type = function
+  set exact solution = if(x <= t, source/sigma + (incoming - source/sigma)*\
+    exp(-sigma*(x-x_min)),0)
+end
+
+subsection default end time
+  set has default end time = true
+  set default end time = 1.0
+end

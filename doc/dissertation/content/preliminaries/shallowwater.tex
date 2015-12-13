@@ -63,26 +63,26 @@ function.
 Note that the shallow water equations are only valid in 1-D or 2-D, not 3-D,
 since they are depth-integrated equations.
 
-Viscous regularization of the shallow water equations is achieved by adding
-artificial viscous fluxes:
-\begin{equation}
-\begin{gathered}
-  \ppt{\vectorsolution} + \nabla\cdot\consfluxvector(\vectorsolution)
-  + \nabla\cdot\viscconsfluxvector
-  = \conssource \eqc
-\\
-  \viscconsfluxvector
-  \equiv \left[\begin{array}{c}
-    \viscflux{\height}(\vectorsolution,\viscosity)\\
-    \viscflux{\heightmomentum}(\vectorsolution,\viscosity)
-    \end{array}\right]
-  \equiv \left[\begin{array}{c}
-    \viscosity\nabla\height\\
-    \viscosity\nabla\heightmomentum
-    \end{array}\right] \eqc
-\end{gathered}
-\end{equation}
-where $\viscosity$ represents the viscosity employed by the particular
-scheme, either low-order viscosity or entropy viscosity, which are discussed in
-Sections \ref{sec:shallowwater_low_order_viscosity} and
-\ref{sec:shallowwater_entropy_viscosity}, respectively.
+%Viscous regularization of the shallow water equations is achieved by adding
+%artificial viscous fluxes:
+%\begin{equation}
+%\begin{gathered}
+%  \ppt{\vectorsolution} + \nabla\cdot\consfluxvector(\vectorsolution)
+%  + \nabla\cdot\viscconsfluxvector
+%  = \conssource \eqc
+%\\
+%  \viscconsfluxvector
+%  \equiv \left[\begin{array}{c}
+%    \viscflux{\height}(\vectorsolution,\viscosity)\\
+%    \viscflux{\heightmomentum}(\vectorsolution,\viscosity)
+%    \end{array}\right]
+%  \equiv \left[\begin{array}{c}
+%    \viscosity\nabla\height\\
+%    \viscosity\nabla\heightmomentum
+%    \end{array}\right] \eqc
+%\end{gathered}
+%\end{equation}
+%where $\viscosity$ represents the viscosity employed by the particular
+%scheme, either low-order viscosity or entropy viscosity, which are discussed in
+%Sections \ref{sec:shallowwater_low_order_viscosity} and
+%\ref{sec:shallowwater_entropy_viscosity}, respectively.

@@ -4,6 +4,7 @@
 
 % general
 \newcommand{\x}{\mathbf{x}}
+\newcommand{\qpoint}{\x_q}
 \newcommand{\timevalue}{t}
 \newcommand{\timestepsize}{\Delta\timevalue}
 \newcommand{\timeindex}{n}
@@ -19,9 +20,13 @@
 \newcommand{\ndofs}{N_\text{dof}}
 \newcommand{\nnodes}{N_\text{node}}
 \newcommand{\dofindex}{j}
-\newcommand{\nodeindex}{k}
+\newcommand{\nodeindex}{p}
 \newcommand{\componentindex}{m}
 \newcommand{\transpose}{^{\text{T}}}
+
+% schemes
+\newcommand{\low}{L}
+\newcommand{\high}{H}
 
 % solution
 \newcommand{\scalarsolution}{u}
@@ -36,14 +41,23 @@
 \newcommand{\highordersolution}[1][]{
   \ifthenelse{\equal{#1}{}}{\solutionvector^H}{\solutionvector^{H,#1}}}
 
+% sets
+\newcommand{\faces}{\mathcal{F}}
+\newcommand{\quadraturepoints}{\mathcal{Q}}
+
 % domain and FEM
 \newcommand{\domain}{\mathcal{D}}
 \newcommand{\celldomain}[1][\cell]{\domain_#1}
+\newcommand{\facedomain}{\domain}
 \newcommand{\domainboundary}{\partial\domain}
 \newcommand{\cellindex}{K}
 \newcommand{\cell}{K}
+\newcommand{\celldiameter}{\Delta x}
+\newcommand{\maxcelldiameter}{\Delta x_{\text{max}}}
 \newcommand{\volume}{V}
+\newcommand{\dvolume}{d\volume}
 \newcommand{\area}{A}
+\newcommand{\darea}{d\area}
 \newcommand{\testfunction}{\varphi}
 \newcommand{\vectortestfunctionscalar}{\Phi}
 \newcommand{\vectortestfunction}{\mathbf{\vectortestfunctionscalar}}
@@ -68,7 +82,7 @@
 \newcommand{\entropyresidual}{\mathcal{R}}
 \newcommand{\entropyresidualcoef}{c_\entropyresidual}
 \newcommand{\entropyjumpcoef}{c_\entropyjump}
-\newcommand{\entropynormalization}{c^{\text{norm}}}
+\newcommand{\entropynormalization}{\hat{\entropy}}
 
 % conservation law
 \newcommand{\consfluxletter}{f}
@@ -220,23 +234,31 @@
 \colorlet{lightBlue}{blue!20!white}
 \colorlet{lightGreen}{green!20!white}
 
-% sums and integrals
+% indexing
 \renewcommand{\ij}{_{i,j}}
 \newcommand{\ji}{_{j,i}}
+\newcommand{\kl}{_{k,\ell}}
+\newcommand{\lk}{_{\ell,k}}
 \newcommand{\nodei}{_{\nodeindex(i)}}
 \newcommand{\nodej}{_{\nodeindex(j)}}
 \newcommand{\nodeij}{_{\nodeindex(i),\nodeindex(j)}}
 \newcommand{\nodeji}{_{\nodeindex(j),\nodeindex(i)}}
+\newcommand{\nodequantity}[1]{\underline{#1}}
+
+% sums and integrals
 \newcommand{\sumj}{\sum\limits_j}
 \newcommand{\sumjnoti}{\sum\limits_{j\ne i}}
 \newcommand{\sumKSi}{\sum\limits_{\cell:\celldomain\subset\support_i}}
 \newcommand{\sumKSij}[1][\cell]
   {\sum\limits_{#1:\celldomain[#1]\subset\support_{i,j}}}
 \newcommand{\sumallcells}{\sum\limits_{\cell}}
-\newcommand{\intdomain}[1]{\int\limits_\domain #1 \,d\volume}
+\newcommand{\intdomain}[1]{\int\limits_\domain #1 \,\dvolume}
 \newcommand{\intboundary}[1]{\int\limits_{\domainboundary} #1 \,d\area}
 \newcommand{\intSi}{\int\limits_{\support_i}}
 \newcommand{\intSij}{\int\limits_{\support_{i,j}}}
+
+% math
+\newcommand{\ltwonorm}[1]{\left\|#1\right\|_{L^2}} % L-2 norm
 
 % BC
 \newcommand{\interior}{_{\text{in}}}

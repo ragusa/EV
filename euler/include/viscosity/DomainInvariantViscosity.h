@@ -23,6 +23,21 @@ using namespace dealii;
 /**
  * \class DomainInvariantViscosity
  * \brief Class for domain-invariant low-order viscosity.
+ *
+ * This class computes the low-order domain-invariant viscosity:
+ * \f[
+ *   \nu^{L,n}_K \equiv \max\limits_{j\ne i\in J(K)}
+ *     \frac{\lambda_{max}(\mathbf{n}_{i,j},\mathbf{U}_i^n,\mathbf{U}_j^n)
+ *     \|\mathbf{c}_{i,j}\|_{\ell^2}}{-\sum\limits_{T:D_T\subset S_{i,j}}
+ *     b_T(\varphi_i,\varphi_j)} \,.
+ * \f]
+ * This viscosity is used by a graph-theoretic diffusion term by
+ * default, which
+ * makes the following contribution to the steady-state residual:
+ * \f[
+ *   r_i = r_i - \sum\limits_K\nu_K\sum\limits_{j\in J(K)}
+ *     U_j b_K(\varphi_i, \varphi_j) \,.
+ * \f]
  */
 template <int dim>
 class DomainInvariantViscosity : public Viscosity<dim>

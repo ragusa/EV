@@ -13,6 +13,8 @@ euler
 euler_parallel
 shallowwater
 shallowwater_parallel
+transport
+transport_parallel
 
 # doxygen directory
 doxygen
