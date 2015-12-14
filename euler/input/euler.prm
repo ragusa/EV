@@ -26,8 +26,8 @@ subsection refinement
 end
 
 subsection time
-   # options are <constant_dt|cfl_condition>
-   set time step size method = cfl_condition
+   # options are <constant|cfl>
+   set time step size method = cfl
    set use default end time = true
    set final time = 0.25
    set time step size = 0.0001
@@ -50,8 +50,8 @@ end
 subsection temporal integration
    # options are <runge_kutta>
    set temporal integrator = runge_kutta
-   # options are <ERK1|ERK2|ERK3|ERK4|SDIRK22>
-   set runge kutta method = ERK1
+   # options are <FE|SSP3>
+   set runge kutta method = FE
 end
 
 # this section is not yet applicable

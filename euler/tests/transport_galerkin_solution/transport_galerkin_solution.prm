@@ -21,7 +21,7 @@ end
 
 subsection time
    # options are <constant_dt|cfl_condition>
-   set time step size method = constant_dt
+   set time step size method = constant
    set use default end time = false
    set final time = 0.1
    set time step size = 0.001
@@ -48,7 +48,7 @@ subsection temporal integration
    # options are <runge_kutta>
    set temporal integrator = runge_kutta
    # options are <ERK1|ERK2|ERK3|ERK4|SDIRK22>
-   set runge kutta method = ERK1
+   set runge kutta method = FE
 end
 
 subsection nonlinear solver

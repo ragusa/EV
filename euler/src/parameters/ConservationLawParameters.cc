@@ -68,8 +68,8 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
   prm.enter_subsection("time");
   {
     prm.declare_entry("time step size method",
-                      "cfl_condition",
-                      Patterns::Selection("constant_dt|cfl_condition"),
+                      "constant",
+                      Patterns::Selection("constant|cfl"),
                       "method of computing time step size");
     prm.declare_entry("use default end time",
                       "true",
@@ -100,8 +100,8 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
                       "The method used for advancing time. "
                       "Choices are <runge_kutta>.");
     prm.declare_entry("runge kutta method",
-                      "ERK1",
-                      Patterns::Selection("ERK1|ERK2|ERK3|ERK4|SDIRK22"),
+                      "FE",
+                      Patterns::Selection("FE|SSP3"),
                       "Runge-Kutta method to use.");
   }
   prm.leave_subsection();
@@ -323,10 +323,10 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
   prm.enter_subsection("time");
   {
     const std::string time_choice = prm.get("time step size method");
-    if (time_choice == "constant_dt")
-      time_step_size_method = TimeStepSizeMethod::constant_dt;
-    else if (time_choice == "cfl_condition")
-      time_step_size_method = TimeStepSizeMethod::cfl_condition;
+    if (time_choice == "constant")
+      time_step_size_method = TimeStepSizeMethod::constant;
+    else if (time_choice == "cfl")
+      time_step_size_method = TimeStepSizeMethod::cfl;
     else
       Assert(false, ExcNotImplemented());
 
@@ -348,16 +348,10 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
       Assert(false, ExcNotImplemented());
 
     const std::string rk_choice = prm.get("runge kutta method");
-    if (rk_choice == "ERK1")
-      time_discretization = TemporalDiscretization::ERK1;
-    else if (rk_choice == "ERK2")
-      time_discretization = TemporalDiscretization::ERK2;
-    else if (rk_choice == "ERK3")
-      time_discretization = TemporalDiscretization::ERK3;
-    else if (rk_choice == "ERK4")
-      time_discretization = TemporalDiscretization::ERK4;
-    else if (rk_choice == "SDIRK22")
-      time_discretization = TemporalDiscretization::SDIRK22;
+    if (rk_choice == "FE")
+      time_discretization = TemporalDiscretization::FE;
+    else if (rk_choice == "SSP3")
+      time_discretization = TemporalDiscretization::SSP3;
     else
       Assert(false, ExcNotImplemented());
   }

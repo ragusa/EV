@@ -36,8 +36,8 @@ public:
 
   enum class TimeStepSizeMethod
   {
-    constant_dt,
-    cfl_condition
+    constant,
+    cfl
   };
   TimeStepSizeMethod time_step_size_method;
   bool use_default_end_time;
@@ -60,12 +60,8 @@ public:
 
   enum class TemporalDiscretization
   {
-    SS,
-    ERK1,
-    ERK2,
-    ERK3,
-    ERK4,
-    SDIRK22
+    FE,
+    SSP3
   };
   TemporalDiscretization time_discretization;
   enum class TemporalIntegrator

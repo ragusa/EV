@@ -259,7 +259,8 @@ void ConservationLaw<dim>::initialize_system()
   }
 }
 
-/** \brief Assigns Butcher tableau constants.
+/**
+ * \brief Assigns Butcher tableau constants.
  */
 template <int dim>
 void ConservationLaw<dim>::initialize_runge_kutta()
@@ -268,20 +269,8 @@ void ConservationLaw<dim>::initialize_runge_kutta()
   rk.s = 0;
   switch (parameters.time_discretization)
   {
-    case TemporalDiscretization::ERK1:
+    case TemporalDiscretization::FE:
       rk.s = 1;
-      break;
-    case TemporalDiscretization::ERK2:
-      rk.s = 2;
-      break;
-    case TemporalDiscretization::ERK3:
-      rk.s = 3;
-      break;
-    case TemporalDiscretization::ERK4:
-      rk.s = 4;
-      break;
-    case TemporalDiscretization::SDIRK22:
-      rk.s = 2;
       break;
     default:
       Assert(false, ExcNotImplemented());
@@ -296,62 +285,12 @@ void ConservationLaw<dim>::initialize_runge_kutta()
   rk.c.resize(rk.s);
 
   // assign constants
-  double gamma, sigma;
   switch (parameters.time_discretization)
   {
-    case TemporalDiscretization::ERK1:
+    case TemporalDiscretization::FE:
       rk.b[0] = 1;
       rk.c[0] = 0;
       rk.is_explicit = true;
-      break;
-    case TemporalDiscretization::ERK2:
-      rk.a[1][0] = 0.5;
-      rk.b[0] = 0;
-      rk.b[1] = 1;
-      rk.c[0] = 0;
-      rk.c[1] = 0.5;
-      rk.is_explicit = true;
-      break;
-    case TemporalDiscretization::ERK3:
-      rk.a[1][0] = 1.0;
-      rk.a[2][0] = 0.25;
-      rk.a[2][1] = 0.25;
-      rk.b[0] = 1. / 6;
-      rk.b[1] = 1. / 6;
-      rk.b[2] = 4. / 6;
-      rk.c[0] = 0;
-      rk.c[1] = 1.0;
-      rk.c[2] = 0.5;
-      rk.is_explicit = true;
-      break;
-    case TemporalDiscretization::ERK4:
-      rk.a[1][0] = 0.5;
-      rk.a[2][0] = 0;
-      rk.a[2][1] = 0.5;
-      rk.a[3][0] = 0;
-      rk.a[3][1] = 0;
-      rk.a[3][2] = 1;
-      rk.b[0] = 1. / 6;
-      rk.b[1] = 1. / 3;
-      rk.b[2] = 1. / 3;
-      rk.b[3] = 1. / 6;
-      rk.c[0] = 0;
-      rk.c[1] = 0.5;
-      rk.c[2] = 0.5;
-      rk.c[3] = 1;
-      rk.is_explicit = true;
-      break;
-    case TemporalDiscretization::SDIRK22:
-      gamma = 1.0 - 1.0 / std::sqrt(2.0);
-      sigma = 1.0 - gamma;
-      rk.a[0][0] = gamma;
-      rk.a[1][0] = sigma;
-      rk.a[1][1] = gamma;
-      rk.b[0] = sigma;
-      rk.b[1] = gamma;
-      rk.c[0] = gamma;
-      rk.c[1] = 1.0;
-      rk.is_explicit = false;
       break;
     default:
       Assert(false, ExcNotImplemented());
@@ -392,7 +331,8 @@ void ConservationLaw<dim>::compute_error_for_refinement()
   estimated_error_per_cell += estimated_error_per_cell_time_step;
 }
 
-/** \brief Adaptively refines mesh based on estimated error per cell.
+/**
+ * \brief Adaptively refines mesh based on estimated error per cell.
  */
 template <int dim>
 void ConservationLaw<dim>::refine_mesh()
@@ -408,11 +348,12 @@ void ConservationLaw<dim>::refine_mesh()
   triangulation.execute_coarsening_and_refinement();
 }
 
-/** \brief Sets up the system before solving.
+/**
+ * \brief Sets up the system before solving.
  *
- *         This function is to be applied after each refinement. It
- *         allocates memory, sets up constraints, makes the sparsity pattern,
- *         and reinitializes the system matrix with the sparsity pattern.
+ *        This function is to be applied after each refinement. It
+ *        allocates memory, sets up constraints, makes the sparsity pattern,
+ *        and reinitializes the system matrix with the sparsity pattern.
  */
 template <int dim>
 void ConservationLaw<dim>::setup_system()
@@ -854,7 +795,7 @@ void ConservationLaw<dim>::apply_dirichlet_bc(SparseMatrix<double> & A,
  * and \f$\mathbf{Y}_i\f$ is computed from the linear solve
  * \f[
  *   \mathbf{M} \mathbf{Y}_i = \mathbf{M} \mathbf{y}^n
- *   + \Delta t\sum\limits^{i-1}_{j=1}a_{i,j} \mathbf{r}_i
+ *   + \Delta t\sum\limits^{i-1}_{j=1}a_{i,j} \mathbf{r}_j
  * \f]
  *
  * \param[inout] postprocessor post-processor for outputting transient
@@ -862,11 +803,12 @@ void ConservationLaw<dim>::apply_dirichlet_bc(SparseMatrix<double> & A,
 template <int dim>
 void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
 {
+  // initialize old time, time index, and transient flag
   old_time = 0.0;
-  unsigned int n = 1; // time step index
-  double t_end = end_time;
+  unsigned int n = 1;
   bool in_transient = true;
-  // bool DMP_satisfied = true;
+
+  // start transient
   while (in_transient)
   {
     // update max speed for use in CFL computation
@@ -876,10 +818,10 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     double dt;
     switch (parameters.time_step_size_method)
     {
-      case TimeStepSizeMethod::constant_dt:
+      case TimeStepSizeMethod::constant:
         dt = parameters.time_step_size;
         break;
-      case TimeStepSizeMethod::cfl_condition:
+      case TimeStepSizeMethod::cfl:
         dt = compute_dt_from_cfl_condition();
         break;
       default:
@@ -887,9 +829,9 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
         break;
     }
     // check end of transient and shorten last time step if necessary
-    if ((old_time + dt) >= t_end)
+    if ((old_time + dt) >= end_time)
     {
-      dt = t_end - old_time;
+      dt = end_time - old_time;
       in_transient = false;
     }
 
@@ -929,10 +871,9 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
 
     // update old_solution to new_solution for next time step;
     // this is not done at the end of the previous time step because
-    // of the time derivative term in update_viscosities() above
+    // of the time derivative term in the viscosities update above
     old_solution = new_solution;
 
-    // solve here
     // compute each f_i
     for (int i = 0; i < rk.s; ++i)
     {
@@ -941,25 +882,18 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
       // compute stage time
       const double stage_time = old_time + rk.c[i] * dt;
 
-      if (rk.is_explicit) // explicit Runge-Kutta
-      {
-        /* compute RHS of
-         *
-         * M*Y_i = M*y^n + sum_{j=1}^{i-1} dt*a_{i,j}*f_j
-         *
-         */
-        system_rhs = 0.0;
-        mass_matrix->vmult(system_rhs, old_solution);
-        for (int j = 0; j < i; ++j)
-          system_rhs.add(dt * rk.a[i][j], rk.f[j]);
+      /* compute RHS of
+       *
+       * M*Y_i = M*y^n + sum_{j=1}^{i-1} dt*a_{i,j}*f_j
+       *
+       */
+      system_rhs = 0.0;
+      mass_matrix->vmult(system_rhs, old_solution);
+      for (int j = 0; j < i; ++j)
+        system_rhs.add(dt * rk.a[i][j], rk.f[j]);
 
-        // solve system M*Y_i = RHS
-        linear_solve(*mass_matrix, system_rhs, new_solution);
-      }
-      else
-      { // implicit Runge-Kutta
-        Assert(false, ExcNotImplemented());
-      }
+      // solve system M*Y_i = RHS
+      linear_solve(*mass_matrix, system_rhs, new_solution);
 
       // compute steady-state residual f(Y_i)
       {
@@ -977,7 +911,6 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     // solve M*y^{n+1} = M*y^n + dt*sum_{i=1}^s b_i*f_i
     system_rhs = 0.0;
     mass_matrix->vmult(system_rhs, old_solution);
-    // mass_matrix_constrained->vmult(system_rhs, old_solution);
     for (int i = 0; i < rk.s; ++i)
       system_rhs.add(dt * rk.b[i], rk.f[i]);
 
@@ -987,7 +920,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     // apply Dirichlet constraints
     apply_dirichlet_bc(system_matrix, new_solution, system_rhs, new_time);
 
-    // linear_solve(*mass_matrix_constrained, system_rhs, new_solution);
+    // solve the linear system
     linear_solve(system_matrix, system_rhs, new_solution);
 
     {
@@ -1023,16 +956,6 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
             << "\x1b[0m" << std::endl;
     }
 
-    /*
-        // check that DMP is satisfied at all time steps
-        if (parameters.viscosity_type ==
-            max_principle)
-        {
-          bool DMP_satisfied_this_time_step = check_DMP(n);
-          DMP_satisfied = DMP_satisfied and DMP_satisfied_this_time_step;
-        }
-    */
-
     // compute error for adaptive mesh refinement
     compute_error_for_refinement();
 
@@ -1040,18 +963,6 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     old_time = new_time;
     n++;
   } // end of time loop
-
-  /*
-    // report if DMP was satisfied at all time steps
-    if (parameters.viscosity_type ==
-    ViscosityType::DMP_low)
-    {
-      if (DMP_satisfied)
-        cout << "DMP was satisfied at all time steps" << std::endl;
-      else
-        cout << "DMP was NOT satisfied at all time steps" << std::endl;
-    }
-  */
 }
 
 /** \brief Computes time step size using the CFL condition

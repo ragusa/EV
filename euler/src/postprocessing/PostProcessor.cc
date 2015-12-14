@@ -28,8 +28,7 @@ PostProcessor<dim>::PostProcessor(
     exact_solution_function(exact_solution_function_),
     solution_component_names(solution_component_names_),
     solution_component_interpretations(solution_component_interpretations_),
-    is_steady_state(parameters.time_discretization ==
-                    ConservationLawParameters<dim>::TemporalDiscretization::SS),
+    is_steady_state(false),
     fe(FE_Q<dim>(parameters.degree), parameters_.n_components),
     cell_quadrature(parameters.n_quadrature_points),
     n_cells(triangulation_.n_active_cells()),
@@ -49,11 +48,8 @@ PostProcessor<dim>::PostProcessor(
   // create map of temporal discretization to string identifier
   std::map<typename ConservationLawParameters<dim>::TemporalDiscretization,
            std::string> temp_discretization_map = {
-    {ConservationLawParameters<dim>::TemporalDiscretization::ERK1, "ERK1"},
-    {ConservationLawParameters<dim>::TemporalDiscretization::ERK2, "ERK2"},
-    {ConservationLawParameters<dim>::TemporalDiscretization::ERK3, "ERK3"},
-    {ConservationLawParameters<dim>::TemporalDiscretization::ERK4, "ERK4"},
-    {ConservationLawParameters<dim>::TemporalDiscretization::SDIRK22, "SDIRK22"}};
+    {ConservationLawParameters<dim>::TemporalDiscretization::FE, "FE"},
+    {ConservationLawParameters<dim>::TemporalDiscretization::SSP3, "SSP3"}};
 
   // determine time discretization string
   if (temp_discretization_map.find(parameters.time_discretization) ==
