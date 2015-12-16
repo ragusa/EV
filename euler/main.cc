@@ -7,8 +7,8 @@
 #include <deal.II/base/logstream.h>
 
 #include "include/other/CMakeVars.h"
-#include "include/base/Burgers.h"
-#include "include/base/Euler.h"
+//#include "include/base/Burgers.h"
+//#include "include/base/Euler.h"
 #include "include/base/ShallowWater.h"
 #include "include/base/Transport.h"
 #include "include/parameters/BurgersParameters.h"

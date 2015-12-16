@@ -13,15 +13,24 @@ using namespace dealii;
  * \class LaplacianDiffusion
  * \brief Class for applying Laplacian diffusion.
  *
- * This class adds a standard Laplacian diffusion term:
+ * This class computes a diffusion matrix representing a standard Laplacian
+ * diffusion term:
  * \f[
- *   u_t + \nabla\cdot \mathbf{f}(u) - \nabla(\nu\nabla u) = 0 \,,
+ *   u_t + \nabla\cdot \mathbf{f}(u) - \nabla(\nu\nabla u) = 0 \,.
  * \f]
- * which makes the following contribution to the steady-state residual for
- * degree of freedom \f$i\f$, \f$r_i\f$:
+ * This diffusion matrix is computed as
  * \f[
- *   r_i = r_i + \int\limits_{S_i}\varphi_i\nabla(\nu\nabla u)dV \,,
+ *   D_{i,j} = -\sum\limits_{K\subset S_{i,j}}
+ *     \int\limits_K\varphi_i(\mathbf{x})\nabla\cdot(\nu_K\nabla\varphi_j(\mathbf{x}))
+ * dV \,,
  * \f]
+ * which after integration by parts and dropping the boundary term, is
+ * \f[
+ *   D_{i,j} = \sum\limits_{K\subset S_{i,j}}
+ *     \nu_K\int\limits_K\nabla\varphi_i(\mathbf{x})\cdot\nabla\varphi_j(\mathbf{x})
+ * dV \,,
+ * \f]
+ * where \f$\nu_K\f$ is the cell viscosity.
  */
 template <int dim>
 class LaplacianDiffusion : public ArtificialDiffusion<dim>
@@ -31,16 +40,15 @@ public:
   using Cell = typename ArtificialDiffusion<dim>::Cell;
 
   LaplacianDiffusion(
-    const std::vector<FEValuesExtractors::Scalar> & scalar_extractors_,
-    const std::vector<FEValuesExtractors::Vector> & vector_extractors_,
-    const unsigned int & n_quadrature_points_,
-    const unsigned int & dofs_per_cell_);
+    const std::vector<FEValuesExtractors::Scalar> & scalar_extractors,
+    const std::vector<FEValuesExtractors::Vector> & vector_extractors,
+    const DoFHandler<dim> & dof_handler,
+    const FESystem<dim> & fe,
+    const QGauss<dim> & cell_quadrature,
+    const unsigned int & dofs_per_cell);
 
-  void apply(std::shared_ptr<Viscosity<dim>> viscosity,
-             const Vector<double> & solution,
-             const Cell & cell,
-             const FEValues<dim> & fe_values,
-             Vector<double> & cell_residual) const override;
+  void compute_diffusion_matrix(const std::shared_ptr<Viscosity<dim>> viscosity,
+                                SparseMatrix<double> & diffusion_matrix) override;
 
 private:
   /** \brief Vector of scalar extractors for conservation law */
@@ -48,6 +56,15 @@ private:
 
   /** \brief Vector of vector extractors for conservation law */
   const std::vector<FEValuesExtractors::Vector> vector_extractors;
+
+  /** \brief Pointer to degree of freedom handler */
+  const DoFHandler<dim> * const dof_handler;
+
+  /** \brief Pointer to finite element system */
+  const FESystem<dim> * const fe;
+
+  /** \brief Pointer to cell quadrature */
+  const QGauss<dim> * const cell_quadrature;
 
   /** \brief Number of scalar components in solution */
   const unsigned int n_scalar_components;

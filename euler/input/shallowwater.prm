@@ -29,8 +29,8 @@ end
 
 subsection time
    # options are <constant|cfl>
-   set time step size method = cfl
-   set use default end time = true
+   set time step size method = constant
+   set use default end time = false
    set final time = 0.01
    set time step size = 0.01
    set cfl = 0.50
@@ -90,7 +90,7 @@ subsection output
    set output viscosity transient = true
    set exact solution refinement level = 7
    set save convergence results = false
-   set print final solution = true
+   set print final solution = false
 
    # verbosity level:
    # 0: print only required info

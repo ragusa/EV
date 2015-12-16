@@ -93,6 +93,9 @@ void DomainInvariantViscosity<dim>::update(const Vector<double> & new_solution,
   Cell cell = this->dof_handler->begin_active();
   for (; cell_scalar != endc_scalar; ++cell_scalar, ++cell)
   {
+    // reinitialize fe values for cell
+    fe_values.reinit(cell);
+
     // get multiplier
     const double multiplier =
       viscosity_multiplier->get_multiplier(fe_values, new_solution);

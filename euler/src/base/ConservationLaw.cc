@@ -462,6 +462,8 @@ void ConservationLaw<dim>::setup_system()
     locally_owned_dofs, locally_owned_dofs, dsp_constrained, mpi_communicator);
   lumped_mass_matrix.reinit(
     locally_owned_dofs, locally_owned_dofs, dsp_unconstrained, mpi_communicator);
+  low_order_diffusion_matrix.reinit(
+    locally_owned_dofs, locally_owned_dofs, dsp_unconstrained, mpi_communicator);
   system_matrix.reinit(
     locally_owned_dofs, locally_owned_dofs, dsp_unconstrained, mpi_communicator);
 #else
@@ -470,6 +472,7 @@ void ConservationLaw<dim>::setup_system()
   consistent_mass_matrix.reinit(unconstrained_sparsity_pattern);
   lumped_mass_matrix_constrained.reinit(constrained_sparsity_pattern);
   lumped_mass_matrix.reinit(unconstrained_sparsity_pattern);
+  low_order_diffusion_matrix.reinit(unconstrained_sparsity_pattern);
   system_matrix.reinit(unconstrained_sparsity_pattern);
 #endif
 
@@ -485,12 +488,18 @@ void ConservationLaw<dim>::setup_system()
   solution_step.reinit(
     locally_owned_dofs, locally_relevant_dofs, mpi_communicator);
   system_rhs.reinit(locally_owned_dofs, mpi_communicator);
+  ss_flux.reinit(locally_owned_dofs, mpi_communicator);
+  ss_rhs.reinit(locally_owned_dofs, mpi_communicator);
+  tmp_vector.reinit(locally_owned_dofs, mpi_communicator);
   estimated_error_per_cell.reinit(triangulation.n_active_cells());
 #else
   old_solution.reinit(n_dofs);
   new_solution.reinit(n_dofs);
   solution_step.reinit(n_dofs);
   system_rhs.reinit(n_dofs);
+  ss_flux.reinit(n_dofs);
+  ss_rhs.reinit(n_dofs);
+  tmp_vector.reinit(n_dofs);
   estimated_error_per_cell.reinit(triangulation.n_active_cells());
 #endif
 
@@ -649,8 +658,13 @@ void ConservationLaw<dim>::setup_system()
       std::vector<FEValuesExtractors::Vector> vector_extractors;
       get_fe_extractors(scalar_extractors, vector_extractors);
 
-      auto tmp_artificial_diffusion = std::make_unique<LaplacianDiffusion<dim>>(
-        scalar_extractors, vector_extractors, n_q_points_cell, dofs_per_cell);
+      auto tmp_artificial_diffusion =
+        std::make_unique<LaplacianDiffusion<dim>>(scalar_extractors,
+                                                  vector_extractors,
+                                                  dof_handler,
+                                                  fe,
+                                                  cell_quadrature,
+                                                  dofs_per_cell);
       artificial_diffusion = std::move(tmp_artificial_diffusion);
       break;
     }
@@ -658,15 +672,15 @@ void ConservationLaw<dim>::setup_system()
     case DiffusionType::graphtheoretic:
     {
       auto tmp_artificial_diffusion =
-        std::make_unique<GraphTheoreticDiffusion<dim>>(dofs_per_cell,
-                                                       n_components);
+        std::make_unique<GraphTheoreticDiffusion<dim>>(
+          dof_handler, dofs_per_cell, n_components);
       artificial_diffusion = std::move(tmp_artificial_diffusion);
       break;
     }
     // else
     default:
     {
-      ExcNotImplemented();
+      Assert(false, ExcNotImplemented());
       break;
     }
   }
@@ -856,6 +870,8 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
             << ": t = \x1b[1;34m" << new_time << "\x1b[0m, CFL = " << cfl
             << std::endl;
 
+    cout1 << std::fixed << std::setprecision(2) << "    stage 1 of 1" << std::endl;
+
     // compute viscosities
     {
       // start timer for compute viscosities section
@@ -869,56 +885,55 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     if (parameters.output_viscosity_transient)
       output_viscosity(postprocessor, true /* is_transient */, old_time);
 
+    // compute low-order diffusion matrix
+    artificial_diffusion->compute_diffusion_matrix(viscosity,
+                                                   low_order_diffusion_matrix);
+
     // update old_solution to new_solution for next time step;
     // this is not done at the end of the previous time step because
     // of the time derivative term in the viscosities update above
     old_solution = new_solution;
 
-    // compute each f_i
-    for (int i = 0; i < rk.s; ++i)
-    {
-      cout1 << "    stage " << i + 1 << " of " << rk.s << std::endl;
-
-      // compute stage time
-      const double stage_time = old_time + rk.c[i] * dt;
-
-      /* compute RHS of
-       *
-       * M*Y_i = M*y^n + sum_{j=1}^{i-1} dt*a_{i,j}*f_j
-       *
-       */
-      system_rhs = 0.0;
-      mass_matrix->vmult(system_rhs, old_solution);
-      for (int j = 0; j < i; ++j)
-        system_rhs.add(dt * rk.a[i][j], rk.f[j]);
-
-      // solve system M*Y_i = RHS
-      linear_solve(*mass_matrix, system_rhs, new_solution);
-
-      // compute steady-state residual f(Y_i)
+    /*
+      for (unsigned int i = 0; i < ssprk.n_stages; ++i)
       {
-        // start timer for compute steady-state residual function
-        TimerOutput::Scope timer_section(timer, "Compute steady-state residual");
+        // get stage time
+        double t_stage = ssprk.get_stage_time();
 
-        compute_ss_residual(stage_time, dt, rk.f[i]);
+        // recompute steady-state rhs if it is time-dependent
+        if (source_is_time_dependent)
+        {
+          assemble_ss_rhs(t_stage);
+        }
+
+        // advance by an SSPRK step
+        ssprk.step(consistent_mass_matrix, inviscid_ss_matrix, ss_rhs,
+          true);
       }
-    }
+      // retrieve the final solution
+      ssprk.get_new_solution(new_solution);
+    */
 
-    /* compute the solution using the computed f_i's:
-     *
-     * M*y^{n+1} = M*y^n + dt*sum_{i=1}^s b_i*f_i
-     */
-    // solve M*y^{n+1} = M*y^n + dt*sum_{i=1}^s b_i*f_i
-    system_rhs = 0.0;
+    // compute steady-state rhs vector
+    compute_ss_rhs(old_time, ss_rhs);
+
+    // compute steady-state flux vector
+    compute_ss_flux(dt, old_solution, ss_flux);
+
+    // compute system rhs
+    system_rhs = 0;
     mass_matrix->vmult(system_rhs, old_solution);
-    for (int i = 0; i < rk.s; ++i)
-      system_rhs.add(dt * rk.b[i], rk.f[i]);
+    system_rhs.add(dt, ss_rhs);
+    system_rhs.add(-dt, ss_flux);
+    low_order_diffusion_matrix.vmult(tmp_vector, old_solution);
+    system_rhs.add(-dt, tmp_vector);
 
     // copy mass matrix before modification
     system_matrix.copy_from(*mass_matrix);
 
     // apply Dirichlet constraints
-    apply_dirichlet_bc(system_matrix, new_solution, system_rhs, new_time);
+    if (boundary_conditions_type == "dirichlet")
+      apply_dirichlet_bc(system_matrix, new_solution, system_rhs, new_time);
 
     // solve the linear system
     linear_solve(system_matrix, system_rhs, new_solution);

@@ -11,7 +11,7 @@ using namespace dealii;
 
 /**
  * \class NoDiffusion
- * \brief Class for having no artificial diffusion. Does nothing.
+ * \brief Class for zero artificial diffusion. Does nothing.
  */
 template <int dim>
 class NoDiffusion : public ArtificialDiffusion<dim>
@@ -21,11 +21,15 @@ public:
 
   NoDiffusion();
 
-  void apply(std::shared_ptr<Viscosity<dim>> viscosity,
-             const Vector<double> & solution,
-             const Cell & cell,
-             const FEValues<dim> & fe_values,
-             Vector<double> & cell_residual) const override;
+  /*
+    void apply(std::shared_ptr<Viscosity<dim>> viscosity,
+               const Vector<double> & solution,
+               const Cell & cell,
+               const FEValues<dim> & fe_values,
+               Vector<double> & cell_residual) const override;
+  */
+  void compute_diffusion_matrix(const std::shared_ptr<Viscosity<dim>> viscosity,
+                                SparseMatrix<double> & diffusion_matrix) override;
 };
 
 #include "src/diffusion/NoDiffusion.cc"

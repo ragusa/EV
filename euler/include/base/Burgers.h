@@ -72,9 +72,11 @@ private:
 
   void define_problem() override;
 
-  void compute_ss_residual(const double & t,
-                           const double & dt,
-                           Vector<double> & solution) override;
+  void compute_ss_flux(const double & dt,
+                       const Vector<double> & solution,
+                       Vector<double> & ss_flux) override;
+
+  void compute_ss_rhs(const double & t, Vector<double> & ss_rhs) override;
 
   void update_flux_speeds() override;
 

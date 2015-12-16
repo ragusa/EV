@@ -314,47 +314,25 @@ void Transport<dim>::set_boundary_ids()
 }
 
 /**
- * \brief Computes the steady-state residual \f$\mathbf{r}\f$.
+ * \brief Computes the steady-state flux vector.
  *
- * Rearranging the Transport equation,
+ * This function computes the steady-state flux vector \f$\mathrm{f}^n\f$:
  * \f[
- *   \frac{1}{v}\frac{\partial u}{\partial t}
- *   + \nabla\cdot(u\mathbf{\Omega}) + \sigma u = q \,.
- * \f]
- * Substituting the approximate FEM solution and testing with a test function
- * \f$\varphi_i\f$ gives the weak form for degree of freedom \f$i\f$:
- * \f[
- *   \frac{1}{v}\left(\varphi_i,\frac{\partial u_h}{\partial t}\right)_\Omega
- *   =   \left(\varphi_i,q\right)_\Omega
- *     - \left(\varphi_i,\nabla\cdot(u_h\mathbf{\Omega})\right)_\Omega
- *     - \left(\varphi_i,\sigma u_h\right)_\Omega \,.
- *
- * \f]
- * This yields a discrete system
- * \f[
- *   \mathbf{M}\frac{d\mathbf{U}}{dt} = \mathbf{r} ,
- * \f]
- * where \f$\mathbf{M}\f$ is the mass matrix and the steady-state residual
- * \f$\mathbf{r}\f$ is given by
- * \f[
- *   r_i = v\left[
- *       \left(\varphi_i,q\right)_\Omega
- *     - \left(\varphi_i,\mathbf{\Omega}\cdot\nabla u_h\right)_\Omega
- *     - \left(\varphi_i,\sigma u_h\right)_\Omega
- *     \right] \,.
+ *   \mathrm{f}_i^n = \int\limits_{S_i}
+ *     \varphi_i(\mathbf{x})\nabla\cdot\mathbf{f}(\tilde{\mathbf{u}}^n)dV \,.
  * \f]
  *
- *  \param[in] t time at which to evaluate residual \f$t\f$
- *  \param[in] dt time step size \f$\Delta t\f$
- *  \param[out] r steady-state residual \f$\mathbf{r}\f$
+ * \param[in] dt time step size \f$\Delta t\f$
+ * \param[in] solution solution vector \f$\mathrm{U}^n\f$
+ * \param[out] ss_flux steady-state flux vector \f$\mathrm{f}^n\f$
  */
 template <int dim>
-void Transport<dim>::compute_ss_residual(const double & t,
-                                         const double & dt,
-                                         Vector<double> & f)
+void Transport<dim>::compute_ss_flux(const double & dt,
+                                     const Vector<double> & solution,
+                                     Vector<double> & ss_flux)
 {
   // reset vector
-  f = 0.0;
+  ss_flux = 0.0;
 
   FEValues<dim> fe_values(this->fe,
                           this->cell_quadrature,
@@ -365,6 +343,86 @@ void Transport<dim>::compute_ss_residual(const double & t,
   std::vector<unsigned int> local_dof_indices(this->dofs_per_cell);
   std::vector<double> solution_values(this->n_q_points_cell);
   std::vector<Tensor<1, dim>> solution_gradients(this->n_q_points_cell);
+
+  // loop over cells
+  typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler
+                                                          .begin_active(),
+                                                 endc = this->dof_handler.end();
+  for (; cell != endc; ++cell)
+  {
+    // reset cell residual
+    cell_residual = 0;
+
+    // reinitialize fe values for cell
+    fe_values.reinit(cell);
+
+    // get current solution values and gradients
+    fe_values[extractor].get_function_values(solution, solution_values);
+    fe_values[extractor].get_function_gradients(solution, solution_gradients);
+
+    // get quadrature points on cell
+    std::vector<Point<dim>> points(this->n_q_points_cell);
+    points = fe_values.get_quadrature_points();
+
+    // loop over quadrature points
+    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+    {
+      // compute cross section value at quadrature point
+      const double cross_section_value = cross_section_function.value(points[q]);
+
+      // loop over test functions
+      for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+      {
+        cell_residual(i) += transport_speed * fe_values[extractor].value(i, q) *
+          (transport_direction * solution_gradients[q] +
+           cross_section_value * solution_values[q]) *
+          fe_values.JxW(q);
+      }
+    }
+
+    // apply artificial diffusion
+    /*
+        this->artificial_diffusion->apply(
+          this->viscosity, this->new_solution, cell, fe_values, cell_residual);
+    */
+
+    // apply boundary conditions
+    this->boundary_conditions->apply(
+      cell, fe_values, solution, dt, cell_residual);
+
+    // aggregate local residual into global residual
+    cell->get_dof_indices(local_dof_indices);
+    for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+      ss_flux(local_dof_indices[i]) += cell_residual(i);
+  }
+}
+
+/**
+ * \brief Computes the steady-state right hand side vector.
+ *
+ * This function computes the steady-state flux vector \f$\mathrm{q}^n\f$:
+ * \f[
+ *   \mathrm{q}_i^n = v \int\limits_{S_i}
+ *     \varphi_i(\mathbf{x}) q(t^n,\mathbf{x})dV \,,
+ * \f]
+ * where \f$v\f$ is the transport speed.
+ *
+ * \param[in] t time at which to evaluate residual \f$t^n\f$
+ * \param[out] ss_flux steady-state rhs vector \f$\mathrm{q}^n\f$
+ */
+template <int dim>
+void Transport<dim>::compute_ss_rhs(const double & t, Vector<double> & ss_rhs)
+{
+  // reset vector
+  ss_rhs = 0.0;
+
+  FEValues<dim> fe_values(this->fe,
+                          this->cell_quadrature,
+                          update_values | update_quadrature_points |
+                            update_JxW_values);
+
+  Vector<double> cell_residual(this->dofs_per_cell);
+  std::vector<unsigned int> local_dof_indices(this->dofs_per_cell);
 
   // set time for source function
   source_function.set_time(t);
@@ -381,11 +439,6 @@ void Transport<dim>::compute_ss_residual(const double & t,
     // reinitialize fe values for cell
     fe_values.reinit(cell);
 
-    // get current solution values and gradients
-    fe_values[extractor].get_function_values(this->new_solution, solution_values);
-    fe_values[extractor].get_function_gradients(this->new_solution,
-                                                solution_gradients);
-
     // get quadrature points on cell
     std::vector<Point<dim>> points(this->n_q_points_cell);
     points = fe_values.get_quadrature_points();
@@ -393,40 +446,22 @@ void Transport<dim>::compute_ss_residual(const double & t,
     // loop over quadrature points
     for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
     {
-      // compute cross section and source values at quadrature point
-      const double cross_section_value = cross_section_function.value(points[q]);
+      // compute source value at quadrature point
       const double source_value = source_function.value(points[q]);
 
       // loop over test functions
       for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
       {
         cell_residual(i) += transport_speed * fe_values[extractor].value(i, q) *
-          (source_value - transport_direction * solution_gradients[q] -
-           cross_section_value * solution_values[q]) *
-          fe_values.JxW(q);
+          source_value * fe_values.JxW(q);
       }
     }
-
-    // apply artificial diffusion
-    this->artificial_diffusion->apply(
-      this->viscosity, this->new_solution, cell, fe_values, cell_residual);
-
-    // apply boundary conditions
-    this->boundary_conditions->apply(
-      cell, fe_values, this->new_solution, dt, cell_residual);
 
     // aggregate local residual into global residual
     cell->get_dof_indices(local_dof_indices);
     for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
-      f(local_dof_indices[i]) += cell_residual(i);
-    /*
-        this->constraints.distribute_local_to_global(
-          cell_residual, local_dof_indices, f);
-    */
-  } // end cell loop
-
-  // if artificial diffusion is algebraic, then apply it here
-  this->artificial_diffusion->apply_algebraic_diffusion(this->new_solution, f);
+      ss_rhs(local_dof_indices[i]) += cell_residual(i);
+  }
 }
 
 template <int dim>

@@ -48,6 +48,7 @@
 #include "include/other/Exceptions.h"
 #include "include/parameters/ConservationLawParameters.h"
 #include "include/postprocessing/PostProcessor.h"
+//#include "include/time_integrator/SSPRKTimeIntegrator.h"
 #include "include/viscosity/ConstantViscosity.h"
 #include "include/viscosity/DomainInvariantViscosity.h"
 #include "include/viscosity/EntropyViscosity.h"
@@ -172,35 +173,36 @@ protected:
    */
   virtual void update_flux_speeds() = 0;
 
-  /** \brief Computes the steady-state residual.
+  /**
+   * \brief Computes the steady-state flux vector.
    *
-   *  This function computes the steady-state residual \f$\mathbf{r}\f$
-   *  in the following discretized system:
-   *  \f[
-   *    \mathbf{M}\frac{d\mathbf{U}}{dt} = \mathbf{r} .
-   *  \f]
-   *  In general, this steady-state residual consists of an inviscid component
-   *  and a viscous component:
-   *  \f[
-   *    \mathbf{r} = \mathbf{r}^{inviscid} + \mathbf{r}^{viscous} ,
-   *  \f]
-   *  which are computed as follows:
-   *  \f[
-   *    r^{inviscid}_i = -\left(\varphi_i,
-   *      \nabla\cdot\mathbf{f}(u_h)\right)_\Omega ,
-   *  \f]
-   *  \f[
-   *    r^{viscous}_i = -\sum\limits_{K\subset S_i}\nu_K\sum\limits_j
-   *      U_j b_K(\varphi_i, \varphi_j) .
-   *  \f]
+   * This function computes the steady-state flux vector \f$\mathrm{f}^n\f$:
+   * \f[
+   *   \mathrm{f}_i^n = \int\limits_{S_i}
+   *     \varphi_i(\mathbf{x})\nabla\cdot\mathbf{f}(\tilde{\mathbf{u}}^n)dV \,.
+   * \f]
    *
-   *  \param[in] t time at which to evaluate residual \f$t\f$
-   *  \param[in] dt time step size \f$\Delta t\f$
-   *  \param[out] r steady-state residual \f$\mathbf{r}\f$
+   * \param[in] dt time step size \f$\Delta t\f$
+   * \param[in] solution solution vector \f$\mathrm{U}^n\f$
+   * \param[out] ss_flux steady-state flux vector \f$\mathrm{f}^n\f$
    */
-  virtual void compute_ss_residual(const double & t,
-                                   const double & dt,
-                                   Vector<double> & r) = 0;
+  virtual void compute_ss_flux(const double & dt,
+                               const Vector<double> & solution,
+                               Vector<double> & ss_flux) = 0;
+
+  /**
+   * \brief Computes the steady-state right hand side vector.
+   *
+   * This function computes the steady-state flux vector \f$\mathrm{q}^n\f$:
+   * \f[
+   *   \mathrm{q}_i^n = \int\limits_{S_i}
+   *     \varphi_i(\mathbf{x}) q(t^n,\mathbf{x})dV \,.
+   * \f]
+   *
+   * \param[in] t time at which to evaluate residual \f$t^n\f$
+   * \param[out] ss_flux steady-state rhs vector \f$\mathrm{q}^n\f$
+   */
+  virtual void compute_ss_rhs(const double & t, Vector<double> & ss_rhs) = 0;
 
   /**
    * \brief Computes divergence of entropy flux at each quadrature point in cell.
@@ -355,6 +357,12 @@ protected:
   double old_time;
   /** \brief system right-hand side */
   LocalVector system_rhs;
+  /** \brief steady-state flux vector */
+  LocalVector ss_flux;
+  /** \brief steady-state right-hand side vector */
+  LocalVector ss_rhs;
+  /** \brief temporal vector */
+  LocalVector tmp_vector;
 
   /** \brief constrained sparsity pattern */
   SparsityPattern constrained_sparsity_pattern;
@@ -372,6 +380,8 @@ protected:
   const LocalMatrix * mass_matrix_constrained;
   /** \brief pointer to mass matrix to be used on right hand side */
   const LocalMatrix * mass_matrix;
+  /** \brief Low-order diffusion matrix \f$\mathrm{D}^{L,n}\f$ */
+  LocalMatrix low_order_diffusion_matrix;
   /** \brief system matrix */
   LocalMatrix system_matrix;
 
@@ -454,6 +464,9 @@ protected:
 
   /** \brief Runge-Kutta parameters */
   RungeKuttaParameters rk;
+
+  /** \brief pointer to SSP Runge Kutta time integrator */
+  // std::shared_ptr<SSPRKTimeIntegrator<dim>> ssprk;
 
   /** \brief Default end time for test problem */
   double default_end_time;

@@ -7,9 +7,9 @@ filebase = "viscosity"
 
 # list of possible input files to plot and their corresponding titles
 outdir = "../output/".problem_name."/"
-file_loworder  = outdir."loworderviscosity_" .timeintegrator.".gpl"
-file_entropy   = outdir."entropyviscosity_"  .timeintegrator.".gpl"
-file_highorder = outdir."highorderviscosity_".timeintegrator.".gpl"
+file_loworder  = outdir."viscosity_low_" .timeintegrator.".gpl"
+file_entropy   = outdir."viscosity_ev_"  .timeintegrator.".gpl"
+file_highorder = outdir."viscosity_high_".timeintegrator.".gpl"
 
 set terminal pdfcairo
 output_file = outdir."viscosity_".timeintegrator.".pdf"

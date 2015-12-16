@@ -50,6 +50,7 @@ subsection artificial viscosity
    set constant entropy normalization coefficient = 0.1
    set entropy viscosity smoothing = none # none | max | average
    set entropy viscosity smoothing weight = 1
+   set diffusion type = none
 end
 
 subsection temporal integration

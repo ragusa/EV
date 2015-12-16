@@ -395,7 +395,13 @@ void ShallowWater<dim>::assemble_lumped_mass_matrix()
 }
 
 /**
- * \brief Computes the steady-state residual.
+ * \brief Computes the steady-state flux vector.
+ *
+ * This function computes the steady-state flux vector \f$\mathrm{f}^n\f$:
+ * \f[
+ *   \mathrm{f}_i^n = \int\limits_{S_i}
+ *     \varphi_i(\mathbf{x})\nabla\cdot\mathbf{f}(\tilde{\mathbf{u}}^n)dV \,.
+ * \f]
  *
  * Rearranging the continuity equation, substituting the approximate FEM
  * solution and testing with a test function \f$\varphi_i^h\f$ gives its
@@ -447,17 +453,17 @@ void ShallowWater<dim>::assemble_lumped_mass_matrix()
  *   - \left(\varphi_i^{\mathbf{q}},g h_h\nabla b\right)_\Omega .
  * \f]
  *
- *  \param[in] t time at which to evaluate residual \f$t\f$
- *  \param[in] dt time step size \f$\Delta t\f$
- *  \param[out] r steady-state residual \f$\mathbf{r}\f$
+ * \param[in] dt time step size \f$\Delta t\f$
+ * \param[in] solution solution vector \f$\mathrm{U}^n\f$
+ * \param[out] ss_flux steady-state flux vector \f$\mathrm{f}^n\f$
  */
 template <int dim>
-void ShallowWater<dim>::compute_ss_residual(const double &,
-                                            const double & dt,
-                                            Vector<double> & f)
+void ShallowWater<dim>::compute_ss_flux(const double & dt,
+                                        const Vector<double> & solution,
+                                        Vector<double> & ss_flux)
 {
   // reset vector
-  f = 0.0;
+  ss_flux = 0;
 
   FEValues<dim> fe_values(this->fe,
                           this->cell_quadrature,
@@ -485,16 +491,14 @@ void ShallowWater<dim>::compute_ss_residual(const double &,
     // get current solution values
     std::vector<double> height(this->n_q_points_cell);
     std::vector<Tensor<1, dim>> momentum(this->n_q_points_cell);
-    fe_values[height_extractor].get_function_values(this->new_solution, height);
-    fe_values[momentum_extractor].get_function_values(this->new_solution,
-                                                      momentum);
+    fe_values[height_extractor].get_function_values(solution, height);
+    fe_values[momentum_extractor].get_function_values(solution, momentum);
 
     // get solution gradients
     std::vector<Tensor<1, dim>> height_gradient(this->n_q_points_cell);
     std::vector<Tensor<2, dim>> momentum_gradient(this->n_q_points_cell);
-    fe_values[height_extractor].get_function_gradients(this->new_solution,
-                                                       height_gradient);
-    fe_values[momentum_extractor].get_function_gradients(this->new_solution,
+    fe_values[height_extractor].get_function_gradients(solution, height_gradient);
+    fe_values[momentum_extractor].get_function_gradients(solution,
                                                          momentum_gradient);
 
     // compute gradients of bathymetry function
@@ -517,14 +521,14 @@ void ShallowWater<dim>::compute_ss_residual(const double &,
         cell_residual(i) +=
           (
             // height flux
-            fe_values[height_extractor].gradient(i, q) * height_inviscid_flux[q]
+            -fe_values[height_extractor].gradient(i, q) * height_inviscid_flux[q]
             // momentum flux
-            +
+            -
             double_contract<0, 0, 1, 1>(
               fe_values[momentum_extractor].gradient(i, q),
               momentum_inviscid_flux[q])
             // bathymetry source term
-            -
+            +
             fe_values[momentum_extractor].value(i, q) * gravity * height[q] *
               bathymetry_gradient[q]) *
           fe_values.JxW(q);
@@ -532,21 +536,38 @@ void ShallowWater<dim>::compute_ss_residual(const double &,
     }
 
     // apply artificial diffusion
-    this->artificial_diffusion->apply(
-      this->viscosity, this->new_solution, cell, fe_values, cell_residual);
+    /*
+        this->artificial_diffusion->apply(
+          this->viscosity, solution, cell, fe_values, cell_residual);
+    */
 
     // apply boundary conditions
     this->boundary_conditions->apply(
-      cell, fe_values, this->new_solution, dt, cell_residual);
+      cell, fe_values, solution, dt, cell_residual);
 
     // aggregate local residual into global residual
     cell->get_dof_indices(local_dof_indices);
-    this->constraints.distribute_local_to_global(
-      cell_residual, local_dof_indices, f);
-  } // end cell loop
+    for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+      ss_flux(local_dof_indices[i]) += cell_residual(i);
+  }
+}
 
-  // if artificial diffusion is algebraic, then apply it here
-  this->artificial_diffusion->apply_algebraic_diffusion(this->new_solution, f);
+/**
+ * \brief Computes the steady-state right hand side vector.
+ *
+ * This function computes the steady-state flux vector \f$\mathrm{q}^n\f$:
+ * \f[
+ *   \mathrm{q}_i^n = \int\limits_{S_i}
+ *     \varphi_i(\mathbf{x}) q(t^n,\mathbf{x})dV \,.
+ * \f]
+ *
+ * \param[in] t time at which to evaluate residual \f$t^n\f$
+ * \param[out] ss_flux steady-state rhs vector \f$\mathrm{q}^n\f$
+ */
+template <int dim>
+void ShallowWater<dim>::compute_ss_rhs(const double &, Vector<double> & ss_rhs)
+{
+  ss_rhs = 0;
 }
 
 /**

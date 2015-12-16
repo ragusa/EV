@@ -53,7 +53,7 @@ void ShallowWaterWallBC<dim>::apply_boundary_condition(
 
     // loop over DoFs in cell
     for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
-      cell_residual(i) -=
+      cell_residual(i) +=
         this->fe_values_face[this->momentum_extractor].value(i, q) *
         momentum_inviscid_flux * normal_vectors[q] * this->fe_values_face.JxW(q);
   }

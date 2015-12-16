@@ -41,7 +41,7 @@ subsection artificial viscosity
    set entropy viscosity smoothing weight = 4
 
    # options are <none|laplacian|graphtheoretic>
-   set diffusion type = laplacian
+   set diffusion type = none
 end
 
 subsection temporal integration

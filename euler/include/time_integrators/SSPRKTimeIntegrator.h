@@ -1,38 +1,46 @@
+/**
+ * \file SSPRKTimeIntegrator.h
+ * \brief Provides the header for the SSPRKTimeIntegrator class.
+ */
 #ifndef SSPRKTimeIntegrator_cc
 #define SSPRKTimeIntegrator_cc
 
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/vector.h>
 #include "LinearSolver.h"
-#include "TransportParameters.h"
+#include "ConservationLawParameters.h"
 
 using namespace dealii;
 
 /**
- * Class for implementing SSP Runge-Kutta time integration.
+ * \brief Class for implementing SSP Runge-Kutta time integration.
  */
-template<int dim>
+template <int dim>
 class SSPRKTimeIntegrator
 {
 public:
-  SSPRKTimeIntegrator(const typename TransportParameters<dim>::TemporalDiscretization &ssprk_method,
-      const unsigned int &system_size, const LinearSolver<dim> &linear_solver,
-      const SparsityPattern &sparsity_pattern);
+  SSPRKTimeIntegrator(const typename ConservationLawParameters<
+                        dim>::TemporalDiscretization & time_discretization,
+                      const unsigned int & system_size,
+                      const LinearSolver<dim> & linear_solver,
+                      const SparsityPattern & sparsity_pattern);
   ~SSPRKTimeIntegrator();
 
-  void initialize_time_step(const Vector<double> &old_solution,
-      const double &time_step_size);
-  void step(const SparseMatrix<double> &mass_matrix,
-      const SparseMatrix<double> &ss_matrix, const Vector<double> &ss_rhs,
-      const bool &call_complete_stage_solution);
+  void initialize_time_step(const Vector<double> & old_solution,
+                            const double & time_step_size);
+  void step(const SparseMatrix<double> & mass_matrix,
+            const SparseMatrix<double> & ss_matrix,
+            const Vector<double> & ss_rhs,
+            const bool & call_complete_stage_solution);
   void complete_stage_solution();
-  void get_stage_solution(const unsigned int &i,
-      Vector<double> &new_solution) const;
-  void get_intermediate_solution(Vector<double> &solution) const;
-  void set_intermediate_solution(Vector<double> &solution);
-  void get_new_solution(Vector<double> &new_solution) const;
+  void get_stage_solution(const unsigned int & i,
+                          Vector<double> & new_solution) const;
+  void get_intermediate_solution(Vector<double> & solution) const;
+  void set_intermediate_solution(Vector<double> & solution);
+  void get_new_solution(Vector<double> & new_solution) const;
   double get_stage_time() const;
-  void set_stage_solution(const unsigned int &i, const Vector<double> &solution);
+  void set_stage_solution(const unsigned int & i,
+                          const Vector<double> & solution);
 
   unsigned int n_stages;
 
@@ -42,7 +50,7 @@ private:
   Vector<double> c;
 
   unsigned int n;
-  std::vector<Vector<double> > u_stage;
+  std::vector<Vector<double>> u_stage;
 
   unsigned int current_stage;
 

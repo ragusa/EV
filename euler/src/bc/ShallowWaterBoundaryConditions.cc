@@ -18,14 +18,14 @@ ShallowWaterBoundaryConditions<dim>::ShallowWaterBoundaryConditions(
 }
 
 /**
- * \brief Adds face contributions to steady-state residual.
+ * \brief Adds face contributions to steady-state flux vector.
  *
  * Adds the following face contributions resulting from integration
  * by parts:
  * \f[
  *   r_i +=
- *   - \left(\varphi_i^h,\mathbf{q}_h\cdot\mathbf{n}\right)_{\partial\Omega}
- *   - \left(\varphi_i^{\mathbf{q}},(\mathbf{q}\otimes\mathbf{v}
+ *     \left(\varphi_i^h,\mathbf{q}_h\cdot\mathbf{n}\right)_{\partial\Omega}
+ *   + \left(\varphi_i^{\mathbf{q}},(\mathbf{q}\otimes\mathbf{v}
  *   + \frac{1}{2}g h^2\mathbf{I})_h\cdot\mathbf{n}\right)_{\partial\Omega} .
  * \f]
  *
@@ -59,7 +59,7 @@ void ShallowWaterBoundaryConditions<dim>::integrate_face(
 
     // loop over DoFs in cell
     for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
-      cell_residual(i) -=
+      cell_residual(i) +=
         (this->fe_values_face[height_extractor].value(i, q) * momentum[q] +
          this->fe_values_face[momentum_extractor].value(i, q) *
            momentum_inviscid_flux) *
