@@ -191,10 +191,6 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
   // artificial viscosity
   prm.enter_subsection("artificial viscosity");
   {
-    prm.declare_entry("viscosity type",
-                      "constant",
-                      Patterns::Anything(),
-                      "choice for artificial viscosity");
     prm.declare_entry("constant viscosity value",
                       "1e-3",
                       Patterns::Double(),
@@ -226,10 +222,6 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
       "2",
       Patterns::Integer(),
       "Weight for center of Laplacian smoothing for entropy viscosity");
-    prm.declare_entry("diffusion type",
-                      "laplacian",
-                      Patterns::Anything(),
-                      "choice for type of diffusion");
   }
   prm.leave_subsection();
 
@@ -281,6 +273,14 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
                       "option to print final solution");
     prm.declare_entry(
       "verbosity level", "1", Patterns::Integer(), "level of verbosity");
+  }
+  prm.leave_subsection();
+
+  // fct
+  prm.enter_subsection("fct");
+  {
+    prm.declare_entry(
+      "antidiffusion", "limited", Patterns::Selection("limited|full|none"), "Option for antidiffusion in FCT scheme");
   }
   prm.leave_subsection();
 }
@@ -471,24 +471,6 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
   // artificial viscosity
   prm.enter_subsection("artificial viscosity");
   {
-    /*
-    const std::string viscosity_choice = prm.get("viscosity type");
-    if (viscosity_choice == "none")
-      viscosity_type = ViscosityType::none;
-    else if (viscosity_choice == "constant")
-      viscosity_type = ViscosityType::constant;
-    else if (viscosity_choice == "low")
-      viscosity_type = ViscosityType::low;
-    else if (viscosity_choice == "DMP")
-      viscosity_type = ViscosityType::DMP;
-    else if (viscosity_choice == "DI")
-      viscosity_type = ViscosityType::DI;
-    else if (viscosity_choice == "entropy")
-      viscosity_type = ViscosityType::entropy;
-    else
-      Assert(false, ExcNotImplemented());
-    */
-
     constant_viscosity_value = prm.get_double("constant viscosity value");
     first_order_viscosity_coef =
       prm.get_double("first order viscosity coefficient");
@@ -499,16 +481,6 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
     entropy_viscosity_smoothing = prm.get("entropy viscosity smoothing");
     entropy_viscosity_smoothing_weight =
       prm.get_integer("entropy viscosity smoothing weight");
-
-    const std::string diffusion_choice = prm.get("diffusion type");
-    if (diffusion_choice == "none")
-      diffusion_type = DiffusionType::none;
-    else if (diffusion_choice == "laplacian")
-      diffusion_type = DiffusionType::laplacian;
-    else if (diffusion_choice == "graphtheoretic")
-      diffusion_type = DiffusionType::graphtheoretic;
-    else
-      ExcNotImplemented();
   }
   prm.leave_subsection();
 
@@ -527,6 +499,22 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
     save_convergence_results = prm.get_bool("save convergence results");
     print_final_solution = prm.get_bool("print final solution");
     verbosity_level = prm.get_integer("verbosity level");
+  }
+  prm.leave_subsection();
+
+  // FCT
+  prm.enter_subsection("output");
+  {
+    // antidiffusion
+    std::string antidiffusion_string = prm.get("antidiffusion");
+    if (antidiffusion_string == "limited")
+      antidiffusion_type = AntidiffusionType::limited;
+    else if (antidiffusion_string == "full")
+      antidiffusion_type = AntidiffusionType::full;
+    else if (antidiffusion_string == "none")
+      antidiffusion_type = AntidiffusionType::none;
+    else
+      Assert(false, ExcNotImplemented());
   }
   prm.leave_subsection();
 }

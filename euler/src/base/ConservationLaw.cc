@@ -464,6 +464,7 @@ void ConservationLaw<dim>::setup_system()
     locally_owned_dofs, locally_relevant_dofs, mpi_communicator);
   system_rhs.reinit(locally_owned_dofs, mpi_communicator);
   ss_flux.reinit(locally_owned_dofs, mpi_communicator);
+  ss_reaction.reinit(locally_owned_dofs, mpi_communicator);
   ss_rhs.reinit(locally_owned_dofs, mpi_communicator);
   estimated_error_per_cell.reinit(triangulation.n_active_cells());
 #else
@@ -473,7 +474,7 @@ void ConservationLaw<dim>::setup_system()
   new_solution.reinit(n_dofs);
   solution_step.reinit(n_dofs);
   system_rhs.reinit(n_dofs);
-  ss_flux.reinit(n_dofs);
+  ss_reaction.reinit(n_dofs);
   ss_rhs.reinit(n_dofs);
   estimated_error_per_cell.reinit(triangulation.n_active_cells());
 #endif
@@ -636,6 +637,9 @@ void ConservationLaw<dim>::setup_system()
   // create low-order and high-order artificial diffusion
   low_order_diffusion = create_artificial_diffusion(low_order_diffusion_type);
   high_order_diffusion = create_artificial_diffusion(high_order_diffusion_type);
+
+  // get list of Dirichlet DoF indices
+  get_dirichlet_dof_indices(dirichlet_dof_indices);
 }
 
 /**
@@ -771,11 +775,14 @@ void ConservationLaw<dim>::assemble_mass_matrix()
  *   + \Delta t\sum\limits^{i-1}_{j=1}a_{i,j} \mathbf{r}_j
  * \f]
  *
- * \param[inout] postprocessor post-processor for outputting transient
+ * \param[in,out] postprocessor post-processor for outputting transient
  */
 template <int dim>
 void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
 {
+  // compute steady-state reaction vector, which is not time-dependent
+  compute_ss_reaction(ss_reaction);
+
   // create linear solver
   LinearSolver<dim> linear_solver(
     parameters.linear_solver, constraints, dof_handler, dirichlet_function);
@@ -785,6 +792,13 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
                                  n_dofs,
                                  linear_solver,
                                  unconstrained_sparsity_pattern);
+
+  // create FCT if applicable
+  std::shared_ptr<FCT<dim>> fct;
+  if (parameters.scheme == Scheme::fct)
+    fct = std::make_shared<FCT<dim>>(dof_handler, lumped_mass_matrix,
+     consistent_mass_matrix, linear_solver, unconstrained_sparsity_pattern,
+     dirichlet_dof_indices, dofs_per_cell, parameters.antidiffusion_type);
 
   // initialize old time, time index, and transient flag
   old_time = 0.0;
@@ -839,33 +853,6 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
       cout1 << std::fixed << std::setprecision(2) << "  time step " << n
             << ": t = \x1b[1;34m" << new_time << "\x1b[0m, CFL = " << cfl
             << std::endl;
-
-    /*
-        // compute viscosities
-        {
-          // start timer for compute viscosities section
-          TimerOutput::Scope timer_section(timer, "Compute viscosity");
-
-          // update viscosities
-          low_order_viscosity->update(old_solution, older_solution, old_dt, n);
-          high_order_viscosity->update(old_solution, older_solution, old_dt, n);
-        }
-
-        // output viscosity transient if specified
-        if (parameters.output_viscosity_transient)
-          output_viscosity(postprocessor, true, old_time);
-
-        // update old_solution to new_solution for next time step;
-        // this is not done at the end of the previous time step because
-        // of the time derivative term in the viscosities update above
-        //old_solution = new_solution;
-
-        // compute diffusion matrices
-        low_order_diffusion->compute_diffusion_matrix(low_order_viscosity,
-                                                      low_order_diffusion_matrix);
-        high_order_diffusion->compute_diffusion_matrix(high_order_viscosity,
-                                                       high_order_diffusion_matrix);
-    */
 
     // initialize SSPRK time step
     ssprk.initialize_time_step(old_solution, dt);
@@ -926,56 +913,22 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
                      true);
           break;
         case Scheme::fct:
-          Assert(false, ExcNotImplemented());
-          // perform_fct_ssprk_step();
+          perform_fct_ssprk_step(fct, ssprk);
           break;
         default:
           Assert(false, ExcNotImplemented());
           break;
       }
+
+      // save viscosity if it is the first stage
+      if (i == 0)
+        if (parameters.output_viscosity_transient)
+          output_viscosity(postprocessor, true, old_time);
     }
 
     // retrieve the final solution
     ssprk.get_new_solution(new_solution);
 
-    /*
-      for (unsigned int i = 0; i < ssprk.n_stages; ++i)
-      {
-        // get stage time
-        double t_stage = ssprk.get_stage_time();
-
-        // recompute steady-state rhs if it is time-dependent
-        if (source_is_time_dependent)
-          this->assembleSteadyStateRHS(t_stage);
-
-        // get old stage solution
-        ssprk.get_stage_solution(i, old_stage_solution);
-
-        // recompute high-order steady-state matrix
-        EV.recompute_high_order_ss_matrix(this->new_solution,
-          old_stage_solution, old_solution, dt, dt_old, t_stage);
-
-        // advance by an SSPRK step
-        ssprk.step(consistent_mass_matrix, this->high_order_ss_matrix,
-          this->ss_rhs, false);
-
-        // get old stage solution
-        ssprk.get_stage_solution(i, old_stage_solution);
-
-        // get intermediate solution
-        ssprk.get_intermediate_solution(this->new_solution);
-
-        // perform FCT
-        fct.solve_FCT_system(this->new_solution, old_stage_solution,
-          this->low_order_ss_matrix, this->ss_rhs, dt,
-          this->low_order_diffusion_matrix, this->high_order_diffusion_matrix);
-
-        // set stage solution to be FCT solution for this stage
-        ssprk.set_intermediate_solution(this->new_solution);
-
-        // finish computing stage solution
-        ssprk.complete_stage_solution();
-    */
     {
       // start timer for output
       TimerOutput::Scope timer_section(timer, "Output");
@@ -1153,4 +1106,87 @@ std::shared_ptr<ViscosityMultiplier<dim>> ConservationLaw<
 {
   auto viscosity_multiplier = std::make_shared<ViscosityMultiplier<dim>>();
   return viscosity_multiplier;
+}
+
+/**
+ * \brief Performs an SSPRK step using FCT.
+ *
+ * \param[in] fct FCT
+ * \param[in,out] ssprk SSPRK time integrator
+ */
+template <int dim>
+void ConservationLaw<dim>::perfrom_fct_ssprk_step(
+  const std::shared_ptr<FCT<dim>> & fct, SSPRKTimeIntegrator<dim> & ssprk)
+{
+  // update low-order diffusion
+  low_order_viscosity->update(
+    old_stage_solution, older_solution, old_stage_dt, n);
+  low_order_diffusion->compute_diffusion_matrix(low_order_viscosity,
+                                                low_order_diffusion_matrix);
+
+  // update high-order diffusion
+  high_order_viscosity->update(
+    old_stage_solution, older_solution, old_stage_dt, n);
+  high_order_diffusion->compute_diffusion_matrix(high_order_viscosity,
+                                                 high_order_diffusion_matrix);
+
+  // compute high-order solution
+  ssprk.step(
+    consistent_mass_matrix, ss_flux, ss_rhs, high_order_diffusion_matrix, false);
+
+  // get high-order solution
+  ssprk.get_intermediate_solution(new_solution);
+
+  // perform FCT
+  fct.solve_fct_system(new_solution,
+                       old_stage_solution,
+                       ss_flux,
+                       ss_reaction,
+                       ss_rhs,
+                       dt,
+                       low_order_diffusion_matrix,
+                       high_order_diffusion_matrix);
+
+  // set stage solution to be FCT solution for this stage
+  ssprk.set_intermediate_solution(new_solution);
+
+  // finish computing stage solution
+  ssprk.complete_stage_solution();
+}
+
+/**
+ * \brief Gets a vector of dof indices subject to Dirichlet boundary conditions
+ *
+ * \param[out] dirichlet_dof_indices vector of dof indices subject to Dirichlet
+ *             boundary conditions
+ */
+template <int dim>
+void ConservationLaw<dim>::get_dirichlet_dof_indices(
+  std::vector<unsigned int> & dirichlet_dof_indices)
+{
+  // get map of Dirichlet dof indices to Dirichlet values
+  std::map<unsigned int, double> boundary_values;
+
+  // loop over boundary IDs
+  for (unsigned int boundary = 0; boundary < n_dirichlet_boundaries; ++boundary)
+    // loop over components
+    for (unsigned int component = 0; component < n_components; ++component)
+    {
+      // mask other components
+      std::vector<bool> component_mask(n_components, false);
+      component_mask[component] = true;
+
+      // fill boundary_values with boundary values
+      VectorTools::interpolate_boundary_values(dof_handler,
+                                               boundary,
+                                               *(dirichlet_functions[boundary]),
+                                               boundary_values,
+                                               component_mask);
+    }
+
+  // extract dof indices from map
+  dirichlet_dof_indices.clear();
+  for (std::map<unsigned int, double>::iterator it = boundary_values.begin();
+      it != boundary_values.end(); ++it)
+    dirichlet_dof_indices.push_back(it->first);
 }

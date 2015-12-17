@@ -98,3 +98,8 @@ subsection output
    # 2: print cycle, time step, stage info, timer summary, and extra info
    set verbosity level = 1
 end
+
+subsection fct
+   set antidiffusion = limited # limited|full|none
+end
+

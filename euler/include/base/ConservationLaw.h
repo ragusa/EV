@@ -45,6 +45,7 @@
 #include "include/diffusion/GraphTheoreticDiffusion.h"
 #include "include/diffusion/LaplacianDiffusion.h"
 #include "include/entropy/Entropy.h"
+#include "include/fct/FCT.h"
 #include "include/other/Exceptions.h"
 #include "include/parameters/ConservationLawParameters.h"
 #include "include/postprocessing/PostProcessor.h"
@@ -152,6 +153,8 @@ protected:
   void output_viscosity(PostProcessor<dim> & postprocessor,
                         const bool & is_transient = false,
                         const double & time = 0.0);
+  void perform_fct_ssprk_step(const std::shared_ptr<FCT<dim>> & fct, SSPRKTimeIntegrator<dim> & ssprk);
+  void get_dirichlet_dof_indices(std::vector<unsigned int> & dirichlet_dof_indices);
 
   /**
    * \brief Computes the lumped mass matrix.
@@ -183,6 +186,31 @@ protected:
                                Vector<double> & ss_flux) = 0;
 
   /**
+   * \brief Computes the steady-state reaction vector.
+   *
+   * This function computes the steady-state reaction vector, which has the
+   * entries
+   * \f[
+   *   \sigma_i = \int\limits_{S_i}\varphi_i(\mathbf{x})\sigma(\mathbf{x})dV
+   *     = \sum\limits_j\int\limits_{S_{i,j}}
+   *     \varphi_i(\mathbf{x})\varphi_j(\mathbf{x})\sigma(\mathbf{x})dV \,,
+   * \f]
+   * where \f$\sigma(\mathbf{x})\f$ is the reaction coefficient of the
+   * conservation law equation when it is put in the form
+   * \f[
+   *   \frac{\partial\mathbf{u}}{\partial t}
+   *   + \nabla \cdot \mathbf{F}(\mathbf{u}) + \sigma(\mathbf{x})\mathbf{u}
+   *   = \mathbf{0} \,.
+   * \f]
+   *
+   * \param[out] ss_reaction steady-state reaction vector
+   */
+  virtual void compute_ss_reaction(Vector<double> & ss_reaction)
+  {
+    ss_reaction = 0;
+  }
+
+  /**
    * \brief Computes the steady-state right hand side vector.
    *
    * This function computes the steady-state flux vector \f$\mathrm{q}^n\f$:
@@ -192,7 +220,7 @@ protected:
    * \f]
    *
    * \param[in] t time at which to evaluate residual \f$t^n\f$
-   * \param[out] ss_flux steady-state rhs vector \f$\mathrm{q}^n\f$
+   * \param[out] ss_rhs steady-state rhs vector \f$\mathrm{q}^n\f$
    */
   virtual void compute_ss_rhs(const double & t, Vector<double> & ss_rhs) = 0;
 
@@ -341,6 +369,8 @@ protected:
   LocalVector system_rhs;
   /** \brief steady-state flux vector */
   LocalVector ss_flux;
+  /** \brief steady-state reaction vector */
+  LocalVector ss_reaction;
   /** \brief steady-state right-hand side vector */
   LocalVector ss_rhs;
 
@@ -429,6 +459,9 @@ protected:
   bool has_default_end_time;
   /** \brief Chosen end time */
   double end_time;
+
+  /** \brief Indices of DoFs subject to Dirichlet boundary conditions */
+  std::vector<unsigned int> dirichlet_dof_indices;
 };
 
 #include "src/base/ConservationLaw.cc"

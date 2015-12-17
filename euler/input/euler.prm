@@ -81,3 +81,8 @@ subsection output
    set exact solution refinement level = 7
    set save convergence results = false
 end
+
+subsection fct
+   set antidiffusion = limited # limited|full|none
+end
+

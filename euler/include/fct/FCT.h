@@ -1,0 +1,146 @@
+/**
+ * \file FCT.h
+ * \brief Provides the header for the FCT class.
+ */
+
+#ifndef FCT_h
+#define FCT_h
+
+#include <deal.II/lac/sparse_matrix.h>
+#include <deal.II/lac/vector.h>
+#include <deal.II/dofs/dof_accessor.h>
+#include "include/solvers/LinearSolver.h"
+#include "include/postprocessing/PostProcessor.h"
+
+using namespace dealii;
+
+/**
+ * \brief Class for performing FCT.
+ *
+ * This class allows the FCT system to be solved for the case of Explicit Euler:
+ * \f[
+ *   \mathrm{M}^L\mathrm{U}^{n+1} = \mathrm{M}^L\mathrm{U}^n + \Delta t\left(
+ *     \mathrm{b}^n - \mathbf{C}\mathbf{F}(\mathrm{U}^n)
+ *     - \mathrm{D}^L(\mathrm{U}^n)\mathrm{U}^n - \bar{\mathrm{p}}\right) \,,
+ * \f]
+ * where \f$\bar{\mathrm{p}}\f$ is the limited flux sum vector. The limiting
+ * coefficients enforce the following bounds:
+ * \f[
+ *   W_i^-(\mathrm{U}^n) \leq U_i^{n+1} \leq W_i^+(\mathrm{U}^n) \,,
+ * \f]
+ * where the bounds are the following:
+ * \f[
+ *   W_i^-(\mathrm{U}^n) = U_{min,i}^n\left(1
+ *     - \frac{\Delta t}{M^L_{i,i}}\sigma_i\right)
+ *     + \frac{\Delta t}{M^L_{i,i}}b_i^n \,,
+ * \f]
+ * \f[
+ *   W_i^+(\mathrm{U}^n) = U_{max,i}^n\left(1
+ *     - \frac{\Delta t}{M^L_{i,i}}\sigma_i\right)
+ *     + \frac{\Delta t}{M^L_{i,i}}b_i^n \,,
+ * \f]
+ * where \f$\sigma_i\f$ is the reaction vector:
+ * \f[
+ *   \sigma_i = \int\limits_{S_i}\varphi_i(\mathbf{x})\sigma(\mathbf{x})dV
+ *     = \sum\limits_j\int\limits_{S_{i,j}}
+ *     \varphi_i(\mathbf{x})\varphi_j(\mathbf{x})\sigma(\mathbf{x})dV \,,
+ * \f]
+ * where \f$\sigma(\mathbf{x})\f$ is the reaction coefficient of the
+ * conservation law equation when it is put in the form
+ * \f[
+ *   \frac{\partial\mathbf{u}}{\partial t}
+ *   + \nabla \cdot \mathbf{F}(\mathbf{u}) + \sigma(\mathbf{x})\mathbf{u}
+ *   = \mathbf{0} \,.
+ * \f]
+ */
+template <int dim>
+class FCT
+{
+public:
+  using AntidiffusionType =
+    typename ConservationLawParameters<dim>::AntidiffusionType;
+
+  FCT(const DoFHandler<dim> & dof_handler,
+      const SparseMatrix<double> & lumped_mass_matrix,
+      const SparseMatrix<double> & consistent_mass_matrix,
+      const LinearSolver<dim> & linear_solver,
+      const SparsityPattern & sparsity_pattern,
+      const std::vector<unsigned int> & dirichlet_nodes,
+      const unsigned int & dofs_per_cell,
+      const AntidiffusionType & antidiffusion_type);
+
+  void solve_FCT_system(Vector<double> & new_solution,
+                        const Vector<double> & old_solution,
+                        const Vector<double> & ss_flux,
+                        const Vector<double> & ss_reaction,
+                        const Vector<double> & ss_rhs,
+                        const double & dt,
+                        const SparseMatrix<double> & low_order_diffusion_matrix,
+                        const SparseMatrix<double> & high_order_diffusion_matrix);
+  bool check_DMP_satisfied();
+/*
+  void output_bounds(const PostProcessor<dim> & postprocessor,
+                     const std::string & description_string) const;
+*/
+  void compute_bounds(const Vector<double> & old_solution,
+                      const Vector<double> & ss_reaction,
+                      const Vector<double> & ss_rhs,
+                      const double & dt);
+
+private:
+  void compute_flux_corrections(
+    const Vector<double> & high_order_solution,
+    const Vector<double> & old_solution,
+    const double & dt,
+    const SparseMatrix<double> & low_order_diffusion_matrix,
+    const SparseMatrix<double> & high_order_diffusion_matrix);
+  void compute_limiting_coefficients_zalesak(
+    const Vector<double> & old_solution,
+    const SparseMatrix<double> & low_order_ss_matrix,
+    const Vector<double> & ss_rhs,
+    const double & dt);
+  void get_matrix_row(const SparseMatrix<double> & matrix,
+                      const unsigned int & i,
+                      std::vector<double> & row_values,
+                      std::vector<unsigned int> & row_indices,
+                      unsigned int & n_col);
+  bool check_max_principle(const Vector<double> & new_solution,
+                           const SparseMatrix<double> & low_order_ss_matrix,
+                           const double & dt);
+  void debug_max_principle_low_order(
+    const unsigned int & i,
+    const SparseMatrix<double> & low_order_ss_matrix,
+    const double & dt);
+
+  const DoFHandler<dim> * dof_handler;
+
+  const SparseMatrix<double> * const lumped_mass_matrix;
+  const SparseMatrix<double> * const consistent_mass_matrix;
+  SparsityPattern sparsity_pattern;
+  SparseMatrix<double> flux_correction_matrix;
+  Vector<double> solution_min;
+  Vector<double> solution_max;
+
+  SparseMatrix<double> system_matrix;
+  Vector<double> system_rhs;
+  Vector<double> tmp_vector;
+  Vector<double> flux_correction_vector;
+  Vector<double> Q_minus;
+  Vector<double> Q_plus;
+  Vector<double> R_minus;
+  Vector<double> R_plus;
+
+  LinearSolver<dim> linear_solver;
+
+  const std::vector<unsigned int> dirichlet_nodes;
+
+  const unsigned int n_dofs;
+  const unsigned int dofs_per_cell;
+
+  const AntidiffusionType antidiffusion_type;
+
+  bool DMP_satisfied_at_all_steps;
+};
+
+#include "src/fct/FCT.cc"
+#endif

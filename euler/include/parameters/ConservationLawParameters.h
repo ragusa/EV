@@ -159,7 +159,14 @@ public:
     DI,
     entropy
   };
-  DiffusionType diffusion_type;
+
+  enum class AntidiffusionType
+  {
+    limited,
+    full,
+    none
+  };
+  AntidiffusionType antidiffusion_type;
 };
 
 #include "src/parameters/ConservationLawParameters.cc"

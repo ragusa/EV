@@ -87,3 +87,7 @@ subsection quadrature
    set number of quadrature points = 3
 end
 
+subsection fct
+   set antidiffusion = limited # limited|full|none
+end
+
