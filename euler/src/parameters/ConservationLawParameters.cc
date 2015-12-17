@@ -279,8 +279,10 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
   // fct
   prm.enter_subsection("fct");
   {
-    prm.declare_entry(
-      "antidiffusion", "limited", Patterns::Selection("limited|full|none"), "Option for antidiffusion in FCT scheme");
+    prm.declare_entry("antidiffusion",
+                      "limited",
+                      Patterns::Selection("limited|full|none"),
+                      "Option for antidiffusion in FCT scheme");
   }
   prm.leave_subsection();
 }
@@ -503,7 +505,7 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
   prm.leave_subsection();
 
   // FCT
-  prm.enter_subsection("output");
+  prm.enter_subsection("fct");
   {
     // antidiffusion
     std::string antidiffusion_string = prm.get("antidiffusion");

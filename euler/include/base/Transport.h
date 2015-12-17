@@ -63,6 +63,8 @@ private:
                        const Vector<double> & solution,
                        Vector<double> & ss_flux) override;
 
+  void compute_ss_reaction(Vector<double> & ss_reaction) override;
+
   void compute_ss_rhs(const double & t, Vector<double> & ss_rhs) override;
 
   void update_flux_speeds() override;

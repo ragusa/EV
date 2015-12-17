@@ -474,6 +474,7 @@ void ConservationLaw<dim>::setup_system()
   new_solution.reinit(n_dofs);
   solution_step.reinit(n_dofs);
   system_rhs.reinit(n_dofs);
+  ss_flux.reinit(n_dofs);
   ss_reaction.reinit(n_dofs);
   ss_rhs.reinit(n_dofs);
   estimated_error_per_cell.reinit(triangulation.n_active_cells());
@@ -796,9 +797,14 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
   // create FCT if applicable
   std::shared_ptr<FCT<dim>> fct;
   if (parameters.scheme == Scheme::fct)
-    fct = std::make_shared<FCT<dim>>(dof_handler, lumped_mass_matrix,
-     consistent_mass_matrix, linear_solver, unconstrained_sparsity_pattern,
-     dirichlet_dof_indices, dofs_per_cell, parameters.antidiffusion_type);
+    fct = std::make_shared<FCT<dim>>(dof_handler,
+                                     lumped_mass_matrix,
+                                     consistent_mass_matrix,
+                                     linear_solver,
+                                     unconstrained_sparsity_pattern,
+                                     dirichlet_dof_indices,
+                                     dofs_per_cell,
+                                     parameters.antidiffusion_type);
 
   // initialize old time, time index, and transient flag
   old_time = 0.0;
@@ -913,7 +919,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
                      true);
           break;
         case Scheme::fct:
-          perform_fct_ssprk_step(fct, ssprk);
+          perform_fct_ssprk_step(dt, old_stage_dt, n, fct, ssprk);
           break;
         default:
           Assert(false, ExcNotImplemented());
@@ -1111,12 +1117,19 @@ std::shared_ptr<ViscosityMultiplier<dim>> ConservationLaw<
 /**
  * \brief Performs an SSPRK step using FCT.
  *
+ * \param[in] dt current time step size
+ * \param[in] old_stage_dt time step size of previous SSPRK stage
+ * \param[in] n time index
  * \param[in] fct FCT
  * \param[in,out] ssprk SSPRK time integrator
  */
 template <int dim>
-void ConservationLaw<dim>::perfrom_fct_ssprk_step(
-  const std::shared_ptr<FCT<dim>> & fct, SSPRKTimeIntegrator<dim> & ssprk)
+void ConservationLaw<dim>::perform_fct_ssprk_step(
+  const double & dt,
+  const double & old_stage_dt,
+  const unsigned int & n,
+  const std::shared_ptr<FCT<dim>> & fct,
+  SSPRKTimeIntegrator<dim> & ssprk)
 {
   // update low-order diffusion
   low_order_viscosity->update(
@@ -1138,14 +1151,14 @@ void ConservationLaw<dim>::perfrom_fct_ssprk_step(
   ssprk.get_intermediate_solution(new_solution);
 
   // perform FCT
-  fct.solve_fct_system(new_solution,
-                       old_stage_solution,
-                       ss_flux,
-                       ss_reaction,
-                       ss_rhs,
-                       dt,
-                       low_order_diffusion_matrix,
-                       high_order_diffusion_matrix);
+  fct->solve_fct_system(new_solution,
+                        old_stage_solution,
+                        ss_flux,
+                        ss_reaction,
+                        ss_rhs,
+                        dt,
+                        low_order_diffusion_matrix,
+                        high_order_diffusion_matrix);
 
   // set stage solution to be FCT solution for this stage
   ssprk.set_intermediate_solution(new_solution);
@@ -1164,29 +1177,33 @@ template <int dim>
 void ConservationLaw<dim>::get_dirichlet_dof_indices(
   std::vector<unsigned int> & dirichlet_dof_indices)
 {
-  // get map of Dirichlet dof indices to Dirichlet values
-  std::map<unsigned int, double> boundary_values;
+  if (boundary_conditions_type == "dirichlet")
+  {
+    // get map of Dirichlet dof indices to Dirichlet values
+    std::map<unsigned int, double> boundary_values;
 
-  // loop over boundary IDs
-  for (unsigned int boundary = 0; boundary < n_dirichlet_boundaries; ++boundary)
-    // loop over components
-    for (unsigned int component = 0; component < n_components; ++component)
-    {
-      // mask other components
-      std::vector<bool> component_mask(n_components, false);
-      component_mask[component] = true;
+    // loop over boundary IDs
+    for (unsigned int boundary = 0; boundary < n_dirichlet_boundaries; ++boundary)
+      // loop over components
+      for (unsigned int component = 0; component < n_components; ++component)
+      {
+        // mask other components
+        std::vector<bool> component_mask(n_components, false);
+        component_mask[component] = true;
 
-      // fill boundary_values with boundary values
-      VectorTools::interpolate_boundary_values(dof_handler,
-                                               boundary,
-                                               *(dirichlet_functions[boundary]),
-                                               boundary_values,
-                                               component_mask);
-    }
+        // fill boundary_values with boundary values
+        VectorTools::interpolate_boundary_values(dof_handler,
+                                                 boundary,
+                                                 *(dirichlet_function[boundary]),
+                                                 boundary_values,
+                                                 component_mask);
+      }
 
-  // extract dof indices from map
-  dirichlet_dof_indices.clear();
-  for (std::map<unsigned int, double>::iterator it = boundary_values.begin();
-      it != boundary_values.end(); ++it)
-    dirichlet_dof_indices.push_back(it->first);
+    // extract dof indices from map
+    dirichlet_dof_indices.clear();
+    for (std::map<unsigned int, double>::iterator it = boundary_values.begin();
+         it != boundary_values.end();
+         ++it)
+      dirichlet_dof_indices.push_back(it->first);
+  }
 }

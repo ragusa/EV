@@ -376,12 +376,6 @@ void Transport<dim>::compute_ss_flux(const double & dt,
       }
     }
 
-    // apply artificial diffusion
-    /*
-        this->artificial_diffusion->apply(
-          this->viscosity, this->new_solution, cell, fe_values, cell_residual);
-    */
-
     // apply boundary conditions
     this->boundary_conditions->apply(
       cell, fe_values, solution, dt, cell_residual);
@@ -390,6 +384,77 @@ void Transport<dim>::compute_ss_flux(const double & dt,
     cell->get_dof_indices(local_dof_indices);
     for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
       ss_flux(local_dof_indices[i]) += cell_residual(i);
+  }
+}
+
+/**
+ * \brief Computes the steady-state reaction vector.
+ *
+ * This function computes the steady-state reaction vector, which has the
+ * entries
+ * \f[
+ *   \sigma_i = \int\limits_{S_i}\varphi_i(\mathbf{x})\sigma(\mathbf{x})dV
+ *     = \sum\limits_j\int\limits_{S_{i,j}}
+ *     \varphi_i(\mathbf{x})\varphi_j(\mathbf{x})\sigma(\mathbf{x})dV \,,
+ * \f]
+ * where \f$\sigma(\mathbf{x})\f$ is the reaction coefficient of the
+ * conservation law equation when it is put in the form
+ * \f[
+ *   \frac{\partial\mathbf{u}}{\partial t}
+ *   + \nabla \cdot \mathbf{F}(\mathbf{u}) + \sigma(\mathbf{x})\mathbf{u}
+ *   = \mathbf{0} \,.
+ * \f]
+ *
+ * \param[out] ss_reaction steady-state reaction vector
+ */
+template <int dim>
+void Transport<dim>::compute_ss_reaction(Vector<double> & ss_reaction)
+{
+  // reset vector
+  ss_reaction = 0.0;
+
+  FEValues<dim> fe_values(this->fe,
+                          this->cell_quadrature,
+                          update_values | update_quadrature_points |
+                            update_JxW_values);
+
+  Vector<double> cell_residual(this->dofs_per_cell);
+  std::vector<unsigned int> local_dof_indices(this->dofs_per_cell);
+
+  // loop over cells
+  typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler
+                                                          .begin_active(),
+                                                 endc = this->dof_handler.end();
+  for (; cell != endc; ++cell)
+  {
+    // reset cell residual
+    cell_residual = 0;
+
+    // reinitialize fe values for cell
+    fe_values.reinit(cell);
+
+    // get quadrature points on cell
+    std::vector<Point<dim>> points(this->n_q_points_cell);
+    points = fe_values.get_quadrature_points();
+
+    // loop over quadrature points
+    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+    {
+      // compute cross section value at quadrature point
+      const double cross_section_value = cross_section_function.value(points[q]);
+
+      // loop over test functions
+      for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+      {
+        cell_residual(i) += transport_speed * fe_values[extractor].value(i, q) *
+          cross_section_value * fe_values.JxW(q);
+      }
+    }
+
+    // aggregate local residual into global residual
+    cell->get_dof_indices(local_dof_indices);
+    for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+      ss_reaction(local_dof_indices[i]) += cell_residual(i);
   }
 }
 

@@ -9,7 +9,7 @@ subsection quadrature
 end
 
 subsection scheme
-   set scheme = high # low|high|fct
+   set scheme = low # low|high|fct
    set low order scheme = standard # constant|standard|dmp|di_visc|di_diff
    set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
 end
@@ -23,7 +23,7 @@ end
 #   lake_at_rest_2d
 #   lake_at_rest_flat_perturbed_2d
 subsection problem
-   set problem name = dam_break_flat
+   set problem name = lake_at_rest
 end
 
 subsection refinement
@@ -36,9 +36,9 @@ subsection refinement
 end
 
 subsection time
-   set time step size method = cfl # constant|cfl
-   set use default end time = true
-   set final time = 0.01
+   set time step size method = constant # constant|cfl
+   set use default end time = false
+   set final time = 0.03
    set time step size = 0.01
    set cfl = 0.50
    set steady state tolerance = 1.0e-6
@@ -96,7 +96,7 @@ subsection output
    # 0: print only required info
    # 1: print cycle, time step, stage info
    # 2: print cycle, time step, stage info, timer summary, and extra info
-   set verbosity level = 1
+   set verbosity level = 2
 end
 
 subsection fct

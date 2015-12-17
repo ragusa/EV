@@ -153,8 +153,13 @@ protected:
   void output_viscosity(PostProcessor<dim> & postprocessor,
                         const bool & is_transient = false,
                         const double & time = 0.0);
-  void perform_fct_ssprk_step(const std::shared_ptr<FCT<dim>> & fct, SSPRKTimeIntegrator<dim> & ssprk);
-  void get_dirichlet_dof_indices(std::vector<unsigned int> & dirichlet_dof_indices);
+  void perform_fct_ssprk_step(const double & dt,
+                              const double & old_stage_dt,
+                              const unsigned int & n,
+                              const std::shared_ptr<FCT<dim>> & fct,
+                              SSPRKTimeIntegrator<dim> & ssprk);
+  void get_dirichlet_dof_indices(
+    std::vector<unsigned int> & dirichlet_dof_indices);
 
   /**
    * \brief Computes the lumped mass matrix.

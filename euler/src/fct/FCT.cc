@@ -56,7 +56,7 @@ FCT<dim>::FCT(const DoFHandler<dim> & dof_handler_,
  * \param[in] old_solution old solution
  */
 template <int dim>
-void FCT<dim>::solve_FCT_system(
+void FCT<dim>::solve_fct_system(
   Vector<double> & new_solution,
   const Vector<double> & old_solution,
   const Vector<double> & ss_flux,
@@ -79,39 +79,41 @@ void FCT<dim>::solve_FCT_system(
   // compute limited flux correction sum and add it to rhs
   switch (antidiffusion_type)
   {
-    case limited:
+    case AntidiffusionType::limited:
       compute_limiting_coefficients_zalesak(
         old_solution, ss_flux, ss_rhs, low_order_diffusion_matrix, dt);
       break;
-    case full:
+    case AntidiffusionType::full:
       Assert(false, ExcNotImplemented());
       break;
-    case none:
+    case AntidiffusionType::none:
       Assert(false, ExcNotImplemented());
       break;
     default:
       Assert(false, ExcNotImplemented());
+      break;
   }
 
-  // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old + f)
+  // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - ss_flux - D*u_old +
+  // f)
   system_rhs = 0;
-  system_rhs.add(dt, ss_rhs); //       now, system_rhs = dt*(ss_rhs)
+  system_rhs.add(dt, ss_rhs);
   lumped_mass_matrix->vmult(tmp_vector, old_solution);
-  system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
-  low_order_ss_matrix.vmult(tmp_vector, old_solution);
-  system_rhs.add(
-    -dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old)
-  system_rhs.add(dt, flux_correction_vector); // now, system_rhs is complete
+  system_rhs.add(1.0, tmp_vector);
+  system_rhs.add(-dt, ss_flux);
+  system_rhs.add(dt, flux_correction_vector);
 
   // solve the linear system M*u_new = system_rhs
   system_matrix.copy_from(*lumped_mass_matrix);
   linear_solver.solve(system_matrix, system_rhs, new_solution);
 
+  /*
   // check that local discrete maximum principle is satisfied at all time steps
   bool DMP_satisfied_this_step =
     check_max_principle(new_solution, low_order_ss_matrix, dt);
   DMP_satisfied_at_all_steps =
     DMP_satisfied_at_all_steps and DMP_satisfied_this_step;
+  */
 }
 
 /**
@@ -240,8 +242,7 @@ void FCT<dim>::compute_flux_corrections(
         unsigned int j = local_dof_indices[1];
 
         // compute flux
-        double Fij =
-          -(*consistent_mass_matrix)(i, j) * (dUdt(j) - dUdt(i)) +
+        double Fij = -(*consistent_mass_matrix)(i, j) * (dUdt(j) - dUdt(i)) +
           (low_order_diffusion_matrix(i, j) - high_order_diffusion_matrix(i, j)) *
             (old_solution(j) - old_solution(i));
 
@@ -261,32 +262,31 @@ void FCT<dim>::compute_flux_corrections(
 template <int dim>
 void FCT<dim>::compute_limiting_coefficients_zalesak(
   const Vector<double> & old_solution,
-  const SparseMatrix<double> & low_order_ss_matrix,
+  const Vector<double> & ss_flux,
   const Vector<double> & ss_rhs,
+  const SparseMatrix<double> & low_order_diffusion_matrix,
   const double & dt)
 {
   // reset flux correction vector
   flux_correction_vector = 0;
 
-  // compute Q+
+  // start computing Q+
   Q_plus = 0;
-  lumped_mass_matrix->vmult(tmp_vector, solution_max);
-  Q_plus.add(1.0 / dt, tmp_vector);
   lumped_mass_matrix->vmult(tmp_vector, old_solution);
   Q_plus.add(-1.0 / dt, tmp_vector);
-  low_order_ss_matrix.vmult(tmp_vector, old_solution);
+  Q_plus.add(1.0, ss_flux);
+  low_order_diffusion_matrix.vmult(tmp_vector, old_solution);
   Q_plus.add(1.0, tmp_vector);
   Q_plus.add(-1.0, ss_rhs);
 
-  // compute Q-
-  Q_minus = 0;
+  // copy current contents of Q+ as these components are identical
+  Q_minus = Q_plus;
+
+  // finish computing Q+ and Q-
+  lumped_mass_matrix->vmult(tmp_vector, solution_max);
+  Q_plus.add(1.0 / dt, tmp_vector);
   lumped_mass_matrix->vmult(tmp_vector, solution_min);
   Q_minus.add(1.0 / dt, tmp_vector);
-  lumped_mass_matrix->vmult(tmp_vector, old_solution);
-  Q_minus.add(-1.0 / dt, tmp_vector);
-  low_order_ss_matrix.vmult(tmp_vector, old_solution);
-  Q_minus.add(1.0, tmp_vector);
-  Q_minus.add(-1.0, ss_rhs);
 
   for (unsigned int i = 0; i < n_dofs; ++i)
   {
@@ -329,17 +329,6 @@ void FCT<dim>::compute_limiting_coefficients_zalesak(
         R_minus(i) = std::min(1.0, Q_minus(i) / P_minus_i);
       else
         R_minus(i) = 1.0;
-    }
-  }
-
-  // if user chose not to limit, set R+ and R- = 1 so that limiting
-  // coefficients will equal 1 and thus no limiting will occur
-  if (do_not_limit)
-  {
-    for (unsigned int i = 0; i < n_dofs; ++i)
-    {
-      R_minus(i) = 1.0;
-      R_plus(i) = 1.0;
     }
   }
 
@@ -407,6 +396,7 @@ void FCT<dim>::get_matrix_row(const SparseMatrix<double> & matrix,
 /**
  * \brief Checks that the imposed bounds are satisfied for a time step.
  */
+/*
 template <int dim>
 bool FCT<dim>::check_max_principle(
   const Vector<double> & new_solution,
@@ -466,12 +456,14 @@ bool FCT<dim>::check_max_principle(
   // return boolean for satisfaction of DMP
   return local_max_principle_satisfied;
 }
+*/
 
 /** \brief Debugging function used for determining why the maximum
  *         principle is failing for the low-order method;
  *         examines the conditions that are required to be met for
  *         the principle to be satisfied.
  */
+/*
 template <int dim>
 void FCT<dim>::debug_max_principle_low_order(
   const unsigned int & i,
@@ -547,6 +539,7 @@ void FCT<dim>::debug_max_principle_low_order(
                  "necessary."
               << std::endl;
 }
+*/
 
 /**
  * \brief Check to see if the DMP was satisfied at all time steps.
