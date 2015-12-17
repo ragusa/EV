@@ -240,11 +240,7 @@ void Transport<dim>::assemble_lumped_mass_matrix()
             fe_values[extractor].value(j, q) * fe_values.JxW(q);
         }
 
-    // add to global mass matrix with contraints
-    this->constraints.distribute_local_to_global(
-      local_mass, local_dof_indices, this->lumped_mass_matrix_constrained);
-
-    // add to global mass matrix without constraints
+    // add to global mass matrix
     for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
       for (unsigned int j = 0; j < this->dofs_per_cell; ++j)
         this->lumped_mass_matrix.add(

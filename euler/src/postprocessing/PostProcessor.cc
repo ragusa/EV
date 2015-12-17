@@ -63,48 +63,67 @@ PostProcessor<dim>::PostProcessor(
   }
 
   // determine viscosity string
-  std::string viscosity_string;
-  switch (parameters.viscosity_type)
+  std::string scheme_string;
+  switch (parameters.scheme)
   {
-    case ConservationLawParameters<dim>::ViscosityType::none:
+    case ConservationLawParameters<dim>::Scheme::low:
     {
-      viscosity_string = "Gal";
+      switch (parameters.low_order_scheme)
+      {
+        case ConservationLawParameters<dim>::LowOrderScheme::constant:
+          scheme_string = "constant";
+          break;
+        case ConservationLawParameters<dim>::LowOrderScheme::standard:
+          scheme_string = "low";
+          break;
+        case ConservationLawParameters<dim>::LowOrderScheme::dmp:
+          scheme_string = "DMPlow";
+          break;
+        case ConservationLawParameters<dim>::LowOrderScheme::di_visc:
+          scheme_string = "DIV";
+          break;
+        case ConservationLawParameters<dim>::LowOrderScheme::di_diff:
+          scheme_string = "DID";
+          break;
+        default:
+          Assert(false, ExcNotImplemented());
+          break;
+      }
       break;
     }
-    case ConservationLawParameters<dim>::ViscosityType::constant:
+    case ConservationLawParameters<dim>::Scheme::high:
     {
-      viscosity_string = "constant";
+      switch (parameters.high_order_scheme)
+      {
+        case ConservationLawParameters<dim>::HighOrderScheme::galerkin:
+          scheme_string = "Gal";
+          break;
+        case ConservationLawParameters<dim>::HighOrderScheme::entropy_visc:
+          scheme_string = "EV";
+          break;
+        case ConservationLawParameters<dim>::HighOrderScheme::entropy_diff:
+          scheme_string = "entropy";
+          break;
+        default:
+          Assert(false, ExcNotImplemented());
+          break;
+      }
       break;
     }
-    case ConservationLawParameters<dim>::ViscosityType::low:
+    case ConservationLawParameters<dim>::Scheme::fct:
     {
-      viscosity_string = "low";
-      break;
-    }
-    case ConservationLawParameters<dim>::ViscosityType::DMP_low:
-    {
-      viscosity_string = "DMPlow";
-      break;
-    }
-    case ConservationLawParameters<dim>::ViscosityType::DI_low:
-    {
-      viscosity_string = "DIlow";
-      break;
-    }
-    case ConservationLawParameters<dim>::ViscosityType::entropy:
-    {
-      viscosity_string = "EV";
+      scheme_string = "fct";
       break;
     }
     default:
     {
-      ExcNotImplemented();
+      Assert(false, ExcNotImplemented());
     }
   }
 
   // create filename appendage
   std::stringstream appendage_ss;
-  appendage_ss << "_" << viscosity_string << "_" << timedisc_string;
+  appendage_ss << "_" << scheme_string << "_" << timedisc_string;
   appendage_string = appendage_ss.str();
 
   // create filename for exact solution

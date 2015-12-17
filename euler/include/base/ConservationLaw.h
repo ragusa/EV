@@ -48,7 +48,8 @@
 #include "include/other/Exceptions.h"
 #include "include/parameters/ConservationLawParameters.h"
 #include "include/postprocessing/PostProcessor.h"
-//#include "include/time_integrator/SSPRKTimeIntegrator.h"
+#include "include/solvers/LinearSolver.h"
+#include "include/time_integrators/SSPRKTimeIntegrator.h"
 #include "include/viscosity/ConstantViscosity.h"
 #include "include/viscosity/DomainInvariantViscosity.h"
 #include "include/viscosity/EntropyViscosity.h"
@@ -89,7 +90,6 @@ class ConservationLaw
 {
 public:
   ConservationLaw(const ConservationLawParameters<dim> & params);
-  ~ConservationLaw();
   void run();
 
 protected:
@@ -128,14 +128,19 @@ protected:
     typename ConservationLawParameters<dim>::TemporalIntegrator;
   using TemporalDiscretization =
     typename ConservationLawParameters<dim>::TemporalDiscretization;
+  using Scheme = typename ConservationLawParameters<dim>::Scheme;
+  using LowOrderScheme = typename ConservationLawParameters<dim>::LowOrderScheme;
+  using HighOrderScheme =
+    typename ConservationLawParameters<dim>::HighOrderScheme;
   using ViscosityType = typename ConservationLawParameters<dim>::ViscosityType;
   using DiffusionType = typename ConservationLawParameters<dim>::DiffusionType;
   using LinearSolverType =
     typename ConservationLawParameters<dim>::LinearSolverType;
 
   void initialize_system();
-  void initialize_runge_kutta();
   void setup_system();
+  std::shared_ptr<ArtificialDiffusion<dim>> create_artificial_diffusion(
+    const DiffusionType & diffusion_type);
   void compute_error_for_refinement();
   void refine_mesh();
   void update_cell_sizes();
@@ -143,23 +148,10 @@ protected:
   void solve_runge_kutta(PostProcessor<dim> & postprocessor);
   double compute_dt_from_cfl_condition();
   double compute_cfl_number(const double & dt) const;
-  void linear_solve(const SparseMatrix<double> & A,
-                    const Vector<double> & b,
-                    Vector<double> & x);
-  void apply_dirichlet_bc(SparseMatrix<double> & A,
-                          Vector<double> & x,
-                          Vector<double> & b,
-                          const double & time);
   void check_nan();
   void output_viscosity(PostProcessor<dim> & postprocessor,
                         const bool & is_transient = false,
                         const double & time = 0.0);
-
-  /*
-    virtual void update_entropy_viscosities(const double & dt);
-    virtual double compute_max_entropy_jump(const Vector<double> & solution,
-                                            const Cell & cell) const;
-  */
 
   /**
    * \brief Computes the lumped mass matrix.
@@ -203,20 +195,6 @@ protected:
    * \param[out] ss_flux steady-state rhs vector \f$\mathrm{q}^n\f$
    */
   virtual void compute_ss_rhs(const double & t, Vector<double> & ss_rhs) = 0;
-
-  /**
-   * \brief Computes divergence of entropy flux at each quadrature point in cell.
-   *
-   * \param[in] solution solution
-   * \param[in] fe_values FEValues object
-   * \param[out] divergence divergence of entropy flux at each quadrature
-   *             point on cell
-   */
-  virtual void compute_divergence_entropy_flux(const Vector<double> &,
-                                               const FEValuesBase<dim> &,
-                                               Vector<double> &) const
-  {
-  }
 
   /**
    * \brief Creates an auxiliary post-processor object and returns the pointer.
@@ -348,12 +326,16 @@ protected:
   LocalVector new_solution;
   /** \brief solution of previous time step */
   LocalVector old_solution;
+  /** \brief solution of previous previous time step */
+  LocalVector older_solution;
+  /** \brief old stage solution */
+  LocalVector old_stage_solution;
 
   /** \brief solution step in Newton loop; vector for temporary storage */
   LocalVector solution_step;
-  /** \brief new time (end of time step) */
+  /** \brief new time */
   double new_time;
-  /** \brief old time (beginning of time step) */
+  /** \brief old time */
   double old_time;
   /** \brief system right-hand side */
   LocalVector system_rhs;
@@ -361,29 +343,19 @@ protected:
   LocalVector ss_flux;
   /** \brief steady-state right-hand side vector */
   LocalVector ss_rhs;
-  /** \brief temporal vector */
-  LocalVector tmp_vector;
 
   /** \brief constrained sparsity pattern */
   SparsityPattern constrained_sparsity_pattern;
   /** \brief unconstrained sparsity pattern */
   SparsityPattern unconstrained_sparsity_pattern;
-  /** \brief consistent mass matrix with constraints */
-  LocalMatrix consistent_mass_matrix_constrained;
-  /** \brief consistent mass matrix without constraints */
+  /** \brief consistent mass matrix */
   LocalMatrix consistent_mass_matrix;
-  /** \brief lumped mass matrix with constraints */
-  LocalMatrix lumped_mass_matrix_constrained;
-  /** \brief lumped mass matrix without constraints */
+  /** \brief lumped mass matrix */
   LocalMatrix lumped_mass_matrix;
-  /** \brief pointer to mass matrix to be used on right hand side */
-  const LocalMatrix * mass_matrix_constrained;
-  /** \brief pointer to mass matrix to be used on right hand side */
-  const LocalMatrix * mass_matrix;
   /** \brief Low-order diffusion matrix \f$\mathrm{D}^{L,n}\f$ */
   LocalMatrix low_order_diffusion_matrix;
-  /** \brief system matrix */
-  LocalMatrix system_matrix;
+  /** \brief High-order diffusion matrix \f$\mathrm{D}^{H,n}\f$ */
+  LocalMatrix high_order_diffusion_matrix;
 
   /** \brief number of Dirichlet boundaries */
   unsigned int n_dirichlet_boundaries;
@@ -433,40 +405,23 @@ protected:
   CellMap max_flux_speed_cell;
 
   // viscosity
-  std::shared_ptr<Viscosity<dim>> viscosity;
-  std::shared_ptr<Viscosity<dim>> constant_viscosity;
+  ViscosityType low_order_viscosity_type;
+  ViscosityType entropy_viscosity_type;
+  ViscosityType high_order_viscosity_type;
   std::shared_ptr<Viscosity<dim>> low_order_viscosity;
   std::shared_ptr<Viscosity<dim>> entropy_viscosity;
+  std::shared_ptr<Viscosity<dim>> high_order_viscosity;
 
-  std::unique_ptr<ArtificialDiffusion<dim>> artificial_diffusion;
+  // diffusion
+  DiffusionType low_order_diffusion_type;
+  DiffusionType high_order_diffusion_type;
+  std::shared_ptr<ArtificialDiffusion<dim>> low_order_diffusion;
+  std::shared_ptr<ArtificialDiffusion<dim>> high_order_diffusion;
 
   /** \brief Flag to signal being in last adaptive refinement cycle */
   bool in_final_cycle;
   /** \brief Estimation of error per cell for adaptive mesh refinement */
   Vector<float> estimated_error_per_cell;
-
-  /**
-   * \brief Structure for Runge-Kutta constants and memory for stage
-   *        steady-state residuals.
-   */
-  struct RungeKuttaParameters
-  {
-    int s;
-    std::vector<LocalVector> a;
-    std::vector<double> b;
-    std::vector<double> c;
-
-    bool solution_computed_in_last_stage;
-    bool is_explicit;
-
-    std::vector<LocalVector> f;
-  };
-
-  /** \brief Runge-Kutta parameters */
-  RungeKuttaParameters rk;
-
-  /** \brief pointer to SSP Runge Kutta time integrator */
-  // std::shared_ptr<SSPRKTimeIntegrator<dim>> ssprk;
 
   /** \brief Default end time for test problem */
   double default_end_time;

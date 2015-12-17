@@ -15,6 +15,23 @@ template <int dim>
 void ConservationLawParameters<dim>::declare_conservation_law_parameters(
   ParameterHandler & prm)
 {
+  // scheme
+  prm.enter_subsection("scheme");
+  {
+    prm.declare_entry(
+      "scheme", "high", Patterns::Selection("low|high|fct"), "scheme");
+    prm.declare_entry(
+      "low order scheme",
+      "standard",
+      Patterns::Selection("constant|standard|dmp|di_visc|di_diff"),
+      "low-order scheme");
+    prm.declare_entry("high order scheme",
+                      "galerkin",
+                      Patterns::Selection("galerkin|entropy_visc|entropy_diff"),
+                      "high-order scheme");
+  }
+  prm.leave_subsection();
+
   // finite element parameters
   prm.enter_subsection("finite element");
   {
@@ -101,7 +118,7 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
                       "Choices are <runge_kutta>.");
     prm.declare_entry("runge kutta method",
                       "FE",
-                      Patterns::Selection("FE|SSP3"),
+                      Patterns::Selection("FE|SSP2|SSP3"),
                       "Runge-Kutta method to use.");
   }
   prm.leave_subsection();
@@ -268,19 +285,60 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
   prm.leave_subsection();
 }
 
-/** \fn
- * ConservationLawParameters<dim>::get_conservation_law_parameters(ParameterHandler
- * &prm)
- *  \brief Gets the parameters from the parameter handler.
+/**
+ * \brief Gets the parameters from the parameter handler.
  *
- *  This function takes the input parameters from the parameter
- *  handler into the member variables.
- *  \param prm parameter handler for conservation law parameters
+ * This function takes the input parameters from the parameter
+ * handler into the member variables.
+ *
+ * \param[in] prm parameter handler for conservation law parameters
  */
 template <int dim>
 void ConservationLawParameters<dim>::get_conservation_law_parameters(
   ParameterHandler & prm)
 {
+  // scheme
+  prm.enter_subsection("scheme");
+  {
+    // scheme
+    std::string scheme_string = prm.get("scheme");
+    if (scheme_string == "low")
+      scheme = Scheme::low;
+    else if (scheme_string == "high")
+      scheme = Scheme::high;
+    else if (scheme_string == "fct")
+      scheme = Scheme::fct;
+    else
+      Assert(false, ExcNotImplemented());
+
+    // low-order scheme
+    std::string low_order_scheme_string = prm.get("low order scheme");
+    if (low_order_scheme_string == "constant")
+      low_order_scheme = LowOrderScheme::constant;
+    else if (low_order_scheme_string == "standard")
+      low_order_scheme = LowOrderScheme::standard;
+    else if (low_order_scheme_string == "dmp")
+      low_order_scheme = LowOrderScheme::dmp;
+    else if (low_order_scheme_string == "di_visc")
+      low_order_scheme = LowOrderScheme::di_visc;
+    else if (low_order_scheme_string == "di_diff")
+      low_order_scheme = LowOrderScheme::di_diff;
+    else
+      Assert(false, ExcNotImplemented());
+
+    // high-order scheme
+    std::string high_order_scheme_string = prm.get("high order scheme");
+    if (high_order_scheme_string == "galerkin")
+      high_order_scheme = HighOrderScheme::galerkin;
+    else if (high_order_scheme_string == "entropy_visc")
+      high_order_scheme = HighOrderScheme::entropy_visc;
+    else if (high_order_scheme_string == "entropy_diff")
+      high_order_scheme = HighOrderScheme::entropy_diff;
+    else
+      Assert(false, ExcNotImplemented());
+  }
+  prm.leave_subsection();
+
   // finite element parameters
   prm.enter_subsection("finite element");
   {
@@ -350,6 +408,8 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
     const std::string rk_choice = prm.get("runge kutta method");
     if (rk_choice == "FE")
       time_discretization = TemporalDiscretization::FE;
+    else if (rk_choice == "SSP2")
+      time_discretization = TemporalDiscretization::SSP2;
     else if (rk_choice == "SSP3")
       time_discretization = TemporalDiscretization::SSP3;
     else
@@ -411,6 +471,7 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
   // artificial viscosity
   prm.enter_subsection("artificial viscosity");
   {
+    /*
     const std::string viscosity_choice = prm.get("viscosity type");
     if (viscosity_choice == "none")
       viscosity_type = ViscosityType::none;
@@ -418,14 +479,15 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
       viscosity_type = ViscosityType::constant;
     else if (viscosity_choice == "low")
       viscosity_type = ViscosityType::low;
-    else if (viscosity_choice == "DMP_low")
-      viscosity_type = ViscosityType::DMP_low;
-    else if (viscosity_choice == "DI_low")
-      viscosity_type = ViscosityType::DI_low;
+    else if (viscosity_choice == "DMP")
+      viscosity_type = ViscosityType::DMP;
+    else if (viscosity_choice == "DI")
+      viscosity_type = ViscosityType::DI;
     else if (viscosity_choice == "entropy")
       viscosity_type = ViscosityType::entropy;
     else
       Assert(false, ExcNotImplemented());
+    */
 
     constant_viscosity_value = prm.get_double("constant viscosity value");
     first_order_viscosity_coef =

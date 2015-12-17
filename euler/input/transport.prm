@@ -1,15 +1,15 @@
-subsection finite element
-   set degree = 1
-end
-
-subsection quadrature
-   set number of quadrature points = 3
-end
+# Input file for scalar transport
 
 # Problem names:
 # absorber
 subsection problem
    set problem name = absorber
+end
+
+subsection scheme
+   set scheme = low # low|high|fct
+   set low order scheme = standard # constant|standard|dmp|di_visc|di_diff
+   set high order scheme = galerkin # galerkin|entropy_visc|entropy_diff
 end
 
 subsection refinement
@@ -20,8 +20,7 @@ subsection refinement
 end
 
 subsection time
-   # options are <constant|cfl>
-   set time step size method = constant
+   set time step size method = constant # constant|cfl
    set use default end time = false
    set final time = 0.1
    set time step size = 0.001
@@ -30,25 +29,18 @@ subsection time
 end
 
 subsection artificial viscosity
-   # options are <none|constant|low|DMP_low|DI_low|entropy>
-   set viscosity type = none
    set constant viscosity value = 0.02
    set first order viscosity coefficient = 0.5
    set use low order viscosity for first time step = true
    set entropy residual coefficient = 1.0
    set entropy jump coefficient = 1.0
-   set entropy viscosity smoothing = none # none | max | average
+   set entropy viscosity smoothing = none # none|max|average
    set entropy viscosity smoothing weight = 4
-
-   # options are <none|laplacian|graphtheoretic>
-   set diffusion type = laplacian
 end
 
 subsection temporal integration
-   # options are <runge_kutta>
-   set temporal integrator = runge_kutta
-   # options are <FE|SSP3>
-   set runge kutta method = FE
+   set temporal integrator = runge_kutta # runge_kutta
+   set runge kutta method = FE # FE|SSP2|SSP3
 end
 
 subsection nonlinear solver
@@ -78,11 +70,20 @@ subsection output
    set output viscosity transient = false
    set exact solution refinement level = 7
    set save convergence results = false
-   set print final solution = true
+   set print final solution = false
 
    # verbosity level:
    # 0: print only required info
    # 1: print cycle, time step, stage info
    # 2: print cycle, time step, stage info, timer summary, and extra info
-   set verbosity level = 0
+   set verbosity level = 1
 end
+
+subsection finite element
+   set degree = 1
+end
+
+subsection quadrature
+   set number of quadrature points = 3
+end
+

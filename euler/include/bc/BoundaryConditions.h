@@ -37,7 +37,6 @@ public:
              Vector<double> & cell_residual);
 
   virtual void apply_dirichlet_boundary_conditions() {}
-
 protected:
   virtual void apply_boundary_condition(const Cell & cell,
                                         const FEValues<dim> & fe_values_cell,

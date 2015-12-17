@@ -48,14 +48,6 @@ ConservationLaw<dim>::ConservationLaw(
 }
 
 /**
- * \brief Destructor.
- */
-template <int dim>
-ConservationLaw<dim>::~ConservationLaw()
-{
-}
-
-/**
  * \brief Runs the problem.
  */
 template <int dim>
@@ -105,8 +97,9 @@ void ConservationLaw<dim>::run()
       dof_handler, initial_conditions_function, new_solution);
     constraints.distribute(new_solution);
 
-    // set old solution to the current solution
+    // set old solutions to the current solution
     old_solution = new_solution;
+    older_solution = new_solution;
 
     // output block
     {
@@ -222,91 +215,75 @@ void ConservationLaw<dim>::initialize_system()
   initial_conditions_function.initialize(
     variables, initial_conditions_strings, constants, false);
 
-  // initialize Runge-Kutta data if RK is being used
-  if (parameters.temporal_integrator == TemporalIntegrator::runge_kutta)
-    initialize_runge_kutta();
-
-  // determine mass matrix to be used based on method
-  switch (parameters.viscosity_type)
+  // determine low-order viscosity and artificial diffusion
+  switch (parameters.low_order_scheme)
   {
-    case ViscosityType::none:
-      mass_matrix_constrained = &consistent_mass_matrix_constrained;
-      mass_matrix = &consistent_mass_matrix;
+    case LowOrderScheme::constant:
+      low_order_viscosity_type = ViscosityType::constant;
+      low_order_diffusion_type = DiffusionType::laplacian;
       break;
-    case ViscosityType::constant:
-      mass_matrix_constrained = &lumped_mass_matrix_constrained;
-      mass_matrix = &lumped_mass_matrix;
+    case LowOrderScheme::standard:
+      low_order_viscosity_type = ViscosityType::low;
+      low_order_diffusion_type = DiffusionType::laplacian;
       break;
-    case ViscosityType::low:
-      mass_matrix_constrained = &lumped_mass_matrix_constrained;
-      mass_matrix = &lumped_mass_matrix;
+    case LowOrderScheme::dmp:
+      Assert(false, ExcNotImplemented());
+      low_order_viscosity_type = ViscosityType::DMP;
+      low_order_diffusion_type = DiffusionType::graphtheoretic;
       break;
-    case ViscosityType::DI_low:
-      mass_matrix_constrained = &lumped_mass_matrix_constrained;
-      mass_matrix = &lumped_mass_matrix;
+    case LowOrderScheme::di_visc:
+      low_order_viscosity_type = ViscosityType::DI;
+      low_order_diffusion_type = DiffusionType::graphtheoretic;
       break;
-    case ViscosityType::DMP_low:
-      mass_matrix_constrained = &lumped_mass_matrix_constrained;
-      mass_matrix = &lumped_mass_matrix;
-      break;
-    case ViscosityType::entropy:
-      mass_matrix_constrained = &consistent_mass_matrix_constrained;
-      mass_matrix = &consistent_mass_matrix;
-      break;
-    default:
-      ExcNotImplemented();
-      break;
-  }
-}
-
-/**
- * \brief Assigns Butcher tableau constants.
- */
-template <int dim>
-void ConservationLaw<dim>::initialize_runge_kutta()
-{
-  // get RK parameters a, b, and c (Butcher tableau)
-  rk.s = 0;
-  switch (parameters.time_discretization)
-  {
-    case TemporalDiscretization::FE:
-      rk.s = 1;
+    case LowOrderScheme::di_diff:
+      Assert(false, ExcNotImplemented());
+      low_order_viscosity_type = ViscosityType::none;
+      low_order_diffusion_type = DiffusionType::DI;
       break;
     default:
       Assert(false, ExcNotImplemented());
       break;
   }
 
-  // allocate memory for constants
-  rk.a.resize(rk.s);
-  for (int i = 0; i < rk.s; ++i)
-    rk.a[i].reinit(rk.s);
-  rk.b.resize(rk.s);
-  rk.c.resize(rk.s);
-
-  // assign constants
-  switch (parameters.time_discretization)
+  // determine high-order viscosity and artificial diffusion
+  switch (parameters.high_order_scheme)
   {
-    case TemporalDiscretization::FE:
-      rk.b[0] = 1;
-      rk.c[0] = 0;
-      rk.is_explicit = true;
+    case HighOrderScheme::galerkin:
+      entropy_viscosity_type = ViscosityType::none;
+      high_order_viscosity_type = ViscosityType::none;
+      high_order_diffusion_type = DiffusionType::none;
+      break;
+    case HighOrderScheme::entropy_visc:
+      entropy_viscosity_type = ViscosityType::entropy;
+      high_order_viscosity_type = ViscosityType::high;
+      high_order_diffusion_type = DiffusionType::laplacian;
+      break;
+    case HighOrderScheme::entropy_diff:
+      Assert(false, ExcNotImplemented());
+      entropy_viscosity_type = ViscosityType::none;
+      high_order_viscosity_type = ViscosityType::none;
+      high_order_diffusion_type = DiffusionType::entropy;
       break;
     default:
       Assert(false, ExcNotImplemented());
       break;
   }
 
-  // allocate stage vectors for steady-state residual evaluations
-  rk.f.resize(rk.s);
-
-  // test to see if last row of A matrix is the same as the b vector;
-  // this implies the last stage solution is the new solution and thus
-  // the final linear combination is not required.
-  rk.solution_computed_in_last_stage = true;
-  for (int i = 0; i < rk.s; ++i)
-    if (std::abs(rk.a[rk.s - 1][i] - rk.b[i]) > 1.0e-30)
-      rk.solution_computed_in_last_stage = false;
+  // set unneeded viscosities and diffusion to none
+  if (parameters.scheme == Scheme::low)
+  {
+    entropy_viscosity_type = ViscosityType::none;
+    high_order_viscosity_type = ViscosityType::none;
+    high_order_diffusion_type = DiffusionType::none;
+  }
+  if (parameters.scheme == Scheme::high)
+  {
+    if (parameters.high_order_scheme == HighOrderScheme::galerkin)
+    {
+      low_order_viscosity_type = ViscosityType::none;
+      low_order_diffusion_type = DiffusionType::none;
+    }
+  }
 }
 
 /**
@@ -454,26 +431,20 @@ void ConservationLaw<dim>::setup_system()
     locally_relevant_dofs);
 
   // reinitialize matrices with sparsity pattern
-  consistent_mass_matrix_constrained.reinit(
-    locally_owned_dofs, locally_owned_dofs, dsp_constrained, mpi_communicator);
   consistent_mass_matrix.reinit(
     locally_owned_dofs, locally_owned_dofs, dsp_unconstrained, mpi_communicator);
-  lumped_mass_matrix_constrained.reinit(
-    locally_owned_dofs, locally_owned_dofs, dsp_constrained, mpi_communicator);
   lumped_mass_matrix.reinit(
     locally_owned_dofs, locally_owned_dofs, dsp_unconstrained, mpi_communicator);
   low_order_diffusion_matrix.reinit(
     locally_owned_dofs, locally_owned_dofs, dsp_unconstrained, mpi_communicator);
-  system_matrix.reinit(
+  high_order_diffusion_matrix.reinit(
     locally_owned_dofs, locally_owned_dofs, dsp_unconstrained, mpi_communicator);
 #else
   // reinitialize matrices with sparsity pattern
-  consistent_mass_matrix_constrained.reinit(constrained_sparsity_pattern);
   consistent_mass_matrix.reinit(unconstrained_sparsity_pattern);
-  lumped_mass_matrix_constrained.reinit(constrained_sparsity_pattern);
   lumped_mass_matrix.reinit(unconstrained_sparsity_pattern);
   low_order_diffusion_matrix.reinit(unconstrained_sparsity_pattern);
-  system_matrix.reinit(unconstrained_sparsity_pattern);
+  high_order_diffusion_matrix.reinit(unconstrained_sparsity_pattern);
 #endif
 
   // assemble mass matrix
@@ -483,6 +454,10 @@ void ConservationLaw<dim>::setup_system()
 #ifdef IS_PARALLEL
   old_solution.reinit(
     locally_owned_dofs, locally_relevant_dofs, mpi_communicator);
+  older_solution.reinit(
+    locally_owned_dofs, locally_relevant_dofs, mpi_communicator);
+  old_stage_solution.reinit(
+    locally_owned_dofs, locally_relevant_dofs, mpi_communicator);
   new_solution.reinit(
     locally_owned_dofs, locally_relevant_dofs, mpi_communicator);
   solution_step.reinit(
@@ -490,61 +465,49 @@ void ConservationLaw<dim>::setup_system()
   system_rhs.reinit(locally_owned_dofs, mpi_communicator);
   ss_flux.reinit(locally_owned_dofs, mpi_communicator);
   ss_rhs.reinit(locally_owned_dofs, mpi_communicator);
-  tmp_vector.reinit(locally_owned_dofs, mpi_communicator);
   estimated_error_per_cell.reinit(triangulation.n_active_cells());
 #else
   old_solution.reinit(n_dofs);
+  older_solution.reinit(n_dofs);
+  old_stage_solution.reinit(n_dofs);
   new_solution.reinit(n_dofs);
   solution_step.reinit(n_dofs);
   system_rhs.reinit(n_dofs);
   ss_flux.reinit(n_dofs);
   ss_rhs.reinit(n_dofs);
-  tmp_vector.reinit(n_dofs);
   estimated_error_per_cell.reinit(triangulation.n_active_cells());
 #endif
 
-  // allocate memory for steady-state residual evaluations if Runge-Kutta is
-  // used
-  if (parameters.temporal_integrator == TemporalIntegrator::runge_kutta)
-    for (int i = 0; i < rk.s; ++i)
-#ifdef IS_PARALLEL
-      rk.f[i].reinit(locally_owned_dofs, locally_relevant_dofs, mpi_communicator);
-#else
-      rk.f[i].reinit(n_dofs);
-#endif
-
-  // create viscosity
-  switch (parameters.viscosity_type)
+  // create low-order viscosity
+  switch (low_order_viscosity_type)
   {
     // no viscosity
     case ViscosityType::none:
     {
-      auto zero_viscosity_tmp =
+      low_order_viscosity =
         std::make_shared<ConstantViscosity<dim>>(0.0, dof_handler);
-      viscosity = zero_viscosity_tmp;
       break;
     }
     // constant viscosity
     case ViscosityType::constant:
     {
-      auto constant_viscosity_tmp = std::make_shared<ConstantViscosity<dim>>(
+      low_order_viscosity = std::make_shared<ConstantViscosity<dim>>(
         parameters.constant_viscosity_value, dof_handler);
-      viscosity = constant_viscosity_tmp;
       break;
     }
     // low-order viscosity
     case ViscosityType::low:
     {
       // ensure diffusion type is compatible
-      Assert(parameters.diffusion_type == DiffusionType::none ||
-               parameters.diffusion_type == DiffusionType::laplacian,
+      Assert(low_order_diffusion_type == DiffusionType::none ||
+               low_order_diffusion_type == DiffusionType::laplacian,
              ExcInvalidDiffusionType());
 
       // create viscosity multiplier
       auto viscosity_multiplier = create_viscosity_multiplier();
 
       // create low-order viscosity
-      auto low_order_viscosity_tmp = std::make_shared<LowOrderViscosity<dim>>(
+      low_order_viscosity = std::make_shared<LowOrderViscosity<dim>>(
         parameters.first_order_viscosity_coef,
         cell_diameter,
         max_flux_speed_cell,
@@ -552,18 +515,15 @@ void ConservationLaw<dim>::setup_system()
         dof_handler,
         cell_quadrature,
         viscosity_multiplier);
-      low_order_viscosity = low_order_viscosity_tmp;
-
-      viscosity = low_order_viscosity_tmp;
 
       break;
     }
     // domain-invariant low-order viscosity
-    case ViscosityType::DI_low:
+    case ViscosityType::DI:
     {
       // ensure diffusion type is compatible
-      Assert(parameters.diffusion_type == DiffusionType::none ||
-               parameters.diffusion_type == DiffusionType::graphtheoretic,
+      Assert(low_order_diffusion_type == DiffusionType::none ||
+               low_order_diffusion_type == DiffusionType::graphtheoretic,
              ExcInvalidDiffusionType());
 
       // create viscosity multiplier
@@ -573,7 +533,7 @@ void ConservationLaw<dim>::setup_system()
       auto max_wave_speed = create_max_wave_speed();
 
       // create domain-invariant viscosity
-      auto low_order_viscosity_tmp =
+      low_order_viscosity =
         std::make_shared<DomainInvariantViscosity<dim>>(max_wave_speed,
                                                         fe,
                                                         dof_handler,
@@ -581,55 +541,6 @@ void ConservationLaw<dim>::setup_system()
                                                         cell_quadrature,
                                                         n_components,
                                                         viscosity_multiplier);
-      low_order_viscosity = low_order_viscosity_tmp;
-
-      viscosity = low_order_viscosity_tmp;
-
-      break;
-    }
-    // entropy viscosity
-    case ViscosityType::entropy:
-    {
-      Assert(parameters.diffusion_type == DiffusionType::none ||
-               parameters.diffusion_type == DiffusionType::laplacian,
-             ExcInvalidDiffusionType());
-
-      // create viscosity multiplier
-      auto viscosity_multiplier = create_viscosity_multiplier();
-
-      // create entropy
-      auto entropy = create_entropy();
-
-      // create low-order viscosity
-      auto low_order_viscosity_tmp = std::make_shared<LowOrderViscosity<dim>>(
-        parameters.first_order_viscosity_coef,
-        cell_diameter,
-        max_flux_speed_cell,
-        fe,
-        dof_handler,
-        cell_quadrature,
-        viscosity_multiplier);
-      low_order_viscosity = low_order_viscosity_tmp;
-
-      // create entropy viscosity
-      auto entropy_viscosity_tmp =
-        std::make_shared<EntropyViscosity<dim>>(parameters,
-                                                entropy,
-                                                cell_diameter,
-                                                fe,
-                                                dof_handler,
-                                                cell_quadrature,
-                                                face_quadrature);
-      entropy_viscosity = entropy_viscosity_tmp;
-
-      // create high-order viscosity
-      auto high_order_viscosity_tmp = std::make_shared<HighOrderViscosity<dim>>(
-        low_order_viscosity,
-        entropy_viscosity,
-        parameters.use_low_order_viscosity_for_first_time_step,
-        dof_handler);
-
-      viscosity = high_order_viscosity_tmp;
 
       break;
     }
@@ -640,14 +551,111 @@ void ConservationLaw<dim>::setup_system()
     }
   }
 
+  // create entropy viscosity
+  switch (entropy_viscosity_type)
+  {
+    // no viscosity
+    case ViscosityType::none:
+    {
+      entropy_viscosity =
+        std::make_shared<ConstantViscosity<dim>>(0.0, dof_handler);
+      break;
+    }
+    // entropy viscosity
+    case ViscosityType::entropy:
+    {
+      // only implemented for Laplacian diffusion for now
+      Assert(high_order_diffusion_type == DiffusionType::laplacian,
+             ExcInvalidDiffusionType());
+
+      // create viscosity multiplier
+      auto viscosity_multiplier = create_viscosity_multiplier();
+
+      // create entropy
+      auto entropy = create_entropy();
+
+      // create entropy viscosity
+      entropy_viscosity =
+        std::make_shared<EntropyViscosity<dim>>(parameters,
+                                                entropy,
+                                                cell_diameter,
+                                                fe,
+                                                dof_handler,
+                                                cell_quadrature,
+                                                face_quadrature);
+      break;
+    }
+    default:
+    {
+      Assert(false, ExcNotImplemented());
+      break;
+    }
+  }
+
+  // create high-order viscosity
+  switch (high_order_viscosity_type)
+  {
+    // no viscosity
+    case ViscosityType::none:
+    {
+      high_order_viscosity =
+        std::make_shared<ConstantViscosity<dim>>(0.0, dof_handler);
+      break;
+    }
+    // high-order viscosity
+    case ViscosityType::high:
+    {
+      // ensure that there is a low-order viscosity
+      Assert(low_order_viscosity_type != ViscosityType::none, ExcInvalidState());
+
+      // ensure that there is an entropy viscosity
+      Assert(entropy_viscosity_type != ViscosityType::none, ExcInvalidState());
+
+      // ensure that low-order viscosity has the same diffusion type
+      // since entropy and low-order viscosities are compared to create the
+      // high-order viscosity
+      Assert(low_order_diffusion_type == high_order_diffusion_type,
+             ExcInvalidState());
+
+      // create high-order viscosity
+      high_order_viscosity = std::make_shared<HighOrderViscosity<dim>>(
+        low_order_viscosity,
+        entropy_viscosity,
+        parameters.use_low_order_viscosity_for_first_time_step,
+        dof_handler);
+
+      break;
+    }
+    default:
+    {
+      Assert(false, ExcNotImplemented());
+      break;
+    }
+  }
+
+  // create low-order and high-order artificial diffusion
+  low_order_diffusion = create_artificial_diffusion(low_order_diffusion_type);
+  high_order_diffusion = create_artificial_diffusion(high_order_diffusion_type);
+}
+
+/**
+ * \brief Creates artificial diffusion object
+ *
+ * \param[in] diffusion_type type of artificial diffusion
+ */
+template <int dim>
+std::shared_ptr<ArtificialDiffusion<dim>> ConservationLaw<
+  dim>::create_artificial_diffusion(const DiffusionType & diffusion_type)
+{
+  std::shared_ptr<ArtificialDiffusion<dim>> artificial_diffusion;
+
   // create artificial diffusion
-  switch (parameters.diffusion_type)
+  switch (diffusion_type)
   {
     // no diffusion
     case DiffusionType::none:
     {
-      auto tmp_artificial_diffusion = std::make_unique<NoDiffusion<dim>>();
-      artificial_diffusion = std::move(tmp_artificial_diffusion);
+      artificial_diffusion = std::make_shared<NoDiffusion<dim>>();
       break;
     }
     // Laplacian diffusion
@@ -658,23 +666,20 @@ void ConservationLaw<dim>::setup_system()
       std::vector<FEValuesExtractors::Vector> vector_extractors;
       get_fe_extractors(scalar_extractors, vector_extractors);
 
-      auto tmp_artificial_diffusion =
-        std::make_unique<LaplacianDiffusion<dim>>(scalar_extractors,
+      artificial_diffusion =
+        std::make_shared<LaplacianDiffusion<dim>>(scalar_extractors,
                                                   vector_extractors,
                                                   dof_handler,
                                                   fe,
                                                   cell_quadrature,
                                                   dofs_per_cell);
-      artificial_diffusion = std::move(tmp_artificial_diffusion);
       break;
     }
     // graph-theoretic diffusion
     case DiffusionType::graphtheoretic:
     {
-      auto tmp_artificial_diffusion =
-        std::make_unique<GraphTheoreticDiffusion<dim>>(
-          dof_handler, dofs_per_cell, n_components);
-      artificial_diffusion = std::move(tmp_artificial_diffusion);
+      artificial_diffusion = std::make_shared<GraphTheoreticDiffusion<dim>>(
+        dof_handler, dofs_per_cell, n_components);
       break;
     }
     // else
@@ -684,9 +689,12 @@ void ConservationLaw<dim>::setup_system()
       break;
     }
   }
+
+  return artificial_diffusion;
 }
 
-/** \brief Updates the cell sizes map and minimum cell size.
+/**
+ * \brief Updates the cell sizes map and minimum cell size.
  */
 template <int dim>
 void ConservationLaw<dim>::update_cell_sizes()
@@ -704,7 +712,8 @@ void ConservationLaw<dim>::update_cell_sizes()
   }
 }
 
-/** \brief Assembles the mass matrices and applies constraints.
+/**
+ * \brief Assembles the mass matrices and applies constraints.
  */
 template <int dim>
 void ConservationLaw<dim>::assemble_mass_matrix()
@@ -716,11 +725,13 @@ void ConservationLaw<dim>::assemble_mass_matrix()
   // assemble consistent mass matrices (constrained and unconstrained)
   //----------------------------
   Function<dim> * dummy_function = 0;
+  /*
   MatrixTools::create_mass_matrix(dof_handler,
                                   cell_quadrature,
                                   consistent_mass_matrix_constrained,
                                   dummy_function,
                                   constraints);
+  */
   MatrixTools::create_mass_matrix(
     dof_handler, cell_quadrature, consistent_mass_matrix, dummy_function);
 
@@ -739,58 +750,6 @@ void ConservationLaw<dim>::assemble_mass_matrix()
       consistent_mass_matrix_out, 10, true, 0, "0", 1);
     consistent_mass_matrix_out.close();
   }
-}
-
-/** \brief Applies Dirichlet boundary conditions at a particular time.
- *
- *  \param[in] time current time; Dirichlet BC may be time-dependent.
- */
-template <int dim>
-void ConservationLaw<dim>::apply_dirichlet_bc(SparseMatrix<double> & A,
-                                              Vector<double> & x,
-                                              Vector<double> & b,
-                                              const double & time)
-{
-  // map of global dof ID to boundary value, to be computed using provided
-  // function
-  std::map<unsigned int, double> boundary_values;
-
-  if (boundary_conditions_type == "dirichlet")
-  {
-    // loop over boundary IDs
-    for (unsigned int boundary = 0; boundary < n_dirichlet_boundaries; ++boundary)
-      // loop over components
-      for (unsigned int component = 0; component < n_components; ++component)
-      {
-        // mask other components
-        std::vector<bool> component_mask(n_components, false);
-        component_mask[component] = true;
-
-        // fill boundary_values with boundary values
-        if (use_exact_solution_as_dirichlet_bc)
-        {
-          exact_solution_function->set_time(time);
-          VectorTools::interpolate_boundary_values(dof_handler,
-                                                   boundary,
-                                                   *exact_solution_function,
-                                                   boundary_values,
-                                                   component_mask);
-        }
-        else
-        {
-          dirichlet_function[boundary]->set_time(time);
-          VectorTools::interpolate_boundary_values(
-            dof_handler,
-            boundary,
-            *(dirichlet_function[boundary]),
-            boundary_values,
-            component_mask);
-        }
-      }
-  }
-
-  // apply boundary values to linear system
-  MatrixTools::apply_boundary_values(boundary_values, A, x, b);
 }
 
 /**
@@ -817,8 +776,19 @@ void ConservationLaw<dim>::apply_dirichlet_bc(SparseMatrix<double> & A,
 template <int dim>
 void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
 {
+  // create linear solver
+  LinearSolver<dim> linear_solver(
+    parameters.linear_solver, constraints, dof_handler, dirichlet_function);
+
+  // create SSPRK time integrator
+  SSPRKTimeIntegrator<dim> ssprk(parameters.time_discretization,
+                                 n_dofs,
+                                 linear_solver,
+                                 unconstrained_sparsity_pattern);
+
   // initialize old time, time index, and transient flag
   old_time = 0.0;
+  double old_dt = 0.0;
   unsigned int n = 1;
   bool in_transient = true;
 
@@ -870,29 +840,103 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
             << ": t = \x1b[1;34m" << new_time << "\x1b[0m, CFL = " << cfl
             << std::endl;
 
-    cout1 << std::fixed << std::setprecision(2) << "    stage 1 of 1" << std::endl;
+    /*
+        // compute viscosities
+        {
+          // start timer for compute viscosities section
+          TimerOutput::Scope timer_section(timer, "Compute viscosity");
 
-    // compute viscosities
+          // update viscosities
+          low_order_viscosity->update(old_solution, older_solution, old_dt, n);
+          high_order_viscosity->update(old_solution, older_solution, old_dt, n);
+        }
+
+        // output viscosity transient if specified
+        if (parameters.output_viscosity_transient)
+          output_viscosity(postprocessor, true, old_time);
+
+        // update old_solution to new_solution for next time step;
+        // this is not done at the end of the previous time step because
+        // of the time derivative term in the viscosities update above
+        //old_solution = new_solution;
+
+        // compute diffusion matrices
+        low_order_diffusion->compute_diffusion_matrix(low_order_viscosity,
+                                                      low_order_diffusion_matrix);
+        high_order_diffusion->compute_diffusion_matrix(high_order_viscosity,
+                                                       high_order_diffusion_matrix);
+    */
+
+    // initialize SSPRK time step
+    ssprk.initialize_time_step(old_solution, dt);
+
+    // loop over SSPRK stages to compute new solution
+    for (unsigned int i = 0; i < ssprk.n_stages; ++i)
     {
-      // start timer for compute viscosities section
-      TimerOutput::Scope timer_section(timer, "Compute viscosity");
+      // print stage index
+      cout1 << "    stage " << i + 1 << " of " << ssprk.n_stages << std::endl;
 
-      // update viscosity
-      viscosity->update(new_solution, old_solution, dt, n);
+      // get stage time
+      double t_stage = ssprk.get_stage_time();
+
+      // compute steady-state rhs vector
+      compute_ss_rhs(t_stage, ss_rhs);
+
+      // compute steady-state flux vector
+      compute_ss_flux(dt, old_solution, ss_flux);
+
+      // determine old stage solution and dt (needed for entropy viscosity)
+      double old_stage_dt;
+      if (i == 0)
+      {
+        old_stage_dt = old_dt;
+      }
+      else
+      {
+        ssprk.get_stage_solution(i - 1, older_solution);
+        old_stage_dt = dt;
+      }
+
+      // get old stage solution
+      ssprk.get_stage_solution(i, old_stage_solution);
+
+      // advance by an SSPRK step
+      switch (parameters.scheme)
+      {
+        case Scheme::low:
+          low_order_viscosity->update(
+            old_stage_solution, older_solution, old_stage_dt, n);
+          low_order_diffusion->compute_diffusion_matrix(
+            low_order_viscosity, low_order_diffusion_matrix);
+          ssprk.step(lumped_mass_matrix,
+                     ss_flux,
+                     ss_rhs,
+                     low_order_diffusion_matrix,
+                     true);
+          break;
+        case Scheme::high:
+          high_order_viscosity->update(
+            old_stage_solution, older_solution, old_stage_dt, n);
+          high_order_diffusion->compute_diffusion_matrix(
+            high_order_viscosity, high_order_diffusion_matrix);
+          ssprk.step(consistent_mass_matrix,
+                     ss_flux,
+                     ss_rhs,
+                     high_order_diffusion_matrix,
+                     true);
+          break;
+        case Scheme::fct:
+          Assert(false, ExcNotImplemented());
+          // perform_fct_ssprk_step();
+          break;
+        default:
+          Assert(false, ExcNotImplemented());
+          break;
+      }
     }
 
-    // output viscosity transient if specified
-    if (parameters.output_viscosity_transient)
-      output_viscosity(postprocessor, true /* is_transient */, old_time);
-
-    // compute low-order diffusion matrix
-    artificial_diffusion->compute_diffusion_matrix(viscosity,
-                                                   low_order_diffusion_matrix);
-
-    // update old_solution to new_solution for next time step;
-    // this is not done at the end of the previous time step because
-    // of the time derivative term in the viscosities update above
-    old_solution = new_solution;
+    // retrieve the final solution
+    ssprk.get_new_solution(new_solution);
 
     /*
       for (unsigned int i = 0; i < ssprk.n_stages; ++i)
@@ -902,42 +946,36 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
 
         // recompute steady-state rhs if it is time-dependent
         if (source_is_time_dependent)
-        {
-          assemble_ss_rhs(t_stage);
-        }
+          this->assembleSteadyStateRHS(t_stage);
+
+        // get old stage solution
+        ssprk.get_stage_solution(i, old_stage_solution);
+
+        // recompute high-order steady-state matrix
+        EV.recompute_high_order_ss_matrix(this->new_solution,
+          old_stage_solution, old_solution, dt, dt_old, t_stage);
 
         // advance by an SSPRK step
-        ssprk.step(consistent_mass_matrix, inviscid_ss_matrix, ss_rhs,
-          true);
-      }
-      // retrieve the final solution
-      ssprk.get_new_solution(new_solution);
+        ssprk.step(consistent_mass_matrix, this->high_order_ss_matrix,
+          this->ss_rhs, false);
+
+        // get old stage solution
+        ssprk.get_stage_solution(i, old_stage_solution);
+
+        // get intermediate solution
+        ssprk.get_intermediate_solution(this->new_solution);
+
+        // perform FCT
+        fct.solve_FCT_system(this->new_solution, old_stage_solution,
+          this->low_order_ss_matrix, this->ss_rhs, dt,
+          this->low_order_diffusion_matrix, this->high_order_diffusion_matrix);
+
+        // set stage solution to be FCT solution for this stage
+        ssprk.set_intermediate_solution(this->new_solution);
+
+        // finish computing stage solution
+        ssprk.complete_stage_solution();
     */
-
-    // compute steady-state rhs vector
-    compute_ss_rhs(old_time, ss_rhs);
-
-    // compute steady-state flux vector
-    compute_ss_flux(dt, old_solution, ss_flux);
-
-    // compute system rhs
-    system_rhs = 0;
-    mass_matrix->vmult(system_rhs, old_solution);
-    system_rhs.add(dt, ss_rhs);
-    system_rhs.add(-dt, ss_flux);
-    low_order_diffusion_matrix.vmult(tmp_vector, old_solution);
-    system_rhs.add(-dt, tmp_vector);
-
-    // copy mass matrix before modification
-    system_matrix.copy_from(*mass_matrix);
-
-    // apply Dirichlet constraints
-    if (boundary_conditions_type == "dirichlet")
-      apply_dirichlet_bc(system_matrix, new_solution, system_rhs, new_time);
-
-    // solve the linear system
-    linear_solve(system_matrix, system_rhs, new_solution);
-
     {
       // start timer for output
       TimerOutput::Scope timer_section(timer, "Output");
@@ -974,8 +1012,13 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     // compute error for adaptive mesh refinement
     compute_error_for_refinement();
 
+    // store old solutions
+    older_solution = old_solution;
+    old_solution = new_solution;
+
     // reset old time and increment time step index
     old_time = new_time;
+    old_dt = dt;
     n++;
   } // end of time loop
 }
@@ -1021,68 +1064,6 @@ double ConservationLaw<dim>::compute_cfl_number(const double & dt) const
 }
 
 /**
- * \brief Solves the linear system \f$A x = b\f$.
- *
- * \param[in] A the system matrix
- * \param[in] b the right-hand side vector
- * \param[out] x the solution vector
- */
-template <int dim>
-void ConservationLaw<dim>::linear_solve(const SparseMatrix<double> & A,
-                                        const Vector<double> & b,
-                                        Vector<double> & x)
-{
-  // start timer for linear solve section
-  TimerOutput::Scope timer_section(timer, "Linear solve");
-
-  // set constrained DoFs to zero, see deal.II module on constrained degrees of
-  // freedom - treatment of inhomogeneous constraints, approach 1; iterative
-  // solvers might stop prematurely if this is not done
-  this->constraints.set_zero(x);
-
-  switch (parameters.linear_solver)
-  {
-    // UMFPACK
-    case LinearSolverType::direct:
-    {
-      SparseDirectUMFPACK A_umfpack;
-      A_umfpack.initialize(A);
-      A_umfpack.vmult(x, b);
-      break;
-    }
-    // GMRes
-    case LinearSolverType::gmres:
-    {
-      Assert(false, ExcNotImplemented());
-      break;
-    }
-    // CG with SSOR
-    case LinearSolverType::cg:
-    {
-      SolverControl solver_control(parameters.max_linear_iterations,
-                                   parameters.linear_atol);
-      SolverCG<> solver(solver_control);
-
-      PreconditionSSOR<> preconditioner;
-      // initialize. The second parameter is a relaxation parameter
-      // between 1 and 2.
-      preconditioner.initialize(A, 1.2);
-
-      solver.solve(A, x, b, preconditioner);
-      break;
-    }
-    default:
-    {
-      Assert(false, ExcNotImplemented());
-      break;
-    }
-  }
-
-  // distribute constraints
-  constraints.distribute(x);
-}
-
-/**
  * \brief Returns a pointer to an auxiliary post-processor object if there is
  *        one; otherwise returns a nullptr
  *
@@ -1120,35 +1101,20 @@ void ConservationLaw<dim>::output_viscosity(PostProcessor<dim> & postprocessor,
   std::vector<std::string> viscosity_names;
 
   // output final viscosities if non-constant viscosity used
-  switch (parameters.viscosity_type)
+  if (low_order_viscosity_type != ViscosityType::none)
   {
-    case ViscosityType::none:
-      break;
-    case ViscosityType::constant:
-      break;
-    case ViscosityType::low:
-      viscosities.push_back(low_order_viscosity);
-      viscosity_names.push_back("low_order_viscosity");
-      break;
-    case ViscosityType::DI_low:
-      viscosities.push_back(low_order_viscosity);
-      viscosity_names.push_back("di_low_order_viscosity");
-      break;
-    case ViscosityType::entropy:
-      // low-order viscosity
-      viscosities.push_back(low_order_viscosity);
-      viscosity_names.push_back("low_order_viscosity");
-      // entropy viscosity
-      viscosities.push_back(entropy_viscosity);
-      viscosity_names.push_back("entropy_viscosity");
-      // high-order viscosity
-      viscosities.push_back(viscosity);
-      viscosity_names.push_back("high_order_viscosity");
-
-      break;
-    default:
-      Assert(false, ExcNotImplemented());
-      break;
+    viscosities.push_back(low_order_viscosity);
+    viscosity_names.push_back("low_order_viscosity");
+  }
+  if (entropy_viscosity_type != ViscosityType::none)
+  {
+    viscosities.push_back(low_order_viscosity);
+    viscosity_names.push_back("entropy_viscosity");
+  }
+  if (high_order_viscosity_type != ViscosityType::none)
+  {
+    viscosities.push_back(high_order_viscosity);
+    viscosity_names.push_back("high_order_viscosity");
   }
 
   // output the  viscosities

@@ -6,6 +6,12 @@ subsection quadrature
    set number of quadrature points = 2
 end
 
+subsection scheme
+   set scheme = low # low|high|fct
+   set low order scheme = constant # constant|standard|dmp|di_visc|di_diff
+   set high order scheme = galerkin # galerkin|entropy_visc|entropy_diff
+end
+
 # Problem Names:
 #   dam_break_flat
 #   dam_break_bump
@@ -38,8 +44,6 @@ subsection time
 end
 
 subsection artificial viscosity
-   # options are <none|constant|old_first_order|max_principle|invariant_domain|entropy>
-   set viscosity type = constant
    set constant viscosity value = 1.00
    set first order viscosity coefficient = 0.5
    set multiply low order viscosity by froude = false
@@ -50,9 +54,6 @@ subsection artificial viscosity
    set constant entropy normalization coefficient = 0.1
    set entropy viscosity smoothing = none # none | max | average
    set entropy viscosity smoothing weight = 1
-
-   # options are <none|laplacian|graphtheoretic>
-   set diffusion type = laplacian
 end
 
 subsection temporal integration

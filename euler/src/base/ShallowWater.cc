@@ -388,9 +388,11 @@ void ShallowWater<dim>::assemble_lumped_mass_matrix()
             fe_values.JxW(q);
         }
 
-    // add to global mass matrix with contraints
-    this->constraints.distribute_local_to_global(
-      local_mass, local_dof_indices, this->lumped_mass_matrix);
+    // add to global mass matrix
+    for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+      for (unsigned int j = 0; j < this->dofs_per_cell; ++j)
+        this->lumped_mass_matrix.add(
+          local_dof_indices[i], local_dof_indices[j], local_mass(i, j));
   }
 }
 
@@ -757,10 +759,6 @@ template <int dim>
 std::shared_ptr<ViscosityMultiplier<dim>> ShallowWater<
   dim>::create_viscosity_multiplier() const
 {
-  /*
-    auto viscosity_multiplier =
-      std::make_shared<ShallowWaterViscosityMultiplier<dim>>(gravity);
-  */
   std::shared_ptr<ViscosityMultiplier<dim>> viscosity_multiplier;
   if (sw_parameters.multiply_low_order_viscosity_by_froude)
   {

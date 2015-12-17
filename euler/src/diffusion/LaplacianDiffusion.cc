@@ -166,7 +166,8 @@ void LaplacianDiffusion<dim>::compute_diffusion_matrix(
           for (unsigned int k = 0; k < n_vector_components; ++k)
             sum_i_q += double_contract<0, 0, 1, 1>(
               fe_values[vector_extractors[k]].gradient(i, q),
-              (*viscosity)[cell] * fe_values[vector_extractors[k]].gradient(j, q));
+              (*viscosity)[cell] *
+                fe_values[vector_extractors[k]].gradient(j, q));
 
           // finish cell matrix entry
           cell_matrix(i, j) += sum_i_q * fe_values.JxW(q);

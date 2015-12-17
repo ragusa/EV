@@ -61,6 +61,7 @@ public:
   enum class TemporalDiscretization
   {
     FE,
+    SSP2,
     SSP3
   };
   TemporalDiscretization time_discretization;
@@ -105,16 +106,43 @@ public:
   unsigned int degree;
   unsigned int n_quadrature_points;
 
+  enum class Scheme
+  {
+    low,
+    high,
+    fct
+  };
+  Scheme scheme;
+
+  enum class LowOrderScheme
+  {
+    constant,
+    standard,
+    dmp,
+    di_visc,
+    di_diff
+  };
+  LowOrderScheme low_order_scheme;
+
+  enum class HighOrderScheme
+  {
+    galerkin,
+    entropy_visc,
+    entropy_diff
+  };
+  HighOrderScheme high_order_scheme;
+
   enum class ViscosityType
   {
     none,
     constant,
     low,
-    DMP_low,
-    DI_low,
-    entropy
+    DMP,
+    DI,
+    entropy,
+    high
   };
-  ViscosityType viscosity_type;
+
   double constant_viscosity_value;
   double first_order_viscosity_coef;
   bool use_low_order_viscosity_for_first_time_step;
@@ -126,9 +154,10 @@ public:
   enum class DiffusionType
   {
     none,
-    algebraic,
     laplacian,
-    graphtheoretic
+    graphtheoretic,
+    DI,
+    entropy
   };
   DiffusionType diffusion_type;
 };
