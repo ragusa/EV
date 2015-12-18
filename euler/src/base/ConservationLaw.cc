@@ -157,6 +157,18 @@ void ConservationLaw<dim>::run()
     for (unsigned int i = 0; i < n_dofs; ++i)
       std::cout << new_solution[i] << std::endl;
   }
+
+/*
+  for (unsigned int i = 0; i < n_dofs; ++i)
+  {
+    SparseMatrix<double>::const_iterator it = low_order_diffusion_matrix.begin(i);
+    SparseMatrix<double>::const_iterator it_end = low_order_diffusion_matrix.end(i);
+    double D_i = 0.0;
+    for (; it != it_end; ++it)
+      D_i += it->value();
+    std::cout << "D_i = " << D_i << std::endl;
+  }
+*/
 }
 
 /**
@@ -236,7 +248,6 @@ void ConservationLaw<dim>::initialize_system()
       low_order_diffusion_type = DiffusionType::graphtheoretic;
       break;
     case LowOrderScheme::di_diff:
-      Assert(false, ExcNotImplemented());
       low_order_viscosity_type = ViscosityType::none;
       low_order_diffusion_type = DiffusionType::DI;
       break;
@@ -687,6 +698,16 @@ std::shared_ptr<ArtificialDiffusion<dim>> ConservationLaw<
         dof_handler, dofs_per_cell, n_components);
       break;
     }
+    // domain-invariant diffusion
+    case DiffusionType::DI:
+    {
+      // create max wave speed
+      auto max_wave_speed = create_max_wave_speed();
+
+      artificial_diffusion = std::make_shared<DomainInvariantDiffusion<dim>>(
+        max_wave_speed, triangulation, cell_quadrature, n_components, n_dofs);
+      break;
+    }
     // else
     default:
     {
@@ -900,7 +921,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
           low_order_viscosity->update(
             old_stage_solution, older_solution, old_stage_dt, n);
           low_order_diffusion->compute_diffusion_matrix(
-            low_order_viscosity, low_order_diffusion_matrix);
+            old_stage_solution, low_order_viscosity, low_order_diffusion_matrix);
           ssprk.step(lumped_mass_matrix,
                      ss_flux,
                      ss_rhs,
@@ -911,7 +932,9 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
           high_order_viscosity->update(
             old_stage_solution, older_solution, old_stage_dt, n);
           high_order_diffusion->compute_diffusion_matrix(
-            high_order_viscosity, high_order_diffusion_matrix);
+            old_stage_solution,
+            high_order_viscosity,
+            high_order_diffusion_matrix);
           ssprk.step(consistent_mass_matrix,
                      ss_flux,
                      ss_rhs,
@@ -1134,14 +1157,14 @@ void ConservationLaw<dim>::perform_fct_ssprk_step(
   // update low-order diffusion
   low_order_viscosity->update(
     old_stage_solution, older_solution, old_stage_dt, n);
-  low_order_diffusion->compute_diffusion_matrix(low_order_viscosity,
-                                                low_order_diffusion_matrix);
+  low_order_diffusion->compute_diffusion_matrix(
+    old_stage_solution, low_order_viscosity, low_order_diffusion_matrix);
 
   // update high-order diffusion
   high_order_viscosity->update(
     old_stage_solution, older_solution, old_stage_dt, n);
-  high_order_diffusion->compute_diffusion_matrix(high_order_viscosity,
-                                                 high_order_diffusion_matrix);
+  high_order_diffusion->compute_diffusion_matrix(
+    old_stage_solution, high_order_viscosity, high_order_diffusion_matrix);
 
   // compute high-order solution
   ssprk.step(

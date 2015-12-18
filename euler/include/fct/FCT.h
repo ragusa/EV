@@ -100,6 +100,7 @@ private:
     const Vector<double> & ss_rhs,
     const SparseMatrix<double> & low_order_diffusion_matrix,
     const double & dt);
+  void compute_full_flux_correction();
   void get_matrix_row(const SparseMatrix<double> & matrix,
                       const unsigned int & i,
                       std::vector<double> & row_values,

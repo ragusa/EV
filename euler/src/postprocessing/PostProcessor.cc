@@ -71,13 +71,13 @@ PostProcessor<dim>::PostProcessor(
       switch (parameters.low_order_scheme)
       {
         case ConservationLawParameters<dim>::LowOrderScheme::constant:
-          scheme_string = "constant";
+          scheme_string = "Constant";
           break;
         case ConservationLawParameters<dim>::LowOrderScheme::standard:
-          scheme_string = "low";
+          scheme_string = "Low";
           break;
         case ConservationLawParameters<dim>::LowOrderScheme::dmp:
-          scheme_string = "DMPlow";
+          scheme_string = "DMP";
           break;
         case ConservationLawParameters<dim>::LowOrderScheme::di_visc:
           scheme_string = "DIV";
@@ -102,7 +102,7 @@ PostProcessor<dim>::PostProcessor(
           scheme_string = "EV";
           break;
         case ConservationLawParameters<dim>::HighOrderScheme::entropy_diff:
-          scheme_string = "entropy";
+          scheme_string = "ED";
           break;
         default:
           Assert(false, ExcNotImplemented());
@@ -112,7 +112,21 @@ PostProcessor<dim>::PostProcessor(
     }
     case ConservationLawParameters<dim>::Scheme::fct:
     {
-      scheme_string = "fct";
+      switch (parameters.high_order_scheme)
+      {
+        case ConservationLawParameters<dim>::HighOrderScheme::galerkin:
+          scheme_string = "GalFCT";
+          break;
+        case ConservationLawParameters<dim>::HighOrderScheme::entropy_visc:
+          scheme_string = "EVFCT";
+          break;
+        case ConservationLawParameters<dim>::HighOrderScheme::entropy_diff:
+          scheme_string = "EDFCT";
+          break;
+        default:
+          Assert(false, ExcNotImplemented());
+          break;
+      }
       break;
     }
     default:

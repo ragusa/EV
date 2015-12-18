@@ -1,15 +1,21 @@
-# Input file for scalar transport
+subsection finite element
+   set degree = 1
+end
 
-# Problem names:
-# absorber
-subsection problem
-   set problem name = absorber
+subsection quadrature
+   set number of quadrature points = 3
 end
 
 subsection scheme
    set scheme = fct # low|high|fct
    set low order scheme = standard # constant|standard|dmp|di_visc|di_diff
    set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
+end
+
+# Problem names:
+# absorber
+subsection problem
+   set problem name = absorber
 end
 
 subsection refinement
@@ -20,7 +26,8 @@ subsection refinement
 end
 
 subsection time
-   set time step size method = constant # constant|cfl
+   # options are <constant_dt|cfl_condition>
+   set time step size method = constant
    set use default end time = false
    set final time = 0.1
    set time step size = 0.001
@@ -34,13 +41,15 @@ subsection artificial viscosity
    set use low order viscosity for first time step = true
    set entropy residual coefficient = 1.0
    set entropy jump coefficient = 1.0
-   set entropy viscosity smoothing = none # none|max|average
+   set entropy viscosity smoothing = none # none | max | average
    set entropy viscosity smoothing weight = 4
 end
 
 subsection temporal integration
-   set temporal integrator = runge_kutta # runge_kutta
-   set runge kutta method = FE # FE|SSP2|SSP3
+   # options are <runge_kutta>
+   set temporal integrator = runge_kutta
+   # options are <ERK1|ERK2|ERK3|ERK4|SDIRK22>
+   set runge kutta method = FE
 end
 
 subsection nonlinear solver
@@ -70,24 +79,15 @@ subsection output
    set output viscosity transient = false
    set exact solution refinement level = 7
    set save convergence results = false
-   set print final solution = false
+   set print final solution = true
 
    # verbosity level:
    # 0: print only required info
    # 1: print cycle, time step, stage info
    # 2: print cycle, time step, stage info, timer summary, and extra info
-   set verbosity level = 1
-end
-
-subsection finite element
-   set degree = 1
-end
-
-subsection quadrature
-   set number of quadrature points = 3
+   set verbosity level = 0
 end
 
 subsection fct
-   set antidiffusion = limited # limited|full|none
+   set antidiffusion = full
 end
-

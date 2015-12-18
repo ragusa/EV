@@ -64,11 +64,13 @@ GraphTheoreticDiffusion<dim>::GraphTheoreticDiffusion(
  * \f]
  * where \f$\nu_K\f$ is the cell viscosity.
  *
+ * \param[in] solution solution vector
  * \param[in] viscosity pointer to viscosity cell map
  * \param[out] diffusion_matrix diffusion matrix
  */
 template <int dim>
 void GraphTheoreticDiffusion<dim>::compute_diffusion_matrix(
+  const Vector<double> &,
   const std::shared_ptr<Viscosity<dim>> viscosity,
   SparseMatrix<double> & diffusion_matrix)
 {

@@ -42,7 +42,8 @@ public:
                           const unsigned int & dofs_per_cell,
                           const unsigned int & n_components);
 
-  void compute_diffusion_matrix(const std::shared_ptr<Viscosity<dim>> viscosity,
+  void compute_diffusion_matrix(const Vector<double> & solution,
+                                const std::shared_ptr<Viscosity<dim>> viscosity,
                                 SparseMatrix<double> & diffusion_matrix) override;
 
 protected:

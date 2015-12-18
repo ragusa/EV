@@ -28,7 +28,8 @@ template <int dim>
 double ShallowWaterMaxWaveSpeed<dim>::compute(
   const std::vector<double> & solution_left,
   const std::vector<double> & solution_right,
-  const Tensor<1, dim> & normal_vector) const
+  const Tensor<1, dim> & normal_vector)
+  //const Tensor<1, dim> & normal_vector) const
 {
   // extract solution components from solution vector
   const double height_left = solution_left[0];
@@ -69,6 +70,9 @@ double ShallowWaterMaxWaveSpeed<dim>::compute(
 
   // compute maximum wave speed
   const double max_wave_speed = std::max(left_head_speed, right_head_speed);
+
+  // update maximum wave speed in domain
+  this->max_wave_speed_domain = std::max(this->max_wave_speed_domain, max_wave_speed);
 
   return max_wave_speed;
 }

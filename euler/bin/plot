@@ -107,7 +107,8 @@ while (<IN>)
   if ($line =~ /set runge kutta method/)
   {
     my @fields = split /\s+=\s+/, $line;
-    $time_discretization = $fields[1];
+    my @fields2 = split /\s+/, $fields[1];
+    $time_discretization = $fields2[0];
     $time_discretization_found = 1;
   }
 }

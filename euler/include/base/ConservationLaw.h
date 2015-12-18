@@ -41,6 +41,7 @@
 #include "include/bc/BoundaryConditions.h"
 #include "include/bc/DirichletBoundaryConditions.h"
 #include "include/diffusion/ArtificialDiffusion.h"
+#include "include/diffusion/DomainInvariantDiffusion.h"
 #include "include/diffusion/NoDiffusion.h"
 #include "include/diffusion/GraphTheoreticDiffusion.h"
 #include "include/diffusion/LaplacianDiffusion.h"

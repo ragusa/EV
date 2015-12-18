@@ -84,28 +84,29 @@ void FCT<dim>::solve_fct_system(
         old_solution, ss_flux, ss_rhs, low_order_diffusion_matrix, dt);
       break;
     case AntidiffusionType::full:
-      Assert(false, ExcNotImplemented());
+      compute_full_flux_correction();
       break;
     case AntidiffusionType::none:
-      Assert(false, ExcNotImplemented());
+      flux_correction_vector = 0;
       break;
     default:
       Assert(false, ExcNotImplemented());
       break;
   }
 
-  // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - ss_flux - D*u_old +
-  // f)
+  // form rhs: system_rhs = M*u_old + dt*(ss_rhs - ss_flux - D*u_old + f)
   system_rhs = 0;
-  system_rhs.add(dt, ss_rhs);
   lumped_mass_matrix->vmult(tmp_vector, old_solution);
   system_rhs.add(1.0, tmp_vector);
+  system_rhs.add(dt, ss_rhs);
   system_rhs.add(-dt, ss_flux);
+  low_order_diffusion_matrix.vmult(tmp_vector, old_solution);
+  system_rhs.add(-dt, tmp_vector);
   system_rhs.add(dt, flux_correction_vector);
 
   // solve the linear system M*u_new = system_rhs
   system_matrix.copy_from(*lumped_mass_matrix);
-  linear_solver.solve(system_matrix, system_rhs, new_solution);
+  linear_solver.solve(system_matrix, new_solution, system_rhs);
 
   /*
   // check that local discrete maximum principle is satisfied at all time steps
@@ -214,43 +215,32 @@ void FCT<dim>::compute_flux_corrections(
   dUdt = 0;
   dUdt.add(1.0 / dt, high_order_solution, -1.0 / dt, old_solution);
 
-  // cell iterator
-  typename DoFHandler<dim>::active_cell_iterator cell =
-                                                   dof_handler->begin_active(),
-                                                 endc = dof_handler->end();
+  // iterate over sparse matrix entries
+  SparseMatrix<double>::const_iterator it_mass = consistent_mass_matrix->begin();
+  SparseMatrix<double>::const_iterator it_low =
+    low_order_diffusion_matrix.begin();
+  SparseMatrix<double>::const_iterator it_high =
+    high_order_diffusion_matrix.begin();
+  SparseMatrix<double>::iterator it_flux = flux_correction_matrix.begin();
+  SparseMatrix<double>::iterator it_end = flux_correction_matrix.end();
 
-  // dof indices for a line
-  std::vector<unsigned int> local_dof_indices(2);
-
-  // loop over cells
-  unsigned int i_cell = 0;
-  unsigned int i_line = 0;
-  for (cell = dof_handler->begin_active(); cell != endc; ++cell, ++i_cell)
+  for (; it_flux != it_end; ++it_flux, ++it_mass, ++it_low, ++it_high)
   {
-    // loop over lines of cell
-    for (unsigned int line = 0; line < GeometryInfo<dim>::lines_per_cell;
-         ++line, ++i_line)
-    {
-      if (!cell->line(line)->user_flag_set())
-      {
-        // mark line so that the same flux isn't recomputed
-        cell->line(line)->set_user_flag();
+    // get row and column indices
+    const unsigned int i = it_flux->row();
+    const unsigned int j = it_flux->column();
 
-        // get dof indices on line
-        cell->line(line)->get_dof_indices(local_dof_indices);
-        unsigned int i = local_dof_indices[0];
-        unsigned int j = local_dof_indices[1];
+    // get values
+    const double Mij = it_mass->value();
+    const double DLij = it_low->value();
+    const double DHij = it_high->value();
 
-        // compute flux
-        double Fij = -(*consistent_mass_matrix)(i, j) * (dUdt(j) - dUdt(i)) +
-          (low_order_diffusion_matrix(i, j) - high_order_diffusion_matrix(i, j)) *
-            (old_solution(j) - old_solution(i));
+    // compute flux correction entry
+    const double Fij = -Mij * (dUdt(j) - dUdt(i)) +
+      (DLij - DHij) * (old_solution(j) - old_solution(i));
 
-        // store flux
-        flux_correction_matrix.set(i, j, Fij);
-        flux_correction_matrix.set(j, i, -Fij);
-      }
-    }
+    // store value
+    it_flux->value() = Fij;
   }
 }
 
@@ -360,8 +350,32 @@ void FCT<dim>::compute_limiting_coefficients_zalesak(
   }
 }
 
-/** \brief Gets the values and indices of nonzero elements in a row of a sparse
- * matrix.
+/**
+ * \brief Computes the full flux correction vector (without any limitation)
+ */
+template <int dim>
+void FCT<dim>::compute_full_flux_correction()
+{
+  // reset vector
+  flux_correction_vector = 0;
+
+  // iterate over sparse matrix entries
+  SparseMatrix<double>::iterator it = flux_correction_matrix.begin();
+  SparseMatrix<double>::iterator it_end = flux_correction_matrix.end();
+
+  for (; it != it_end; ++it)
+  {
+    // get row index
+    const unsigned int i = it->row();
+
+    // add entry to flux correction vector
+    flux_correction_vector(i) += it->value();
+  }
+}
+
+/**
+ * \brief Gets the values and indices of nonzero elements in a row of a sparse
+ *        matrix.
  *  \param [in] matrix sparse matrix whose row will be retrieved
  *  \param [in] i index of row to be retrieved
  *  \param [out] row_values vector of values of nonzero entries of row i

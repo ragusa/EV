@@ -22,7 +22,8 @@ public:
 
   double compute(const std::vector<double> & solution_left,
                  const std::vector<double> & solution_right,
-                 const Tensor<1, dim> & normal_vector) const override;
+                 const Tensor<1, dim> & normal_vector) override;
+//                 const Tensor<1, dim> & normal_vector) const override;
 
 protected:
   double compute_height_star(const double & h_left,

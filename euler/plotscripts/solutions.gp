@@ -9,10 +9,11 @@ filebase = "solution"
 # list of possible input files to plot and their corresponding titles
 file_initial  = filebase."_initial"
 file_exact    = filebase."_exact"
-file_galerkin = filebase."_Gal_"   .timeintegrator
-file_low      = filebase."_low_"   .timeintegrator
-file_DIlow    = filebase."_DIlow_" .timeintegrator
-file_high     = filebase."_EV_"    .timeintegrator
+file_Gal      = filebase."_Gal_"   .timeintegrator
+file_Low      = filebase."_Low_"   .timeintegrator
+file_DIV      = filebase."_DIV_"   .timeintegrator
+file_DID      = filebase."_DID_"   .timeintegrator
+file_EV       = filebase."_EV_"    .timeintegrator
 file_EVFCT    = filebase."_EVFCT_" .timeintegrator
 file_GalFCT   = filebase."_GalFCT_".timeintegrator
 file_LowDMPmin = "DMPmin_Low"
@@ -23,10 +24,11 @@ file_EVFCTDMPmin  = "DMPmin_EVFCT"
 file_EVFCTDMPmax  = "DMPmax_EVFCT"
 file_list = file_initial." ".\
             file_exact." ".\
-            file_galerkin." ".\
-            file_low." ".\
-            file_DIlow." ".\
-            file_high." ".\
+            file_Gal." ".\
+            file_Low." ".\
+            file_DIV." ".\
+            file_DID." ".\
+            file_EV." ".\
             file_EVFCT." ".\
             file_GalFCT." ".\
             file_LowDMPmin." ".\
@@ -39,7 +41,8 @@ title_list = "Initial\
               Exact\
               Galerkin\
               Low-Order\
-              DI-Low-Order\
+              DI-Viscosity\
+              DI-Diffusion\
               EV\
               EV-FCT\
               Galerkin-FCT\
@@ -49,9 +52,9 @@ title_list = "Initial\
               DMP-max-Gal-FCT\
               DMP-min-EV-FCT\
               DMP-max-EV-FCT"
-linetypes = "2 1 1 2 1 1 1 1 2 2 2 2 4 4"
-linecolors = "-1 -1 1 2 2 3 4 5 -1 -1 -1 -1 -1 -1"
-symboltypes = "-2 -2 1 4 2 3 4 6 -2 -2 -2 -2 -2 -2"
+linetypes = "2 1 1 2 1 3 1 1 1 2 2 2 2 4 4"
+linecolors = "-1 -1 1 2 2 2 3 4 5 -1 -1 -1 -1 -1 -1"
+symboltypes = "-2 -2 1 4 2 1 3 4 6 -2 -2 -2 -2 -2 -2"
 
 # define is_missing(x) function for determining if an input file exists
 outdir = "../output/".problem_name."/"
