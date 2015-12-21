@@ -33,8 +33,8 @@
 #include "include/viscosity/ShallowWaterMaxWaveSpeed.h"
 #include "include/viscosity/ViscosityMultiplier.h"
 #include "include/viscosity/ShallowWaterViscosityMultiplier.h"
-//#include "include/riemann/ShallowWaterStarState.h"
-//#include "include/riemann/StarState.h"
+#include "include/riemann/ShallowWaterStarState.h"
+#include "include/riemann/StarState.h"
 
 /**
  * \brief Class for solving the shallow water equations.
@@ -111,7 +111,7 @@ private:
 
   std::shared_ptr<MaxWaveSpeed<dim>> create_max_wave_speed() const override;
 
-  // std::shared_ptr<StarState<dim>> create_star_state() const override;
+  std::shared_ptr<StarState<dim>> create_star_state() const override;
 
   std::shared_ptr<ViscosityMultiplier<dim>> create_viscosity_multiplier()
     const override;

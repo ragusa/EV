@@ -8,24 +8,35 @@
  * \brief Constructor.
  *
  * \param[in] gravity_ acceleration due to gravity
+ * \param[in] gradient_matrix_ pointer to gradient matrix object
+ * \param[in] dof_handler_ degree of freedom handler for vector case
+ * \param[in] triangulation_ triangulation
+ * \param[in] n_components_ number of solution components
  */
 template <int dim>
-ShallowWaterStarState<dim>::ShallowWaterStarState(const double & gravity_)
-  : StarState<dim>(), gravity(gravity_)
+ShallowWaterStarState<dim>::ShallowWaterStarState(
+  const double & gravity_,
+  const std::shared_ptr<GradientMatrix<dim>> & gradient_matrix_,
+  const DoFHandler<dim> & dof_handler_,
+  const Triangulation<dim> & triangulation_,
+  const unsigned int & n_components_)
+  : StarState<dim>(gradient_matrix_, dof_handler_, triangulation_, n_components_),
+    gravity(gravity_)
 {
 }
 
 /**
- * \brief Computes the maximum wave speed for a given left and right state.
+ * \brief Computes the star state for a given left and right state of a 1-D
+ *        Riemann problem in a given direction.
  *
- * \param[in] solution_left solution vector for left state
- * \param[in] solution_right solution vector for right state
- * \param[in] normal_vector normal vector
+ * \param[in] solution_left solution vector for left state \f$\mathbf{u}_L\f$
+ * \param[in] solution_right solution vector for right state \f$\mathbf{u}_R\f$
+ * \param[in] normal_vector normal vector \f$\mathbf{n}\f$
  *
- * \return maximum wave speed
+ * \return star state solution \f$\mathbf{u}_*\f$
  */
 template <int dim>
-double ShallowWaterStarState<dim>::compute(
+std::vector<double> ShallowWaterStarState<dim>::compute(
   const std::vector<double> & solution_left,
   const std::vector<double> & solution_right,
   const Tensor<1, dim> & normal_vector) const
@@ -51,26 +62,18 @@ double ShallowWaterStarState<dim>::compute(
   const double height_star =
     compute_height_star(height_left, velocity_left, height_right, velocity_right);
 
-  // compute sound speeds
-  const double soundspeed_left = std::sqrt(gravity * height_left);
-  const double soundspeed_right = std::sqrt(gravity * height_right);
+  // compute velocity in star region
+  const double velocity_star = compute_velocity_star(
+    height_star, height_left, velocity_left, height_right, velocity_right);
 
-  // compute left and right head speeds
-  const double left_head_speed = velocity_left -
-    soundspeed_left * (1.0 + std::max(0.5 * (height_star - height_left) *
-                                        (height_star + 2.0 * height_left) /
-                                        std::pow(height_left, 2),
-                                      0.0));
-  const double right_head_speed = velocity_right +
-    soundspeed_right * (1.0 + std::max(0.5 * (height_star - height_right) *
-                                         (height_star + 2.0 * height_right) /
-                                         std::pow(height_right, 2),
-                                       0.0));
+  // determine star solution for each component of the original problem, which
+  // may not be 1-D like the Riemann problem
+  std::vector<double> solution_star(dim + 1);
+  solution_star[0] = height_star;
+  for (unsigned int d = 0; d < dim; ++d)
+    solution_star[d + 1] = velocity_star;
 
-  // compute maximum wave speed
-  const double max_wave_speed = std::max(left_head_speed, right_head_speed);
-
-  return max_wave_speed;
+  return solution_star;
 }
 
 /**
@@ -164,6 +167,12 @@ double ShallowWaterStarState<dim>::compute_height_star(
 /**
  * \brief Computes velocity in the star region.
  *
+ * The velocity in the star region is computed as
+ * \f[
+ *   u^* = \frac{1}{2}\left(u_L + u_R + \mathcal{W}_R(h^*,\mathbf{u}_R)
+ *     - \mathcal{W}_R(h^*,\mathbf{u}_R)\right) \,.
+ * \f]
+ *
  * \param[in] h_star height in star state
  * \param[in] h_left height in left state
  * \param[in] u_left velocity in left state
@@ -193,8 +202,7 @@ double ShallowWaterStarState<dim>::compute_velocity_star(
   evaluate_fluxes(h_star, h_right, a_right, wave_right, wave_deriv_right);
 
   // compute star velocity
-  const double velocity_star =
-    0.5 * (velocity_left + velocity_right + wave_right - wave_left);
+  const double velocity_star = 0.5 * (u_left + u_right + wave_right - wave_left);
 
   return velocity_star;
 }

@@ -13,6 +13,7 @@ FCT<dim>::FCT(const DoFHandler<dim> & dof_handler_,
               const LinearSolver<dim> & linear_solver_,
               const SparsityPattern & sparsity_pattern_,
               const std::vector<unsigned int> & dirichlet_nodes_,
+              const unsigned int & n_components_,
               const unsigned int & dofs_per_cell_,
               const AntidiffusionType & antidiffusion_type_)
   : dof_handler(&dof_handler_),
@@ -21,7 +22,9 @@ FCT<dim>::FCT(const DoFHandler<dim> & dof_handler_,
     linear_solver(linear_solver_),
     dirichlet_nodes(dirichlet_nodes_),
     n_dofs(dof_handler_.n_dofs()),
+    n_components(n_components_),
     dofs_per_cell(dofs_per_cell_),
+    dofs_per_cell_per_component(dofs_per_cell_ / n_components_),
     antidiffusion_type(antidiffusion_type_),
     DMP_satisfied_at_all_steps(true)
 {
@@ -157,22 +160,26 @@ void FCT<dim>::compute_bounds(const Vector<double> & old_solution,
     // get local dof indices
     cell->get_dof_indices(local_dof_indices);
 
-    // find min and max values on cell
-    double max_cell = old_solution(local_dof_indices[0]);
-    double min_cell = old_solution(local_dof_indices[0]);
-    for (unsigned int j = 0; j < dofs_per_cell; ++j)
+    // loop over solution components
+    for (unsigned int m = 0; m < n_components; ++m)
     {
-      double value_j = old_solution(local_dof_indices[j]);
-      max_cell = std::max(max_cell, value_j);
-      min_cell = std::min(min_cell, value_j);
-    }
+      // find min and max values on cell for this component
+      double max_cell = old_solution(local_dof_indices[m]);
+      double min_cell = old_solution(local_dof_indices[m]);
+      for (unsigned int j = 0; j < dofs_per_cell_per_component; ++j)
+      {
+        const double value_j = old_solution(local_dof_indices[j * n_components + m]);
+        max_cell = std::max(max_cell, value_j);
+        min_cell = std::min(min_cell, value_j);
+      }
 
-    // update the max and min values of neighborhood of each dof
-    for (unsigned int j = 0; j < dofs_per_cell; ++j)
-    {
-      unsigned int i = local_dof_indices[j]; // global index
-      solution_max(i) = std::max(solution_max(i), max_cell);
-      solution_min(i) = std::min(solution_min(i), min_cell);
+      // update the max and min values of neighborhood of each dof
+      for (unsigned int j = 0; j < dofs_per_cell_per_component; ++j)
+      {
+        unsigned int i = local_dof_indices[j * n_components + m]; // global index
+        solution_max(i) = std::max(solution_max(i), max_cell);
+        solution_min(i) = std::min(solution_min(i), min_cell);
+      }
     }
   }
 

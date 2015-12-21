@@ -287,6 +287,9 @@ void ConservationLaw<dim>::initialize_system()
   // create gradient matrix
   gradient_matrix = std::make_shared<GradientMatrix<dim>>(
     triangulation, cell_quadrature, n_components);
+
+  // create star state
+  star_state = create_star_state();
 }
 
 /**
@@ -482,6 +485,9 @@ void ConservationLaw<dim>::setup_system()
   ss_rhs.reinit(n_dofs);
   estimated_error_per_cell.reinit(triangulation.n_active_cells());
 #endif
+
+  // reinitialize objects
+  star_state->reinitialize();
 
   // create low-order viscosity
   switch (low_order_viscosity_type)
@@ -817,6 +823,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
                                      linear_solver,
                                      unconstrained_sparsity_pattern,
                                      dirichlet_dof_indices,
+                                     n_components,
                                      dofs_per_cell,
                                      parameters.antidiffusion_type);
 

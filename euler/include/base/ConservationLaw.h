@@ -61,7 +61,7 @@
 #include "include/viscosity/MaxWaveSpeed.h"
 #include "include/viscosity/Viscosity.h"
 #include "include/viscosity/ViscosityMultiplier.h"
-//#include "include/riemann/StarState.h"
+#include "include/riemann/StarState.h"
 
 #ifdef IS_PARALLEL
 #include <deal.II/base/index_set.h>
@@ -269,7 +269,7 @@ protected:
    *
    * \return pointer to created star state object
    */
-  // virtual std::shared_ptr<StarState<dim>> create_star_state() const = 0;
+  virtual std::shared_ptr<StarState<dim>> create_star_state() const = 0;
 
   /**
    * \brief Returns the names of each component.
@@ -356,6 +356,9 @@ protected:
 
   /** \brief Pointer to gradient matrix */
   std::shared_ptr<GradientMatrix<dim>> gradient_matrix;
+
+  /** \brief Pointer to star state */
+  std::shared_ptr<StarState<dim>> star_state;
 
   /** \brief number of quadrature points in each dimension */
   const unsigned int n_q_points_per_dim;

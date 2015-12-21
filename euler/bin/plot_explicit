@@ -87,9 +87,9 @@ else
   }
   elsif ($conservation_law eq "shallowwater")
   {
-     @quantity = ("height");
+     #@quantity = ("height");
      #@quantity = ("height","momentum","waterlevel");
-     #@quantity = ("height","momentum");
+     @quantity = ("height","momentum");
      #@quantity = ("waterlevel");
      # columns are: 
      # 1: x
@@ -97,9 +97,9 @@ else
      # 3: momentum
      # 4: bathymetry
      # 5: water level
-     @column = (2);
+     #@column = (2);
      #@column = (2,3,5);
-     #@column = (2,3);
+     @column = (2,3);
      #@column = (5);
   }
   elsif ($conservation_law eq "transport")

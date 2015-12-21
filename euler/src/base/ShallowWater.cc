@@ -332,6 +332,24 @@ std::shared_ptr<Entropy<dim>> ShallowWater<dim>::create_entropy() const
 }
 
 /**
+ * \brief Creates a star state object.
+ *
+ * \return pointer to created star state object
+ */
+template <int dim>
+std::shared_ptr<StarState<dim>> ShallowWater<dim>::create_star_state() const
+{
+  auto star_state =
+    std::make_shared<ShallowWaterStarState<dim>>(gravity,
+                                                 this->gradient_matrix,
+                                                 this->dof_handler,
+                                                 this->triangulation,
+                                                 this->n_components);
+
+  return star_state;
+}
+
+/**
  * \brief Creates a max wave speed object
  *
  * \return pointer to created max wave speed object

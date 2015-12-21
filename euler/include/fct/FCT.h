@@ -66,6 +66,7 @@ public:
       const LinearSolver<dim> & linear_solver,
       const SparsityPattern & sparsity_pattern,
       const std::vector<unsigned int> & dirichlet_nodes,
+      const unsigned int & n_components,
       const unsigned int & dofs_per_cell,
       const AntidiffusionType & antidiffusion_type);
 
@@ -77,11 +78,14 @@ public:
                         const double & dt,
                         const SparseMatrix<double> & low_order_diffusion_matrix,
                         const SparseMatrix<double> & high_order_diffusion_matrix);
+
   bool check_DMP_satisfied();
+
   /*
     void output_bounds(const PostProcessor<dim> & postprocessor,
                        const std::string & description_string) const;
   */
+
   void compute_bounds(const Vector<double> & old_solution,
                       const Vector<double> & ss_reaction,
                       const Vector<double> & ss_rhs,
@@ -94,18 +98,22 @@ private:
     const double & dt,
     const SparseMatrix<double> & low_order_diffusion_matrix,
     const SparseMatrix<double> & high_order_diffusion_matrix);
+
   void compute_limiting_coefficients_zalesak(
     const Vector<double> & old_solution,
     const Vector<double> & ss_flux,
     const Vector<double> & ss_rhs,
     const SparseMatrix<double> & low_order_diffusion_matrix,
     const double & dt);
+
   void compute_full_flux_correction();
+
   void get_matrix_row(const SparseMatrix<double> & matrix,
                       const unsigned int & i,
                       std::vector<double> & row_values,
                       std::vector<unsigned int> & row_indices,
                       unsigned int & n_col);
+
   /*
   bool check_max_principle(const Vector<double> & new_solution,
                            const SparseMatrix<double> & low_order_ss_matrix,
@@ -139,7 +147,12 @@ private:
   const std::vector<unsigned int> dirichlet_nodes;
 
   const unsigned int n_dofs;
+
+  const unsigned int n_components;
+
   const unsigned int dofs_per_cell;
+
+  const unsigned int dofs_per_cell_per_component;
 
   const AntidiffusionType antidiffusion_type;
 
