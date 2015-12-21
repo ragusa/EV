@@ -8,6 +8,7 @@
  * \brief Constructor.
  *
  * \param[in] max_wave_speed_ max wave speed object
+ * \param[in] gradient_matrix_ gradient matrix object
  * \param[in] fe_ finite element system
  * \param[in] dof_handler_ degree of freedom handler
  * \param[in] triangulation_ triangulation
@@ -18,6 +19,7 @@
 template <int dim>
 DomainInvariantViscosity<dim>::DomainInvariantViscosity(
   const std::shared_ptr<MaxWaveSpeed<dim>> & max_wave_speed_,
+  const std::shared_ptr<GradientMatrix<dim>> & gradient_matrix_,
   const FESystem<dim> & fe_,
   const DoFHandler<dim> & dof_handler_,
   const Triangulation<dim> & triangulation_,
@@ -26,6 +28,7 @@ DomainInvariantViscosity<dim>::DomainInvariantViscosity(
   const std::shared_ptr<ViscosityMultiplier<dim>> & viscosity_multiplier_)
   : Viscosity<dim>(dof_handler_),
     max_wave_speed(max_wave_speed_),
+    gradient_matrix(gradient_matrix_),
     fe_scalar(1),
     fe(&fe_),
     dof_handler_scalar(triangulation_),
@@ -34,7 +37,6 @@ DomainInvariantViscosity<dim>::DomainInvariantViscosity(
     n_components(n_components_),
     n_dofs_scalar(dof_handler->n_dofs() / n_components),
     dofs_per_cell_scalar(fe_scalar.dofs_per_cell),
-    n_q_points_cell(cell_quadrature_.size()),
     viscosity_multiplier(viscosity_multiplier_)
 {
   // reinitialize
@@ -56,15 +58,9 @@ void DomainInvariantViscosity<dim>::reinitialize()
   DoFTools::make_sparsity_pattern(dof_handler_scalar, dsp);
   sparsity.copy_from(dsp);
   viscous_sums.reinit(sparsity);
-  for (unsigned int d = 0; d < dim; ++d)
-    gradients[d].reinit(sparsity);
-  gradient_norms.reinit(sparsity);
 
   // compute viscous bilinear form sum matrix
   compute_graph_theoretic_sums();
-
-  // compute gradients
-  compute_gradients_and_normals();
 }
 
 /**
@@ -124,19 +120,19 @@ void DomainInvariantViscosity<dim>::update(const Vector<double> & new_solution,
             solution_j[m] = new_solution[j * n_components + m];
           }
 
-          // create tensor for normal vector
-          Tensor<1, dim> normal;
-          for (unsigned int d = 0; d < dim; ++d)
-            normal[d] = gradients[d](i, j);
+          // get normal vector
+          auto normal = gradient_matrix->get_normal(i, j);
 
           // compute maximum wave speed
           const double max_wave_speed_value =
             max_wave_speed->compute(solution_i, solution_j, normal);
 
+          // gradient matrix entry
+          const double gradient_norm = gradient_matrix->get_gradient_norm(i, j);
+
           // compute viscosity
-          const double viscosity =
-            -(max_wave_speed_value * gradient_norms(i, j)) / viscous_sums(i, j) *
-            multiplier;
+          const double viscosity = -(max_wave_speed_value * gradient_norm) /
+            viscous_sums(i, j) * multiplier;
 
           // update max viscosity for this cell
           this->values[cell] = std::max(this->values[cell], viscosity);
@@ -186,80 +182,6 @@ void DomainInvariantViscosity<dim>::compute_graph_theoretic_sums()
         // add local contribution to sum
         viscous_sums.add(local_dof_indices[i], local_dof_indices[j], b_cell);
       }
-    }
-  }
-}
-
-/**
- * \brief Computes gradients and normal vectors along each edge.
- */
-template <int dim>
-void DomainInvariantViscosity<dim>::compute_gradients_and_normals()
-{
-  // reset matrices
-  for (unsigned int d = 0; d < dim; ++d)
-    gradients[d] = 0;
-  gradient_norms = 0;
-
-  FEValues<dim> fe_values(fe_scalar,
-                          *cell_quadrature,
-                          update_values | update_gradients | update_JxW_values);
-
-  std::vector<unsigned int> local_dof_indices(dofs_per_cell_scalar);
-
-  // loop over cells
-  Cell cell = dof_handler_scalar.begin_active(), endc = dof_handler_scalar.end();
-  for (; cell != endc; ++cell)
-  {
-    // reinitialize fe values for cell
-    fe_values.reinit(cell);
-
-    // get DoF indices
-    cell->get_dof_indices(local_dof_indices);
-
-    // loop over dimension
-    for (unsigned int d = 0; d < dim; ++d)
-      // loop over test function i
-      for (unsigned int i = 0; i < dofs_per_cell_scalar; ++i)
-        // loop over test function j
-        for (unsigned int j = 0; j < dofs_per_cell_scalar; ++j)
-        {
-          // initialize integral to zero
-          double entry_cell_i_j = 0.0;
-
-          // loop over quadrature points
-          for (unsigned int q = 0; q < n_q_points_cell; ++q)
-            entry_cell_i_j += fe_values.shape_value(i, q) *
-              fe_values.shape_grad(j, q)[d] * fe_values.JxW(q);
-
-          // add contribution to global matrix
-          gradients[d].add(
-            local_dof_indices[i], local_dof_indices[j], entry_cell_i_j);
-        }
-  }
-
-  // initialize matrix iterators
-  SparseMatrix<double>::iterator it = gradient_norms.begin();
-  SparseMatrix<double>::iterator it_end = gradient_norms.end();
-  std::vector<SparseMatrix<double>::iterator> it_grad;
-  for (unsigned int d = 0; d < dim; ++d)
-    it_grad.push_back(gradients[d].begin());
-
-  for (; it != it_end; ++it)
-  {
-    // compute gradient norms
-    for (unsigned int d = 0; d < dim; ++d)
-      it->value() += it_grad[d]->value() * it_grad[d]->value();
-    it->value() = std::sqrt(it->value());
-
-    // compute normalized gradient vector
-    for (unsigned int d = 0; d < dim; ++d)
-    {
-      // normalize this component of gradient
-      it_grad[d]->value() = it_grad[d]->value() / it->value();
-
-      // increment iterator
-      ++it_grad[d];
     }
   }
 }

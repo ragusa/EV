@@ -1,24 +1,29 @@
 /**
- * \file ShallowWaterMaxWaveSpeed.h
- * \brief Provides the header for the ShallowWaterMaxWaveSpeed class.
+ * \file ShallowWaterStarState.h
+ * \brief Provides the header for the ShallowWaterStarState class.
  */
 
-#ifndef ShallowWaterMaxWaveSpeed_cc
-#define ShallowWaterMaxWaveSpeed_cc
+#ifndef ShallowWaterStarState_cc
+#define ShallowWaterStarState_cc
 
-#include "include/viscosity/MaxWaveSpeed.h"
+#include "include/viscosity/StarState.h"
 
 using namespace dealii;
 
 /**
- * \brief Class for computing the maximum wave speed for the shallow water
- *        equations, used in the computation of the domain-invariant viscosity.
+ * \brief Class for computing the star state for the shallow water equations
+ *
+ * The velocity in the star region is computed as
+ * \f[
+ *   u^* = \frac{1}{2}\left(u_L + u_R + \mathcal{W}_R(h^*,\mathbf{u}_R)
+ *     - \mathcal{W}_R(h^*,\mathbf{u}_R)\right)
+ * \f]
  */
 template <int dim>
-class ShallowWaterMaxWaveSpeed : public MaxWaveSpeed<dim>
+class ShallowWaterStarState : public StarState<dim>
 {
 public:
-  ShallowWaterMaxWaveSpeed(const double & gravity);
+  ShallowWaterStarState(const double & gravity);
 
   double compute(const std::vector<double> & solution_left,
                  const std::vector<double> & solution_right,
@@ -39,6 +44,6 @@ protected:
   const double gravity;
 };
 
-#include "src/viscosity/ShallowWaterMaxWaveSpeed.cc"
+#include "src/viscosity/ShallowWaterStarState.cc"
 
 #endif

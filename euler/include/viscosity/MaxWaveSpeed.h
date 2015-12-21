@@ -20,15 +20,13 @@ public:
 
   virtual double compute(const std::vector<double> & solution_left,
                          const std::vector<double> & solution_right,
-                         const Tensor<1, dim> & normal_vector) = 0;
-                         //const Tensor<1, dim> & normal_vector) const = 0;
+                         const Tensor<1, dim> & normal_vector) const = 0;
 
   void reset_max_wave_speed_domain();
 
   double get_max_wave_speed_domain() const;
 
 protected:
-
   /** \brief Max wave speed found in domain */
   double max_wave_speed_domain;
 };

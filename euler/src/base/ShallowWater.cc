@@ -346,6 +346,21 @@ std::shared_ptr<MaxWaveSpeed<dim>> ShallowWater<dim>::create_max_wave_speed()
 }
 
 /**
+ * \brief Creates a star state object
+ *
+ * \return pointer to created star state object
+ */
+/*
+template <int dim>
+std::shared_ptr<StarState<dim>> ShallowWater<dim>::create_star_state() const
+{
+  auto star_state = std::make_shared<ShallowWaterStarState<dim>>(gravity);
+
+  return star_state;
+}
+*/
+
+/**
  * \brief Interpolates the bathymetry FE vector from its function.
  */
 template <int dim>

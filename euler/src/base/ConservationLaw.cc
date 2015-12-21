@@ -157,18 +157,6 @@ void ConservationLaw<dim>::run()
     for (unsigned int i = 0; i < n_dofs; ++i)
       std::cout << new_solution[i] << std::endl;
   }
-
-/*
-  for (unsigned int i = 0; i < n_dofs; ++i)
-  {
-    SparseMatrix<double>::const_iterator it = low_order_diffusion_matrix.begin(i);
-    SparseMatrix<double>::const_iterator it_end = low_order_diffusion_matrix.end(i);
-    double D_i = 0.0;
-    for (; it != it_end; ++it)
-      D_i += it->value();
-    std::cout << "D_i = " << D_i << std::endl;
-  }
-*/
 }
 
 /**
@@ -295,6 +283,10 @@ void ConservationLaw<dim>::initialize_system()
       low_order_diffusion_type = DiffusionType::none;
     }
   }
+
+  // create gradient matrix
+  gradient_matrix = std::make_shared<GradientMatrix<dim>>(
+    triangulation, cell_quadrature, n_components);
 }
 
 /**
@@ -548,6 +540,7 @@ void ConservationLaw<dim>::setup_system()
       // create domain-invariant viscosity
       low_order_viscosity =
         std::make_shared<DomainInvariantViscosity<dim>>(max_wave_speed,
+                                                        gradient_matrix,
                                                         fe,
                                                         dof_handler,
                                                         triangulation,
@@ -705,7 +698,7 @@ std::shared_ptr<ArtificialDiffusion<dim>> ConservationLaw<
       auto max_wave_speed = create_max_wave_speed();
 
       artificial_diffusion = std::make_shared<DomainInvariantDiffusion<dim>>(
-        max_wave_speed, triangulation, cell_quadrature, n_components, n_dofs);
+        max_wave_speed, gradient_matrix, n_components, n_dofs);
       break;
     }
     // else

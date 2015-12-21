@@ -47,6 +47,7 @@
 #include "include/diffusion/LaplacianDiffusion.h"
 #include "include/entropy/Entropy.h"
 #include "include/fct/FCT.h"
+#include "include/fe/GradientMatrix.h"
 #include "include/other/Exceptions.h"
 #include "include/parameters/ConservationLawParameters.h"
 #include "include/postprocessing/PostProcessor.h"
@@ -60,6 +61,7 @@
 #include "include/viscosity/MaxWaveSpeed.h"
 #include "include/viscosity/Viscosity.h"
 #include "include/viscosity/ViscosityMultiplier.h"
+//#include "include/riemann/StarState.h"
 
 #ifdef IS_PARALLEL
 #include <deal.II/base/index_set.h>
@@ -263,6 +265,13 @@ protected:
   virtual std::shared_ptr<MaxWaveSpeed<dim>> create_max_wave_speed() const = 0;
 
   /**
+   * \brief Creates a star state object and returns the pointer.
+   *
+   * \return pointer to created star state object
+   */
+  // virtual std::shared_ptr<StarState<dim>> create_star_state() const = 0;
+
+  /**
    * \brief Returns the names of each component.
    *
    * \return vector of names of each component
@@ -344,6 +353,9 @@ protected:
   DoFHandler<dim> dof_handler;
   /** \brief constraint matrix */
   ConstraintMatrix constraints;
+
+  /** \brief Pointer to gradient matrix */
+  std::shared_ptr<GradientMatrix<dim>> gradient_matrix;
 
   /** \brief number of quadrature points in each dimension */
   const unsigned int n_q_points_per_dim;

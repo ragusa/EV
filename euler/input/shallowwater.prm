@@ -11,7 +11,7 @@ end
 subsection scheme
    set scheme = low # low|high|fct
    set low order scheme = di_diff # constant|standard|dmp|di_visc|di_diff
-   set high order scheme = galerkin # galerkin|entropy_visc|entropy_diff
+   set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
 end
 
 # Problem Names:
@@ -37,7 +37,7 @@ end
 
 subsection time
    set time step size method = cfl # constant|cfl
-   set use default end time = false
+   set use default end time = true
    set final time = 0.5
    set time step size = 0.01
    set cfl = 0.10
@@ -47,7 +47,7 @@ end
 subsection artificial viscosity
    set constant viscosity value = 1.00
    set first order viscosity coefficient = 0.5
-   set multiply low order viscosity by froude = true
+   set multiply low order viscosity by froude = false
    set use low order viscosity for first time step = true
    set entropy residual coefficient = 1.0
    set entropy jump coefficient = 1.0

@@ -14,6 +14,7 @@
 #include <deal.II/lac/vector.h>
 
 #include "include/diffusion/ArtificialDiffusion.h"
+#include "include/fe/GradientMatrix.h"
 #include "include/viscosity/MaxWaveSpeed.h"
 
 using namespace dealii;
@@ -44,8 +45,7 @@ public:
 
   DomainInvariantDiffusion(
     const std::shared_ptr<MaxWaveSpeed<dim>> & max_wave_speed_,
-    const Triangulation<dim> & triangulation_,
-    const QGauss<dim> & cell_quadrature_,
+    const std::shared_ptr<GradientMatrix<dim>> & gradient_matrix,
     const unsigned int & n_components,
     const unsigned int & n_dofs);
 
@@ -56,43 +56,17 @@ public:
                                 SparseMatrix<double> & diffusion_matrix) override;
 
 protected:
-  void compute_gradients_and_normals();
-
   /** \brief Pointer to max wave speed object */
   const std::shared_ptr<MaxWaveSpeed<dim>> max_wave_speed;
 
-  /** \brief Scalar 1st-order Lagrangian finite element */
-  const FE_Q<dim> fe_scalar;
-
-  /** \brief Degree of freedom handler for scalar case */
-  DoFHandler<dim> dof_handler_scalar;
-
-  /** \brief Pointer to cell quadrature */
-  const QGauss<dim> * const cell_quadrature;
+  /** \brief Pointer to gradient matrix object */
+  const std::shared_ptr<GradientMatrix<dim>> gradient_matrix;
 
   /** \brief Number of solution components */
   const unsigned int n_components;
 
-  /** \brief Number of degrees of freedom for the vector case */
-  const unsigned int n_dofs;
-
   /** \brief Number of degrees of freedom for the scalar case */
   const unsigned int n_dofs_scalar;
-
-  /** \brief Number of degrees of freedom per cell for the scalar case */
-  const unsigned int dofs_per_cell_scalar;
-
-  /** \brief Number of quadrature points per cell */
-  const unsigned int n_q_points_cell;
-
-  /** \brief Sparsity pattern for gradient matrices */
-  SparsityPattern sparsity;
-
-  /** \brief Array of matrices for each component of gradient tensor matrix */
-  SparseMatrix<double> gradients[dim];
-
-  /** \brief Sparse matrix of L2-norm of each C matrix entry */
-  SparseMatrix<double> gradient_norms;
 };
 
 #include "src/diffusion/DomainInvariantDiffusion.cc"

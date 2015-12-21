@@ -7,8 +7,8 @@
 
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/vector.h>
-#include "LinearSolver.h"
-#include "ConservationLawParameters.h"
+#include "include/solvers/LinearSolver.h"
+#include "include/parameters/ConservationLawParameters.h"
 
 using namespace dealii;
 

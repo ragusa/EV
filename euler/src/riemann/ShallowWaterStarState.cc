@@ -1,6 +1,6 @@
 /**
- * \file ShallowWaterMaxWaveSpeed.cc
- * \brief Provides the function definitions for the ShallowWaterMaxWaveSpeed
+ * \file ShallowWaterStarState.cc
+ * \brief Provides the function definitions for the ShallowWaterStarState
  *        class.
  */
 
@@ -10,8 +10,8 @@
  * \param[in] gravity_ acceleration due to gravity
  */
 template <int dim>
-ShallowWaterMaxWaveSpeed<dim>::ShallowWaterMaxWaveSpeed(const double & gravity_)
-  : MaxWaveSpeed<dim>(), gravity(gravity_)
+ShallowWaterStarState<dim>::ShallowWaterStarState(const double & gravity_)
+  : StarState<dim>(), gravity(gravity_)
 {
 }
 
@@ -25,7 +25,7 @@ ShallowWaterMaxWaveSpeed<dim>::ShallowWaterMaxWaveSpeed(const double & gravity_)
  * \return maximum wave speed
  */
 template <int dim>
-double ShallowWaterMaxWaveSpeed<dim>::compute(
+double ShallowWaterStarState<dim>::compute(
   const std::vector<double> & solution_left,
   const std::vector<double> & solution_right,
   const Tensor<1, dim> & normal_vector) const
@@ -84,7 +84,7 @@ double ShallowWaterMaxWaveSpeed<dim>::compute(
  * \return height in star region
  */
 template <int dim>
-double ShallowWaterMaxWaveSpeed<dim>::compute_height_star(
+double ShallowWaterStarState<dim>::compute_height_star(
   const double & h_left,
   const double & u_left,
   const double & h_right,
@@ -162,6 +162,44 @@ double ShallowWaterMaxWaveSpeed<dim>::compute_height_star(
 }
 
 /**
+ * \brief Computes velocity in the star region.
+ *
+ * \param[in] h_star height in star state
+ * \param[in] h_left height in left state
+ * \param[in] u_left velocity in left state
+ * \param[in] h_right height in right state
+ * \param[in] u_right velocity in right state
+ *
+ * \return velocity in star region
+ */
+template <int dim>
+double ShallowWaterStarState<dim>::compute_velocity_star(
+  const double & h_star,
+  const double & h_left,
+  const double & u_left,
+  const double & h_right,
+  const double & u_right) const
+{
+  // compute sound speeds
+  const double a_left = std::sqrt(gravity * h_left);
+  const double a_right = std::sqrt(gravity * h_right);
+
+  // evaluate left and right fluxes
+  double wave_left;
+  double wave_right;
+  double wave_deriv_left;
+  double wave_deriv_right;
+  evaluate_fluxes(h_star, h_left, a_left, wave_left, wave_deriv_left);
+  evaluate_fluxes(h_star, h_right, a_right, wave_right, wave_deriv_right);
+
+  // compute star velocity
+  const double velocity_star =
+    0.5 * (velocity_left + velocity_right + wave_right - wave_left);
+
+  return velocity_star;
+}
+
+/**
  * \brief Evaluates flux and its derivative.
  *
  * \param[in] h height at which to evaluate flux
@@ -171,11 +209,11 @@ double ShallowWaterMaxWaveSpeed<dim>::compute_height_star(
  * \param[out] f_deriv flux derivative
  */
 template <int dim>
-void ShallowWaterMaxWaveSpeed<dim>::evaluate_fluxes(const double & h,
-                                                    const double & h_K,
-                                                    const double & c_K,
-                                                    double & f,
-                                                    double & f_deriv) const
+void ShallowWaterStarState<dim>::evaluate_fluxes(const double & h,
+                                                 const double & h_K,
+                                                 const double & c_K,
+                                                 double & f,
+                                                 double & f_deriv) const
 {
   if (h <= h_K)
   {

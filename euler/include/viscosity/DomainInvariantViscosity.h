@@ -14,6 +14,7 @@
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/vector.h>
 
+#include "include/fe/GradientMatrix.h"
 #include "include/viscosity/MaxWaveSpeed.h"
 #include "include/viscosity/Viscosity.h"
 #include "include/viscosity/ViscosityMultiplier.h"
@@ -48,6 +49,7 @@ public:
 
   DomainInvariantViscosity(
     const std::shared_ptr<MaxWaveSpeed<dim>> & max_wave_speed_,
+    const std::shared_ptr<GradientMatrix<dim>> & gradient_matrix,
     const FESystem<dim> & fe,
     const DoFHandler<dim> & dof_handler_,
     const Triangulation<dim> & triangulation_,
@@ -65,10 +67,11 @@ public:
 protected:
   void compute_graph_theoretic_sums();
 
-  void compute_gradients_and_normals();
-
   /** \brief Pointer to max wave speed object */
   const std::shared_ptr<MaxWaveSpeed<dim>> max_wave_speed;
+
+  /** \brief Pointer to gradient matrix */
+  const std::shared_ptr<GradientMatrix<dim>> gradient_matrix;
 
   /** \brief Scalar 1st-order Lagrangian finite element */
   const FE_Q<dim> fe_scalar;
@@ -94,9 +97,6 @@ protected:
   /** \brief Number of degrees of freedom per cell for the scalar case */
   const unsigned int dofs_per_cell_scalar;
 
-  /** \brief Number of quadrature points per cell */
-  const unsigned int n_q_points_cell;
-
   /** \brief Sparsity pattern for viscous bilinear form sum matrix */
   SparsityPattern sparsity;
 
@@ -109,12 +109,6 @@ protected:
    * \f]
    */
   SparseMatrix<double> viscous_sums;
-
-  /** \brief Array of matrices for each component of gradient tensor matrix */
-  SparseMatrix<double> gradients[dim];
-
-  /** \brief Sparse matrix of L2-norm of each C matrix entry */
-  SparseMatrix<double> gradient_norms;
 
   /** \brief Pointer to viscosity multiplier */
   std::shared_ptr<ViscosityMultiplier<dim>> viscosity_multiplier;
