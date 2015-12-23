@@ -7,8 +7,9 @@
  * \brief Constructor.
  */
 template <int dim>
-MaxWaveSpeed<dim>::MaxWaveSpeed()
-  : max_wave_speed_domain(0.0)
+MaxWaveSpeed<dim>::MaxWaveSpeed(
+  const std::shared_ptr<StarState<dim>> & star_state_)
+  : max_wave_speed_domain(0.0), star_state(star_state_)
 {
 }
 

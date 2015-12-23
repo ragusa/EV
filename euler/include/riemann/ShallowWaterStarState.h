@@ -30,12 +30,12 @@ public:
     const Triangulation<dim> & triangulation_,
     const unsigned int & n_components_);
 
-protected:
   std::vector<double> compute(
     const std::vector<double> & solution_left,
     const std::vector<double> & solution_right,
     const Tensor<1, dim> & normal_vector) const override;
 
+protected:
   double compute_height_star(const double & h_left,
                              const double & u_left,
                              const double & h_right,

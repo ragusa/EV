@@ -7,25 +7,30 @@
  * \brief Constructor.
  */
 template <int dim>
-FCT<dim>::FCT(const DoFHandler<dim> & dof_handler_,
+FCT<dim>::FCT(const ConservationLawParameters<dim> & parameters_,
+              const DoFHandler<dim> & dof_handler_,
               const SparseMatrix<double> & lumped_mass_matrix_,
               const SparseMatrix<double> & consistent_mass_matrix_,
+              const std::shared_ptr<StarState<dim>> & star_state_,
               const LinearSolver<dim> & linear_solver_,
               const SparsityPattern & sparsity_pattern_,
               const std::vector<unsigned int> & dirichlet_nodes_,
               const unsigned int & n_components_,
-              const unsigned int & dofs_per_cell_,
-              const AntidiffusionType & antidiffusion_type_)
+              const unsigned int & dofs_per_cell_)
   : dof_handler(&dof_handler_),
     lumped_mass_matrix(&lumped_mass_matrix_),
     consistent_mass_matrix(&consistent_mass_matrix_),
+    star_state(star_state_),
     linear_solver(linear_solver_),
+    sparsity(&sparsity_pattern_),
     dirichlet_nodes(dirichlet_nodes_),
     n_dofs(dof_handler_.n_dofs()),
     n_components(n_components_),
     dofs_per_cell(dofs_per_cell_),
     dofs_per_cell_per_component(dofs_per_cell_ / n_components_),
-    antidiffusion_type(antidiffusion_type_),
+    antidiffusion_type(parameters_.antidiffusion_type),
+    synchronization_type(parameters_.fct_synchronization_type),
+    use_star_states_in_fct_bounds(parameters_.use_star_states_in_fct_bounds),
     DMP_satisfied_at_all_steps(true)
 {
   // allocate memory for vectors
@@ -41,6 +46,7 @@ FCT<dim>::FCT(const DoFHandler<dim> & dof_handler_,
 
   // initialize sparse matrices
   system_matrix.reinit(sparsity_pattern_);
+  limiter_matrix.reinit(sparsity_pattern_);
   flux_correction_matrix.reinit(sparsity_pattern_);
 }
 
@@ -85,6 +91,21 @@ void FCT<dim>::solve_fct_system(
     case AntidiffusionType::limited:
       compute_limiting_coefficients_zalesak(
         old_solution, ss_flux, ss_rhs, low_order_diffusion_matrix, dt);
+      switch (synchronization_type)
+      {
+        case FCTSynchronizationType::none:
+          break;
+        case FCTSynchronizationType::min:
+          synchronize_min();
+          break;
+        case FCTSynchronizationType::compound:
+          Assert(false, ExcNotImplemented());
+          break;
+        default:
+          Assert(false, ExcNotImplemented());
+          break;
+      }
+      compute_limited_flux_correction_vector();
       break;
     case AntidiffusionType::full:
       compute_full_flux_correction();
@@ -168,7 +189,9 @@ void FCT<dim>::compute_bounds(const Vector<double> & old_solution,
       double min_cell = old_solution(local_dof_indices[m]);
       for (unsigned int j = 0; j < dofs_per_cell_per_component; ++j)
       {
-        const double value_j = old_solution(local_dof_indices[j * n_components + m]);
+        // consider old states
+        const double value_j =
+          old_solution(local_dof_indices[j * n_components + m]);
         max_cell = std::max(max_cell, value_j);
         min_cell = std::min(min_cell, value_j);
       }
@@ -179,6 +202,35 @@ void FCT<dim>::compute_bounds(const Vector<double> & old_solution,
         unsigned int i = local_dof_indices[j * n_components + m]; // global index
         solution_max(i) = std::max(solution_max(i), max_cell);
         solution_min(i) = std::min(solution_min(i), min_cell);
+      }
+    }
+  }
+
+  // consider star states in bounds if specified
+  if (use_star_states_in_fct_bounds)
+  {
+    for (unsigned int i = 0; i < n_dofs; ++i)
+    {
+      // iterate over sparsity pattern to get degree of freedom indices
+      // in the support of i
+      SparsityPattern::iterator it = sparsity->begin(i);
+      SparsityPattern::iterator it_end = sparsity->end(i);
+      for (; it != it_end; ++it)
+      {
+        // get column index
+        const unsigned int j = it->column();
+
+        if (j != i)
+        {
+          // determine if j corresponds to the same component as i
+          if (i % n_components == j % n_components)
+          {
+            // get star state value associated with i and j
+            const double star_state_value = star_state->get_star_state(i, j);
+            solution_max(i) = std::max(solution_max(i), star_state_value);
+            solution_min(i) = std::min(solution_min(i), star_state_value);
+          }
+        }
       }
     }
   }
@@ -344,15 +396,38 @@ void FCT<dim>::compute_limiting_coefficients_zalesak(
     {
       unsigned int j = row_indices[k];
       double Fij = row_values[k];
+
       // compute limiting coefficient Lij
       double Lij;
       if (Fij >= 0.0)
         Lij = std::min(R_plus(i), R_minus(j));
       else
         Lij = std::min(R_minus(i), R_plus(j));
+      limiter_matrix.set(i,j,Lij);
+    }
+  }
+}
 
-      // add Lij*Fij to flux correction sum
-      flux_correction_vector(i) += Lij * Fij;
+/**
+ * \brief Computes limited flux correction vector.
+ */
+template <int dim>
+void FCT<dim>::compute_limited_flux_correction_vector()
+{
+  // reset vector
+  flux_correction_vector = 0;
+
+  for (unsigned int i = 0; i < n_dofs; ++i)
+  {
+    // iterate over nonzero columns of matrix
+    SparseMatrix<double>::const_iterator it_lim = limiter_matrix.begin(i);
+    SparseMatrix<double>::const_iterator it_lim_end = limiter_matrix.end(i);
+    SparseMatrix<double>::const_iterator it_flux = flux_correction_matrix.begin(i);
+    for (; it_lim != it_lim_end; ++it_lim, ++it_flux)
+    {
+      const double limiting_coefficient = it_lim->value();
+      const double flux = it_flux->value();
+      flux_correction_vector(i) += limiting_coefficient * flux;
     }
   }
 }
@@ -595,3 +670,61 @@ void FCT<dim>::output_bounds(
   postprocessor.output_solution(solution_max, *dof_handler, DMP_max_string);
 }
 */
+
+/**
+ * \brief Synchronizes limiting coefficients for a support point pair by taking
+ *        the minimum limiting coefficient of all solution components.
+ */
+template <int dim>
+void FCT<dim>::synchronize_min()
+{
+  // loop over rows
+  for (unsigned int i = 0; i < n_dofs; ++i)
+  {
+    // get support point index for i; employ integer division
+    const unsigned int k_i = i / n_components;
+
+    // loop over nonzero columns in row i to determine minimum limiting
+    // coefficient at support point
+    SparseMatrix<double>::iterator it = limiter_matrix.begin(i);
+    SparseMatrix<double>::iterator it_end = limiter_matrix.end(i);
+    std::map<unsigned int,double> min_values;
+    for (; it != it_end; ++it)
+    {
+      // get degree of freedom index j
+      const unsigned int j = it->column();
+
+      // get support point index for j; employ integer division
+      const unsigned int k_j = j / n_components;
+
+      // if i and j have same support point, then the limiting coefficient is
+      // not considered because it is irrelevant and shouldn't be in min;
+      // the associated flux is zero
+      if (k_j != k_i)
+      {
+        if (min_values.find(k_j) != min_values.end())
+        {
+          // value in map exists; take minimum at support point
+          const double value = it->value();
+          min_values[k_j] = std::min(min_values[k_j], value);
+        }
+        else 
+          // initialize to some value > 1
+          min_values[k_j] = 1.0e15;
+      }
+    }
+
+    // loop over nonzero columns in row i to set limiting coefficients
+    for (it = limiter_matrix.begin(i); it != it_end; ++it)
+    {
+      // get degree of freedom index j
+      const unsigned int j = it->column();
+
+      // get support point index for i; employ integer division
+      const unsigned int k_j = j / n_components;
+
+      // set limiting coefficient
+      it->value() = min_values[k_j];
+    }
+  }
+}

@@ -283,6 +283,15 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
                       "limited",
                       Patterns::Selection("limited|full|none"),
                       "Option for antidiffusion in FCT scheme");
+    prm.declare_entry(
+      "fct synchronization",
+      "none",
+      Patterns::Selection("none|min|compound"),
+      "Option for synchronization of limiting coefficients in FCT scheme");
+    prm.declare_entry("use star states in fct bounds",
+                      "false",
+                      Patterns::Bool(),
+                      "Option to include star states in FCT bounds");
   }
   prm.leave_subsection();
 }
@@ -517,6 +526,20 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
       antidiffusion_type = AntidiffusionType::none;
     else
       Assert(false, ExcNotImplemented());
+
+    // synchronization
+    std::string synchronization_string = prm.get("fct synchronization");
+    if (synchronization_string == "none")
+      fct_synchronization_type = FCTSynchronizationType::none;
+    else if (synchronization_string == "min")
+      fct_synchronization_type = FCTSynchronizationType::min;
+    else if (synchronization_string == "compound")
+      fct_synchronization_type = FCTSynchronizationType::compound;
+    else
+      Assert(false, ExcNotImplemented());
+
+    // star states
+    use_star_states_in_fct_bounds = prm.get_bool("use star states in fct bounds");
   }
   prm.leave_subsection();
 }

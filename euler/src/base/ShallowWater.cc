@@ -358,7 +358,8 @@ template <int dim>
 std::shared_ptr<MaxWaveSpeed<dim>> ShallowWater<dim>::create_max_wave_speed()
   const
 {
-  auto max_wave_speed = std::make_shared<ShallowWaterMaxWaveSpeed<dim>>(gravity);
+  auto max_wave_speed =
+    std::make_shared<ShallowWaterMaxWaveSpeed<dim>>(this->star_state, gravity);
 
   return max_wave_speed;
 }

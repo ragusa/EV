@@ -10,8 +10,9 @@
  * \param[in] gravity_ acceleration due to gravity
  */
 template <int dim>
-ShallowWaterMaxWaveSpeed<dim>::ShallowWaterMaxWaveSpeed(const double & gravity_)
-  : MaxWaveSpeed<dim>(), gravity(gravity_)
+ShallowWaterMaxWaveSpeed<dim>::ShallowWaterMaxWaveSpeed(
+  const std::shared_ptr<StarState<dim>> & star_state_, const double & gravity_)
+  : MaxWaveSpeed<dim>(star_state_), gravity(gravity_)
 {
 }
 
@@ -48,8 +49,14 @@ double ShallowWaterMaxWaveSpeed<dim>::compute(
     (momentum_right_multidim * normal_vector) / height_right;
 
   // compute height in star region
-  const double height_star =
-    compute_height_star(height_left, velocity_left, height_right, velocity_right);
+  /*
+    const double height_star =
+      compute_height_star(height_left, velocity_left, height_right,
+    velocity_right);
+  */
+  const std::vector<double> solution_star =
+    this->star_state->compute(solution_left, solution_right, normal_vector);
+  const double height_star = solution_star[0];
 
   // compute sound speeds
   const double soundspeed_left = std::sqrt(gravity * height_left);

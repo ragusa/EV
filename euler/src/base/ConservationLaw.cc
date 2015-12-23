@@ -817,15 +817,16 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
   // create FCT if applicable
   std::shared_ptr<FCT<dim>> fct;
   if (parameters.scheme == Scheme::fct)
-    fct = std::make_shared<FCT<dim>>(dof_handler,
+    fct = std::make_shared<FCT<dim>>(parameters,
+                                     dof_handler,
                                      lumped_mass_matrix,
                                      consistent_mass_matrix,
+                                     star_state,
                                      linear_solver,
                                      unconstrained_sparsity_pattern,
                                      dirichlet_dof_indices,
                                      n_components,
-                                     dofs_per_cell,
-                                     parameters.antidiffusion_type);
+                                     dofs_per_cell);
 
   // initialize old time, time index, and transient flag
   old_time = 0.0;
@@ -918,6 +919,9 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
       switch (parameters.scheme)
       {
         case Scheme::low:
+          // update star states
+          // star_state->compute_star_states(old_stage_solution);
+
           low_order_viscosity->update(
             old_stage_solution, older_solution, old_stage_dt, n);
           low_order_diffusion->compute_diffusion_matrix(
@@ -1154,6 +1158,9 @@ void ConservationLaw<dim>::perform_fct_ssprk_step(
   const std::shared_ptr<FCT<dim>> & fct,
   SSPRKTimeIntegrator<dim> & ssprk)
 {
+  // update star states
+  star_state->compute_star_states(old_stage_solution);
+
   // update low-order diffusion
   low_order_viscosity->update(
     old_stage_solution, older_solution, old_stage_dt, n);

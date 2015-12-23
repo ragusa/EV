@@ -78,27 +78,45 @@ void StarState<dim>::compute_star_states(const Vector<double> & solution)
       // get column
       const unsigned int j = it->column();
 
-      // get solution at each support point
-      std::vector<double> solution_j(n_components);
-      for (unsigned int m = 0; m < n_components; ++m)
-        solution_j[m] = solution[j * n_components + m];
-
-      // get normal for i and j
-      auto normal_ij = gradient_matrix->get_normal(i, j);
-
-      // compute star state solution
-      auto solution_star = compute(solution_i, solution_j, normal_ij);
-
-      // store star state solution in vector matrix
-      for (unsigned int m = 0; m < n_components; ++m)
+      if (j != i)
       {
-        // compute indices
-        const unsigned int i_m = i * n_components + m;
-        const unsigned int j_m = j * n_components + m;
+        // get solution at each support point
+        std::vector<double> solution_j(n_components);
+        for (unsigned int m = 0; m < n_components; ++m)
+          solution_j[m] = solution[j * n_components + m];
 
-        // store value
-        star_state_matrix.set(i_m, j_m, solution_star[m]);
+        // get normal for i and j
+        auto normal_ij = gradient_matrix->get_normal(i, j);
+
+        // compute star state solution
+        auto solution_star = compute(solution_i, solution_j, normal_ij);
+
+        // store star state solution in vector matrix
+        for (unsigned int m = 0; m < n_components; ++m)
+        {
+          // compute indices
+          const unsigned int i_m = i * n_components + m;
+          const unsigned int j_m = j * n_components + m;
+
+          // store value
+          star_state_matrix.set(i_m, j_m, solution_star[m]);
+        }
       }
     }
   }
+}
+
+/**
+ * \brief Gets a star state value.
+ *
+ * \param[in] i row index
+ * \param[in] j column index
+ *
+ * \return star state value for i and j.
+ */
+template <int dim>
+double StarState<dim>::get_star_state(const unsigned int & i,
+                                      const unsigned int & j) const
+{
+  return star_state_matrix(i, j);
 }

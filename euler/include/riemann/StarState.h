@@ -27,11 +27,14 @@ public:
 
   void reinitialize();
 
-protected:
-  virtual std::vector<double> compute(const std::vector<double> & solution_left,
-                                      const std::vector<double> & solution_right,
-                                      const Tensor<1, dim> & normal_vector) const = 0;
+  double get_star_state(const unsigned int & i, const unsigned int & j) const;
 
+  virtual std::vector<double> compute(
+    const std::vector<double> & solution_left,
+    const std::vector<double> & solution_right,
+    const Tensor<1, dim> & normal_vector) const = 0;
+
+protected:
   /** \brief Pointer to gradient matrix object */
   std::shared_ptr<GradientMatrix<dim>> gradient_matrix;
 

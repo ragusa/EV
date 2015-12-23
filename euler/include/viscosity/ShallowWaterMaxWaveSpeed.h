@@ -7,6 +7,7 @@
 #define ShallowWaterMaxWaveSpeed_cc
 
 #include "include/viscosity/MaxWaveSpeed.h"
+#include "include/riemann/StarState.h"
 
 using namespace dealii;
 
@@ -18,7 +19,8 @@ template <int dim>
 class ShallowWaterMaxWaveSpeed : public MaxWaveSpeed<dim>
 {
 public:
-  ShallowWaterMaxWaveSpeed(const double & gravity);
+  ShallowWaterMaxWaveSpeed(const std::shared_ptr<StarState<dim>> & star_state,
+                           const double & gravity);
 
   double compute(const std::vector<double> & solution_left,
                  const std::vector<double> & solution_right,

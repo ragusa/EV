@@ -6,6 +6,8 @@
 #ifndef MaxWaveSpeed_cc
 #define MaxWaveSpeed_cc
 
+#include "include/riemann/StarState.h"
+
 using namespace dealii;
 
 /**
@@ -16,7 +18,7 @@ template <int dim>
 class MaxWaveSpeed
 {
 public:
-  MaxWaveSpeed();
+  MaxWaveSpeed(const std::shared_ptr<StarState<dim>> & star_state);
 
   virtual double compute(const std::vector<double> & solution_left,
                          const std::vector<double> & solution_right,
@@ -29,6 +31,9 @@ public:
 protected:
   /** \brief Max wave speed found in domain */
   double max_wave_speed_domain;
+
+  /** \brief Pointer to star state */
+  std::shared_ptr<StarState<dim>> star_state;
 };
 
 #include "src/viscosity/MaxWaveSpeed.cc"

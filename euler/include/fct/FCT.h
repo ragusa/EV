@@ -9,8 +9,10 @@
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/vector.h>
 #include <deal.II/dofs/dof_accessor.h>
-#include "include/solvers/LinearSolver.h"
+#include "include/parameters/ConservationLawParameters.h"
 #include "include/postprocessing/PostProcessor.h"
+#include "include/riemann/StarState.h"
+#include "include/solvers/LinearSolver.h"
 
 using namespace dealii;
 
@@ -60,15 +62,19 @@ public:
   using AntidiffusionType =
     typename ConservationLawParameters<dim>::AntidiffusionType;
 
-  FCT(const DoFHandler<dim> & dof_handler,
+  using FCTSynchronizationType =
+    typename ConservationLawParameters<dim>::FCTSynchronizationType;
+
+  FCT(const ConservationLawParameters<dim> & parameters,
+      const DoFHandler<dim> & dof_handler,
       const SparseMatrix<double> & lumped_mass_matrix,
       const SparseMatrix<double> & consistent_mass_matrix,
+      const std::shared_ptr<StarState<dim>> & star_state,
       const LinearSolver<dim> & linear_solver,
       const SparsityPattern & sparsity_pattern,
       const std::vector<unsigned int> & dirichlet_nodes,
       const unsigned int & n_components,
-      const unsigned int & dofs_per_cell,
-      const AntidiffusionType & antidiffusion_type);
+      const unsigned int & dofs_per_cell);
 
   void solve_fct_system(Vector<double> & new_solution,
                         const Vector<double> & old_solution,
@@ -106,6 +112,8 @@ private:
     const SparseMatrix<double> & low_order_diffusion_matrix,
     const double & dt);
 
+  void compute_limited_flux_correction_vector();
+
   void compute_full_flux_correction();
 
   void get_matrix_row(const SparseMatrix<double> & matrix,
@@ -113,6 +121,8 @@ private:
                       std::vector<double> & row_values,
                       std::vector<unsigned int> & row_indices,
                       unsigned int & n_col);
+
+  void synchronize_min();
 
   /*
   bool check_max_principle(const Vector<double> & new_solution,
@@ -129,6 +139,7 @@ private:
   const SparseMatrix<double> * const lumped_mass_matrix;
   const SparseMatrix<double> * const consistent_mass_matrix;
   SparsityPattern sparsity_pattern;
+  SparseMatrix<double> limiter_matrix;
   SparseMatrix<double> flux_correction_matrix;
   Vector<double> solution_min;
   Vector<double> solution_max;
@@ -142,7 +153,11 @@ private:
   Vector<double> R_minus;
   Vector<double> R_plus;
 
+  std::shared_ptr<StarState<dim>> star_state;
+
   LinearSolver<dim> linear_solver;
+
+  const SparsityPattern * const sparsity;
 
   const std::vector<unsigned int> dirichlet_nodes;
 
@@ -155,6 +170,10 @@ private:
   const unsigned int dofs_per_cell_per_component;
 
   const AntidiffusionType antidiffusion_type;
+
+  const FCTSynchronizationType synchronization_type;
+
+  const bool use_star_states_in_fct_bounds;
 
   bool DMP_satisfied_at_all_steps;
 };

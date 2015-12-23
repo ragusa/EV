@@ -167,6 +167,16 @@ public:
     none
   };
   AntidiffusionType antidiffusion_type;
+
+  enum class FCTSynchronizationType
+  {
+    none,
+    min,
+    compound
+  };
+  FCTSynchronizationType fct_synchronization_type;
+
+  bool use_star_states_in_fct_bounds;
 };
 
 #include "src/parameters/ConservationLawParameters.cc"
