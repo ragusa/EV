@@ -118,6 +118,10 @@ void FCT<dim>::solve_fct_system(
       break;
   }
 
+  // check limited flux correction sum if requested
+  if (true)
+    check_limited_flux_correction_sum();
+
   // form rhs: system_rhs = M*u_old + dt*(ss_rhs - ss_flux - D*u_old + f)
   system_rhs = 0;
   lumped_mass_matrix->vmult(tmp_vector, old_solution);

@@ -1,10 +1,10 @@
 /**
- * \file FCT.h
- * \brief Provides the header for the FCT class.
+ * \file ShallowWaterFCT.h
+ * \brief Provides the header for the ShallowWaterFCT class.
  */
 
-#ifndef FCT_h
-#define FCT_h
+#ifndef ShallowWaterFCT_h
+#define ShallowWaterFCT_h
 
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/vector.h>
@@ -17,7 +17,7 @@
 using namespace dealii;
 
 /**
- * \brief Class for performing FCT.
+ * \brief Class for performing FCT for the shallow water equations.
  *
  * This class allows the FCT system to be solved for the case of Explicit Euler:
  * \f[
@@ -56,7 +56,7 @@ using namespace dealii;
  * \f]
  */
 template <int dim>
-class FCT
+class ShallowWaterFCT : public FCT<dim>
 {
 public:
   using AntidiffusionType =
@@ -65,7 +65,7 @@ public:
   using FCTSynchronizationType =
     typename ConservationLawParameters<dim>::FCTSynchronizationType;
 
-  FCT(const ConservationLawParameters<dim> & parameters,
+  ShallowWaterFCT(const ConservationLawParameters<dim> & parameters,
       const DoFHandler<dim> & dof_handler,
       const SparseMatrix<double> & lumped_mass_matrix,
       const SparseMatrix<double> & consistent_mass_matrix,
@@ -76,26 +76,10 @@ public:
       const unsigned int & n_components,
       const unsigned int & dofs_per_cell);
 
-  void solve_fct_system(Vector<double> & new_solution,
-                        const Vector<double> & old_solution,
-                        const Vector<double> & ss_flux,
-                        const Vector<double> & ss_reaction,
-                        const Vector<double> & ss_rhs,
-                        const double & dt,
-                        const SparseMatrix<double> & low_order_diffusion_matrix,
-                        const SparseMatrix<double> & high_order_diffusion_matrix);
-
-  bool check_DMP_satisfied();
-
-  /*
-    void output_bounds(const PostProcessor<dim> & postprocessor,
-                       const std::string & description_string) const;
-  */
-
-  virtual void compute_bounds(const Vector<double> & old_solution,
+  void compute_bounds(const Vector<double> & old_solution,
                       const Vector<double> & ss_reaction,
                       const Vector<double> & ss_rhs,
-                      const double & dt);
+                      const double & dt) override;
 
 private:
   void compute_flux_corrections(
@@ -123,18 +107,6 @@ private:
                       unsigned int & n_col);
 
   void synchronize_min();
-
-  void check_limited_flux_correction_sum();
-
-  /*
-  bool check_max_principle(const Vector<double> & new_solution,
-                           const SparseMatrix<double> & low_order_ss_matrix,
-                           const double & dt);
-  void debug_max_principle_low_order(
-    const unsigned int & i,
-    const SparseMatrix<double> & low_order_ss_matrix,
-    const double & dt);
-*/
 
   const DoFHandler<dim> * dof_handler;
 
@@ -180,5 +152,5 @@ private:
   bool DMP_satisfied_at_all_steps;
 };
 
-#include "src/fct/FCT.cc"
+#include "src/fct/ShallowWaterFCT.cc"
 #endif
