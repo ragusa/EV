@@ -1,0 +1,2 @@
+convert $1 -rotate 90 $1.new.pdf
+mv $1.new.pdf $1

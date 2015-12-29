@@ -9,6 +9,7 @@
 template <int dim>
 FCT<dim>::FCT(const ConservationLawParameters<dim> & parameters_,
               const DoFHandler<dim> & dof_handler_,
+              const Triangulation<dim> & triangulation_,
               const SparseMatrix<double> & lumped_mass_matrix_,
               const SparseMatrix<double> & consistent_mass_matrix_,
               const std::shared_ptr<StarState<dim>> & star_state_,
@@ -17,7 +18,9 @@ FCT<dim>::FCT(const ConservationLawParameters<dim> & parameters_,
               const std::vector<unsigned int> & dirichlet_nodes_,
               const unsigned int & n_components_,
               const unsigned int & dofs_per_cell_)
-  : dof_handler(&dof_handler_),
+  : fe_scalar(1),
+    dof_handler(&dof_handler_),
+    dof_handler_scalar(triangulation_),
     lumped_mass_matrix(&lumped_mass_matrix_),
     consistent_mass_matrix(&consistent_mass_matrix_),
     star_state(star_state_),
@@ -26,13 +29,24 @@ FCT<dim>::FCT(const ConservationLawParameters<dim> & parameters_,
     dirichlet_nodes(dirichlet_nodes_),
     n_dofs(dof_handler_.n_dofs()),
     n_components(n_components_),
+    n_dofs_scalar(n_dofs / n_components),
     dofs_per_cell(dofs_per_cell_),
     dofs_per_cell_per_component(dofs_per_cell_ / n_components_),
     antidiffusion_type(parameters_.antidiffusion_type),
     synchronization_type(parameters_.fct_synchronization_type),
+    fct_variables_type(parameters_.fct_variables_type),
     use_star_states_in_fct_bounds(parameters_.use_star_states_in_fct_bounds),
     DMP_satisfied_at_all_steps(true)
 {
+  // distribute degrees of freedom in scalar degree of freedom handler
+  dof_handler_scalar.clear();
+  dof_handler_scalar.distribute_dofs(fe_scalar);
+
+  // create scalar sparsity pattern
+  DynamicSparsityPattern dsp(n_dofs_scalar);
+  DoFTools::make_sparsity_pattern(dof_handler_scalar, dsp);
+  scalar_sparsity_pattern.copy_from(dsp);
+
   // allocate memory for vectors
   tmp_vector.reinit(n_dofs);
   system_rhs.reinit(n_dofs);
@@ -120,7 +134,7 @@ void FCT<dim>::solve_fct_system(
 
   // check limited flux correction sum if requested
   if (true)
-    check_limited_flux_correction_sum();
+    check_limited_flux_correction_sum(flux_correction_vector);
 
   // form rhs: system_rhs = M*u_old + dt*(ss_rhs - ss_flux - D*u_old + f)
   system_rhs = 0;
@@ -320,8 +334,8 @@ void FCT<dim>::compute_limiting_coefficients_zalesak(
   const SparseMatrix<double> & low_order_diffusion_matrix,
   const double & dt)
 {
-  // reset flux correction vector
-  flux_correction_vector = 0;
+  // reset limiter matrix
+  limiter_matrix = 0;
 
   // start computing Q+
   Q_plus = 0;
@@ -407,7 +421,7 @@ void FCT<dim>::compute_limiting_coefficients_zalesak(
         Lij = std::min(R_plus(i), R_minus(j));
       else
         Lij = std::min(R_minus(i), R_plus(j));
-      limiter_matrix.set(i,j,Lij);
+      limiter_matrix.set(i, j, Lij);
     }
   }
 }
@@ -426,7 +440,8 @@ void FCT<dim>::compute_limited_flux_correction_vector()
     // iterate over nonzero columns of matrix
     SparseMatrix<double>::const_iterator it_lim = limiter_matrix.begin(i);
     SparseMatrix<double>::const_iterator it_lim_end = limiter_matrix.end(i);
-    SparseMatrix<double>::const_iterator it_flux = flux_correction_matrix.begin(i);
+    SparseMatrix<double>::const_iterator it_flux =
+      flux_correction_matrix.begin(i);
     for (; it_lim != it_lim_end; ++it_lim, ++it_flux)
     {
       const double limiting_coefficient = it_lim->value();
@@ -682,53 +697,63 @@ void FCT<dim>::output_bounds(
 template <int dim>
 void FCT<dim>::synchronize_min()
 {
-  // loop over rows
-  for (unsigned int i = 0; i < n_dofs; ++i)
+  // loop over support points
+  for (unsigned int k_i = 0; k_i < n_dofs_scalar; ++k_i)
   {
-    // get support point index for i; employ integer division
-    const unsigned int k_i = i / n_components;
-
-    // loop over nonzero columns in row i to determine minimum limiting
-    // coefficient at support point
-    SparseMatrix<double>::iterator it = limiter_matrix.begin(i);
-    SparseMatrix<double>::iterator it_end = limiter_matrix.end(i);
-    std::map<unsigned int,double> min_values;
+    SparsityPattern::iterator it = scalar_sparsity_pattern.begin(k_i);
+    SparsityPattern::iterator it_end = scalar_sparsity_pattern.end(k_i);
     for (; it != it_end; ++it)
     {
-      // get degree of freedom index j
-      const unsigned int j = it->column();
+      // support point index
+      const unsigned int k_j = it->column();
 
-      // get support point index for j; employ integer division
-      const unsigned int k_j = j / n_components;
-
-      // if i and j have same support point, then the limiting coefficient is
-      // not considered because it is irrelevant and shouldn't be in min;
-      // the associated flux is zero
-      if (k_j != k_i)
+      // compute minimum limiting coefficient at this support point pair
+      double min_ij = 1.0e15;
+      for (unsigned int m = 0; m < n_components; ++m)
       {
-        if (min_values.find(k_j) != min_values.end())
-        {
-          // value in map exists; take minimum at support point
-          const double value = it->value();
-          min_values[k_j] = std::min(min_values[k_j], value);
-        }
-        else 
-          // initialize to some value > 1
-          min_values[k_j] = 1.0e15;
+        const unsigned int i = k_i * n_components + m;
+        const unsigned int j = k_j * n_components + m;
+        min_ij = std::min(min_ij, limiter_matrix(i, j));
+      }
+
+      // set limiting coefficients for this support point pair
+      for (unsigned int m = 0; m < n_components; ++m)
+      {
+        const unsigned int i = k_i * n_components + m;
+        const unsigned int j = k_j * n_components + m;
+        limiter_matrix.set(i, j, min_ij);
       }
     }
-
-    // loop over nonzero columns in row i to set limiting coefficients
-    for (it = limiter_matrix.begin(i); it != it_end; ++it)
-    {
-      // get degree of freedom index j
-      const unsigned int j = it->column();
-
-      // get support point index for i; employ integer division
-      const unsigned int k_j = j / n_components;
-
-      // set limiting coefficient
-      it->value() = min_values[k_j];
-    }
   }
+}
+
+/**
+ * \brief Computes the limited flux correction sum to ensure it is zero.
+ *
+ * \param[in] flux_vector limited correction flux sum vector
+ */
+template <int dim>
+void FCT<dim>::check_limited_flux_correction_sum(
+  const Vector<double> & flux_vector)
+{
+  // compute limited flux sum
+  double sum = 0.0;
+  for (unsigned int i = 0; i < n_dofs; ++i)
+    sum += flux_vector[i];
+
+  std::cout << std::scientific << std::setprecision(4)
+            << "Limited flux sum = " << sum << std::endl;
+}
+
+/**
+ * \brief Outputs the matrix of limiting coefficients.
+ */
+template <int dim>
+void FCT<dim>::output_limiter_matrix() const
+{
+  // save limiting coefficients
+  std::ofstream limiter_out("output/limiter.txt");
+  limiter_matrix.print_formatted(
+    limiter_out, 10, true, 0, "0", 1);
+  limiter_out.close();
 }

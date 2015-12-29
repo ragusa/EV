@@ -6,6 +6,8 @@
 #ifndef FCT_h
 #define FCT_h
 
+#include <deal.II/fe/fe_q.h>
+#include <deal.II/grid/tria.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/vector.h>
 #include <deal.II/dofs/dof_accessor.h>
@@ -65,8 +67,12 @@ public:
   using FCTSynchronizationType =
     typename ConservationLawParameters<dim>::FCTSynchronizationType;
 
+  using FCTVariablesType =
+    typename ConservationLawParameters<dim>::FCTVariablesType;
+
   FCT(const ConservationLawParameters<dim> & parameters,
       const DoFHandler<dim> & dof_handler,
+      const Triangulation<dim> & triangulation,
       const SparseMatrix<double> & lumped_mass_matrix,
       const SparseMatrix<double> & consistent_mass_matrix,
       const std::shared_ptr<StarState<dim>> & star_state,
@@ -93,9 +99,11 @@ public:
   */
 
   virtual void compute_bounds(const Vector<double> & old_solution,
-                      const Vector<double> & ss_reaction,
-                      const Vector<double> & ss_rhs,
-                      const double & dt);
+                              const Vector<double> & ss_reaction,
+                              const Vector<double> & ss_rhs,
+                              const double & dt);
+
+  void output_limiter_matrix() const;
 
 private:
   void compute_flux_corrections(
@@ -124,7 +132,8 @@ private:
 
   void synchronize_min();
 
-  void check_limited_flux_correction_sum();
+  void check_limited_flux_correction_sum(
+    const Vector<double> & flux_correction_vector);
 
   /*
   bool check_max_principle(const Vector<double> & new_solution,
@@ -135,8 +144,14 @@ private:
     const SparseMatrix<double> & low_order_ss_matrix,
     const double & dt);
 */
+  const FE_Q<dim> fe_scalar;
+
+  /** \brief scalar sparsity pattern */
+  SparsityPattern scalar_sparsity_pattern;
 
   const DoFHandler<dim> * dof_handler;
+
+  DoFHandler<dim> dof_handler_scalar;
 
   const SparseMatrix<double> * const lumped_mass_matrix;
   const SparseMatrix<double> * const consistent_mass_matrix;
@@ -167,6 +182,8 @@ private:
 
   const unsigned int n_components;
 
+  const unsigned int n_dofs_scalar;
+
   const unsigned int dofs_per_cell;
 
   const unsigned int dofs_per_cell_per_component;
@@ -174,6 +191,8 @@ private:
   const AntidiffusionType antidiffusion_type;
 
   const FCTSynchronizationType synchronization_type;
+
+  const FCTVariablesType fct_variables_type;
 
   const bool use_star_states_in_fct_bounds;
 

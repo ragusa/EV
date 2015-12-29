@@ -36,9 +36,9 @@ subsection refinement
 end
 
 subsection time
-   set time step size method = cfl # constant|cfl
-   set use default end time = true
-   set final time = 0.5
+   set time step size method = constant # constant|cfl
+   set use default end time = false
+   set final time = 0.01
    set time step size = 0.01
    set cfl = 0.10
    set steady state tolerance = 1.0e-6
@@ -85,9 +85,9 @@ subsection output
    set output period = 0
    set max transient output size = 1e9
    set output mesh = false
-   set output mass matrix = false
-   set output viscosity = true
-   set output viscosity transient = true
+   set output mass matrix = true
+   set output viscosity = false
+   set output viscosity transient = false
    set exact solution refinement level = 7
    set save convergence results = false
    set print final solution = false

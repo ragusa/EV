@@ -66,15 +66,15 @@ public:
     typename ConservationLawParameters<dim>::FCTSynchronizationType;
 
   ShallowWaterFCT(const ConservationLawParameters<dim> & parameters,
-      const DoFHandler<dim> & dof_handler,
-      const SparseMatrix<double> & lumped_mass_matrix,
-      const SparseMatrix<double> & consistent_mass_matrix,
-      const std::shared_ptr<StarState<dim>> & star_state,
-      const LinearSolver<dim> & linear_solver,
-      const SparsityPattern & sparsity_pattern,
-      const std::vector<unsigned int> & dirichlet_nodes,
-      const unsigned int & n_components,
-      const unsigned int & dofs_per_cell);
+                  const DoFHandler<dim> & dof_handler,
+                  const SparseMatrix<double> & lumped_mass_matrix,
+                  const SparseMatrix<double> & consistent_mass_matrix,
+                  const std::shared_ptr<StarState<dim>> & star_state,
+                  const LinearSolver<dim> & linear_solver,
+                  const SparsityPattern & sparsity_pattern,
+                  const std::vector<unsigned int> & dirichlet_nodes,
+                  const unsigned int & n_components,
+                  const unsigned int & dofs_per_cell);
 
   void compute_bounds(const Vector<double> & old_solution,
                       const Vector<double> & ss_reaction,
@@ -95,61 +95,6 @@ private:
     const Vector<double> & ss_rhs,
     const SparseMatrix<double> & low_order_diffusion_matrix,
     const double & dt);
-
-  void compute_limited_flux_correction_vector();
-
-  void compute_full_flux_correction();
-
-  void get_matrix_row(const SparseMatrix<double> & matrix,
-                      const unsigned int & i,
-                      std::vector<double> & row_values,
-                      std::vector<unsigned int> & row_indices,
-                      unsigned int & n_col);
-
-  void synchronize_min();
-
-  const DoFHandler<dim> * dof_handler;
-
-  const SparseMatrix<double> * const lumped_mass_matrix;
-  const SparseMatrix<double> * const consistent_mass_matrix;
-  SparsityPattern sparsity_pattern;
-  SparseMatrix<double> limiter_matrix;
-  SparseMatrix<double> flux_correction_matrix;
-  Vector<double> solution_min;
-  Vector<double> solution_max;
-
-  SparseMatrix<double> system_matrix;
-  Vector<double> system_rhs;
-  Vector<double> tmp_vector;
-  Vector<double> flux_correction_vector;
-  Vector<double> Q_minus;
-  Vector<double> Q_plus;
-  Vector<double> R_minus;
-  Vector<double> R_plus;
-
-  std::shared_ptr<StarState<dim>> star_state;
-
-  LinearSolver<dim> linear_solver;
-
-  const SparsityPattern * const sparsity;
-
-  const std::vector<unsigned int> dirichlet_nodes;
-
-  const unsigned int n_dofs;
-
-  const unsigned int n_components;
-
-  const unsigned int dofs_per_cell;
-
-  const unsigned int dofs_per_cell_per_component;
-
-  const AntidiffusionType antidiffusion_type;
-
-  const FCTSynchronizationType synchronization_type;
-
-  const bool use_star_states_in_fct_bounds;
-
-  bool DMP_satisfied_at_all_steps;
 };
 
 #include "src/fct/ShallowWaterFCT.cc"

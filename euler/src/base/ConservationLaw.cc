@@ -819,6 +819,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
   if (parameters.scheme == Scheme::fct)
     fct = std::make_shared<FCT<dim>>(parameters,
                                      dof_handler,
+                                     triangulation,
                                      lumped_mass_matrix,
                                      consistent_mass_matrix,
                                      star_state,
@@ -1007,6 +1008,9 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     old_dt = dt;
     n++;
   } // end of time loop
+
+  // output limiter matrix if specified
+  fct->output_limiter_matrix();
 }
 
 /** \brief Computes time step size using the CFL condition

@@ -288,6 +288,10 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
       "none",
       Patterns::Selection("none|min|compound"),
       "Option for synchronization of limiting coefficients in FCT scheme");
+    prm.declare_entry("fct variables type",
+                      "conservative",
+                      Patterns::Selection("conservative|primitive"),
+                      "Option for set of variables for limiting in FCT");
     prm.declare_entry("use star states in fct bounds",
                       "false",
                       Patterns::Bool(),
@@ -535,6 +539,15 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
       fct_synchronization_type = FCTSynchronizationType::min;
     else if (synchronization_string == "compound")
       fct_synchronization_type = FCTSynchronizationType::compound;
+    else
+      Assert(false, ExcNotImplemented());
+
+    // variables type
+    std::string variables_type_string = prm.get("fct variables type");
+    if (variables_type_string == "conservative")
+      fct_variables_type = FCTVariablesType::conservative;
+    else if (variables_type_string == "primitive")
+      fct_variables_type = FCTVariablesType::primitive;
     else
       Assert(false, ExcNotImplemented());
 
