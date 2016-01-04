@@ -296,6 +296,10 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
                       "false",
                       Patterns::Bool(),
                       "Option to include star states in FCT bounds");
+    prm.declare_entry("output limiter matrix",
+                      "false",
+                      Patterns::Bool(),
+                      "Option to output matrix of limiting coefficients");
   }
   prm.leave_subsection();
 }
@@ -553,6 +557,9 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
 
     // star states
     use_star_states_in_fct_bounds = prm.get_bool("use star states in fct bounds");
+
+    // output limiter matrix
+    output_limiter_matrix = prm.get_bool("output limiter matrix");
   }
   prm.leave_subsection();
 }

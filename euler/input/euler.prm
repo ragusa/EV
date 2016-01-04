@@ -86,5 +86,6 @@ subsection fct
    set antidiffusion = limited # limited|full|none
    set fct synchronization = none # none | min | compound
    set use star states in fct bounds = true
+   set output limiter matrix = false
 end
 

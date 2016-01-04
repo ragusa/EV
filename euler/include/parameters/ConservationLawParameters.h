@@ -184,6 +184,8 @@ public:
   FCTVariablesType fct_variables_type;
 
   bool use_star_states_in_fct_bounds;
+
+  bool output_limiter_matrix;
 };
 
 #include "src/parameters/ConservationLawParameters.cc"

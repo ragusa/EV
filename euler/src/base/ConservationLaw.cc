@@ -1010,7 +1010,9 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
   } // end of time loop
 
   // output limiter matrix if specified
-  fct->output_limiter_matrix();
+  if (parameters.scheme == Scheme::fct)
+    if (parameters.output_limiter_matrix)
+      fct->output_limiter_matrix();
 }
 
 /** \brief Computes time step size using the CFL condition
