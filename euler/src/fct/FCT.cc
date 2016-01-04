@@ -341,10 +341,12 @@ void FCT<dim>::compute_limiting_coefficients_zalesak(
   Q_plus = 0;
   lumped_mass_matrix->vmult(tmp_vector, old_solution);
   Q_plus.add(-1.0 / dt, tmp_vector);
+  /*
   Q_plus.add(1.0, ss_flux);
   low_order_diffusion_matrix.vmult(tmp_vector, old_solution);
   Q_plus.add(1.0, tmp_vector);
   Q_plus.add(-1.0, ss_rhs);
+  */
 
   // copy current contents of Q+ as these components are identical
   Q_minus = Q_plus;
@@ -421,9 +423,33 @@ void FCT<dim>::compute_limiting_coefficients_zalesak(
         Lij = std::min(R_plus(i), R_minus(j));
       else
         Lij = std::min(R_minus(i), R_plus(j));
+
+/*
+      if (Lij < 0.0 || Lij > 1.0)
+      {
+        std::cout << std::endl;
+        std::cout << "L(" << i << "," << j << ") = " << Lij << std::endl;
+        std::cout << "R_plus(" << i << ") = " << R_plus(i) << std::endl;
+        std::cout << "R_plus(" << j << ") = " << R_plus(j) << std::endl;
+        std::cout << "R_minus(" << i << ") = " << R_minus(i) << std::endl;
+        std::cout << "R_minus(" << j << ") = " << R_minus(j) << std::endl;
+        std::cout << "Q_plus(" << i << ") = " << Q_plus(i) << std::endl;
+        std::cout << "Q_plus(" << j << ") = " << Q_plus(j) << std::endl;
+        std::cout << "Q_minus(" << i << ") = " << Q_minus(i) << std::endl;
+        std::cout << "Q_minus(" << j << ") = " << Q_minus(j) << std::endl;
+        std::cout << "solution_min(" << i << ") = " << solution_min(i) << std::endl;
+        std::cout << "solution_min(" << j << ") = " << solution_min(j) << std::endl;
+        std::cout << "solution_max(" << i << ") = " << solution_max(i) << std::endl;
+        std::cout << "solution_max(" << j << ") = " << solution_max(j) << std::endl;
+      }
+*/
       limiter_matrix.set(i, j, Lij);
     }
   }
+/*
+  std::cout << "Old solution:" << std::endl;
+  old_solution.print(std::cout);
+*/
 }
 
 /**

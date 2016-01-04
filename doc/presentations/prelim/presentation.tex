@@ -1,0 +1,969 @@
+\documentclass{beamer}
+\useoutertheme{infolines}
+\usefonttheme{default}
+
+\usepackage{xcolor}     % for defining colors
+\usepackage{multicol}   % for multiple columns
+\usepackage{etoolbox}   % for toggles
+\usepackage{subcaption} % for subplots
+\usepackage{listings}   % for colored verbatim
+\usepackage{listings}   % for colored verbatim
+\usepackage{ifthen}     % for conditionals
+\input{newcommands}     % macros file
+
+% create toggle for print-friendly mode (no colored heading and sidebar)
+\newtoggle{PRINTMODE}
+\togglefalse{PRINTMODE} %\toggletrue or \togglefalse
+
+% add sidebar if not in print mode
+\setbeamertemplate{items}[square]
+\setbeamertemplate{navigation symbols}{}
+
+% define colors
+\definecolor{myblue}{RGB}{60,140,230}
+\definecolor{myorangelight}{RGB}{255,220,0}
+\definecolor{myorangemedium}{RGB}{255,190,50}
+\definecolor{myorangeheavy}{RGB}{255,150,0}
+\definecolor{myorangered}{RGB}{255,100,30}
+\definecolor{mygray}{RGB}{100,100,100}
+
+\colorlet{primarycolor}{myblue}
+\colorlet{secondarycolorlight}{myorangelight}
+\colorlet{secondarycolormedium}{myorangemedium}
+\colorlet{secondarycolorheavy}{myorangeheavy}
+\colorlet{secondarytextcolor}{myorangered}
+
+% make headers black on white if in print mode, colored otherwise
+\iftoggle{PRINTMODE}{
+   \setbeamercolor{title}{fg=black,bg=white}
+   \setbeamercolor{frametitle}{fg=black,bg=white}
+}{
+   \setbeamercolor{title}{fg=primarycolor,bg=white}
+   \setbeamercolor{frametitle}{fg=white,bg=primarycolor}
+}
+
+% colors
+\setbeamercolor{normal text}{fg=mygray}
+\setbeamercolor{itemize item}{fg=secondarycolorheavy}
+\setbeamercolor{itemize subitem}{fg=secondarycolormedium}
+\setbeamercolor{itemize subsubitem}{fg=secondarycolorlight}
+\setbeamercolor{author in head/foot}{fg=secondarytextcolor,bg=secondarycolorlight}
+\setbeamercolor{title in head/foot}{fg=secondarytextcolor,bg=secondarycolormedium}
+\setbeamercolor{date in head/foot}{fg=white,bg=secondarycolorheavy}
+
+% no header
+\setbeamertemplate{headline}{}
+
+% custom footer
+\makeatletter
+\setbeamertemplate{footline}
+{
+  \leavevmode%
+  \hbox{%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+    \usebeamerfont{author in head/foot}\insertsection
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+    \usebeamerfont{title in head/foot}\insertsubsection
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+    \usebeamerfont{date in head/foot}\insertshortdate{}\hspace*{2em}
+    \insertframenumber{} / \inserttotalframenumber\hspace*{2ex} 
+  \end{beamercolorbox}}%
+  \vskip0pt%
+}
+\makeatother
+
+% title, author, date, etc.
+\title[]{Application of the Entropy Viscosity Method and the Flux-Corrected
+Transport Algorithm to Hyperbolic Conservation Laws}
+\author[]{Joshua E. Hansel\inst{1} \and Jean C. Ragusa\inst{1}
+   \and Jean-Luc Guermond\inst{2}}
+\institute{
+  \inst{1}Department of Nuclear Engineering\\
+   Texas A\&M University
+   \and
+   \inst{2}Department of Mathematics\\
+   Texas A\&M University}
+\date[]{Preliminary Exam, Jan. 20th, 2016}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[plain]
+  \titlepage
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Introduction}
+\subsection{Motivation}
+\begin{frame}
+\frametitle{Motivation}
+
+\begin{itemize}
+   \item Weak solutions to conservation law problems using standard CFEM
+      are not unique and thus are prone to unphysical oscillations:
+   \begin{center}
+      \includegraphics[width=0.7\textwidth]{./figures/advection_Galerkin.pdf}
+   \end{center}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Objectives}
+\begin{frame}
+\frametitle{Objectives}
+
+\begin{itemize}
+   \item The objectives of this research are the following:
+   \begin{itemize}
+      \item \textbf{Accurately solve conservation law problems} using the
+         continuous finite element method (CFEM).
+      \begin{itemize}
+         \item Scheme to be presented is 2nd order-accurate in space (for smooth
+            problems).
+      \end{itemize}
+      \item \textbf{Prevent spurious oscillations}.
+      \begin{itemize}
+	 \item Scheme to be presented is not proven to be completely immune to any
+            spurious oscillations but shows good results in practice.
+      \end{itemize}
+      \item \textbf{Prevent negativities} for physically non-negative quantities.
+      \begin{itemize}
+         \item Scheme to be presented is guaranteed to be positivity-preserving.
+      \end{itemize}
+   \end{itemize}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Outline}
+\begin{frame}
+\frametitle{Outline}
+
+\begin{itemize}
+   \item Presentation of scheme for simple case: linear scalar transport
+      conservation law using explicit time discretizations
+   \begin{itemize}
+      \item Problem formulation
+      \item Monotone low-order scheme
+      \item High-order entropy viscosity scheme
+      \item FCT scheme
+   \end{itemize}
+   \item Extension of scheme to more complex cases:
+   \begin{itemize}
+      \item Implicit time discretizations
+      \item nonlinear scalar conservation laws
+   \end{itemize}
+   \item Implementation
+   \item Results for linear conservation law problems
+   \item Conclusions
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Methodology}
+\subsection{Problem Formulation}
+\begin{frame}
+\frametitle{Problem Formulation}
+
+\begin{itemize}
+   \item Scalar linear conservation law model:
+   \begin{align}
+      &\pd{u}{t} + \nabla\cdot(\velocity u\xt)
+      + \sigma(\x)u\xt = q\xt\\
+      &\sigma(\x)\ge 0,\qquad q\xt\ge 0\nonumber
+   \end{align}
+   \item Define problem by providing initial conditions and some boundary
+      condition, such as Dirichlet:
+   \begin{equation}
+      u(\x,0) = u^0(\x) \quad \forall \x\in \mathcal{D}
+   \end{equation}
+   \begin{equation}
+      u\xt = u^{inc}(\x) \quad \forall \x\in \partial \mathcal{D}^{inc}
+   \end{equation}
+   \item CFEM solution:
+   \begin{equation}
+      u_h\xt = \sum\limits_{j=1}^N U_j(t) \varphi_j(\x),
+      \quad \varphi_j(\x)\in P^1_h
+   \end{equation}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Time Discretization}
+\begin{frame}
+\frametitle{Time Discretization}
+
+\begin{itemize}
+   \item Simplest time discretization is forward Euler (FE), which gives the
+      discrete system
+   \begin{equation}
+      \consistentmassmatrix\frac{\solutionvector^{n+1}-\solutionvector^n}
+        {\dt} + \ssmatrix\solutionvector^n = \ssrhs^n
+   \end{equation}
+   \begin{equation}
+      M\ij^C \equiv \int\limits_{\support\ij}\varphi_i(\x) \varphi_j(\x) d\x
+   \end{equation}
+   \begin{equation}
+      A\ij \equiv \int\limits_{\support\ij}\left(
+      \mathbf{v}\cdot\nabla\varphi_j(\x) +
+		\sigma(\x)\varphi_j(\x)\right)\varphi_i(\x) d\x
+   \end{equation}
+   \begin{equation}
+      b_i^n \equiv \int\limits_{S_i} q(\x,t^n)\varphi_i(\x) d\x
+   \end{equation}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{FCT Scheme Overview}
+\begin{frame}
+\frametitle{Flux Corrected Transport (FCT) Scheme}
+\framesubtitle{Introduction}
+
+\begin{itemize}
+   \item Initially developed in 1973 for finite difference discretizations of
+      transport/conservation law problems and recently applied to finite element
+      method.
+   \item Works by adding conservative fluxes to satisfy physical bounds on the
+      solution.
+   \item Employs a high-order scheme and a low-order, monotone scheme.
+   \item Defines a \emph{correction}, or \emph{antidiffusion}, flux, which
+      when added to the low-order scheme, produces the high-order scheme
+      solution.
+   \item Limits this correction flux to enforce the physical bounds imposed.
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\subsection{Low-Order Scheme}
+%\begin{frame}
+%\frametitle{Low-Order Scheme}
+%\framesubtitle{Definition}
+%
+%\begin{itemize}
+%   \item To get the low-order scheme, one does the following:
+%   \begin{itemize}
+%      \item Lumps the mass matrix:
+%        $\consistentmassmatrix\rightarrow\lumpedmassmatrix$.
+%      \item Adds a low-order diffusion operator:
+%        $\ssmatrix \rightarrow \ssmatrix+\loworderdiffusionmatrix$.
+%   \end{itemize}
+%   \item This gives the following, where $\solutionvector^{L,n+1}$ is the low-order solution:
+%   \begin{equation}
+%      \lumpedmassmatrix\frac{\solutionvector^{L,n+1}-\solutionvector^n}{\dt} + (\ssmatrix + \diffusionmatrix^L)\solutionvector^n = \b^n
+%   \end{equation}
+%   \item The diffusion matrix $\diffusionmatrix^L$ is assembled elementwise, where $K$
+%      denotes an element, using a local bilinear form $b_K$ and a
+%      local low-order viscosity $\nu_K^L$:
+%   \begin{equation}
+%      D\ij^L = \sum\limits_{K\subset S\ij}\nu_K^L b_K(\varphi_j,\varphi_i)
+%   \end{equation}
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Low-Order Scheme}
+%\framesubtitle{Local Bilinear Form}
+%
+%\begin{itemize}
+%   \item The local bilinear form is defined as follows, where $|K|$ denotes
+%      the volume of element $K$, $\mathcal{I}(K)$ is the set of indices
+%      corresponding to degrees of freedom with nonempty support on $K$, and
+%      $n_K$ is the cardinality of this set.
+%   \begin{equation}
+%      b_K(\varphi_j, \varphi_i) \equiv \left\{\begin{array}{l l}
+%         -\frac{1}{n_K - 1}|K| & i\ne j, \quad i,j\in \mathcal{I}(K)\\
+%         |K|                   & i = j,  \quad i,j\in \mathcal{I}(K)\\
+%         0                     & i\notin\mathcal{I}(K)\,|\, j\notin\mathcal{I}(K)
+%      \end{array}\right.
+%   \end{equation}
+%   \item Some properties that result from this definition:
+%   \begin{equation}
+%      \sum\limits_j b_K(\varphi_j, \varphi_i) = 0
+%   \end{equation}
+%   \begin{equation}
+%      b_K(\varphi_i, \varphi_i) > 0
+%   \end{equation}
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Low-Order Scheme}
+%\framesubtitle{Low-Order Viscosity}
+%
+%\begin{itemize}
+%   \item The low-order viscosity is defined as
+%   \begin{equation}
+%      \nu_K^L \equiv \max\limits_{i\ne j\in \mathcal{I}(K)}\frac{\max(0,A\ij)}
+%      {-\sum\limits_{T\subset S\ij} b_T(\varphi_j, \varphi_i)}
+%   \end{equation}
+%   \item This definition is designed to be the smallest number such that the
+%      following is guaranteed:
+%   \begin{equation}
+%      D^L\ij \leq -A\ij, \quad j\ne i
+%   \end{equation}
+%   \item This is used to guarantee that the low-order steady-state matrix
+%      $\ssmatrix^L=\ssmatrix+\diffusionmatrix^L$ is an M-matrix, i.e., a \emph{monotone} matrix:
+%      $\ssmatrix^L\solutionvector \ge 0\Rightarrow \solutionvector\ge 0$.
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Low-Order Scheme}
+%\framesubtitle{Discrete Maximum Principle}
+%
+%\begin{itemize}
+%   \item In addition to guaranteeing monotonicity and positivity, the low-order
+%      viscous terms guarantee the following discrete maximum principle (DMP),
+%      where $U^n_{\substack{\max\\\min},i} =
+%      \substack{\max\\\min\limits_{j\in\mathcal{I}(S_i)}}U^n_j$:
+%      \begin{equation}
+%         W_i^-\leq
+%         U_i^{L,n+1}\leq
+%         W_i^+\qquad\forall i
+%      \end{equation}
+%      \begin{equation}
+%         W_i^\pm \equiv U_{\substack{\max\\\min},i}^n\left(
+%         1-\frac{\dt}{M_{i,i}^L}
+%         \sum\limits_j A\ij^L\right)
+%         + \frac{\diffusionmatrixelta t}{M_{i,i}^L}b_i^n
+%      \end{equation}
+%   \item For example, when there is no reaction term or source term, this reduces
+%      to the following DMP, which implies the scheme is local extremum
+%      diminishing (LED):
+%      \begin{equation}
+%         U^n_{\min,i}\leq
+%         U_i^{L,n+1}\leq
+%         U^n_{\max,i}\qquad\forall i
+%      \end{equation}
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Low-Order Scheme}
+%\framesubtitle{Results Example}
+%
+%\includegraphics[width=\textwidth]{./figures/advection_low_order.pdf}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\subsection{High-Order Scheme}
+%\begin{frame}
+%\frametitle{Entropy Viscosity Scheme}
+%\framesubtitle{Introduction}
+%
+%\begin{itemize}
+%   \item The standard Galerkin CFEM weak solution is not unique. Even with
+%      FCT, it would not necessarily converge to the correct, physical
+%      weak solution, i.e., the \emph{entropy} solution.
+%   \item To converge to the entropy solution, one must ensure that an entropy
+%      inequality is satisfied:
+%      \begin{equation}
+%         R(u) \equiv \pd{\eta(u)}{t} + \nabla\cdot\mathbf{f}^\eta(u) \leq 0
+%      \end{equation}
+%      for any convex entropy $\eta(u)$ and corresponding entropy flux
+%      $\mathbf{f}^\eta(u)$.
+%   \item This \emph{entropy residual} $R(u)$ measures entropy production;
+%      where it is positive, the inequality is violated, so the residual
+%      should be decreased somehow.
+%   \item To enforce the inequality, the entropy viscosity method adds
+%      viscosity in proportion to local entropy production, thus decreasing
+%      local entropy.
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Entropy Viscosity Scheme}
+%\framesubtitle{Entropy Viscosity Definition}
+%
+%\begin{itemize}
+%   \item One chooses a convex entropy function $\eta(u)$ such
+%   as $\eta(u)=\frac{1}{2}u^2$ and manipulates the
+%   conservation law equation to get an entropy residual:
+%   \begin{equation}
+%      R(u) = \pd{\eta}{t}
+%      + \frac{d\eta}{du}\left(\nabla\cdot(\mathbf{v}u)
+%      + \sigma u 
+%      - q \right)
+%   \end{equation}
+%   \item Viscosity is set to be proportional to a linear combination
+%      of the local entropy residual $R_K(u) = \left\|R(u)\right\|_{L^\infty(K)}$
+%      and entropy jumps $J_F(u)$ across the faces:
+%      \begin{equation}
+%         \nu^{\eta}_K \propto c_R R_K(u_h)
+%         + c_J\max\limits_{F\in\partial K}J_F(u_h)
+%      \end{equation}
+%   \item In practice, the entropy viscosity becomes the following, where the
+%      denominator is just a normalization constant:
+%      \begin{equation}
+%         \nu^{\eta}_K = \frac{c_R R_K(u_h)
+%         + c_J\max\limits_{F\in\partial K}J_F(u_h)}
+%         {\|\eta(u_h)-\bar{\eta}(u_h)\|_{L^\infty(\mathcal{D})}}
+%      \end{equation}
+%\end{itemize}
+%   
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Entropy Viscosity Scheme}
+%\framesubtitle{High-Order Scheme}
+%
+%\begin{itemize}
+%   \item The high-order viscosity does not need to be any greater than the
+%      low-order viscosity:
+%      \begin{equation}
+%         \nu^{H,n}_K = \min(\nu^{L}_K,\nu^{\eta,n}_K)
+%      \end{equation}
+%   \item For the high-order scheme, the mass matrix is not modified; the
+%      only change is the addition of the high-order diffusion operator
+%      $\diffusionmatrix^{H,n}$: $\ssmatrix \rightarrow \ssmatrix + \diffusionmatrix^{H,n}$:
+%      \begin{equation}
+%         \consistentmassmatrix\frac{\solutionvector^{H,n+1}-\solutionvector^n}{\dt} + (\ssmatrix + \diffusionmatrix^{H,n})\solutionvector^n = \b^n
+%      \end{equation}
+%   \item The high-order diffusion matrix is computed just as the low-order
+%      counterpart, except that $\nu^{H,n}_K$ is used instead of $\nu^{L}_K$:
+%      \begin{equation}
+%         D\ij^{H,n} = \sum\limits_{K\subset S\ij}\nu_K^{H,n}
+%            b_K(\varphi_j,\varphi_i)
+%      \end{equation}
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{High-Order Scheme}
+%\framesubtitle{Results Example}
+%
+%\includegraphics[width=\textwidth]{./figures/advection_high_order.pdf}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\subsection{FCT Scheme}
+%\begin{frame}
+%\frametitle{Flux Corrected Transport (FCT) Scheme}
+%\framesubtitle{Correction Flux Definition}
+%
+%\begin{itemize}
+%   \item Recall that FCT defines antidiffusive correction fluxes
+%      from a low-order, monotone scheme to a high-order scheme. Calling
+%      these fluxes $\f$, this gives
+%      \begin{equation}
+%         \lumpedmassmatrix\frac{\solutionvector^{H,n+1}-\solutionvector^n}{\dt}+(\ssmatrix+\diffusionmatrix^L)\solutionvector^n = \b^n + \f
+%      \end{equation}
+%   \item Subtracting the high-order scheme equation from this gives the
+%      definition of $\f$:
+%      \begin{equation}
+%         \f \equiv -(\consistentmassmatrix-\lumpedmassmatrix)\frac{\solutionvector^{H,n+1}-\solutionvector^n}{\dt} +(\diffusionmatrix^L-\diffusionmatrix^{H,n})\solutionvector^n
+%      \end{equation}
+%   \item Decomposing $\f$ into internodal fluxes
+%      $F\ij$ such that $f_i = \sum_j F\ij$, where $\diffusionmatrixelta_{j,i}[\mathbf{y}]$
+%      denotes $y_j - y_i$:
+%   \begin{equation}
+%      F\ij = -M\ij^C\diffusionmatrixelta_{j,i}\left[\frac{\solutionvector^{H,n+1}-\solutionvector^n}{\diffusionmatrixelta t}\right]
+%      + (D\ij^L-D\ij^{H,n})\diffusionmatrixelta_{j,i}[\solutionvector^n]
+%   \end{equation}
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Flux Corrected Transport (FCT) Scheme}
+%\framesubtitle{FCT Overview}
+%
+%\begin{itemize}
+%   \item Recall that the objective of FCT is to limit these antidiffusive
+%      fluxes to enforce some physical bounds.
+%   \item The chosen bounds take the form of the DMP satisfied by the
+%      low-order scheme:
+%      \begin{equation}
+%         W_i^-\leq
+%         U_i^{n+1}\leq
+%         W_i^+\qquad\forall i
+%      \end{equation}
+%   \item This is achieved by applying a limiting coefficient $L\ij$ to each
+%      internodal flux $F\ij$:
+%      \begin{equation}
+%         \lumpedmassmatrix\frac{\solutionvector^{n+1}-\solutionvector^n}{\dt} + \ssmatrix^L\solutionvector^n = \b + \L\cdot\F
+%      \end{equation}
+%   \item Each limiting coefficient is between zero and unity: $0\leq L\ij\leq 1$.
+%   \begin{itemize}
+%      \item If all $L\ij$ are zero, then the low-order scheme is produced.
+%      \item If all $L\ij$ are one, then the high-order scheme is produced.
+%   \end{itemize}
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Flux Corrected Transport (FCT) Scheme}
+%\framesubtitle{Limiting Coefficients Introduction}
+%
+%\begin{itemize}
+%   \item The enforced bounds can be rearranged to bound the limited flux sums:
+%      \begin{equation}
+%         Q^-_i \leq \sum\limits_j L\ij F\ij \leq Q^+_i
+%      \end{equation}
+%      where $Q_i^\pm$ has the following definition:
+%      \begin{equation}
+%         Q_i^\pm \equiv M_{i,i}^L\frac{W_i^\pm-U_i^n}{\diffusionmatrixelta t}
+%         + \sum\limits_j A_{i,j}^L U_j^n - b_i
+%      \end{equation}
+%   \item The classic Zalesak limiting strategy starts by separating the
+%      negative and positive fluxes:
+%      \begin{equation}
+%         Q^-_i \leq \sum\limits_{j:F\ij<0} L\ij F\ij +
+%            \sum\limits_{j:F\ij>0} L\ij F\ij\leq Q^+_i
+%      \end{equation}
+%      The positive fluxes risk violating $Q_i^+$, and the negative fluxes risk
+%      violating $Q_i^-$.
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Flux Corrected Transport (FCT) Scheme}
+%\framesubtitle{Limiting Coefficients Definition}
+%
+%\begin{itemize}
+%   \item Zalesak's limiting coefficients assume that
+%      all positive fluxes into a node $i$ have the same limiting coefficient
+%      $L^+_i$ and similarly, negative fluxes have the same limiting coefficient
+%      $L^-_i$:
+%      \begin{equation}
+%         Q^-_i \leq L^-_i F^-_i + L^+_i F^+_i \leq Q^+_i
+%      \end{equation}
+%      where
+%      \begin{equation}
+%         F_i^- \equiv \sum\limits_{j:F\ij<0} F\ij \qquad
+%         F_i^+ \equiv \sum\limits_{j:F\ij>0} F\ij
+%      \end{equation}
+%   \item As a conservative bound for $L^+_i$, contributions from negative fluxes
+%      are ignored (pretending $L_i^-=0$), giving $L^+_i \leq \frac{Q_i^+}{F_i^+}$
+%      and similarly for $L^-_i$ and the lower bound.
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Flux Corrected Transport (FCT) Scheme}
+%\framesubtitle{Limiting Coefficients Definition (Cont.)}
+%
+%\begin{itemize}
+%   \item Then, recalling that limiting coefficients are not greater than unity:
+%      \begin{equation}
+%         L_i^\pm \equiv\left\{
+%            \begin{array}{l l}
+%               1                                          & F_i^\pm = 0\\
+%               \min\left(1,\frac{Q_i^\pm}{F_i^\pm}\right) & F_i^\pm \ne 0
+%            \end{array}
+%            \right.
+%      \end{equation}
+%   \item However, to limit fluxes conservatively, limited correction fluxes must
+%      be equal and opposite:
+%      \begin{equation}
+%         L\ij F\ij = -L_{j,i} F_{j,i}
+%      \end{equation}
+%      Since $F\ij$ happens to be skew symmetric ($F_{j,i}=-F\ij$) due to the
+%      chosen flux decomposition, the limiting coefficients must be symmetric:
+%      $L_{j,i} = L\ij$.
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Flux Corrected Transport (FCT) Scheme}
+%\framesubtitle{Limiting Coefficients Definition (Cont.)}
+%
+%\begin{itemize}
+%   \item Thus when deciding the limiting coefficient $L\ij$ for a flux $F\ij$, 
+%      one must not only consider the bounds for $i$ but also the bounds for $j$.
+%      Specifically, a positive flux $F\ij$ risks violating $Q_i^+$ and $Q_j^-$.
+%      Putting everything together,
+%      \begin{equation}
+%         L\ij \equiv\left\{
+%            \begin{array}{l l}
+%               \min(L_i^+,L_j^-) & F_{i,j} \geq 0\\
+%               \min(L_i^-,L_j^+) & F_{i,j} < 0
+%            \end{array}
+%            \right.
+%      \end{equation}
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Flux Corrected Transport (FCT) Scheme}
+%\framesubtitle{Results Example}
+%
+%\includegraphics[width=\textwidth]{./figures/advection_FCT.pdf}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\section{Extensions}
+%\subsection{Implicit}
+%\begin{frame}
+%\frametitle{Implicit Time Discretization}
+%\framesubtitle{}
+%
+%\begin{itemize}
+%   \item For the implicit case, for instance a general $\theta$ scheme, the
+%      discrete system is the following:
+%      \begin{equation}
+%        \consistentmassmatrix\frac{\solutionvector^{n+1}-\solutionvector^n}{\dt}
+%        + (1-\theta)\ssmatrix\solutionvector^n + \theta\ssmatrix\solutionvector^{n+1}
+%        = (1-\theta)\b^n + \theta\b^{n+1}
+%      \end{equation}
+%   \item For this discretization, the corresponding low-order scheme
+%      has the following DMP, which in general is not explicit:
+%      \begin{multline}
+%         W_i^\pm \equiv \frac{1}{1+\frac{\theta\diffusionmatrixelta t}{M_{i,i}^L}A_{i,i}^L}
+%           \left[\left(1 - \frac{(1-\theta)
+%           \diffusionmatrixelta t}{M_{i,i}^L}\sum\limits_j A_{i,j}^L\right)
+%           U_{\substack{\max\\\min},i}^n\right.\\\left.
+%          -\frac{\theta\diffusionmatrixelta t}{M_{i,i}^L}\sum\limits_{j\ne i}A_{i,j}^L
+%           U_{\substack{\max\\\min},i}^{L,n+1}
+%          +\frac{\diffusionmatrixelta t}{M_{i,i}^L}\left((1-\theta)b_i^n
+%          + \theta b_i^{n+1}\right)\right]
+%      \end{multline}
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Implicit Time Discretization}
+%\framesubtitle{}
+%
+%\begin{itemize}
+%   \item Because $W_i^\pm$ is in general not explicit, the limiting coefficients
+%      are also not explicit. Thus, all implicit FCT schemes require some form
+%      of iteration.
+%      \begin{itemize}
+%         \item In practice, it has been found that a simple fixed point iteration
+%            scheme is effective in resolving these nonlinearities.
+%      \end{itemize}
+%   \item Note that for the entropy viscosity scheme, it is suggested to treat
+%      the entropy viscosity explicitly to avoid \emph{entropy oscillations},
+%      which arise due to the entropy profile adapting at each iteration.
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\subsection{Nonlinear Conservation Laws}
+%\begin{frame}
+%\frametitle{Nonlinear Conservation Laws}
+%\framesubtitle{}
+%
+%\begin{itemize}
+%   \item In the nonlinear case, the model conservation law equation is
+%      \begin{equation}
+%         \pd{u}{t} + \nabla\cdot\mathbf{g}(u) + \sigma u\xt = q\xt
+%      \end{equation}
+%   \item The nonlinear discrete system may be expressed in a quasilinear form:
+%      \begin{equation}
+%         \consistentmassmatrix\frac{\solutionvector^{n+1}-\solutionvector^n}{\dt} + \ssmatrix(u_h^n)\solutionvector^n = \b^n
+%      \end{equation}
+%      where
+%      \begin{equation}
+%         A\ij(u) \equiv \int\limits_{S\ij}\left(
+%            \mathbf{g}'(u)\cdot\nabla\varphi_j(\x) +
+%            \sigma(\x)\varphi_j(\x)\right)\varphi_i(\x) d\x
+%      \end{equation}
+%   \item Now the low-order diffusion matrix also depends on the solution
+%      and must be computed each time step: $\diffusionmatrix^L\rightarrow\diffusionmatrix^{L,n}$.
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\section{Implementation}
+%\begin{frame}
+%\frametitle{Implementation}
+%\framesubtitle{FCT Implementation Overview}
+%
+%\begin{itemize}
+%   \item Summary of steps necessary for FCT scheme:
+%      \begin{enumerate}
+%         \item Assemble $\consistentmassmatrix$, $\lumpedmassmatrix$, $\ssmatrix$, $\diffusionmatrix^L$, $\diffusionmatrix^{H,n}$ (if using EV), $\b$
+%         \item Compute high-order solution $\solutionvector^{H,n+1}$
+%         \item Compute antidiffusive fluxes $F\ij,\quad\forall j\ne i
+%            \in\mathcal{I}(S_i)$
+%         \item Compute DMP bounds $W_i^\pm$
+%            \begin{itemize}
+%               \item Need to compute $U_{\substack{\max\\\min},i}$
+%            \end{itemize}
+%         \item Compute limiting coefficients $L\ij$
+%         \item Solve FCT system:
+%            \begin{equation}
+%               \lumpedmassmatrix\frac{\solutionvector^{n+1}-\solutionvector^n}{\dt} + \ssmatrix^L\solutionvector^n = \b + \L\cdot\F
+%            \end{equation}
+%      \end{enumerate}
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Implementation}
+%\framesubtitle{Determining Overlapping Supports}
+%
+%\begin{itemize}
+%   \item Most steps standard, but some steps require algebraic operations
+%      not typical in FEM computations.
+%   \item Need to be able to determine $j\in\mathcal{I}(S_i)$.
+%      Some approaches:
+%      \begin{itemize}
+%         \item If sparse matrix class provides function to extract
+%            a row's entries and corresponding indices, this indicates
+%            $j\in\mathcal{I}(S_i)$. For instance, do this with $\consistentmassmatrix$.
+%         \item Since linear FEM, know that only adjacent, i.e., ``connected''
+%            nodes can share support:
+%            \[i \mbox{ adjacent } j\Rightarrow j\in\mathcal{I}(S_i),\quad
+%               i\in\mathcal{I}(S_j)\]
+%            \item Thus one can loop over these ``edges'', i.e., pairs of nodes
+%            \item This is particularly useful for computing $F\ij$, since it
+%               is skew symmetric
+%      \end{itemize}
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Implementation}
+%\framesubtitle{Nonlinear Schemes}
+%
+%\begin{itemize}
+%   \item When the time discretization is not explicit, the discrete maximum
+%      principle is implicit, and thus the FCT scheme is nonlinear.
+%   \item The following is a basic fixed-point-type iteration FCT scheme:
+%      \begin{enumerate}
+%         \item If conservation law is nonlinear, re-assemble as necessary:
+%            \begin{enumerate}
+%               \item Compute steady-state matrix $\ssmatrix(\solutionvector^{n+1,(k)})$.
+%               \item Compute low-order diffusion matrix $\diffusionmatrix^L(\solutionvector^{n+1,(k)})$.
+%            \end{enumerate}
+%         \item Compute limiting coefficients using previous iteration of
+%            solution: $\limitermatrix(\solutionvector^{n+1,(k)})$.
+%         \item Compute new solution $\solutionvector^{n+1,(k+1)}$.
+%      \end{enumerate}
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\section{Results}
+%\begin{frame}
+%\frametitle{Results}
+%\framesubtitle{1-D Source Problem Results}
+%
+%\includegraphics[width=\textwidth]{./figures/solutions_source_FE.pdf}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Results}
+%\framesubtitle{2-D Void-to-Absorber Problem Results}
+%
+%\begin{figure}[h]
+%   \centering
+%   \begin{subfigure}{0.3\textwidth}
+%      \includegraphics[width=\textwidth]{./figures/exact.png}
+%      \caption{Exact}
+%   \end{subfigure}
+%   \begin{subfigure}{0.3\textwidth}
+%      \includegraphics[width=\textwidth]{./figures/Gal.png}
+%      \caption{Galerkin}
+%   \end{subfigure}
+%   \begin{subfigure}{0.3\textwidth}
+%      \includegraphics[width=\textwidth]{./figures/GalFCT.png}
+%      \caption{Galerkin-FCT}
+%   \end{subfigure}
+%   \begin{subfigure}{0.3\textwidth}
+%      \includegraphics[width=\textwidth]{./figures/low.png}
+%      \caption{Low-order}
+%   \end{subfigure}
+%   \begin{subfigure}{0.3\textwidth}
+%      \includegraphics[width=\textwidth]{./figures/EV.png}
+%      \caption{EV}
+%   \end{subfigure}
+%   \begin{subfigure}{0.3\textwidth}
+%      \includegraphics[width=\textwidth]{./figures/EVFCT.png}
+%      \caption{EV-FCT}
+%   \end{subfigure}
+%\end{figure}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Results}
+%\framesubtitle{3-D Void-to-Absorber Problem Results}
+%
+%\begin{figure}[h]
+%   \centering
+%   \begin{subfigure}{0.45\textwidth}
+%      \includegraphics[width=\textwidth]{./figures/Gal_3D.png}
+%      \caption{Galerkin}
+%   \end{subfigure}
+%   \begin{subfigure}{0.45\textwidth}
+%      \includegraphics[width=\textwidth]{./figures/GalFCT_3D.png}
+%      \caption{Galerkin-FCT}
+%   \end{subfigure}
+%\end{figure}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Results}
+%\framesubtitle{2-D Skew Void-to-Absorber Problem Results}
+%
+%\begin{figure}[h]
+%   \centering
+%   \begin{subfigure}{0.3\textwidth}
+%      \includegraphics[width=\textwidth]{./figures/skew_exact.png}
+%      \caption{Exact}
+%   \end{subfigure}
+%   \begin{subfigure}{0.3\textwidth}
+%      \includegraphics[width=\textwidth]{./figures/skew_Gal.png}
+%      \caption{Galerkin}
+%   \end{subfigure}
+%   \begin{subfigure}{0.3\textwidth}
+%      \includegraphics[width=\textwidth]{./figures/skew_GalFCT.png}
+%      \caption{Galerkin-FCT}
+%   \end{subfigure}
+%   \begin{subfigure}{0.3\textwidth}
+%      \includegraphics[width=\textwidth]{./figures/skew_low.png}
+%      \caption{Low-order}
+%   \end{subfigure}
+%   \begin{subfigure}{0.3\textwidth}
+%      \includegraphics[width=\textwidth]{./figures/skew_EV.png}
+%      \caption{EV}
+%   \end{subfigure}
+%   \begin{subfigure}{0.3\textwidth}
+%      \includegraphics[width=\textwidth]{./figures/skew_EVFCT.png}
+%      \caption{EV-FCT}
+%   \end{subfigure}
+%\end{figure}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Results}
+%\framesubtitle{Galerkin-FCT Vs. EV-FCT}
+%
+%\includegraphics[width=\textwidth]{./figures/sourcevoid_FCT_comparison.pdf}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Results}
+%\framesubtitle{Galerkin-FCT Vs. EV-FCT (Cont.)}
+%
+%\begin{itemize}
+%  \item KPP Rotating Wave problem results, taken from\\
+%    {\small
+%    \emph{A Second-Order Maximum Principle Preserving
+%      Lagrange Finite Element Technique for Nonlinear
+%      Scalar Conservation Equations} by Jean-Luc Guermond, et. al.
+%      \cite{guermond_secondorder}
+%    }
+%\end{itemize}
+%
+%\begin{figure}[h]
+%   \centering
+%   \begin{subfigure}{0.4\textwidth}
+%      \includegraphics[width=\textwidth]{./figures/Gal-FCT_rotation.png}
+%      \caption{Galerkin-FCT}
+%   \end{subfigure}
+%   \begin{subfigure}{0.4\textwidth}
+%      \includegraphics[width=\textwidth]{./figures/EV-FCT_rotation.png}
+%      \caption{EV-FCT}
+%   \end{subfigure}
+%\end{figure}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Results}
+%\framesubtitle{1-D Smooth Problem Convergence Results (Using FE)}
+%
+%\includegraphics[width=\textwidth]{./figures/convergence_smooth_FE.pdf}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Results}
+%\framesubtitle{1-D Non-smooth Problem Convergence Results (Using SSPRK33)}
+%
+%\includegraphics[width=\textwidth]{./figures/convergence_absorber_SSPRK33.pdf}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\section{Conclusions}
+%\begin{frame}
+%\frametitle{Conclusions}
+%
+%\begin{itemize}
+%   \item The CFEM scheme presented for solving conservation law problems is
+%   \begin{itemize}
+%      \item 2nd-order-accurate
+%      \item Positivity-preserving
+%      \item Monotone
+%      \item Discrete-maximum-principle preserving
+%      \item Valid in an arbitrary number of dimensions
+%      \item Valid for general meshes
+%   \end{itemize}
+%   \item Results were shown for the explicit, scalar, linear case. More results
+%      are in progress.
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\section{Goals}
+%\begin{frame}
+%\frametitle{Primary Goals}
+%
+%Scalar Conservation Laws:
+%\begin{itemize}
+%\item Demonstrate a conservative, positivity-preserving CFEM scheme.
+%\item Demonstrate satisfaction of a discrete maximum principle.
+%\item Demonstrate convergence to the entropy solution.
+%\item Demonstrate 2nd-order spatial convergence.
+%\end{itemize}
+%
+%Conservation Law Systems:
+%\begin{itemize}
+%\item Demonstrate a conservative CFEM scheme that converges to the entropy solution.
+%\item Demonstrate 2nd-order spatial convergence.
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Acknowledgments}
+
+\begin{itemize}
+   \item Dr. Jean Ragusa
+   \item Dr. Jean-Luc Guermond
+   \item Dr. Marco Delchini
+   \item Dr. Dmitri Kuzmin
+\end{itemize}
+\begin{itemize}
+   \item This material is based upon work supported under an Integrated University
+      Program Graduate Fellowship.
+\end{itemize}
+
+\begin{center}
+   \includegraphics[width=0.4\textwidth]{./figures/NEUP_Final_Logo_Version-09.jpg}
+\end{center}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{References}
+
+\bibliographystyle{plain}
+\bibliography{../dissertation/references}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}

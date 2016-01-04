@@ -1,0 +1,339 @@
+% required packages
+\usepackage{xcolor}
+\usepackage{stmaryrd} % jump brackets: \llbracket, \rrbracket
+
+% general
+\newcommand{\x}{\mathbf{x}}
+\newcommand{\qpoint}{\x_q}
+\newcommand{\timevalue}{t}
+\newcommand{\timestepsize}{\Delta\timevalue}
+\newcommand{\dt}{\timestepsize}
+\newcommand{\timeindex}{n}
+\newcommand{\speed}{v}
+\newcommand{\velocity}{\mathbf{\speed}}
+\newcommand{\velocityx}{u}
+\newcommand{\normalvectorletter}{n}
+\newcommand{\normalvector}{\mathbf{\normalvectorletter}}
+\newcommand{\normalx}{\normalvectorletter_x}
+\newcommand{\normaly}{\normalvectorletter_y}
+\newcommand{\ndimensions}{N_\text{dim}}
+\newcommand{\ncomponents}{N_\text{comp}}
+\newcommand{\ndofs}{N_\text{dof}}
+\newcommand{\nnodes}{N_\text{node}}
+\newcommand{\dofindex}{j}
+\newcommand{\nodeindex}{p}
+\newcommand{\componentindex}{m}
+\newcommand{\transpose}{^{\text{T}}}
+
+% schemes
+\newcommand{\low}{L}
+\newcommand{\high}{H}
+
+% solution
+\newcommand{\scalarsolution}{u}
+\newcommand{\vectorsolution}{\mathbf{\scalarsolution}}
+\newcommand{\approximate}[1]{\tilde{#1}}
+\newcommand{\approximatescalarsolution}{\approximate{\scalarsolution}}
+\newcommand{\approximatevectorsolution}{\approximate{\vectorsolution}}
+\newcommand{\solutionletter}{U}
+\newcommand{\solutionvector}{\mathbf{\solutionletter}}
+\newcommand{\lowordersolution}[1][]{
+  \ifthenelse{\equal{#1}{}}{\solutionvector^L}{\solutionvector^{L,#1}}}
+\newcommand{\highordersolution}[1][]{
+  \ifthenelse{\equal{#1}{}}{\solutionvector^H}{\solutionvector^{H,#1}}}
+
+% sets
+\newcommand{\faces}{\mathcal{F}}
+\newcommand{\quadraturepoints}{\mathcal{Q}}
+
+% domain and FEM
+\newcommand{\domain}{\mathcal{D}}
+\newcommand{\celldomain}[1][\cell]{\domain_#1}
+\newcommand{\facedomain}{\domain}
+\newcommand{\domainboundary}{\partial\domain}
+\newcommand{\cellindex}{K}
+\newcommand{\cell}{K}
+\newcommand{\celldiameter}{\Delta x}
+\newcommand{\maxcelldiameter}{\Delta x_{\text{max}}}
+\newcommand{\volume}{V}
+\newcommand{\dvolume}{d\volume}
+\newcommand{\area}{A}
+\newcommand{\darea}{d\area}
+\newcommand{\testfunction}{\varphi}
+\newcommand{\vectortestfunctionscalar}{\Phi}
+\newcommand{\vectortestfunction}{\mathbf{\vectortestfunctionscalar}}
+\newcommand{\support}{S}
+\newcommand{\maxdof}{N}
+\newcommand{\interpolant}{\Pi}
+
+% local viscous bilinear form
+\newcommand{\localvisc}{b}
+\newcommand{\localviscbilinearform}[3]{\localvisc_#1(\testfunction_#2, \testfunction_#3)}
+\newcommand{\cellvolume}{|\celldomain|}
+\newcommand{\cardinality}[1][]{\ifthenelse{\equal{#1}{}}{n_\cell}{n_#1}}
+\newcommand{\cardsystem}{\bar{n}}
+\newcommand{\indices}{\mathcal{I}}
+\newcommand{\indicesnode}{\indices^{\text{node}}_\cell}
+\newcommand{\indicescell}[1][]{\ifthenelse{\equal{#1}{}}{\indices_{\cell}}
+  {\indices_{#1}}}
+
+% entropy viscosity
+\newcommand{\entropy}{\eta}
+\newcommand{\entropyjump}{\mathcal{J}}
+\newcommand{\entropyresidual}{\mathcal{R}}
+\newcommand{\entropyresidualcoef}{c_\entropyresidual}
+\newcommand{\entropyjumpcoef}{c_\entropyjump}
+\newcommand{\entropynormalization}{\hat{\entropy}}
+
+% conservation law
+\newcommand{\consfluxletter}{f}
+\newcommand{\consfluxscalar}[1][\scalarsolution]{\mathbf{\consfluxletter}(#1)}
+\newcommand{\consfluxvector}{\mathbf{\MakeUppercase{\consfluxletter}}}
+\newcommand{\consfluxinterpolant}{\mathscr{F}}
+\newcommand{\conssource}{\mathbf{s}(\vectorsolution)}
+
+% viscosity
+\newcommand{\viscosity}{\nu}
+\newcommand{\cellviscosity}{\viscosity_\cellindex}
+\newcommand{\lowordercellviscosity}[1][]{
+  \ifthenelse{\equal{#1}{}}{\cellviscosity^L}
+  {\cellviscosity^{L,#1}}}
+\newcommand{\highordercellviscosity}[1][]{
+  \ifthenelse{\equal{#1}{}}{\cellviscosity^H}
+  {\cellviscosity^{H,#1}}}
+\newcommand{\entropycellviscosity}[1][]{
+  \ifthenelse{\equal{#1}{}}{\cellviscosity^\entropy}
+  {\cellviscosity^{\entropy,#1}}}
+
+% viscous fluxes
+\newcommand{\viscstring}{\text{visc}}
+\newcommand{\viscflux}[1]{\mathbf{\consfluxletter}^{\viscstring,#1}}
+\newcommand{\viscconsfluxvector}
+  {\mathbf{\MakeUppercase{\consfluxletter}}^\viscstring
+  (\vectorsolution,\viscosity)}
+
+% mass matrix
+\newcommand{\massmatrixletter}{M}
+\newcommand{\massmatrix}{\mathbf{\massmatrixletter}}
+\newcommand{\consistentmassmatrix}{\massmatrix^C}
+\newcommand{\consistentmassentry}{\massmatrixletter^C_{i,j}}
+\newcommand{\lumpedmassmatrix}{\massmatrix^L}
+\newcommand{\lumpedmassentry}{\massmatrixletter^L_{i,i}}
+
+% gradient matrix (for conservation law systems)
+\newcommand{\gradientmatrixletter}{c}
+\newcommand{\gradientmatrix}{\mathbf{\MakeUppercase{\gradientmatrixletter}}}
+\newcommand{\gradiententry}{\mathbf{\gradientmatrixletter}\ij}
+
+% steady-state system matrix and rhs
+\newcommand{\ssmatrixletter}{A}
+\newcommand{\ssmatrix}[1][]{
+  \ifthenelse{\equal{#1}{}}
+  {\mathbf{\ssmatrixletter}}
+  {\mathbf{\ssmatrixletter}^#1}}
+\newcommand{\loworderssmatrix}[1][]{
+  \ifthenelse{\equal{#1}{}}
+  {\ssmatrix^L}
+  {\ssmatrix^{L,#1}}}
+\newcommand{\highorderssmatrix}[1][]{
+  \ifthenelse{\equal{#1}{}}
+  {\ssmatrix^H}
+  {\ssmatrix^{H,#1}}}
+\newcommand{\ssrhsletter}{b}
+\newcommand{\ssrhs}[1][]{
+  \ifthenelse{\equal{#1}{}}
+  {\mathbf{\ssrhsletter}}
+  {\mathbf{\ssrhsletter}^#1}}
+\newcommand{\ssresletter}{r}
+\newcommand{\ssres}{\mathbf{\ssresletter}}
+
+% diffusion matrix
+\newcommand{\diffusionmatrixletter}{D}
+\newcommand{\diffusionmatrix}[1][]{
+  \ifthenelse{\equal{#1}{}}
+  {\mathbf{\diffusionmatrixletter}}
+  {\mathbf{\diffusionmatrixletter}^#1}}
+\newcommand{\loworderdiffusionmatrix}[1][]{
+  \ifthenelse{\equal{#1}{}}
+  {\diffusionmatrix^L}
+  {\diffusionmatrix^{L,#1}}}
+\newcommand{\highorderdiffusionmatrix}[1][]{
+  \ifthenelse{\equal{#1}{}}
+  {\diffusionmatrix^H}
+  {\diffusionmatrix^{H,#1}}}
+
+% Runge-Kutta
+\newcommand{\RKstagesolution}{\hat{\mathbf{\solutionletter}}}
+\newcommand{\RKintermediatesolution}{\tilde{\mathbf{\solutionletter}}}
+\newcommand{\RKoldsolutioncoef}{\alpha}
+\newcommand{\RKstagesolutioncoef}{\beta}
+\newcommand{\RKtimecoef}{c}
+\newcommand{\RKstagetime}{\hat{\timevalue}}
+\newcommand{\RKnstages}{s}
+
+% FCT
+\newcommand{\DMPbound}{W}
+\newcommand{\DMPboundsi}{\DMPbound^\pm_i}
+\newcommand{\limitedfluxbound}{Q}
+\newcommand{\limitedfluxboundsi}{\limitedfluxbound^\pm_i}
+\newcommand{\limiterletter}{L}
+\newcommand{\limitermatrix}{\mathbf{\limiterletter}}
+\newcommand{\correctionfluxletter}{p}
+\newcommand{\correctionfluxvector}{\mathbf{\correctionfluxletter}}
+\newcommand{\correctionfluxij}{\MakeUppercase{\correctionfluxletter}_{i,j}}
+\newcommand{\correctionfluxmatrix}{\mathbf{\MakeUppercase{\correctionfluxletter}}}
+\newcommand{\correctionfluxsumsi}{\MakeUppercase{\correctionfluxletter}^\pm_i}
+\newcommand{\limitedfluxsum}{\limitermatrix\cdot\correctionfluxmatrix}
+\newcommand{\limitedfluxsumi}{\sumj\limiterletter\ij
+  \MakeUppercase{\correctionfluxletter}\ij}
+
+% radiation transport
+\newcommand{\angularflux}{\psi}
+\newcommand{\speedoflight}{c}
+\newcommand{\totalcrosssection}{\Sigma_t}
+\newcommand{\reactioncoef}{\sigma}
+\newcommand{\directionvector}{\mathbf{\Omega}}
+\newcommand{\scalarsource}{q}
+\newcommand{\radiationsource}{Q}
+
+% Euler equations
+\newcommand{\density}{\rho}
+\newcommand{\totalenergy}{E}
+\newcommand{\momentum}{\mathbf{m}}
+\newcommand{\pressure}{p}
+\newcommand{\gasconstant}{\gamma}
+\newcommand{\identity}{\mathbf{I}}
+
+% shallow water equations
+\newcommand{\height}{h}
+\newcommand{\heightmomentumletter}{q}
+\newcommand{\heightmomentum}{\mathbf{\heightmomentumletter}}
+\newcommand{\heightmomentumx}{\heightmomentumletter_x}
+\newcommand{\heightmomentumy}{\heightmomentumletter_y}
+\newcommand{\heightmomentumd}{\heightmomentumletter_d}
+\newcommand{\dischargex}{\heightmomentumletter}
+\newcommand{\bathymetry}{b}
+\newcommand{\waterlevel}{w}
+\newcommand{\gravity}{g}
+\newcommand{\speedofsound}{a}
+\newcommand{\froude}{\mathrm{Fr}}
+
+% Riemann solvers
+\newcommand{\shockspeed}{S}
+\newcommand{\eigenvalue}{\lambda}
+\newcommand{\eigenvaluematrix}{\mathbf{\Lambda}}
+\newcommand{\eigenvector}{\mathbf{k}}
+\newcommand{\eigenvectormatrix}{\mathbf{K}}
+\newcommand{\jacobianx}{\mathbf{A}}
+\newcommand{\characteristicsolution}{\mathbf{w}}
+\newcommand{\wavespeed}{\eigenvalue}
+\newcommand{\maxwavespeed}{\wavespeed_{\text{max}}}
+\newcommand{\wavestrength}{\mathcal{W}}
+
+%==============================================================================
+% colors
+\colorlet{lightBlue}{blue!20!white}
+\colorlet{lightGreen}{green!20!white}
+
+% indexing
+\renewcommand{\ij}{_{i,j}}
+\newcommand{\ji}{_{j,i}}
+\newcommand{\kl}{_{k,\ell}}
+\newcommand{\lk}{_{\ell,k}}
+\newcommand{\nodei}{_{\nodeindex(i)}}
+\newcommand{\nodej}{_{\nodeindex(j)}}
+\newcommand{\nodeij}{_{\nodeindex(i),\nodeindex(j)}}
+\newcommand{\nodeji}{_{\nodeindex(j),\nodeindex(i)}}
+\newcommand{\nodequantity}[1]{\underline{#1}}
+
+% sums and integrals
+\newcommand{\sumj}{\sum\limits_j}
+\newcommand{\sumjnoti}{\sum\limits_{j\ne i}}
+\newcommand{\sumKSi}{\sum\limits_{\cell:\celldomain\subset\support_i}}
+\newcommand{\sumKSij}[1][\cell]
+  {\sum\limits_{#1:\celldomain[#1]\subset\support_{i,j}}}
+\newcommand{\sumallcells}{\sum\limits_{\cell}}
+\newcommand{\intdomain}[1]{\int\limits_\domain #1 \,\dvolume}
+\newcommand{\intboundary}[1]{\int\limits_{\domainboundary} #1 \,d\area}
+\newcommand{\intSi}{\int\limits_{\support_i}}
+\newcommand{\intSij}{\int\limits_{\support_{i,j}}}
+
+% math
+\newcommand{\ltwonorm}[1]{\left\|#1\right\|_{L^2}} % L-2 norm
+
+% BC
+\newcommand{\interior}{_{\text{in}}}
+\newcommand{\BC}{_{\text{BC}}}
+
+% common fractions
+\newcommand{\half}{\frac{1}{2}}
+\newcommand{\fourth}{\frac{1}{4}}
+
+% derivatives
+\newcommand{\dd}[2]{\frac{d #1}{d #2}}               % ordinary derivative
+\newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}} % partial derivative
+\newcommand{\ppt}[1]{\pd{#1}{t}}                     % partial d/dt
+\newcommand{\ddt}[1]{\frac{d#1}{dt}}                 % ordinary d/dt
+
+% typesetting
+\newcommand{\pr}[1]{\left(#1\right)} % parentheses
+\newcommand{\sq}[1]{\left[#1\right]} % square brackets
+\newcommand{\jumpbrackets}[1]{\left\llbracket#1\right\rrbracket} % jump brackets
+\newcommand{\tab}{\hspace*{0.5cm}}   % tab for verbatim evironments
+\newcommand{\eqp}{\,.} % equation period
+\newcommand{\eqc}{\,,} % equation comma
+
+% miscellaneous
+\newcommand{\xt}{\pr{\x,\timevalue}}
+\newcommand{\divergence}{\nabla\cdot}
+\newcommand{\unitvector}[1]{\hat{\mathbf{e}}_{#1}}
+
+% command to highlight term in equation
+\newcommand{\highlightblue}[1]{
+  \colorbox{lightBlue}{$\displaystyle#1$}}
+\newcommand{\highlightgreen}[1]{
+  \colorbox{lightGreen}{$\displaystyle#1$}}
+
+% QED symbol command
+%\newcommand{\qed}{\nobreak \ifvmode \relax \else
+%      \ifdim\lastskip<1.5em \hskip-\lastskip
+%      \hskip1.5em plus0em minus0.5em \fi \nobreak
+%      \vrule height0.75em width0.5em depth0.25em\fi}
+
+% math environments
+%\newenvironment{proof}[1][Proof]{\begin{trivlist}
+%\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+%\newenvironment{example}[1][Example]{\begin{trivlist}
+%\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+\newenvironment{remark}[1][Remark]{\begin{trivlist}
+\item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
+
+% table environment
+% #1 = caption
+% #2 = label
+% #3 = table format (columns)
+% #4 = header row
+\newenvironment{mytable}[4]
+  {\begin{table}[htb]\caption{#1\label{tab:#2}}\begin{center}
+    \begin{tabular}
+    {#3}\hline #4\\\hline}
+  {\hline\end{tabular}\end{center}\end{table}}
+
+% references commands
+\newcommand{\refsec}[1]{, \S#1}
+
+% algorithm shortcuts
+\newcommand{\objective}{\phi}
+\newcommand{\hmin}{\height_{\text{min}}}
+\newcommand{\hmax}{\height_{\text{max}}}
+\newcommand{\hlow}{\check{\height}}
+\newcommand{\hhigh}{\hat{\height}}
+\newcommand{\hrarefaction}{\tilde{\height}_*}
+\newcommand{\tol}{\epsilon}
+\newcommand{\minwavespeed}{\wavespeed_{\text{min}}}
+\newcommand{\lowwavespeedone}{\check{\wavespeed}_1}
+\newcommand{\highwavespeedone}{\hat{\wavespeed}_1}
+\newcommand{\lowwavespeedtwo}{\check{\wavespeed}_2}
+\newcommand{\highwavespeedtwo}{\hat{\wavespeed}_2}
+\newcommand{\hinterplow}{\height_d}
+\newcommand{\hinterphigh}{\height_u}
