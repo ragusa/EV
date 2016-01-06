@@ -9,7 +9,7 @@ water equations\cite{toro2009}\cite{leveque2002}:
 \begin{equation}
 \begin{gathered}
   \ppt{\vectorsolution} + \nabla\cdot\consfluxvector(\vectorsolution)
-  = \conssource \eqc
+  = \conssource(\vectorsolution) \eqc
 \\
   \vectorsolution
     = \left[\begin{array}{c}
@@ -27,7 +27,7 @@ water equations\cite{toro2009}\cite{leveque2002}:
         & \frac{\heightmomentumy^2}{\height} + \half\gravity\height^2\\
     \end{array}\right]
   \eqc\quad
-  \conssource
+  \conssource(\vectorsolution)
   = \left[\begin{array}{c}
       0\\
      -\gravity\height\pd{\bathymetry}{x}\\
@@ -47,7 +47,7 @@ written more concisely as
       + \half\gravity\height^2\identity
     \end{array}\right]
   \eqc\quad
-  \conssource
+  \conssource(\vectorsolution)
   = \left[\begin{array}{c}0\\-\gravity\height\nabla\bathymetry\end{array}
     \right] \eqc
 \]
@@ -69,7 +69,7 @@ since they are depth-integrated equations.
 %\begin{gathered}
 %  \ppt{\vectorsolution} + \nabla\cdot\consfluxvector(\vectorsolution)
 %  + \nabla\cdot\viscconsfluxvector
-%  = \conssource \eqc
+%  = \conssource(\vectorsolution) \eqc
 %\\
 %  \viscconsfluxvector
 %  \equiv \left[\begin{array}{c}

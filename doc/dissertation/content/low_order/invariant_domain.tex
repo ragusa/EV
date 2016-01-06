@@ -1,0 +1,94 @@
+In the case of \emph{systems} of conservation laws, the discrete maximum
+principle is no longer an applicable tool. Instead, the desired property
+is \emph{domain-invariance}.
+Thus the low-order scheme for conservation law systems is centered around
+this property.
+ The approach given in this section is taken
+from recent work by Guermond \cite{guermond_invariantdomain}. This section
+will begin by making definitions necessary to describe the domain-invariance
+property of the low-order scheme. Subsequent sections will define the scheme,
+including the low-order diffusion terms necessary to ensure the
+invariant domain property.
+
+It is desired that the solution process produce admissible
+(physical, entropy-satisfying) solutions; let the space of these solutions be
+$\admissibleset\subset\realspace[\ncomponents]$, where $\ncomponents$ is the
+number of components in the system. The definition of an \emph{invariant set}
+follows.
+%------------------------------------------------------------------------------
+\begin{definition}{Invariant Set}
+Consider the following Riemann initial value problem (IVP):
+\begin{equation}\label{eq:riemannivp}
+  \ppt{\vectorsolution} + \pd{}{x}(\consflux(\vectorsolution)\cdot\normalvector)
+    = 0 \eqc
+  \quad (x,t)\in\realspace\times\realspace_+ \eqc
+  \quad \vectorsolution(x,0) = \left\{\begin{array}{l}
+    \vectorsolution_L \eqc \quad x \leq 0 \eqc\\
+    \vectorsolution_R \eqc \quad x > 0 \eqc
+  \end{array}\right. \eqp
+\end{equation}
+This problem has a unique solution which is denoted by
+$\vectorsolution(\vectorsolution_L,\vectorsolution_R,\normalvector)(x,t)$.
+A set $\invariantset\subset\admissibleset\subset\realspace[\ncomponents]$ 
+is called an invariant set for the Riemann problem given by Equation
+\eqref{eq:riemannivp} if and only if
+$\forall(\vectorsolution_L,\vectorsolution_R)\in\invariantset\times\invariantset$,
+$\forall\normalvector$ on the unit sphere, and $\forall t > 0$, the average
+of the entropy solution 
+$\vectorsolution(\vectorsolution_L,\vectorsolution_R,\normalvector)$
+over the Riemann fan, i.e.,
+\begin{equation}
+  \bar{\vectorsolution} \equiv
+    \frac{1}{t(\wavespeed_{\ncomponents}^+ - \wavespeed_1^-)}
+    \int\limits_{\wavespeed_1^- t}^{\wavespeed_{\ncomponents}^+ t}
+    \vectorsolution(\vectorsolution_L,\vectorsolution_R,\normalvector)(x,t)dx \eqc
+\end{equation}
+is an element in $\invariantset$.
+\end{definition}
+%------------------------------------------------------------------------------
+Let $\discreteprocess$ be defined as the discrete solution process,
+which produces each subsequent approximate solution:
+$\vectorsolution^{n+1} = \discreteprocess(\vectorsolution^n)$.
+
+Recall the following definition for a \emph{convex set}:
+%------------------------------------------------------------------------------
+\begin{definition}{Convex Set}
+A convex set $\invariantset$ is a set such that for any two elements in
+the set, the line connecting the two remains completely in the set.
+As a consequence, any convex combination of elements in the set remains in the
+set: $\sum_i\convexcoefficient_i\convexelement_i\in\invariantset$, where
+$\convexelement_i\in\invariantset\quad\forall i$,
+$\convexcoefficient_i\geq 0\quad\forall i$, and $\sum_i\convexcoefficient_i=0$.
+\end{definition}
+%------------------------------------------------------------------------------
+Finally the definition for an \emph{invariant domain} is made.
+%------------------------------------------------------------------------------
+\begin{definition}{Invariant Domain}
+A convex invariant set $\invariantset$ is an invariant domain for the
+process $\discreteprocess$ if and only if
+$\forall\vectorsolution\in\invariantset$,
+$\discreteprocess(\vectorsolution)\in\invariantset$.
+\end{definition}
+%------------------------------------------------------------------------------
+Now all of the necessary definitions have been made. Proving the invariant
+domain property with respect to the discrete process $\discreteprocess$ takes
+the following approach:
+\begin{enumerate}
+  \item Assume the initial data $\vectorsolution^0\in\invariantset$, where
+    $\invariantset$ is a convex invariant set.
+  \item Prove that the discrete scheme $\discreteprocess$ is such that
+    $\vectorsolution^{n+1}\equiv\discreteprocess(\vectorsolution^n)$
+    can be expressed a convex combination of elements in $\invariantset$:
+    $\vectorsolution^{n+1}=\sum_i\convexcoefficient_i\convexelement_i$.
+    \begin{enumerate}
+      \item Prove $\sum_i\convexcoefficient_i=0$.
+      \item Prove $\convexcoefficient_i\geq 0\forall i$, which requires
+        conditions on the time step size.
+      \item Prove $\convexelement_i\in\invariantset\quad\forall i$.
+    \end{enumerate}
+  \item Invoke the definition of a convex set to prove that $\invariantset$
+    is an invariant domain for the process $\discreteprocess$.
+\end{enumerate}
+These proofs are given in detail in \cite{guermond_invariantdomain} and
+will not be reproduced here.
+

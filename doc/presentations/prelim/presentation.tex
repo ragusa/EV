@@ -974,26 +974,39 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \frametitle{Discretization}
 
 \begin{itemize}
-  \item The discrete system for the shallow water equations is
+  \item A general system of conservation laws, with sources, is
     \begin{equation}
-      \consistentmassmatrix\ddt{\solutionvector} = \ssres \eqc
+      \pd{\vectorsolution}{t} + \divergence\consfluxvector(\vectorsolution)
+        = \conssource(\vectorsolution) \eqp
     \end{equation}
-    where $\consistentmassmatrix$ is the mass matrix and the steady-state residual
-    $\ssres$ is given by
-\begin{multline}
-  r_i =
-  \intdomain{\nabla\testfunction_i^\height\cdot\tilde{\heightmomentum}}
-  - \intboundary{\testfunction_i^\height\tilde{\heightmomentum}\cdot\normalvector}
-  + \intdomain{\nabla\testfunction_i^{\heightmomentum}:
-    \left(\tilde{\heightmomentum}\otimes\tilde{\velocity}
-    + \frac{1}{2}\gravity\tilde{\height}^2\mathbf{I}\right)}
-  \\
-  - \intboundary{\testfunction_i^{\heightmomentum}\cdot
-    \left(\tilde{\heightmomentum}\otimes\tilde{\velocity}
-    + \frac{1}{2}\gravity \tilde{\height}^2\mathbf{I}\right)\cdot\normalvector}
-  - \intdomain{\testfunction_i^{\heightmomentum}\cdot
-    \gravity\tilde{\height}\nabla\bathymetry}
-\end{multline}
+  \item Substituting the approximate solution
+    $\approximatevectorsolution\xt =
+      \sum_j \solutionvector_j(t) \testfunction_j(\x)$,
+    where $\solutionvector_j(t)$ are vector-valued degrees of freedom,
+    and interpolating the flux function at the nodes,
+    $\consfluxvector(\approximatevectorsolution)\rightarrow
+      \sum_j\consfluxinterpolant_j(t)\testfunction_j(\x)$, and testing with
+    $\testfunction_i(\x)$ gives
+    \begin{equation}
+      \sum_j\consistentmassentry\solutionvector_j(t)
+        + \sum_j\gradiententry\cdot\consfluxinterpolant_j(t)
+        = \ssrhs_i(t) \eqc
+    \end{equation}
+    \begin{equation}
+      \gradiententry \equiv \int_{\support\ij}
+        \testfunction_i(\x)\nabla\testfunction_j(\x) d\volume \eqc
+      \quad
+      \ssrhs_i(t) \equiv \int_{\support_i}
+        \testfunction_i(\x)\conssource(\approximatevectorsolution)d\volume \eqp
+    \end{equation}
+  \item Expressing this as a linear system with forward Euler (FE) time
+    discretization,
+    \begin{equation}
+      \consistentmassmatrix\frac{\solutionvector_j^{n+1}
+        - \solutionvector_j^{n}}{\dt}
+        + \gradientmatrix\cdot\consfluxinterpolant^n
+        = \ssrhs^n \eqp
+    \end{equation}
 \end{itemize}
 
 \end{frame}

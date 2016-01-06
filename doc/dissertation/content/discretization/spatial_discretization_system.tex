@@ -10,8 +10,8 @@ example, the 2-D shallow water equations, which consist of a continuity
 equation and a conservation of momentum equation, have $\ncomponents=3$ because
 the multi-dimensional conservation of momentum equation is comprised of two
 scalar conservation of momentum equations.  There are a number of ways to view
-the basis function expansion of the approximate solution. For example, one may
-use vector-valued basis functions:
+the basis function expansion of the approximate solution.
+For example, one may use vector-valued basis functions:
 \begin{equation}
   \approximatevectorsolution\xt = \sum\limits_{j=1}^{\ndofs}
     \solutionletter_j(\timevalue)\vectortestfunction_j(\x) \eqc
@@ -27,19 +27,34 @@ are the vector-valued basis functions
 \end{equation}
 where $\componentindex(j)$ returns the component index associated with degree
 of freedom $j$, and $\nodeindex(j)$ returns the node index associated with
-degree of freedom $j$, and $\unitvector{\componentindex(j)}$ is the unit vector for dimension
-$\componentindex(j)$. The basis function $\vectortestfunction_j$ is thus
-zero for all components except the one corresponding to $j$ which uses
-the scalar component basis function
-at node $\nodeindex(j)$, $\testfunction_{\nodeindex(j)}(\x)$.
-Alternately, one may view each solution component as its own expansion:
+degree of freedom $j$, and $\unitvector{\componentindex(j)}$ is the unit vector
+for dimension $\componentindex(j)$. The basis function $\vectortestfunction_j$
+is thus zero for all components except the one corresponding to $j$ which uses
+the scalar component basis function at node $\nodeindex(j)$,
+$\testfunction_{\nodeindex(j)}(\x)$.  One may view each solution component as
+its own expansion:
 \begin{equation}
-  \approximatescalarsolution^m\xt = \sum\limits_{k=1}^{\nnodes}
-    \solutionletter_{\dofindex(k,m)}(\timevalue)\testfunction_k(\x)
+  \approximatescalarsolution^\componentindex\xt = \sum\limits_{k=1}^{\nnodes}
+    \solutionletter_{\dofindex(k,\componentindex)}(\timevalue)\testfunction_k(\x)
   \eqc
 \end{equation}
-where $\dofindex(k,m)$ is the global degree of freedom index associated
-with node $k$ and solution component $m$.
+where $\dofindex(k,\componentindex)$ is the global degree of freedom index
+associated with node $k$ and solution component $\componentindex$.
+
+\begin{remark}
+Alternatively, one may consider vector-valued degrees of freedom
+$\solutionvector_j(\timevalue)$ with scalar test functions:
+\begin{equation}
+  \approximatevectorsolution\xt = \sum\limits_{j=1}^{\nnodes}
+    \solutionvector_j(\timevalue)\testfunction_j(\x) \eqp
+\end{equation}
+This is often more convenient in describing schemes and theory; however,
+in a typical implementation, the former view is used since the solution
+vector is typically stored as a single vector of scalars instead of a
+vector of vectors. When there is doubt regarding which view is used
+in this dissertation, the view used will be stated explicitly.
+\end{remark}
+
 As opposed to the scalar conservation law case, the vector case interpolates
 the conservation law flux between nodal values:
 \begin{equation}

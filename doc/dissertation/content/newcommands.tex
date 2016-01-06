@@ -29,12 +29,12 @@
 \newcommand{\normalx}{\normalvectorletter_x}
 \newcommand{\normaly}{\normalvectorletter_y}
 \newcommand{\ndimensions}{N_\text{dim}}
-\newcommand{\ncomponents}{N_\text{comp}}
+\newcommand{\ncomponents}{m}
 \newcommand{\ndofs}{N_\text{dof}}
 \newcommand{\nnodes}{N_\text{node}}
 \newcommand{\dofindex}{j}
-\newcommand{\nodeindex}{p}
-\newcommand{\componentindex}{m}
+\newcommand{\nodeindex}{k}
+\newcommand{\componentindex}{p}
 \newcommand{\transpose}{^{\text{T}}}
 
 % schemes
@@ -104,8 +104,8 @@
 \newcommand{\consfluxsystem}{\mathbf{\MakeUppercase{\consfluxletter}}}
 \newcommand{\consfluxscalar}[1][\scalarsolution]{\mathbf{\consfluxletter}(#1)}
 \newcommand{\consfluxvector}{\mathbf{\MakeUppercase{\consfluxletter}}}
-\newcommand{\consfluxinterpolant}{\mathscr{F}}
-\newcommand{\conssource}{\mathbf{s}(\vectorsolution)}
+\newcommand{\consfluxinterpolant}{\mathrm{F}}
+\newcommand{\conssource}{\mathbf{s}}
 
 % viscosity
 \newcommand{\viscosity}{\nu}
@@ -365,4 +365,15 @@
 
 % highlighting
 \newcommand{\hlorange}[1]{\textcolor{myorangeheavy}{#1}}
+
+% invariant domains
+\newcommand{\invariantset}{A}
+\newcommand{\admissibleset}{\mathcal{A}}
+\newcommand{\discreteprocess}{S}
+\newcommand{\convexcoefficient}{a}
+\newcommand{\convexelement}{\mathbf{b}}
+
+% spaces
+\newcommand{\realspace}[1][]{
+  \ifthenelse{\equal{#1}{}}{\mathbb{R}}{\mathbb{R}^{#1}}}
 

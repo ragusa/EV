@@ -3,7 +3,7 @@ water equations:
 \begin{equation}
 \begin{gathered}
   \ppt{\vectorsolution} + \nabla\cdot\consfluxvector
-  = \conssource \eqc
+  = \conssource(\vectorsolution) \eqc
 \\
   \vectorsolution
     = \left[\begin{array}{c}\height\\\heightmomentum\end{array}\right]
@@ -14,7 +14,7 @@ water equations:
       + \half\gravity\height^2\identity
     \end{array}\right]
   \eqc\quad
-  \conssource
+  \conssource(\vectorsolution)
   = \left[\begin{array}{c}0\\-\gravity\height\nabla\bathymetry\end{array}
     \right] \eqp
 \end{gathered}

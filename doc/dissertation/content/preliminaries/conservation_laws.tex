@@ -9,13 +9,13 @@ functions. When a conservation law does not fit this model equation,
 a source term must be added:
 \begin{equation}\label{eq:conservation_law_system_source}
   \ppt{\vectorsolution} + \nabla\cdot\consfluxvector(\vectorsolution)
-  = \conssource \eqp
+  = \conssource(\vectorsolution) \eqp
 \end{equation}
 Table \ref{tab:cons_law_systems} gives some examples of conservation law
 systems.
 \begin{mytable}{Conservation Law Systems}{cons_law_systems}{l c c c}
 {\emph{System} & $\vectorsolution$ & $\consfluxvector(\vectorsolution)$
-  & $\conssource$}
+  & $\conssource(\vectorsolution)$}
 \\
 Burgers equation & $\scalarsolution$ & $\half\scalarsolution^2$ & 0\\ [1ex]\\
 Euler equations &
