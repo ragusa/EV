@@ -1,5 +1,4 @@
-\documentclass{beamer}
-\useoutertheme{infolines}
+\documentclass{beamer} \useoutertheme{infolines}
 \usefonttheme{default}
 
 \usepackage{xcolor}     % for defining colors
@@ -9,7 +8,7 @@
 \usepackage{listings}   % for colored verbatim
 \usepackage{listings}   % for colored verbatim
 \usepackage{ifthen}     % for conditionals
-\input{newcommands}     % macros file
+\input{../../dissertation/content/newcommands} % macros file
 
 % create toggle for print-friendly mode (no colored heading and sidebar)
 \newtoggle{PRINTMODE}
@@ -48,9 +47,12 @@
 \setbeamercolor{itemize item}{fg=secondarycolorheavy}
 \setbeamercolor{itemize subitem}{fg=secondarycolormedium}
 \setbeamercolor{itemize subsubitem}{fg=secondarycolorlight}
-\setbeamercolor{author in head/foot}{fg=secondarytextcolor,bg=secondarycolorlight}
-\setbeamercolor{title in head/foot}{fg=secondarytextcolor,bg=secondarycolormedium}
-\setbeamercolor{date in head/foot}{fg=white,bg=secondarycolorheavy}
+%\setbeamercolor{author in head/foot}{fg=secondarytextcolor,bg=secondarycolorlight}
+%\setbeamercolor{title in head/foot}{fg=secondarytextcolor,bg=secondarycolormedium}
+%\setbeamercolor{date in head/foot}{fg=white,bg=secondarycolorheavy}
+\setbeamercolor{author in head/foot}{fg=white,bg=secondarycolormedium}
+\setbeamercolor{title in head/foot}{fg=white,bg=secondarycolormedium}
+\setbeamercolor{date in head/foot}{fg=white,bg=secondarycolormedium}
 
 % no header
 \setbeamertemplate{headline}{}
@@ -95,58 +97,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
-\subsection{Physics Models}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Physics}
-\framesubtitle{A Scalar Conservation Law Model}
-
-\begin{itemize}
-  \item This research first considers the following conservation law model:
-    \begin{equation}
-      \pd{u}{t} + \nabla\cdot\mathbf{\consfluxletter}(u\xt)
-      + \sigma(\x)u\xt = q\xt \eqc
-    \end{equation}
-    where $\sigma(\x)\ge 0$ and $q\xt\ge 0$.
-  \item Some examples of applicability include
-    \begin{itemize}
-      \item \textcolor{secondarycolorheavy}{Linear advection}:
-        advection of some quantity, such as a tracer
-      \item \textcolor{secondarycolorheavy}{Traffic flow}:
-        vehicle density on a one-lane highway
-      \item \textcolor{secondarycolorheavy}{Inviscid Burgers' equation}:
-        inviscid fluid flow model capturing some key features of gas dynamics
-    \end{itemize}
-  \item This model can be applied to radiation transport using source iteration:
-    $q\xt$ would include scattering source from the previous solution iterate.
-\end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Physics}
-\framesubtitle{The Shallow Water Equations}
-
-\begin{itemize}
-  \item This research also considers the shallow water equations system:
-    \begin{equation}
-      \ppt{}\left[\begin{array}{c}\height\\\heightmomentum\end{array}\right]
-        + \divergence\left[\begin{array}{c}\heightmomentum\\
-          \heightmomentum\otimes\velocity + \half\gravity\height^2 I
-          \end{array}\right]
-        = \left[\begin{array}{c}0\\-\gravity\height\nabla\bathymetry\end{array}
-    \right] \eqp
-    \end{equation}
-  \item Some important simulations include
-    \begin{itemize}
-      \item \textcolor{secondarycolorheavy}{dam break problems}: for example, what wave
-        structures will develop in a dam-break accident?
-      \item \textcolor{secondarycolorheavy}{tsunami problems}: for example, what height
-        of sea-wall is necessary to stop a tsunami of a certain height?
-    \end{itemize}
-\end{itemize}
-
-\end{frame}
+\subsection{Motivation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Motivation}
@@ -156,9 +107,10 @@ Transport Algorithm to Hyperbolic Conservation Laws}
    \item Weak solutions to conservation law problems using standard CFEM
       are not unique and thus are prone to unphysical oscillations:
 \end{itemize}
-   \begin{center}
-      \includegraphics[height=0.6\textheight]{./figures/advection_Galerkin.pdf}
-   \end{center}
+
+\begin{center}
+\includegraphics[height=0.6\textheight]{./figures/advection_Galerkin.pdf}
+\end{center}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -170,145 +122,47 @@ Transport Algorithm to Hyperbolic Conservation Laws}
     been extensively addressed in other spatial discretizations (finite difference,
     finite volume) via slope limiters, flux limiters, etc.
   \item Recently, efforts addressing this issue for the continuous finite
-    element method (CFEM) have begun
+    element method (CFEM) have begun.
   \begin{itemize}
-    \item CFEM is attractive due to the ability to model complex domains
+    \item CFEM is attractive due to the ability to model complex domains.
   \end{itemize}
-  \item 
+  \item These oscillations give rise to unstable algorithms, where they grow
+    without bound.
+  \item Negativities can wreak havoc in a numerical algorithm and often
+    cause simulations to terminate prematurely.
 \end{itemize}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Objectives}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Objectives}
 
 \begin{itemize}
    \item The objectives of this research are the following:
    \begin{itemize}
-      \item \textbf{Accurately solve conservation law problems} using the
-         continuous finite element method (CFEM).
+      \item \textcolor{secondarycolorheavy}{Accurately solve conservation law
+        problems} using the continuous finite element method (CFEM).
       \begin{itemize}
-         \item Scheme to be presented is 2nd order-accurate in space (for smooth
-            problems).
+        \item 2nd-order-accuracy in space (for smooth problems) is sought.
       \end{itemize}
-      \item \textbf{Prevent spurious oscillations}.
+      \item \textcolor{secondarycolorheavy}{Prevent spurious oscillations}.
       \begin{itemize}
-	 \item Scheme to be presented is not proven to be completely immune to any
-            spurious oscillations but shows good results in practice.
+	\item Complete immunity to spurious oscillations remains a dream for
+          high-order schemes, but quality results are possible in practice.
       \end{itemize}
-      \item \textbf{Prevent negativities} for physically non-negative quantities.
-      \begin{itemize}
-         \item Scheme to be presented is guaranteed to be positivity-preserving.
-      \end{itemize}
+      \item \textcolor{secondarycolorheavy}{Prevent negativities}
+        for physically non-negative quantities.
    \end{itemize}
 \end{itemize}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Progress}
-
-Scalar Conservation Laws:
-\begin{itemize}
-\item[] \checked low-order monotone, positivity-preserving scheme
-\item[] \checked high-order entropy-based scheme
-\item[] \checked high-order DMP-satisfying, positivity-preserving FCT scheme
-\end{itemize}
-
-Systems of Conservation Laws:
-\begin{itemize}
-\item[] \checked low-order monotone, positivity-preserving scheme
-\item[] \checked high-order entropy-based scheme
-\item[] \unchecked high-order LED, positivity-preserving FCT scheme
-\end{itemize}
-
-\end{frame}
+\subsection{FCT Introduction}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Outline}
 \begin{frame}
-\frametitle{Outline}
-
-\begin{itemize}
-   \item Presentation of scheme for simple case: linear scalar transport
-      conservation law using explicit time discretizations
-   \begin{itemize}
-      \item Problem formulation
-      \item Monotone low-order scheme
-      \item High-order entropy viscosity scheme
-      \item FCT scheme
-   \end{itemize}
-   \item Extension of scheme to more complex cases:
-   \begin{itemize}
-      \item Implicit time discretizations
-      \item nonlinear scalar conservation laws
-   \end{itemize}
-   \item Implementation
-   \item Results for linear conservation law problems
-   \item Conclusions
-\end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Methodology}
-\subsection{Problem Formulation}
-\begin{frame}
-\frametitle{Problem Formulation}
-
-\begin{itemize}
-   \item Scalar linear conservation law model:
-   \begin{align}
-      &\pd{u}{t} + \nabla\cdot(\velocity u\xt)
-      + \sigma(\x)u\xt = q\xt\\
-      &\sigma(\x)\ge 0,\qquad q\xt\ge 0\nonumber
-   \end{align}
-   \item Define problem by providing initial conditions and some boundary
-      condition, such as Dirichlet:
-   \begin{equation}
-      u(\x,0) = u^0(\x) \quad \forall \x\in \mathcal{D}
-   \end{equation}
-   \begin{equation}
-      u\xt = u^{inc}(\x) \quad \forall \x\in \partial \mathcal{D}^{inc}
-   \end{equation}
-   \item CFEM solution:
-   \begin{equation}
-      u_h\xt = \sum\limits_{j=1}^N U_j(t) \varphi_j(\x),
-      \quad \varphi_j(\x)\in P^1_h
-   \end{equation}
-\end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Time Discretization}
-\begin{frame}
-\frametitle{Time Discretization}
-
-\begin{itemize}
-   \item Simplest time discretization is forward Euler (FE), which gives the
-      discrete system
-   \begin{equation}
-      \consistentmassmatrix\frac{\solutionvector^{n+1}-\solutionvector^n}
-        {\dt} + \ssmatrix\solutionvector^n = \ssrhs^n
-   \end{equation}
-   \begin{equation}
-      M\ij^C \equiv \int\limits_{\support\ij}\varphi_i(\x) \varphi_j(\x) d\x
-   \end{equation}
-   \begin{equation}
-      A\ij \equiv \int\limits_{\support\ij}\left(
-      \mathbf{v}\cdot\nabla\varphi_j(\x) +
-		\sigma(\x)\varphi_j(\x)\right)\varphi_i(\x) d\x
-   \end{equation}
-   \begin{equation}
-      b_i^n \equiv \int\limits_{S_i} q(\x,t^n)\varphi_i(\x) d\x
-   \end{equation}
-\end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{FCT Scheme Overview}
-\begin{frame}
-\frametitle{Flux Corrected Transport (FCT) Scheme}
-\framesubtitle{Introduction}
+\frametitle{Introduction to Flux-Corrected Transport (FCT)}
 
 \begin{itemize}
    \item Initially developed in 1973 for finite difference discretizations of
@@ -325,7 +179,123 @@ Systems of Conservation Laws:
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Outline}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Outline}
+
+\begin{itemize}
+   \item The scalar case
+   \begin{itemize}
+      \item Problem formulation
+      \item Low-order, DMP-satisfying, positivity-preserving scheme
+      \item High-order, entropy-based scheme
+      \item High-order, DMP-satisfying, positivity-preserving FCT scheme
+      \item Scalar results
+   \end{itemize}
+   \item The systems case (using the shallow water equations)
+   \begin{itemize}
+      \item Problem formulation
+      \item Low-order, domain-invariant, positivity-preserving scheme
+      \item High-order, entropy-based scheme
+      \item High-order, LED, positivity-preserving FCT scheme
+      \item Preliminary systems results
+   \end{itemize}
+   \item Conclusions
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Scalar Introduction}
+\subsection{Model}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Scalar Conservation Law Model}
+
+\begin{itemize}
+  \item This research first considers the following conservation law model:
+    \begin{equation}
+      \pd{\scalarsolution}{t} + \nabla\cdot\consflux(\scalarsolution)
+      + \reactioncoef(\x)\scalarsolution\xt = \scalarsource\xt \eqc
+    \end{equation}
+    where $\reactioncoef(\x)\ge 0$ and $\scalarsource\xt\ge 0$.
+  \item Some examples of applicability include
+    \begin{itemize}
+      \item \textcolor{secondarycolorheavy}{Linear advection}:
+        advection of some quantity, such as a tracer
+      \item \textcolor{secondarycolorheavy}{Traffic flow}:
+        vehicle density on a one-lane highway
+      \item \textcolor{secondarycolorheavy}{Inviscid Burgers' equation}:
+        inviscid fluid flow model capturing some key features of gas dynamics
+    \end{itemize}
+  \item This model can be applied to radiation transport using source iteration:
+    $\scalarsource\xt$ would include scattering source from the previous solution iterate.
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Scalar Methodology}
+\subsection{Problem Formulation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Problem Formulation}
+
+\begin{itemize}
+  \item Consider a linear conservation law model
+    ($\consflux(\scalarsolution)=\velocity\scalarsolution$):
+    \begin{equation}
+      \pd{\scalarsolution}{t} + \nabla\cdot(\velocity\scalarsolution)
+      + \reactioncoef(\x)\scalarsolution\xt = \scalarsource\xt \eqc
+    \end{equation}
+    where $\reactioncoef(\x)\ge 0$ and $\scalarsource\xt\ge 0$.
+  \item Complete problem by providing initial conditions and some boundary
+    condition, such as Dirichlet:
+   \begin{equation}
+      u(\x,0) = u^0(\x) \quad \forall \x\in \domain
+   \end{equation}
+   \begin{equation}
+      u\xt = u^{\text{inc}}(\x) \quad \forall \x\in \incomingdomainboundary
+   \end{equation}
+   \item CFEM solution:
+   \begin{equation}
+      \approximatescalarsolution\xt = \sum\limits_{j=1}^N U_j(t) \testfunction_j(\x) \eqc
+      \quad \testfunction_j(\x)\in P^1_h
+   \end{equation}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Discretization}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Discretization}
+
+\begin{itemize}
+   \item The simplest time discretization is forward Euler (FE), which gives the
+      discrete system
+   \begin{equation}
+      \consistentmassmatrix\frac{\solutionvector^{n+1}-\solutionvector^n}
+        {\dt} + \ssmatrix\solutionvector^n = \ssrhs^n \eqc
+   \end{equation}
+   where
+   \begin{equation}
+     M\ij^C \equiv \int\limits_{\support\ij}
+       \testfunction_i(\x) \testfunction_j(\x) d\x \eqc
+   \end{equation}
+   \begin{equation}
+     A\ij \equiv \int\limits_{\support\ij}\left(
+       \mathbf{v}\cdot\nabla\testfunction_j(\x) +
+		\reactioncoef(\x)\testfunction_j(\x)\right)\testfunction_i(\x) d\x \eqc
+   \end{equation}
+   \begin{equation}
+      b_i^n \equiv \int\limits_{S_i} q(\x,t^n)\testfunction_i(\x) d\x \eqp
+   \end{equation}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Low-Order Scheme}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Low-Order Scheme}
 \framesubtitle{Definition}
@@ -338,16 +308,17 @@ Systems of Conservation Laws:
       \item Adds a low-order diffusion operator:
         $\ssmatrix \rightarrow \ssmatrix+\loworderdiffusionmatrix$.
    \end{itemize}
-   \item This gives the following, where $\solutionvector^{L,n+1}$ is the low-order solution:
+   \item This gives the following, where $\solutionvector^{L,n+1}$ is the
+     low-order solution:
    \begin{equation}
       \lumpedmassmatrix\frac{\solutionvector^{L,n+1}-\solutionvector^n}{\dt}
-        + (\ssmatrix + \diffusionmatrix^L)\solutionvector^n = \ssrhs^n
+        + (\ssmatrix + \diffusionmatrix^L)\solutionvector^n = \ssrhs^n \eqp
    \end{equation}
    \item The diffusion matrix $\diffusionmatrix^L$ is assembled elementwise,
       where $K$ denotes an element, using a local bilinear form $b_K$ and a
       local low-order viscosity $\nu_K^L$:
    \begin{equation}
-      D\ij^L = \sum\limits_{K\subset S\ij}\nu_K^L b_K(\varphi_j,\varphi_i)
+      D\ij^L = \sumKSij \nu_K^L b_K(\testfunction_j,\testfunction_i) \eqp
    \end{equation}
 \end{itemize}
 
@@ -363,18 +334,18 @@ Systems of Conservation Laws:
       corresponding to degrees of freedom with nonempty support on $K$, and
       $n_K$ is the cardinality of this set.
    \begin{equation}
-      b_K(\varphi_j, \varphi_i) \equiv \left\{\begin{array}{l l}
-         -\frac{1}{n_K - 1}|K| & i\ne j, \quad i,j\in \mathcal{I}(K)\\
-         |K|                   & i = j,  \quad i,j\in \mathcal{I}(K)\\
-         0                     & i\notin\mathcal{I}(K)\,|\, j\notin\mathcal{I}(K)
-      \end{array}\right.
+      b_K(\testfunction_j, \testfunction_i) \equiv \left\{\begin{array}{l l}
+         -\frac{1}{n_K - 1}\cellvolume & i\ne j, \quad i,j\in \mathcal{I}(K)\\
+         \cellvolume                   & i = j,  \quad i,j\in \mathcal{I}(K)\\
+         0                & i\notin\mathcal{I}(K)\,|\, j\notin\mathcal{I}(K)
+      \end{array}\right. \eqp
    \end{equation}
-   \item Some properties that result from this definition:
+   \item Some properties that result from this definition are
    \begin{equation}
-      \sum\limits_j b_K(\varphi_j, \varphi_i) = 0
+      \sum\limits_j b_K(\testfunction_j, \testfunction_i) = 0 \eqc
    \end{equation}
    \begin{equation}
-      b_K(\varphi_i, \varphi_i) > 0
+      b_K(\testfunction_i, \testfunction_i) > 0 \eqp
    \end{equation}
 \end{itemize}
 
@@ -387,13 +358,15 @@ Systems of Conservation Laws:
 \begin{itemize}
    \item The low-order viscosity is defined as
    \begin{equation}
-      \nu_K^L \equiv \max\limits_{i\ne j\in \mathcal{I}(K)}\frac{\max(0,A\ij)}
-      {-\sum\limits_{T\subset S\ij} b_T(\varphi_j, \varphi_i)}
+     \lowordercellviscosity[\timeindex] \equiv \max\limits_{i\ne j\in\indicescell}
+     \frac{\max(0,\ssmatrixletter\ij^\timeindex)}
+     {-\mkern-20mu\sumKSij[T]\mkern-20mu\localviscbilinearform{T}{j}{i}}
+     \eqp
    \end{equation}
    \item This definition is designed to be the smallest number such that the
       following is guaranteed:
    \begin{equation}
-      D^L\ij \leq -A\ij, \quad j\ne i
+      D^L\ij \leq -A\ij, \quad j\ne i \eqp
    \end{equation}
    \item This is used to guarantee that the low-order steady-state matrix
       $\ssmatrix^L=\ssmatrix+\diffusionmatrix^L$ is an M-matrix, i.e., a \emph{monotone} matrix:
@@ -409,18 +382,18 @@ Systems of Conservation Laws:
 \begin{itemize}
    \item In addition to guaranteeing monotonicity and positivity, the low-order
       viscous terms guarantee the following discrete maximum principle (DMP),
-      where $U^n_{\substack{\max\\\min},i} =
-      \substack{\max\\\min\limits_{j\in\mathcal{I}(S_i)}}U^n_j$:
+      where $U^n_{\max,i} = \max\limits_{j\in\mathcal{I}(S_i)}U^n_j$,
+      $U^n_{\min,i} = \min\limits_{j\in\mathcal{I}(S_i)}U^n_j$:
       \begin{equation}
          W_i^-\leq
          U_i^{L,n+1}\leq
-         W_i^+\qquad\forall i
+         W_i^+\qquad\forall i \eqc
       \end{equation}
       \begin{equation}
          W_i^\pm \equiv U_{\substack{\max\\\min},i}^n\left(
          1-\frac{\dt}{M_{i,i}^L}
          \sum\limits_j A\ij^L\right)
-         + \frac{\Delta t}{M_{i,i}^L}b_i^n
+         + \frac{\Delta t}{M_{i,i}^L}b_i^n \eqp
       \end{equation}
    \item For example, when there is no reaction term or source term, this reduces
       to the following DMP, which implies the scheme is local extremum
@@ -428,7 +401,7 @@ Systems of Conservation Laws:
       \begin{equation}
          U^n_{\min,i}\leq
          U_i^{L,n+1}\leq
-         U^n_{\max,i}\qquad\forall i
+         U^n_{\max,i}\qquad\forall i \eqp
       \end{equation}
 \end{itemize}
 
@@ -443,6 +416,7 @@ Systems of Conservation Laws:
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{High-Order Scheme}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Entropy Viscosity Scheme}
 \framesubtitle{Introduction}
@@ -479,22 +453,22 @@ Systems of Conservation Laws:
    \begin{equation}
       R(u) = \pd{\eta}{t}
       + \frac{d\eta}{du}\left(\nabla\cdot(\mathbf{v}u)
-      + \sigma u 
-      - q \right)
+      + \reactioncoef u 
+      - q \right) \eqp
    \end{equation}
    \item Viscosity is set to be proportional to a linear combination
       of the local entropy residual $R_K(u) = \left\|R(u)\right\|_{L^\infty(K)}$
       and entropy jumps $J_F(u)$ across the faces:
       \begin{equation}
          \nu^{\eta}_K \propto c_R R_K(u_h)
-         + c_J\max\limits_{F\in\partial K}J_F(u_h)
+         + c_J\max\limits_{F\in\partial K}J_F(u_h) \eqp
       \end{equation}
    \item In practice, the entropy viscosity becomes the following, where the
       denominator is just a normalization constant:
       \begin{equation}
          \nu^{\eta}_K = \frac{c_R R_K(u_h)
          + c_J\max\limits_{F\in\partial K}J_F(u_h)}
-         {\|\eta(u_h)-\bar{\eta}(u_h)\|_{L^\infty(\mathcal{D})}}
+         {\|\eta(u_h)-\bar{\eta}(u_h)\|_{L^\infty(\mathcal{D})}} \eqp
       \end{equation}
 \end{itemize}
    
@@ -508,7 +482,7 @@ Systems of Conservation Laws:
    \item The high-order viscosity does not need to be any greater than the
       low-order viscosity:
       \begin{equation}
-         \nu^{H,n}_K = \min(\nu^{L}_K,\nu^{\eta,n}_K)
+         \nu^{H,n}_K = \min(\nu^{L}_K,\nu^{\eta,n}_K) \eqp
       \end{equation}
    \item For the high-order scheme, the mass matrix is not modified; the
       only change is the addition of the high-order diffusion operator
@@ -517,13 +491,13 @@ Systems of Conservation Laws:
       \begin{equation}
         \consistentmassmatrix\frac{\solutionvector^{H,n+1}
           -\solutionvector^n}{\dt} + (\ssmatrix + \diffusionmatrix^{H,n})
-          \solutionvector^n = \ssrhs^n
+          \solutionvector^n = \ssrhs^n \eqp
       \end{equation}
    \item The high-order diffusion matrix is computed just as the low-order
       counterpart, except that $\nu^{H,n}_K$ is used instead of $\nu^{L}_K$:
       \begin{equation}
          D\ij^{H,n} = \sum\limits_{K\subset S\ij}\nu_K^{H,n}
-            b_K(\varphi_j,\varphi_i)
+            b_K(\testfunction_j,\testfunction_i) \eqp
       \end{equation}
 \end{itemize}
 
@@ -538,6 +512,7 @@ Systems of Conservation Laws:
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{FCT Scheme}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Flux Corrected Transport (FCT) Scheme}
 \framesubtitle{Correction Flux Definition}
@@ -549,7 +524,7 @@ Systems of Conservation Laws:
       \begin{equation}
         \lumpedmassmatrix\frac{\solutionvector^{H,n+1}-\solutionvector^n}{\dt}
           + (\ssmatrix+\diffusionmatrix^L)\solutionvector^n = \ssrhs^n
-          + \correctionfluxvector
+          + \correctionfluxvector \eqp
       \end{equation}
    \item Subtracting the high-order scheme equation from this gives the
       definition of $\correctionfluxvector$:
@@ -557,15 +532,16 @@ Systems of Conservation Laws:
         \correctionfluxvector \equiv
           -(\consistentmassmatrix-\lumpedmassmatrix)
           \frac{\solutionvector^{H,n+1}-\solutionvector^n}{\dt}
-          + (\diffusionmatrix^L-\diffusionmatrix^{H,n})\solutionvector^n
+          + (\diffusionmatrix^L-\diffusionmatrix^{H,n})\solutionvector^n \eqp
       \end{equation}
    \item Decomposing $\correctionfluxvector$ into internodal fluxes
-      $\correctionfluxij$ such that $\correctionfluxletter_i = \sum_j \correctionfluxij$, where $\Delta_{j,i}[\mathbf{y}]$
+      $\correctionfluxij$ such that $\sum_j \correctionfluxij =
+      \correctionfluxletter_i$, where $\Delta_{j,i}[\mathbf{y}]$
       denotes $y_j - y_i$:
    \begin{equation}
      \correctionfluxij = -M\ij^C\Delta_{j,i}\left[
        \frac{\solutionvector^{H,n+1}-\solutionvector^n}{\Delta t}\right]
-       + (D\ij^L-D\ij^{H,n})\Delta_{j,i}[\solutionvector^n]
+       + (D\ij^L-D\ij^{H,n})\Delta_{j,i}[\solutionvector^n] \eqp
    \end{equation}
 \end{itemize}
 
@@ -583,14 +559,14 @@ Systems of Conservation Laws:
       \begin{equation}
          W_i^-\leq
          U_i^{n+1}\leq
-         W_i^+\qquad\forall i
+         W_i^+\qquad\forall i \eqp
       \end{equation}
    \item This is achieved by applying a limiting coefficient $L\ij$ to each
       internodal flux $\correctionfluxij$:
       \begin{equation}
         \lumpedmassmatrix\frac{\solutionvector^{n+1}-\solutionvector^n}{\dt}
           + \ssmatrix^L\solutionvector^n = \ssrhs
-          + \limitermatrix\cdot\correctionfluxmatrix
+          + \limitermatrix\cdot\correctionfluxmatrix \eqp
       \end{equation}
    \item Each limiting coefficient is between zero and unity: $0\leq L\ij\leq 1$.
    \begin{itemize}
@@ -608,18 +584,18 @@ Systems of Conservation Laws:
 \begin{itemize}
    \item The enforced bounds can be rearranged to bound the limited flux sums:
       \begin{equation}
-         Q^-_i \leq \sum\limits_j L\ij \correctionfluxij \leq Q^+_i
+         Q^-_i \leq \sum\limits_j L\ij \correctionfluxij \leq Q^+_i \eqc
       \end{equation}
       where $Q_i^\pm$ has the following definition:
       \begin{equation}
          Q_i^\pm \equiv M_{i,i}^L\frac{W_i^\pm-U_i^n}{\Delta t}
-         + \sum\limits_j A_{i,j}^L U_j^n - b_i
+         + \sum\limits_j A_{i,j}^L U_j^n - b_i \eqp
       \end{equation}
    \item The classic Zalesak limiting strategy starts by separating the
       negative and positive fluxes:
       \begin{equation}
          Q^-_i \leq \sum\limits_{j:\correctionfluxij<0} L\ij \correctionfluxij +
-            \sum\limits_{j:\correctionfluxij>0} L\ij \correctionfluxij\leq Q^+_i
+            \sum\limits_{j:\correctionfluxij>0} L\ij \correctionfluxij\leq Q^+_i \eqp
       \end{equation}
       The positive fluxes risk violating $Q_i^+$, and the negative fluxes risk
       violating $Q_i^-$.
@@ -637,15 +613,19 @@ Systems of Conservation Laws:
       $L^+_i$ and similarly, negative fluxes have the same limiting coefficient
       $L^-_i$:
       \begin{equation}
-         Q^-_i \leq L^-_i \correctionfluxletter^-_i + L^+_i \correctionfluxletter^+_i \leq Q^+_i
+        Q^-_i \leq L^-_i \correctionfluxletter^-_i
+          + L^+_i \correctionfluxletter^+_i \leq Q^+_i \eqp
       \end{equation}
       where
       \begin{equation}
-         \correctionfluxletter_i^- \equiv \sum\limits_{j:\correctionfluxij<0} \correctionfluxij \qquad
-         \correctionfluxletter_i^+ \equiv \sum\limits_{j:\correctionfluxij>0} \correctionfluxij
+        \correctionfluxletter_i^- \equiv \sum\limits_{j:\correctionfluxij<0}
+          \correctionfluxij \eqc \qquad
+        \correctionfluxletter_i^+ \equiv \sum\limits_{j:\correctionfluxij>0}
+          \correctionfluxij \eqp
       \end{equation}
    \item As a conservative bound for $L^+_i$, contributions from negative fluxes
-      are ignored (pretending $L_i^-=0$), giving $L^+_i \leq \frac{Q_i^+}{\correctionfluxletter_i^+}$
+      are ignored (pretending $L_i^-=0$), giving
+      $L^+_i \leq \frac{Q_i^+}{\correctionfluxletter_i^+}$
       and similarly for $L^-_i$ and the lower bound.
 \end{itemize}
 
@@ -660,18 +640,20 @@ Systems of Conservation Laws:
       \begin{equation}
          L_i^\pm \equiv\left\{
             \begin{array}{l l}
-               1                                          & \correctionfluxletter_i^\pm = 0\\
-               \min\left(1,\frac{Q_i^\pm}{\correctionfluxletter_i^\pm}\right) & \correctionfluxletter_i^\pm \ne 0
+               1 & \correctionfluxletter_i^\pm = 0\\
+               \min\left(1,\frac{Q_i^\pm}{\correctionfluxletter_i^\pm}\right) &
+                 \correctionfluxletter_i^\pm \ne 0
             \end{array}
-            \right.
+            \right. \eqp
       \end{equation}
    \item However, to limit fluxes conservatively, limited correction fluxes must
       be equal and opposite:
       \begin{equation}
-         L\ij \correctionfluxij = -L_{j,i} \MakeUppercase{\correctionfluxletter}_{j,i}
+        L\ij \correctionfluxij = -L_{j,i}
+          \MakeUppercase{\correctionfluxletter}_{j,i} \eqp
       \end{equation}
-      Since $\correctionfluxij$ happens to be skew symmetric (
-      $\MakeUppercase{\correctionfluxletter}_{j,i}=-\correctionfluxij$) due to the
+      Since $\correctionfluxij$ happens to be skew symmetric
+      ($\MakeUppercase{\correctionfluxletter}_{j,i}=-\correctionfluxij$) due to the
       chosen flux decomposition, the limiting coefficients must be symmetric:
       $L_{j,i} = L\ij$.
 \end{itemize}
@@ -693,7 +675,7 @@ Systems of Conservation Laws:
                \min(L_i^+,L_j^-) & \correctionfluxij \geq 0\\
                \min(L_i^-,L_j^+) & \correctionfluxij < 0
             \end{array}
-            \right.
+            \right. \eqp
       \end{equation}
 \end{itemize}
 
@@ -707,166 +689,92 @@ Systems of Conservation Laws:
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Extensions}
-\subsection{Implicit}
-\begin{frame}
-\frametitle{Implicit Time Discretization}
-\framesubtitle{}
-
-\begin{itemize}
-   \item For the implicit case, for instance a general $\theta$ scheme, the
-      discrete system is the following:
-      \begin{equation}
-        \consistentmassmatrix\frac{\solutionvector^{n+1}-\solutionvector^n}{\dt}
-        + (1-\theta)\ssmatrix\solutionvector^n + \theta\ssmatrix\solutionvector^{n+1}
-        = (1-\theta)\ssrhs^n + \theta\ssrhs^{n+1}
-      \end{equation}
-   \item For this discretization, the corresponding low-order scheme
-      has the following DMP, which in general is not explicit:
-      \begin{multline}
-         W_i^\pm \equiv \frac{1}{1+\frac{\theta\Delta t}{M_{i,i}^L}A_{i,i}^L}
-           \left[\left(1 - \frac{(1-\theta)
-           \Delta t}{M_{i,i}^L}\sum\limits_j A_{i,j}^L\right)
-           U_{\substack{\max\\\min},i}^n\right.\\\left.
-          -\frac{\theta\Delta t}{M_{i,i}^L}\sum\limits_{j\ne i}A_{i,j}^L
-           U_{\substack{\max\\\min},i}^{L,n+1}
-          +\frac{\Delta t}{M_{i,i}^L}\left((1-\theta)b_i^n
-          + \theta b_i^{n+1}\right)\right]
-      \end{multline}
-\end{itemize}
-
-\end{frame}
+%\section{Extensions}
+%\subsection{Implicit}
+%\begin{frame}
+%\frametitle{Implicit Time Discretization}
+%\framesubtitle{}
+%
+%\begin{itemize}
+%   \item For the implicit case, for instance a general $\theta$ scheme, the
+%      discrete system is the following:
+%      \begin{equation}
+%        \consistentmassmatrix\frac{\solutionvector^{n+1}-\solutionvector^n}{\dt}
+%        + (1-\theta)\ssmatrix\solutionvector^n + \theta\ssmatrix\solutionvector^{n+1}
+%        = (1-\theta)\ssrhs^n + \theta\ssrhs^{n+1}
+%      \end{equation}
+%   \item For this discretization, the corresponding low-order scheme
+%      has the following DMP, which in general is not explicit:
+%      \begin{multline}
+%         W_i^\pm \equiv \frac{1}{1+\frac{\theta\Delta t}{M_{i,i}^L}A_{i,i}^L}
+%           \left[\left(1 - \frac{(1-\theta)
+%           \Delta t}{M_{i,i}^L}\sum\limits_j A_{i,j}^L\right)
+%           U_{\substack{\max\\\min},i}^n\right.\\\left.
+%          -\frac{\theta\Delta t}{M_{i,i}^L}\sum\limits_{j\ne i}A_{i,j}^L
+%           U_{\substack{\max\\\min},i}^{L,n+1}
+%          +\frac{\Delta t}{M_{i,i}^L}\left((1-\theta)b_i^n
+%          + \theta b_i^{n+1}\right)\right]
+%      \end{multline}
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\begin{frame}
+%\frametitle{Implicit Time Discretization}
+%\framesubtitle{}
+%
+%\begin{itemize}
+%   \item Because $W_i^\pm$ is in general not explicit, the limiting coefficients
+%      are also not explicit. Thus, all implicit FCT schemes require some form
+%      of iteration.
+%      \begin{itemize}
+%         \item In practice, it has been found that a simple fixed point iteration
+%            scheme is effective in resolving these nonlinearities.
+%      \end{itemize}
+%   \item Note that for the entropy viscosity scheme, it is suggested to treat
+%      the entropy viscosity explicitly to avoid \emph{entropy oscillations},
+%      which arise due to the entropy profile adapting at each iteration.
+%\end{itemize}
+%
+%\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%\subsection{Nonlinear Conservation Laws}
+%\begin{frame}
+%\frametitle{Nonlinear Conservation Laws}
+%\framesubtitle{}
+%
+%\begin{itemize}
+%   \item In the nonlinear case, the model conservation law equation is
+%      \begin{equation}
+%         \pd{u}{t} + \nabla\cdot\mathbf{f}(u) + \reactioncoef u\xt = q\xt
+%      \end{equation}
+%   \item The nonlinear discrete system may be expressed in a quasilinear form:
+%      \begin{equation}
+%        \consistentmassmatrix\frac{\solutionvector^{n+1}-\solutionvector^n}{\dt}
+%          + \ssmatrix(u_h^n)\solutionvector^n = \ssrhs^n
+%      \end{equation}
+%      where
+%      \begin{equation}
+%         A\ij(u) \equiv \int\limits_{S\ij}\left(
+%            \mathbf{f}'(u)\cdot\nabla\testfunction_j(\x) +
+%            \reactioncoef(\x)\testfunction_j(\x)\right)\testfunction_i(\x) d\x
+%      \end{equation}
+%   \item Now the low-order diffusion matrix also depends on the solution
+%      and must be computed each time step:
+%      $\diffusionmatrix^L\rightarrow\diffusionmatrix^{L,n}$.
+%\end{itemize}
+%
+%\end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Implicit Time Discretization}
-\framesubtitle{}
-
-\begin{itemize}
-   \item Because $W_i^\pm$ is in general not explicit, the limiting coefficients
-      are also not explicit. Thus, all implicit FCT schemes require some form
-      of iteration.
-      \begin{itemize}
-         \item In practice, it has been found that a simple fixed point iteration
-            scheme is effective in resolving these nonlinearities.
-      \end{itemize}
-   \item Note that for the entropy viscosity scheme, it is suggested to treat
-      the entropy viscosity explicitly to avoid \emph{entropy oscillations},
-      which arise due to the entropy profile adapting at each iteration.
-\end{itemize}
-
-\end{frame}
+\section{Scalar Results}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\subsection{Nonlinear Conservation Laws}
-\begin{frame}
-\frametitle{Nonlinear Conservation Laws}
-\framesubtitle{}
-
-\begin{itemize}
-   \item In the nonlinear case, the model conservation law equation is
-      \begin{equation}
-         \pd{u}{t} + \nabla\cdot\mathbf{f}(u) + \sigma u\xt = q\xt
-      \end{equation}
-   \item The nonlinear discrete system may be expressed in a quasilinear form:
-      \begin{equation}
-        \consistentmassmatrix\frac{\solutionvector^{n+1}-\solutionvector^n}{\dt}
-          + \ssmatrix(u_h^n)\solutionvector^n = \ssrhs^n
-      \end{equation}
-      where
-      \begin{equation}
-         A\ij(u) \equiv \int\limits_{S\ij}\left(
-            \mathbf{f}'(u)\cdot\nabla\varphi_j(\x) +
-            \sigma(\x)\varphi_j(\x)\right)\varphi_i(\x) d\x
-      \end{equation}
-   \item Now the low-order diffusion matrix also depends on the solution
-      and must be computed each time step:
-      $\diffusionmatrix^L\rightarrow\diffusionmatrix^{L,n}$.
-\end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Implementation}
-\begin{frame}
-\frametitle{Implementation}
-\framesubtitle{FCT Implementation Overview}
-
-\begin{itemize}
-   \item Summary of steps necessary for FCT scheme:
-      \begin{enumerate}
-         \item Assemble $\consistentmassmatrix$, $\lumpedmassmatrix$,
-           $\ssmatrix$, $\diffusionmatrix^L$, $\diffusionmatrix^{H,n}$
-           (if using EV), $\ssrhs$
-         \item Compute high-order solution $\solutionvector^{H,n+1}$
-         \item Compute antidiffusive fluxes $\correctionfluxij,\quad\forall j\ne i
-            \in\mathcal{I}(S_i)$
-         \item Compute DMP bounds $W_i^\pm$
-            \begin{itemize}
-               \item Need to compute $U_{\substack{\max\\\min},i}$
-            \end{itemize}
-         \item Compute limiting coefficients $L\ij$
-         \item Solve FCT system:
-            \begin{equation}
-              \lumpedmassmatrix\frac{\solutionvector^{n+1}
-                -\solutionvector^n}{\dt} + \ssmatrix^L\solutionvector^n =
-                \ssrhs + \limitermatrix\cdot\correctionfluxmatrix
-            \end{equation}
-      \end{enumerate}
-\end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Implementation}
-\framesubtitle{Determining Overlapping Supports}
-
-\begin{itemize}
-   \item Most steps standard, but some steps require algebraic operations
-      not typical in FEM computations.
-   \item Need to be able to determine $j\in\mathcal{I}(S_i)$.
-      Some approaches:
-      \begin{itemize}
-         \item If sparse matrix class provides function to extract
-            a row's entries and corresponding indices, this indicates
-            $j\in\mathcal{I}(S_i)$. For instance, do this with $\consistentmassmatrix$.
-         \item Since linear FEM, know that only adjacent, i.e., ``connected''
-            nodes can share support:
-            \[i \mbox{ adjacent } j\Rightarrow j\in\mathcal{I}(S_i),\quad
-               i\in\mathcal{I}(S_j)\]
-            \item Thus one can loop over these ``edges'', i.e., pairs of nodes
-            \item This is particularly useful for computing $\correctionfluxij$, since it
-               is skew symmetric
-      \end{itemize}
-\end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Implementation}
-\framesubtitle{Nonlinear Schemes}
-
-\begin{itemize}
-   \item When the time discretization is not explicit, the discrete maximum
-      principle is implicit, and thus the FCT scheme is nonlinear.
-   \item The following is a basic fixed-point-type iteration FCT scheme:
-      \begin{enumerate}
-         \item If conservation law is nonlinear, re-assemble as necessary:
-            \begin{enumerate}
-               \item Compute steady-state matrix $\ssmatrix(\solutionvector^{n+1,(k)})$.
-               \item Compute low-order diffusion matrix $\diffusionmatrix^L(\solutionvector^{n+1,(k)})$.
-            \end{enumerate}
-         \item Compute limiting coefficients using previous iteration of
-            solution: $\limitermatrix(\solutionvector^{n+1,(k)})$.
-         \item Compute new solution $\solutionvector^{n+1,(k+1)}$.
-      \end{enumerate}
-\end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\section{Results}
 \begin{frame}
 \frametitle{Results}
 \framesubtitle{1-D Source Problem Results}
 
-\includegraphics[width=\textwidth]{./figures/solutions_source_FE.pdf}
+\begin{center}
+\includegraphics[height=0.8\textheight]{./figures/solutions_source_FE.pdf}
+\end{center}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -877,27 +785,27 @@ Systems of Conservation Laws:
 \begin{figure}[h]
    \centering
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/exact.png}
+      \includegraphics[width=0.8\textwidth]{./figures/exact.png}
       \caption{Exact}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/Gal.png}
+      \includegraphics[width=0.8\textwidth]{./figures/Gal.png}
       \caption{Galerkin}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/GalFCT.png}
+      \includegraphics[width=0.8\textwidth]{./figures/GalFCT.png}
       \caption{Galerkin-FCT}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/low.png}
+      \includegraphics[width=0.8\textwidth]{./figures/low.png}
       \caption{Low-order}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/EV.png}
+      \includegraphics[width=0.8\textwidth]{./figures/EV.png}
       \caption{EV}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/EVFCT.png}
+      \includegraphics[width=0.8\textwidth]{./figures/EVFCT.png}
       \caption{EV-FCT}
    \end{subfigure}
 \end{figure}
@@ -929,27 +837,27 @@ Systems of Conservation Laws:
 \begin{figure}[h]
    \centering
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/skew_exact.png}
+      \includegraphics[width=0.8\textwidth]{./figures/skew_exact.png}
       \caption{Exact}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/skew_Gal.png}
+      \includegraphics[width=0.8\textwidth]{./figures/skew_Gal.png}
       \caption{Galerkin}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/skew_GalFCT.png}
+      \includegraphics[width=0.8\textwidth]{./figures/skew_GalFCT.png}
       \caption{Galerkin-FCT}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/skew_low.png}
+      \includegraphics[width=0.8\textwidth]{./figures/skew_low.png}
       \caption{Low-order}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/skew_EV.png}
+      \includegraphics[width=0.8\textwidth]{./figures/skew_EV.png}
       \caption{EV}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]{./figures/skew_EVFCT.png}
+      \includegraphics[width=0.8\textwidth]{./figures/skew_EVFCT.png}
       \caption{EV-FCT}
    \end{subfigure}
 \end{figure}
@@ -960,43 +868,50 @@ Systems of Conservation Laws:
 \frametitle{Results}
 \framesubtitle{Galerkin-FCT Vs. EV-FCT}
 
-\includegraphics[width=\textwidth]{./figures/sourcevoid_FCT_comparison.pdf}
+\begin{center}
+\includegraphics[height=0.8\textheight]{./figures/sourcevoid_FCT_comparison.pdf}
+\end{center}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Results}
-\framesubtitle{Galerkin-FCT Vs. EV-FCT (Cont.)}
-
-\begin{itemize}
-  \item KPP Rotating Wave problem results, taken from\\
-    {\small
-    \emph{A Second-Order Maximum Principle Preserving
-      Lagrange Finite Element Technique for Nonlinear
-      Scalar Conservation Equations} by Jean-Luc Guermond, et. al.
-      \cite{guermond_secondorder}
-    }
-\end{itemize}
-
-\begin{figure}[h]
-   \centering
-   \begin{subfigure}{0.4\textwidth}
-      \includegraphics[width=\textwidth]{./figures/Gal-FCT_rotation.png}
-      \caption{Galerkin-FCT}
-   \end{subfigure}
-   \begin{subfigure}{0.4\textwidth}
-      \includegraphics[width=\textwidth]{./figures/EV-FCT_rotation.png}
-      \caption{EV-FCT}
-   \end{subfigure}
-\end{figure}
-
-\end{frame}
+% NOTE: I should ask Dr. Guermond's permission before using the figures in this
+% slide.
+%
+%\begin{frame}
+%\frametitle{Results}
+%\framesubtitle{Galerkin-FCT Vs. EV-FCT (Cont.)}
+%
+%\begin{itemize}
+%  \item KPP Rotating Wave problem results, taken from\\
+%    {\small
+%    \emph{A Second-Order Maximum Principle Preserving
+%      Lagrange Finite Element Technique for Nonlinear
+%      Scalar Conservation Equations} by Jean-Luc Guermond, et. al.
+%      \cite{guermond_secondorder}
+%    }
+%\end{itemize}
+%
+%\begin{figure}[h]
+%   \centering
+%   \begin{subfigure}{0.4\textwidth}
+%      \includegraphics[height=0.5\textheight]{./figures/Gal-FCT_rotation.png}
+%      \caption{Galerkin-FCT}
+%   \end{subfigure}
+%   \begin{subfigure}{0.4\textwidth}
+%      \includegraphics[height=0.5\textheight]{./figures/EV-FCT_rotation.png}
+%      \caption{EV-FCT}
+%   \end{subfigure}
+%\end{figure}
+%
+%\end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Results}
 \framesubtitle{1-D Smooth Problem Convergence Results (Using FE)}
 
-\includegraphics[width=\textwidth]{./figures/convergence_smooth_FE.pdf}
+\begin{center}
+\includegraphics[height=0.8\textheight]{./figures/convergence_smooth_FE.pdf}
+\end{center}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1004,26 +919,148 @@ Systems of Conservation Laws:
 \frametitle{Results}
 \framesubtitle{1-D Non-smooth Problem Convergence Results (Using SSPRK33)}
 
-\includegraphics[width=\textwidth]{./figures/convergence_absorber_SSPRK33.pdf}
+\begin{center}
+\includegraphics[height=0.8\textheight]{./figures/convergence_absorber_SSPRK33.pdf}
+\end{center}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Shallow Water Equations Introduction}
+\subsection{Introduction}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Shallow Water Equations (SWE) Introduction}
+
+\begin{itemize}
+  \item This research also considers the shallow water equations system:
+    \begin{equation}
+      \ppt{}\left[\begin{array}{c}\height\\\heightmomentum\end{array}\right]
+        + \divergence\left[\begin{array}{c}\heightmomentum\\
+          \heightmomentum\otimes\velocity + \half\gravity\height^2 I
+          \end{array}\right]
+        = \left[\begin{array}{c}0\\-\gravity\height\nabla\bathymetry\end{array}
+    \right] \eqp
+    \end{equation}
+  \item Obtained by depth-integrating Navier-Stokes equations with the
+    assumption that the horizontal length scale is much greater than the
+    vertical length scale
+  \item Some important simulations include
+    \begin{itemize}
+      \item \textcolor{secondarycolorheavy}{dam break problems}: for example, what wave
+        structures will develop in a dam-break accident?
+      \item \textcolor{secondarycolorheavy}{tsunami problems}: for example, what height
+        of sea-wall is necessary to stop a tsunami of a certain height?
+    \end{itemize}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Definitions for the Shallow Water Equations}
+
+\begin{itemize}
+  \item $\height\xt \equiv \int\density\xt dz$ is referred to as ``height''.
+  \item $\heightmomentum\xt \equiv \height\xt\velocity\xt$ is referred to as ``discharge''.
+  \item $\gravity$ is the acceleration due to gravity.
+  \item $\bathymetry(\x)$ is the bottom topography profile, or ``bathymetry''. For a
+    flat bottom, $\bathymetry(\x)=0$.
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Discretization}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Discretization}
+
+\begin{itemize}
+  \item The discrete system for the shallow water equations is
+    \begin{equation}
+      \consistentmassmatrix\ddt{\solutionvector} = \ssres \eqc
+    \end{equation}
+    where $\consistentmassmatrix$ is the mass matrix and the steady-state residual
+    $\ssres$ is given by
+\begin{multline}
+  r_i =
+  \intdomain{\nabla\testfunction_i^\height\cdot\tilde{\heightmomentum}}
+  - \intboundary{\testfunction_i^\height\tilde{\heightmomentum}\cdot\normalvector}
+  + \intdomain{\nabla\testfunction_i^{\heightmomentum}:
+    \left(\tilde{\heightmomentum}\otimes\tilde{\velocity}
+    + \frac{1}{2}\gravity\tilde{\height}^2\mathbf{I}\right)}
+  \\
+  - \intboundary{\testfunction_i^{\heightmomentum}\cdot
+    \left(\tilde{\heightmomentum}\otimes\tilde{\velocity}
+    + \frac{1}{2}\gravity \tilde{\height}^2\mathbf{I}\right)\cdot\normalvector}
+  - \intdomain{\testfunction_i^{\heightmomentum}\cdot
+    \gravity\tilde{\height}\nabla\bathymetry}
+\end{multline}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Systems Methodology}
+\subsection{Low-Order Scheme}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Domain-Invariance}
+
+\begin{itemize}
+  \item For the systems case, discrete maximum principles no longer apply;
+    \hlorange{domain-invariance} becomes the desired property.
+  \item
+\end{itemize}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Conclusions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Progress}
+
+\begin{itemize}
+  \item Scalar Conservation Laws:
+    \begin{itemize}
+      \item[\checked] Low-order, DMP-satisfying, positivity-preserving scheme
+      \item[\checked] High-order, entropy-based scheme
+      \item[\checked] High-order, DMP-satisfying, positivity-preserving FCT scheme
+    \end{itemize}
+ \item Systems of Conservation Laws / Shallow Water Equations (SWE):
+   \begin{itemize}
+     \item[\checked] Low-order, domain-invariant, positivity-preserving scheme
+       for SWE with \emph{flat} bottom topography
+     \item[\unchecked] Low-order, domain-invariant, positivity-preserving scheme
+       for SWE with \emph{non-flat} bottom topography
+     \item[\checked] High-order, entropy-based scheme
+     \item[\unchecked] High-order, LED, positivity-preserving FCT scheme
+   \end{itemize}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Conclusions}
 
 \begin{itemize}
-   \item The CFEM scheme presented for solving conservation law problems is
-   \begin{itemize}
-      \item 2nd-order-accurate
+  \item The scalar FCT scheme developed is
+    \begin{itemize}
       \item Positivity-preserving
-      \item Monotone
       \item Discrete-maximum-principle preserving
+      \item Not guaranteed monotone, but works well in practice
+      \item Entropy-inequality-enforcing
+      \item 2nd-order-accurate for smooth problems
       \item Valid in an arbitrary number of dimensions
       \item Valid for general meshes
-   \end{itemize}
-   \item Results were shown for the explicit, scalar, linear case. More results
-      are in progress.
+    \end{itemize}
+  \item The shallow water equations FCT scheme developed is
+    \begin{itemize}
+      \item Positivity-preserving
+      \item Not guaranteed monotone, but works well in practice
+      \item Entropy-inequality-enforcing
+      \item 2nd-order-accurate for smooth problems
+      \item Valid in an arbitrary number of dimensions (in general - the SWE
+        do not apply in 3-D of course)
+      \item Valid for general meshes
+    \end{itemize}
 \end{itemize}
 
 \end{frame}

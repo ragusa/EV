@@ -2,11 +2,24 @@
 \usepackage{xcolor}
 \usepackage{stmaryrd} % jump brackets: \llbracket, \rrbracket
 
+% create a provideenvironment command
+\makeatletter
+\def\provideenvironment{\@star@or@long\provide@environment}
+\def\provide@environment#1{%
+  \@ifundefined{#1}%
+    {\def\reserved@a{\newenvironment{#1}}}%
+    {\def\reserved@a{\renewenvironment{dummy@environ}}}%
+  \reserved@a
+}
+\def\dummy@environ{}
+\makeatother
+
 % general
 \newcommand{\x}{\mathbf{x}}
 \newcommand{\qpoint}{\x_q}
 \newcommand{\timevalue}{t}
 \newcommand{\timestepsize}{\Delta\timevalue}
+\newcommand{\dt}{\timestepsize}
 \newcommand{\timeindex}{n}
 \newcommand{\speed}{v}
 \newcommand{\velocity}{\mathbf{\speed}}
@@ -50,6 +63,7 @@
 \newcommand{\celldomain}[1][\cell]{\domain_#1}
 \newcommand{\facedomain}{\domain}
 \newcommand{\domainboundary}{\partial\domain}
+\newcommand{\incomingdomainboundary}{\domainboundary^{\text{inc}}}
 \newcommand{\cellindex}{K}
 \newcommand{\cell}{K}
 \newcommand{\celldiameter}{\Delta x}
@@ -86,6 +100,8 @@
 
 % conservation law
 \newcommand{\consfluxletter}{f}
+\newcommand{\consflux}{\mathbf{\consfluxletter}}
+\newcommand{\consfluxsystem}{\mathbf{\MakeUppercase{\consfluxletter}}}
 \newcommand{\consfluxscalar}[1][\scalarsolution]{\mathbf{\consfluxletter}(#1)}
 \newcommand{\consfluxvector}{\mathbf{\MakeUppercase{\consfluxletter}}}
 \newcommand{\consfluxinterpolant}{\mathscr{F}}
@@ -294,15 +310,15 @@
   \colorbox{lightGreen}{$\displaystyle#1$}}
 
 % QED symbol command
-\newcommand{\qed}{\nobreak \ifvmode \relax \else
-      \ifdim\lastskip<1.5em \hskip-\lastskip
-      \hskip1.5em plus0em minus0.5em \fi \nobreak
-      \vrule height0.75em width0.5em depth0.25em\fi}
+\providecommand{\qed}{\nobreak \ifvmode \relax \else
+  \ifdim\lastskip<1.5em \hskip-\lastskip
+  \hskip1.5em plus0em minus0.5em \fi \nobreak
+  \vrule height0.75em width0.5em depth0.25em\fi}
 
 % math environments
-\newenvironment{proof}[1][Proof]{\begin{trivlist}
+\provideenvironment{proof}[1][Proof]{\begin{trivlist}
 \item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
-\newenvironment{example}[1][Example]{\begin{trivlist}
+\provideenvironment{example}[1][Example]{\begin{trivlist}
 \item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
 \newenvironment{remark}[1][Remark]{\begin{trivlist}
 \item[\hskip \labelsep {\bfseries #1}]}{\end{trivlist}}
@@ -336,3 +352,17 @@
 \newcommand{\highwavespeedtwo}{\hat{\wavespeed}_2}
 \newcommand{\hinterplow}{\height_d}
 \newcommand{\hinterphigh}{\height_u}
+
+% checkboxes
+\usepackage{amssymb}
+\usepackage{xcolor}
+\definecolor{myorangeheavy}{RGB}{255,150,0}
+\newcommand{\checked}{
+  \makebox[0pt][l]{$\square$}\raisebox{.15ex}
+  {\hspace{0.1em}\textcolor{myorangeheavy}{$\checkmark$}}}
+\newcommand{\unchecked}{
+  \makebox[0pt][l]{$\square$}\hspace{0.9em}}
+
+% highlighting
+\newcommand{\hlorange}[1]{\textcolor{myorangeheavy}{#1}}
+
