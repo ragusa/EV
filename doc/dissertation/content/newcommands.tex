@@ -242,7 +242,8 @@
 \newcommand{\jacobianx}{\mathbf{A}}
 \newcommand{\characteristicsolution}{\mathbf{w}}
 \newcommand{\wavespeed}{\eigenvalue}
-\newcommand{\maxwavespeed}{\wavespeed^{\text{max}}}
+\newcommand{\maxwavespeed}[1][]{
+  \ifthenelse{\equal{#1}{}}{\wavespeed^{\text{max}}}{\wavespeed^{\text{max},#1}}}
 \newcommand{\wavestrength}{\mathcal{W}}
 
 %==============================================================================

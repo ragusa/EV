@@ -332,10 +332,10 @@ is verified, and the proof is complete.\qed
 \begin{algorithmic}
 \State Input: $(\hlow^{(0)},\hhigh^{(0)},\tol)$
 \Loop
-  \State Compute $\maxwavespeed^{(k)}$ using Equation \eqref{eq:maxwavespeedbound}
+  \State Compute $\maxwavespeed[k]$ using Equation \eqref{eq:maxwavespeedbound}
   \State Compute $\minwavespeed^{(k)}$ using Equation \eqref{eq:minwavespeedbound}
   \If{$\minwavespeed^{(0)} > 0$}
-    \If{$\frac{\maxwavespeed^{(k)}}{\minwavespeed^{(k)}} - 1 \leq \tol$}
+    \If{$\frac{\maxwavespeed[k]}{\minwavespeed^{(k)}} - 1 \leq \tol$}
       \State \Return
     \EndIf
   \EndIf
@@ -345,12 +345,12 @@ is verified, and the proof is complete.\qed
   \State $\hlow^{(k+1)}\gets \hinterplow(\hlow^{(k)},\hhigh^{(k)})$
   \State $\hhigh^{(k+1)}\gets \hinterphigh(\hlow^{(k)},\hhigh^{(k)})$
 \EndLoop
-\State $\maxwavespeed\gets \maxwavespeed^{(k)}$
+\State $\maxwavespeed\gets \maxwavespeed[k]$
 \end{algorithmic}
 \end{algorithm}
 
 \begin{equation}\label{eq:maxwavespeedbound}
-  \maxwavespeed^{(k)} = \max\pr{(\highwavespeedtwo^{(k)})_+,
+  \maxwavespeed[k] = \max\pr{(\highwavespeedtwo^{(k)})_+,
     (\lowwavespeedone^{(k)})_-}
   \eqc
 \end{equation}
