@@ -9,9 +9,9 @@ subsection quadrature
 end
 
 subsection scheme
-   set scheme = fct # low|high|fct
+   set scheme = high # low|high|fct
    set low order scheme = standard # constant|standard|dmp|di_visc|di_diff
-   set high order scheme = galerkin # galerkin|entropy_visc|entropy_diff
+   set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
 end
 
 # Problem Names:

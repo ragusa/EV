@@ -100,8 +100,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \subsection{Motivation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Motivation}
-\framesubtitle{A Simple Motivating Example}
+\frametitle{A Simple Motivating Example}
 
 \begin{itemize}
    \item Weak solutions to conservation law problems using standard CFEM
@@ -238,7 +237,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \subsection{Problem Formulation}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Problem Formulation}
+\frametitle{Scalar Problem Formulation}
 
 \begin{itemize}
   \item Consider a linear conservation law model
@@ -298,7 +297,6 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Low-Order Scheme}
-\framesubtitle{Definition}
 
 \begin{itemize}
    \item To get the low-order scheme, one does the following:
@@ -325,8 +323,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Low-Order Scheme}
-\framesubtitle{Local Bilinear Form}
+\frametitle{Local Viscous Bilinear Form}
 
 \begin{itemize}
    \item The local bilinear form is defined as follows, where $|K|$ denotes
@@ -352,8 +349,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Low-Order Scheme}
-\framesubtitle{Low-Order Viscosity}
+\frametitle{Low-Order Viscosity}
 
 \begin{itemize}
    \item The low-order viscosity is defined as
@@ -376,8 +372,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Low-Order Scheme}
-\framesubtitle{Discrete Maximum Principle}
+\frametitle{Discrete Maximum Principle}
 
 \begin{itemize}
    \item In addition to guaranteeing monotonicity and positivity, the low-order
@@ -408,8 +403,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Low-Order Scheme}
-\framesubtitle{Results Example}
+\frametitle{Low-Order Scheme Results Example}
 
 \includegraphics[width=\textwidth]{./figures/advection_low_order.pdf}
 
@@ -418,8 +412,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \subsection{High-Order Scheme}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Entropy Viscosity Scheme}
-\framesubtitle{Introduction}
+\frametitle{Introduction to Entropy Viscosity}
 
 \begin{itemize}
    \item The standard Galerkin CFEM weak solution is not unique. Even with
@@ -443,8 +436,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Entropy Viscosity Scheme}
-\framesubtitle{Entropy Viscosity Definition}
+\frametitle{Entropy Viscosity Definition}
 
 \begin{itemize}
    \item One chooses a convex entropy function $\eta(u)$ such
@@ -475,8 +467,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Entropy Viscosity Scheme}
-\framesubtitle{High-Order Scheme}
+\frametitle{High-Order Scheme}
 
 \begin{itemize}
    \item The high-order viscosity does not need to be any greater than the
@@ -504,8 +495,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{High-Order Scheme}
-\framesubtitle{Results Example}
+\frametitle{High-Order Scheme Results Example}
 
 \includegraphics[width=\textwidth]{./figures/advection_high_order.pdf}
 
@@ -514,8 +504,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \subsection{FCT Scheme}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Flux Corrected Transport (FCT) Scheme}
-\framesubtitle{Correction Flux Definition}
+\frametitle{FCT Antidiffusive Flux Definition}
 
 \begin{itemize}
    \item Recall that FCT defines antidiffusive correction fluxes
@@ -548,8 +537,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Flux Corrected Transport (FCT) Scheme}
-\framesubtitle{FCT Overview}
+\frametitle{FCT Scheme Overview}
 
 \begin{itemize}
    \item Recall that the objective of FCT is to limit these antidiffusive
@@ -578,8 +566,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Flux Corrected Transport (FCT) Scheme}
-\framesubtitle{Limiting Coefficients Introduction}
+\frametitle{Limiting Coefficients Introduction}
 
 \begin{itemize}
    \item The enforced bounds can be rearranged to bound the limited flux sums:
@@ -604,8 +591,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Flux Corrected Transport (FCT) Scheme}
-\framesubtitle{Limiting Coefficients Definition}
+\frametitle{Limiting Coefficients Definition}
 
 \begin{itemize}
    \item Zalesak's limiting coefficients assume that
@@ -632,8 +618,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Flux Corrected Transport (FCT) Scheme}
-\framesubtitle{Limiting Coefficients Definition (Cont.)}
+\frametitle{Limiting Coefficients Definition (Cont.)}
 
 \begin{itemize}
    \item Then, recalling that limiting coefficients are not greater than unity:
@@ -661,8 +646,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Flux Corrected Transport (FCT) Scheme}
-\framesubtitle{Limiting Coefficients Definition (Cont.)}
+\frametitle{Limiting Coefficients Definition (Cont.)}
 
 \begin{itemize}
    \item Thus when deciding the limiting coefficient $L\ij$ for a flux $\correctionfluxij$, 
@@ -682,95 +666,16 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Flux Corrected Transport (FCT) Scheme}
-\framesubtitle{Results Example}
+\frametitle{FCT Scheme Results Example}
 
 \includegraphics[width=\textwidth]{./figures/advection_FCT.pdf}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\section{Extensions}
-%\subsection{Implicit}
-%\begin{frame}
-%\frametitle{Implicit Time Discretization}
-%\framesubtitle{}
-%
-%\begin{itemize}
-%   \item For the implicit case, for instance a general $\theta$ scheme, the
-%      discrete system is the following:
-%      \begin{equation}
-%        \consistentmassmatrix\frac{\solutionvector^{n+1}-\solutionvector^n}{\dt}
-%        + (1-\theta)\ssmatrix\solutionvector^n + \theta\ssmatrix\solutionvector^{n+1}
-%        = (1-\theta)\ssrhs^n + \theta\ssrhs^{n+1}
-%      \end{equation}
-%   \item For this discretization, the corresponding low-order scheme
-%      has the following DMP, which in general is not explicit:
-%      \begin{multline}
-%         W_i^\pm \equiv \frac{1}{1+\frac{\theta\Delta t}{M_{i,i}^L}A_{i,i}^L}
-%           \left[\left(1 - \frac{(1-\theta)
-%           \Delta t}{M_{i,i}^L}\sum\limits_j A_{i,j}^L\right)
-%           U_{\substack{\max\\\min},i}^n\right.\\\left.
-%          -\frac{\theta\Delta t}{M_{i,i}^L}\sum\limits_{j\ne i}A_{i,j}^L
-%           U_{\substack{\max\\\min},i}^{L,n+1}
-%          +\frac{\Delta t}{M_{i,i}^L}\left((1-\theta)b_i^n
-%          + \theta b_i^{n+1}\right)\right]
-%      \end{multline}
-%\end{itemize}
-%
-%\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\begin{frame}
-%\frametitle{Implicit Time Discretization}
-%\framesubtitle{}
-%
-%\begin{itemize}
-%   \item Because $W_i^\pm$ is in general not explicit, the limiting coefficients
-%      are also not explicit. Thus, all implicit FCT schemes require some form
-%      of iteration.
-%      \begin{itemize}
-%         \item In practice, it has been found that a simple fixed point iteration
-%            scheme is effective in resolving these nonlinearities.
-%      \end{itemize}
-%   \item Note that for the entropy viscosity scheme, it is suggested to treat
-%      the entropy viscosity explicitly to avoid \emph{entropy oscillations},
-%      which arise due to the entropy profile adapting at each iteration.
-%\end{itemize}
-%
-%\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\subsection{Nonlinear Conservation Laws}
-%\begin{frame}
-%\frametitle{Nonlinear Conservation Laws}
-%\framesubtitle{}
-%
-%\begin{itemize}
-%   \item In the nonlinear case, the model conservation law equation is
-%      \begin{equation}
-%         \pd{u}{t} + \nabla\cdot\mathbf{f}(u) + \reactioncoef u\xt = q\xt
-%      \end{equation}
-%   \item The nonlinear discrete system may be expressed in a quasilinear form:
-%      \begin{equation}
-%        \consistentmassmatrix\frac{\solutionvector^{n+1}-\solutionvector^n}{\dt}
-%          + \ssmatrix(u_h^n)\solutionvector^n = \ssrhs^n
-%      \end{equation}
-%      where
-%      \begin{equation}
-%         A\ij(u) \equiv \int\limits_{S\ij}\left(
-%            \mathbf{f}'(u)\cdot\nabla\testfunction_j(\x) +
-%            \reactioncoef(\x)\testfunction_j(\x)\right)\testfunction_i(\x) d\x
-%      \end{equation}
-%   \item Now the low-order diffusion matrix also depends on the solution
-%      and must be computed each time step:
-%      $\diffusionmatrix^L\rightarrow\diffusionmatrix^{L,n}$.
-%\end{itemize}
-%
-%\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Scalar Results}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Results}
-\framesubtitle{1-D Source Problem Results}
+\frametitle{1-D Source Problem Results}
 
 \begin{center}
 \includegraphics[height=0.8\textheight]{./figures/solutions_source_FE.pdf}
@@ -779,8 +684,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Results}
-\framesubtitle{2-D Void-to-Absorber Problem Results}
+\frametitle{2-D Void-to-Absorber Problem Results}
 
 \begin{figure}[h]
    \centering
@@ -813,8 +717,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Results}
-\framesubtitle{3-D Void-to-Absorber Problem Results}
+\frametitle{3-D Void-to-Absorber Problem Results}
 
 \begin{figure}[h]
    \centering
@@ -831,8 +734,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Results}
-\framesubtitle{2-D Skew Void-to-Absorber Problem Results}
+\frametitle{2-D Skew Void-to-Absorber Problem Results}
 
 \begin{figure}[h]
    \centering
@@ -865,8 +767,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Results}
-\framesubtitle{Galerkin-FCT Vs. EV-FCT}
+\frametitle{Galerkin-FCT Vs. EV-FCT}
 
 \begin{center}
 \includegraphics[height=0.8\textheight]{./figures/sourcevoid_FCT_comparison.pdf}
@@ -874,40 +775,8 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-% NOTE: I should ask Dr. Guermond's permission before using the figures in this
-% slide.
-%
-%\begin{frame}
-%\frametitle{Results}
-%\framesubtitle{Galerkin-FCT Vs. EV-FCT (Cont.)}
-%
-%\begin{itemize}
-%  \item KPP Rotating Wave problem results, taken from\\
-%    {\small
-%    \emph{A Second-Order Maximum Principle Preserving
-%      Lagrange Finite Element Technique for Nonlinear
-%      Scalar Conservation Equations} by Jean-Luc Guermond, et. al.
-%      \cite{guermond_secondorder}
-%    }
-%\end{itemize}
-%
-%\begin{figure}[h]
-%   \centering
-%   \begin{subfigure}{0.4\textwidth}
-%      \includegraphics[height=0.5\textheight]{./figures/Gal-FCT_rotation.png}
-%      \caption{Galerkin-FCT}
-%   \end{subfigure}
-%   \begin{subfigure}{0.4\textwidth}
-%      \includegraphics[height=0.5\textheight]{./figures/EV-FCT_rotation.png}
-%      \caption{EV-FCT}
-%   \end{subfigure}
-%\end{figure}
-%
-%\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Results}
-\framesubtitle{1-D Smooth Problem Convergence Results (Using FE)}
+\frametitle{1-D Smooth Problem Convergence Results (Using FE)}
 
 \begin{center}
 \includegraphics[height=0.8\textheight]{./figures/convergence_smooth_FE.pdf}
@@ -916,8 +785,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Results}
-\framesubtitle{1-D Non-smooth Problem Convergence Results (Using SSPRK33)}
+\frametitle{1-D Non-smooth Problem Convergence Results (Using SSPRK33)}
 
 \begin{center}
 \includegraphics[height=0.8\textheight]{./figures/convergence_absorber_SSPRK33.pdf}
@@ -941,6 +809,14 @@ Transport Algorithm to Hyperbolic Conservation Laws}
         = \left[\begin{array}{c}0\\-\gravity\height\nabla\bathymetry\end{array}
     \right] \eqp
     \end{equation}
+    \begin{itemize}
+      \item $\height\xt \equiv \int\density\xt dz$ is referred to as ``height''.
+      \item $\heightmomentum\xt \equiv \height\xt\velocity\xt$ is referred to
+        as ``discharge''.
+      \item $\gravity$ is the acceleration due to gravity.
+      \item $\bathymetry(\x)$ is the bottom topography profile,
+        or ``bathymetry''.
+    \end{itemize}
   \item Obtained by depth-integrating Navier-Stokes equations with the
     assumption that the horizontal length scale is much greater than the
     vertical length scale
@@ -948,22 +824,9 @@ Transport Algorithm to Hyperbolic Conservation Laws}
     \begin{itemize}
       \item \textcolor{secondarycolorheavy}{dam break problems}: for example, what wave
         structures will develop in a dam-break accident?
-      \item \textcolor{secondarycolorheavy}{tsunami problems}: for example, what height
-        of sea-wall is necessary to stop a tsunami of a certain height?
+      \item \textcolor{secondarycolorheavy}{wave/tsunami problems}: for example, what height
+        of seawall is necessary to stop a wave of a certain height?
     \end{itemize}
-\end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Definitions for the Shallow Water Equations}
-
-\begin{itemize}
-  \item $\height\xt \equiv \int\density\xt dz$ is referred to as ``height''.
-  \item $\heightmomentum\xt \equiv \height\xt\velocity\xt$ is referred to as ``discharge''.
-  \item $\gravity$ is the acceleration due to gravity.
-  \item $\bathymetry(\x)$ is the bottom topography profile, or ``bathymetry''. For a
-    flat bottom, $\bathymetry(\x)=0$.
 \end{itemize}
 
 \end{frame}
@@ -979,18 +842,24 @@ Transport Algorithm to Hyperbolic Conservation Laws}
       \pd{\vectorsolution}{t} + \divergence\consfluxvector(\vectorsolution)
         = \conssource(\vectorsolution) \eqp
     \end{equation}
-  \item Substituting the approximate solution
-    $\approximatevectorsolution\xt =
-      \sum_j \solutionvector_j(t) \testfunction_j(\x)$,
-    where $\solutionvector_j(t)$ are vector-valued degrees of freedom,
-    and interpolating the flux function at the nodes,
-    $\consfluxvector(\approximatevectorsolution)\rightarrow
-      \sum_j\consfluxinterpolant_j(t)\testfunction_j(\x)$, and testing with
-    $\testfunction_i(\x)$ gives
+  \item After doing the following:
+    \begin{itemize}
+      \item Substituting the approximate solution
+        $\approximatevectorsolution\xt =
+          \sum_j \solutionvector_j(t) \testfunction_j(\x)$,
+          where $\solutionvector_j(t)$ are vector-valued degrees of freedom,
+      \item Interpolating the flux function at the nodes,
+        $\consfluxvector(\approximatevectorsolution)\rightarrow
+          \sum_j\consfluxinterpolant_j(t)\testfunction_j(\x)$,
+      \item Testing with $\testfunction_i(\x)$, and
+      \item Evaluating with forward Euler (FE),
+    \end{itemize}
+    the discrete system becomes
     \begin{equation}
-      \sum_j\consistentmassentry\solutionvector_j(t)
-        + \sum_j\gradiententry\cdot\consfluxinterpolant_j(t)
-        = \ssrhs_i(t) \eqc
+      \sum_j\consistentmassentry
+        \frac{\solutionvector_j^{n+1}-\solutionvector_j^n}{\dt}
+        + \sum_j\gradiententry\cdot\consfluxinterpolant_j^n
+        = \ssrhs_i^n \eqc
     \end{equation}
     \begin{equation}
       \gradiententry \equiv \int_{\support\ij}
@@ -998,14 +867,6 @@ Transport Algorithm to Hyperbolic Conservation Laws}
       \quad
       \ssrhs_i(t) \equiv \int_{\support_i}
         \testfunction_i(\x)\conssource(\approximatevectorsolution)d\volume \eqp
-    \end{equation}
-  \item Expressing this as a linear system with forward Euler (FE) time
-    discretization,
-    \begin{equation}
-      \consistentmassmatrix\frac{\solutionvector_j^{n+1}
-        - \solutionvector_j^{n}}{\dt}
-        + \gradientmatrix\cdot\consfluxinterpolant^n
-        = \ssrhs^n \eqp
     \end{equation}
 \end{itemize}
 
@@ -1015,13 +876,290 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \subsection{Low-Order Scheme}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Domain-Invariance}
+\frametitle{Invariant Domain}
 
 \begin{itemize}
-  \item For the systems case, discrete maximum principles no longer apply;
-    \hlorange{domain-invariance} becomes the desired property.
-  \item
+  \item For the \emph{systems} case, discrete maximum principles no longer apply;
+    the concept of \hlorange{invariant domains} becomes the desired tool.
+  \item The objective is to prove that the solution
+    $\approximatevectorsolution^{n+1}\equiv\discreteprocess
+      (\approximatevectorsolution^n)$ belongs to an invariant domain with
+    respect to the discrete solution process $\discreteprocess$.
+  \item First one assumes that the initial data belongs
+    to a convex invariant admissible set: $\vectorsolution^0\in\invariantset$.
+  \item Next one expresses $\discreteprocess(\approximatevectorsolution^n)$
+    as a convex combination of states:
+    $\sum_i\convexcoefficient_i\convexelement_i$, and proves the following:
+    \begin{enumerate}
+      \item $\sum_i \convexcoefficient_i = 1$
+      \item $\convexcoefficient_i \geq 0 \quad \forall i$
+      \item $\convexelement_i \in \invariantset \quad \forall i$
+    \end{enumerate}
+  \item Thus it is proven that
+    $\discreteprocess(\approximatevectorsolution^n)\in\invariantset$ since
+    $\invariantset$ is a convex set, and thus $\invariantset$ is an invariant
+    domain for $\discreteprocess$.
 \end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Low-Order Scheme}
+
+\begin{itemize}
+  \item The domain-invariant low-order scheme lumps the mass matrix and adds
+    a low-order diffusion term:
+    \begin{equation}
+      \lumpedmassentry
+        \frac{\solutionvector_i^{L,n+1}-\solutionvector_i^n}{\dt}
+        + \sum_j\gradiententry\cdot\consfluxinterpolant_j^n
+        + \sum_j\diffusionmatrixletter\ij^{L,n}\solutionvector_j^n
+        = \ssrhs_i^n \eqc
+    \end{equation}
+  \item The following definition for the low-order diffusion matrix allows
+    the domain-invariance property to be proven:
+    \begin{equation}
+      \diffusionmatrixletter^{L,n}\ij \equiv
+        \max(\maxwavespeed\ij,\maxwavespeed\ji)
+      \quad j\ne i \eqc \quad
+      \diffusionmatrixletter^{L,n}_{i,i} \equiv
+        -\sumjnoti\diffusionmatrixletter^{L,n}\ij
+      \eqc
+   \end{equation}
+   where $\maxwavespeed\ij \equiv \maxwavespeed(
+   \normalvector\ij,\solutionvector_i^n,\solutionvector_j^n)$
+   is the maximum wave speed in the 1-D Riemann problem in the direction
+   $\normalvector\ij \equiv \mathbf{\gradientmatrixletter}\ij /
+   \ltwonorm{\mathbf{\gradientmatrixletter}\ij}$
+   with left state $\solutionvector_i^n$ and right state $\solutionvector_j^n$.
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{High-Order Scheme}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{High-Order Scheme}
+
+\begin{itemize}
+  \item The high-order scheme adds a high-order diffusion term:
+    \begin{equation}
+      \sum_j\consistentmassentry
+        \frac{\solutionvector_j^{H,n+1}-\solutionvector_j^n}{\dt}
+        + \sum_j\gradiententry\cdot\consfluxinterpolant_j^n
+        + \sum_j\diffusionmatrixletter\ij^{H,n}\solutionvector_j^n
+        = \ssrhs_i^n \eqc
+    \end{equation}
+  \item The high-order diffusion matrix is proportional to an entropy diffusion matrix
+    and uses the low-order diffusion matrix as an upper bound:
+    \begin{equation}
+      \diffusionmatrixletter^{H,n}\ij \equiv \min(
+        \diffusionmatrixletter^{\entropy,n}\ij,\diffusionmatrixletter^{L,n}\ij) \eqc
+    \end{equation}
+    where the entropy diffusion matrix is proportional to an entropy residual and
+    entropy jump:
+    \begin{equation}
+      \diffusionmatrixletter^{\entropy,n}\ij \equiv
+        \frac{\entropyresidualcoef\entropyresidual\ij^n
+          + \entropyjumpcoef\entropyjump\ij^n}{\entropynormalization\ij^n} \eqp
+    \end{equation}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Entropy for the Shallow Water Equations}
+
+\begin{itemize}
+  \item For the SWE, the entropy is chosen to be the sum of kinetic and
+    potential energy terms:
+    \begin{equation}
+      \entropy(\vectorsolution,\bathymetry)
+        = \half\frac{\heightmomentum\cdot\heightmomentum}{\height}
+          + \half\gravity\height\pr{\height+\bathymetry}
+      \eqp
+    \end{equation}
+  \item The entropy flux is
+    \begin{equation}
+      \mathbf{\consfluxletter}^\entropy(\vectorsolution,\bathymetry)
+        = \gravity(\height + \bathymetry)\heightmomentum
+        + \half\frac{\pr{\heightmomentum\cdot\heightmomentum}\heightmomentum} 
+        {\height^2}
+      \eqp
+    \end{equation}
+  \item The entropy residual is
+    \begin{equation}
+      \entropyresidual(\vectorsolution^\timeindex, \vectorsolution^{\timeindex-1})
+        \equiv \frac{\entropy(\vectorsolution^\timeindex)
+        - \entropy(\vectorsolution^{\timeindex-1})}{\timestepsize^{\timeindex-1}}
+        + \divergence\mathbf{\consfluxletter}^\entropy(\vectorsolution^\timeindex,
+          \bathymetry)
+      \eqp
+    \end{equation}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{FCT Scheme}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{FCT Antidiffusive Flux Definition}
+
+\begin{itemize}
+  \item The antidiffusive fluxes $\correctionfluxvector_i$ are defined such that
+    \begin{equation}
+      \lumpedmassentry
+        \frac{\solutionvector_i^{H,n+1}-\solutionvector_i^n}{\dt}
+        + \sum_j\gradiententry\cdot\consfluxinterpolant_j^n
+        + \sum_j\diffusionmatrixletter\ij^{L,n}\solutionvector_j^n
+        = \ssrhs_i^n + \correctionfluxvector_i\eqc
+    \end{equation}
+   \item Subtracting the high-order scheme equation from this gives the
+      definition of $\correctionfluxvector$:
+      \begin{equation}
+        \correctionfluxvector_i \equiv
+          \lumpedmassentry
+            \frac{\solutionvector_i^{H}-\solutionvector_i^n}{\dt}
+          -\sum_j\consistentmassentry
+            \frac{\solutionvector_j^{H}-\solutionvector_j^n}{\dt}
+          +\sum_j(\diffusionmatrixletter\ij^{L,n}-\diffusionmatrixletter\ij^{H,n})
+            \solutionvector_j^n
+      \end{equation}
+   \item Decomposing $\correctionfluxvector$ into internodal fluxes
+      $\correctionfluxmatrix\ij$ such that $\sum_j \correctionfluxmatrix\ij =
+      \correctionfluxvector_i$,
+      \begin{equation}
+        \correctionfluxmatrix\ij = -M\ij^C\pr{
+            \frac{\solutionvector_j^{H}-\solutionvector_j^n}{\dt}
+            -\frac{\solutionvector_i^{H}-\solutionvector_i^n}{\dt}
+          }
+          + (D\ij^{L,n}-D\ij^{H,n})(\solutionvector_j^n-\solutionvector_i^n) \eqp
+      \end{equation}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Limiting Coefficients}
+
+\begin{itemize}
+  \item Bounds to impose on solution are unclear:
+    \begin{itemize}
+      \item For scalar case, a DMP was used, but no DMP exists for systems.
+      \item The invariant domain property is not useful here
+        because the invariant domain is not actually known.
+    \end{itemize}
+  \item Choose to impose LED constraint for each component:
+    \begin{equation}
+      \solutionletter_{\min,i}^{\componentindex,n}
+        \leq \solutionletter_i^{\componentindex,n+1}
+        \leq \solutionletter_{\max,i}^{\componentindex,n}
+      \quad \forall\componentindex \eqp
+    \end{equation}
+  \item The FCT scheme is
+    \begin{equation}
+      \lumpedmassentry
+        \frac{\solutionvector_i^{n+1}-\solutionvector_i^n}{\dt}
+        + \sum_j\gradiententry\cdot\consfluxinterpolant_j^n
+        + \sum_j\diffusionmatrixletter\ij^{L,n}\solutionvector_j^n
+        = \ssrhs_i^n + \sum_j\limitermatrix\ij\odot\correctionfluxmatrix\ij \eqp
+    \end{equation}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Limiting Coefficients (Cont.)}
+
+\begin{itemize}
+  \item Define antidiffusive flux bounds $\mathbf{\limitedfluxbound}_i^\pm$ such that
+    \begin{equation}
+      \mathbf{\limitedfluxbound}^-_i \leq
+        \sum\limits_j \limitermatrix\ij\odot\correctionfluxmatrix\ij \leq
+        \mathbf{\limitedfluxbound}^+_i
+      \quad\Rightarrow\quad
+      \mathbf{\DMPbound}_i^- \leq
+        \solutionvector_i^{n+1} \leq
+        \mathbf{\DMPbound}_i^+ \quad \forall i \eqp
+    \end{equation}
+  \item Performing some algebra gives the definition
+    \begin{equation}
+      \mathbf{\limitedfluxbound}_i^\pm \equiv
+        \lumpedmassentry\frac{\mathbf{\DMPbound}_i^\pm-\solutionvector_i^n}{\dt}
+        + \sum_j\gradiententry\cdot\consfluxinterpolant_j^n
+        + \sum_j\diffusionmatrixletter\ij^{L,n}\solutionvector_j^n
+        - \ssrhs_i^n \eqp
+    \end{equation}
+  \item As in the scalar case, negative and positive antidiffusive flux
+    sums are required in the limiting coefficient definitions:
+    \begin{equation}
+      \correctionfluxletter_i^{\componentindex,-} \equiv
+        \sum\limits_{j:\correctionfluxij^\componentindex<0}
+        \correctionfluxij^\componentindex \eqc \qquad
+      \correctionfluxletter_i^{\componentindex,+} \equiv
+        \sum\limits_{j:\correctionfluxij^\componentindex>0}
+        \correctionfluxij^\componentindex \eqp
+    \end{equation}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Limiting Coefficients (Cont.)}
+
+\begin{itemize}
+  \item The limiting coefficients are first computed just as in the scalar case:
+    \begin{equation}
+      \limiterletter_i^{\componentindex,\pm} \equiv\left\{
+        \begin{array}{l l}
+          1 & \correctionfluxletter_i^{\componentindex,\pm} = 0\\
+          \min\left(1,\frac{Q_i^{\componentindex,\pm}}
+            {\correctionfluxletter_i^{\componentindex,\pm}}\right) &
+          \correctionfluxletter_i^{\componentindex,\pm} \ne 0
+        \end{array}
+      \right. \eqp
+    \end{equation}
+    \begin{equation}
+      \limiterletter\ij^\componentindex \equiv\left\{
+        \begin{array}{l l}
+          \min(L_i^{\componentindex,+},L_j^{\componentindex,-}) &
+            \correctionfluxij^\componentindex \geq 0\\
+          \min(L_i^{\componentindex,-},L_j^{\componentindex,+}) &
+            \correctionfluxij^\componentindex < 0
+        \end{array}
+      \right. \eqp
+    \end{equation}
+  \item However, there is a caveat: limiting coefficients may require
+    \hlorange{synchronization}, e.g.,
+    \begin{equation}
+      \limiterletter\ij^\componentindex \mapsfrom
+        \min\limits_k\limiterletter\ij^k \quad \forall\componentindex \eqp
+    \end{equation}
+  \item Otherwise, antidiffusive fluxes in one component can violate the
+    conditions of another component.
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Shallow Water Equations Results}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Preliminary Results}
+\framesubtitle{Height in Dam Break Problem}
+
+\begin{center}
+\includegraphics[height=0.8\textheight]{./figures/height_FE.pdf}
+\end{center}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Preliminary Results}
+\framesubtitle{Discharge in Dam Break Problem}
+
+\begin{center}
+\includegraphics[height=0.8\textheight]{./figures/momentum_FE.pdf}
+\end{center}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1095,14 +1233,6 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \begin{center}
    \includegraphics[width=0.4\textwidth]{./figures/NEUP_Final_Logo_Version-09.jpg}
 \end{center}
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{References}
-
-\bibliographystyle{plain}
-\bibliography{../../dissertation/references}
-
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \end{document}

@@ -39,7 +39,8 @@ Equation \eqref{eq:shallowwater_entropy_equality}:
   \entropyresidual(\vectorsolution^\timeindex, \vectorsolution^{\timeindex-1})
     \equiv \frac{\entropy(\vectorsolution^\timeindex)
       - \entropy(\vectorsolution^{\timeindex-1})}{\timestepsize^{\timeindex-1}}
-    + \divergence\mathbf{\consfluxletter}^\entropy(\vectorsolution^\timeindex)
+    + \divergence\mathbf{\consfluxletter}^\entropy
+      (\vectorsolution^\timeindex,\bathymetry)
   \eqp
 \end{equation}
 The entropy jump for a face $F$ is defined to be
@@ -63,8 +64,8 @@ for the high-order diffusion. The entropy diffusion matrix is computed as
 \end{equation}
 \begin{equation}
   \nodequantity{\diffusionmatrixletter}^{\entropy,\timeindex}\kl \equiv
-    \frac{\entropyresidualcoef\nodequantity{\entropyresidual}\kl +
-      \entropyjumpcoef\nodequantity{\entropyjump}\kl}
+    \frac{\entropyresidualcoef\nodequantity{\entropyresidual}\kl^n +
+      \entropyjumpcoef\nodequantity{\entropyjump}\kl^n}
       {\nodequantity{\entropynormalization}^\timeindex\kl}
   \eqc
 \end{equation}
@@ -106,7 +107,7 @@ diffusion as an upper bound:
 \end{equation}
 \begin{equation}
   \nodequantity{\diffusionmatrixletter}^{\high,\timeindex}\kl \equiv
-    \max\pr{\nodequantity{\diffusionmatrixletter}^{\entropy,\timeindex}\kl,
+    \min\pr{\nodequantity{\diffusionmatrixletter}^{\entropy,\timeindex}\kl,
       \nodequantity{\diffusionmatrixletter}^{\low,\timeindex}\kl}
   \eqc
 \end{equation}
