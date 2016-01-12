@@ -920,12 +920,15 @@ Transport Algorithm to Hyperbolic Conservation Laws}
     the domain-invariance property to be proven:
     \begin{equation}
       \diffusionmatrixletter^{L,n}\ij \equiv
-        \max(\maxwavespeed\ij,\maxwavespeed\ji)
+        \max(\maxwavespeed\ij\ltwonorm{\mathbf{\gradientmatrixletter}\ij},
+          \maxwavespeed\ji\ltwonorm{\mathbf{\gradientmatrixletter}\ji})
       \quad j\ne i \eqc \quad
+    \end{equation}
+    \begin{equation}
       \diffusionmatrixletter^{L,n}_{i,i} \equiv
         -\sumjnoti\diffusionmatrixletter^{L,n}\ij
       \eqc
-   \end{equation}
+    \end{equation}
    where $\maxwavespeed\ij \equiv \maxwavespeed(
    \normalvector\ij,\solutionvector_i^n,\solutionvector_j^n)$
    is the maximum wave speed in the 1-D Riemann problem in the direction

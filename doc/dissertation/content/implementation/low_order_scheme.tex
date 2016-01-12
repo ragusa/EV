@@ -1,0 +1,64 @@
+%--------------------------------------------------------------------------------
+\begin{definition}{Low-Order Artificial Diffusion Matrix}
+   The low-order artificial diffusion matrix $\loworderdiffusionmatrix[\timeindex]$
+   is defined as
+   \begin{subequations}\label{eq:low_order_diffusion_matrix_system}
+   \begin{equation}
+     \diffusionmatrixletter\ij^{L,\timeindex} \equiv
+       \nodequantity{\diffusionmatrixletter}^{L,\timeindex}\nodeij \eqc
+   \end{equation}
+   \begin{equation}
+     \nodequantity{\diffusionmatrixletter}^{L,\timeindex}\kl \equiv
+       \max(\maxwavespeed(\nodequantity{\normalvector}\kl,
+         \nodequantity{\solutionvector}_k^\timeindex,
+         \nodequantity{\solutionvector}_\ell^\timeindex)
+         \ltwonorm{\nodequantity{\mathbf{\gradientmatrixletter}}\kl},\;
+         \maxwavespeed(\nodequantity{\normalvector}\lk,
+         \nodequantity{\solutionvector}_\ell^\timeindex,
+         \nodequantity{\solutionvector}_k^\timeindex)
+         \ltwonorm{\nodequantity{\mathbf{\gradientmatrixletter}}\lk}
+       )
+     \eqc
+   \end{equation}
+   \end{subequations}
+   where $\maxwavespeed(\nodequantity{\normalvector}\kl,
+         \nodequantity{\solutionvector}_k^\timeindex,
+         \nodequantity{\solutionvector}_\ell^\timeindex)$
+  is the maximum wave speed in the 1-D Riemann problem in the direction
+  $\nodequantity{\normalvector}\kl \equiv
+  \nodequantity{\mathbf{\gradientmatrixletter}}\kl /
+  \ltwonorm{\nodequantity{\mathbf{\gradientmatrixletter}}\kl}$
+  with left state $\nodequantity{\solutionvector}_k^\timeindex$ and right state
+  $\nodequantity{\solutionvector}_\ell^\timeindex$.
+\end{definition}
+%--------------------------------------------------------------------------------
+    \begin{equation}
+      \diffusionmatrixletter^{L,n}\ij \equiv
+        \max(\maxwavespeed\ij,\maxwavespeed\ji)
+      \quad j\ne i \eqc \quad
+      \diffusionmatrixletter^{L,n}_{i,i} \equiv
+        -\sumjnoti\diffusionmatrixletter^{L,n}\ij
+      \eqc
+   \end{equation}
+   \begin{equation}
+     \diffusionmatrixletter^{L,\timeindex}\ij \equiv
+       \max(\maxwavespeed(\nodequantity{\normalvector}\ij,
+         \nodequantity{\solutionvector}_k^\timeindex,
+         \nodequantity{\solutionvector}_\ell^\timeindex)
+         \ltwonorm{\nodequantity{\mathbf{\gradientmatrixletter}}\kl},\;
+         \maxwavespeed(\nodequantity{\normalvector}\lk,
+         \nodequantity{\solutionvector}_\ell^\timeindex,
+         \nodequantity{\solutionvector}_k^\timeindex)
+         \ltwonorm{\nodequantity{\mathbf{\gradientmatrixletter}}\lk}
+       )
+     \eqc
+   \end{equation}
+   where $\maxwavespeed(\nodequantity{\normalvector}\kl,
+         \nodequantity{\solutionvector}_k^\timeindex,
+         \nodequantity{\solutionvector}_\ell^\timeindex)$
+  is the maximum wave speed in the 1-D Riemann problem in the direction
+  $\nodequantity{\normalvector}\kl \equiv
+  \nodequantity{\mathbf{\gradientmatrixletter}}\kl /
+  \ltwonorm{\nodequantity{\mathbf{\gradientmatrixletter}}\kl}$
+  with left state $\nodequantity{\solutionvector}_k^\timeindex$ and right state
+  $\nodequantity{\solutionvector}_\ell^\timeindex$.

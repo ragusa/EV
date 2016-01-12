@@ -1,0 +1,55 @@
+\begin{subequations}
+\begin{equation}
+  \diffusionmatrixletter^{\entropy,\timeindex}\ij \equiv
+    \nodequantity{\diffusionmatrixletter}^{\entropy,\timeindex}\nodeij \eqc
+\end{equation}
+\begin{equation}
+  \nodequantity{\diffusionmatrixletter}^{\entropy,\timeindex}\kl \equiv
+    \frac{\entropyresidualcoef\nodequantity{\entropyresidual}\kl^n +
+      \entropyjumpcoef\nodequantity{\entropyjump}\kl^n}
+      {\nodequantity{\entropynormalization}^\timeindex\kl}
+  \eqc
+\end{equation}
+\end{subequations}
+where
+\begin{equation}
+  \nodequantity{\entropyresidual}\kl^\timeindex \equiv \left|
+    \int\limits_{\nodequantity{\support}\kl}
+      \entropyresidual(\vectorsolution^\timeindex,\vectorsolution^{\timeindex-1})
+      \nodequantity{\testfunction}_k(\x)
+      \nodequantity{\testfunction}_\ell(\x) \dvolume
+    \right|
+  \eqc
+\end{equation}
+% TODO: I think the following quantity is always zero because the product
+% of the supports on the faces are zero, so the jumps may need
+% to be redefined or omitted.
+\begin{equation}
+  \nodequantity{\entropyjump}\kl^\timeindex \equiv \maxcelldiameter
+    \sum\limits_{F:\facedomain_F\subset\nodequantity{\support}\kl} \,
+    \int\limits_{\facedomain_F}\entropyjump_F(\vectorsolution^\timeindex)
+      \nodequantity{\testfunction}_k(\x)
+      \nodequantity{\testfunction}_\ell(\x) \darea
+  \eqc
+\end{equation}
+\begin{equation}
+  \nodequantity{\entropynormalization}^\timeindex\kl \equiv
+    \max\limits_{\cell:\celldomain\subset\nodequantity{\support}\kl}
+    \max\limits_{\qpoint\in\quadraturepoints(\celldomain)}
+    \entropynormalization(\vectorsolution^\timeindex(\qpoint))
+  \eqp
+\end{equation}
+Similarly to the scalar case, the high-order diffusion uses the low-order
+diffusion as an upper bound:
+\begin{subequations}
+\begin{equation}
+  \diffusionmatrixletter^{\high,\timeindex}\ij \equiv
+    \nodequantity{\diffusionmatrixletter}^{\high,\timeindex}\nodeij \eqc
+\end{equation}
+\begin{equation}
+  \nodequantity{\diffusionmatrixletter}^{\high,\timeindex}\kl \equiv
+    \min\pr{\nodequantity{\diffusionmatrixletter}^{\entropy,\timeindex}\kl,
+      \nodequantity{\diffusionmatrixletter}^{\low,\timeindex}\kl}
+  \eqc
+\end{equation}
+\end{subequations}

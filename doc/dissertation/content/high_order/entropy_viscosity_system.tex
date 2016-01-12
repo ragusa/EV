@@ -57,26 +57,20 @@ matrix is computed directly. This is because the domain-invariant low-order sche
 described in Section \ref{sec:low_order_scheme_system} also makes
 this approach, and the low-order scheme diffusion must be used as an upper bound
 for the high-order diffusion. The entropy diffusion matrix is computed as
-\begin{subequations}
 \begin{equation}
   \diffusionmatrixletter^{\entropy,\timeindex}\ij \equiv
-    \nodequantity{\diffusionmatrixletter}^{\entropy,\timeindex}\nodeij \eqc
-\end{equation}
-\begin{equation}
-  \nodequantity{\diffusionmatrixletter}^{\entropy,\timeindex}\kl \equiv
-    \frac{\entropyresidualcoef\nodequantity{\entropyresidual}\kl^n +
-      \entropyjumpcoef\nodequantity{\entropyjump}\kl^n}
-      {\nodequantity{\entropynormalization}^\timeindex\kl}
+    \frac{\entropyresidualcoef\entropyresidual\ij^n +
+      \entropyjumpcoef\entropyjump\ij^n}
+      {\entropynormalization^\timeindex\ij}
   \eqc
 \end{equation}
-\end{subequations}
 where
 \begin{equation}
-  \nodequantity{\entropyresidual}\kl^\timeindex \equiv \left|
-    \int\limits_{\nodequantity{\support}\kl}
+  \entropyresidual\ij^\timeindex \equiv \left|
+    \int\limits_{\support\ij}
       \entropyresidual(\vectorsolution^\timeindex,\vectorsolution^{\timeindex-1})
-      \nodequantity{\testfunction}_k(\x)
-      \nodequantity{\testfunction}_\ell(\x) \dvolume
+      \testfunction_i(\x)
+      \testfunction_j(\x) \dvolume
     \right|
   \eqc
 \end{equation}
@@ -84,33 +78,26 @@ where
 % of the supports on the faces are zero, so the jumps may need
 % to be redefined or omitted.
 \begin{equation}
-  \nodequantity{\entropyjump}\kl^\timeindex \equiv \maxcelldiameter
-    \sum\limits_{F:\facedomain_F\subset\nodequantity{\support}\kl} \,
+  \entropyjump\ij^\timeindex \equiv \maxcelldiameter
+    \sum\limits_{F:\facedomain_F\subset\support\ij} \,
     \int\limits_{\facedomain_F}\entropyjump_F(\vectorsolution^\timeindex)
-      \nodequantity{\testfunction}_k(\x)
-      \nodequantity{\testfunction}_\ell(\x) \darea
+      \testfunction_i(\x)
+      \testfunction_j(\x) \darea
   \eqc
 \end{equation}
 \begin{equation}
-  \nodequantity{\entropynormalization}^\timeindex\kl \equiv
-    \max\limits_{\cell:\celldomain\subset\nodequantity{\support}\kl}
+  \entropynormalization^\timeindex\ij \equiv
+    \max\limits_{\cell:\celldomain\subset\support\ij}
     \max\limits_{\qpoint\in\quadraturepoints(\celldomain)}
     \entropynormalization(\vectorsolution^\timeindex(\qpoint))
   \eqp
 \end{equation}
 Similarly to the scalar case, the high-order diffusion uses the low-order
 diffusion as an upper bound:
-\begin{subequations}
 \begin{equation}
   \diffusionmatrixletter^{\high,\timeindex}\ij \equiv
-    \nodequantity{\diffusionmatrixletter}^{\high,\timeindex}\nodeij \eqc
-\end{equation}
-\begin{equation}
-  \nodequantity{\diffusionmatrixletter}^{\high,\timeindex}\kl \equiv
-    \min\pr{\nodequantity{\diffusionmatrixletter}^{\entropy,\timeindex}\kl,
-      \nodequantity{\diffusionmatrixletter}^{\low,\timeindex}\kl}
+    \min\pr{\diffusionmatrixletter^{\entropy,\timeindex}\ij,
+      \diffusionmatrixletter^{\low,\timeindex}\ij}
   \eqc
 \end{equation}
-\end{subequations}
-
 
