@@ -1,18 +1,20 @@
 The solution of conservation law equations such as the neutron transport
 equation presents a number of unique challenges; in the vicinity of strong
 gradients and discontinuities, numerical solutions are prone to spurious
-oscillations that may generate unphysical values. For example, physically
-non-negative quantities such as scalar flux or angular flux may have negative
-numerical solution values if care is not taken in the numerical scheme.
+oscillations that may generate unphysical values. For example,
+numerical schemes may generate negative solution values for physically
+non-negative quantities such as scalar flux or angular flux
+if adequate precautions are not taken.
 These negativities are not only undesirable because they are physically
-incorrect, but also because often numerical algorithms completely break
-down, causing simulations to abort, or worse, altering results without
-discovery that unphysical values were encountered. The consequences of
-these results may lead to poor design choices, which can pose serious safety
-risks when a design is implemented.
+incorrect, but also because often numerical solution algorithms completely break
+down, causing simulations to terminate prematurely. Even more consequential
+is the possibility that these negative solution values go undiscovered
+and cause significant inaccuracies in quantities of interest.
+This is a particularly serious possibility, as these erroneous results may
+lead to poor design choices, thus presenting significant safety concerns.
 
 The formation of spurious oscillations and negativities is a well-known issue
-in the simulation of hyperbolic partial differential equations (PDEs), which
+in numerical discretizations of hyperbolic partial differential equations (PDEs), which
 include, for example, linear advection, Burger's equation, the inviscid Euler
 equations of gas dynamics, and the shallow water (or Saint-Venant) equations.
 These PDEs result from manipulating the corresponding integral conservation law
@@ -21,11 +23,11 @@ smooth - in the presence of shocks, the PDE form breaks down
 \cite{leveque2002}\refsec{11.6}. Thus it becomes necessary to work with these
 equations in a weak form, which holds in the presence of shocks.  However, the
 mathematical formulations for these problems do not necessarily yield unique
-weak solutions; this is a manifestation of the neglect of physics in the
+weak solutions; this is a manifestation of the lack of some physics in the
 underlying hyperbolic PDE model \cite{leveque2002}\refsec{11.13}.
 
-Attempts to address these issues have taken a number
-of different approaches for different discretization schemes.
+%Attempts to address these issues have taken a number
+%of different approaches for different discretization schemes.
 
 To produce a unique, physically meaningful solution, it is necessary to
 enforce additional conditions, often called \emph{admissibility conditions}
@@ -34,9 +36,11 @@ leaving only the physical, \emph{entropy-satisfying} weak solution
 \cite{leveque2002}\refsec{11.13}.
 There are a number of entropy conditions that may be applied: some
 examples are the Lax entropy condition and the Oleinik entropy
-condition\cite{leveque2002}\refsec{11.13}; however, it can be impractical
+condition\cite{leveque2002}\refsec{11.13}; however, it is typically impractical
 to apply these conditions in a numerical simulation. The research in this
 dissertation employs the notion of an entropy-based artificial viscosity,
 based on the recent work of Guermond et al.\cite{guermond_ev}.
 The notion of entropy stems from
-thermodynamics, in which entropy is a non-decreasing function of time.
+thermodynamics, in which entropy is a non-decreasing function of time, whereas
+the concept of entropy in mathematics is usually viewed as the opposite: it is
+a non-\emph{increasing} function of time.

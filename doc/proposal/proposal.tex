@@ -1,0 +1,78 @@
+\documentclass[12pt]{article}
+\usepackage[letterpaper]{geometry}
+\geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{subcaption}
+%\usepackage[mathscr]{euscript} % for \mathscr{} in math mode
+\usepackage[hidelinks]{hyperref}
+
+% create path commands
+\newcommand{\refdir}{../dissertation}
+\newcommand{\contentdir}{../dissertation/content}
+
+% input user-defined commands
+\input{\contentdir/newcommands}
+\input{\contentdir/theorems_dissertation}
+
+%===============================================================================
+% Document
+%===============================================================================
+\begin{document}
+
+\begin{center}
+  {\large
+    Application of the Entropy Viscosity Method and the Flux-Corrected Transport
+    Algorithm to Scalar Transport Equations and the Shallow Water Equations
+  }
+
+  {\scriptsize
+    Dissertation Proposal
+  }
+
+  \vspace{1em}
+
+  Joshua E. Hansel
+\end{center}
+
+%===============================================================================
+\section{Introduction}
+%===============================================================================
+\input{\contentdir/introduction/purpose}
+
+The organization of this proposal is as follows.
+Section \ref{sec:problem_formulation} gives and discusses the physical models,
+problem formulation, and discretization.
+Section \ref{sec:methodology} discusses the methodology used, including
+entropy-based artificial dissipation and the flux-corrected transport
+algorithm.
+Section \ref{sec:results} gives a sample of preliminary results.
+Section \ref{sec:goals} discusses the goals of this research.
+Section \ref{sec:conclusions} gives a summary and conclusions of this proposal.
+%===============================================================================
+\section{Problem Formulation\label{sec:problem_formulation}}
+%===============================================================================
+%-------------------------------------------------------------------------------
+\subsection{Physical Models}
+%-------------------------------------------------------------------------------
+\subsubsection{Scalar Transport}
+%-------------------------------------------------------------------------------
+%===============================================================================
+\section{Methodology\label{sec:methodology}}
+%===============================================================================
+%===============================================================================
+\section{Preliminary Results\label{sec:results}}
+%===============================================================================
+%===============================================================================
+\section{Research Goals\label{sec:goals}}
+%===============================================================================
+%===============================================================================
+\section{Conclusions\label{sec:conclusions}}
+%===============================================================================
+
+%===============================================================================
+\bibliographystyle{plain}
+\bibliography{\refdir/references}
+%===============================================================================
+
+\end{document}
