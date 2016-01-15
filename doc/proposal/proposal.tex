@@ -48,12 +48,16 @@ algorithm.
 Section \ref{sec:results} gives a sample of preliminary results.
 Section \ref{sec:goals} discusses the goals of this research.
 Section \ref{sec:conclusions} gives a summary and conclusions of this proposal.
+
 %###############################################################################
 \section{Problem Formulation\label{sec:problem_formulation}}
 %###############################################################################
 %===============================================================================
 \subsection{Physical Models}
 %===============================================================================
+This section introduces the PDEs under consideration. Section
+\ref{sec:scalar_model} introduces the scalar hyperbolic PDE model, and
+Section \ref{sec:sw_model} introduces the shallow water equations.
 %-------------------------------------------------------------------------------
 \subsubsection{Scalar Transport\label{sec:scalar_model}}
 %-------------------------------------------------------------------------------
@@ -62,6 +66,30 @@ Section \ref{sec:conclusions} gives a summary and conclusions of this proposal.
 \subsubsection{The Shallow Water Equations\label{sec:sw_model}}
 %-------------------------------------------------------------------------------
 \input{\contentdir/preliminaries/shallowwater}
+
+%===============================================================================
+\subsection{Discretization}
+%===============================================================================
+This section gives the spatial and temporal discretizations. Section
+\ref{sec:spatial_discretization_scalar} gives the spatial discretization
+for the scalar model given in Section \ref{sec:scalar_model}, and
+Section \ref{sec:spatial_discretization_sw} gives the spatial discretization
+for the shallow water equations, introduced in Section \ref{sec:sw_model}.
+In both cases, the continuous Galerkin finite element method (FEM) is employed
+with basis functions from a piecewise linear polynomial space.
+
+%-------------------------------------------------------------------------------
+\subsubsection{Spatial Discretization of the Scalar Hyperbolic PDE Model
+\label{sec:spatial_discretization_scalar}}
+%-------------------------------------------------------------------------------
+\input{spatial_discretization_scalar}
+
+%-------------------------------------------------------------------------------
+\subsubsection{Spatial Discretization of the Shallow Water Equations
+\label{sec:spatial_discretization_sw}}
+%-------------------------------------------------------------------------------
+\input{spatial_discretization_shallowwater}
+
 %###############################################################################
 \section{Methodology\label{sec:methodology}}
 %###############################################################################

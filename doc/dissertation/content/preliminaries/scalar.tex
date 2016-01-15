@@ -1,6 +1,6 @@
 The primary application of this research is radiation transport;
 however, most of the analysis performed is valid
-for any conservation law of the following form:
+for any scalar conservation law of the following form:
 \begin{equation}\label{eq:scalar_transport}
    \ppt{\scalarsolution} + \divergence\consfluxscalar
    + \reactioncoef\xt \scalarsolution\xt = \scalarsource\xt \eqc
@@ -9,23 +9,22 @@ where $\scalarsolution\xt$ is a general scalar conserved quantity at position
 $\x$ and time $\timevalue$, $\consfluxscalar$ is a general flux
 function,
 $\reactioncoef\xt$ is a reaction term, and $\scalarsource\xt$ is a source
-term. This notation will be used throughout this document to keep
-the analysis as general as possible; radiation transport notation
-will only be adopted when assumptions are needed.
+term. Since the radiation transport equation has a linear flux function
+$\consfluxscalar$, hereafter it is assumed that
+$\consfluxscalar\equiv\velocity\scalarsolution$, where $\velocity$ is a constant
+velocity.
 
-A Scalar radiation transport equation,
+The following scalar radiation transport equation then fits the model of
+Equation \eqref{eq:scalar_transport}:
 \begin{equation}\label{eq:rad_transport}
   \frac{1}{\speed}\ppt{\angularflux} + \directionvector\cdot\nabla\angularflux\xt
   + \totalcrosssection(\x)\angularflux\xt = \radiationsource\xt \eqc
 \end{equation}
-fits the conservation law model of Equation \eqref{eq:scalar_transport} by
-making the following substitutions:
+by making the following definitions:
 \[
-  \consfluxscalar\rightarrow\velocity\scalarsolution
+  \scalarsolution\rightarrow\angularflux
   \eqc \quad
   \velocity\rightarrow\speed\directionvector
-  \eqc \quad
-  \scalarsolution\rightarrow\angularflux
   \eqc \quad
   \reactioncoef\rightarrow\speed\totalcrosssection
   \eqc \quad
@@ -37,22 +36,21 @@ $\speed$ is the transport speed, $\totalcrosssection(\x)$
 is the macroscopic total cross-section, and $\radiationsource\xt$ is the
 total source (extraneous plus scattering).
 
-To complete the problem formulation, boundary
-conditions must be provided, as well as initial conditions if the
-problem is transient:
+Initial conditions are included if the problem is transient:
 \begin{equation}
    \scalarsolution(\x,0) = \scalarsolution^0(\x)
    \quad \forall \x\in\domain \eqp
 \end{equation}
 Boundary conditions will depend on the chosen conservation law and
 the particular problem. 
-For linear transport a well-posed problem can be completed with an incoming flux
-boundary condition:
+This research assumes an incoming flux boundary condition, which is strongly
+imposed as a Dirichlet boundary condition:
 \begin{equation}
    \scalarsolution\xt = \scalarsolution^{inc}\xt \quad \forall \x
    \in \domainboundary^-,
      \quad \domainboundary^- = \{\x\in\domainboundary:
      \velocity\cdot\normalvector(\x)<0\} \eqp
 \end{equation}
-For nonlinear conservation laws, care must be taken to ensure that the
+These conditions together make the problem well-posed, but for general
+nonlinear conservation laws, care must be taken to ensure that the
 boundary conditions used result in a well-posed problem.

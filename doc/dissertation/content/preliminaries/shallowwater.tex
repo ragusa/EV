@@ -6,7 +6,7 @@ approximation that the depth component of acceleration can be neglected due to
 horizontal length scales being much greater than the depth length
 scale. Depth-integrating the conservation equations gives the shallow
 water equations\cite{toro2009}\cite{leveque2002}:
-\begin{equation}
+\begin{equation}\label{eq:shallow_water_equations}
 \begin{gathered}
   \ppt{\vectorsolution} + \nabla\cdot\consfluxvector(\vectorsolution)
   = \conssource(\vectorsolution) \eqc
@@ -59,24 +59,23 @@ $\velocity$ is velocity, $\gravity$
 is acceleration due to gravity, and $\bathymetry$ is the topography of the
 bottom terrain of the fluid body, hereafter referred to as the \emph{bathymetry}
 function.
-
 Note that the shallow water equations are only valid in 1-D or 2-D, not 3-D,
 since they are depth-integrated equations.
 
+Initial conditions are included if the problem is transient:
+\begin{equation}
+   \vectorsolution(\x,0) = \vectorsolution^0(\x)
+   \quad \forall \x\in\domain \eqp
+\end{equation}
 To complete the problem formulation, boundary
 conditions must be provided, some examples being
 Dirichlet boundary conditions, open boundary conditions,
 wall boundary conditions,
 etc. One must be careful with specifying boundary conditions to have
-a well-posed problem for hyperbolic systems; a characteristic analysis
-is required and there is a large body of research
-addressing this area alone. For simplicity, problems are
+a well-posed problem for hyperbolic systems.
+In general a characteristic analysis is required; there is a large body of research
+addressing this area alone. For simplicity, problems in this work are
 chosen such that initial data never reaches the boundary
 or boundary conditions are implemented as natural conditions
 rather than using the method of characteristics.
 
-For transient problems, initial conditions are specified:
-\begin{equation}
-   \vectorsolution(\x,0) = \vectorsolution^0(\x)
-   \quad \forall \x\in\domain \eqp
-\end{equation}

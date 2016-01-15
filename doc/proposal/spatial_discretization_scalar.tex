@@ -1,0 +1,47 @@
+With linear piecewise FEM, the solution is approximated as a linear combination of
+the piecewise linear basis functions $\testfunction_j(\x)$:
+\begin{equation}
+  \approximatescalarsolution\xt = \sumj \solutionletter_j(\timevalue)
+  \testfunction_j(\x) \eqc
+\end{equation}
+where the coefficients $\solutionletter_j(\timevalue)$ are the basis function
+expansion coefficients at time $\timevalue$. Substituting the approximate
+solution into Equation \eqref{eq:scalar_transport}
+(with $\consfluxscalar\equiv\velocity\scalarsolution$) and testing with basis
+function $\testfunction_i(\x)$ gives
+\begin{equation}
+   \intSi\ppt{\approximatescalarsolution}\testfunction_i(\x) d\volume
+      + \intSi\left(\velocity\cdot\nabla\approximatescalarsolution\xt
+      + \reactioncoef(\x)\approximatescalarsolution\xt\right)
+      \testfunction_i(\x) d\volume
+      = \intSi \scalarsource\xt \testfunction_i(\x) d\volume \eqc
+\end{equation}
+where $\support_i$ is the support of $\testfunction_i(\x)$.
+With the assumption of the linear flux function, the system to be solved
+is linear:
+\begin{equation}\label{eq:semidiscrete}
+  \consistentmassmatrix\ddt{\solutionvector}+\ssmatrix\solutionvector(t)
+  = \ssrhs(\timevalue) \eqc
+\end{equation}
+where $\consistentmassmatrix$ is the consistent mass matrix:
+\begin{equation}\label{eq:massmatrix}
+  \massmatrixletter^C\ij \equiv \intSij
+  \testfunction_j(\x)\testfunction_i(\x) d\volume \eqc
+\end{equation}
+$\ssrhs(\timevalue)$ is the source vector:
+\begin{equation}
+  \ssrhsletter_i(\timevalue) \equiv \intSi \scalarsource\xt\testfunction_i(\x)
+  d\volume \eqc
+\end{equation}
+and $\ssmatrix$ is the steady-state matrix:
+\begin{equation}\label{eq:Aij}
+  \ssmatrixletter\ij \equiv \intSij\left(
+  \velocity\cdot\nabla\testfunction_j(\x) +
+  \reactioncoef(\x)\testfunction_j(\x)\right)\testfunction_i(\x) d\volume \eqc
+\end{equation}
+where $\support\ij$ is the dual support of $\testfunction_i(\x)$ and
+$\testfunction_j(\x)$.
+If the flux function $\consfluxscalar$ were nonlinear, then the system would
+be nonlinear, but it would be expressible in a quasilinear form:
+$\ssmatrix\rightarrow\ssmatrix(\approximatescalarsolution)$.
+

@@ -1,0 +1,67 @@
+The FEM basis functions for each solution component are chosen to be identical,
+so one may take the viewpoint that degrees of freedom are vector-valued
+and that the test functions are scalar:
+\begin{equation}
+  \approximatevectorsolution\xt = \sumj \solutionvector_j(\timevalue)
+  \testfunction_j(\x) \eqc
+\end{equation}
+where $\solutionvector_j(\timevalue)$ is a vector of the degrees of freedom of all
+solution components at a node $j$:
+$\solutionvector_j(\timevalue)=[\height_j(\timevalue),
+\heightmomentum_j(\timevalue)]\transpose$. Note that in a practical
+implementation, the basis functions would be viewed as vector-valued, with
+degrees of freedom being scalar.
+
+As opposed to the scalar conservation law case, the vector case takes a
+group finite element approach: the conservation law flux is interpolated
+using the flux evaluated at nodes:
+\begin{equation}
+  \consfluxvector(\vectorsolution\xt) \rightarrow
+  \Pi\consfluxvector(\vectorsolution\xt) 
+    \equiv \sumj\testfunction_j(\x)\consfluxvector
+      (\vectorsolution(\x_j,\timevalue))
+  \eqc
+\end{equation}
+where hereafter the nodal flux values used as interpolation values,
+$\consfluxvector(\vectorsolution(\x_j,\timevalue))$,
+will be denoted as $\consfluxinterpolant_j(\timevalue)$. This is done
+as a step for proving the domain-invariance of the low-order scheme,
+which is introduced in Section \ref{sec:low_order_scheme_system}.
+
+Rearranging Equation \eqref{eq:shallow_water_equations},
+substituting the approximate FEM
+solution and conservation law flux,
+testing with a test function $\testfunction_i$,
+and integrating by parts gives
+\begin{equation}
+  \sumj\consistentmassentry
+    \ddt{\solutionvector_j}
+    + \sum_j\gradiententry\cdot\consfluxinterpolant_j(t)
+    = \ssrhs_i(t) \eqc
+\end{equation}
+where
+\begin{equation}
+  \gradiententry \equiv
+    \intSij\testfunction_i(\x)
+      \nabla\testfunction_j(\x) d\volume
+  \eqp
+\end{equation}
+For the 2-D shallow water equations,
+\begin{equation}
+  \consfluxinterpolant_j(\timevalue) = \sq{\begin{array}{c}
+    \approximate{\heightmomentum}_j \\
+    \frac{\approximate{\heightmomentumletter}_{x,j}}{\approximate{\height}_j}
+      \approximate{\heightmomentum}_j
+      + \frac{1}{2}\gravity\approximate{\height}_j^2\unitvector{x} \\
+    \frac{\approximate{\heightmomentumletter}_{y,j}}{\approximate{\height}_j}
+      \approximate{\heightmomentum}_j
+      + \frac{1}{2}\gravity\approximate{\height}_j^2\unitvector{y}
+  \end{array}} \eqc \qquad
+  \ssrhs_i(t) = \sq{\begin{array}{c}
+    0\\
+    - \int_{\support_i}\testfunction_i(\x)
+      \gravity\approximate{\height}\xt\partial_x\bathymetry\dvolume \\
+    - \int_{\support_i}\testfunction_i(\x)
+      \gravity\approximate{\height}\xt\partial_y\bathymetry\dvolume
+  \end{array}} \eqp
+\end{equation}

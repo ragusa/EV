@@ -48,6 +48,15 @@ not priorities of the research but would be advantageous to complete
 if the primary objectives are completed with sufficient remaining time:
 
 \begin{itemize}
+  \item \textbf{Extend shallow water methodology to include non-zero topography.}
+    The presence of the bathymetry term in the shallow water equations
+    is a non-conservative term and thus currently does not fit the conservation
+    law model relied upon for the domain-invariant low-order scheme.
+    This adds some complexity to the theory because the characteristic
+    analysis must include this term, but it is currently believed that the
+    extension is possible. The extension would be advantageous as it would
+    allow the simulation of problems such as the so-called lake-at-rest problem
+    shoreline problems, and dam-break problems over a hump.
   \item \textbf{Perform timing studies.}
     This research contains a number of schemes of varying complexity, and
     it advantageous to compare the relative computational costs in
@@ -65,5 +74,10 @@ if the primary objectives are completed with sufficient remaining time:
     It is desirable to compare how the methods developed in this research
     compare to existing methods in literature for large benchmark
     problems. One example is the 2-D partial dam-break problem for the SWE.
+  \item \textbf{Demonstrate effectiveness in non-uniform meshes.}
+    One of the main advantages of the schemes designed in this work is
+    that mesh uniformity is not a requirement of the limitation procedure,
+    as in standard flux-limiting procedures. It would be advantageous
+    to demonstrate this attribute by performing adaptive mesh refinement.
 \end{itemize}
 
