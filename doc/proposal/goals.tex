@@ -1,22 +1,69 @@
-The goals of this research are
+The main goal of this research is to develop numerical methods for hyperbolic
+PDEs that address the development of spurious oscillations and negativities
+for physically positive solution quantities. The equations and models under
+consideration are the scalar transport PDE model given in Section \ref{sec:scalar_model}
+and the shallow water equations (SWE), given in Section \ref{sec:sw_model}.
+The methodology developed for these equations is intended to be largely
+extendible to other hyperbolic systems. The following list discusses specific
+primary research objectives that derive from the main research goal.
+
 \begin{itemize}
-  \item The scalar FCT scheme developed is
-    \begin{itemize}
-      \item Positivity-preserving
-      \item Discrete-maximum-principle preserving
-      \item Not guaranteed monotone, but works well in practice
-      \item Entropy-inequality-enforcing
-      \item 2nd-order-accurate for smooth problems
-      \item Valid in multiple dimensions
-      \item Valid for unstructured meshes
-    \end{itemize}
-  \item The shallow water equations FCT scheme developed is
-    \begin{itemize}
-      \item Positivity-preserving
-      \item Not guaranteed monotone, but works well in practice
-      \item Entropy-inequality-enforcing
-      \item 2nd-order-accurate for smooth problems
-      \item Valid in multiple dimensions
-      \item Valid for unstructured meshes
-    \end{itemize}
+  \item \textbf{Demonstrate 2nd-order spatial convergence rates for smooth problems.}
+    For smooth problems, CFEM with piecewise linear basis functions should
+    have 2nd-order convergence rates for both $L^1$ and $L^2$ norms.
+  \item \textbf{Demonstrate theoretical convergence rates for non-smooth problems.}
+    For non-smooth problems, CFEM with piecewise linear basis functions should
+    have convergence rates of $\frac{3}{4}$ and $\frac{3}{8}$ for $L^1$ and $L^2$
+    norms, respectively.
+  \item \textbf{Prove and demonstrate stability.}
+    Stability should be able to be proven theoretically and demonstrated with
+    numerical illustrations. Stability in the $L^\infty$ norm can be easily
+    be theoretically proved for the FCT scheme recursive application of the
+    imposed solution bounds.
+  \item \textbf{Prove and demonstrate positivity.}
+    Positivity for physically positive solution quantities should be proved
+    theoretically and demonstrated with numerical illustrations. For the FCT
+    scheme, proving positivity theoretically amounts to proving that the
+    imposed lower bound on the solution is non-negative.
+  \item \textbf{Demonstrate advantages of entropy-based FCT over Galerkin FCT.}
+    Traditionally the high-order method used in the FCT algorithm is simply the
+    Galerkin spatial discretization, not the entropy-based method discussed in
+    Section \ref{sec:methodology}. It is desirable to compare the two approaches
+    and demonstrate the advantages of entropy-based FCT over Galerkin FCT, as
+    well as give justification with some heuristics.
+  \item \textbf{Prove and demonstrate satisfaction of a discrete maximum
+    principle (DMP) for the scalar case.}
+    For the scalar case, it is possible to theoretically prove that the FCT
+    scheme satisfies a DMP. This is a desired goal, as well as demonstration
+    with numerical illustrations.
+  \item \textbf{Demonstrate a reduction in spurious oscillations.}
+    The FCT algorithm to date cannot guarantee the absence of spurious
+    oscillations and artifacts; however, it should be proven that the incidence
+    of these spurious artifacts is reduced from the entropy-based method
+    without FCT.
 \end{itemize}
+  
+The following list gives secondary objectives of the research, which are
+not priorities of the research but would be advantageous to complete
+if the primary objectives are completed with sufficient remaining time:
+
+\begin{itemize}
+  \item \textbf{Perform timing studies.}
+    This research contains a number of schemes of varying complexity, and
+    it advantageous to compare the relative computational costs in
+    comparing merits of each scheme. The entropy-based scheme and FCT
+    algorithm aim to provide numerous advantages but each comes with
+    an added cost.
+  \item \textbf{Develop a parallel implementation.}
+    The research is not aimed at parallel computing, and a serial
+    implementation is sufficient for meeting primary objectives;
+    however, a parallel implementation would allow larger problems
+    to be run. Fine spatial refinement studies in multiple dimensions
+    are particularly expensive and often are computationally intractable
+    with a serial implementation.
+  \item \textbf{Run large benchmark problems.}
+    It is desirable to compare how the methods developed in this research
+    compare to existing methods in literature for large benchmark
+    problems. One example is the 2-D partial dam-break problem for the SWE.
+\end{itemize}
+
