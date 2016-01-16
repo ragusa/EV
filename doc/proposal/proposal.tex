@@ -77,6 +77,8 @@ Section \ref{sec:spatial_discretization_sw} gives the spatial discretization
 for the shallow water equations, introduced in Section \ref{sec:sw_model}.
 In both cases, the continuous Galerkin finite element method (FEM) is employed
 with basis functions from a piecewise linear polynomial space.
+Section \ref{sec:temporal_discretization} gives the temporal discretizations
+used.
 
 %-------------------------------------------------------------------------------
 \subsubsection{Spatial Discretization of the Scalar Hyperbolic PDE Model
@@ -90,17 +92,40 @@ with basis functions from a piecewise linear polynomial space.
 %-------------------------------------------------------------------------------
 \input{spatial_discretization_shallowwater}
 
+%-------------------------------------------------------------------------------
+\subsubsection{Temporal discretization
+\label{sec:temporal_discretization}}
+%-------------------------------------------------------------------------------
+\input{temporal_discretization}
+
 %###############################################################################
 \section{Methodology\label{sec:methodology}}
 %###############################################################################
+%===============================================================================
+\subsection{Low-Order Scheme\label{sec:low_order_scheme}}
+%===============================================================================
+\input{low_order_scheme}
+
+%===============================================================================
+\subsection{High-Order Scheme\label{sec:high_order_scheme}}
+%===============================================================================
+\input{high_order_scheme}
+
+%===============================================================================
+\subsection{FCT Scheme\label{sec:fct_scheme}}
+%===============================================================================
+\input{fct_scheme}
+
 %###############################################################################
 \section{Preliminary Results\label{sec:results}}
 %###############################################################################
 \input{results}
+
 %###############################################################################
 \section{Research Goals\label{sec:goals}}
 %###############################################################################
 \input{goals}
+
 %###############################################################################
 \section{Conclusions\label{sec:conclusions}}
 %###############################################################################
