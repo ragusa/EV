@@ -26,9 +26,6 @@ mathematical formulations for these problems do not necessarily yield unique
 weak solutions; this is a manifestation of the omission of some physics in the
 approximate hyperbolic PDE model \cite{leveque2002}\refsec{11.13}.
 
-%Attempts to address these issues have taken a number
-%of different approaches for different discretization schemes.
-
 To produce a unique, physically meaningful solution, it is necessary to
 enforce additional conditions, often called \emph{admissibility conditions}
 or \emph{entropy conditions}, which filter out spurious weak solutions,
@@ -44,3 +41,19 @@ The notion of entropy stems from
 thermodynamics, in which entropy is a non-decreasing function of time, whereas
 in mathematics, the concept of entropy is usually viewed as the opposite: it is
 a non-\emph{increasing} function of time.
+
+The FCT algorithm was introduced in 1973 by Boris and Book\cite{boris} for
+finite difference discretizations of transport problems, and it has
+recently been applied to the finite element method. The idea of FCT
+is to blend a low-order scheme that is monotone with a high-order
+scheme using a nonlinear limiting procedure. FCT takes the difference
+of the high-order and low-order schemes to define antidiffusive
+fluxes (or \emph{correction} fluxes), which when added to the low-order
+scheme as a source, becomes equivalent to the high-order scheme. However,
+the FCT algorithm limits these antidiffusive fluxes to satisfy some
+physically-motivated criteria, such as discrete local-extremum-diminishing
+(LED) bounds. FEM-FCT traditionally has used the Galerkin method for
+its high-order scheme, which in some cases is adequate; however, in
+this work, an entropy-based dissipation is added to the scheme to enforce
+an entropy inequality.
+
