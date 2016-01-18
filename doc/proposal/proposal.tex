@@ -23,12 +23,8 @@
 
 \begin{center}
   {\large
-    Application of the Entropy Viscosity Method and the Flux-Corrected Transport
+    Dissertation Proposal: Application of the Entropy Viscosity Method and the Flux-Corrected Transport
     Algorithm to Scalar Transport Equations and the Shallow Water Equations
-  }
-
-  {\scriptsize
-    Dissertation Proposal
   }
 
   \vspace{1em}
@@ -131,7 +127,19 @@ FCT algorithm.
 %###############################################################################
 \section{Preliminary Results\label{sec:results}}
 %###############################################################################
-\input{results}
+This section gives some preliminary results. The methods described
+in Section \ref{sec:methodology} have been implemented using the
+\texttt{deal.II} finite element library\cite{dealii}.
+
+%===============================================================================
+\subsection{Three-Region Problem\label{sec:threeregion}}
+%===============================================================================
+\input{results_threeregion}
+
+%===============================================================================
+\subsection{Spatial Convergence Study\label{sec:convergence}}
+%===============================================================================
+\input{results_convergence}
 
 %###############################################################################
 \section{Research Goals\label{sec:goals}}

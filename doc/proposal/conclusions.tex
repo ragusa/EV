@@ -2,7 +2,8 @@ Preliminary results show that the developed entropy-based FCT scheme
 is effective at preventing the formation of spurious oscillations and
 negativities; however, even with discrete LED criterion satisfied, it is
 possible to generate spurious plateaus. While the monotonicity property is
-not guaranteed, positivity preservation is guaranteed. For scalar conservation laws,
+not guaranteed, positivity preservation is guaranteed.
+For scalar conservation laws,
 the theoretical understanding
 is greater, and a discrete maximum principle can be proved and enforced
 on the FCT solution; this has been demonstrated for the scalar radiation
@@ -13,15 +14,12 @@ entropy solution.
 Some convergence studies have been performed for the scalar case and
 demonstrate the expected spatial convergence rates.
 
-Goals that remain include improvement of the FCT scheme for systems,
-
-
-    \begin{itemize}
-      \item Positivity-preserving
-      \item Discrete-maximum-principle preserving
-      \item Not guaranteed monotone, but works well in practice
-      \item Entropy-inequality-enforcing
-      \item 2nd-order-accurate for smooth problems
-      \item Valid in multiple dimensions
-      \item Valid for unstructured meshes
-    \end{itemize}
+Goals that remain include improvement of the FCT scheme for systems;
+the limitation procedure for systems is complicated by the fact that
+limitation of one set of variables (such as the conservative variables)
+does not necessarily imply the same constraints are imposed on
+auxiliary quantities. Research remains to consider what limitation
+procedure(s) will give satisfactory results for the shallow water
+equations. Other goals that remain include niceties such as timing
+and parallelization studies, which may or may not be achievable in
+the time remaining.

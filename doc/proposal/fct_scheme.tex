@@ -37,76 +37,48 @@ internodal flux $\correctionfluxij$:
     + \limitermatrix\cdot\correctionfluxmatrix \eqp
 \end{equation}
 Each limiting coefficient is between zero and unity: $0\leq L\ij\leq 1$.
-   \begin{itemize}
-      \item If all $L\ij$ are zero, then the low-order scheme is produced.
-      \item If all $L\ij$ are one, then the high-order scheme is produced.
-   \end{itemize}
-   \item The enforced bounds can be rearranged to bound the limited flux sums:
-      \begin{equation}
-         Q^-_i \leq \sum\limits_j L\ij \correctionfluxij \leq Q^+_i \eqc
-      \end{equation}
-      where $Q_i^\pm$ has the following definition:
-      \begin{equation}
-         Q_i^\pm \equiv M_{i,i}^L\frac{W_i^\pm-U_i^n}{\Delta t}
-         + \sum\limits_j A_{i,j}^L U_j^n - b_i \eqp
-      \end{equation}
-   \item The classic Zalesak limiting strategy starts by separating the
-      negative and positive fluxes:
-      \begin{equation}
-         Q^-_i \leq \sum\limits_{j:\correctionfluxij<0} L\ij \correctionfluxij +
-            \sum\limits_{j:\correctionfluxij>0} L\ij \correctionfluxij\leq Q^+_i \eqp
-      \end{equation}
-      The positive fluxes risk violating $Q_i^+$, and the negative fluxes risk
-      violating $Q_i^-$.
-   \item Zalesak's limiting coefficients assume that
-      all positive fluxes into a node $i$ have the same limiting coefficient
-      $L^+_i$ and similarly, negative fluxes have the same limiting coefficient
-      $L^-_i$:
-      \begin{equation}
-        Q^-_i \leq L^-_i \correctionfluxletter^-_i
-          + L^+_i \correctionfluxletter^+_i \leq Q^+_i \eqp
-      \end{equation}
-      where
-      \begin{equation}
-        \correctionfluxletter_i^- \equiv \sum\limits_{j:\correctionfluxij<0}
-          \correctionfluxij \eqc \qquad
-        \correctionfluxletter_i^+ \equiv \sum\limits_{j:\correctionfluxij>0}
-          \correctionfluxij \eqp
-      \end{equation}
-   \item As a conservative bound for $L^+_i$, contributions from negative fluxes
-      are ignored (pretending $L_i^-=0$), giving
-      $L^+_i \leq \frac{Q_i^+}{\correctionfluxletter_i^+}$
-      and similarly for $L^-_i$ and the lower bound.
-   \item Then, recalling that limiting coefficients are not greater than unity:
-      \begin{equation}
-         L_i^\pm \equiv\left\{
-            \begin{array}{l l}
-               1 & \correctionfluxletter_i^\pm = 0\\
-               \min\left(1,\frac{Q_i^\pm}{\correctionfluxletter_i^\pm}\right) &
-                 \correctionfluxletter_i^\pm \ne 0
-            \end{array}
-            \right. \eqp
-      \end{equation}
-   \item However, to limit fluxes conservatively, limited correction fluxes must
-      be equal and opposite:
-      \begin{equation}
-        L\ij \correctionfluxij = -L_{j,i}
-          \MakeUppercase{\correctionfluxletter}_{j,i} \eqp
-      \end{equation}
-      Since $\correctionfluxij$ happens to be skew symmetric
-      ($\MakeUppercase{\correctionfluxletter}_{j,i}=-\correctionfluxij$) due to the
-      chosen flux decomposition, the limiting coefficients must be symmetric:
-      $L_{j,i} = L\ij$.
-   \item Thus when deciding the limiting coefficient $L\ij$ for a flux $\correctionfluxij$, 
-      one must not only consider the bounds for $i$ but also the bounds for $j$.
-      Specifically, a positive flux $\correctionfluxij$ risks violating $Q_i^+$ and $Q_j^-$.
-      Putting everything together,
-      \begin{equation}
-         L\ij \equiv\left\{
-            \begin{array}{l l}
-               \min(L_i^+,L_j^-) & \correctionfluxij \geq 0\\
-               \min(L_i^-,L_j^+) & \correctionfluxij < 0
-            \end{array}
-            \right. \eqp
-      \end{equation}
-\end{itemize}
+If for example, all $L\ij$ are zero, then the low-order scheme is reproduced;
+conversely, if all $L\ij$ are one, then the high-order scheme is reproduced.
+
+Now the definition for the limiting coefficients is given. Firstly,
+the enforced bounds on the solution, given by Equation \eqref{eq:dmp}
+are rearranged to give bounds on the limited flux sums:
+\begin{subequations}
+\begin{equation}
+  Q^-_i \leq \sum\limits_j L\ij \correctionfluxij \leq Q^+_i \eqc
+\end{equation}
+\begin{equation}
+  Q_i^\pm \equiv M_{i,i}^L\frac{W_i^\pm-U_i^n}{\Delta t}
+    + \sum\limits_j A_{i,j}^L U_j^n - b_i \eqp
+\end{equation}
+\end{subequations}
+The classic Zalesak limiter has the following definition\cite{zalesak}:
+\begin{equation}
+  \correctionfluxletter_i^- \equiv \sum\limits_{j:\correctionfluxij<0}
+    \correctionfluxij \eqc \qquad
+  \correctionfluxletter_i^+ \equiv \sum\limits_{j:\correctionfluxij>0}
+    \correctionfluxij \eqp
+\end{equation}
+\begin{equation}
+  L_i^\pm \equiv\left\{
+    \begin{array}{l l}
+      1 & \correctionfluxletter_i^\pm = 0\\
+      \min\left(1,\frac{Q_i^\pm}{\correctionfluxletter_i^\pm}\right) &
+      \correctionfluxletter_i^\pm \ne 0
+    \end{array}
+  \right. \eqp
+\end{equation}
+\begin{equation}
+  L\ij \equiv\left\{
+    \begin{array}{l l}
+      \min(L_i^+,L_j^-) & \correctionfluxij \geq 0\\
+      \min(L_i^-,L_j^+) & \correctionfluxij < 0
+    \end{array}
+  \right. \eqp
+\end{equation}
+Since the internodal antidiffusive fluxes are skew-symmetric, i.e.,
+$\correctionfluxij=-\correctionfluxji$, and the limiting coefficients
+are symmetric, i.e., $L_{i,j}=L_{j,i}$, the limited antidiffusion added
+to the low-order scheme is conservative because
+$\sum_i\sum_j L_{i,j}\correctionfluxij=0$.
+
