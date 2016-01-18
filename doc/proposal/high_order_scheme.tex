@@ -1,61 +1,69 @@
-\begin{itemize}
-   \item The standard Galerkin CFEM weak solution is not unique. Even with
-      FCT, it would not necessarily converge to the correct, physical
-      weak solution, i.e., the \emph{entropy} solution.
-   \item To converge to the entropy solution, one must ensure that an entropy
-      inequality is satisfied:
-      \begin{equation}
-         R(u) \equiv \pd{\eta(u)}{t} + \nabla\cdot\mathbf{f}^\eta(u) \leq 0
-      \end{equation}
-      for any convex entropy $\eta(u)$ and corresponding entropy flux
-      $\mathbf{f}^\eta(u)$.
-   \item This \emph{entropy residual} $R(u)$ measures entropy production;
-      where it is positive, the inequality is violated, so the residual
-      should be decreased somehow.
-   \item To enforce the inequality, the entropy viscosity method adds
-      viscosity in proportion to local entropy production, thus decreasing
-      local entropy.
-   \item One chooses a convex entropy function $\eta(u)$ such
-   as $\eta(u)=\frac{1}{2}u^2$ and manipulates the
-   conservation law equation to get an entropy residual:
-   \begin{equation}
-      R(u) = \pd{\eta}{t}
-      + \frac{d\eta}{du}\left(\nabla\cdot(\mathbf{v}u)
-      + \reactioncoef u 
-      - q \right) \eqp
-   \end{equation}
-   \item Viscosity is set to be proportional to a linear combination
-      of the local entropy residual $R_K(u) = \left\|R(u)\right\|_{L^\infty(K)}$
-      and entropy jumps $J_F(u)$ across the faces:
-      \begin{equation}
-         \nu^{\eta}_K \propto c_R R_K(u_h)
-         + c_J\max\limits_{F\in\partial K}J_F(u_h) \eqp
-      \end{equation}
-   \item In practice, the entropy viscosity becomes the following, where the
-      denominator is just a normalization constant:
-      \begin{equation}
-         \nu^{\eta}_K = \frac{c_R R_K(u_h)
-         + c_J\max\limits_{F\in\partial K}J_F(u_h)}
-         {\|\eta(u_h)-\bar{\eta}(u_h)\|_{L^\infty(\mathcal{D})}} \eqp
-      \end{equation}
-   \item The high-order viscosity does not need to be any greater than the
-      low-order viscosity:
-      \begin{equation}
-         \nu^{H,n}_K = \min(\nu^{L}_K,\nu^{\eta,n}_K) \eqp
-      \end{equation}
-   \item For the high-order scheme, the mass matrix is not modified; the
-      only change is the addition of the high-order diffusion operator
-      $\diffusionmatrix^{H,n}$:
-      $\ssmatrix \rightarrow \ssmatrix + \diffusionmatrix^{H,n}$:
-      \begin{equation}
-        \consistentmassmatrix\frac{\solutionvector^{H,n+1}
-          -\solutionvector^n}{\dt} + (\ssmatrix + \diffusionmatrix^{H,n})
-          \solutionvector^n = \ssrhs^n \eqp
-      \end{equation}
-   \item The high-order diffusion matrix is computed just as the low-order
-      counterpart, except that $\nu^{H,n}_K$ is used instead of $\nu^{L}_K$:
-      \begin{equation}
-         D\ij^{H,n} = \sum\limits_{K\subset S\ij}\nu_K^{H,n}
-            b_K(\testfunction_j,\testfunction_i) \eqp
-      \end{equation}
-\end{itemize}
+As stated in the introduction, the FCT algorithm requires the use of a
+high-order scheme. Traditionally, the standard Galerkin scheme given
+by Equation \eqref{eq:semidiscrete} has been used in this role\cite{kuzmin_FCT};
+however, this research considers an alternative high-order scheme
+that uses entropy-based artificial dissipation, introduced by Guermond
+in 2011\cite{guermond_ev}.
+
+Conservation law systems usually have at
+least one entropy function that satisfies an auxiliary entropy inequality,
+\begin{equation}\label{eq:entropy_inequality}
+  \partial_t\entropy(\scalarsolution)
+    + \divergence\entropyflux(\scalarsolution) \leq 0 \eqc
+\end{equation}
+and scalar conservation laws have many entropy/entropy flux pairs;
+the Cauchy problem, which is restricted to a bounded domain,
+has a unique entropy solution that satisfies an entropy inequality
+for any convex entropy function $\entropy(\scalarsolution)$ and associated
+entropy flux $\entropyflux(\scalarsolution)\equiv
+\int\entropy'(\scalarsolution)\mathbf{\consfluxletter}'(\scalarsolution)
+  d\scalarsolution$
+\cite{guermond_ev}\cite{bardos1979}\cite{kruzkov1970}.
+Entropy functions satisfy a conservation equality in smooth regions and
+satisfy an entropy inequality in shocks\cite{guermond_ev}. The
+idea of the entropy viscosity method introduced in \cite{guermond_ev}
+is to add dissipation in proportion to the entropy production
+$\entropyresidual(\scalarsolution)\equiv
+  \partial_t\entropy(\scalarsolution)
+    + \divergence\entropyflux(\scalarsolution)$,
+since the lack of equality in Equation \eqref{eq:entropy_inequality} indicates
+a shock is present. This artificial dissipation then lowers the entropy
+in this region and in this way enforces the entropy inequality.
+
+As Guermond states, for convex scalar conservation law fluxes $\consfluxscalar$
+in 1-D, a single entropy/entropy flux pair is enough to select the
+unique entropy solution\cite{guermond_ev}\cite{lellis2004}\cite{panov1994}.
+Therefore for scalar conservation laws it suffices to choose any
+convex function for the definition of $\entropy(\scalarsolution)$,
+such as $\entropy(\scalarsolution) = \half\scalarsolution^2$.
+
+In practice, the entropy viscosity is set to be proportional to a linear
+combination of the local entropy residual $R_K(u) =
+\left\|R(u)\right\|_{L^\infty(K)}$ and entropy jumps $J_F(u)$ across the faces:
+\begin{equation}
+  \nu^{\eta,n}_K = \frac{c_R R_K(\approximatescalarsolution^n)
+    + c_J\max\limits_{F\in\partial K}J_F(\approximatescalarsolution^n)}
+    {\|\eta(\approximatescalarsolution^n)-\bar{\eta}(\approximatescalarsolution^n)\|_{L^\infty(\mathcal{D})}} \eqc
+\end{equation}
+where the denominator is just a normalization constant. The viscosity used
+in the high-order scheme uses the entropy viscosity with an upper bound
+of the low-order viscosity for a given cell, since a viscosity above
+this would be in excess:
+\begin{equation}
+  \nu^{H,n}_K = \min(\nu^{L}_K,\nu^{\eta,n}_K) \eqp
+\end{equation}
+After computation of the high-order cell viscosities, the high-order diffusion
+matrix is assembled just like the low-order diffusion matrix but replacing
+the low-order viscosity with the high-order viscosity:
+\begin{equation}
+  D\ij^{H,n} = \sum\limits_{K\subset S\ij}\nu_K^{H,n}
+    b_K(\testfunction_j,\testfunction_i) \eqp
+\end{equation}
+Putting everything together, the discrete high-order system for the scalar
+case is the following:
+\begin{equation}
+  \consistentmassmatrix\frac{\solutionvector^{H,n+1}
+    -\solutionvector^n}{\dt} + (\ssmatrix + \diffusionmatrix^{H,n})
+    \solutionvector^n = \ssrhs^n \eqc
+\end{equation}
+and one can note that no mass lumping is performed in this case.

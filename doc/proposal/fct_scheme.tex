@@ -1,46 +1,42 @@
-\begin{itemize}
-   \item Recall that FCT defines antidiffusive correction fluxes
-      from a low-order, monotone scheme to a high-order scheme. Calling
-      these fluxes $\correctionfluxvector$, this gives
-      \begin{equation}
-        \lumpedmassmatrix\frac{\solutionvector^{H,n+1}-\solutionvector^n}{\dt}
-          + (\ssmatrix+\diffusionmatrix^L)\solutionvector^n = \ssrhs^n
-          + \correctionfluxvector \eqp
-      \end{equation}
-   \item Subtracting the high-order scheme equation from this gives the
-      definition of $\correctionfluxvector$:
-      \begin{equation}
-        \correctionfluxvector \equiv
-          -(\consistentmassmatrix-\lumpedmassmatrix)
-          \frac{\solutionvector^{H,n+1}-\solutionvector^n}{\dt}
-          + (\diffusionmatrix^L-\diffusionmatrix^{H,n})\solutionvector^n \eqp
-      \end{equation}
-   \item Decomposing $\correctionfluxvector$ into internodal fluxes
-      $\correctionfluxij$ such that $\sum_j \correctionfluxij =
-      \correctionfluxletter_i$, where $\Delta_{j,i}[\mathbf{y}]$
-      denotes $y_j - y_i$:
-   \begin{equation}
-     \correctionfluxij = -M\ij^C\Delta_{j,i}\left[
-       \frac{\solutionvector^{H,n+1}-\solutionvector^n}{\Delta t}\right]
-       + (D\ij^L-D\ij^{H,n})\Delta_{j,i}[\solutionvector^n] \eqp
-   \end{equation}
-   \item Recall that the objective of FCT is to limit these antidiffusive
-      fluxes to enforce some physical bounds.
-   \item The chosen bounds take the form of the DMP satisfied by the
-      low-order scheme:
-      \begin{equation}
-         W_i^-\leq
-         U_i^{n+1}\leq
-         W_i^+\qquad\forall i \eqp
-      \end{equation}
-   \item This is achieved by applying a limiting coefficient $L\ij$ to each
-      internodal flux $\correctionfluxij$:
-      \begin{equation}
-        \lumpedmassmatrix\frac{\solutionvector^{n+1}-\solutionvector^n}{\dt}
-          + \ssmatrix^L\solutionvector^n = \ssrhs
-          + \limitermatrix\cdot\correctionfluxmatrix \eqp
-      \end{equation}
-   \item Each limiting coefficient is between zero and unity: $0\leq L\ij\leq 1$.
+Recall that FCT defines antidiffusive correction fluxes from a low-order,
+monotone scheme to a high-order scheme. Calling these fluxes
+$\correctionfluxvector$, this gives
+\begin{equation}
+  \lumpedmassmatrix\frac{\solutionvector^{H,n+1}-\solutionvector^n}{\dt}
+    + (\ssmatrix+\diffusionmatrix^L)\solutionvector^n = \ssrhs^n
+    + \correctionfluxvector \eqp
+\end{equation}
+Subtracting the high-order scheme equation from this gives the
+definition of $\correctionfluxvector$:
+\begin{equation}
+  \correctionfluxvector \equiv
+    -(\consistentmassmatrix-\lumpedmassmatrix)
+    \frac{\solutionvector^{H,n+1}-\solutionvector^n}{\dt}
+    + (\diffusionmatrix^L-\diffusionmatrix^{H,n})\solutionvector^n \eqp
+\end{equation}
+Now it is necessary to decompose these fluxes into internodal fluxes
+$\correctionfluxij$ such that $\sum_j\correctionfluxij=\correctionfluxletter_i$:
+\begin{equation}
+  \correctionfluxij = -M\ij^C\pr{
+    \frac{\MakeUppercase{\solutionletter}^{H,n+1}_j
+      -\MakeUppercase{\solutionletter}^n_j}{\Delta t}
+    -\frac{\MakeUppercase{\solutionletter}^{H,n+1}_i
+      -\MakeUppercase{\solutionletter}^n_i}{\Delta t}
+  }
+  + (D\ij^L-D\ij^{H,n})(\MakeUppercase{\solutionletter}^n_j
+    -\MakeUppercase{\solutionletter}^n_i) \eqp
+\end{equation}
+Recall that the objective of FCT is to limit these antidiffusive
+fluxes to enforce some physical bounds. For the scalar case, one can use
+the discrete maximum principle bounds given by Equation \eqref{eq:dmp}.
+The limitation is achieved by applying a limiting coefficient $L\ij$ to each
+internodal flux $\correctionfluxij$:
+\begin{equation}
+  \lumpedmassmatrix\frac{\solutionvector^{n+1}-\solutionvector^n}{\dt}
+    + \ssmatrix^L\solutionvector^n = \ssrhs
+    + \limitermatrix\cdot\correctionfluxmatrix \eqp
+\end{equation}
+Each limiting coefficient is between zero and unity: $0\leq L\ij\leq 1$.
    \begin{itemize}
       \item If all $L\ij$ are zero, then the low-order scheme is produced.
       \item If all $L\ij$ are one, then the high-order scheme is produced.

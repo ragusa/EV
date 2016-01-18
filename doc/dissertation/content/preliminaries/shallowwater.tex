@@ -1,11 +1,12 @@
 The shallow water equations, also known as the Saint-Venant equations, are an
 approximation of conservation of mass and momentum equations applied to free
 surface flows, which assume the fluid to be incompressible, non-viscous, and
-non-heat-conducting. The shallow water equations make the additional
-approximation that the depth component of acceleration can be neglected due to
+non-heat-conducting\cite{toro2009}. The shallow water equations are derived
+by making the additional
+approximation that the vertical component of acceleration can be neglected due to
 horizontal length scales being much greater than the depth length
-scale. Depth-integrating the conservation equations gives the shallow
-water equations\cite{toro2009}\cite{leveque2002}:
+scale and then depth-integrating the conservation equations:
+\cite{toro2009}\cite{leveque2002}\cite{fjordholm2011}:
 \begin{equation}\label{eq:shallow_water_equations}
 \begin{gathered}
   \ppt{\vectorsolution} + \nabla\cdot\consfluxvector(\vectorsolution)
@@ -61,6 +62,11 @@ bottom terrain of the fluid body, hereafter referred to as the \emph{bathymetry}
 function.
 Note that the shallow water equations are only valid in 1-D or 2-D, not 3-D,
 since they are depth-integrated equations.
+
+The shallow water equations (SWE) are a popular model for flows in lakes, rivers,
+irrigation channels, and ocean shores, and thus are of great interest
+in hydrology, oceanography, and climate modeling\cite{bernetti2008}
+\cite{fjordholm2011}.
 
 Initial conditions are included if the problem is transient:
 \begin{equation}
