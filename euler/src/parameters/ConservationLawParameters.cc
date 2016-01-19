@@ -279,6 +279,10 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
   // fct
   prm.enter_subsection("fct");
   {
+    prm.declare_entry("fct bounds type",
+                      "led",
+                      Patterns::Selection("led|dmp"),
+                      "Type of bounds to impose on FCT solution");
     prm.declare_entry("antidiffusion",
                       "limited",
                       Patterns::Selection("limited|full|none"),
@@ -524,6 +528,15 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
   // FCT
   prm.enter_subsection("fct");
   {
+    // FCT bounds type
+    std::string fct_bounds_string = prm.get("fct bounds type");
+    if (fct_bounds_string == "led")
+      fct_bounds_type = FCTBoundsType::led;
+    else if (fct_bounds_string == "dmp")
+      fct_bounds_type = FCTBoundsType::dmp;
+    else
+      Assert(false, ExcNotImplemented());
+
     // antidiffusion
     std::string antidiffusion_string = prm.get("antidiffusion");
     if (antidiffusion_string == "limited")

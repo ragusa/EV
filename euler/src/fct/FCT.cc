@@ -32,12 +32,17 @@ FCT<dim>::FCT(const ConservationLawParameters<dim> & parameters_,
     n_dofs_scalar(n_dofs / n_components),
     dofs_per_cell(dofs_per_cell_),
     dofs_per_cell_per_component(dofs_per_cell_ / n_components_),
+    fct_bounds_type(parameters_.fct_bounds_type),
     antidiffusion_type(parameters_.antidiffusion_type),
     synchronization_type(parameters_.fct_synchronization_type),
     fct_variables_type(parameters_.fct_variables_type),
     use_star_states_in_fct_bounds(parameters_.use_star_states_in_fct_bounds),
     DMP_satisfied_at_all_steps(true)
 {
+  // assert that DMP bounds are not used for the non-scalar case
+  if (fct_bounds_type == FCTBoundsType::dmp)
+    Assert(n_components == 1, ExcNotImplemented());
+
   // distribute degrees of freedom in scalar degree of freedom handler
   dof_handler_scalar.clear();
   dof_handler_scalar.distribute_dofs(fe_scalar);
@@ -131,10 +136,6 @@ void FCT<dim>::solve_fct_system(
       Assert(false, ExcNotImplemented());
       break;
   }
-
-  // check limited flux correction sum if requested
-  if (true)
-    check_limited_flux_correction_sum(flux_correction_vector);
 
   // form rhs: system_rhs = M*u_old + dt*(ss_rhs - ss_flux - D*u_old + f)
   system_rhs = 0;
@@ -258,16 +259,45 @@ void FCT<dim>::compute_bounds(const Vector<double> & old_solution,
   // Now these values are multiplied by (1-dt/m(i))*sigma(i) and
   // added to dt/m(i)*b(i).
 
-  // compute the upper and lower bounds for the maximum principle
-  for (unsigned int i = 0; i < n_dofs; ++i)
+  // compute the upper and lower bounds for the FCT solution
+  switch (fct_bounds_type)
   {
-    solution_max(i) = solution_max(i) *
-        (1.0 - dt / (*lumped_mass_matrix)(i, i) * ss_reaction(i)) +
-      dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
-
-    solution_min(i) = solution_min(i) *
-        (1.0 - dt / (*lumped_mass_matrix)(i, i) * ss_reaction(i)) +
-      dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
+    case FCTBoundsType::led:
+    {
+/*
+      // nothing else needs to be done
+      for (unsigned int i = 0; i < n_dofs; ++i)
+      {
+        solution_max(i) = solution_max(i) *
+            (1.0 - dt / (*lumped_mass_matrix)(i, i) * ss_reaction(i)) +
+          dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
+    
+        solution_min(i) = solution_min(i) *
+            (1.0 - dt / (*lumped_mass_matrix)(i, i) * ss_reaction(i)) +
+          dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
+*/
+      }
+      break;
+    }
+    case FCTBoundsType::dmp:
+    {
+      for (unsigned int i = 0; i < n_dofs; ++i)
+      {
+        solution_max(i) = solution_max(i) *
+            (1.0 - dt / (*lumped_mass_matrix)(i, i) * ss_reaction(i)) +
+          dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
+    
+        solution_min(i) = solution_min(i) *
+            (1.0 - dt / (*lumped_mass_matrix)(i, i) * ss_reaction(i)) +
+          dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
+      }
+      break;
+    }
+    default:
+    {
+      Assert(false, ExcNotImplemented());
+      break;
+    }
   }
 }
 
@@ -341,12 +371,12 @@ void FCT<dim>::compute_limiting_coefficients_zalesak(
   Q_plus = 0;
   lumped_mass_matrix->vmult(tmp_vector, old_solution);
   Q_plus.add(-1.0 / dt, tmp_vector);
-  /*
+/*
   Q_plus.add(1.0, ss_flux);
   low_order_diffusion_matrix.vmult(tmp_vector, old_solution);
   Q_plus.add(1.0, tmp_vector);
   Q_plus.add(-1.0, ss_rhs);
-  */
+*/
 
   // copy current contents of Q+ as these components are identical
   Q_minus = Q_plus;
@@ -424,32 +454,9 @@ void FCT<dim>::compute_limiting_coefficients_zalesak(
       else
         Lij = std::min(R_minus(i), R_plus(j));
 
-/*
-      if (Lij < 0.0 || Lij > 1.0)
-      {
-        std::cout << std::endl;
-        std::cout << "L(" << i << "," << j << ") = " << Lij << std::endl;
-        std::cout << "R_plus(" << i << ") = " << R_plus(i) << std::endl;
-        std::cout << "R_plus(" << j << ") = " << R_plus(j) << std::endl;
-        std::cout << "R_minus(" << i << ") = " << R_minus(i) << std::endl;
-        std::cout << "R_minus(" << j << ") = " << R_minus(j) << std::endl;
-        std::cout << "Q_plus(" << i << ") = " << Q_plus(i) << std::endl;
-        std::cout << "Q_plus(" << j << ") = " << Q_plus(j) << std::endl;
-        std::cout << "Q_minus(" << i << ") = " << Q_minus(i) << std::endl;
-        std::cout << "Q_minus(" << j << ") = " << Q_minus(j) << std::endl;
-        std::cout << "solution_min(" << i << ") = " << solution_min(i) << std::endl;
-        std::cout << "solution_min(" << j << ") = " << solution_min(j) << std::endl;
-        std::cout << "solution_max(" << i << ") = " << solution_max(i) << std::endl;
-        std::cout << "solution_max(" << j << ") = " << solution_max(j) << std::endl;
-      }
-*/
       limiter_matrix.set(i, j, Lij);
     }
   }
-/*
-  std::cout << "Old solution:" << std::endl;
-  old_solution.print(std::cout);
-*/
 }
 
 /**

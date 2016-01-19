@@ -3,7 +3,7 @@
 *.log
 *.lot
 *.out
-*.pdf
+dissertation.pdf
 *.toc
 *.bbl
 *.blg

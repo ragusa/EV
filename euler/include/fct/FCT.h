@@ -61,6 +61,9 @@ template <int dim>
 class FCT
 {
 public:
+  using FCTBoundsType =
+    typename ConservationLawParameters<dim>::FCTBoundsType;
+
   using AntidiffusionType =
     typename ConservationLawParameters<dim>::AntidiffusionType;
 
@@ -187,6 +190,8 @@ private:
   const unsigned int dofs_per_cell;
 
   const unsigned int dofs_per_cell_per_component;
+
+  const FCTBoundsType fct_bounds_type;
 
   const AntidiffusionType antidiffusion_type;
 

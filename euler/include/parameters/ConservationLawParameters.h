@@ -160,6 +160,15 @@ public:
     entropy
   };
 
+  /** \brief Enumeration for type of bounds to impose on FCT solution */
+  enum class FCTBoundsType
+  {
+    dmp,
+    led
+  };
+  /** \brief Type of bounds to impose on FCT solution */
+  FCTBoundsType fct_bounds_type;
+
   enum class AntidiffusionType
   {
     limited,

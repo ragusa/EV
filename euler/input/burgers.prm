@@ -91,6 +91,7 @@ subsection output
 end
 
 subsection fct
+   set fct bounds type = dmp # led | dmp
    set antidiffusion = limited # limited|full|none
    set fct synchronization = none # none | min | compound
    set use star states in fct bounds = true
