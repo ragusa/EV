@@ -1519,3 +1519,13 @@ GENERATE_LEGEND        = YES
 # the various graphs.
 
 DOT_CLEANUP            = YES
+
+#---------------------------------------------------------------------------
+# User-added options
+#---------------------------------------------------------------------------
+
+# If AUTOLINK_SUPPORT is set to YES, then Doxygen tries to intelligently
+# create links in the text to classes, files, etc.
+
+AUTOLINK_SUPPORT = NO
+

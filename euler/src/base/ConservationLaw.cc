@@ -970,6 +970,10 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
       // output solution transient if specified
       postprocessor.output_solution_transient(
         new_solution, new_time, dof_handler, "solution", false);
+
+      // output FCT bounds if specified
+      if (fct)
+        fct->output_bounds_transient(postprocessor, new_time);
     }
 
     // check that there are no NaNs in solution
@@ -998,6 +1002,9 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
 
     // compute error for adaptive mesh refinement
     compute_error_for_refinement();
+
+    // increment transient counter for post-processor
+    postprocessor.increment_transient_counter();
 
     // store old solutions
     older_solution = old_solution;

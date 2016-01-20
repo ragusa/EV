@@ -62,6 +62,13 @@ public:
                        const std::string & output_string,
                        const bool & output_1d_vtu = false);
 
+  void output_dof_transient(const Vector<double> & solution,
+                            const double & time,
+                            const DoFHandler<dim> & dof_handler,
+                            const std::string & output_string,
+                            unsigned int & transient_file_index,
+                            const bool & force_output = false);
+
   void output_solution_transient(const Vector<double> & solution,
                                  const double & time,
                                  const DoFHandler<dim> & dof_handler,
@@ -98,6 +105,8 @@ public:
     const std::string & transient_appendage = "");
 
   void log_time_step_size(const double & dt);
+
+  void increment_transient_counter();
 
 private:
   void output_exact_solution(const double & time);
@@ -176,7 +185,7 @@ private:
   unsigned int transient_output_size;
 
   /** \brief Number used in the next transient solution file name */
-  unsigned int transient_solution_file_number;
+  unsigned int transient_solution_file_index;
 
   /** \brief Number used in the next transient viscosity file name */
   unsigned int transient_viscosity_file_number;

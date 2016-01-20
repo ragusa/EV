@@ -96,17 +96,15 @@ public:
 
   bool check_DMP_satisfied();
 
-  /*
-    void output_bounds(const PostProcessor<dim> & postprocessor,
-                       const std::string & description_string) const;
-  */
-
   virtual void compute_bounds(const Vector<double> & old_solution,
                               const Vector<double> & ss_reaction,
                               const Vector<double> & ss_rhs,
                               const double & dt);
 
   void output_limiter_matrix() const;
+
+  void output_bounds_transient(PostProcessor<dim> & postprocessor,
+    const double & time);
 
 private:
   void compute_flux_corrections(
@@ -202,6 +200,8 @@ private:
   const bool use_star_states_in_fct_bounds;
 
   bool DMP_satisfied_at_all_steps;
+
+  unsigned int bounds_transient_file_index;
 };
 
 #include "src/fct/FCT.cc"

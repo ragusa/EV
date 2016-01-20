@@ -36,7 +36,7 @@ PostProcessor<dim>::PostProcessor(
     is_last_cycle(false),
     fine_dof_handler(fine_triangulation),
     transient_output_size(0),
-    transient_solution_file_number(0),
+    transient_solution_file_index(0),
     transient_viscosity_file_number(0),
     transient_counter(0),
     transient_not_output_this_step(true),
@@ -237,24 +237,25 @@ void PostProcessor<dim>::output_solution(const Vector<double> & solution,
 }
 
 /**
- * \brief Outputs the solution to a file if the user specified.
+ * \brief Outputs a DoF-point quantity to a file if the user specified.
  *
  * The user supplies an output period for the transient; this function
- * determines if this solution is scheduled to be output and outputs it
- * if it does.
+ * outputs the DoF-point quantity if it is scheduled.
  *
  * \param[in] solution solution vector
  * \param[in] time time value
  * \param[in] dof_handler degrees of freedom handler.
  * \param[in] output_string string for the output filename.
+ * \param[inout] transient_file_index index for transient file name
  * \param[in] force_output option to force output if it is not scheduled.
  */
 template <int dim>
-void PostProcessor<dim>::output_solution_transient(
+void PostProcessor<dim>::output_dof_transient(
   const Vector<double> & solution,
   const double & time,
   const DoFHandler<dim> & dof_handler,
   const std::string & output_string,
+  unsigned int & transient_file_index,
   const bool & force_output)
 {
   if (parameters.output_period > 0)
@@ -281,7 +282,7 @@ void PostProcessor<dim>::output_solution_transient(
 
         // create transient filename
         const std::string transient_appendage =
-          "-" + Utilities::int_to_string(transient_solution_file_number, 4);
+          "-" + Utilities::int_to_string(transient_file_index, 4);
 
         // call function that outputs a vector of values to a file,
         // with the solution component names and types lists
@@ -297,9 +298,6 @@ void PostProcessor<dim>::output_solution_transient(
 
         // signal that transient was output this step
         transient_not_output_this_step = false;
-
-        // increment transient file number
-        transient_solution_file_number++;
       }
       else
         std::cout
@@ -311,10 +309,36 @@ void PostProcessor<dim>::output_solution_transient(
       // signal that transient was not output this step
       transient_not_output_this_step = true;
     }
-
-    // increment transient counter
-    transient_counter++;
   }
+}
+
+/**
+ * \brief Outputs the solution to a file if the user specified.
+ *
+ * The user supplies an output period for the transient; this function
+ * determines if this solution is scheduled to be output and outputs it
+ * if it does.
+ *
+ * \param[in] solution solution vector
+ * \param[in] time time value
+ * \param[in] dof_handler degrees of freedom handler.
+ * \param[in] output_string string for the output filename.
+ * \param[in] force_output option to force output if it is not scheduled.
+ */
+template <int dim>
+void PostProcessor<dim>::output_solution_transient(
+  const Vector<double> & solution,
+  const double & time,
+  const DoFHandler<dim> & dof_handler,
+  const std::string & output_string,
+  const bool & force_output)
+{
+  // call function with transient solution file index
+  output_dof_transient(solution, time, dof_handler, output_string,
+    transient_solution_file_index, force_output);
+
+  // increment transient solution file index
+  transient_solution_file_index++;
 }
 
 /**
@@ -971,3 +995,16 @@ void PostProcessor<dim>::log_time_step_size(const double & dt)
   // increment time step count
   n_time_steps++;
 }
+
+/**
+ * \brief Increments the transient counter, used for determining if a quantity
+ *        is to be output, considering the desired output frequency.
+ *
+ *        This function should be called at the end of each time step.
+ */
+template <int dim>
+void PostProcessor<dim>::increment_transient_counter()
+{
+  transient_counter++;
+}
+

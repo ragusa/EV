@@ -11,7 +11,7 @@ end
 subsection scheme
    set scheme = fct # low|high|fct
    set low order scheme = standard # constant|standard|dmp|di_visc|di_diff
-   set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
+   set high order scheme = galerkin # galerkin|entropy_visc|entropy_diff
 end
 
 # Problem Names:
@@ -82,7 +82,7 @@ subsection linear solver
 end
 
 subsection output
-   set output period = 0
+   set output period = 1
    set max transient output size = 1e9
    set output mesh = false
    set output mass matrix = false

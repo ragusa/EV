@@ -37,7 +37,8 @@ FCT<dim>::FCT(const ConservationLawParameters<dim> & parameters_,
     synchronization_type(parameters_.fct_synchronization_type),
     fct_variables_type(parameters_.fct_variables_type),
     use_star_states_in_fct_bounds(parameters_.use_star_states_in_fct_bounds),
-    DMP_satisfied_at_all_steps(true)
+    DMP_satisfied_at_all_steps(true),
+    bounds_transient_file_index(1)
 {
   // assert that DMP bounds are not used for the non-scalar case
   if (fct_bounds_type == FCTBoundsType::dmp)
@@ -275,8 +276,8 @@ void FCT<dim>::compute_bounds(const Vector<double> & old_solution,
         solution_min(i) = solution_min(i) *
             (1.0 - dt / (*lumped_mass_matrix)(i, i) * ss_reaction(i)) +
           dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
-*/
       }
+*/
       break;
     }
     case FCTBoundsType::dmp:
@@ -701,29 +702,6 @@ bool FCT<dim>::check_DMP_satisfied()
 }
 
 /**
- * \brief Outputs bounds to files.
- */
-/*
-template<int dim>
-void FCT<dim>::output_bounds(
-  const PostProcessor<dim> &postprocessor,
-  const std::string &description_string) const
-{
-  // create the strings for the output files
-  std::stringstream DMP_min_ss;
-  std::stringstream DMP_max_ss;
-  DMP_min_ss << "DMPmin_" << description_string;
-  DMP_max_ss << "DMPmax_" << description_string;
-  std::string DMP_min_string = DMP_min_ss.str();
-  std::string DMP_max_string = DMP_max_ss.str();
-
-  // use a method from the post-processor class to output the bounds
-  postprocessor.output_solution(solution_min, *dof_handler, DMP_min_string);
-  postprocessor.output_solution(solution_max, *dof_handler, DMP_max_string);
-}
-*/
-
-/**
  * \brief Synchronizes limiting coefficients for a support point pair by taking
  *        the minimum limiting coefficient of all solution components.
  */
@@ -790,3 +768,23 @@ void FCT<dim>::output_limiter_matrix() const
     limiter_out, 10, true, 0, "0", 1);
   limiter_out.close();
 }
+
+/**
+ * \brief Outputs FCT bounds during a transient if time step counter is at
+ *        a value given by the desired transient output frequency.
+ *
+ * \param[in] postprocessor post-processor
+ * \param[in] time current time
+ */
+template <int dim>
+void FCT<dim>::output_bounds_transient(PostProcessor<dim> & postprocessor,
+  const double & time)
+{
+  // output lower bound
+  postprocessor.output_dof_transient(solution_min, time, *dof_handler,
+    "lower_fct_bound", bounds_transient_file_index, false);
+
+  // increment transient file index for bounds
+  bounds_transient_file_index++;
+}
+
