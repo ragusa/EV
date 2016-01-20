@@ -1,83 +1,46 @@
 The main goal of this research is to develop numerical methods for hyperbolic
-PDEs that address the development of spurious oscillations and negativities
-for physically positive solution quantities. The equations and models under
-consideration are the scalar transport PDE model given in Section \ref{sec:scalar_model}
-and the shallow water equations (SWE), given in Section \ref{sec:sw_model}.
-The methodology developed for these equations is intended to be largely
-extendible to other hyperbolic systems. The following list discusses specific
-primary research objectives that derive from the main research goal.
+PDEs that address the development of spurious oscillations and negativities for
+physically positive solution quantities. The equations and models under
+consideration are the scalar transport PDE model given in Section
+\ref{sec:scalar_model} and the shallow water equations (SWE) with flat bottom
+topography ($\nabla\bathymetry=\mathbf{0}$), given in Section
+\ref{sec:sw_model}.  The methodology developed for these equations is intended
+to be largely extendible to other hyperbolic systems. The following list
+discusses specific research objectives that derive from the main research goal.
 
 \begin{itemize}
-  \item \textbf{Demonstrate 2nd-order spatial convergence rates for smooth problems.}
-    For smooth problems, CFEM with piecewise linear basis functions should
-    have 2nd-order convergence rates for both $L^1$ and $L^2$ norms.
-  \item \textbf{Demonstrate theoretical convergence rates for non-smooth problems.}
-    For non-smooth problems, CFEM with piecewise linear basis functions should
-    have convergence rates of $\frac{3}{4}$ and $\frac{3}{8}$ for $L^1$ and $L^2$
-    norms, respectively.
-  \item \textbf{Prove and demonstrate stability.}
-    Stability should be able to be proven theoretically and demonstrated with
-    numerical illustrations. Stability in the $L^\infty$ norm can be easily
-    be theoretically proved for the FCT scheme recursive application of the
-    imposed solution bounds.
-  \item \textbf{Prove and demonstrate positivity.}
-    Positivity for physically positive solution quantities should be proved
-    theoretically and demonstrated with numerical illustrations. For the FCT
-    scheme, proving positivity theoretically amounts to proving that the
-    imposed lower bound on the solution is non-negative.
-  \item \textbf{Demonstrate advantages of entropy-based FCT over Galerkin FCT.}
-    Traditionally the high-order method used in the FCT algorithm is simply the
-    Galerkin spatial discretization, not the entropy-based method discussed in
-    Section \ref{sec:methodology}. It is desirable to compare the two approaches
-    and demonstrate the advantages of entropy-based FCT over Galerkin FCT, as
-    well as give justification with some heuristics.
-  \item \textbf{Prove and demonstrate satisfaction of a discrete maximum
-    principle (DMP) for the scalar case.}
-    For the scalar case, it is possible to theoretically prove that the FCT
-    scheme satisfies a DMP. This is a desired goal, as well as demonstration
-    with numerical illustrations.
-  \item \textbf{Demonstrate a reduction in spurious oscillations.}
-    The FCT algorithm to date cannot guarantee the absence of spurious
-    oscillations and artifacts; however, it should be proven that the incidence
-    of these spurious artifacts is reduced from the entropy-based method
-    without FCT.
-\end{itemize}
-  
-The following list gives secondary objectives of the research, which are
-not priorities of the research but would be advantageous to complete
-if the primary objectives are completed with sufficient remaining time:
-
-\begin{itemize}
-  \item \textbf{Extend shallow water methodology to include non-zero topography.}
-    The presence of the bathymetry term in the shallow water equations
-    is a non-conservative term and thus currently does not fit the conservation
-    law model relied upon for the domain-invariant low-order scheme.
-    This adds some complexity to the theory because the characteristic
-    analysis must include this term, but it is currently believed that the
-    extension is possible. The extension would be advantageous as it would
-    allow the simulation of problems such as the so-called lake-at-rest problem
-    shoreline problems, and dam-break problems over a hump.
-  \item \textbf{Perform timing studies.}
-    This research contains a number of schemes of varying complexity, and
-    it advantageous to compare the relative computational costs in
-    comparing merits of each scheme. The entropy-based scheme and FCT
-    algorithm aim to provide numerous advantages but each comes with
-    an added cost.
-  \item \textbf{Develop a parallel implementation.}
-    The research is not aimed at parallel computing, and a serial
-    implementation is sufficient for meeting primary objectives;
-    however, a parallel implementation would allow larger problems
-    to be run. Fine spatial refinement studies in multiple dimensions
-    are particularly expensive and often are computationally intractable
-    with a serial implementation.
-  \item \textbf{Run large benchmark problems.}
-    It is desirable to compare how the methods developed in this research
-    compare to existing methods in literature for large benchmark
-    problems. One example is the 2-D partial dam-break problem for the SWE.
-  \item \textbf{Demonstrate effectiveness in non-uniform meshes.}
-    One of the main advantages of the schemes designed in this work is
-    that mesh uniformity is not a requirement of the limitation procedure,
-    as in standard flux-limiting procedures. It would be advantageous
-    to demonstrate this attribute by performing adaptive mesh refinement.
+  \item \textbf{Develop low-order scheme.}
+    For the scalar case, this first-order-accurate scheme should satisfy a discrete maximum principle
+    as described in Section \ref{sec:low_order_scheme}. For the systems case,
+    this scheme should have an invariant domain. The domain-invariant scheme
+    is developed for general conservation law systems; however, the scheme
+    requires an estimation of maximum wave speeds, which entails an
+    analysis of the characteristics for the specific hyperbolic system. This
+    research performs this analysis for the shallow water equations with flat
+    bottom topography. The monotonicity and
+    positivity-preservation of these schemes should be demonstrated with numerical examples.
+  \item \textbf{Develop high-order entropy-based scheme.}
+    The entropy-based scheme should be second-order-accurate and should
+    demonstrate stability with numerical examples. A reduction in the occurrence
+    and magnitude of spurious oscillations should be observed. The scalar
+    case will use an arbitrary convex entropy function such as
+    $\entropy(\scalarsolution)=\half\scalarsolution^2$, while for the shallow
+    water equations, the entropy function will be the total energy.
+  \item \textbf{Develop Galerkin FCT scheme.}
+    The basic FEM-FCT scheme, as described by Kuzmin in \cite{kuzmin_FCT}, should
+    be implemented. This scheme uses the standard second-order-accurate Galerkin
+    scheme as the high-order scheme in the algorithm. Positivity-preservation and
+    a reduction of spurious oscillations should be demonstrated.
+  \item \textbf{Develop entropy-based FCT scheme.}
+    The basic FEM-FCT scheme should be modified to replace the Galerkin scheme
+    with the high-order entropy-based scheme in the FCT algorithm. This should
+    demonstrate positivity-preservation and a further reduction in spurious
+    oscillations from the entropy-based method alone.
+  \item \textbf{Compare schemes.}
+    Schemes developed in this research should be compared in a number of
+    test problems. In addition to comparing accuracy and convergence rates,
+    it is advantageous to determine rough computational cost estimates
+    of each method, since the developed methods have the cost of additional
+    complexity.
 \end{itemize}
 

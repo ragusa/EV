@@ -7,7 +7,14 @@ algorithm; if the antidiffusive fluxes in question would violate the imposed
 monotonicity bounds, then they are limited partially or in full. In this section,
 the low-order scheme for the scalar case is given.
 
-Monotonicity of the low-order
+In the general case of conservation law systems, the desired approach to
+achieving monotonicity of the low-order scheme is to prove an \emph{invariant
+domain} for the scheme, which in essence implies that the numerical
+solution cannot leave some domain determined by initial data. For the
+scalar case, the invariant domain amounts to a \emph{discrete maximum principle},
+which is described later in this section.
+
+Monotonicity of the scalar low-order
 scheme can be proven by proving that the system matrix of the scheme in
 the form $\mathbf{A}\solutionvector^{n+1}=\mathbf{b}$ is an M-matrix, i.e.,
 that it is an \emph{inverse-positive} matrix, also known as a \emph{monotone}

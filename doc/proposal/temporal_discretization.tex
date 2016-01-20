@@ -1,12 +1,18 @@
+Traditionally, methods for solving conservation law problems are only
+applicable with explicit time discretizations. In this research, the
+scalar case also considers the steady-state case and implicit
+temporal discretizations such as $\theta$ methods (which include backward
+Euler and Crank-Nicolson, for example). The steady-state and implicit time
+discretizations are complicated by the fact that the
+imposed bounds are implicit, so nonlinear solves are required, unlike
+for explicit time discretizations.
+
 The remainder of this proposal assumes that forward Euler (FE) is used for the
 temporal discretization. The methodology presented in this research is best
 understood using FE; however, a class of explicit temporal discretizations
 called Strong-Stability-Preserving Runge-Kutta (SSPRK) methods are expressible
 as a combination of FE steps, so the methods given in this research are
 applicable to higher-order temporal discretizations.
-Implicit temporal discretizations such as $\theta$ methods like backward
-Euler and Crank-Nicolson are also an option; however, in these cases, the
-imposed bounds are implicit as well, so nonlinear solves are required.
 
 The FE discretization for a general system $\mathbf{M}d\solutionvector/dt=
 \mathbf{r}(\solutionvector(t),t)$ is the following:
