@@ -9,7 +9,12 @@ where $\scalarsolution\xt$ is a general scalar conserved quantity at position
 $\x$ and time $\timevalue$, $\consfluxscalar$ is a general flux
 function,
 $\reactioncoef\xt$ is a reaction term, and $\scalarsource\xt$ is a source
-term. Since the radiation transport equation has a linear flux function
+term.
+Note that traditional conservation law methodology is not equipped
+to handle the presence of the reaction term $\reactioncoef\xt \scalarsolution\xt$
+or source term $\scalarsource\xt$, and this is in fact a significant
+driver for this research.
+Since the radiation transport equation has a linear flux function
 $\consfluxscalar$, hereafter it is assumed that
 $\consfluxscalar\equiv\velocity\scalarsolution$, where $\velocity$ is a constant
 velocity.

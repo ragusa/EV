@@ -1,5 +1,5 @@
-The solution of conservation law equations such as the neutron transport
-equation presents a number of unique challenges; in the vicinity of strong
+The solution of hyperbolic conservation law equations
+presents a number of unique challenges; in the vicinity of strong
 gradients and discontinuities, numerical solutions are prone to spurious
 oscillations that may generate unphysical values. For example,
 numerical schemes may generate negative solution values for physically
@@ -37,14 +37,21 @@ condition\cite{leveque2002}\refsec{11.13}; however, it is typically impractical
 to apply these conditions in a numerical simulation. The research in this
 dissertation employs the notion of an entropy-based artificial viscosity,
 based on the recent work of Guermond et al.\cite{guermond_ev}.
-The notion of entropy stems from
-thermodynamics, in which entropy is a non-decreasing function of time, whereas
-in mathematics, the concept of entropy is usually viewed as the opposite: it is
-a non-\emph{increasing} function of time.
+%The notion of entropy stems from
+%thermodynamics, in which entropy is a non-decreasing function of time, whereas
+%in mathematics, the concept of entropy is usually viewed as the opposite: it is
+%a non-\emph{increasing} function of time.
 
+While entropy-based methods mitigate the issues of spurious oscillations
+and negativities, they still do not resolve the issues entirely, even
+though such methods help in convergence to the entropy solution; spurious
+oscillations and negativities are still present, although smaller in
+magnitude. To further address these issues, one can employ the Flux-Corrected Transport (FCT)
+algorithm, which has shown some success in the solution of hyperbolic
+conservation laws for several decades.
 The FCT algorithm was introduced in 1973 by Boris and Book\cite{borisbook} for
 finite difference discretizations of transport problems, and it has
-recently been applied to the finite element method. The idea of FCT
+been applied to the finite element method more recently. The idea of FCT
 is to blend a low-order scheme that is monotone with a high-order
 scheme using a nonlinear limiting procedure. FCT takes the difference
 of the high-order and low-order schemes to define antidiffusive

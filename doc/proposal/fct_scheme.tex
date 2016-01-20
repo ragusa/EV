@@ -34,8 +34,10 @@ internodal flux $\correctionfluxij$:
 \begin{equation}
   \lumpedmassmatrix\frac{\solutionvector^{n+1}-\solutionvector^n}{\dt}
     + \ssmatrix^L\solutionvector^n = \ssrhs
-    + \limitermatrix\cdot\correctionfluxmatrix \eqp
+    + \bar{\correctionfluxvector} \eqc
 \end{equation}
+where $\bar{\correctionfluxvector}$ denotes the limited antidiffusion vector:
+$\bar{\correctionfluxletter}_i\equiv\sum_j\limiterletter\ij\correctionfluxij$.
 Each limiting coefficient is between zero and unity: $0\leq L\ij\leq 1$.
 If for example, all $L\ij$ are zero, then the low-order scheme is reproduced;
 conversely, if all $L\ij$ are one, then the high-order scheme is reproduced.
