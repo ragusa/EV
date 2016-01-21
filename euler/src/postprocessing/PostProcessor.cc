@@ -232,6 +232,7 @@ void PostProcessor<dim>::output_solution(const Vector<double> & solution,
                        solution_component_interpretations,
                        dof_handler,
                        output_string,
+                       times_and_solution_filenames,
                        output_1d_vtu,
                        true);
 }
@@ -246,7 +247,13 @@ void PostProcessor<dim>::output_solution(const Vector<double> & solution,
  * \param[in] time time value
  * \param[in] dof_handler degrees of freedom handler.
  * \param[in] output_string string for the output filename.
+ * \param[in] component_names list of names of each component in the
+ *            vector of values
  * \param[inout] transient_file_index index for transient file name
+ * \param[inout] times_and_filenames vector of pairs of times and filenames,
+ *               to be output to .pvd file
+ * \param[in] is_solution flag to signal that the output quantity is the
+ *            solution
  * \param[in] force_output option to force output if it is not scheduled.
  */
 template <int dim>
@@ -255,7 +262,10 @@ void PostProcessor<dim>::output_dof_transient(
   const double & time,
   const DoFHandler<dim> & dof_handler,
   const std::string & output_string,
+  const std::vector<std::string> & component_names,
   unsigned int & transient_file_index,
+  std::vector<std::pair<double, std::string>> & times_and_filenames,
+  const bool & is_solution,
   const bool & force_output)
 {
   if (parameters.output_period > 0)
@@ -288,12 +298,13 @@ void PostProcessor<dim>::output_dof_transient(
         // with the solution component names and types lists
         output_at_dof_points(solution,
                              time,
-                             solution_component_names,
+                             component_names,
                              solution_component_interpretations,
                              dof_handler,
                              output_string + appendage_string,
+                             times_and_filenames,
                              true /* output_1d_vtu */,
-                             true /* is_solution */,
+                             is_solution,
                              transient_appendage);
 
         // signal that transient was output this step
@@ -334,8 +345,15 @@ void PostProcessor<dim>::output_solution_transient(
   const bool & force_output)
 {
   // call function with transient solution file index
-  output_dof_transient(solution, time, dof_handler, output_string,
-    transient_solution_file_index, force_output);
+  output_dof_transient(solution,
+                       time,
+                       dof_handler,
+                       output_string,
+                       solution_component_names,
+                       transient_solution_file_index,
+                       times_and_solution_filenames,
+                       true /* is_solution */,
+                       force_output);
 
   // increment transient solution file index
   transient_solution_file_index++;
@@ -439,6 +457,8 @@ void PostProcessor<dim>::output_exact_solution(const double & time)
  *            of each component in the vector of values
  * \param[in] dof_handler degrees of freedom handler.
  * \param[in] output_string string for the output filename.
+ * \param[inout] times_and_filenames vector of pairs of times and filenames,
+ *               to be output to .pvd file
  * \param[in] output_1d_vtu option to output 1-D data in VTU format instead
  *            of GNUPLOT format
  * \param[in] is_solution flag to signal that the output quantity is the
@@ -455,6 +475,7 @@ void PostProcessor<dim>::output_at_dof_points(
     component_interpretations,
   const DoFHandler<dim> & dof_handler,
   const std::string & output_string,
+  std::vector<std::pair<double, std::string>> & times_and_filenames,
   const bool & output_1d_vtu,
   const bool & is_solution,
   const std::string & transient_appendage)
@@ -481,6 +502,7 @@ void PostProcessor<dim>::output_at_dof_points(
   else
     output_vtu = false;
 
+  // output format is .vtu
   if (output_vtu)
   {
     // create output filestream
@@ -497,13 +519,14 @@ void PostProcessor<dim>::output_at_dof_points(
     // write pvd file for associating time value to index
     if (transient_appendage != "")
     {
-      times_and_solution_filenames.push_back(
+      times_and_filenames.push_back(
         std::pair<double, std::string>(time, filename));
       std::string pvd_filename = output_dir + output_string + ".pvd";
       std::ofstream pvd_filestream(pvd_filename);
-      data_out.write_pvd_record(pvd_filestream, times_and_solution_filenames);
+      data_out.write_pvd_record(pvd_filestream, times_and_filenames);
     }
   }
+  // output format is .gpl
   else
   {
     // create output filestream
@@ -935,6 +958,7 @@ void PostProcessor<dim>::output_function(
                        component_interpretations,
                        dof_handler,
                        filename,
+                       times_and_solution_filenames,
                        false /* output_1d_vtu */,
                        is_solution);
 }
@@ -1007,4 +1031,3 @@ void PostProcessor<dim>::increment_transient_counter()
 {
   transient_counter++;
 }
-

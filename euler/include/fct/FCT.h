@@ -61,8 +61,7 @@ template <int dim>
 class FCT
 {
 public:
-  using FCTBoundsType =
-    typename ConservationLawParameters<dim>::FCTBoundsType;
+  using FCTBoundsType = typename ConservationLawParameters<dim>::FCTBoundsType;
 
   using AntidiffusionType =
     typename ConservationLawParameters<dim>::AntidiffusionType;
@@ -83,7 +82,8 @@ public:
       const SparsityPattern & sparsity_pattern,
       const std::vector<unsigned int> & dirichlet_nodes,
       const unsigned int & n_components,
-      const unsigned int & dofs_per_cell);
+      const unsigned int & dofs_per_cell,
+      const std::vector<std::string> & component_names);
 
   void solve_fct_system(Vector<double> & new_solution,
                         const Vector<double> & old_solution,
@@ -104,7 +104,7 @@ public:
   void output_limiter_matrix() const;
 
   void output_bounds_transient(PostProcessor<dim> & postprocessor,
-    const double & time);
+                               const double & time);
 
 private:
   void compute_flux_corrections(
@@ -202,6 +202,16 @@ private:
   bool DMP_satisfied_at_all_steps;
 
   unsigned int bounds_transient_file_index;
+
+  std::vector<std::string> lower_bound_component_names;
+
+  std::vector<std::string> upper_bound_component_names;
+
+  /** \brief vector of times and corresponding lower bound file names */
+  std::vector<std::pair<double, std::string>> times_and_lower_bound_filenames;
+
+  /** \brief vector of times and corresponding upper bound file names */
+  std::vector<std::pair<double, std::string>> times_and_upper_bound_filenames;
 };
 
 #include "src/fct/FCT.cc"

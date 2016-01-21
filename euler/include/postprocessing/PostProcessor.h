@@ -62,12 +62,16 @@ public:
                        const std::string & output_string,
                        const bool & output_1d_vtu = false);
 
-  void output_dof_transient(const Vector<double> & solution,
-                            const double & time,
-                            const DoFHandler<dim> & dof_handler,
-                            const std::string & output_string,
-                            unsigned int & transient_file_index,
-                            const bool & force_output = false);
+  void output_dof_transient(
+    const Vector<double> & solution,
+    const double & time,
+    const DoFHandler<dim> & dof_handler,
+    const std::string & output_string,
+    const std::vector<std::string> & component_names,
+    unsigned int & transient_file_index,
+    std::vector<std::pair<double, std::string>> & times_and_filenames,
+    const bool & is_solution = true,
+    const bool & force_output = false);
 
   void output_solution_transient(const Vector<double> & solution,
                                  const double & time,
@@ -119,6 +123,7 @@ private:
       component_interpretations,
     const DoFHandler<dim> & dof_handler,
     const std::string & output_string,
+    std::vector<std::pair<double, std::string>> & times_and_filenames,
     const bool & output_1d_vtu = false,
     const bool & is_solution = true,
     const std::string & transient_appendage = "");

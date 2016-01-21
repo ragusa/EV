@@ -17,7 +17,8 @@ FCT<dim>::FCT(const ConservationLawParameters<dim> & parameters_,
               const SparsityPattern & sparsity_pattern_,
               const std::vector<unsigned int> & dirichlet_nodes_,
               const unsigned int & n_components_,
-              const unsigned int & dofs_per_cell_)
+              const unsigned int & dofs_per_cell_,
+              const std::vector<std::string> & component_names)
   : fe_scalar(1),
     dof_handler(&dof_handler_),
     dof_handler_scalar(triangulation_),
@@ -68,6 +69,16 @@ FCT<dim>::FCT(const ConservationLawParameters<dim> & parameters_,
   system_matrix.reinit(sparsity_pattern_);
   limiter_matrix.reinit(sparsity_pattern_);
   flux_correction_matrix.reinit(sparsity_pattern_);
+
+  // create bounds component names
+  lower_bound_component_names = component_names;
+  upper_bound_component_names = component_names;
+  for (unsigned int m = 0; m < n_components; ++m)
+  {
+    lower_bound_component_names[m] += "_FCTmin";
+    upper_bound_component_names[m] += "_FCTmax";
+    std::cout << lower_bound_component_names[m] << std::endl;
+  }
 }
 
 /**
@@ -265,19 +276,19 @@ void FCT<dim>::compute_bounds(const Vector<double> & old_solution,
   {
     case FCTBoundsType::led:
     {
-/*
-      // nothing else needs to be done
-      for (unsigned int i = 0; i < n_dofs; ++i)
-      {
-        solution_max(i) = solution_max(i) *
-            (1.0 - dt / (*lumped_mass_matrix)(i, i) * ss_reaction(i)) +
-          dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
-    
-        solution_min(i) = solution_min(i) *
-            (1.0 - dt / (*lumped_mass_matrix)(i, i) * ss_reaction(i)) +
-          dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
-      }
-*/
+      /*
+            // nothing else needs to be done
+            for (unsigned int i = 0; i < n_dofs; ++i)
+            {
+              solution_max(i) = solution_max(i) *
+                  (1.0 - dt / (*lumped_mass_matrix)(i, i) * ss_reaction(i)) +
+                dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
+
+              solution_min(i) = solution_min(i) *
+                  (1.0 - dt / (*lumped_mass_matrix)(i, i) * ss_reaction(i)) +
+                dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
+            }
+      */
       break;
     }
     case FCTBoundsType::dmp:
@@ -287,7 +298,7 @@ void FCT<dim>::compute_bounds(const Vector<double> & old_solution,
         solution_max(i) = solution_max(i) *
             (1.0 - dt / (*lumped_mass_matrix)(i, i) * ss_reaction(i)) +
           dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
-    
+
         solution_min(i) = solution_min(i) *
             (1.0 - dt / (*lumped_mass_matrix)(i, i) * ss_reaction(i)) +
           dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
@@ -372,12 +383,12 @@ void FCT<dim>::compute_limiting_coefficients_zalesak(
   Q_plus = 0;
   lumped_mass_matrix->vmult(tmp_vector, old_solution);
   Q_plus.add(-1.0 / dt, tmp_vector);
-/*
-  Q_plus.add(1.0, ss_flux);
-  low_order_diffusion_matrix.vmult(tmp_vector, old_solution);
-  Q_plus.add(1.0, tmp_vector);
-  Q_plus.add(-1.0, ss_rhs);
-*/
+  /*
+    Q_plus.add(1.0, ss_flux);
+    low_order_diffusion_matrix.vmult(tmp_vector, old_solution);
+    Q_plus.add(1.0, tmp_vector);
+    Q_plus.add(-1.0, ss_rhs);
+  */
 
   // copy current contents of Q+ as these components are identical
   Q_minus = Q_plus;
@@ -764,8 +775,7 @@ void FCT<dim>::output_limiter_matrix() const
 {
   // save limiting coefficients
   std::ofstream limiter_out("output/limiter.txt");
-  limiter_matrix.print_formatted(
-    limiter_out, 10, true, 0, "0", 1);
+  limiter_matrix.print_formatted(limiter_out, 10, true, 0, "0", 1);
   limiter_out.close();
 }
 
@@ -778,13 +788,30 @@ void FCT<dim>::output_limiter_matrix() const
  */
 template <int dim>
 void FCT<dim>::output_bounds_transient(PostProcessor<dim> & postprocessor,
-  const double & time)
+                                       const double & time)
 {
   // output lower bound
-  postprocessor.output_dof_transient(solution_min, time, *dof_handler,
-    "lower_fct_bound", bounds_transient_file_index, false);
+  postprocessor.output_dof_transient(solution_min,
+                                     time,
+                                     *dof_handler,
+                                     "lower_fct_bound",
+                                     lower_bound_component_names,
+                                     bounds_transient_file_index,
+                                     times_and_lower_bound_filenames,
+                                     false,
+                                     false);
+
+  // output upper bound
+  postprocessor.output_dof_transient(solution_max,
+                                     time,
+                                     *dof_handler,
+                                     "upper_fct_bound",
+                                     upper_bound_component_names,
+                                     bounds_transient_file_index,
+                                     times_and_upper_bound_filenames,
+                                     false,
+                                     false);
 
   // increment transient file index for bounds
   bounds_transient_file_index++;
 }
-

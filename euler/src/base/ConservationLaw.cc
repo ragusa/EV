@@ -827,7 +827,8 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
                                      unconstrained_sparsity_pattern,
                                      dirichlet_dof_indices,
                                      n_components,
-                                     dofs_per_cell);
+                                     dofs_per_cell,
+                                     component_names);
 
   // initialize old time, time index, and transient flag
   old_time = 0.0;
