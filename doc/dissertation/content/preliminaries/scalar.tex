@@ -10,10 +10,11 @@ $\x$ and time $\timevalue$, $\consfluxscalar$ is a general flux
 function,
 $\reactioncoef\xt$ is a reaction term, and $\scalarsource\xt$ is a source
 term.
-Note that traditional conservation law methodology is not equipped
-to handle the presence of the reaction term $\reactioncoef\xt \scalarsolution\xt$
-or source term $\scalarsource\xt$, and this is in fact a significant
-driver for this research.
+Note that traditional FCT methodology does not consider the
+the presence of the reaction term $\reactioncoef\xt \scalarsolution\xt$
+or source term $\scalarsource\xt$ \cite{kuzmin_FCT}; extension to include these
+terms is a significant driver for this research since this allows the application
+of FCT to radiation transport, for example.
 Since the radiation transport equation has a linear flux function
 $\consfluxscalar$, hereafter it is assumed that
 $\consfluxscalar\equiv\velocity\scalarsolution$, where $\velocity$ is a constant

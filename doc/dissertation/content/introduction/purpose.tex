@@ -59,8 +59,22 @@ fluxes (or \emph{correction} fluxes), which when added to the low-order
 scheme as a source, becomes equivalent to the high-order scheme. However,
 the FCT algorithm limits these antidiffusive fluxes to satisfy some
 physically-motivated criteria, such as discrete local-extremum-diminishing
-(LED) bounds. FEM-FCT traditionally has used the Galerkin method for
-its high-order scheme, which in some cases is adequate; however, in
+(LED) bounds.
+
+For the monotone, low-order method required by the FCT algorithm, this research
+uses the discrete-maximum-preserving method introduced by Guermond
+\cite{guermond_firstorder} for the scalar transport model, and the invariant
+domain method for the case of conservation law systems,
+also introduced by Guermond \cite{guermond_invariantdomain}.
+The invariant domain property is a key
+property in ensuring monotonicity; it essentially ensures that the numerical
+solution will not leave a domain determined by the initial data \cite{hoff_1985}.
+For the case of a scalar conservation law, this property reduces to a discrete
+maximum principle.
+For the high-order method required by the FCT algorithm, FEM-FCT traditionally
+has used the Galerkin method without any artificial dissipation \cite{kuzmin_FCT},
+which in some cases is adequate; however, in
 this work, an entropy-based dissipation is added to the scheme to enforce
-an entropy inequality.
+an entropy inequality, as performed by Guermond
+\cite{guermond_ev}\cite{guermond_secondorder}.
 
