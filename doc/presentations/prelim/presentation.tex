@@ -101,10 +101,12 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{A Simple Motivating Example}
+\framesubtitle{Linear Advection of Discontinuous Wave Front}
 
 \begin{itemize}
-   \item Weak solutions to conservation law problems using standard CFEM
-      are not unique and thus are prone to unphysical oscillations:
+   \item Weak solutions to conservation law problems
+      are not unique; unphysical weak solutions are possible, such as the
+      following:
 \end{itemize}
 
 \begin{center}
@@ -148,9 +150,11 @@ Transport Algorithm to Hyperbolic Conservation Laws}
       \end{itemize}
       \item \textcolor{secondarycolorheavy}{Prevent spurious oscillations}.
       \begin{itemize}
-	\item Complete immunity to spurious oscillations remains a dream for
+	\item Complete immunity to spurious oscillations remains unattainable for
           high-order schemes, but quality results are possible in practice.
       \end{itemize}
+      \item \textcolor{secondarycolorheavy}{Prevent solution from leaving
+        physically-motivated bounds}.
       \item \textcolor{secondarycolorheavy}{Prevent negativities}
         for physically non-negative quantities.
    \end{itemize}
@@ -170,6 +174,8 @@ Transport Algorithm to Hyperbolic Conservation Laws}
    \item Works by adding conservative fluxes to satisfy physical bounds on the
       solution.
    \item Employs a high-order scheme and a low-order, monotone scheme.
+   \item Low-order scheme acts as a fail-safe in regions that risk formation
+     of spurious oscillations.
    \item Defines a \emph{correction}, or \emph{antidiffusion}, flux, which
       when added to the low-order scheme, produces the high-order scheme
       solution.
@@ -215,7 +221,8 @@ Transport Algorithm to Hyperbolic Conservation Laws}
   \item This research first considers the following conservation law model:
     \begin{equation}
       \pd{\scalarsolution}{t} + \nabla\cdot\consflux(\scalarsolution)
-      + \reactioncoef(\x)\scalarsolution\xt = \scalarsource\xt \eqc
+      + \textcolor{secondarycolorheavy}{\reactioncoef(\x)\scalarsolution\xt}
+      = \textcolor{secondarycolorheavy}{\scalarsource\xt} \eqc
     \end{equation}
     where $\reactioncoef(\x)\ge 0$ and $\scalarsource\xt\ge 0$.
   \item Some examples of applicability include
@@ -309,8 +316,10 @@ Transport Algorithm to Hyperbolic Conservation Laws}
    \item This gives the following, where $\solutionvector^{L,n+1}$ is the
      low-order solution:
    \begin{equation}
-      \lumpedmassmatrix\frac{\solutionvector^{L,n+1}-\solutionvector^n}{\dt}
-        + (\ssmatrix + \diffusionmatrix^L)\solutionvector^n = \ssrhs^n \eqp
+      \textcolor{secondarycolorheavy}{\lumpedmassmatrix}
+        \frac{\solutionvector^{L,n+1}-\solutionvector^n}{\dt}
+        + (\ssmatrix + \textcolor{secondarycolorheavy}{\diffusionmatrix^L})
+          \solutionvector^n = \ssrhs^n \eqp
    \end{equation}
    \item The diffusion matrix $\diffusionmatrix^L$ is assembled elementwise,
       where $K$ denotes an element, using a local bilinear form $b_K$ and a
@@ -366,7 +375,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
    \end{equation}
    \item This is used to guarantee that the low-order steady-state matrix
       $\ssmatrix^L=\ssmatrix+\diffusionmatrix^L$ is an M-matrix, i.e., a \emph{monotone} matrix:
-      $\ssmatrix^L\solutionvector \ge 0\Rightarrow \solutionvector\ge 0$.
+      $\ssmatrix^L\solutionvector=\ssrhs \ge 0\Rightarrow \solutionvector\ge 0$.
 \end{itemize}
 
 \end{frame}
@@ -404,8 +413,11 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Low-Order Scheme Results Example}
+\framesubtitle{Linear Advection of Discontinuous Wave Front}
 
-\includegraphics[width=\textwidth]{./figures/advection_low_order.pdf}
+\begin{center}
+\includegraphics[width=0.85\textwidth]{./figures/advection_low_order.pdf}
+\end{center}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -415,7 +427,8 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \frametitle{Introduction to Entropy Viscosity}
 
 \begin{itemize}
-   \item The standard Galerkin CFEM weak solution is not unique. Even with
+   \item The standard Galerkin CFEM method does not produce a unique weak
+      solution and may even diverge. Even with
       FCT, it would not necessarily converge to the correct, physical
       weak solution, i.e., the \emph{entropy} solution.
    \item To converge to the entropy solution, one must ensure that an entropy
@@ -425,6 +438,9 @@ Transport Algorithm to Hyperbolic Conservation Laws}
       \end{equation}
       for any convex entropy $\eta(u)$ and corresponding entropy flux
       $\mathbf{f}^\eta(u)$.
+   %\item Note that the entropy inequality in mathematics is flipped from
+   %   its definition in thermodynamics, where entropy is a non-\emph{decreasing}
+   %   function.
    \item This \emph{entropy residual} $R(u)$ measures entropy production;
       where it is positive, the inequality is violated, so the residual
       should be decreased somehow.
@@ -481,14 +497,15 @@ Transport Algorithm to Hyperbolic Conservation Laws}
       $\ssmatrix \rightarrow \ssmatrix + \diffusionmatrix^{H,n}$:
       \begin{equation}
         \consistentmassmatrix\frac{\solutionvector^{H,n+1}
-          -\solutionvector^n}{\dt} + (\ssmatrix + \diffusionmatrix^{H,n})
+          -\solutionvector^n}{\dt} + (\ssmatrix
+            + \textcolor{secondarycolorheavy}{\diffusionmatrix^{H,n}})
           \solutionvector^n = \ssrhs^n \eqp
       \end{equation}
    \item The high-order diffusion matrix is computed just as the low-order
       counterpart, except that $\nu^{H,n}_K$ is used instead of $\nu^{L}_K$:
       \begin{equation}
-         D\ij^{H,n} = \sum\limits_{K\subset S\ij}\nu_K^{H,n}
-            b_K(\testfunction_j,\testfunction_i) \eqp
+        D\ij^{H,n} = \sumKSij \nu_K^{H,n}
+          b_K(\testfunction_j,\testfunction_i) \eqp
       \end{equation}
 \end{itemize}
 
@@ -496,8 +513,11 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{High-Order Scheme Results Example}
+\framesubtitle{Linear Advection of Discontinuous Wave Front}
 
-\includegraphics[width=\textwidth]{./figures/advection_high_order.pdf}
+\begin{center}
+\includegraphics[width=0.85\textwidth]{./figures/advection_high_order.pdf}
+\end{center}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -511,26 +531,29 @@ Transport Algorithm to Hyperbolic Conservation Laws}
       from a low-order, monotone scheme to a high-order scheme. Calling
       these fluxes $\correctionfluxvector$, this gives
       \begin{equation}
-        \lumpedmassmatrix\frac{\solutionvector^{H,n+1}-\solutionvector^n}{\dt}
+        \lumpedmassmatrix\frac{
+          \textcolor{secondarycolorheavy}{\solutionvector^{H}}
+            -\solutionvector^n}{\dt}
           + (\ssmatrix+\diffusionmatrix^L)\solutionvector^n = \ssrhs^n
-          + \correctionfluxvector \eqp
+          + \textcolor{secondarycolorheavy}{\correctionfluxvector} \eqp
       \end{equation}
    \item Subtracting the high-order scheme equation from this gives the
       definition of $\correctionfluxvector$:
       \begin{equation}
         \correctionfluxvector \equiv
           -(\consistentmassmatrix-\lumpedmassmatrix)
-          \frac{\solutionvector^{H,n+1}-\solutionvector^n}{\dt}
+          \frac{\solutionvector^{H}-\solutionvector^n}{\dt}
           + (\diffusionmatrix^L-\diffusionmatrix^{H,n})\solutionvector^n \eqp
       \end{equation}
    \item Decomposing $\correctionfluxvector$ into internodal fluxes
       $\correctionfluxij$ such that $\sum_j \correctionfluxij =
-      \correctionfluxletter_i$, where $\Delta_{j,i}[\mathbf{y}]$
-      denotes $y_j - y_i$:
+      \correctionfluxletter_i$,
    \begin{equation}
-     \correctionfluxij = -M\ij^C\Delta_{j,i}\left[
-       \frac{\solutionvector^{H,n+1}-\solutionvector^n}{\Delta t}\right]
-       + (D\ij^L-D\ij^{H,n})\Delta_{j,i}[\solutionvector^n] \eqp
+     \correctionfluxij = -M\ij^C\pr{
+       \frac{\solutionletter^{H}_j-\solutionletter^n_j}{\Delta t}
+       -\frac{\solutionletter^{H}_i-\solutionletter^n_i}{\Delta t}
+       }
+       + (D\ij^L-D\ij^{H,n})\pr{\solutionletter^n_j-\solutionletter^n_i} \eqp
    \end{equation}
 \end{itemize}
 
@@ -554,7 +577,8 @@ Transport Algorithm to Hyperbolic Conservation Laws}
       \begin{equation}
         \lumpedmassmatrix\frac{\solutionvector^{n+1}-\solutionvector^n}{\dt}
           + \ssmatrix^L\solutionvector^n = \ssrhs
-          + \limitermatrix\cdot\correctionfluxmatrix \eqp
+          + \textcolor{secondarycolorheavy}{\limitermatrix}
+            \cdot\correctionfluxmatrix \eqp
       \end{equation}
    \item Each limiting coefficient is between zero and unity: $0\leq L\ij\leq 1$.
    \begin{itemize}
@@ -667,6 +691,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{FCT Scheme Results Example}
+\framesubtitle{Linear Advection of Discontinuous Wave Front}
 
 \includegraphics[width=\textwidth]{./figures/advection_FCT.pdf}
 
@@ -675,7 +700,8 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \section{Scalar Results}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{1-D Source Problem Results}
+\frametitle{1-D Test Problem: Applicability to Radiation Transport}
+\framesubtitle{Strong Absorber with Source in Left Half of Domain}
 
 \begin{center}
 \includegraphics[height=0.8\textheight]{./figures/solutions_source_FE.pdf}
@@ -684,7 +710,8 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{2-D Void-to-Absorber Problem Results}
+\frametitle{2-D Test Problem}
+\framesubtitle{Normally-Incident Wave from Void to Absorber Quadrant}
 
 \begin{figure}[h]
    \centering
@@ -717,7 +744,8 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{3-D Void-to-Absorber Problem Results}
+\frametitle{3-D Test Problem}
+\framesubtitle{Normally-Incident Wave from Void to Absorber Octant}
 
 \begin{figure}[h]
    \centering
@@ -734,7 +762,8 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{2-D Skew Void-to-Absorber Problem Results}
+\frametitle{2-D Test Problem: Multidimensional Effects}
+\framesubtitle{45$^{\circ}$-Incident Wave from Void to Absorber Quadrant}
 
 \begin{figure}[h]
    \centering
@@ -767,7 +796,8 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Galerkin-FCT Vs. EV-FCT}
+\frametitle{1-D Test Problem: Galerkin-FCT Vs. EV-FCT}
+\framesubtitle{Left Half: Source in Vacuum, Right Half: No Source in Absorber}
 
 \begin{center}
 \includegraphics[height=0.8\textheight]{./figures/sourcevoid_FCT_comparison.pdf}
@@ -776,7 +806,8 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{1-D Smooth Problem Convergence Results (Using FE)}
+\frametitle{1-D Convergence Results (Using FE)}
+\framesubtitle{Smooth MMS Problem}
 
 \begin{center}
 \includegraphics[height=0.8\textheight]{./figures/convergence_smooth_FE.pdf}
@@ -785,7 +816,8 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{1-D Non-smooth Problem Convergence Results (Using SSPRK33)}
+\frametitle{1-D Convergence Results (Using SSPRK33)}
+\framesubtitle{Non-smooth Problem: Linear Advection of Discontinuous Wave Front}
 
 \begin{center}
 \includegraphics[height=0.8\textheight]{./figures/convergence_absorber_SSPRK33.pdf}
@@ -804,7 +836,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
     \begin{equation}
       \ppt{}\left[\begin{array}{c}\height\\\heightmomentum\end{array}\right]
         + \divergence\left[\begin{array}{c}\heightmomentum\\
-          \heightmomentum\otimes\velocity + \half\gravity\height^2 I
+          \heightmomentum\otimes\velocity + \half\gravity\height^2 \mathbb{I}
           \end{array}\right]
         = \left[\begin{array}{c}0\\-\gravity\height\nabla\bathymetry\end{array}
     \right] \eqp
@@ -910,14 +942,15 @@ Transport Algorithm to Hyperbolic Conservation Laws}
   \item The domain-invariant low-order scheme lumps the mass matrix and adds
     a low-order diffusion term:
     \begin{equation}
-      \lumpedmassentry
+      \textcolor{secondarycolorheavy}{\lumpedmassentry}
         \frac{\solutionvector_i^{L,n+1}-\solutionvector_i^n}{\dt}
         + \sum_j\gradiententry\cdot\consfluxinterpolant_j^n
-        + \sum_j\diffusionmatrixletter\ij^{L,n}\solutionvector_j^n
+        + \textcolor{secondarycolorheavy}{
+          \sum_j\diffusionmatrixletter\ij^{L,n}\solutionvector_j^n}
         = \ssrhs_i^n \eqc
     \end{equation}
   \item The following definition for the low-order diffusion matrix allows
-    the domain-invariance property to be proven:
+    the invariant domain property to be proven:
     \begin{equation}
       \diffusionmatrixletter^{L,n}\ij \equiv
         \max(\maxwavespeed\ij\ltwonorm{\mathbf{\gradientmatrixletter}\ij},
@@ -950,7 +983,8 @@ Transport Algorithm to Hyperbolic Conservation Laws}
       \sum_j\consistentmassentry
         \frac{\solutionvector_j^{H,n+1}-\solutionvector_j^n}{\dt}
         + \sum_j\gradiententry\cdot\consfluxinterpolant_j^n
-        + \sum_j\diffusionmatrixletter\ij^{H,n}\solutionvector_j^n
+        + \textcolor{secondarycolorheavy}{
+          \sum_j\diffusionmatrixletter\ij^{H,n}\solutionvector_j^n}
         = \ssrhs_i^n \eqc
     \end{equation}
   \item The high-order diffusion matrix is proportional to an entropy diffusion matrix
@@ -1012,10 +1046,12 @@ Transport Algorithm to Hyperbolic Conservation Laws}
   \item The antidiffusive fluxes $\correctionfluxvector_i$ are defined such that
     \begin{equation}
       \lumpedmassentry
-        \frac{\solutionvector_i^{H,n+1}-\solutionvector_i^n}{\dt}
+        \frac{\textcolor{secondarycolorheavy}{\solutionvector_i^{H}}
+          -\solutionvector_i^n}{\dt}
         + \sum_j\gradiententry\cdot\consfluxinterpolant_j^n
         + \sum_j\diffusionmatrixletter\ij^{L,n}\solutionvector_j^n
-        = \ssrhs_i^n + \correctionfluxvector_i\eqc
+        = \ssrhs_i^n + \textcolor{secondarycolorheavy}{\correctionfluxvector_i}
+      \eqc
     \end{equation}
    \item Subtracting the high-order scheme equation from this gives the
       definition of $\correctionfluxvector$:
@@ -1050,7 +1086,8 @@ Transport Algorithm to Hyperbolic Conservation Laws}
     \begin{itemize}
       \item For scalar case, a DMP was used, but no DMP exists for systems.
       \item The invariant domain property is not useful here
-        because the invariant domain is not actually known.
+        because while the property is known to hold, the domain itself is not
+        actually known.
     \end{itemize}
   \item Choose to impose LED constraint for each component:
     \begin{equation}
