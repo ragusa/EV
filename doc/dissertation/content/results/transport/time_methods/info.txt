@@ -1,0 +1,5 @@
+void-to-absorber
+t = 0.3
+CFL = 0.8
+Galerkin FCT
+Ncells = 32

@@ -19,7 +19,8 @@ The spatial derivative of the flux function can be evaluated using chain rule, g
     \sq{\begin{array}{c c}0 & 1\\
       \speedofsound^2-\velocityx^2 & 2\velocityx\end{array}} \eqc
 \end{equation}
-where $\jacobianx(\vectorsolution)$ is referred to as the Jacobian matrix. The
+where $\jacobianx(\vectorsolution)$ is referred to as the Jacobian matrix,
+and $\speedofsound\equiv\sqrt{\gravity\speedofsound}$. The
 eigenvalues and corresponding eigenvectors of this matrix are
 \begin{equation}
   \eigenvalue_1(\vectorsolution) = \velocityx - \speedofsound \eqc \quad
@@ -57,7 +58,8 @@ second by $\frac{2\gravity}{\speedofsound}$ gives
     + \eigenvaluematrix(\vectorsolution)\pd{\characteristicsolution}{x}
   = \mathbf{0} \eqc
 \end{equation}
-where $\characteristicsolution(\vectorsolution)$ is the vector of
+where $\characteristicsolution(\vectorsolution)\equiv
+\eigenvectormatrix(\vectorsolution)^{-1}\vectorsolution$ is the vector of
 characteristic variables, and $\eigenvaluematrix(\vectorsolution)$ is a
 diagonal matrix with the eigenvalues as the diagonal entries:
 \begin{equation}

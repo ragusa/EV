@@ -276,7 +276,6 @@ void FCT<dim>::compute_bounds(const Vector<double> & old_solution,
   {
     case FCTBoundsType::led:
     {
-      /*
             // nothing else needs to be done
             for (unsigned int i = 0; i < n_dofs; ++i)
             {
@@ -288,7 +287,6 @@ void FCT<dim>::compute_bounds(const Vector<double> & old_solution,
                   (1.0 - dt / (*lumped_mass_matrix)(i, i) * ss_reaction(i)) +
                 dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
             }
-      */
       break;
     }
     case FCTBoundsType::dmp:

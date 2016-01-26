@@ -37,9 +37,9 @@ ev.entropy_deriv = @(u) u;        % derivative of entropy function
 temporal_scheme = 3; % temporal discretization scheme
 
 theta = 1.0;     % theta parameter to use if using a theta method
-CFL = 0.8;       % CFL number
+CFL = 1.0;       % CFL number
 ss_tol = 1.0e-5; % steady-state tolerance
-t_end = 0.75;     % max time to run
+t_end = 0.3;     % max time to run
 %--------------------------------------------------------------------------
 % FCT options
 %--------------------------------------------------------------------------
@@ -62,8 +62,9 @@ prelimit = 0;
 %            1: pure absorber without source
 %            2: void without source -> absorber without source
 %            3: void with    source -> absorber without source
+%            4: void
 %            5: MMS-1
-problemID = 2;
+problemID = 4;
 
 % IC_option: 0: zero
 %            1: exponential pulse
@@ -74,9 +75,9 @@ mesh.x_min = 0.0;         % left end of domain
 mesh.x_max = 1.0;         % right end of domain
 phys.periodic_BC = false; % option for periodic BC; otherwise Dirichlet
 phys.mu     = 1;          % cos(angle)
-phys.sigma  = @(x,t) 1;   % cross section function
+phys.sigma  = @(x,t) 0;   % cross section function
 phys.source = @(x,t) 0;   % source function
-phys.inc    = 0;          % incoming flux
+phys.inc    = 1;          % incoming flux
 phys.speed  = 1;          % advection speed
 source_is_time_dependent = false; % is source time-dependent?
 %--------------------------------------------------------------------------
@@ -91,7 +92,7 @@ relaxation_parameter = 1.0; % relaxation parameter for iteration
 plot_viscosity            = false; % plot viscosities?
 plot_low_order_transient  = false; % plot low-order transient?
 plot_high_order_transient = false; % plot high-order transient?
-plot_FCT_transient        = true; % plot FCT transient?
+plot_FCT_transient        = false; % plot FCT transient?
 pausetime = 0.01;                   % time to pause for transient plots
 legend_location           = 'NorthEast'; % location of plot legend
 %--------------------------------------------------------------------------
@@ -151,6 +152,20 @@ switch problemID
         source_is_time_dependent = false;
         exact_solution_known = true;
         exact = @(x,t) x.*(x<0.5) + 0.5*exp(-10*(x-0.5)).*(x>=0.5);
+    case 4 % void
+        mesh.x_min = 0.0;
+        mesh.x_max = 1.0;
+        phys.periodic_BC = false;
+        phys.inc    = 1.0;
+        phys.mu     = 1.0;
+        phys.sigma  = @(x,t) 0.0;
+        phys.source = @(x,t) 0.0;
+        phys.speed  = 1;
+        
+        IC_option = 0;
+        source_is_time_dependent = false;
+        exact_solution_known = true;
+        exact = @(x,t) t >= x;
     case 5 % MMS-1
         mesh.x_min = 0.0;
         mesh.x_max = 1.0;
