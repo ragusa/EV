@@ -195,6 +195,8 @@ public:
   bool use_star_states_in_fct_bounds;
 
   bool output_limiter_matrix;
+
+  bool output_fct_bounds;
 };
 
 #include "src/parameters/ConservationLawParameters.cc"

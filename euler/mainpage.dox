@@ -153,7 +153,7 @@ This class provides the following main methods:
 - \c run(): calls \c initialize_system() and loops over refinement cycles.
 - \c solve_runge_kutta(): solves a transient using an SSPRK method.
 
-The following steps are executed in the transient loop in
+The following steps are executed in each time step of the transient loop in
 <tt>solve_runge_kutta</tt>:
 -# compute time step size
 -# begin loop over SSPRK stages:
@@ -172,7 +172,7 @@ The following steps are executed in the transient loop in
       -# update \f$\nu^L\f$, \f$\nu^H\f$
       -# update \f$\mathbf{D}^L\f$, \f$\mathbf{D}^H\f$
       -# compute high-order stage solution
-      -# compute fct stage solution
+      -# compute FCT stage solution
 -# perform post-processing for time step
 
 \subsection diffusion_sec Artificial Diffusion

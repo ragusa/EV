@@ -42,8 +42,8 @@ FCT<dim>::FCT(const ConservationLawParameters<dim> & parameters_,
     bounds_transient_file_index(1)
 {
   // assert that DMP bounds are not used for the non-scalar case
-  if (fct_bounds_type == FCTBoundsType::dmp)
-    Assert(n_components == 1, ExcNotImplemented());
+  //if (fct_bounds_type == FCTBoundsType::dmp)
+  //  Assert(n_components == 1, ExcNotImplemented());
 
   // distribute degrees of freedom in scalar degree of freedom handler
   dof_handler_scalar.clear();
@@ -198,10 +198,22 @@ void FCT<dim>::compute_bounds(const Vector<double> & old_solution,
 {
   for (unsigned int i = 0; i < n_dofs; ++i)
   {
+/*
     solution_max(i) = old_solution(i);
     solution_min(i) = old_solution(i);
+*/
+
+    if (i % 2 == 0) // height
+    {
+      solution_max(i) = 3.0;
+      solution_min(i) = 1.0;
+    } else {
+      solution_max(i) = 1000.0;
+      solution_min(i) = 0.0;
+    }
   }
 
+/*
   // loop over cells
   typename DoFHandler<dim>::active_cell_iterator cell =
                                                    dof_handler->begin_active(),
@@ -236,6 +248,12 @@ void FCT<dim>::compute_bounds(const Vector<double> & old_solution,
       }
     }
   }
+*/
+/*
+for (unsigned int i = 0; i < n_dofs; ++i)
+  std::cout << i << " " << solution_min(i) << std::endl;
+std::exit(0);
+*/
 
   // consider star states in bounds if specified
   if (use_star_states_in_fct_bounds)
@@ -276,6 +294,7 @@ void FCT<dim>::compute_bounds(const Vector<double> & old_solution,
   {
     case FCTBoundsType::led:
     {
+/*
             // nothing else needs to be done
             for (unsigned int i = 0; i < n_dofs; ++i)
             {
@@ -287,6 +306,7 @@ void FCT<dim>::compute_bounds(const Vector<double> & old_solution,
                   (1.0 - dt / (*lumped_mass_matrix)(i, i) * ss_reaction(i)) +
                 dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
             }
+*/
       break;
     }
     case FCTBoundsType::dmp:
@@ -381,12 +401,10 @@ void FCT<dim>::compute_limiting_coefficients_zalesak(
   Q_plus = 0;
   lumped_mass_matrix->vmult(tmp_vector, old_solution);
   Q_plus.add(-1.0 / dt, tmp_vector);
-  /*
     Q_plus.add(1.0, ss_flux);
     low_order_diffusion_matrix.vmult(tmp_vector, old_solution);
     Q_plus.add(1.0, tmp_vector);
     Q_plus.add(-1.0, ss_rhs);
-  */
 
   // copy current contents of Q+ as these components are identical
   Q_minus = Q_plus;

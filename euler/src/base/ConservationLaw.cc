@@ -973,7 +973,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
         new_solution, new_time, dof_handler, "solution", false);
 
       // output FCT bounds if specified
-      if (fct)
+      if (fct && parameters.output_fct_bounds)
         fct->output_bounds_transient(postprocessor, new_time);
     }
 

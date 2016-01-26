@@ -304,6 +304,10 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
                       "false",
                       Patterns::Bool(),
                       "Option to output matrix of limiting coefficients");
+    prm.declare_entry("output fct bounds",
+                      "false",
+                      Patterns::Bool(),
+                      "Option to output FCT bounds");
   }
   prm.leave_subsection();
 }
@@ -573,6 +577,9 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
 
     // output limiter matrix
     output_limiter_matrix = prm.get_bool("output limiter matrix");
+
+    // output FCT bounds
+    output_fct_bounds = prm.get_bool("output fct bounds");
   }
   prm.leave_subsection();
 }
