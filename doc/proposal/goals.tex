@@ -18,7 +18,21 @@ discusses specific research objectives that derive from the main research goal.
     analysis of the characteristics for the specific hyperbolic system. This
     research performs this analysis for the shallow water equations with flat
     bottom topography. The monotonicity and
-    positivity-preservation of these schemes should be demonstrated with numerical examples.
+    positivity-preservation of these schemes should be demonstrated with
+    numerical examples.
+
+    For the \emph{scalar} case, the low-order scheme should be
+    developed for the following time discretizations:
+    \begin{itemize}
+      \item steady-state,
+      \item implicit $\theta$ methods: implicit Euler and Crank-Nicolson,
+      \item explicit methods of the SSPRK family.
+    \end{itemize}
+    For the \emph{systems} case, the low-order scheme should be
+    developed for the following time discretizations:
+    \begin{itemize}
+      \item explicit methods of the SSPRK family.
+    \end{itemize}
   \item \textbf{Develop high-order entropy-based scheme.}
     The entropy-based scheme should be second-order-accurate and should
     demonstrate stability with numerical examples. A reduction in the occurrence
@@ -26,16 +40,55 @@ discusses specific research objectives that derive from the main research goal.
     case will use an arbitrary convex entropy function such as
     $\entropy(\scalarsolution)=\half\scalarsolution^2$, while for the shallow
     water equations, the entropy function will be the total energy.
+
+    For the \emph{scalar} case, the high-order scheme should be
+    developed for the following time discretizations:
+    \begin{itemize}
+      \item steady-state,
+      \item implicit $\theta$ methods: implicit Euler and Crank-Nicolson,
+      \item explicit methods of the SSPRK family.
+    \end{itemize}
+    For the \emph{systems} case, the high-order scheme should be
+    developed for the following time discretizations:
+    \begin{itemize}
+      \item explicit methods of the SSPRK family.
+    \end{itemize}
   \item \textbf{Develop Galerkin FCT scheme.}
     The basic FEM-FCT scheme, as described by Kuzmin in \cite{kuzmin_FCT}, should
     be implemented. This scheme uses the standard second-order-accurate Galerkin
     scheme as the high-order scheme in the algorithm. Positivity-preservation and
     a reduction of spurious oscillations should be demonstrated.
+
+    For the \emph{scalar} case, the Galerkin FCT scheme should be
+    developed for the following time discretizations:
+    \begin{itemize}
+      \item steady-state,
+      \item implicit $\theta$ methods: implicit Euler and Crank-Nicolson,
+      \item explicit methods of the SSPRK family.
+    \end{itemize}
+    For the \emph{systems} case, the Galerkin FCT scheme should be
+    developed for the following time discretizations:
+    \begin{itemize}
+      \item explicit methods of the SSPRK family.
+    \end{itemize}
   \item \textbf{Develop entropy-based FCT scheme.}
     The basic FEM-FCT scheme should be modified to replace the Galerkin scheme
     with the high-order entropy-based scheme in the FCT algorithm. This should
     demonstrate positivity-preservation and a further reduction in spurious
     oscillations from the entropy-based method alone.
+
+    For the \emph{scalar} case, the entropy-based FCT scheme should be
+    developed for the following time discretizations:
+    \begin{itemize}
+      \item steady-state,
+      \item implicit $\theta$ methods: implicit Euler and Crank-Nicolson,
+      \item explicit methods of the SSPRK family.
+    \end{itemize}
+    For the \emph{systems} case, the entropy-based FCT scheme should be
+    developed for the following time discretizations:
+    \begin{itemize}
+      \item explicit methods of the SSPRK family.
+    \end{itemize}
   \item \textbf{Compare schemes.}
     Schemes developed in this research should be compared in a number of
     test problems. In addition to comparing accuracy and convergence rates,
