@@ -13,14 +13,14 @@ subsection problem
    # 13 = source-in-void to absorber
    # 14 = 5-region
    # 15 = 2-region saturation
-   set Problem ID = 1
+   set Problem ID = 2
 end
 
 subsection time
-   set End time = 0.1
+   set End time = 1.0
    set Time step size = 0.001
    set CFL limit = 0.5
-   set Time discretization option = FE  # <SS|FE|CN|BE|SSP2|SSP3>
+   set Time discretization option = SSP3  # <SS|FE|CN|BE|SSP2|SSP3>
 end
 
 subsection viscosity
@@ -29,14 +29,14 @@ subsection viscosity
    # 2 = EV
    # 3 = EV+FCT
    # 4 = Galerkin+FCT
-   set Viscosity option = 0
+   set Viscosity option = 3
 end
 
 subsection entropy viscosity
    set Entropy string = 0.5*u*u
    set Entropy derivative string = u
-   set Entropy residual coefficient = 0.5
-   set Jump coefficient = 0.5
+   set Entropy residual coefficient = 1.0
+   set Jump coefficient = 1.0
    set EV temporal discretization = BE # <FE|BE|CN|BDF2>
 end
 
@@ -48,7 +48,7 @@ subsection refinement
    set Refinement mode = space # <space|time>
    set Time refinement factor = 0.5
    set Use adaptive refinement = false
-   set Initial refinement level = 5
+   set Initial refinement level = 7
    set Number of refinement cycles = 1
 end
 

@@ -217,6 +217,48 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \subsection{Model}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
+\frametitle{Radiation Transport Model}
+
+\begin{itemize}
+  \item Consider the following model for radiation transport:
+    \begin{equation}\label{eq:rad_transport}
+      \frac{1}{\speed}\ppt{\angularflux}
+        + \directionvector\cdot\nabla\angularflux(\x,\directionvector,E,t)
+        + \totalcrosssection(\x,E)\angularflux(\x,\directionvector,E,t)
+        = \radiationsource(\x,\directionvector,E,t) \eqp
+    \end{equation}
+  \item For example, $\radiationsource\xt$ can include extraneous sources
+    and scattering sources in a source iteration scheme:
+    \begin{equation}
+      \frac{1}{\speed}\ppt{\angularflux}^{(\ell+1)}
+        + \directionvector\cdot\nabla\angularflux^{(\ell+1)}
+        + \totalcrosssection(\x)\angularflux^{(\ell+1)}
+        = \radiationsource^{(\ell)} \eqc
+    \end{equation}
+    with for example, $\radiationsource^{(\ell)}=
+    \frac{Q_{ext}}{4\pi} + \frac{\Sigma_s}{4\pi}\scalarflux^{(\ell)}$.
+  \item Consider a more general case of a scalar conservation law:
+    \begin{equation}
+      \pd{\scalarsolution}{t} + \nabla\cdot\consflux(\scalarsolution)
+      + \reactioncoef(\x)\scalarsolution\xt
+      = \scalarsource\xt \eqp
+    \end{equation}
+  \item Radiation transport fits this model with the following substitutions:
+\[
+  \scalarsolution\rightarrow\angularflux
+  \eqc \quad
+  \consflux(\angularflux)\rightarrow\speed\directionvector\angularflux
+  \eqc \quad
+  \reactioncoef\rightarrow\speed\totalcrosssection
+  \eqc \quad
+  \scalarsource\rightarrow\speed\radiationsource
+  \eqp
+\]
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
 \frametitle{Scalar Conservation Law Model}
 
 \begin{itemize}
@@ -235,9 +277,9 @@ Transport Algorithm to Hyperbolic Conservation Laws}
         vehicle density on a one-lane highway
       \item \textcolor{secondarycolorheavy}{Inviscid Burgers' equation}:
         inviscid fluid flow model capturing some key features of gas dynamics
+      \item \textcolor{secondarycolorheavy}{Radiation transport}:
+        transport of radiation such as photons or neutrons
     \end{itemize}
-  \item This model can be applied to radiation transport using source iteration:
-    $\scalarsource\xt$ would include scattering source from the previous solution iterate.
 \end{itemize}
 
 \end{frame}
@@ -974,6 +1016,57 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Maximum Wave Speeds}
+
+\begin{itemize}
+  \item Consider an example for the 1-D SWE Riemann problem, where the left
+    wave is a shock, and the right is a rarefaction:
+    \begin{center}
+      \includegraphics[height=0.4\textheight]{./figures/characteristic_diagram.png}
+    \end{center}
+  \item For a general conservation law system of size $m$,
+    \begin{equation}
+      \maxwavespeed(\vectorsolution_L,\vectorsolution_R)
+        = \max\pr{|\lambda_1^-|,|\lambda_m^+|} \eqp
+    \end{equation}
+  \item Then for the example above
+    $\maxwavespeed(\vectorsolution_L,\vectorsolution_R)$ is the maximum of
+    the shock speed $|\lambda_1|$ and rarefaction \emph{head} speed $|\lambda_2^+|$.
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Maximum Wave Speeds (Cont.)}
+
+\begin{itemize}
+  \item For the SWE, a left \textcolor{secondarycolorheavy}{shock} has the wave speed
+\begin{equation}\label{eq:left_shockspeed}
+  \wavespeed_1^-(\vectorsolution_L, \vectorsolution_R)
+    = \velocityx_L - \speedofsound_L\pr{1 + \pr{
+    \frac{(\height_* - \height_L)(\height_* + 2\height_L)}{2\height_L^2}}}^{\frac{1}{2}}
+    \eqc
+\end{equation}
+    where $\speedofsound=\sqrt{\gravity\height}$ is the ``speed of sound'' for the SWE.
+  \item A left \textcolor{secondarycolorheavy}{rarefaction} has the head wave speed
+\begin{equation}\label{eq:leftwavespeed_rarefaction}
+  \wavespeed_1^-(\vectorsolution_L, \vectorsolution_R)
+    = \velocityx_L - \speedofsound_L
+    \eqc
+\end{equation}
+  \item Note the shock speed depends on the intermediate (star-state) solution
+    for height $\height_*$, which may be computed with the following steps:
+    \begin{itemize}
+      \item Apply Rankine-Hugoniot condition to shock(s)
+      \item Apply Riemann invariant condition to rarefaction(s)
+      \item Combine resulting expressions and solve nonlinear equation for
+        $\height_*$
+    \end{itemize}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{High-Order Scheme}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
@@ -1234,7 +1327,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \section{Shallow Water Equations Results}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Preliminary Results}
+\frametitle{Preliminary Results: Limitation on Conservative Variables}
 \framesubtitle{Height in Dam Break Problem}
 
 \begin{center}
@@ -1244,7 +1337,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Preliminary Results}
+\frametitle{Preliminary Results: Limitation on Conservative Variables}
 \framesubtitle{Discharge in Dam Break Problem}
 
 \begin{center}
@@ -1269,10 +1362,10 @@ Transport Algorithm to Hyperbolic Conservation Laws}
    \begin{itemize}
      \item[\checked] Low-order, domain-invariant, positivity-preserving scheme
        for SWE with \emph{flat} bottom topography
-     \item[\unchecked] Low-order, domain-invariant, positivity-preserving scheme
-       for SWE with \emph{non-flat} bottom topography
      \item[\checked] High-order, entropy-based scheme
      \item[\unchecked] High-order, LED, positivity-preserving FCT scheme
+     \item[\unchecked] Bonus: Extend invariant domain method to
+       include \emph{non-flat} bottom topography for SWE
    \end{itemize}
 \end{itemize}
 
@@ -1317,6 +1410,41 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Backup Slides}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Strong-Stability-Preserving Runge-Kutta Methods}
+
+\begin{itemize}
+  \item A general $s$-stage SSPRK method for discretizing a system
+    $\massmatrix\ddt{\solutionvector} = \ssres(\solutionvector,t)$
+    is the following:
+    \begin{equation}
+      \solutionvector^{n+1} = \RKstagesolution^{s} \eqc
+    \end{equation}
+    \begin{equation}
+      \RKstagesolution^i = \left\{\begin{array}{l l}
+        \solutionvector^n & i = 0\\
+        \RKoldsolutioncoef_i\RKstagesolution^0
+        + \RKstagesolutioncoef_i\RKintermediatesolution^i & i\ne 0
+      \end{array}\right. \eqc 
+    \end{equation}
+    \begin{equation}
+      \massmatrix\RKintermediatesolution^i = \massmatrix\RKstagesolution^{i-1}
+        + \timestepsize\,\ssres(\RKstagetime_i,\RKstagesolution^{i-1})
+      \eqc
+    \end{equation}
+    where $\RKstagetime_i = \timevalue^\timeindex+\RKtimecoef_i\timestepsize$,
+  \item An example is the Shu-Osher method (3-stage, 3rd-order-accurate):
+    \begin{equation}
+      \RKoldsolutioncoef = \left[\begin{array}{c}
+        0\\\frac{3}{4}\\\frac{1}{3}\end{array}\right]
+        \qquad\RKstagesolutioncoef = \left[\begin{array}{c}
+        1\\\frac{1}{4}\\\frac{2}{3}\end{array}\right]
+        \qquad c = \left[\begin{array}{c}0\\1\\\frac{1}{2}\end{array}\right] \eqp
+    \end{equation}
+\end{itemize}
+
+\end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
 \frametitle{Low-Order Steady-State Matrix Row Sum}
@@ -1411,6 +1539,17 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{equation}
 \end{subequations}
 \end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{1-D Scalar Transport Results}
+\framesubtitle{Strong Absorber with Source in Left Half of Domain, 512 Cells}
+
+\begin{center}
+   \includegraphics[width=0.8\textwidth]
+     {\contentdir/results/transport/source_in_left_half/source_in_left_half_FE_512cells.pdf}
+\end{center}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

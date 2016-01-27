@@ -68,7 +68,16 @@ do for [i=1:words(file_list)] {
       existing_title_list = existing_title_list." ".mytitle
       existing_lt_list = existing_lt_list." ".mylt
       existing_lc_list = existing_lc_list." ".mylc
-      existing_sym_list = existing_sym_list." ".mysym
+
+      # check number of data points and do not use symbols if too many
+      stats outdir.myfile using 1 noout
+      n_data = STATS_records
+      # print "Number of data points in ",myfile,": ",n_data
+      #if (n_data > 200) {
+      #   existing_sym_list   = existing_sym_list  ." -2"
+      #} else {
+         existing_sym_list   = existing_sym_list  ." ".mysym
+      #}
    }
 }
 
