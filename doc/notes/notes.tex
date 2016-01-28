@@ -9,8 +9,9 @@
 %\author{Jean-Luc Guermond\\Jean Ragusa\\Joshua Hansel}
 \title{Shallow Water Notes}
 
-\input{../dissertation/content/newestcommands}
-\input{../dissertation/content/theorems_dissertation}
+\newcommand{\contentdir}{../dissertation/content}
+\input{\contentdir/newcommands}
+\input{\contentdir/theorems_dissertation}
 
 \begin{document}
 
@@ -23,7 +24,7 @@
 %\input{../../dissertation/content/discretization/shallowwater}
 %\section{Boundary Conditions}
 %\input{../../dissertation/content/discretization/shallowwater_bc}
-\input{../dissertation/content/appendices/appendix_shallow_water_max_wave_speed}
+%\input{../dissertation/content/appendices/appendix_shallow_water_max_wave_speed}
 %===============================================================================
 %\section{Preliminaries}
 %===============================================================================
@@ -46,6 +47,11 @@
 %    \input{../../dissertation/content/high_order/EV_shallowwater}
 %\subsection{The High-Order System}
 %  \input{../../dissertation/content/high_order/high_order_system}
+%===============================================================================
+\section{Implementation}  
+%===============================================================================
+\input{\contentdir/implementation/implementation}
+\input{\contentdir/implementation/nonlinear_iteration}
 %
 %===============================================================================
 %\section*{References}

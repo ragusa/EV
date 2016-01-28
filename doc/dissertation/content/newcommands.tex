@@ -49,6 +49,7 @@
 \newcommand{\approximatevectorsolution}{\approximate{\vectorsolution}}
 \newcommand{\solutionletter}{U}
 \newcommand{\solutionvector}{\mathbf{\solutionletter}}
+\newcommand{\U}{\solutionvector}
 \newcommand{\lowordersolution}[1][]{
   \ifthenelse{\equal{#1}{}}{\solutionvector^L}{\solutionvector^{L,#1}}}
 \newcommand{\highordersolution}[1][]{
@@ -131,6 +132,7 @@
 % mass matrix
 \newcommand{\massmatrixletter}{M}
 \newcommand{\massmatrix}{\mathbf{\massmatrixletter}}
+\newcommand{\M}{\massmatrix}
 \newcommand{\consistentmassmatrix}{\massmatrix^C}
 \newcommand{\consistentmassentry}{\massmatrixletter^C_{i,j}}
 \newcommand{\lumpedmassmatrix}{\massmatrix^L}
@@ -147,6 +149,7 @@
   \ifthenelse{\equal{#1}{}}
   {\mathbf{\ssmatrixletter}}
   {\mathbf{\ssmatrixletter}^#1}}
+\newcommand{\A}{\ssmatrix}
 \newcommand{\loworderssmatrix}[1][]{
   \ifthenelse{\equal{#1}{}}
   {\ssmatrix^L}
@@ -160,8 +163,12 @@
   \ifthenelse{\equal{#1}{}}
   {\mathbf{\ssrhsletter}}
   {\mathbf{\ssrhsletter}^#1}}
+\renewcommand{\b}{\ssrhs}
 \newcommand{\ssresletter}{r}
 \newcommand{\ssres}{\mathbf{\ssresletter}}
+\renewcommand{\r}{\ssres}
+\newcommand{\B}{\mathbf{B}}
+\newcommand{\s}{\mathbf{s}}
 
 % diffusion matrix
 \newcommand{\diffusionmatrixletter}{D}
@@ -169,6 +176,7 @@
   \ifthenelse{\equal{#1}{}}
   {\mathbf{\diffusionmatrixletter}}
   {\mathbf{\diffusionmatrixletter}^#1}}
+\newcommand{\D}{\diffusionmatrix}
 \newcommand{\loworderdiffusionmatrix}[1][]{
   \ifthenelse{\equal{#1}{}}
   {\diffusionmatrix^L}
@@ -204,6 +212,8 @@
 \newcommand{\limitedfluxsum}{\limitermatrix\cdot\correctionfluxmatrix}
 \newcommand{\limitedfluxsumi}{\sumj\limiterletter\ij
   \MakeUppercase{\correctionfluxletter}\ij}
+\newcommand{\F}{\correctionfluxmatrix}
+\newcommand{\LF}{\limitermatrix\cdot\correctionfluxmatrix}
 
 % radiation transport
 \newcommand{\angularflux}{\psi}
