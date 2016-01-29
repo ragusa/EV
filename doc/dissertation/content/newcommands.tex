@@ -393,3 +393,19 @@
 \newcommand{\realspace}[1][]{
   \ifthenelse{\equal{#1}{}}{\mathbb{R}}{\mathbb{R}^{#1}}}
 
+% nonlinear solve
+\newcommand{\nonlinearmatrix}{\mathbf{B}}
+\newcommand{\nonlinearrhs}{\mathbf{s}}
+\newcommand{\relaxationparameter}{\alpha}
+\newcommand{\nonlineartolerance}{\epsilon}
+
+% algorithm
+\usepackage{algpseudocode}
+\usepackage{algorithm}
+\newcommand{\Break}{\State \textbf{break}}
+\newcommand{\Not}{\textbf{not}\,}
+\newcommand{\Error}[1]{\State \textbf{error}: #1}
+
+% boundary conditions
+\newcommand{\dirichlet}[1]{\tilde{#1}}
+

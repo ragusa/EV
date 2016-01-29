@@ -89,6 +89,18 @@ discusses specific research objectives that derive from the main research goal.
     \begin{itemize}
       \item explicit methods of the SSPRK family.
     \end{itemize}
+  \item \textbf{Investigate FCT limitation on non-conservative variables.}
+    The application of FCT to \emph{systems} of conservation laws requires that
+    physically-motivated bounds be imposed on the solution; however, the
+    discrete maximum principle (DMP) bounds used for the \emph{scalar}
+    FCT scheme are not valid. Kuzmin notes that local
+    transformations of the discrete system to other sets of variables such
+    as characteristic variables could give superior results in the computation
+    of the limiting coefficients, as this transformation entails some
+    decoupling of the PDEs in the system, thus allowing scalar FCT methodology
+    to be more effective for FCT for systems \cite{kuzmin_FCT}. This
+    possibility should be investigated as an alternative to limiting on the
+    conservative set of variables.
   \item \textbf{Compare schemes.}
     Schemes developed in this research should be compared in a number of
     test problems. In addition to comparing accuracy and convergence rates,

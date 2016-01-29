@@ -1,145 +1,173 @@
-\section{Nonlinear Iteration}
 %================================================================================
-\subsection{Steady-State High-Order Scheme}
-%--------------------------------------------------------------------------------
-The high-order steady-state scheme
-\begin{equation}
-   \A^H\U = \b
+\section{Nonlinear Solution}
+%================================================================================
+The nonlinear systems considered in this research can be written in a quasilinear
+form:
+\begin{equation}\label{eq:nonlinear_equation}
+  \nonlinearmatrix(\solutionvector)\solutionvector
+    = \nonlinearrhs(\solutionvector) \eqp
 \end{equation}
-is in general nonlinear since the high-order steady-state matrix is
-$\A^H = \A + \D^H$, where $\D^H$ may be a function of the solution, as
-it is in the case of the entropy viscosity high-order scheme.
-This section presents a defect correction scheme to solve this
-nonlinear system iteratively.
+The right-hand-side $\nonlinearrhs(\solutionvector)$ is a function of
+the solution for FCT schemes since in general the limiting coefficients are
+functions of the solution.
+A system in which Dirichlet boundary conditions are strongly imposed
+requires modification of the matrix and right-hand-side vector:
+$\nonlinearmatrix\rightarrow\dirichlet{\nonlinearmatrix}$ and
+$\nonlinearrhs\rightarrow\dirichlet{\nonlinearrhs}$. In the remainder of
+this section, the Dirichlet-modified notation is used to be general;
+if strong Dirichlet boundary conditions are not applied, then the
+Dirichlet-modified notation can simply be ignored. Subsequent sections
+will define the matrix $\nonlinearmatrix$ and $\nonlinearrhs$ for different
+nonlinear schemes.
 
-If the system is modified to strongly impose Dirichlet
-boundary conditions, let it be denoted by
+To solve this system, fixed point iteration will be used:
 \begin{equation}
-   \tilde{\A}^H\U = \tilde{\b} \eqc
+  \dirichlet{\nonlinearmatrix}^{(\ell)}\solutionvector^{(\ell+1)}
+    = \dirichlet{\nonlinearrhs}^{(\ell)} \eqc
 \end{equation}
-where the tildes denote modification to the vector and matrix.
-Each new iterate of the solution is computed as
+where $\nonlinearmatrix^{(\ell)}\equiv\nonlinearmatrix(\solutionvector^{(\ell)})$
+and $\nonlinearrhs^{(\ell)}\equiv\nonlinearrhs(\solutionvector^{(\ell)})$.
+However, in implementation, this will be expressed as a defect correction scheme:
 \begin{equation}
-   \U^{(k+1)} = \U^{(k)} + \alpha\Delta\U^{(k+1)} \eqc
+  \ssres^{(\ell)} = \dirichlet{\nonlinearrhs}^{(\ell)}
+    - \dirichlet{\nonlinearmatrix}^{(\ell)}\solutionvector^{(\ell)} \eqc
 \end{equation}
-where
 \begin{equation}
-   \Delta\U^{(k+1)} = [\tilde{\A}^{H,(k)}]^{-1}\r^{(k)} \eqc
+  \dirichlet{\nonlinearmatrix}^{(\ell)}\Delta\solutionvector^{(\ell+1)}
+    = \ssres^{(\ell)} \eqc
 \end{equation}
-and the steady-state residual as is defined as
-\begin{equation}\label{ssres_ss}
-   \r^{(k)} = \tilde{\b} - \tilde{\A}^{H,(k)}\U^{(k)} \eqc
+\begin{equation}
+  \solutionvector^{(\ell+1)} = \solutionvector^{(\ell)}
+    + \Delta\solutionvector^{(\ell+1)} \eqp
 \end{equation}
-and $\alpha$ is a relaxation parameter. Typically, $\alpha\le 1$,
-and if $\alpha=1$, then this scheme is equivalent to fixed point iteration.
+There are a number of advantages to this approach. Firstly this approach uses
+the linear residual $\ssres^{(\ell)}$, which is advantageous when checking
+for convergence; for example, there are a number of caveats associated with
+checking convergence based on some measure of the difference between solution
+iterates $\solutionvector^{(\ell)}$ and $\solutionvector^{(\ell+1)}$.
 
-%--------------------------------------------------------------------------------
-\subsection{Theta High-Order Scheme}
-%--------------------------------------------------------------------------------
-The high order theta scheme is the following:
+Another advantage of the defect correction approach is the ease in implementing
+a relaxation parameter $\relaxationparameter$:
 \begin{equation}
-   \M^C\frac{\U^{n+1}-\U^n}{\dt^{n+1}} + (1-\theta)\A^{H,n}\U^n
-   + \theta\A^{H,n+1}\U^{n+1} = (1-\theta)\b^n + \theta\b^{n+1} \eqp
-\end{equation}
-Rearranging gives
-\begin{equation}\label{thetahigh_unmod}
-   \B\U^{n+1} = \M^C\U^n
-   + (1-\theta)\dt^{n+1}\r^n + \theta\dt^{n+1}\b^{n+1} \eqc
-\end{equation}
-where $\B\equiv \M^C+\theta\dt^{n+1}\A^{H,n+1}$, and the steady-state
-residual is defined as
-\begin{equation}
-   \r^n = \b^n - \A^{H,n}\U^n \eqp
-\end{equation}
-Note that this differs from the definition given by Equation \eqref{ssres_ss},
-where the residual uses the strongly Dirichlet-modified system matrix and right
-hand side. Denoting the right hand side of Equation \eqref{thetahigh_unmod} as
-\begin{equation}
-   \s = \M^C\U^n + (1-\theta)\dt^{n+1}\r^n + \theta\dt^{n+1}\b^{n+1}
-\end{equation}
-and modifying for Dirichlet boundary conditions gives
-\begin{equation}
-   \tilde{\B}^C\U^{n+1} = \tilde{\s}.
-\end{equation}
-This system is nonlinear, so defect correction is used to iteratively
-compute the solution:
-\begin{equation}
-   \U^{n+1,(k+1)} = \U^{n+1,(k)} + \alpha\Delta\U^{n+1,(k+1)} \eqc
-\end{equation}
-where the change in solution is computed as
-\begin{equation}
-   \Delta\U^{n+1,(k+1)} = [\tilde{B}^{(s)}]^{-1}\tilde{\s} - \U^{n+1,(k)} \eqc
-\end{equation}
-and again, $\alpha$ is a relaxation parameter.
-
-%--------------------------------------------------------------------------------
-\subsection{Steady-State FCT Scheme}
-%--------------------------------------------------------------------------------
-The steady-state FCT scheme, given by Equation \eqref{FCT_limited_ss}, is
-\begin{equation}
-   \A^L\U = \b + \LF \equiv \b^F \eqp
-\end{equation}
-The first step is to perform a nonlinear solve to get the high-order
-solution $\U^H$, since the flux corrections $\F$ depend on the high-order
-solution. The FCT step is also nonlinear since the limiting coefficients
-are nonlinear, so a defect correction scheme is used, which will
-now be described.
-Strongly imposing Dirichlet boundary conditions,
-\begin{equation}
-   \tilde{\A}^L\U = \tilde{\b}^F \eqp
-\end{equation}
-Defining the steady-state residual as
-\begin{equation}
-   \r^{(k)} = \tilde{\b}^{F,(k)} - \tilde{\A}^{L}\U^{(k)} \eqc
-\end{equation}
-updates to the solution are computed as
-\begin{equation}
-   \Delta\U^{(k+1)} = [\tilde{\A}^{L,(k)}]^{-1}\r^{(k)} \eqp
-\end{equation}
-The update is performed with a relaxation parameter $\alpha$:
-\begin{equation}
-   \U^{(k+1)} = \U^{(k)} + \alpha\Delta\U^{(k+1)} \eqp
+  \solutionvector^{(\ell+1)} = \solutionvector^{(\ell)}
+    + \relaxationparameter\Delta\solutionvector^{(\ell+1)} \eqp
 \end{equation}
 
-%--------------------------------------------------------------------------------
-\subsection{Theta FCT Scheme}
-%--------------------------------------------------------------------------------
-Discretizing Equation \eqref{limited_semidiscrete} using the theta scheme
-given in Section \ref{theta} gives
-\begin{equation}
-   \M^L\frac{\U^{n+1}-\U^n}{\dt^{n+1}} + (1-\theta)\A^L\U^{n}
-   + \theta\A^L\U^{n+1} = (1-\theta)\b^n + \theta\b^{n+1}
-   + \LF \eqp
-\end{equation}
-Rearranging gives
-\begin{equation}\label{thetaFCT_unmod}
-   \B\U^{n+1} = \M^L\U^n + (1-\theta)\dt^{n+1}\r^n + \theta\dt^{n+1}\b^{n+1}
-   + \dt^{n+1}\LF \eqc
-\end{equation}
-where $\B\equiv \M^L + \theta\dt^{n+1}\A^L$, and the steady-state residual
-is defined as
-\begin{equation}
-   \r^n = \b^n - \A^L\U^n \eqp
-\end{equation}
-Note that this differs from the definition given by Equation \eqref{ssres_ss},
-where the residual uses the strongly Dirichlet-modified system matrix and right
-hand side. Denoting the right hand side of Equation \eqref{thetaFCT_unmod} as
-\begin{equation}
-   \s = \M^L\U^n + (1-\theta)\dt^{n+1}\r^n + \theta\dt^{n+1}\b^{n+1} + \dt^{n+1}\LF
-\end{equation}
-and modifying for Dirichlet boundary conditions gives
-\begin{equation}
-   \tilde{\B}\U^{n+1} = \tilde{\s}.
-\end{equation}
-This system is nonlinear, so defect correction is used to iteratively
-compute the solution:
-\begin{equation}
-   \U^{n+1,(k+1)} = \U^{n+1,(k)} + \alpha\Delta\U^{n+1,(k+1)} \eqc
-\end{equation}
-where the change in solution is computed as
-\begin{equation}
-   \Delta\U^{n+1,(k+1)} = [\tilde{\B}]^{-1}\tilde{\s}^{(k)} - \U^{n+1,(k)} \eqc
-\end{equation}
-and again, $\alpha$ is a relaxation parameter.
+The pseudocode for this defect correction scheme is given in Algorithm
+\ref{alg:defect_correction}.
+The notation $\|\ssres\|_X$ denotes some norm $X$ of $\ssres$.
+The initial guess is denoted by $\solutionvector^{\text{guess}}$. For
+transient calculations, the previous time step solution $\solutionvector^n$
+is often used as the guess, and for steady-state calculations, one
+could use a zero vector as the initial guess.
 
+\begin{algorithm}[H]
+\caption{Defect Correction Algorithm}
+\label{alg:defect_correction}
+\begin{algorithmic}
+\State $\solutionvector^{(0)} = \solutionvector^{\text{guess}}$
+\State \texttt{converged} $\gets$ \texttt{FALSE}
+\For{$\ell\gets 0, \ell_{\text{max}}$}
+  \State $\nonlinearmatrix^{(\ell)} \gets
+    \nonlinearmatrix(\solutionvector^{(\ell)})$
+  \State $\nonlinearrhs^{(\ell)} \gets
+    \nonlinearrhs(\solutionvector^{(\ell)})$
+  \State $\nonlinearmatrix^{(\ell)} \rightarrow \dirichlet{\nonlinearmatrix}^{(\ell)}$,
+    $\nonlinearrhs^{(\ell)} \rightarrow \dirichlet{\nonlinearrhs}^{(\ell)}$,
+  \State $\ssres^{(\ell)} \gets \dirichlet{\nonlinearrhs}
+    - \dirichlet{\nonlinearmatrix}^{(\ell)}\solutionvector^{(\ell)}$
+  \If{$\|\ssres^{(\ell)}\|_X < \nonlineartolerance$}
+    \State \texttt{converged} $\gets$ \texttt{TRUE}
+    \Break
+  \EndIf
+  \State $\Delta\solutionvector^{(\ell+1)}
+    = \sq{\dirichlet{\nonlinearmatrix}^{(\ell)}}^{-1}\ssres^{(\ell)}$
+  \State $\solutionvector^{(\ell+1)} = \solutionvector^{(\ell)}
+    + \relaxationparameter\Delta\solutionvector^{(\ell+1)}$
+\EndFor
+\If{\Not \texttt{converged}}
+  \Error{Solution did not converge within $\ell_{\text{max}}$ iterations}
+\EndIf
+\end{algorithmic}
+\end{algorithm}
+
+Table \ref{tab:nonlinear_systems} gives the definitions of the system matrix
+and right-hand-side vector given by Equation \eqref{eq:nonlinear_equation}
+for a number of different nonlinear schemes. These schemes include schemes
+that use entropy viscosity and those that use FCT. For the equations of
+transient schemes, the time index superscript $n+1$ as in $\solutionvector^{n+1}$
+is understood for $\solutionvector$ with a superscript; this is to be consistent
+with the convention that $\solutionvector$ is the vector iterated upon in
+the nonlinear scheme.
+
+%-------------------------------------------------------------------------------
+\begin{table}[htb]\caption{Nonlinear System Matrix and Right-hand-side Vector for
+  Different Schemes}
+\label{tab:nonlinear_systems}
+\centering
+\begin{tabular}{l c}\toprule
+\multicolumn{2}{l}{\emph{Steady-State Entropy Viscosity Scheme}}\\\midrule
+Equation &
+  \(\displaystyle
+    \highorderssmatrix(\solutionvector)\solutionvector = \ssrhs\)\\
+Matrix &
+  \(\displaystyle
+    \nonlinearmatrix(\solutionvector)
+      \equiv \highorderssmatrix(\solutionvector)\)\\
+Right-hand-side &
+  \(\displaystyle \nonlinearrhs \equiv \ssrhs\)\\
+\midrule
+\multicolumn{2}{l}{\emph{Steady-State FCT Scheme}}\\\midrule
+Equation &
+  \(\displaystyle
+    \loworderssmatrix\solutionvector = \ssrhs
+    + \limitermatrix(\solutionvector)\cdot\correctionfluxmatrix\)\\
+Matrix &
+  \(\displaystyle
+    \nonlinearmatrix \equiv \loworderssmatrix\)\\
+Right-hand-side &
+  \(\displaystyle
+    \nonlinearrhs(\solutionvector) \equiv \ssrhs
+    + \limitermatrix(\solutionvector)\cdot\correctionfluxmatrix\)\\
+\midrule
+\multicolumn{2}{l}{\emph{Theta Entropy Viscosity Scheme}}\\\midrule
+Equation &
+  \(\displaystyle
+    \consistentmassmatrix\frac{\solutionvector-\solutionvector^n}{\dt}
+    + (1-\theta)\ssmatrix^{H,n}\solutionvector^n
+    + \theta\ssmatrix^{H}(\solutionvector)\solutionvector
+    = (1-\theta)\ssrhs^n + \theta\ssrhs^{n+1}\)\\
+Matrix &
+  \(\displaystyle
+    \nonlinearmatrix(\solutionvector) \equiv \consistentmassmatrix
+    + \theta\dt\ssmatrix^H(\solutionvector)\)\\
+Right-hand-side &
+  \(\displaystyle
+    \nonlinearrhs \equiv
+      \consistentmassmatrix\solutionvector^n
+      - (1-\theta)\dt\ssmatrix^{H,n}\solutionvector^n
+      + (1-\theta)\dt\ssrhs^n + \theta\dt\ssrhs^{n+1}\)\\
+\midrule
+\multicolumn{2}{l}{\emph{Theta FCT Scheme}}\\\midrule
+Equation &
+  \(\displaystyle
+    \lumpedmassmatrix\frac{\solutionvector-\solutionvector^n}{\dt}
+    + (1-\theta)\loworderssmatrix\solutionvector^{n}
+    + \theta\loworderssmatrix\solutionvector
+    = (1-\theta)\ssrhs^n + \theta\ssrhs^{n+1}
+    + \limitermatrix(\solutionvector)\cdot\correctionfluxmatrix\)\\
+Matrix &
+  \(\displaystyle
+    \nonlinearmatrix \equiv \lumpedmassmatrix
+    + \theta\dt\loworderssmatrix\)\\
+Right-hand-side &
+  \(\displaystyle
+    \nonlinearrhs(\solutionvector) \equiv
+      \lumpedmassmatrix\solutionvector^n
+      - (1-\theta)\dt\loworderssmatrix\solutionvector^n
+      + (1-\theta)\dt\ssrhs^n + \theta\dt\ssrhs^{n+1}
+      + \dt\limitermatrix(\solutionvector)\cdot\correctionfluxmatrix\)\\
+\bottomrule\end{tabular}
+\end{table}
+%-------------------------------------------------------------------------------
 
