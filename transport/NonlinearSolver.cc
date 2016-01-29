@@ -45,26 +45,21 @@ void NonlinearSolver<dim>::reset(const Vector<double> & solution_guess)
 /**
  * Checks convergence of nonlinear system.
  *
- * @param[in] new_solution  new solution
+ * @param[in] residual  residual for linear system
  * @return boolean convergence flag
  */
 template<int dim>
-bool NonlinearSolver<dim>::checkConvergence(const Vector<double> & new_solution)
+bool NonlinearSolver<dim>::checkConvergence(const Vector<double> & residual)
 {
   // increment iteration number
   ++iteration_number;
 
-  // compute L-2 norm of difference between new solution and previous solution
-  Vector<double> & difference = solution;
-  difference.add(-1.0, new_solution);
-  double nonlinear_err = difference.l2_norm();
+  // compute L-2 norm of linear residual
+  double nonlinear_err = residual.l2_norm();
 
   // print error
   std::cout << "Iter " << iteration_number << ": err = " <<
     nonlinear_err << std::endl;
-
-  // keep new solution as next iteration's previous iterate
-  solution = new_solution;
 
   // determine if error is within the nonlinear tolerance
   if (nonlinear_err < nonlinear_tolerance)
@@ -91,3 +86,15 @@ Vector<double> NonlinearSolver<dim>::getSolution() const
 {
   return solution;
 }
+
+/**
+ * \brief Updates the solution iterate.
+ *
+ * \param[in] new_solution solution iterate
+ */
+template<int dim>
+void NonlinearSolver<dim>::update_solution(const Vector<double> & new_solution)
+{
+  solution = new_solution;
+}
+

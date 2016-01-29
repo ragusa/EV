@@ -4,15 +4,15 @@ close all; clear; clc;
 %--------------------------------------------------------------------------
 % finite element options
 %--------------------------------------------------------------------------
-mesh.n_cell = 32;                   % number of elements
+mesh.n_cell = 2^5;                   % number of elements
 impose_DirichletBC_strongly = true; % impose Dirichlet BC strongly?
 quadrature.nq = 3;                  % number of quadrature points per cell
 %--------------------------------------------------------------------------
 % spatial method options
 %--------------------------------------------------------------------------
 compute_low_order  = false; % compute and plot low-order solution?
-compute_high_order = false; % compute and plot high-order solution?
-compute_FCT        = true; % compute and plot FCT solution?
+compute_high_order = true; % compute and plot high-order solution?
+compute_FCT        = false; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
 %                   2 = graph-theoretic low-order scheme
@@ -20,13 +20,15 @@ low_order_scheme  = 2;
 
 % high_order_scheme: 1 = Galerkin
 %                    2 = Entropy viscosity
-high_order_scheme = 1;
+high_order_scheme = 2;
 
 % entropy viscosity options:
 ev.cE = 0.1; % coefficient for entropy residual in entropy viscosity
-ev.cJ = 0.1; % coefficient for jumps in entropy viscosity
+ev.cJ = ev.cE*1; % coefficient for jumps in entropy viscosity
 ev.entropy       = @(u) 0.5*u.^2; % entropy function
 ev.entropy_deriv = @(u) u;        % derivative of entropy function
+ev.smooth_entropy_viscosity = false; % option to smooth entropy viscosity
+ev.smoothing_weight = 0.0; % weight for center value in smoothing
 %--------------------------------------------------------------------------
 % time options
 %--------------------------------------------------------------------------
@@ -34,10 +36,10 @@ ev.entropy_deriv = @(u) u;        % derivative of entropy function
 %                  1 = SSPRK(1,1) (Explicit Euler)
 %                  2 = SSPRK(3,3) (Shu-Osher)
 %                  3 = theta method
-temporal_scheme = 3; % temporal discretization scheme
+temporal_scheme = 0; % temporal discretization scheme
 
-theta = 1.0;     % theta parameter to use if using a theta method
-CFL = 1.0;       % CFL number
+theta = 0.5;     % theta parameter to use if using a theta method
+CFL = 2.0;       % CFL number
 ss_tol = 1.0e-5; % steady-state tolerance
 t_end = 0.3;     % max time to run
 %--------------------------------------------------------------------------
@@ -64,7 +66,7 @@ prelimit = 0;
 %            3: void with    source -> absorber without source
 %            4: void
 %            5: MMS-1
-problemID = 4;
+problemID = 3;
 
 % IC_option: 0: zero
 %            1: exponential pulse
@@ -144,14 +146,22 @@ switch problemID
         phys.periodic_BC = false;
         phys.inc    = 0.0;
         phys.mu     = 1.0;
-        phys.sigma  = @(x,t) 10.0*(x >= 0.5);
-        phys.source = @(x,t) 1.0*(x < 0.5);
+        sigma_value = 10.0;
+        phys.sigma  = @(x,t) sigma_value*(x >= 0.5);
+        source_value = 1.0;
+        phys.source = @(x,t) source_value*(x < 0.5);
         phys.speed  = 1;
         
         IC_option = 0;
         source_is_time_dependent = false;
         exact_solution_known = true;
-        exact = @(x,t) x.*(x<0.5) + 0.5*exp(-10*(x-0.5)).*(x>=0.5);
+        if temporal_scheme == 0
+            exact = @(x,t) x.*(x<0.5) + 0.5*exp(-10*(x-0.5)).*(x>=0.5);
+        else
+            s0 = @(x,t) max(min(x,0.5) - max(x-t,0),0);
+            s1 = @(x,t) max(x - max(x-t,0.5),0);
+            exact = @(x,t) source_value*s0(x,t).*exp(-sigma_value*s1(x,t));
+        end
     case 4 % void
         mesh.x_min = 0.0;
         mesh.x_max = 1.0;
@@ -238,6 +248,7 @@ mesh.dx = diff(mesh.x);                     % element sizes
 if phys.periodic_BC
     mesh.x(end)=[];
 end
+x_center = 0.5*(mesh.x(1:end-1) + mesh.x(2:end));
 
 % get quadrature points and weights and evaluate basis functions
 [quadrature.zq,quadrature.wq]  = get_GL_quadrature(quadrature.nq);
@@ -429,7 +440,7 @@ if (compute_high_order)
     fprintf('\nComputing high-order solution...\n\n');
     
     if (temporal_scheme == 0) % steady-state
-        [uH,DH] = compute_high_order_solution_ss(A,b,viscL,mesh,...
+        [uH,DH,viscE] = compute_high_order_solution_ss(A,b,viscL,mesh,...
             phys,quadrature,ev,dof_handler,high_order_scheme,max_iter,...
             nonlin_tol,relaxation_parameter,modify_for_strong_DirichletBC);
     else % transient
@@ -441,7 +452,7 @@ if (compute_high_order)
         t = 0;
         time_step = 0;
         dt_old = dtCFL;
-        DH = compute_high_order_diffusion_matrix(u_old,...
+        [DH,viscE] = compute_high_order_diffusion_matrix(u_old,...
             u_old,dt_old,viscL,mesh,phys,quadrature,ev,...
             dof_handler,high_order_scheme);
         AH = A + DH;
@@ -518,6 +529,9 @@ if (compute_high_order)
                 otherwise
                     error('Invalid temporal discretization scheme');
             end
+
+            % check for NaNs in solution
+            check_NaN(uH);
             
             % test steady-state convergence
             ss_err = norm(uH-u_old,2);
@@ -555,7 +569,7 @@ if (compute_FCT)
     
     if (temporal_scheme == 0) % steady-state
         % compute high-order ss solution
-        [uH,DH] = compute_high_order_solution_ss(A,b,viscL,mesh,...
+        [uH,DH,viscE] = compute_high_order_solution_ss(A,b,viscL,mesh,...
             phys,quadrature,ev,dof_handler,high_order_scheme,max_iter,...
             nonlin_tol,relaxation_parameter,modify_for_strong_DirichletBC);
         
@@ -612,7 +626,7 @@ if (compute_FCT)
         t = 0;
         time_step = 0;
         dt_old = dtCFL;
-        DH = compute_high_order_diffusion_matrix(u_old,...
+        [DH,viscE] = compute_high_order_diffusion_matrix(u_old,...
             u_old,dt_old,viscL,mesh,phys,quadrature,ev,...
             dof_handler,high_order_scheme);
         AH = A + DH;

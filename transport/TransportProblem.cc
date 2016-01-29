@@ -526,27 +526,46 @@ void TransportProblem<dim>::processProblemID()
 
       function_parser_constants["x1"] = interface_positions[0];
 
-      cross_section_string = "if(x<=x1 || y<=x1, sigma0, sigma1)";
       function_parser_constants["sigma0"] = region_sigmas[0];
       function_parser_constants["sigma1"] = region_sigmas[1];
 
       source_time_dependent = false;
-      source_string = "if(x<=x1 || y<=x1, q0, q1)";
       function_parser_constants["q0"] = region_sources[0];
       function_parser_constants["q1"] = region_sources[1];
 
-      // create MultiRegionExactSolution object
-      exact_solution_option = ExactSolutionOption::multi_region;
-      std::shared_ptr<MultiRegionExactSolution<dim> > exact_solution_function_derived =
-        std::make_shared<MultiRegionExactSolution<dim> >(interface_positions,
-          region_sources, region_sigmas, direction, incoming);
-      // point base class shared pointer to derived class function object
-      exact_solution_function = exact_solution_function_derived;
+      if (dim == 1)
+      {
+        cross_section_string = "if(x<=x1, sigma0, sigma1)";
+        source_string = "if(x<=x1, q0, q1)";
+      }
+      else if (dim == 2)
+      {
+        cross_section_string = "if(x<=x1 || y<=x1, sigma0, sigma1)";
+        source_string = "if(x<=x1 || y<=x1, q0, q1)";
+      }
+      else
+      {
+        Assert(false, ExcNotImplemented());
+      }
 
-      // for now, assume no steady-state, but this would be easy to implement
-      // by using the existing transient exact solution class and just using
-      // t=large
-      Assert(is_time_dependent, ExcNotImplemented());
+      // create MultiRegionExactSolution object
+      if (is_time_dependent)
+      {
+        exact_solution_option = ExactSolutionOption::multi_region;
+
+        std::shared_ptr<MultiRegionExactSolution<dim> > exact_solution_function_derived =
+          std::make_shared<MultiRegionExactSolution<dim> >(interface_positions,
+            region_sources, region_sigmas, direction, incoming);
+        // point base class shared pointer to derived class function object
+        exact_solution_function = exact_solution_function_derived;
+      }
+      else
+      {
+        exact_solution_option = ExactSolutionOption::parser;
+
+        Assert(dim == 1, ExcNotImplemented());
+        exact_solution_string = "if(x<0.5,x,0.5*exp(-10*(x-0.5)))";
+      }
 
       initial_conditions_string = "0";
 

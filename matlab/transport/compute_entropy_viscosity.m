@@ -115,3 +115,24 @@ for iel = 1:nel
        viscE(iel) = (cE*R_max + cJ*jump_max) / E_dev_max;
     end
 end
+
+% smooth the entropy viscosity if specified
+if ev.smooth_entropy_viscosity
+    % get the smoothing weight
+    weight = ev.smoothing_weight;
+
+    % save the unsmoothed entropy viscosity
+    viscE_uns = viscE;
+
+    % first cell
+    viscE(1) = (viscE_uns(1)*weight + viscE_uns(2))/(1+weight);
+
+    % interior cells
+    for iel = 2:nel-1
+        viscE(iel) = (viscE_uns(iel)*weight + viscE_uns(iel-1) + ...
+            viscE_uns(iel+1)) / (2+weight);
+    end
+
+    % first cell
+    viscE(nel) = (viscE_uns(nel)*weight + viscE_uns(nel-1))/(1+weight);
+end

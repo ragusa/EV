@@ -107,10 +107,7 @@ void SteadyStateExecutioner<dim>::run()
       bool converged = false;
       while (!converged)
       {
-        // get previous solution into new solution
-        this->new_solution = nonlinear_solver.getSolution();
-
-        // recompute high-order steady-state matrix
+        // recompute high-order steady-state matrix A^(l)
         entropy_viscosity.recomputeHighOrderSteadyStateMatrix(
           this->new_solution);
 
@@ -124,22 +121,26 @@ void SteadyStateExecutioner<dim>::run()
           this->system_rhs,
           this->new_solution);
 
-        // create system rhs
+        // compute linear residual: r^(l) = b - A^(l)*U^(l)
         this->system_matrix.vmult(tmp, this->new_solution);
         this->system_rhs.add(-1.0, tmp);
 
-        // update solution
+        // check convergence
+        converged = nonlinear_solver.checkConvergence(this->system_rhs);
+
+        // solve for solution update dU: A^(l)*dU = r^(l)
         this->linear_solver.solve(
           this->system_matrix,
           this->system_rhs,
           solution_change,
           false);
+
+        // update solution: U^(l+1) = U^(l) + relax*dU
         this->new_solution.add(nonlinear_solver.relaxation_factor,
           solution_change);
-        this->constraints.distribute(this->new_solution);
 
-        // check convergence
-        converged = nonlinear_solver.checkConvergence(this->new_solution);
+        // distribute constraints
+        this->constraints.distribute(this->new_solution);
       }
 
       break;

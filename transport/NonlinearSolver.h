@@ -25,8 +25,12 @@ public:
     Function<dim>                  & dirichlet_value_function);
 
   void reset(const Vector<double> & solution_guess);
+
   bool checkConvergence(const Vector<double> & new_solution);
+
   Vector<double> getSolution() const;
+
+  void update_solution(const Vector<double> & solution);
 
   const double relaxation_factor;
 
