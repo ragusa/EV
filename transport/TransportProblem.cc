@@ -717,9 +717,8 @@ void TransportProblem<dim>::run()
     refinement_handler.refine(cycle);
 
     // print information
-    std::cout << std::endl << "Cycle " << cycle << ':' << std::endl;
-    std::cout << "   Number of active cells:       "
-      << triangulation.n_active_cells() << std::endl;
+    std::cout << std::endl << "Cycle " << cycle << "  (n_cells = ";
+    std::cout << triangulation.n_active_cells() << ")" << std::endl;
 
     if (is_time_dependent)
     { // run transient problem

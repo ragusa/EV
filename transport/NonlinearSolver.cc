@@ -1,10 +1,10 @@
 /**
- * Constructor.
+ * \brief Constructor.
  *
- * @param[in] parameters_  input parameters
- * @param[in] constraints_  constraints for linear system
- * @param[in] dof_handler_  dof handler
- * @param[in] dirichlet_value_function_  function for the Dirichlet BC to be
+ * \param[in] parameters_  input parameters
+ * \param[in] constraints_  constraints for linear system
+ * \param[in] dof_handler_  dof handler
+ * \param[in] dirichlet_value_function_  function for the Dirichlet BC to be
  *   imposed on the linear system
  */
 template<int dim>
@@ -25,31 +25,41 @@ NonlinearSolver<dim>::NonlinearSolver(
       dirichlet_value_function),
     iteration_number(0)
 {
+  // get number of degrees of freedom
+  n_dofs = dof_handler_.n_dofs();
+
+  // reinitialize vectors
+  solution_change.reinit(n_dofs);
+  residual.reinit(n_dofs);
 }
 
 /**
- * Resets the nonlinear solver.
+ * \brief Initializes the solution to guess and sets iteration counter to zero.
  *
- * @param[in] solution_guess  initial guess for the solution
+ * \param[in] solution_guess  initial guess for the solution
  */
 template<int dim>
-void NonlinearSolver<dim>::reset(const Vector<double> & solution_guess)
+void NonlinearSolver<dim>::initialize(Vector<double> & solution_guess)
 {
-  // initialize the guess for the solution
-  solution = solution_guess;
+  // get pointer to solution vector, which current has a guess for the solution
+  solution = &solution_guess;
 
   // set the interation number to zero
   iteration_number = 0;
+
+  std::cout << "  Nonlinear solve:" << std::endl;
 }
 
 /**
- * Checks convergence of nonlinear system.
+ * \brief Checks convergence of nonlinear system.
  *
- * @param[in] residual  residual for linear system
- * @return boolean convergence flag
+ * The L-2 norm of the linear residual is used to determine convergence.
+ *
+ * \param[in] residual  residual for linear system
+ * \return boolean convergence flag
  */
 template<int dim>
-bool NonlinearSolver<dim>::checkConvergence(const Vector<double> & residual)
+bool NonlinearSolver<dim>::check_convergence(const Vector<double> & residual)
 {
   // increment iteration number
   ++iteration_number;
@@ -58,7 +68,7 @@ bool NonlinearSolver<dim>::checkConvergence(const Vector<double> & residual)
   double nonlinear_err = residual.l2_norm();
 
   // print error
-  std::cout << "Iter " << iteration_number << ": err = " <<
+  std::cout << "  (" << iteration_number << ") err = " <<
     nonlinear_err << std::endl;
 
   // determine if error is within the nonlinear tolerance
@@ -77,24 +87,38 @@ bool NonlinearSolver<dim>::checkConvergence(const Vector<double> & residual)
 }
 
 /**
- * Gets the solution.
+ * \brief Computes the linear residual, checks convergence, and if not
+ *        converged, updates the solution iterate.
  *
- * @return solution vector
+ * \param[in] A system matrix
+ * \param[in] b system right-hand-side
+ *
+ * \return convergence flag
  */
 template<int dim>
-Vector<double> NonlinearSolver<dim>::getSolution() const
+bool NonlinearSolver<dim>::update(
+  const SparseMatrix<double> & A,
+  const Vector<double> & b)
 {
-  return solution;
-}
+  // compute linear residual: r^(l) = b^(l) - A^(l)*U^(l)
+  A.vmult(residual, *solution);
+  residual *= -1.0;
+  residual.add(1.0, b);
 
-/**
- * \brief Updates the solution iterate.
- *
- * \param[in] new_solution solution iterate
- */
-template<int dim>
-void NonlinearSolver<dim>::update_solution(const Vector<double> & new_solution)
-{
-  solution = new_solution;
+  // check convergence
+  bool converged = check_convergence(residual);
+
+  // solve for solution update dU: A^(l)*dU = r^(l)
+  linear_solver.solve(A, residual, solution_change);
+  //linear_solver.solve(A, solution_change, residual);
+
+  // update solution: U^(l+1) = U^(l) + relax*dU
+  solution->add(relaxation_factor, solution_change);
+
+  // distribute constraints
+  constraints.distribute(*solution);
+
+  // return convergence flag
+  return converged;
 }
 

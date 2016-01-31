@@ -24,10 +24,14 @@ class LinearSolver {
                    Function<dim>          & dirichlet_value_function);
       ~LinearSolver();
 
+      void solve(const SparseMatrix<double> & A,
+                 const Vector<double>       & b,
+                 Vector<double>             & x);
+
       void solve(SparseMatrix<double> & A,
                  Vector<double>       & b,
                  Vector<double>       & x,
-                 const bool           & apply_dirichlet_bc = true,
+                 const bool           & apply_dirichlet_bc,
                  const double         & t = 0);
 
    private:

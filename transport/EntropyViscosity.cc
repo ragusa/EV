@@ -325,7 +325,6 @@ void EntropyViscosity<dim>::compute_entropy_viscosity(
     double max_entropy_residual = 0.0;
     for (unsigned int q = 0; q < n_q_points_cell; ++q)
     {
-      //max_entropy_residual  = std::max(max_entropy_residual,  std::abs(entropy_residual_values[q]));
       max_entropy_residual = std::max(max_entropy_residual,
         std::max(0.0, entropy_residual_values[q]));
     }

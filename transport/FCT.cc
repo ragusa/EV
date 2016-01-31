@@ -73,7 +73,7 @@ void FCT<dim>::solve_FCT_system(
 
   // solve the linear system M*u_new = system_rhs
   system_matrix.copy_from(*lumped_mass_matrix);
-  linear_solver.solve(system_matrix, system_rhs, new_solution);
+  linear_solver.solve(system_matrix, system_rhs, new_solution, true);
 
   // check that local discrete maximum principle is satisfied at all time steps
   bool DMP_satisfied_this_step = check_max_principle(new_solution,
@@ -82,7 +82,54 @@ void FCT<dim>::solve_FCT_system(
     and DMP_satisfied_this_step;
 }
 
-/** \brief Computes min and max quantities for max principle
+/**
+ * \brief Solves a steady-state FCT system.
+ *
+ * \param[in,out] new_solution     solution vector
+ * \param[in] low_order_ss_matrix  low-order steady-state matrix
+ * \param[in] ss_rhs               low-order steady-state right-hand-side
+ * \param[in] low_order_diffusion_matrix   low-order diffusion matrix
+ * \param[in] high_order_diffusion_matrix  high-order diffusion matrix
+ */
+template<int dim>
+void FCT<dim>::solve_ss_FCT_system(
+  Vector<double> &new_solution,
+  const SparseMatrix<double> &low_order_ss_matrix,
+  const Vector<double> &ss_rhs,
+  const SparseMatrix<double> &low_order_diffusion_matrix,
+  const SparseMatrix<double> &high_order_diffusion_matrix)
+{
+  // compute flux corrections
+  compute_flux_corrections(new_solution, new_solution, 1.0,
+    low_order_diffusion_matrix, high_order_diffusion_matrix);
+
+ // iteration should begin here
+
+  // compute max principle min and max values
+  compute_steady_state_bounds(new_solution, low_order_ss_matrix, ss_rhs);
+
+  // compute limited flux correction sum and add it to rhs
+  compute_limiting_coefficients(old_solution, low_order_ss_matrix, ss_rhs, dt);
+
+  // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old + f)
+  system_rhs = 0;
+  system_rhs.add(dt, ss_rhs); //       now, system_rhs = dt*(ss_rhs)
+  lumped_mass_matrix->vmult(tmp_vector, old_solution);
+  system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
+  low_order_ss_matrix.vmult(tmp_vector, old_solution);
+  system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old)
+  system_rhs.add(dt, flux_correction_vector);   // now, system_rhs is complete
+
+  // solve the linear system M*u_new = system_rhs
+  system_matrix.copy_from(*lumped_mass_matrix);
+  linear_solver.solve(system_matrix, system_rhs, new_solution, true);
+
+  // check that local discrete maximum principle is satisfied at all time steps
+  DMP_satisfied = check_max_principle(new_solution, low_order_ss_matrix, dt);
+}
+
+/**
+ * \brief Computes solution bounds for the transient case.
  */
 template<int dim>
 void FCT<dim>::compute_bounds(
@@ -154,23 +201,23 @@ void FCT<dim>::compute_bounds(
   }
 }
 
-/** \brief Computes min and max quantities for steady-state max principle
+/**
+ * \brief Computes solution bounds for the steady-state case.
  */
 template<int dim>
 void FCT<dim>::compute_steady_state_bounds(
-  const Vector<double> &new_solution,
+  const Vector<double> &solution,
   const SparseMatrix<double> &low_order_ss_matrix,
-  const Vector<double> &ss_rhs,
-  const double &dt)
+  const Vector<double> &ss_rhs)
 {
   // initialize min and max values
   for (unsigned int i = 0; i < n_dofs; ++i)
   {
-    solution_max(i) = new_solution(i);
-    solution_min(i) = new_solution(i);
+    solution_max(i) = solution(i);
+    solution_min(i) = solution(i);
   }
 
-  // loop over cells
+  // loop over cells to get min and max solution values
   typename DoFHandler<dim>::active_cell_iterator cell =
     dof_handler->begin_active(), endc = dof_handler->end();
   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
@@ -180,11 +227,11 @@ void FCT<dim>::compute_steady_state_bounds(
     cell->get_dof_indices(local_dof_indices);
 
     // find min and max values on cell
-    double max_cell = new_solution(local_dof_indices[0]);
-    double min_cell = new_solution(local_dof_indices[0]);
+    double max_cell = solution(local_dof_indices[0]);
+    double min_cell = solution(local_dof_indices[0]);
     for (unsigned int j = 0; j < dofs_per_cell; ++j)
     {
-      double value_j = new_solution(local_dof_indices[j]);
+      double value_j = solution(local_dof_indices[j]);
       max_cell = std::max(max_cell, value_j);
       min_cell = std::min(min_cell, value_j);
     }

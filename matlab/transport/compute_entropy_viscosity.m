@@ -101,7 +101,7 @@ for iel = 1:nel
     % compute maximum entropy residual at quadrature points
     R = (E_new-E_old)/(speed*dt) + mu*dEdx_new +...
         dEdu_new.*(sigma_q.*u_new_local - source_q);
-    R_max = max(abs(R));
+    R_max = max(max(0,R));
     
     % compute max jump
     faceL = g(iel,1);

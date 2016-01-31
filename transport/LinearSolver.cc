@@ -20,6 +20,33 @@ LinearSolver<dim>::~LinearSolver()
 }
 
 /**
+ * Solves a linear system A*x = b, with no Dirichlet BC or constraints applied.
+ *
+ * \param[in] A  system matrix
+ * \param[in] b  system rhs
+ * \param[in,out] x  system solution
+ */
+template<int dim>
+void LinearSolver<dim>::solve(
+  const SparseMatrix<double> & A,
+  const Vector<double>       & b,
+  Vector<double>       & x)
+{
+   // solve linear system
+   switch (linear_solver_option) {
+      case 1: {
+         SparseDirectUMFPACK A_direct;
+         A_direct.initialize(A);
+         A_direct.vmult(x, b);
+         break;
+      } default: {
+         Assert(false,ExcNotImplemented());
+         break;
+      }
+   }
+}
+
+/**
  * Solves a linear system A*x = b, with or without Dirichlet BC applied.
  *
  * @param[in] A  system matrix

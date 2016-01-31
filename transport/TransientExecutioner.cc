@@ -492,6 +492,7 @@ void TransientExecutioner<dim>::takeGalerkinFCTStep(
     // finish computing stage solution
     ssprk.complete_stage_solution();
   }
-// retrieve the final solution
+
+  // retrieve the final solution
   ssprk.get_new_solution(this->new_solution);
 }

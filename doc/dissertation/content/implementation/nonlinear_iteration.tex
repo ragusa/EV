@@ -1,6 +1,11 @@
 %================================================================================
 \section{Nonlinear Solution}
 %================================================================================
+In this research, implicit and steady-state temporal discretizations are
+considered for the scalar case only. The examples given in this section thus
+correspond to the scalar case; however, the same methodology could be used
+for systems of conservation laws.
+
 The nonlinear systems considered in this research can be written in a quasilinear
 form:
 \begin{equation}\label{eq:nonlinear_equation}
@@ -95,10 +100,19 @@ Table \ref{tab:nonlinear_systems} gives the definitions of the system matrix
 and right-hand-side vector given by Equation \eqref{eq:nonlinear_equation}
 for a number of different nonlinear schemes. These schemes include schemes
 that use entropy viscosity and those that use FCT. For the equations of
-transient schemes, the time index superscript $n+1$ as in $\solutionvector^{n+1}$
-is understood for $\solutionvector$ with a superscript; this is to be consistent
+transient schemes, the solution vector $\solutionvector^{n+1}$ uses
+$\solutionvector$ as its notation; the superscript $n+1$ is understood.
+This is to be consistent
 with the convention that $\solutionvector$ is the vector iterated upon in
 the nonlinear scheme.
+
+Note that in Table \ref{tab:nonlinear_systems}, the low-order steady-state
+matrix $\loworderssmatrix$ is assumed to be independent of the solution. This
+is true for conservation laws with \emph{linear} conservation law flux
+functions $\consfluxscalar$. For nonlinear $\consfluxscalar$, this is not the
+case, and the nonlinear system matrix $\nonlinearmatrix$ for the FCT schemes
+given in the table becomes a function of the solution and thus must be
+recomputed in each iteration.
 
 %-------------------------------------------------------------------------------
 \begin{table}[htb]\caption{Nonlinear System Matrix and Right-hand-side Vector for
