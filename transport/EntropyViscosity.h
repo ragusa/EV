@@ -21,61 +21,55 @@ using namespace dealii;
 /**
  * Class for computing entropy viscosity for a transport problem.
  */
-template<int dim>
+template <int dim>
 class EntropyViscosity : public Viscosity<dim>
 {
 public:
-
-  EntropyViscosity(
-    const FESystem<dim> &fe,
-    const unsigned int &n_cells,
-    const DoFHandler<dim> &dof_handler,
-    const ConstraintMatrix &constraints,
-    const QGauss<dim> &cell_quadrature,
-    const QGauss<dim - 1> &face_quadrature,
-    const Tensor<1, dim> &transport_direction,
-    const FunctionParser<dim> &cross_section_function,
-    FunctionParser<dim> &source_function,
-    const std::string &entropy_string,
-    const std::string &entropy_derivative_string,
-    const double &entropy_residual_coefficient,
-    const double &jump_coefficient,
-    const double &domain_volume,
-    const typename TransportParameters<dim>::TemporalDiscretization temporal_discretization,
-    const LowOrderViscosity<dim> &low_order_viscosity,
-    const SparseMatrix<double> &inviscid_matrix,
-    SparseMatrix<double> &diffusion_matrix,
-    SparseMatrix<double> &total_matrix);
+  EntropyViscosity(const FESystem<dim> & fe,
+                   const unsigned int & n_cells,
+                   const DoFHandler<dim> & dof_handler,
+                   const ConstraintMatrix & constraints,
+                   const QGauss<dim> & cell_quadrature,
+                   const QGauss<dim - 1> & face_quadrature,
+                   const Tensor<1, dim> & transport_direction,
+                   const FunctionParser<dim> & cross_section_function,
+                   FunctionParser<dim> & source_function,
+                   const std::string & entropy_string,
+                   const std::string & entropy_derivative_string,
+                   const double & entropy_residual_coefficient,
+                   const double & jump_coefficient,
+                   const double & domain_volume,
+                   const typename TransportParameters<dim>::TemporalDiscretization
+                     temporal_discretization,
+                   const LowOrderViscosity<dim> & low_order_viscosity,
+                   const SparseMatrix<double> & inviscid_matrix,
+                   SparseMatrix<double> & diffusion_matrix,
+                   SparseMatrix<double> & total_matrix);
 
   ~EntropyViscosity();
 
-  void recomputeHighOrderSteadyStateMatrix(
-    const Vector<double> & solution);
+  void recomputeHighOrderSteadyStateMatrix(const Vector<double> & solution);
 
-  void recompute_high_order_ss_matrix(
-    const Vector<double> &old_solution,
-    const Vector<double> &older_solution,
-    const Vector<double> &oldest_solution,
-    const double &old_dt,
-    const double &older_dt,
-    const double &time);
+  void recompute_high_order_ss_matrix(const Vector<double> & old_solution,
+                                      const Vector<double> & older_solution,
+                                      const Vector<double> & oldest_solution,
+                                      const double & old_dt,
+                                      const double & older_dt,
+                                      const double & time);
 
 private:
-
-  void compute_entropy_viscosity(
-    const Vector<double> &old_solution,
-    const Vector<double> &older_solution,
-    const Vector<double> &oldest_solution,
-    const double &old_dt,
-    const double &older_dt,
-    const double &time);
-  void compute_normalization_constant(const Vector<double> &old_solution);
-  void compute_temporal_discretization_constants(
-    const double old_dt,
-    const double older_dt);
+  void compute_entropy_viscosity(const Vector<double> & old_solution,
+                                 const Vector<double> & older_solution,
+                                 const Vector<double> & oldest_solution,
+                                 const double & old_dt,
+                                 const double & older_dt,
+                                 const double & time);
+  void compute_normalization_constant(const Vector<double> & old_solution);
+  void compute_temporal_discretization_constants(const double old_dt,
+                                                 const double older_dt);
 
   // mesh and dof data
-  const FESystem<dim> *fe;
+  const FESystem<dim> * fe;
   const FEValuesExtractors::Scalar flux;
   const unsigned int n_dofs;
   const unsigned int faces_per_cell;
@@ -88,8 +82,8 @@ private:
 
   // physics data
   Tensor<1, dim> transport_direction;
-  const FunctionParser<dim> *cross_section_function;
-  FunctionParser<dim> *source_function;
+  const FunctionParser<dim> * cross_section_function;
+  FunctionParser<dim> * source_function;
 
   // entropy viscosity functions and data
   FunctionParser<1> entropy_function;
@@ -106,7 +100,8 @@ private:
   Vector<double> entropy_viscosity;
 
   // temporal discretization for entropy residual
-  typename TransportParameters<dim>::TemporalDiscretization temporal_discretization;
+  typename TransportParameters<dim>::TemporalDiscretization
+    temporal_discretization;
 
   // coefficients for entropy residual
   double a_old;

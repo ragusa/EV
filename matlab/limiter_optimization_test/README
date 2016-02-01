@@ -1,0 +1,18 @@
+This directory contains files used in a test to try a new FCT limitation
+technique. This technique does not use a DMP for solution bounds but
+instead chooses the limiting coefficient to minimize entropy production.
+Specifically the goal of this limiter is
+
+minimize f(x) subject to the constraints:
+0 <= L_edge <= 1 , for all edges
+
+where f(x) is the sum of the following integrals of entropy:
+
+f_i(x) = \int\limits_{S_i} \phi_i(x) \eta(u(x)) dV ,
+
+where \eta(u(x)) is the entropy function. This amounts to a nonlinear
+optimization problem with linear inequality constraints. This optimization
+problem is solved by MATLAB's fmincon() function.
+
+It was found that this approach gives the low-order solution, so this
+approach was abandoned.

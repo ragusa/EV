@@ -3,10 +3,10 @@
  *
  * @param[in] parameters input parameters
  */
-template<int dim>
+template <int dim>
 TransportProblem<dim>::TransportProblem(
-  const TransportParameters<dim> &parameters) :
-    parameters(parameters),
+  const TransportParameters<dim> & parameters)
+  : parameters(parameters),
     is_time_dependent(
       !(parameters.time_discretization_option == TransportParameters<dim>::SS)),
     transport_direction(),
@@ -19,7 +19,7 @@ TransportProblem<dim>::TransportProblem(
 /**
  * Destructor.
  */
-template<int dim>
+template <int dim>
 TransportProblem<dim>::~TransportProblem()
 {
 }
@@ -27,7 +27,7 @@ TransportProblem<dim>::~TransportProblem()
 /**
  * Initializes system.
  */
-template<int dim>
+template <int dim>
 void TransportProblem<dim>::initializeSystem()
 {
   // timer
@@ -68,14 +68,15 @@ void TransportProblem<dim>::initializeSystem()
     { // function parser
 
       // create and initialize function parser
-      std::shared_ptr<FunctionParser<dim> > exact_solution_function_derived =
-        std::make_shared<FunctionParser<dim> >();
+      std::shared_ptr<FunctionParser<dim>> exact_solution_function_derived =
+        std::make_shared<FunctionParser<dim>>();
       exact_solution_function_derived->initialize(variables,
-        exact_solution_string, function_parser_constants, is_time_dependent);
+                                                  exact_solution_string,
+                                                  function_parser_constants,
+                                                  is_time_dependent);
 
       // point base class shared pointer to derived class function object
       exact_solution_function = exact_solution_function_derived;
-
     }
     else if (exact_solution_option != ExactSolutionOption::multi_region)
     { // multi-region
@@ -85,20 +86,24 @@ void TransportProblem<dim>::initializeSystem()
 
   // initialize initial conditions function
   if (is_time_dependent)
-    initial_conditions.initialize(variables, initial_conditions_string,
-      function_parser_constants, is_time_dependent);
+    initial_conditions.initialize(variables,
+                                  initial_conditions_string,
+                                  function_parser_constants,
+                                  is_time_dependent);
 
   // initialize source function
-  source_function.initialize(variables, source_string, function_parser_constants,
-    is_time_dependent);
+  source_function.initialize(
+    variables, source_string, function_parser_constants, is_time_dependent);
 
   // initialize cross section function
-  cross_section_function.initialize(variables, cross_section_string,
-    function_parser_constants, is_time_dependent);
+  cross_section_function.initialize(variables,
+                                    cross_section_string,
+                                    function_parser_constants,
+                                    is_time_dependent);
 
   // initialize Dirichlet boundary value function
-  incoming_function.initialize(variables, incoming_string,
-    function_parser_constants, is_time_dependent);
+  incoming_function.initialize(
+    variables, incoming_string, function_parser_constants, is_time_dependent);
 
   // create grid for initial refinement level
   GridGenerator::hyper_cube(triangulation, x_min, x_max);
@@ -111,12 +116,12 @@ void TransportProblem<dim>::initializeSystem()
 /**
  * Processes problem ID.
  */
-template<int dim>
+template <int dim>
 void TransportProblem<dim>::processProblemID()
 {
   switch (parameters.problem_id)
   {
-    case 1 :
+    case 1:
     { // pure absorber
       Assert(dim < 3, ExcNotImplemented());
 
@@ -141,14 +146,14 @@ void TransportProblem<dim>::processProblemID()
         exact_solution_string =
           "source/sigma + (incoming - source/sigma)*exp(-sigma*(x-x_min))";
       else
-        exact_solution_string =
-          "if(x<=t,source/sigma + (incoming - source/sigma)*exp(-sigma*(x-x_min)),0)";
+        exact_solution_string = "if(x<=t,source/sigma + (incoming - "
+                                "source/sigma)*exp(-sigma*(x-x_min)),0)";
 
       initial_conditions_string = "0";
 
       break;
     }
-    case 2 :
+    case 2:
     { // void-to-absorber
       Assert(dim < 3, ExcNotImplemented());
 
@@ -160,14 +165,14 @@ void TransportProblem<dim>::processProblemID()
       incoming_string = "1";
       function_parser_constants["incoming"] = 1.0;
 
-      if (dim == 1)      // 1-D
+      if (dim == 1) // 1-D
         cross_section_string = "if(x<x_mid, 0, sigma)";
       else if (dim == 2) // 2-D
         cross_section_string = "if(x>=x_mid, if(y>=x_mid, sigma, 0), 0)";
       else
         // 3-D
         cross_section_string = "if(x>=x_mid, if(y>=x_mid, if(z>=x_mid,"
-          "sigma, 0), 0), 0)";
+                               "sigma, 0), 0), 0)";
       function_parser_constants["sigma"] = 100.0;
 
       source_time_dependent = false;
@@ -177,38 +182,42 @@ void TransportProblem<dim>::processProblemID()
       exact_solution_option = ExactSolutionOption::parser;
 
       if (!is_time_dependent)
-      { // steady-state
-        if (dim == 1)      // 1-D
+      {               // steady-state
+        if (dim == 1) // 1-D
           exact_solution_string = "if(x>=x_mid,"
-            "incoming*exp(-sigma*(x-x_mid)), incoming)";
+                                  "incoming*exp(-sigma*(x-x_mid)), incoming)";
         else if (dim == 2) // 2-D
-          exact_solution_string = "if(x>=x_mid, if(y>=y_mid,"
+          exact_solution_string =
+            "if(x>=x_mid, if(y>=y_mid,"
             "incoming*exp(-sigma*(x-x_mid)), incoming), incoming)";
         else
           // 3-D
-          exact_solution_string = "if(x>=x_mid, if(y>=y_mid, if(z>=x_mid,"
+          exact_solution_string =
+            "if(x>=x_mid, if(y>=y_mid, if(z>=x_mid,"
             "incoming*exp(-sigma*(x-x_mid)), incoming), incoming),"
             "incoming)";
       }
       else
-      { // transient
-        if (dim == 1)      // 1-D
+      {               // transient
+        if (dim == 1) // 1-D
           exact_solution_string = "if(x-t<x_min, if(x>=x_mid,"
-            "incoming*exp(-sigma*(x-x_mid)), incoming), 0)";
+                                  "incoming*exp(-sigma*(x-x_mid)), incoming), 0)";
         else if (dim == 2) // 2-D
-          exact_solution_string = "if(x-t<x_min, if(x>=x_mid,"
+          exact_solution_string =
+            "if(x-t<x_min, if(x>=x_mid,"
             "if(y>=x_mid, incoming*exp(-sigma*(x-x_mid)), incoming),"
             "incoming), 0)";
         else
           // 3-D
-          exact_solution_string = "if(x-t<x_min, if(x>=x_mid,"
+          exact_solution_string =
+            "if(x-t<x_min, if(x>=x_mid,"
             "if(y>=x_mid, if(z>=x_mid, incoming*exp(-sigma*(x-x_mid)),"
             "incoming), incoming), incoming), 0)";
       }
       initial_conditions_string = "0";
       break;
     }
-    case 3 :
+    case 3:
     { // void
       Assert(dim == 1, ExcNotImplemented());
 
@@ -233,8 +242,8 @@ void TransportProblem<dim>::processProblemID()
       initial_conditions_string = "if(x<0,incoming,0)";
       break;
     }
-    case 5 :
-    { // MMS-1
+    case 5:
+    {                                        // MMS-1
       Assert(dim == 1, ExcNotImplemented()); // assume 1-D
 
       x_min = 0.0;
@@ -265,9 +274,9 @@ void TransportProblem<dim>::processProblemID()
 
       break;
     }
-    case 6 :
-    { // MMS-2
-      Assert(dim == 1, ExcNotImplemented()); // assume 1-D
+    case 6:
+    {                                                 // MMS-2
+      Assert(dim == 1, ExcNotImplemented());          // assume 1-D
       Assert(is_time_dependent, ExcNotImplemented()); // assume not steady-state
 
       x_min = 0.0;
@@ -289,9 +298,9 @@ void TransportProblem<dim>::processProblemID()
 
       break;
     }
-    case 7 :
-    { // MMS-3
-      Assert(dim == 1, ExcNotImplemented()); // assume 1-D
+    case 7:
+    {                                                 // MMS-3
+      Assert(dim == 1, ExcNotImplemented());          // assume 1-D
       Assert(is_time_dependent, ExcNotImplemented()); // assume not steady-state
 
       x_min = 0.0;
@@ -314,9 +323,9 @@ void TransportProblem<dim>::processProblemID()
 
       break;
     }
-    case 8 :
-    { // source in left half
-      Assert(dim == 1, ExcNotImplemented()); // assume 1-D
+    case 8:
+    {                                                 // source in left half
+      Assert(dim == 1, ExcNotImplemented());          // assume 1-D
       Assert(is_time_dependent, ExcNotImplemented()); // assume not steady-state
 
       x_min = 0.0;
@@ -337,17 +346,17 @@ void TransportProblem<dim>::processProblemID()
       function_parser_constants["source"] = 10.0;
 
       exact_solution_option = ExactSolutionOption::parser;
-      exact_solution_string = (std::string) "source/sigma*(1-exp(-sigma*"
-        + "max(0,min(x,x_mid)-max(x-speed*t,0))))"
-        + "*exp(-sigma*max(0,min(x,x_max)-max(x-speed*t,x_mid)))";
+      exact_solution_string = (std::string) "source/sigma*(1-exp(-sigma*" +
+        "max(0,min(x,x_mid)-max(x-speed*t,0))))" +
+        "*exp(-sigma*max(0,min(x,x_max)-max(x-speed*t,x_mid)))";
 
       initial_conditions_string = "0";
 
       break;
     }
-    case 9 :
-    { // MMS-4
-      Assert(dim == 1, ExcNotImplemented()); // assume 1-D
+    case 9:
+    {                                                 // MMS-4
+      Assert(dim == 1, ExcNotImplemented());          // assume 1-D
       Assert(is_time_dependent, ExcNotImplemented()); // assume not steady-state
 
       x_min = 0.0;
@@ -369,8 +378,8 @@ void TransportProblem<dim>::processProblemID()
 
       break;
     }
-    case 10 :
-    { // MMS-5
+    case 10:
+    {                                        // MMS-5
       Assert(dim == 1, ExcNotImplemented()); // assume 1-D
 
       x_min = 0.0;
@@ -400,7 +409,7 @@ void TransportProblem<dim>::processProblemID()
 
       break;
     }
-    case 11 :
+    case 11:
     { // skew void-to-absorber
 
       x_min = 0.0;
@@ -415,14 +424,14 @@ void TransportProblem<dim>::processProblemID()
       incoming_string = "1";
       function_parser_constants["incoming"] = 1.0;
 
-      if (dim == 1)      // 1-D
+      if (dim == 1) // 1-D
         cross_section_string = "if(x<x_mid, 0, sigma)";
       else if (dim == 2) // 2-D
         cross_section_string = "if(x>=x_mid, if(y>=x_mid, sigma, 0), 0)";
       else
         // 3-D
         cross_section_string = "if(x>=x_mid, if(y>=x_mid, if(z>=x_mid,"
-          "sigma, 0), 0), 0)";
+                               "sigma, 0), 0), 0)";
       function_parser_constants["sigma"] = 10.0;
 
       source_time_dependent = false;
@@ -435,18 +444,22 @@ void TransportProblem<dim>::processProblemID()
       Assert(is_time_dependent, ExcNotImplemented());
 
       // create exact solution function constructor arguments
-      const std::vector<double> interface_positions = { 0.5 };
-      const std::vector<double> region_sources = { 0.0, 0.0 };
-      const std::vector<double> region_sigmas = { 0.0, 10.0 };
+      const std::vector<double> interface_positions = {0.5};
+      const std::vector<double> region_sources = {0.0, 0.0};
+      const std::vector<double> region_sigmas = {0.0, 10.0};
       const std::vector<double> direction(
-        { 1.0 / sqrt(2.0), 1.0 / sqrt(3.0), 1.0 / sqrt(6.0) });
+        {1.0 / sqrt(2.0), 1.0 / sqrt(3.0), 1.0 / sqrt(6.0)});
       const double incoming = 1.0;
       exact_solution_option = ExactSolutionOption::multi_region;
 
       // create MultiRegionExactSolution object
-      std::shared_ptr<MultiRegionExactSolution<dim> > exact_solution_function_derived =
-        std::make_shared<MultiRegionExactSolution<dim> >(interface_positions,
-          region_sources, region_sigmas, direction, incoming);
+      std::shared_ptr<MultiRegionExactSolution<dim>>
+        exact_solution_function_derived =
+          std::make_shared<MultiRegionExactSolution<dim>>(interface_positions,
+                                                          region_sources,
+                                                          region_sigmas,
+                                                          direction,
+                                                          incoming);
       // point base class shared pointer to derived class function object
       exact_solution_function = exact_solution_function_derived;
 
@@ -454,7 +467,7 @@ void TransportProblem<dim>::processProblemID()
 
       break;
     }
-    case 12 :
+    case 12:
     { // 3-region
 
       // for now, assume 1-D
@@ -482,17 +495,21 @@ void TransportProblem<dim>::processProblemID()
       function_parser_constants["q2"] = 20.0;
 
       // create exact solution function constructor arguments
-      const std::vector<double> interface_positions = { 0.3, 0.6 };
-      const std::vector<double> region_sources = { 1.0, 5.0, 20.0 };
-      const std::vector<double> region_sigmas = { 1.0, 40.0, 20.0 };
-      const std::vector<double> direction( { 1.0, 0.0, 0.0 });
+      const std::vector<double> interface_positions = {0.3, 0.6};
+      const std::vector<double> region_sources = {1.0, 5.0, 20.0};
+      const std::vector<double> region_sigmas = {1.0, 40.0, 20.0};
+      const std::vector<double> direction({1.0, 0.0, 0.0});
       const double incoming = 1.0;
       exact_solution_option = ExactSolutionOption::multi_region;
 
       // create MultiRegionExactSolution object
-      std::shared_ptr<MultiRegionExactSolution<dim> > exact_solution_function_derived =
-        std::make_shared<MultiRegionExactSolution<dim> >(interface_positions,
-          region_sources, region_sigmas, direction, incoming);
+      std::shared_ptr<MultiRegionExactSolution<dim>>
+        exact_solution_function_derived =
+          std::make_shared<MultiRegionExactSolution<dim>>(interface_positions,
+                                                          region_sources,
+                                                          region_sigmas,
+                                                          direction,
+                                                          incoming);
       // point base class shared pointer to derived class function object
       exact_solution_function = exact_solution_function_derived;
 
@@ -505,14 +522,14 @@ void TransportProblem<dim>::processProblemID()
 
       break;
     }
-    case 13 :
+    case 13:
     { // source-in-void to absorber
 
       // create exact solution function constructor arguments
-      const std::vector<double> interface_positions = { 0.5 };
-      const std::vector<double> region_sources = { 1.0, 0.0 };
-      const std::vector<double> region_sigmas = { 0.0, 10.0 };
-      const std::vector<double> direction( { 1.0, 0.0, 0.0 });
+      const std::vector<double> interface_positions = {0.5};
+      const std::vector<double> region_sources = {1.0, 0.0};
+      const std::vector<double> region_sigmas = {0.0, 10.0};
+      const std::vector<double> direction({1.0, 0.0, 0.0});
       const double incoming = 0.0;
 
       x_min = 0.0;
@@ -553,9 +570,13 @@ void TransportProblem<dim>::processProblemID()
       {
         exact_solution_option = ExactSolutionOption::multi_region;
 
-        std::shared_ptr<MultiRegionExactSolution<dim> > exact_solution_function_derived =
-          std::make_shared<MultiRegionExactSolution<dim> >(interface_positions,
-            region_sources, region_sigmas, direction, incoming);
+        std::shared_ptr<MultiRegionExactSolution<dim>>
+          exact_solution_function_derived =
+            std::make_shared<MultiRegionExactSolution<dim>>(interface_positions,
+                                                            region_sources,
+                                                            region_sigmas,
+                                                            direction,
+                                                            incoming);
         // point base class shared pointer to derived class function object
         exact_solution_function = exact_solution_function_derived;
       }
@@ -571,14 +592,14 @@ void TransportProblem<dim>::processProblemID()
 
       break;
     }
-    case 14 :
+    case 14:
     { // multi-region
 
-      const std::vector<double> interface_positions = { 0.2, 0.4, 0.6, 0.8 };
-      const std::vector<double> region_sources = { 0.0, 0.0, 10.0, 10.0, 5.0 };
-      const std::vector<double> region_sigmas = { 0.0, 10.0, 0.0, 10.0, 5.0 };
+      const std::vector<double> interface_positions = {0.2, 0.4, 0.6, 0.8};
+      const std::vector<double> region_sources = {0.0, 0.0, 10.0, 10.0, 5.0};
+      const std::vector<double> region_sigmas = {0.0, 10.0, 0.0, 10.0, 5.0};
       const std::vector<double> direction(
-        { 1.0 / sqrt(2.0), 1.0 / sqrt(3.0), 1.0 / sqrt(6.0) });
+        {1.0 / sqrt(2.0), 1.0 / sqrt(3.0), 1.0 / sqrt(6.0)});
       const double incoming = 1.0;
 
       x_min = 0.0;
@@ -605,22 +626,27 @@ void TransportProblem<dim>::processProblemID()
       function_parser_constants["q3"] = region_sources[3];
       function_parser_constants["q4"] = region_sources[4];
 
-      cross_section_string = "if(x<=x1 || y<=x1, sigma0, if(x<=x2 || y<=x2,"
+      cross_section_string =
+        "if(x<=x1 || y<=x1, sigma0, if(x<=x2 || y<=x2,"
         " sigma1, if(x<=x3 || y<=x3, sigma2, if(x<=x4 || y<=x4,"
         " sigma3, sigma4))))";
 
       source_time_dependent = false;
       source_string = "if(x<=x1 || y<=x1, q0, if(x<=x2 || y<=x2,"
-        " q1, if(x<=x3 || y<=x3, q2, if(x<=x4 || y<=x4,"
-        " q3, q4))))";
+                      " q1, if(x<=x3 || y<=x3, q2, if(x<=x4 || y<=x4,"
+                      " q3, q4))))";
 
       // create exact solution function constructor arguments
       exact_solution_option = ExactSolutionOption::multi_region;
 
       // create MultiRegionExactSolution object
-      std::shared_ptr<MultiRegionExactSolution<dim> > exact_solution_function_derived =
-        std::make_shared<MultiRegionExactSolution<dim> >(interface_positions,
-          region_sources, region_sigmas, direction, incoming);
+      std::shared_ptr<MultiRegionExactSolution<dim>>
+        exact_solution_function_derived =
+          std::make_shared<MultiRegionExactSolution<dim>>(interface_positions,
+                                                          region_sources,
+                                                          region_sigmas,
+                                                          direction,
+                                                          incoming);
       // point base class shared pointer to derived class function object
       exact_solution_function = exact_solution_function_derived;
 
@@ -633,15 +659,15 @@ void TransportProblem<dim>::processProblemID()
 
       break;
     }
-    case 15 :
+    case 15:
     { // 2-region saturation
 
       Assert(dim == 1, ExcNotImplemented());
 
-      const std::vector<double> interface_positions = { 0.5 };
-      const std::vector<double> region_sources = { 1.0, 1.0e5 };
-      const std::vector<double> region_sigmas = { 1.0, 1.0e5 };
-      const std::vector<double> direction( { 1.0, 0.0, 0.0 });
+      const std::vector<double> interface_positions = {0.5};
+      const std::vector<double> region_sources = {1.0, 1.0e5};
+      const std::vector<double> region_sigmas = {1.0, 1.0e5};
+      const std::vector<double> direction({1.0, 0.0, 0.0});
       const double incoming = 1.0;
 
       x_min = 0.0;
@@ -668,9 +694,13 @@ void TransportProblem<dim>::processProblemID()
       exact_solution_option = ExactSolutionOption::multi_region;
 
       // create MultiRegionExactSolution object
-      std::shared_ptr<MultiRegionExactSolution<dim> > exact_solution_function_derived =
-        std::make_shared<MultiRegionExactSolution<dim> >(interface_positions,
-          region_sources, region_sigmas, direction, incoming);
+      std::shared_ptr<MultiRegionExactSolution<dim>>
+        exact_solution_function_derived =
+          std::make_shared<MultiRegionExactSolution<dim>>(interface_positions,
+                                                          region_sources,
+                                                          region_sigmas,
+                                                          direction,
+                                                          incoming);
       // point base class shared pointer to derived class function object
       exact_solution_function = exact_solution_function_derived;
 
@@ -683,7 +713,7 @@ void TransportProblem<dim>::processProblemID()
 
       break;
     }
-    default :
+    default:
     {
       Assert(false, ExcNotImplemented());
       break;
@@ -694,15 +724,15 @@ void TransportProblem<dim>::processProblemID()
 /**
  * Runs the problem.
  */
-template<int dim>
+template <int dim>
 void TransportProblem<dim>::run()
 {
   // initialize problem
   initializeSystem();
 
   // create post-processor object
-  PostProcessor<dim> postprocessor(parameters, has_exact_solution,
-    exact_solution_function);
+  PostProcessor<dim> postprocessor(
+    parameters, has_exact_solution, exact_solution_function);
 
   // create refinement handler object
   RefinementHandler<dim> refinement_handler(parameters, triangulation);
@@ -726,10 +756,16 @@ void TransportProblem<dim>::run()
       TimerOutput::Scope t_solve(timer, "solve");
 
       // create and run transient executioner
-      TransientExecutioner<dim> executioner(parameters, triangulation,
-        transport_direction, cross_section_function, source_function,
-        incoming_function, initial_conditions, domain_volume, postprocessor,
-        source_time_dependent);
+      TransientExecutioner<dim> executioner(parameters,
+                                            triangulation,
+                                            transport_direction,
+                                            cross_section_function,
+                                            source_function,
+                                            incoming_function,
+                                            initial_conditions,
+                                            domain_volume,
+                                            postprocessor,
+                                            source_time_dependent);
       executioner.run();
     }
     else
@@ -738,9 +774,14 @@ void TransportProblem<dim>::run()
       TimerOutput::Scope t_solve(timer, "solve");
 
       // create and run steady-state executioner
-      SteadyStateExecutioner<dim> executioner(parameters, triangulation,
-        transport_direction, cross_section_function, source_function,
-        incoming_function, domain_volume, postprocessor);
+      SteadyStateExecutioner<dim> executioner(parameters,
+                                              triangulation,
+                                              transport_direction,
+                                              cross_section_function,
+                                              source_function,
+                                              incoming_function,
+                                              domain_volume,
+                                              postprocessor);
       executioner.run();
     }
   } // end refinement cycle loop

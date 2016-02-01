@@ -4,28 +4,29 @@
  * @param[in] fe finite element object
  *
  */
-template<int dim>
+template <int dim>
 EntropyViscosity<dim>::EntropyViscosity(
-  const FESystem<dim> &fe,
-  const unsigned int &n_cells,
-  const DoFHandler<dim> &dof_handler,
-  const ConstraintMatrix &constraints,
-  const QGauss<dim> &cell_quadrature,
-  const QGauss<dim - 1> &face_quadrature,
-  const Tensor<1, dim> &transport_direction,
-  const FunctionParser<dim> &cross_section_function,
-  FunctionParser<dim> &source_function,
-  const std::string &entropy_string,
-  const std::string &entropy_derivative_string,
-  const double &entropy_residual_coefficient,
-  const double &jump_coefficient,
-  const double &domain_volume,
-  const typename TransportParameters<dim>::TemporalDiscretization temporal_discretization,
-  const LowOrderViscosity<dim> &low_order_viscosity,
-  const SparseMatrix<double> &inviscid_matrix,
-  SparseMatrix<double> &diffusion_matrix,
-  SparseMatrix<double> &total_matrix) :
-    Viscosity<dim>(n_cells, fe.dofs_per_cell, dof_handler, constraints),
+  const FESystem<dim> & fe,
+  const unsigned int & n_cells,
+  const DoFHandler<dim> & dof_handler,
+  const ConstraintMatrix & constraints,
+  const QGauss<dim> & cell_quadrature,
+  const QGauss<dim - 1> & face_quadrature,
+  const Tensor<1, dim> & transport_direction,
+  const FunctionParser<dim> & cross_section_function,
+  FunctionParser<dim> & source_function,
+  const std::string & entropy_string,
+  const std::string & entropy_derivative_string,
+  const double & entropy_residual_coefficient,
+  const double & jump_coefficient,
+  const double & domain_volume,
+  const typename TransportParameters<dim>::TemporalDiscretization
+    temporal_discretization,
+  const LowOrderViscosity<dim> & low_order_viscosity,
+  const SparseMatrix<double> & inviscid_matrix,
+  SparseMatrix<double> & diffusion_matrix,
+  SparseMatrix<double> & total_matrix)
+  : Viscosity<dim>(n_cells, fe.dofs_per_cell, dof_handler, constraints),
     fe(&fe),
     flux(0),
     n_dofs(dof_handler.n_dofs()),
@@ -52,14 +53,14 @@ EntropyViscosity<dim>::EntropyViscosity(
   // initialize entropy function
   std::map<std::string, double> constants;
   entropy_function.initialize("u", entropy_string, constants, false);
-  entropy_derivative_function.initialize("u", entropy_derivative_string,
-    constants, false);
+  entropy_derivative_function.initialize(
+    "u", entropy_derivative_string, constants, false);
 }
 
 /**
  * Destructor.
  */
-template<int dim>
+template <int dim>
 EntropyViscosity<dim>::~EntropyViscosity()
 {
 }
@@ -75,18 +76,17 @@ EntropyViscosity<dim>::~EntropyViscosity()
  *
  * @param[in] solution  solution
  */
-template<int dim>
+template <int dim>
 void EntropyViscosity<dim>::recomputeHighOrderSteadyStateMatrix(
   const Vector<double> & solution)
 {
   // recompute entropy viscosity
-  compute_entropy_viscosity(
-    solution,
-    solution,
-    solution,
-    1.0, // arbitrary value for time step size
-    1.0, // arbitrary value for time step size
-    0.0); // arbitrary value for time
+  compute_entropy_viscosity(solution,
+                            solution,
+                            solution,
+                            1.0,  // arbitrary value for time step size
+                            1.0,  // arbitrary value for time step size
+                            0.0); // arbitrary value for time
 
   // compute diffusion matrix
   this->compute_diffusion_matrix(*diffusion_matrix);
@@ -105,23 +105,18 @@ void EntropyViscosity<dim>::recomputeHighOrderSteadyStateMatrix(
  * @param[in] older_dt  older time step size
  * @param[in] time  time at which to evaluate entropy residual
  */
-template<int dim>
+template <int dim>
 void EntropyViscosity<dim>::recompute_high_order_ss_matrix(
-  const Vector<double> &old_solution,
-  const Vector<double> &older_solution,
-  const Vector<double> &oldest_solution,
-  const double &old_dt,
-  const double &older_dt,
-  const double &time)
+  const Vector<double> & old_solution,
+  const Vector<double> & older_solution,
+  const Vector<double> & oldest_solution,
+  const double & old_dt,
+  const double & older_dt,
+  const double & time)
 {
   // recompute entropy viscosity
   compute_entropy_viscosity(
-    old_solution,
-    older_solution,
-    oldest_solution,
-    old_dt,
-    older_dt,
-    time);
+    old_solution, older_solution, oldest_solution, old_dt, older_dt, time);
 
   // compute diffusion matrix
   this->compute_diffusion_matrix(*diffusion_matrix);
@@ -137,23 +132,24 @@ void EntropyViscosity<dim>::recompute_high_order_ss_matrix(
  * @param[in] solution solution with which to calculate entropy for the
  *            normalization constant
  */
-template<int dim>
+template <int dim>
 void EntropyViscosity<dim>::compute_normalization_constant(
   const Vector<double> & solution)
 {
-  FEValues < dim
-    > fe_values(*fe, cell_quadrature, update_values | update_JxW_values);
+  FEValues<dim> fe_values(
+    *fe, cell_quadrature, update_values | update_JxW_values);
   std::vector<double> solution_values(n_q_points_cell);
   std::vector<double> entropy_values(n_q_points_cell);
-  std::vector<Point<1> > solution_local_points(n_q_points_cell);
+  std::vector<Point<1>> solution_local_points(n_q_points_cell);
 
   // compute domain-averaged entropy
   //--------------------------------
   double domain_integral_entropy = 0.0;
 
   // loop over cells
-  typename DoFHandler<dim>::active_cell_iterator cell =
-    this->dof_handler->begin_active(), endc = this->dof_handler->end();
+  typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler
+                                                          ->begin_active(),
+                                                 endc = this->dof_handler->end();
   for (cell = this->dof_handler->begin_active(); cell != endc; ++cell)
   {
     // reinitialize FE values
@@ -194,8 +190,9 @@ void EntropyViscosity<dim>::compute_normalization_constant(
     for (unsigned int q = 0; q < n_q_points_cell; ++q)
     {
       // add contribution of quadrature point to entropy_values integral
-      normalization_constant = std::max(normalization_constant,
-        std::abs(entropy_values[q] - domain_averaged_entropy));
+      normalization_constant =
+        std::max(normalization_constant,
+                 std::abs(entropy_values[q] - domain_averaged_entropy));
     }
   }
 
@@ -207,7 +204,7 @@ void EntropyViscosity<dim>::compute_normalization_constant(
 /**
  * Computes the entropy viscosity for each cell.
  */
-template<int dim>
+template <int dim>
 void EntropyViscosity<dim>::compute_entropy_viscosity(
   const Vector<double> & old_solution,
   const Vector<double> & older_solution,
@@ -226,17 +223,17 @@ void EntropyViscosity<dim>::compute_entropy_viscosity(
   compute_normalization_constant(old_solution);
 
   // cell values
-  std::vector<Point<dim> > points(n_q_points_cell);
+  std::vector<Point<dim>> points(n_q_points_cell);
   std::vector<double> sigma(n_q_points_cell);
   std::vector<double> source(n_q_points_cell);
   std::vector<double> u_old(n_q_points_cell);
   std::vector<double> u_older(n_q_points_cell);
   std::vector<double> u_oldest(n_q_points_cell);
-  std::vector<Point<1> > u_old_points(n_q_points_cell);
-  std::vector<Point<1> > u_older_points(n_q_points_cell);
-  std::vector<Point<1> > u_oldest_points(n_q_points_cell);
-  std::vector<Tensor<1, dim> > dudx_old(n_q_points_cell);
-  std::vector<Tensor<1, dim> > dudx_older(n_q_points_cell);
+  std::vector<Point<1>> u_old_points(n_q_points_cell);
+  std::vector<Point<1>> u_older_points(n_q_points_cell);
+  std::vector<Point<1>> u_oldest_points(n_q_points_cell);
+  std::vector<Tensor<1, dim>> dudx_old(n_q_points_cell);
+  std::vector<Tensor<1, dim>> dudx_older(n_q_points_cell);
   std::vector<double> s_old(n_q_points_cell);
   std::vector<double> s_older(n_q_points_cell);
   std::vector<double> s_oldest(n_q_points_cell);
@@ -244,35 +241,36 @@ void EntropyViscosity<dim>::compute_entropy_viscosity(
   std::vector<double> dsdu_older(n_q_points_cell);
 
   // face values
-  std::vector<Tensor<1,dim> > normal(n_q_points_face);
+  std::vector<Tensor<1, dim>> normal(n_q_points_face);
   std::vector<double> u_old_face(n_q_points_face);
   std::vector<double> u_old_face_neighbor(n_q_points_face);
-  std::vector<Tensor<1, dim> > dudx_old_face(n_q_points_face);
-  std::vector<Tensor<1, dim> > dudx_old_face_neighbor(n_q_points_face);
-  std::vector<Point<1> > u_old_face_points(n_q_points_face);
-  std::vector<Point<1> > u_old_face_points_neighbor(n_q_points_face);
+  std::vector<Tensor<1, dim>> dudx_old_face(n_q_points_face);
+  std::vector<Tensor<1, dim>> dudx_old_face_neighbor(n_q_points_face);
+  std::vector<Point<1>> u_old_face_points(n_q_points_face);
+  std::vector<Point<1>> u_old_face_points_neighbor(n_q_points_face);
   std::vector<double> dsdu_old_face(n_q_points_face);
   std::vector<double> dsdu_old_face_neighbor(n_q_points_face);
 
   // FE cell values for computing entropy
-  FEValues < dim
-    > fe_values(*fe, cell_quadrature,
-      update_values | update_gradients | update_quadrature_points
-        | update_JxW_values);
+  FEValues<dim> fe_values(*fe,
+                          cell_quadrature,
+                          update_values | update_gradients |
+                            update_quadrature_points | update_JxW_values);
 
   // FE face values for computing entropy jumps
-  FEFaceValues < dim
-    > fe_values_face(*fe, face_quadrature,
-      update_values | update_gradients | update_JxW_values
-        | update_normal_vectors);
-  FEFaceValues < dim
-    > fe_values_face_neighbor(*fe, face_quadrature,
-      update_values | update_gradients | update_JxW_values
-        | update_normal_vectors);
+  FEFaceValues<dim> fe_values_face(*fe,
+                                   face_quadrature,
+                                   update_values | update_gradients |
+                                     update_JxW_values | update_normal_vectors);
+  FEFaceValues<dim> fe_values_face_neighbor(
+    *fe,
+    face_quadrature,
+    update_values | update_gradients | update_JxW_values | update_normal_vectors);
 
   // cell iterator
-  typename DoFHandler<dim>::active_cell_iterator cell =
-    this->dof_handler->begin_active(), endc = this->dof_handler->end();
+  typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler
+                                                          ->begin_active(),
+                                                 endc = this->dof_handler->end();
   // loop over cells
   unsigned int i_cell = 0;
   for (cell = this->dof_handler->begin_active(); cell != endc; ++cell, ++i_cell)
@@ -310,23 +308,19 @@ void EntropyViscosity<dim>::compute_entropy_viscosity(
     // compute entropy residual values at each quadrature point on cell
     std::vector<double> entropy_residual_values(n_q_points_cell, 0.0);
     for (unsigned int q = 0; q < n_q_points_cell; ++q)
-      entropy_residual_values[q] =
-        a_old * s_old[q] + a_older * s_older[q] + a_oldest * s_oldest[q]
-          + b_old
-            * (dsdu_old[q]
-              * (transport_direction * dudx_old[q] + sigma[q] * u_old[q]
-                - source[q]))
-          + b_older
-            * (dsdu_older[q]
-              * (transport_direction * dudx_older[q] + sigma[q] * u_older[q]
-                - source[q]));
+      entropy_residual_values[q] = a_old * s_old[q] + a_older * s_older[q] +
+        a_oldest * s_oldest[q] +
+        b_old * (dsdu_old[q] * (transport_direction * dudx_old[q] +
+                                sigma[q] * u_old[q] - source[q])) +
+        b_older * (dsdu_older[q] * (transport_direction * dudx_older[q] +
+                                    sigma[q] * u_older[q] - source[q]));
 
     // determine maximum entropy residual in cell
     double max_entropy_residual = 0.0;
     for (unsigned int q = 0; q < n_q_points_cell; ++q)
     {
-      max_entropy_residual = std::max(max_entropy_residual,
-        std::max(0.0, entropy_residual_values[q]));
+      max_entropy_residual =
+        std::max(max_entropy_residual, std::max(0.0, entropy_residual_values[q]));
     }
 
     // compute max jump in cell
@@ -339,7 +333,7 @@ void EntropyViscosity<dim>::compute_entropy_viscosity(
       if (face->at_boundary() == false)
       {
         Assert(cell->neighbor(iface).state() == IteratorState::valid,
-          ExcInternalError());
+               ExcInternalError());
         typename DoFHandler<dim>::cell_iterator neighbor = cell->neighbor(iface);
         const unsigned int ineighbor = cell->neighbor_of_neighbor(iface);
         Assert(ineighbor < faces_per_cell, ExcInternalError());
@@ -350,10 +344,10 @@ void EntropyViscosity<dim>::compute_entropy_viscosity(
         // get solution and gradients on face
         fe_values_face.get_function_values(old_solution, u_old_face);
         fe_values_face_neighbor.get_function_values(old_solution,
-          u_old_face_neighbor);
+                                                    u_old_face_neighbor);
         fe_values_face.get_function_gradients(old_solution, dudx_old_face);
         fe_values_face_neighbor.get_function_gradients(old_solution,
-          dudx_old_face_neighbor);
+                                                       dudx_old_face_neighbor);
 
         // get normal vectors
         normal = fe_values_face.get_all_normal_vectors();
@@ -366,17 +360,17 @@ void EntropyViscosity<dim>::compute_entropy_viscosity(
         }
         entropy_derivative_function.value_list(u_old_face_points, dsdu_old_face);
         entropy_derivative_function.value_list(u_old_face_points_neighbor,
-          dsdu_old_face_neighbor);
+                                               dsdu_old_face_neighbor);
 
         // compute max jump on face
         max_jump_on_face = 0.0;
         for (unsigned int q = 0; q < n_q_points_face; ++q)
         {
-          double jump_dsdn = normal[q]
-            * (dsdu_old_face[q] * dudx_old_face[q]
-              - dsdu_old_face_neighbor[q] * dudx_old_face_neighbor[q]);
-          double jump_on_face = std::abs(
-            transport_direction * normal[q] * jump_dsdn);
+          double jump_dsdn =
+            normal[q] * (dsdu_old_face[q] * dudx_old_face[q] -
+                         dsdu_old_face_neighbor[q] * dudx_old_face_neighbor[q]);
+          double jump_on_face =
+            std::abs(transport_direction * normal[q] * jump_dsdn);
           max_jump_on_face = std::max(max_jump_on_face, jump_on_face);
         }
       }
@@ -385,31 +379,31 @@ void EntropyViscosity<dim>::compute_entropy_viscosity(
 
     // compute entropy viscosity in cell
     //----------------------------------------------------------------------------
-    double entropy_viscosity_cell = (entropy_residual_coefficient
-      * max_entropy_residual + jump_coefficient * max_jump_in_cell)
-      / normalization_constant;
+    double entropy_viscosity_cell =
+      (entropy_residual_coefficient * max_entropy_residual +
+       jump_coefficient * max_jump_in_cell) /
+      normalization_constant;
 
     // get low-order viscosity for cell
-    double low_order_viscosity_cell = low_order_viscosity->get_viscosity_value(
-      i_cell);
+    double low_order_viscosity_cell =
+      low_order_viscosity->get_viscosity_value(i_cell);
 
     // compute high-order viscosity
-    this->viscosity(i_cell) = std::min(entropy_viscosity_cell,
-      low_order_viscosity_cell);
+    this->viscosity(i_cell) =
+      std::min(entropy_viscosity_cell, low_order_viscosity_cell);
   }
 }
 
 /**
  * Computes the temporal discretization constants used in the entropy residual.
  */
-template<int dim>
+template <int dim>
 void EntropyViscosity<dim>::compute_temporal_discretization_constants(
-  const double old_dt,
-  const double older_dt)
+  const double old_dt, const double older_dt)
 {
   switch (temporal_discretization)
   {
-    case TransportParameters<dim>::TemporalDiscretization::FE :
+    case TransportParameters<dim>::TemporalDiscretization::FE:
     {
       a_old = 1.0 / old_dt;
       a_older = -1.0 / old_dt;
@@ -418,7 +412,7 @@ void EntropyViscosity<dim>::compute_temporal_discretization_constants(
       b_older = 0.0;
       break;
     }
-    case TransportParameters<dim>::TemporalDiscretization::BE :
+    case TransportParameters<dim>::TemporalDiscretization::BE:
     {
       a_old = 1.0 / old_dt;
       a_older = -1.0 / old_dt;
@@ -427,7 +421,7 @@ void EntropyViscosity<dim>::compute_temporal_discretization_constants(
       b_older = 0.0;
       break;
     }
-    case TransportParameters<dim>::TemporalDiscretization::CN :
+    case TransportParameters<dim>::TemporalDiscretization::CN:
     {
       a_old = 1.0 / old_dt;
       a_older = -1.0 / old_dt;
@@ -436,7 +430,7 @@ void EntropyViscosity<dim>::compute_temporal_discretization_constants(
       b_older = 0.5;
       break;
     }
-    case TransportParameters<dim>::TemporalDiscretization::BDF2 :
+    case TransportParameters<dim>::TemporalDiscretization::BDF2:
     {
       a_old = (older_dt + 2 * old_dt) / (old_dt * (older_dt + old_dt));
       a_older = -(older_dt + old_dt) / (older_dt * old_dt);
@@ -445,7 +439,7 @@ void EntropyViscosity<dim>::compute_temporal_discretization_constants(
       b_older = 0.0;
       break;
     }
-    default :
+    default:
     {
       ExcNotImplemented();
     }

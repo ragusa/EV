@@ -11,8 +11,8 @@ quadrature.nq = 3;                  % number of quadrature points per cell
 % spatial method options
 %--------------------------------------------------------------------------
 compute_low_order  = false; % compute and plot low-order solution?
-compute_high_order = true; % compute and plot high-order solution?
-compute_FCT        = false; % compute and plot FCT solution?
+compute_high_order = false; % compute and plot high-order solution?
+compute_FCT        = true; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
 %                   2 = graph-theoretic low-order scheme
@@ -100,10 +100,10 @@ legend_location           = 'NorthEast'; % location of plot legend
 %--------------------------------------------------------------------------
 % output options
 %--------------------------------------------------------------------------
-save_exact_solution      = true; % option to save exact solution 
+save_exact_solution      = false; % option to save exact solution 
 save_low_order_solution  = false; % option to save low-order solution
 save_high_order_solution = false; % option to save high-order solution
-save_FCT_solution        = true; % option to save FCT solution
+save_FCT_solution        = false; % option to save FCT solution
 %-------------------------------------------------------------------------
 
 %% Define Problem
@@ -575,6 +575,8 @@ if (compute_FCT)
         
         % compute flux correction matrix
         F = flux_correction_matrix_ss(uH,DL-DH);
+        dlmwrite('output/ML.txt',full(ML),' ');
+        dlmwrite('output/flux.txt',full(F),' ');
         
         % compute low-order solution
         uL = AL_mod \ b_mod;
@@ -585,7 +587,7 @@ if (compute_FCT)
         end
         
         % initialize solution iterate
-        uFCT = uL;
+        uFCT = zeros(dof_handler.n_dof,1);
         
         % iteration loop
         for iter = 1:max_iter

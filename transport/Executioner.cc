@@ -1,16 +1,17 @@
 /**
  * Constructor.
  */
-template<int dim>
+template <int dim>
 Executioner<dim>::Executioner(const TransportParameters<dim> & parameters_,
-  Triangulation<dim> & triangulation_,
-  const Tensor<1, dim> & transport_direction_,
-  const FunctionParser<dim> & cross_section_function_,
-  FunctionParser<dim> & source_function_, Function<dim> & incoming_function_,
-  const double & domain_volume_,
-  PostProcessor<dim> & postprocessor_) :
-    parameters(parameters_),
-    triangulation(& triangulation_),
+                              Triangulation<dim> & triangulation_,
+                              const Tensor<1, dim> & transport_direction_,
+                              const FunctionParser<dim> & cross_section_function_,
+                              FunctionParser<dim> & source_function_,
+                              Function<dim> & incoming_function_,
+                              const double & domain_volume_,
+                              PostProcessor<dim> & postprocessor_)
+  : parameters(parameters_),
+    triangulation(&triangulation_),
     fe(FE_Q<dim>(parameters.degree), 1),
     flux(0),
     dof_handler(triangulation_),
@@ -19,14 +20,17 @@ Executioner<dim>::Executioner(const TransportParameters<dim> & parameters_,
     cell_quadrature(parameters.n_quadrature_points),
     face_quadrature(parameters.n_quadrature_points),
     n_q_points_cell(cell_quadrature.size()),
-    linear_solver(parameters.linear_solver_option, constraints, dof_handler,
-      incoming_function_),
+    linear_solver(parameters.linear_solver_option,
+                  constraints,
+                  dof_handler,
+                  incoming_function_),
+    nonlinear_solver(parameters_, constraints, dof_handler, incoming_function_),
     transport_direction(transport_direction_),
-    cross_section_function(& cross_section_function_),
-    source_function(& source_function_),
-    incoming_function(& incoming_function_),
+    cross_section_function(&cross_section_function_),
+    source_function(&source_function_),
+    incoming_function(&incoming_function_),
     domain_volume(domain_volume_),
-    postprocessor(& postprocessor_)
+    postprocessor(&postprocessor_)
 {
   // distribute dofs
   dof_handler.distribute_dofs(fe);
@@ -44,8 +48,7 @@ Executioner<dim>::Executioner(const TransportParameters<dim> & parameters_,
 
   // create sparsity pattern
   DynamicSparsityPattern dsp(n_dofs);
-  DoFTools::make_sparsity_pattern(dof_handler,
-    dsp, constraints, false);
+  DoFTools::make_sparsity_pattern(dof_handler, dsp, constraints, false);
   constrained_sparsity_pattern.copy_from(dsp);
 
   // initialize sparse matrices
@@ -66,12 +69,15 @@ Executioner<dim>::Executioner(const TransportParameters<dim> & parameters_,
 
   // determine Dirichlet nodes
   getDirichletNodes();
+
+  // reinitialize nonlinear solver since DoFs have been distributed
+  nonlinear_solver.reinit();
 }
 
 /**
  * Destructor.
  */
-template<int dim>
+template <int dim>
 Executioner<dim>::~Executioner()
 {
 }
@@ -79,16 +85,16 @@ Executioner<dim>::~Executioner()
 /**
  * Assembles the inviscid steady-state matrix.
  */
-template<int dim>
+template <int dim>
 void Executioner<dim>::assembleInviscidSteadyStateMatrix()
 {
   inviscid_ss_matrix = 0;
 
   // FE values, for assembly terms
-  FEValues < dim
-    > fe_values(fe, cell_quadrature,
-      update_values | update_gradients | update_quadrature_points
-        | update_JxW_values);
+  FEValues<dim> fe_values(fe,
+                          cell_quadrature,
+                          update_values | update_gradients |
+                            update_quadrature_points | update_JxW_values);
 
   FullMatrix<double> cell_matrix(dofs_per_cell, dofs_per_cell);
 
@@ -99,7 +105,8 @@ void Executioner<dim>::assembleInviscidSteadyStateMatrix()
 
   // cell iterator
   typename DoFHandler<dim>::active_cell_iterator cell =
-    dof_handler.begin_active(), endc = dof_handler.end();
+                                                   dof_handler.begin_active(),
+                                                 endc = dof_handler.end();
   // loop over cells
   unsigned int i_cell = 0;
   for (cell = dof_handler.begin_active(); cell != endc; ++cell, ++i_cell)
@@ -111,7 +118,7 @@ void Executioner<dim>::assembleInviscidSteadyStateMatrix()
     fe_values.reinit(cell);
 
     // get quadrature points on cell
-    std::vector<Point<dim> > points(n_q_points_cell);
+    std::vector<Point<dim>> points(n_q_points_cell);
     points = fe_values.get_quadrature_points();
 
     // get cross section values for all quadrature points
@@ -132,20 +139,22 @@ void Executioner<dim>::assembleInviscidSteadyStateMatrix()
           // store integrals of divergence and total interaction term
           // so that they may be used in computation of max-principle
           // preserving viscosity
-          cell_matrix(i, j) += (
-          // divergence term
-          fe_values[flux].value(i, q) * transport_direction
-            * fe_values[flux].gradient(j, q) +
-          // total interaction term
-            fe_values[flux].value(i, q) * total_cross_section_values[q]
-              * fe_values[flux].value(j, q)) * fe_values.JxW(q);
+          cell_matrix(i, j) +=
+            (
+              // divergence term
+              fe_values[flux].value(i, q) * transport_direction *
+                fe_values[flux].gradient(j, q) +
+              // total interaction term
+              fe_values[flux].value(i, q) * total_cross_section_values[q] *
+                fe_values[flux].value(j, q)) *
+            fe_values.JxW(q);
         } // end j
-      } // end i
-    } // end q
+      }   // end i
+    }     // end q
 
     // aggregate local matrix and rhs to global matrix and rhs
-    constraints.distribute_local_to_global(cell_matrix, local_dof_indices,
-      inviscid_ss_matrix);
+    constraints.distribute_local_to_global(
+      cell_matrix, local_dof_indices, inviscid_ss_matrix);
   } // end cell
 }
 
@@ -154,8 +163,8 @@ void Executioner<dim>::assembleInviscidSteadyStateMatrix()
  *
  * @param[in] t time at which to evaluate rhs
  */
-template<int dim>
-void Executioner<dim>::assembleSteadyStateRHS(const double &t)
+template <int dim>
+void Executioner<dim>::assembleSteadyStateRHS(const double & t)
 {
   // reset steady-state rhs
   ss_rhs = 0;
@@ -164,22 +173,23 @@ void Executioner<dim>::assembleSteadyStateRHS(const double &t)
   source_function->set_time(t);
 
   // FE values, for assembly terms
-  FEValues < dim
-    > fe_values(fe, cell_quadrature,
-      update_values | update_gradients | update_quadrature_points
-        | update_JxW_values);
+  FEValues<dim> fe_values(fe,
+                          cell_quadrature,
+                          update_values | update_gradients |
+                            update_quadrature_points | update_JxW_values);
 
   Vector<double> cell_rhs(dofs_per_cell);
 
   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
 
   // source values at each quadrature point on cell
-  std::vector<Point<dim> > points(n_q_points_cell);
+  std::vector<Point<dim>> points(n_q_points_cell);
   std::vector<double> source_values(n_q_points_cell);
 
   // cell iterator
   typename DoFHandler<dim>::active_cell_iterator cell =
-    dof_handler.begin_active(), endc = dof_handler.end();
+                                                   dof_handler.begin_active(),
+                                                 endc = dof_handler.end();
   // loop over cells
   for (cell = dof_handler.begin_active(); cell != endc; ++cell)
   {
@@ -201,8 +211,8 @@ void Executioner<dim>::assembleSteadyStateRHS(const double &t)
 
     for (unsigned int q = 0; q < n_q_points_cell; ++q)
       for (unsigned int i = 0; i < dofs_per_cell; ++i)
-        cell_rhs(i) += fe_values[flux].value(i, q) * source_values[q]
-          * fe_values.JxW(q);
+        cell_rhs(i) +=
+          fe_values[flux].value(i, q) * source_values[q] * fe_values.JxW(q);
 
     // aggregate local matrix and rhs to global matrix and rhs
     constraints.distribute_local_to_global(cell_rhs, local_dof_indices, ss_rhs);
@@ -212,7 +222,7 @@ void Executioner<dim>::assembleSteadyStateRHS(const double &t)
 /**
  * Returns the final solution.
  */
-template<int dim>
+template <int dim>
 Vector<double> Executioner<dim>::getFinalSolution() const
 {
   return new_solution;
@@ -224,27 +234,25 @@ Vector<double> Executioner<dim>::getFinalSolution() const
  * The Dirichlet BC is applied only to the incoming boundary, so the transport
  * direction is compared against the normal vector of the face.
  */
-template<int dim>
+template <int dim>
 void Executioner<dim>::setBoundaryIndicators()
 {
   // reset boundary indicators to zero
   typename DoFHandler<dim>::active_cell_iterator cell =
-      dof_handler.begin_active(), endc = dof_handler.end();
+                                                   dof_handler.begin_active(),
+                                                 endc = dof_handler.end();
   for (cell = dof_handler.begin_active(); cell != endc; ++cell)
-    for (unsigned int face = 0; face < GeometryInfo < dim > ::faces_per_cell;
-        ++face)
+    for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell; ++face)
       if (cell->face(face)->at_boundary())
         cell->face(face)->set_boundary_id(0);
 
   // FE face values
-  FEFaceValues<dim> fe_face_values(fe, face_quadrature,
-    update_normal_vectors);
+  FEFaceValues<dim> fe_face_values(fe, face_quadrature, update_normal_vectors);
   // loop over cells
   for (cell = dof_handler.begin_active(); cell != endc; ++cell)
   {
     // loop over faces of cell
-    for (unsigned int face = 0; face < GeometryInfo < dim > ::faces_per_cell;
-        ++face)
+    for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell; ++face)
     {
       // if face is at boundary
       if (cell->face(face)->at_boundary())
@@ -272,18 +280,19 @@ void Executioner<dim>::setBoundaryIndicators()
  * Max principle checks are not valid for Dirichlet nodes, so these nodes
  * must be excluded from limiting and DMP checks.
  */
-template<int dim>
+template <int dim>
 void Executioner<dim>::getDirichletNodes()
 {
   // get map of Dirichlet dof indices to Dirichlet values
   std::map<unsigned int, double> boundary_values;
-  VectorTools::interpolate_boundary_values(dof_handler, 1, ZeroFunction<dim>(),
-      boundary_values);
+  VectorTools::interpolate_boundary_values(
+    dof_handler, 1, ZeroFunction<dim>(), boundary_values);
 
   // extract dof indices from map
   dirichlet_nodes.clear();
   for (std::map<unsigned int, double>::iterator it = boundary_values.begin();
-      it != boundary_values.end(); ++it)
+       it != boundary_values.end();
+       ++it)
     dirichlet_nodes.push_back(it->first);
 }
 
@@ -295,28 +304,20 @@ void Executioner<dim>::getDirichletNodes()
  * @param [in,out] x system solution
  * @param [in] t  time at which Dirichlet value function is to be evaluated
  */
-template<int dim>
-void Executioner<dim>::applyDirichletBC(
-  SparseMatrix<double> & A,
-  Vector<double>       & b,
-  Vector<double>       & x,
-  const double         & t)
+template <int dim>
+void Executioner<dim>::applyDirichletBC(SparseMatrix<double> & A,
+                                        Vector<double> & b,
+                                        Vector<double> & x,
+                                        const double & t)
 {
-   // set time for dirichlet function
-   incoming_function->set_time(t);
+  // set time for dirichlet function
+  incoming_function->set_time(t);
 
-   // create map of dofs to boundary values to be imposed
-   std::map<unsigned int, double> boundary_values;
-   VectorTools::interpolate_boundary_values(
-     dof_handler,
-     1,
-     *incoming_function,
-     boundary_values);
+  // create map of dofs to boundary values to be imposed
+  std::map<unsigned int, double> boundary_values;
+  VectorTools::interpolate_boundary_values(
+    dof_handler, 1, *incoming_function, boundary_values);
 
-   // apply boundary values to system
-   MatrixTools::apply_boundary_values(
-     boundary_values,
-     A,
-     x,
-     b);
+  // apply boundary values to system
+  MatrixTools::apply_boundary_values(boundary_values, A, x, b);
 }

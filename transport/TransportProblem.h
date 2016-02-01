@@ -37,18 +37,16 @@ using namespace dealii;
 /**
  * Class for defining and running a transport problem.
  */
-template<int dim>
+template <int dim>
 class TransportProblem
 {
 public:
-
-  TransportProblem(const TransportParameters<dim> &parameters);
+  TransportProblem(const TransportParameters<dim> & parameters);
   ~TransportProblem();
 
   void run();
 
 private:
-
   void initializeSystem();
   void processProblemID();
 
@@ -63,7 +61,7 @@ private:
   std::map<std::string, double> function_parser_constants;
   Tensor<1, dim> transport_direction;
   FunctionParser<dim> initial_conditions;
-  std::shared_ptr<Function<dim> > exact_solution_function;
+  std::shared_ptr<Function<dim>> exact_solution_function;
   FunctionParser<dim> source_function;
   FunctionParser<dim> cross_section_function;
   FunctionParser<dim> incoming_function;

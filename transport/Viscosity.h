@@ -16,26 +16,24 @@ using namespace dealii;
 /**
  * Class for a general cell-based artificial viscosity.
  */
-template<int dim>
+template <int dim>
 class Viscosity
 {
 public:
-
-  Viscosity(const unsigned int      n_cells,
-            const unsigned int      dofs_per_cell,
-            const DoFHandler<dim>  &dof_handler,
-            const ConstraintMatrix &constraints);
+  Viscosity(const unsigned int n_cells,
+            const unsigned int dofs_per_cell,
+            const DoFHandler<dim> & dof_handler,
+            const ConstraintMatrix & constraints);
   ~Viscosity();
 
-  void add_diffusion_matrix(const SparseMatrix<double> &inviscid_matrix,
-                                  SparseMatrix<double> &diffusion_matrix,
-                                  SparseMatrix<double> &total_matrix);
+  void add_diffusion_matrix(const SparseMatrix<double> & inviscid_matrix,
+                            SparseMatrix<double> & diffusion_matrix,
+                            SparseMatrix<double> & total_matrix);
   double get_viscosity_value(const unsigned int i) const;
   void output_viscosity(const std::string output_file) const;
 
 protected:
-
-  void compute_diffusion_matrix(SparseMatrix<double> &diffusion_matrix);
+  void compute_diffusion_matrix(SparseMatrix<double> & diffusion_matrix);
 
   Vector<double> viscosity;
 

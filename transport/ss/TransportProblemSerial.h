@@ -69,70 +69,71 @@ namespace LA
 
 using namespace dealii;
 
-template<int dim>
-class TransportProblem {
-   public:
-      TransportProblem(const TransportParameters<dim> &parameters);
-      ~TransportProblem();
-      void run();
+template <int dim>
+class TransportProblem
+{
+public:
+  TransportProblem(const TransportParameters<dim> & parameters);
+  ~TransportProblem();
+  void run();
 
-   private:
-      // functions
-      void initialize_system();
-      void setup_system();
-      void assemble_system();
-      void solve();
-      void refine_grid();
-      void set_boundary_indicators();
-      void process_problem_ID();
-      void output_solution();
+private:
+  // functions
+  void initialize_system();
+  void setup_system();
+  void assemble_system();
+  void solve();
+  void refine_grid();
+  void set_boundary_indicators();
+  void process_problem_ID();
+  void output_solution();
 
-      // input parameters
-      const TransportParameters<dim> &parameters;
+  // input parameters
+  const TransportParameters<dim> & parameters;
 
-      // mesh and dof data
-      Triangulation<dim> triangulation;
-      DoFHandler<dim> dof_handler;
-      unsigned int n_cells;
-      unsigned int n_dofs;
-      const unsigned int degree;
-      const FE_Q<dim> fe;
-      const unsigned int dofs_per_cell;
-      const unsigned int faces_per_cell;
+  // mesh and dof data
+  Triangulation<dim> triangulation;
+  DoFHandler<dim> dof_handler;
+  unsigned int n_cells;
+  unsigned int n_dofs;
+  const unsigned int degree;
+  const FE_Q<dim> fe;
+  const unsigned int dofs_per_cell;
+  const unsigned int faces_per_cell;
 
-      // quadrature data
-      const QGauss<dim>   cell_quadrature;
-      const QGauss<dim-1> face_quadrature;
-      const unsigned int n_q_points_cell;
-      const unsigned int n_q_points_face;
+  // quadrature data
+  const QGauss<dim> cell_quadrature;
+  const QGauss<dim - 1> face_quadrature;
+  const unsigned int n_q_points_cell;
+  const unsigned int n_q_points_face;
 
-      // sparse matrices, sparsity patterns, and constraints
-      ConstraintMatrix constraints;
-      SparsityPattern constrained_sparsity_pattern;
-      SparseMatrix<double> system_matrix;
+  // sparse matrices, sparsity patterns, and constraints
+  ConstraintMatrix constraints;
+  SparsityPattern constrained_sparsity_pattern;
+  SparseMatrix<double> system_matrix;
 
-      // vectors for solutions and right hand sides
-      Vector<double> solution;
-      Vector<double> system_rhs;
+  // vectors for solutions and right hand sides
+  Vector<double> solution;
+  Vector<double> system_rhs;
 
-      // physics data
-      std::map<std::string,double> function_parser_constants;
-      Tensor<1,dim> transport_direction;
-      FunctionParser<dim> exact_solution_function;
-      FunctionParser<dim> source_function;
-      FunctionParser<dim> cross_section_function;
-      FunctionParser<dim> incoming_function;
-      std::string exact_solution_string;
-      std::string source_string;
-      std::string cross_section_string;
-      std::string incoming_string;
-      bool has_exact_solution;
-      double x_min;
-      double x_max;
-      double domain_volume;
+  // physics data
+  std::map<std::string, double> function_parser_constants;
+  Tensor<1, dim> transport_direction;
+  FunctionParser<dim> exact_solution_function;
+  FunctionParser<dim> source_function;
+  FunctionParser<dim> cross_section_function;
+  FunctionParser<dim> incoming_function;
+  std::string exact_solution_string;
+  std::string source_string;
+  std::string cross_section_string;
+  std::string incoming_string;
+  bool has_exact_solution;
+  double x_min;
+  double x_max;
+  double domain_volume;
 
-      // timer
-      TimerOutput computing_timer;
+  // timer
+  TimerOutput computing_timer;
 };
 
 #include "TransportProblemSerial.cc"

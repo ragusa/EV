@@ -18,40 +18,42 @@ using namespace dealii;
 /**
  * Class for outputting solutions and evaluating error and convergence.
  */
-template<int dim>
+template <int dim>
 class PostProcessor
 {
 public:
-
   PostProcessor(const TransportParameters<dim> & parameters,
-    const bool has_exact_solution, std::shared_ptr<Function<dim> > & exact_solution_function);
+                const bool has_exact_solution,
+                std::shared_ptr<Function<dim>> & exact_solution_function);
   ~PostProcessor();
 
-  void output_results(const Vector<double> &solution,
-    const DoFHandler<dim> &dof_handler, const Triangulation<dim> &triangulation);
-  void output_solution(const Vector<double> &solution,
-    const DoFHandler<dim> &dof_handler, const std::string &output_string) const;
-  void output_viscosity(const Vector<double> &low_order_viscosity,
-    const Vector<double> &entropy_viscosity,
-    const Vector<double> &high_order_viscosity,
-    const DoFHandler<dim> &dof_handler) const;
-  void evaluate_error(const Vector<double> &solution,
-    const DoFHandler<dim> &dof_handler, const Triangulation<dim> &triangulation);
-  void update_dt(const double &dt);
+  void output_results(const Vector<double> & solution,
+                      const DoFHandler<dim> & dof_handler,
+                      const Triangulation<dim> & triangulation);
+  void output_solution(const Vector<double> & solution,
+                       const DoFHandler<dim> & dof_handler,
+                       const std::string & output_string) const;
+  void output_viscosity(const Vector<double> & low_order_viscosity,
+                        const Vector<double> & entropy_viscosity,
+                        const Vector<double> & high_order_viscosity,
+                        const DoFHandler<dim> & dof_handler) const;
+  void evaluate_error(const Vector<double> & solution,
+                      const DoFHandler<dim> & dof_handler,
+                      const Triangulation<dim> & triangulation);
+  void update_dt(const double & dt);
   void setCycle(const unsigned int & cycle);
   bool askIfLastCycle() const;
 
 private:
-
-  void output_grid(const Triangulation<dim> &triangulation) const;
-  void create_directory(const std::string &dir) const;
+  void output_grid(const Triangulation<dim> & triangulation) const;
+  void create_directory(const std::string & dir) const;
 
   const TransportParameters<dim> parameters;
 
   ConvergenceTable convergence_table;
 
   const bool has_exact_solution;
-  std::shared_ptr<Function<dim> > exact_solution_function;
+  std::shared_ptr<Function<dim>> exact_solution_function;
 
   double dt_nominal;
   const bool is_steady_state;

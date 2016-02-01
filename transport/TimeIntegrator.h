@@ -6,10 +6,9 @@ using namespace dealii;
 /**
  * Time integrator base class.
  */
-template<int dim>
+template <int dim>
 class TimeIntegrator
 {
-
 };
 
 #include "TimeIntegrator.cc"

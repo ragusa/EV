@@ -18,26 +18,25 @@ using namespace dealii;
 /**
  * \brief Class for nonlinear solver.
  */
-template<int dim>
+template <int dim>
 class NonlinearSolver
 {
 public:
+  NonlinearSolver(const TransportParameters<dim> & parameters,
+                  const ConstraintMatrix & constraints,
+                  const DoFHandler<dim> & dof_handler,
+                  Function<dim> & dirichlet_value_function);
 
-  NonlinearSolver(
-    const TransportParameters<dim> & parameters,
-    const ConstraintMatrix         & constraints,
-    const DoFHandler<dim>          & dof_handler,
-    Function<dim>                  & dirichlet_value_function);
+  void reinit();
 
   void initialize(Vector<double> & solution_guess);
 
   bool update(const SparseMatrix<double> & A, const Vector<double> & b);
 
 protected:
-
   /** \brief exception for reaching the maximum iteration */
-  DeclException1(ExcMaxIterationReached, unsigned int,
-    << "Max iteration reached: " << arg1);
+  DeclException1(
+    ExcMaxIterationReached, unsigned int, << "Max iteration reached: " << arg1);
 
   bool check_convergence(const Vector<double> & residual);
 
@@ -55,8 +54,8 @@ protected:
   /** \brief Constraint matrix */
   const ConstraintMatrix & constraints;
 
-  /** \brief Degree of freedom handler, used in linear solver */
-  const DoFHandler<dim> & dof_handler;
+  /** \brief Pointer to degree of freedom handler, used in linear solver */
+  const DoFHandler<dim> * const dof_handler;
 
   /** \brief function for Dirichlet BC values, used in linear solver */
   Function<dim> & dirichlet_value_function;

@@ -15,38 +15,39 @@ using namespace dealii;
 /**
  * Class for solving linear systems.
  */
-template<int dim>
-class LinearSolver {
-   public:
-      LinearSolver(const unsigned int     & linear_solver_option,
-                   const ConstraintMatrix & constraints,
-                   const DoFHandler<dim>  & dof_handler,
-                   Function<dim>          & dirichlet_value_function);
-      ~LinearSolver();
+template <int dim>
+class LinearSolver
+{
+public:
+  LinearSolver(const unsigned int & linear_solver_option,
+               const ConstraintMatrix & constraints,
+               const DoFHandler<dim> & dof_handler,
+               Function<dim> & dirichlet_value_function);
+  ~LinearSolver();
 
-      void solve(const SparseMatrix<double> & A,
-                 const Vector<double>       & b,
-                 Vector<double>             & x);
+  void solve(const SparseMatrix<double> & A,
+             Vector<double> & x,
+             const Vector<double> & b);
 
-      void solve(SparseMatrix<double> & A,
-                 Vector<double>       & b,
-                 Vector<double>       & x,
-                 const bool           & apply_dirichlet_bc,
-                 const double         & t = 0);
+  void solve(SparseMatrix<double> & A,
+             Vector<double> & x,
+             Vector<double> & b,
+             const bool & apply_dirichlet_bc,
+             const double & t = 0);
 
-   private:
-      void apply_Dirichlet_BC(SparseMatrix<double> &A,
-                              Vector<double>       &b,
-                              Vector<double>       &x,
-                              const double          t);
+private:
+  void apply_Dirichlet_BC(SparseMatrix<double> & A,
+                          Vector<double> & b,
+                          Vector<double> & x,
+                          const double t);
 
-      const unsigned int linear_solver_option;
+  const unsigned int linear_solver_option;
 
-      const ConstraintMatrix * const constraints;
+  const ConstraintMatrix * const constraints;
 
-      const DoFHandler<dim> * const dof_handler;
+  const DoFHandler<dim> * const dof_handler;
 
-      Function<dim> * const dirichlet_value_function;
+  Function<dim> * const dirichlet_value_function;
 };
 
 #include "LinearSolver.cc"

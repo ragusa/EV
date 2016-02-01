@@ -8,42 +8,49 @@ using namespace dealii;
 /**
  * Parameters class for defining input parameters.
  */
-template<int dim>
+template <int dim>
 class TransportParameters
 {
 public:
   enum TemporalDiscretization
   {
-    SS, FE, CN, BE, BDF2, SSP2, SSP3
+    SS,
+    FE,
+    CN,
+    BE,
+    BDF2,
+    SSP2,
+    SSP3
   };
 
   enum RefinementMode
   {
-    space, time
+    space,
+    time
   };
 
   TransportParameters();
 
-  static void declare_parameters(ParameterHandler &prm);
-  void get_parameters(ParameterHandler &prm);
+  static void declare_parameters(ParameterHandler & prm);
+  void get_parameters(ParameterHandler & prm);
 
   // problem parameters
   unsigned int problem_id; // problem ID
 
   // time parameters
-  double end_time; // end time if transient problem is run
+  double end_time;       // end time if transient problem is run
   double time_step_size; // time step size if transient problem is run
-  double CFL_limit; // upper bound for the CFL number
+  double CFL_limit;      // upper bound for the CFL number
   TemporalDiscretization time_discretization_option;
 
   // viscosity parameters
   unsigned int viscosity_option; // option for viscosity used
 
   // entropy viscosity parameters
-  std::string entropy_string; // string for entropy function
+  std::string entropy_string;            // string for entropy function
   std::string entropy_derivative_string; // string for entropy derivative function
-  double entropy_residual_coefficient; // value of entropy residual coefficient
-  double jump_coefficient; // value of jump coefficient
+  double entropy_residual_coefficient;   // value of entropy residual coefficient
+  double jump_coefficient;               // value of jump coefficient
   TemporalDiscretization EV_time_discretization;
 
   // fct parameters
@@ -51,32 +58,33 @@ public:
 
   // refinement parameters
   RefinementMode refinement_mode;
-  double time_refinement_factor; // reduction factor for time refinement
-  bool use_adaptive_refinement; // option to use adaptive mesh refinement
+  double time_refinement_factor;         // reduction factor for time refinement
+  bool use_adaptive_refinement;          // option to use adaptive mesh refinement
   unsigned int initial_refinement_level; // initial level of refinement
-  unsigned int n_refinement_cycles; // number of refinement cycles
+  unsigned int n_refinement_cycles;      // number of refinement cycles
 
   // finite element parameters
   unsigned int degree; // polynomial degree of finite elements
-  unsigned int n_quadrature_points; // number of quadrature points to use in formula
+  unsigned int
+    n_quadrature_points; // number of quadrature points to use in formula
 
   // linear solver options
   unsigned int linear_solver_option; // linear solver option
 
   // nonlinear solver options
   unsigned int nonlinear_solver_option; // nonlinear solver option
-  double nonlinear_tolerance; // nonlinear solver tolerance
+  double nonlinear_tolerance;           // nonlinear solver tolerance
   unsigned int nonlinear_max_iteration; // maximum iteration
   double relaxation_factor; // relaxation factor for nonlinear solution updates
 
   // output options
-  bool output_mesh; // option to output mesh as .eps file
+  bool output_mesh;           // option to output mesh as .eps file
   bool output_exact_solution; // option to output exact solution
   unsigned int exact_solution_refinement_level; // refinement level exact solution
-  bool output_initial_solution; // option to output initial solution
-  bool output_DMP_bounds; // option to output DMP bounds
+  bool output_initial_solution;  // option to output initial solution
+  bool output_DMP_bounds;        // option to output DMP bounds
   bool save_convergence_results; // option to save convergence results
-  bool print_solution; // option to print final solution
+  bool print_solution;           // option to print final solution
 };
 
 #include "TransportParameters.cc"

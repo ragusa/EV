@@ -1,11 +1,11 @@
 /**
  * Constructor.
  */
-template<int dim>
+template <int dim>
 RefinementHandler<dim>::RefinementHandler(
   const TransportParameters<dim> & parameters_,
-  Triangulation<dim> & triangulation_) :
-    triangulation(& triangulation_),
+  Triangulation<dim> & triangulation_)
+  : triangulation(&triangulation_),
     refinement_mode(parameters_.refinement_mode),
     use_adaptive_refinement(parameters_.use_adaptive_refinement),
     time_refinement_factor(parameters_.time_refinement_factor)
@@ -15,7 +15,7 @@ RefinementHandler<dim>::RefinementHandler(
 /**
  * Destructor.
  */
-template<int dim>
+template <int dim>
 RefinementHandler<dim>::~RefinementHandler()
 {
 }
@@ -23,7 +23,7 @@ RefinementHandler<dim>::~RefinementHandler()
 /**
  * Refine the grid or time step size.
  */
-template<int dim>
+template <int dim>
 void RefinementHandler<dim>::refine(unsigned int cycle) const
 {
   if (cycle != 0)
@@ -31,17 +31,17 @@ void RefinementHandler<dim>::refine(unsigned int cycle) const
     // refine mesh if user selected the option
     switch (refinement_mode)
     {
-      case TransportParameters<dim>::RefinementMode::space :
+      case TransportParameters<dim>::RefinementMode::space:
       { // refine space
         refineGrid();
         break;
       }
-      case TransportParameters<dim>::RefinementMode::time :
+      case TransportParameters<dim>::RefinementMode::time:
       { // refine time
         ExcNotImplemented();
         break;
       }
-      default :
+      default:
       {
         ExcNotImplemented();
       }
@@ -52,10 +52,9 @@ void RefinementHandler<dim>::refine(unsigned int cycle) const
 /**
  * Refines the grid.
  */
-template<int dim>
+template <int dim>
 void RefinementHandler<dim>::refineGrid() const
 {
-
   Assert(use_adaptive_refinement == false, ExcNotImplemented());
   /*
    // refine adaptively or uniformly

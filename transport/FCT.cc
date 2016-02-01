@@ -1,16 +1,18 @@
-template<int dim>
-FCT<dim>::FCT(
-  const DoFHandler<dim> &dof_handler,
-  Triangulation<dim> &triangulation,
-  const SparseMatrix<double> &lumped_mass_matrix,
-  const SparseMatrix<double> &consistent_mass_matrix,
-  const LinearSolver<dim> &linear_solver,
-  const SparsityPattern &sparsity_pattern,
-  const std::vector<unsigned int> &dirichlet_nodes,
-  const unsigned int &n_dofs,
-  const unsigned int &dofs_per_cell,
-  const bool &do_not_limit) :
-    dof_handler(&dof_handler),
+/**
+ * \brief Constructor for transient schemes.
+ */
+template <int dim>
+FCT<dim>::FCT(const DoFHandler<dim> & dof_handler,
+              Triangulation<dim> & triangulation,
+              const SparseMatrix<double> & lumped_mass_matrix,
+              const SparseMatrix<double> & consistent_mass_matrix,
+              const LinearSolver<dim> & linear_solver,
+              const SparsityPattern & sparsity_pattern,
+              const std::vector<unsigned int> & dirichlet_nodes,
+              const unsigned int & n_dofs,
+              const unsigned int & dofs_per_cell,
+              const bool & do_not_limit)
+  : dof_handler(&dof_handler),
     triangulation(&triangulation),
     lumped_mass_matrix(&lumped_mass_matrix),
     consistent_mass_matrix(&consistent_mass_matrix),
@@ -19,7 +21,7 @@ FCT<dim>::FCT(
     n_dofs(n_dofs),
     dofs_per_cell(dofs_per_cell),
     do_not_limit(do_not_limit),
-    DMP_satisfied_at_all_steps(true)
+    DMP_satisfied(true)
 {
   // allocate memory for vectors
   tmp_vector.reinit(n_dofs);
@@ -37,24 +39,59 @@ FCT<dim>::FCT(
   flux_correction_matrix.reinit(sparsity_pattern);
 }
 
-template<int dim>
-FCT<dim>::~FCT()
+/**
+ * \brief Constructor for steady-state schemes.
+ */
+template <int dim>
+FCT<dim>::FCT(const DoFHandler<dim> & dof_handler,
+              Triangulation<dim> & triangulation,
+              const LinearSolver<dim> & linear_solver,
+              const SparsityPattern & sparsity_pattern,
+              const std::vector<unsigned int> & dirichlet_nodes,
+              const unsigned int & n_dofs,
+              const unsigned int & dofs_per_cell,
+              const bool & do_not_limit)
+  : dof_handler(&dof_handler),
+    triangulation(&triangulation),
+    linear_solver(linear_solver),
+    dirichlet_nodes(dirichlet_nodes),
+    n_dofs(n_dofs),
+    dofs_per_cell(dofs_per_cell),
+    do_not_limit(do_not_limit),
+    DMP_satisfied(true)
 {
+  // allocate memory for vectors
+  tmp_vector.reinit(n_dofs);
+  system_rhs.reinit(n_dofs);
+  solution_min.reinit(n_dofs);
+  solution_max.reinit(n_dofs);
+  flux_correction_vector.reinit(n_dofs);
+  Q_minus.reinit(n_dofs);
+  Q_plus.reinit(n_dofs);
+  R_minus.reinit(n_dofs);
+  R_plus.reinit(n_dofs);
+
+  // initialize sparse matrices
+  system_matrix.reinit(sparsity_pattern);
+  flux_correction_matrix.reinit(sparsity_pattern);
 }
 
-template<int dim>
+template <int dim>
 void FCT<dim>::solve_FCT_system(
-  Vector<double> &new_solution,
-  const Vector<double> &old_solution,
-  const SparseMatrix<double> &low_order_ss_matrix,
-  const Vector<double> &ss_rhs,
-  const double &dt,
-  const SparseMatrix<double> &low_order_diffusion_matrix,
-  const SparseMatrix<double> &high_order_diffusion_matrix)
+  Vector<double> & new_solution,
+  const Vector<double> & old_solution,
+  const SparseMatrix<double> & low_order_ss_matrix,
+  const Vector<double> & ss_rhs,
+  const double & dt,
+  const SparseMatrix<double> & low_order_diffusion_matrix,
+  const SparseMatrix<double> & high_order_diffusion_matrix)
 {
   // compute flux corrections
-  compute_flux_corrections(new_solution, old_solution, dt,
-    low_order_diffusion_matrix, high_order_diffusion_matrix);
+  compute_flux_corrections(new_solution,
+                           old_solution,
+                           dt,
+                           low_order_diffusion_matrix,
+                           high_order_diffusion_matrix);
 
   // compute max principle min and max values
   compute_bounds(old_solution, low_order_ss_matrix, ss_rhs, dt);
@@ -68,75 +105,28 @@ void FCT<dim>::solve_FCT_system(
   lumped_mass_matrix->vmult(tmp_vector, old_solution);
   system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
   low_order_ss_matrix.vmult(tmp_vector, old_solution);
-  system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old)
-  system_rhs.add(dt, flux_correction_vector);   // now, system_rhs is complete
+  system_rhs.add(
+    -dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old)
+  system_rhs.add(dt, flux_correction_vector); // now, system_rhs is complete
 
   // solve the linear system M*u_new = system_rhs
   system_matrix.copy_from(*lumped_mass_matrix);
-  linear_solver.solve(system_matrix, system_rhs, new_solution, true);
+  linear_solver.solve(system_matrix, new_solution, system_rhs, true);
 
   // check that local discrete maximum principle is satisfied at all time steps
-  bool DMP_satisfied_this_step = check_max_principle(new_solution,
-    low_order_ss_matrix, dt);
-  DMP_satisfied_at_all_steps = DMP_satisfied_at_all_steps
-    and DMP_satisfied_this_step;
-}
-
-/**
- * \brief Solves a steady-state FCT system.
- *
- * \param[in,out] new_solution     solution vector
- * \param[in] low_order_ss_matrix  low-order steady-state matrix
- * \param[in] ss_rhs               low-order steady-state right-hand-side
- * \param[in] low_order_diffusion_matrix   low-order diffusion matrix
- * \param[in] high_order_diffusion_matrix  high-order diffusion matrix
- */
-template<int dim>
-void FCT<dim>::solve_ss_FCT_system(
-  Vector<double> &new_solution,
-  const SparseMatrix<double> &low_order_ss_matrix,
-  const Vector<double> &ss_rhs,
-  const SparseMatrix<double> &low_order_diffusion_matrix,
-  const SparseMatrix<double> &high_order_diffusion_matrix)
-{
-  // compute flux corrections
-  compute_flux_corrections(new_solution, new_solution, 1.0,
-    low_order_diffusion_matrix, high_order_diffusion_matrix);
-
- // iteration should begin here
-
-  // compute max principle min and max values
-  compute_steady_state_bounds(new_solution, low_order_ss_matrix, ss_rhs);
-
-  // compute limited flux correction sum and add it to rhs
-  compute_limiting_coefficients(old_solution, low_order_ss_matrix, ss_rhs, dt);
-
-  // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old + f)
-  system_rhs = 0;
-  system_rhs.add(dt, ss_rhs); //       now, system_rhs = dt*(ss_rhs)
-  lumped_mass_matrix->vmult(tmp_vector, old_solution);
-  system_rhs.add(1.0, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs)
-  low_order_ss_matrix.vmult(tmp_vector, old_solution);
-  system_rhs.add(-dt, tmp_vector); //  now, system_rhs = M*u_old + dt*(ss_rhs - (A+D)*u_old)
-  system_rhs.add(dt, flux_correction_vector);   // now, system_rhs is complete
-
-  // solve the linear system M*u_new = system_rhs
-  system_matrix.copy_from(*lumped_mass_matrix);
-  linear_solver.solve(system_matrix, system_rhs, new_solution, true);
-
-  // check that local discrete maximum principle is satisfied at all time steps
-  DMP_satisfied = check_max_principle(new_solution, low_order_ss_matrix, dt);
+  bool DMP_satisfied_this_step =
+    check_max_principle(new_solution, low_order_ss_matrix, dt);
+  DMP_satisfied = DMP_satisfied and DMP_satisfied_this_step;
 }
 
 /**
  * \brief Computes solution bounds for the transient case.
  */
-template<int dim>
-void FCT<dim>::compute_bounds(
-  const Vector<double> &old_solution,
-  const SparseMatrix<double> &low_order_ss_matrix,
-  const Vector<double> &ss_rhs,
-  const double &dt)
+template <int dim>
+void FCT<dim>::compute_bounds(const Vector<double> & old_solution,
+                              const SparseMatrix<double> & low_order_ss_matrix,
+                              const Vector<double> & ss_rhs,
+                              const double & dt)
 {
   for (unsigned int i = 0; i < n_dofs; ++i)
   {
@@ -146,7 +136,8 @@ void FCT<dim>::compute_bounds(
 
   // loop over cells
   typename DoFHandler<dim>::active_cell_iterator cell =
-    dof_handler->begin_active(), endc = dof_handler->end();
+                                                   dof_handler->begin_active(),
+                                                 endc = dof_handler->end();
   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
   for (; cell != endc; ++cell)
   {
@@ -192,23 +183,22 @@ void FCT<dim>::compute_bounds(
       row_sum += row_values[k];
 
     // compute the max and min values for the maximum principle
-    solution_max(i) = solution_max(i)
-      * (1.0 - dt / (*lumped_mass_matrix)(i, i) * row_sum)
-      + dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
-    solution_min(i) = solution_min(i)
-      * (1.0 - dt / (*lumped_mass_matrix)(i, i) * row_sum)
-      + dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
+    solution_max(i) =
+      solution_max(i) * (1.0 - dt / (*lumped_mass_matrix)(i, i) * row_sum) +
+      dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
+    solution_min(i) =
+      solution_min(i) * (1.0 - dt / (*lumped_mass_matrix)(i, i) * row_sum) +
+      dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
   }
 }
 
 /**
  * \brief Computes solution bounds for the steady-state case.
  */
-template<int dim>
-void FCT<dim>::compute_steady_state_bounds(
-  const Vector<double> &solution,
-  const SparseMatrix<double> &low_order_ss_matrix,
-  const Vector<double> &ss_rhs)
+template <int dim>
+void FCT<dim>::compute_bounds_ss(const Vector<double> & solution,
+                                 const SparseMatrix<double> & low_order_ss_matrix,
+                                 const Vector<double> & ss_rhs)
 {
   // initialize min and max values
   for (unsigned int i = 0; i < n_dofs; ++i)
@@ -219,7 +209,8 @@ void FCT<dim>::compute_steady_state_bounds(
 
   // loop over cells to get min and max solution values
   typename DoFHandler<dim>::active_cell_iterator cell =
-    dof_handler->begin_active(), endc = dof_handler->end();
+                                                   dof_handler->begin_active(),
+                                                 endc = dof_handler->end();
   std::vector<unsigned int> local_dof_indices(dofs_per_cell);
   for (; cell != endc; ++cell)
   {
@@ -248,100 +239,128 @@ void FCT<dim>::compute_steady_state_bounds(
   // compute the upper and lower bounds for the maximum principle
   for (unsigned int i = 0; i < n_dofs; ++i)
   {
-    // compute sum of low-order ss matrix over row i
     // get nonzero entries of row i of A
     std::vector<double> row_values;
     std::vector<unsigned int> row_indices;
     unsigned int n_col;
     get_matrix_row(low_order_ss_matrix, i, row_values, row_indices, n_col);
+
     // add nonzero entries to get the row sum
-    double row_sum = 0.0;
+    double diagonal_term = 0.0;
+    double off_diagonal_sum = 0.0;
     for (unsigned int k = 0; k < n_col; ++k)
-      row_sum += row_values[k];
+      if (row_indices[k] == i)
+        diagonal_term = row_values[k];
+      else
+        off_diagonal_sum += row_values[k];
 
     // compute the max and min values for the maximum principle
-    solution_max(i) = solution_max(i)
-      * (1.0 - row_sum / low_order_ss_matrix(i, i))
-      + ss_rhs(i) / low_order_ss_matrix(i, i);
-    solution_min(i) = solution_min(i)
-      * (1.0 - row_sum / low_order_ss_matrix(i, i))
-      + ss_rhs(i) / low_order_ss_matrix(i, i);
+    solution_max(i) = -off_diagonal_sum / diagonal_term * solution_max(i) +
+      ss_rhs(i) / diagonal_term;
+    solution_min(i) = -off_diagonal_sum / diagonal_term * solution_min(i) +
+      ss_rhs(i) / diagonal_term;
   }
 }
 
-/** \brief Assembles the flux correction matrix.
+/**
+ * \brief Assembles the flux correction matrix for transient schemes.
  *
- *  \param [in] dt current time step size
+ * \param[in] dt current time step size
  */
-template<int dim>
+template <int dim>
 void FCT<dim>::compute_flux_corrections(
-  const Vector<double> &high_order_solution,
-  const Vector<double> &old_solution,
-  const double &dt,
-  const SparseMatrix<double> &low_order_diffusion_matrix,
-  const SparseMatrix<double> &high_order_diffusion_matrix)
+  const Vector<double> & high_order_solution,
+  const Vector<double> & old_solution,
+  const double & dt,
+  const SparseMatrix<double> & low_order_diffusion_matrix,
+  const SparseMatrix<double> & high_order_diffusion_matrix)
 {
   // reset flux correction matrix to zero
   flux_correction_matrix = 0;
 
   // compute time derivative of high-order solution
-  tmp_vector = 0;
-  tmp_vector.add(1.0 / dt, high_order_solution, -1.0 / dt, old_solution);
+  Vector<double> & dUdt = tmp_vector;
+  dUdt = 0;
+  dUdt.add(1.0 / dt, high_order_solution, -1.0 / dt, old_solution);
 
-  // cell iterator
-  typename DoFHandler<dim>::active_cell_iterator cell =
-    dof_handler->begin_active(), endc = dof_handler->end();
+  // iterate over sparse matrix entries
+  SparseMatrix<double>::const_iterator it_mass = consistent_mass_matrix->begin();
+  SparseMatrix<double>::const_iterator it_low =
+    low_order_diffusion_matrix.begin();
+  SparseMatrix<double>::const_iterator it_high =
+    high_order_diffusion_matrix.begin();
+  SparseMatrix<double>::iterator it_flux = flux_correction_matrix.begin();
+  SparseMatrix<double>::iterator it_end = flux_correction_matrix.end();
 
-  // reset line flags
-  triangulation->clear_user_flags_line();
-
-  // dof indices for a line
-  std::vector<unsigned int> local_dof_indices(2);
-
-  // loop over cells
-  unsigned int i_cell = 0;
-  unsigned int i_line = 0;
-  for (cell = dof_handler->begin_active(); cell != endc; ++cell, ++i_cell)
+  for (; it_flux != it_end; ++it_flux, ++it_mass, ++it_low, ++it_high)
   {
-    // loop over lines of cell
-    for (unsigned int line = 0; line < GeometryInfo < dim > ::lines_per_cell;
-      ++line, ++i_line)
-    {
-      if (!cell->line(line)->user_flag_set())
-      {
+    // get row and column indices
+    const unsigned int i = it_flux->row();
+    const unsigned int j = it_flux->column();
 
-        // mark line so that the same flux isn't recomputed
-        cell->line(line)->set_user_flag();
+    // get values
+    const double Mij = it_mass->value();
+    const double DLij = it_low->value();
+    const double DHij = it_high->value();
 
-        // get dof indices on line
-        cell->line(line)->get_dof_indices(local_dof_indices);
-        unsigned int i = local_dof_indices[0];
-        unsigned int j = local_dof_indices[1];
+    // compute flux correction entry
+    const double Fij = -Mij * (dUdt(j) - dUdt(i)) +
+      (DLij - DHij) * (old_solution(j) - old_solution(i));
 
-        // compute flux
-        double Fij = -(*consistent_mass_matrix)(i, j)
-          * (tmp_vector(j) - tmp_vector(i))
-          + (low_order_diffusion_matrix(i, j) - high_order_diffusion_matrix(i, j))
-            * (old_solution(j) - old_solution(i));
-
-        // store flux
-        flux_correction_matrix.set(i, j, Fij);
-        flux_correction_matrix.set(j, i, -Fij);
-      }
-    }
+    // store value
+    it_flux->value() = Fij;
   }
 }
 
-/** \brief Computes the limiting coefficient vectors \f$R^+\f$ and \f$R^-\f$,
- *         used for computing the high-order solution from the low-order
- *         solution.
+/**
+ * \brief Assembles the flux correction matrix for steady-state schemes.
  */
-template<int dim>
+template <int dim>
+void FCT<dim>::compute_flux_corrections_ss(
+  const Vector<double> & high_order_solution,
+  const SparseMatrix<double> & low_order_diffusion_matrix,
+  const SparseMatrix<double> & high_order_diffusion_matrix)
+{
+  // reset flux correction matrix to zero
+  flux_correction_matrix = 0;
+
+  // iterate over sparse matrix entries
+  SparseMatrix<double>::const_iterator it_low =
+    low_order_diffusion_matrix.begin();
+  SparseMatrix<double>::const_iterator it_high =
+    high_order_diffusion_matrix.begin();
+  SparseMatrix<double>::iterator it_flux = flux_correction_matrix.begin();
+  SparseMatrix<double>::iterator it_end = flux_correction_matrix.end();
+
+  for (; it_flux != it_end; ++it_flux, ++it_low, ++it_high)
+  {
+    // get row and column indices
+    const unsigned int i = it_flux->row();
+    const unsigned int j = it_flux->column();
+
+    // get values
+    const double DLij = it_low->value();
+    const double DHij = it_high->value();
+
+    // compute flux correction entry
+    const double Fij =
+      (DLij - DHij) * (high_order_solution(j) - high_order_solution(i));
+
+    // store value
+    it_flux->value() = Fij;
+  }
+}
+
+/**
+ * \brief Computes the limiting coefficient vectors \f$\mathbf{L}^+\f$ and
+ *        \f$\mathbf{L}^-\f$ for transient schemes.
+ */
+template <int dim>
 void FCT<dim>::compute_limiting_coefficients(
-  const Vector<double> &old_solution,
-  const SparseMatrix<double> &low_order_ss_matrix,
-  const Vector<double> &ss_rhs,
-  const double &dt)
+  const Vector<double> & old_solution,
+  const SparseMatrix<double> & low_order_ss_matrix,
+  const Vector<double> & ss_rhs,
+  const double & dt)
 {
   // reset flux correction vector
   flux_correction_vector = 0;
@@ -368,9 +387,10 @@ void FCT<dim>::compute_limiting_coefficients(
 
   for (unsigned int i = 0; i < n_dofs; ++i)
   {
-    // for Dirichlet nodes, set R_minus and R_plus to 1 because no limiting is needed
-    if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i)
-      != dirichlet_nodes.end())
+    // for Dirichlet nodes, set R_minus and R_plus to 1 because no limiting is
+    // needed
+    if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) !=
+        dirichlet_nodes.end())
     {
       R_minus(i) = 1.0;
       R_plus(i) = 1.0;
@@ -448,20 +468,153 @@ void FCT<dim>::compute_limiting_coefficients(
   }
 }
 
-/** \brief Gets the values and indices of nonzero elements in a row of a sparse matrix.
+/**
+ * \brief Computes the limiting coefficient vectors \f$\mathbf{L}^+\f$ and
+ *        \f$\mathbf{L}^-\f$ for the steady-state case.
+ *
+ * \f[
+ *   Q_i^\pm \equiv A_{i,i}^L W_i^\pm + \sum\limits_{j\ne i}A_{i,j}^L U_j - b_i
+ * \f]
+ *
+ * \param[in] solution solution iterate \f$\mathbf{U}^{(\ell)}\f$
+ * \param[in] low_order_ss_matrix low-order steady-state matrix \f$\mathbf{A}^L\f$
+ * \param[in] ss_rhs steady-state right-hand-side vector \f$\mathbf{b}\f$
+ */
+template <int dim>
+void FCT<dim>::compute_limiting_coefficients_ss(
+  const Vector<double> & solution,
+  const SparseMatrix<double> & low_order_ss_matrix,
+  const Vector<double> & ss_rhs)
+{
+  // reset flux correction vector
+  flux_correction_vector = 0;
+
+  // compute Q- and Q+
+  for (unsigned int i = 0; i < n_dofs; ++i)
+  {
+    // get nonzero entries in row i of low-order steady-state matrix
+    std::vector<double> row_values;
+    std::vector<unsigned int> row_indices;
+    unsigned int n_col;
+    get_matrix_row(low_order_ss_matrix, i, row_values, row_indices, n_col);
+
+    // compute Q-(i) and Q+(i)
+    Q_minus[i] = -ss_rhs[i];
+    Q_plus[i] = -ss_rhs[i];
+    for (unsigned int k = 0; k < n_col; ++k)
+    {
+      if (row_indices[k] == i) // diagonal element of A^L
+      {
+        Q_minus[i] += row_values[k] * solution_min[i];
+        Q_plus[i] += row_values[k] * solution_max[i];
+      }
+      else // off-diagonal element of A^L
+      {
+        const unsigned int j = row_indices[k];
+        Q_minus[i] += row_values[k] * solution[j];
+        Q_plus[i] += row_values[k] * solution[j];
+      }
+    }
+  }
+
+  // compute P-, P+, R-, and R+
+  for (unsigned int i = 0; i < n_dofs; ++i)
+  {
+    // for Dirichlet nodes, set R_minus and R_plus to 1 because no limiting is
+    // needed
+    if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) !=
+        dirichlet_nodes.end())
+    {
+      R_minus(i) = 1.0;
+      R_plus(i) = 1.0;
+    }
+    else
+    {
+      // get nonzero entries in row i of flux correction matrix
+      std::vector<double> row_values;
+      std::vector<unsigned int> row_indices;
+      unsigned int n_col;
+      get_matrix_row(flux_correction_matrix, i, row_values, row_indices, n_col);
+
+      // compute P_plus, P_minus
+      double P_plus_i = 0.0;
+      double P_minus_i = 0.0;
+      for (unsigned int k = 0; k < n_col; ++k)
+      {
+        // get value of nonzero entry k
+        double Pij = row_values[k];
+
+        P_plus_i += std::max(0.0, Pij);
+        P_minus_i += std::min(0.0, Pij);
+      }
+
+      // compute R_plus(i)
+      if (P_plus_i != 0.0)
+        R_plus(i) = std::min(1.0, Q_plus(i) / P_plus_i);
+      else
+        R_plus(i) = 1.0;
+
+      // compute R_minus(i)
+      if (P_minus_i != 0.0)
+        R_minus(i) = std::min(1.0, Q_minus(i) / P_minus_i);
+      else
+        R_minus(i) = 1.0;
+    }
+  }
+
+  // if user chose not to limit, set R+ and R- = 1 so that limiting
+  // coefficients will equal 1 and thus no limiting will occur
+  if (do_not_limit)
+  {
+    for (unsigned int i = 0; i < n_dofs; ++i)
+    {
+      R_minus(i) = 1.0;
+      R_plus(i) = 1.0;
+    }
+  }
+
+  // compute limited flux correction sum
+  for (unsigned int i = 0; i < n_dofs; ++i)
+  {
+    // get values and indices of nonzero entries in row i of coefficient matrix A
+    std::vector<double> row_values;
+    std::vector<unsigned int> row_indices;
+    unsigned int n_col;
+    get_matrix_row(flux_correction_matrix, i, row_values, row_indices, n_col);
+
+    // perform flux correction for dof i
+    // Note that flux correction sum is sum_{j in I(S_i)} of Lij*Fij.
+    for (unsigned int k = 0; k < n_col; ++k)
+    {
+      unsigned int j = row_indices[k];
+      double Pij = row_values[k];
+      // compute limiting coefficient Lij
+      double Lij;
+      if (Pij >= 0.0)
+        Lij = std::min(R_plus(i), R_minus(j));
+      else
+        Lij = std::min(R_minus(i), R_plus(j));
+
+      // add Lij*Fij to flux correction sum
+      flux_correction_vector(i) += Lij * Pij;
+    }
+  }
+}
+
+/** \brief Gets the values and indices of nonzero elements in a row of a sparse
+ * matrix.
  *  \param [in] matrix sparse matrix whose row will be retrieved
  *  \param [in] i index of row to be retrieved
  *  \param [out] row_values vector of values of nonzero entries of row i
  *  \param [out] row_indices vector of indices of nonzero entries of row i
  *  \param [out] n_col number of nonzero entries of row i
  */
-template<int dim>
-void FCT<dim>::get_matrix_row(
-  const SparseMatrix<double> &matrix,
-  const unsigned int &i,
-  std::vector<double> &row_values,
-  std::vector<unsigned int> &row_indices,
-  unsigned int &n_col)
+template <int dim>
+void FCT<dim>::get_matrix_row(const SparseMatrix<double> & matrix,
+                              const unsigned int & i,
+                              std::vector<double> & row_values,
+                              std::vector<unsigned int> & row_indices,
+                              unsigned int & n_col)
 {
   // get first and one-past-last iterator for row
   SparseMatrix<double>::const_iterator matrix_iterator = matrix.begin(i);
@@ -474,20 +627,21 @@ void FCT<dim>::get_matrix_row(
 
   // loop over columns in row
   for (unsigned int k = 0; matrix_iterator != matrix_iterator_end;
-    ++matrix_iterator, ++k)
+       ++matrix_iterator, ++k)
   {
     row_values[k] = matrix_iterator->value();
     row_indices[k] = matrix_iterator->column();
   }
 }
 
-/** \brief Check that the DMP is satisfied for a time step.
+/**
+ * \brief Check that the DMP is satisfied for a time step.
  */
-template<int dim>
+template <int dim>
 bool FCT<dim>::check_max_principle(
-  const Vector<double> &new_solution,
-  const SparseMatrix<double> &low_order_ss_matrix,
-  const double &dt)
+  const Vector<double> & new_solution,
+  const SparseMatrix<double> & low_order_ss_matrix,
+  const double & dt)
 {
   // machine precision for floating point comparisons
   const double machine_tolerance = 1.0e-12;
@@ -499,9 +653,10 @@ bool FCT<dim>::check_max_principle(
   bool local_max_principle_satisfied = true;
   for (unsigned int i = 0; i < n_dofs; ++i)
   {
-    // check if dof is a Dirichlet node or not - if it is, don't check max principle
-    if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i)
-      == dirichlet_nodes.end())
+    // check if dof is a Dirichlet node or not - if it is, don't check max
+    // principle
+    if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) ==
+        dirichlet_nodes.end())
     {
       double value_i = new_solution(i);
       // check lower bound
@@ -510,8 +665,8 @@ bool FCT<dim>::check_max_principle(
         local_max_principle_satisfied = false;
         // determine which condition was violated
         std::cout << "      Max principle lower bound violated with dof " << i
-          << " of low-order solution: " << std::scientific << value_i << " < "
-          << solution_min(i) << std::endl;
+                  << " of low-order solution: " << std::scientific << value_i
+                  << " < " << solution_min(i) << std::endl;
         debug_max_principle_low_order(i, low_order_ss_matrix, dt);
       }
       // check upper bound
@@ -520,8 +675,8 @@ bool FCT<dim>::check_max_principle(
         local_max_principle_satisfied = false;
         // determine which condition was violated
         std::cout << "      Max principle upper bound violated with dof " << i
-          << " of low-order solution: " << std::scientific << value_i << " > "
-          << solution_max(i) << std::endl;
+                  << " of low-order solution: " << std::scientific << value_i
+                  << " > " << solution_max(i) << std::endl;
         debug_max_principle_low_order(i, low_order_ss_matrix, dt);
       }
     }
@@ -534,7 +689,7 @@ bool FCT<dim>::check_max_principle(
   if (not local_max_principle_satisfied)
   {
     std::cout << "Program terminated due to max-principle violation."
-      << std::endl;
+              << std::endl;
     std::exit(0);
   }
 
@@ -547,11 +702,11 @@ bool FCT<dim>::check_max_principle(
  *         examines the conditions that are required to be met for
  *         the principle to be satisfied.
  */
-template<int dim>
+template <int dim>
 void FCT<dim>::debug_max_principle_low_order(
-  const unsigned int &i,
-  const SparseMatrix<double> &low_order_ss_matrix,
-  const double &dt)
+  const unsigned int & i,
+  const SparseMatrix<double> & low_order_ss_matrix,
+  const double & dt)
 {
   // flag to determine if no conditions were violated
   bool condition_violated = false;
@@ -569,7 +724,7 @@ void FCT<dim>::debug_max_principle_low_order(
   if (Aii < 0.0)
   {
     std::cout << "         DEBUG: diagonal element is negative: " << Aii
-      << std::endl;
+              << std::endl;
     condition_violated = true;
   }
 
@@ -590,7 +745,7 @@ void FCT<dim>::debug_max_principle_low_order(
       if (Aij > 0.0)
       {
         std::cout << "         DEBUG: off-diagonal element (" << i << "," << j
-          << ") is positive: " << Aij << std::endl;
+                  << ") is positive: " << Aij << std::endl;
         condition_violated = true;
       }
     }
@@ -600,43 +755,43 @@ void FCT<dim>::debug_max_principle_low_order(
   if (Aii < off_diagonal_sum)
   {
     std::cout << "         DEBUG: row is not diagonally dominant: Aii = " << Aii
-      << ", off-diagonal sum = " << off_diagonal_sum << std::endl;
+              << ", off-diagonal sum = " << off_diagonal_sum << std::endl;
     condition_violated = true;
   }
 
   // check that CFL condition is satisfied if transient problem
-  //if (!parameters.is_steady_state)
+  // if (!parameters.is_steady_state)
   //{
   double cfl = dt / (*lumped_mass_matrix)(i, i) * low_order_ss_matrix(i, i);
   if (cfl > 1.0)
   {
     std::cout << "         DEBUG: row does not satisfy CFL condition: CFL = "
-      << cfl << std::endl;
+              << cfl << std::endl;
     condition_violated = true;
   }
   //}
 
   // report if no conditions were violated
   if (not condition_violated)
-    std::cout
-      << "         DEBUG: No checks returned flags; deeper debugging is necessary."
-      << std::endl;
+    std::cout << "         DEBUG: No checks returned flags; deeper debugging is "
+                 "necessary."
+              << std::endl;
 }
 
-/* \brief Check to see if the DMP was satisfied at all time steps.
+/**
+ * \brief Check to see if the DMP was satisfied at all time steps.
  */
-template<int dim>
+template <int dim>
 bool FCT<dim>::check_DMP_satisfied()
 {
-  return DMP_satisfied_at_all_steps;
+  return DMP_satisfied;
 }
 
 /** \brief Outputs bounds to files.
  */
-template<int dim>
-void FCT<dim>::output_bounds(
-  const PostProcessor<dim> &postprocessor,
-  const std::string &description_string) const
+template <int dim>
+void FCT<dim>::output_bounds(const PostProcessor<dim> & postprocessor,
+                             const std::string & description_string) const
 {
   // create the strings for the output files
   std::stringstream DMP_min_ss;
@@ -649,4 +804,15 @@ void FCT<dim>::output_bounds(
   // use a method from the post-processor class to output the bounds
   postprocessor.output_solution(solution_min, *dof_handler, DMP_min_string);
   postprocessor.output_solution(solution_max, *dof_handler, DMP_max_string);
+}
+
+/**
+ * \brief Returns the limited flux correction vector
+ *
+ * \return the limited flux correction vector
+ */
+template <int dim>
+Vector<double> FCT<dim>::get_flux_correction_vector() const
+{
+  return flux_correction_vector;
 }

@@ -7,26 +7,36 @@
  * \param[in] dirichlet_value_function_  function for the Dirichlet BC to be
  *   imposed on the linear system
  */
-template<int dim>
+template <int dim>
 NonlinearSolver<dim>::NonlinearSolver(
   const TransportParameters<dim> & parameters_,
-  const ConstraintMatrix         & constraints_,
-  const DoFHandler<dim>          & dof_handler_,
-  Function<dim>                  & dirichlet_value_function_) :
-    relaxation_factor(parameters_.relaxation_factor),
+  const ConstraintMatrix & constraints_,
+  const DoFHandler<dim> & dof_handler_,
+  Function<dim> & dirichlet_value_function_)
+  : relaxation_factor(parameters_.relaxation_factor),
     nonlinear_tolerance(parameters_.nonlinear_tolerance),
     iteration_max(parameters_.nonlinear_max_iteration),
     constraints(constraints_),
-    dof_handler(dof_handler_),
+    dof_handler(&dof_handler_),
     dirichlet_value_function(dirichlet_value_function_),
     linear_solver(parameters_.linear_solver_option,
-      constraints,
-      dof_handler,
-      dirichlet_value_function),
+                  constraints,
+                  dof_handler_,
+                  dirichlet_value_function),
     iteration_number(0)
 {
+  // reinitialize number of degrees of freedom and vectors
+  reinit();
+}
+
+/**
+ * \brief Reinitializes number of degrees of freedom and vectors.
+ */
+template <int dim>
+void NonlinearSolver<dim>::reinit()
+{
   // get number of degrees of freedom
-  n_dofs = dof_handler_.n_dofs();
+  n_dofs = dof_handler->n_dofs();
 
   // reinitialize vectors
   solution_change.reinit(n_dofs);
@@ -38,7 +48,7 @@ NonlinearSolver<dim>::NonlinearSolver(
  *
  * \param[in] solution_guess  initial guess for the solution
  */
-template<int dim>
+template <int dim>
 void NonlinearSolver<dim>::initialize(Vector<double> & solution_guess)
 {
   // get pointer to solution vector, which current has a guess for the solution
@@ -58,7 +68,7 @@ void NonlinearSolver<dim>::initialize(Vector<double> & solution_guess)
  * \param[in] residual  residual for linear system
  * \return boolean convergence flag
  */
-template<int dim>
+template <int dim>
 bool NonlinearSolver<dim>::check_convergence(const Vector<double> & residual)
 {
   // increment iteration number
@@ -68,8 +78,8 @@ bool NonlinearSolver<dim>::check_convergence(const Vector<double> & residual)
   double nonlinear_err = residual.l2_norm();
 
   // print error
-  std::cout << "  (" << iteration_number << ") err = " <<
-    nonlinear_err << std::endl;
+  std::cout << "  (" << iteration_number << ") err = " << nonlinear_err
+            << std::endl;
 
   // determine if error is within the nonlinear tolerance
   if (nonlinear_err < nonlinear_tolerance)
@@ -80,7 +90,7 @@ bool NonlinearSolver<dim>::check_convergence(const Vector<double> & residual)
   {
     // check if max iteration has been reached
     AssertThrow(iteration_number < iteration_max,
-      ExcMaxIterationReached(iteration_max));
+                ExcMaxIterationReached(iteration_max));
 
     return false;
   }
@@ -95,10 +105,9 @@ bool NonlinearSolver<dim>::check_convergence(const Vector<double> & residual)
  *
  * \return convergence flag
  */
-template<int dim>
-bool NonlinearSolver<dim>::update(
-  const SparseMatrix<double> & A,
-  const Vector<double> & b)
+template <int dim>
+bool NonlinearSolver<dim>::update(const SparseMatrix<double> & A,
+                                  const Vector<double> & b)
 {
   // compute linear residual: r^(l) = b^(l) - A^(l)*U^(l)
   A.vmult(residual, *solution);
@@ -107,10 +116,11 @@ bool NonlinearSolver<dim>::update(
 
   // check convergence
   bool converged = check_convergence(residual);
+  if (converged)
+    return converged;
 
   // solve for solution update dU: A^(l)*dU = r^(l)
-  linear_solver.solve(A, residual, solution_change);
-  //linear_solver.solve(A, solution_change, residual);
+  linear_solver.solve(A, solution_change, residual);
 
   // update solution: U^(l+1) = U^(l) + relax*dU
   solution->add(relaxation_factor, solution_change);
@@ -121,4 +131,3 @@ bool NonlinearSolver<dim>::update(
   // return convergence flag
   return converged;
 }
-

@@ -9,20 +9,17 @@ using namespace dealii;
 /**
  * Class for performing spatial/temporal refinement.
  */
-template<int dim>
+template <int dim>
 class RefinementHandler
 {
 public:
-
-  RefinementHandler(
-    const TransportParameters<dim> & parameters,
-    Triangulation<dim> & triangulation);
+  RefinementHandler(const TransportParameters<dim> & parameters,
+                    Triangulation<dim> & triangulation);
   ~RefinementHandler();
 
   void refine(unsigned int cycle) const;
 
 private:
-
   void refineGrid() const;
 
   /** pointer to triangulation */

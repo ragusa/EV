@@ -3,24 +3,24 @@ subsection problem
    # 2 = void-to-absorber
    # 3 = void
    # 5 = MMS-1:  TR:t*sin(pi*x)        SS:sin(pi*x)
-   # 6 = MMS-2:  TR:x*exp(-t)          SS:error
-   # 7 = MMS-3:  TR:exp(-t)*sin(pi*x)  SS:error
+   # 6 = MMS-2:  TR:x*exp(-t)          SS:N/a
+   # 7 = MMS-3:  TR:exp(-t)*sin(pi*x)  SS:N/a
    # 8 = source in left half
-   # 9 = MMS-4:  TR:x*t                SS:error
+   # 9 = MMS-4:  TR:x*t                SS:N/a
    # 10 = MMS-5: TR:t                  SS:1
    # 11 = skew void-to-absorber
    # 12 = 3-region
    # 13 = source-in-void to absorber
    # 14 = 5-region
    # 15 = 2-region saturation
-   set Problem ID = 13
+   set Problem ID = 2
 end
 
 subsection time
    set End time = 1.0
    set Time step size = 0.001
    set CFL limit = 0.5
-   set Time discretization option = SS  # <SS|FE|CN|BE|SSP2|SSP3>
+   set Time discretization option = SSP3  # <SS|FE|CN|BE|SSP2|SSP3>
 end
 
 subsection viscosity
@@ -29,7 +29,7 @@ subsection viscosity
    # 2 = EV
    # 3 = EV+FCT
    # 4 = Galerkin+FCT
-   set Viscosity option = 2
+   set Viscosity option = 3
 end
 
 subsection entropy viscosity
@@ -48,7 +48,7 @@ subsection refinement
    set Refinement mode = space # <space|time>
    set Time refinement factor = 0.5
    set Use adaptive refinement = false
-   set Initial refinement level = 5
+   set Initial refinement level = 7
    set Number of refinement cycles = 1
 end
 
@@ -64,7 +64,7 @@ end
 subsection nonlinear solver
    set Nonlinear solver option = 1   # 1 = defect correction
    set Nonlinear tolerance = 1.0e-10
-   set Nonlinear max iteration = 500
+   set Nonlinear max iteration = 100
    set Relaxation factor = 1.0
 end
 

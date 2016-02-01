@@ -79,7 +79,7 @@ could use a zero vector as the initial guess.
     \nonlinearrhs(\solutionvector^{(\ell)})$
   \State $\nonlinearmatrix^{(\ell)} \rightarrow \dirichlet{\nonlinearmatrix}^{(\ell)}$,
     $\nonlinearrhs^{(\ell)} \rightarrow \dirichlet{\nonlinearrhs}^{(\ell)}$,
-  \State $\ssres^{(\ell)} \gets \dirichlet{\nonlinearrhs}
+  \State $\ssres^{(\ell)} \gets \dirichlet{\nonlinearrhs}^{(\ell)}
     - \dirichlet{\nonlinearmatrix}^{(\ell)}\solutionvector^{(\ell)}$
   \If{$\|\ssres^{(\ell)}\|_X < \nonlineartolerance$}
     \State \texttt{converged} $\gets$ \texttt{TRUE}

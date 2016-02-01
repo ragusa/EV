@@ -19,19 +19,18 @@ using namespace dealii;
 /**
  * Class for executioner.
  */
-template<int dim>
+template <int dim>
 class Executioner
 {
 public:
-
   Executioner(const TransportParameters<dim> & parameters,
-    Triangulation<dim> & triangulation,
-    const Tensor<1, dim> & transport_direction,
-    const FunctionParser<dim> & cross_section_function,
-    FunctionParser<dim> & source_function,
-    Function<dim> & incoming_function,
-    const double & domain_volume,
-    PostProcessor<dim> & postprocessor);
+              Triangulation<dim> & triangulation,
+              const Tensor<1, dim> & transport_direction,
+              const FunctionParser<dim> & cross_section_function,
+              FunctionParser<dim> & source_function,
+              Function<dim> & incoming_function,
+              const double & domain_volume,
+              PostProcessor<dim> & postprocessor);
   virtual ~Executioner();
 
   virtual void run() = 0;
@@ -39,17 +38,15 @@ public:
   Vector<double> getFinalSolution() const;
 
 protected:
-
   void setupSystem();
   void assembleInviscidSteadyStateMatrix();
-  void assembleSteadyStateRHS(const double &t);
+  void assembleSteadyStateRHS(const double & t);
   void setBoundaryIndicators();
   void getDirichletNodes();
-  void applyDirichletBC(
-    SparseMatrix<double> & A,
-    Vector<double>       & b,
-    Vector<double>       & x,
-    const double         & t = 0.0);
+  void applyDirichletBC(SparseMatrix<double> & A,
+                        Vector<double> & b,
+                        Vector<double> & x,
+                        const double & t = 0.0);
 
   const TransportParameters<dim> parameters;
 
@@ -61,11 +58,13 @@ protected:
   unsigned int n_dofs;
   const unsigned int dofs_per_cell;
   const unsigned int n_cells;
-  const QGauss<dim>   cell_quadrature;
-  const QGauss<dim-1> face_quadrature;
+  const QGauss<dim> cell_quadrature;
+  const QGauss<dim - 1> face_quadrature;
   const unsigned int n_q_points_cell;
 
   LinearSolver<dim> linear_solver;
+
+  NonlinearSolver<dim> nonlinear_solver;
 
   const Tensor<1, dim> transport_direction;
   const FunctionParser<dim> * const cross_section_function;

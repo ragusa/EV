@@ -6,6 +6,7 @@
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/grid/tria.h>
 #include "LinearSolver.h"
+#include "NonlinearSolver.h"
 #include "PostProcessor.h"
 
 using namespace dealii;
@@ -13,90 +14,98 @@ using namespace dealii;
 /**
  * Class for performing FCT.
  */
-template<int dim>
+template <int dim>
 class FCT
 {
 public:
+  FCT(const DoFHandler<dim> & dof_handler,
+      Triangulation<dim> & triangulation,
+      const SparseMatrix<double> & lumped_mass_matrix,
+      const SparseMatrix<double> & consistent_mass_matrix,
+      const LinearSolver<dim> & linear_solver,
+      const SparsityPattern & sparsity_pattern,
+      const std::vector<unsigned int> & dirichlet_nodes,
+      const unsigned int & n_dofs,
+      const unsigned int & dofs_per_cell,
+      const bool & do_not_limit);
 
-  FCT(
-    const DoFHandler<dim> &dof_handler,
-    Triangulation<dim> &triangulation,
-    const SparseMatrix<double> &lumped_mass_matrix,
-    const SparseMatrix<double> &consistent_mass_matrix,
-    const LinearSolver<dim> &linear_solver,
-    const SparsityPattern &sparsity_pattern,
-    const std::vector<unsigned int> &dirichlet_nodes,
-    const unsigned int &n_dofs,
-    const unsigned int &dofs_per_cell,
-    const bool &do_not_limit);
-  ~FCT();
+  FCT(const DoFHandler<dim> & dof_handler,
+      Triangulation<dim> & triangulation,
+      const LinearSolver<dim> & linear_solver,
+      const SparsityPattern & sparsity_pattern,
+      const std::vector<unsigned int> & dirichlet_nodes,
+      const unsigned int & n_dofs,
+      const unsigned int & dofs_per_cell,
+      const bool & do_not_limit);
 
-  void solve_FCT_system(
-    Vector<double> &new_solution,
-    const Vector<double> &old_solution,
-    const SparseMatrix<double> &low_order_ss_matrix,
-    const Vector<double> &ss_rhs,
-    const double &dt,
-    const SparseMatrix<double> &low_order_diffusion_matrix,
-    const SparseMatrix<double> &high_order_diffusion_matrix);
-
-  void solve_ss_FCT_system(
-    Vector<double> &new_solution,
-    const SparseMatrix<double> &low_order_ss_matrix,
-    const Vector<double> &ss_rhs,
-    const SparseMatrix<double> &low_order_diffusion_matrix,
-    const SparseMatrix<double> &high_order_diffusion_matrix);
+  void solve_FCT_system(Vector<double> & new_solution,
+                        const Vector<double> & old_solution,
+                        const SparseMatrix<double> & low_order_ss_matrix,
+                        const Vector<double> & ss_rhs,
+                        const double & dt,
+                        const SparseMatrix<double> & low_order_diffusion_matrix,
+                        const SparseMatrix<double> & high_order_diffusion_matrix);
 
   bool check_DMP_satisfied();
 
-  void output_bounds(
-    const PostProcessor<dim> &postprocessor,
-    const std::string &description_string) const;
+  void compute_bounds(const Vector<double> & old_solution,
+                      const SparseMatrix<double> & low_order_ss_matrix,
+                      const Vector<double> & ss_rhs,
+                      const double & dt);
 
-  void compute_bounds(
-    const Vector<double> &old_solution,
-    const SparseMatrix<double> &low_order_ss_matrix,
-    const Vector<double> &ss_rhs,
-    const double &dt);
-
-private:
-
-  void compute_steady_state_bounds(
-    const Vector<double> &solution,
-    const SparseMatrix<double> &low_order_ss_matrix,
-    const Vector<double> &ss_rhs);
+  void compute_bounds_ss(const Vector<double> & solution,
+                         const SparseMatrix<double> & low_order_ss_matrix,
+                         const Vector<double> & ss_rhs);
 
   void compute_flux_corrections(
-    const Vector<double> &high_order_solution,
-    const Vector<double> &old_solution,
-    const double &dt,
-    const SparseMatrix<double> &low_order_diffusion_matrix,
-    const SparseMatrix<double> &high_order_diffusion_matrix);
-  void compute_limiting_coefficients(
-    const Vector<double> &old_solution,
-    const SparseMatrix<double> &low_order_ss_matrix,
-    const Vector<double> &ss_rhs,
-    const double &dt);
-  void get_matrix_row(
-    const SparseMatrix<double> &matrix,
-    const unsigned int &i,
-    std::vector<double> &row_values,
-    std::vector<unsigned int> &row_indices,
-    unsigned int &n_col);
-  bool check_max_principle(
-    const Vector<double> &new_solution,
-    const SparseMatrix<double> &low_order_ss_matrix,
-    const double &dt);
-  void debug_max_principle_low_order(
-    const unsigned int &i,
-    const SparseMatrix<double> &low_order_ss_matrix,
-    const double &dt);
+    const Vector<double> & high_order_solution,
+    const Vector<double> & old_solution,
+    const double & dt,
+    const SparseMatrix<double> & low_order_diffusion_matrix,
+    const SparseMatrix<double> & high_order_diffusion_matrix);
 
-  const DoFHandler<dim> *dof_handler;
+  void compute_flux_corrections_ss(
+    const Vector<double> & high_order_solution,
+    const SparseMatrix<double> & low_order_diffusion_matrix,
+    const SparseMatrix<double> & high_order_diffusion_matrix);
+
+  void compute_limiting_coefficients(
+    const Vector<double> & old_solution,
+    const SparseMatrix<double> & low_order_ss_matrix,
+    const Vector<double> & ss_rhs,
+    const double & dt);
+
+  void compute_limiting_coefficients_ss(
+    const Vector<double> & solution,
+    const SparseMatrix<double> & low_order_ss_matrix,
+    const Vector<double> & ss_rhs);
+
+  bool check_max_principle(const Vector<double> & new_solution,
+                           const SparseMatrix<double> & low_order_ss_matrix,
+                           const double & dt);
+
+  void output_bounds(const PostProcessor<dim> & postprocessor,
+                     const std::string & description_string) const;
+
+  Vector<double> get_flux_correction_vector() const;
+
+protected:
+  void get_matrix_row(const SparseMatrix<double> & matrix,
+                      const unsigned int & i,
+                      std::vector<double> & row_values,
+                      std::vector<unsigned int> & row_indices,
+                      unsigned int & n_col);
+
+  void debug_max_principle_low_order(
+    const unsigned int & i,
+    const SparseMatrix<double> & low_order_ss_matrix,
+    const double & dt);
+
+  const DoFHandler<dim> * dof_handler;
   Triangulation<dim> * const triangulation;
 
-  const SparseMatrix<double> *lumped_mass_matrix;
-  const SparseMatrix<double> *consistent_mass_matrix;
+  const SparseMatrix<double> * lumped_mass_matrix;
+  const SparseMatrix<double> * consistent_mass_matrix;
   SparsityPattern sparsity_pattern;
   SparseMatrix<double> flux_correction_matrix;
   Vector<double> solution_min;
@@ -120,7 +129,7 @@ private:
 
   const bool do_not_limit;
 
-  bool DMP_satisfied_at_all_steps;
+  bool DMP_satisfied;
 };
 
 #include "FCT.cc"
