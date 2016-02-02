@@ -9,8 +9,8 @@ PostProcessor<dim>::PostProcessor(
   : parameters(parameters_),
     has_exact_solution(has_exact_solution_),
     exact_solution_function(exact_solution_function_),
-    is_steady_state(parameters.time_discretization_option ==
-                    TransportParameters<dim>::TemporalDiscretization::SS),
+    is_steady_state(parameters.temporal_discretization ==
+                    TemporalDiscretization::ss),
     fe(FE_Q<dim>(parameters.degree), 1),
     cell_quadrature(parameters.n_quadrature_points),
     current_cycle(0),
@@ -18,41 +18,64 @@ PostProcessor<dim>::PostProcessor(
 {
   // determine time discretization string
   std::string timedisc_string;
-  switch (parameters.time_discretization_option)
+  switch (parameters.temporal_discretization)
   {
-    case TransportParameters<dim>::TemporalDiscretization::SS:
+    case TemporalDiscretization::ss: // steady-state
     {
       timedisc_string = "SS";
       break;
     }
-    case TransportParameters<dim>::TemporalDiscretization::FE:
+    case TemporalDiscretization::theta: // theta method
     {
-      timedisc_string = "FE";
+      switch (parameters.theta_method)
+      {
+        case ThetaMethod::FE:
+        {
+          timedisc_string = "FE";
+          break;
+        }
+        case ThetaMethod::CN:
+        {
+          timedisc_string = "CN";
+          break;
+        }
+        case ThetaMethod::BE:
+        {
+          timedisc_string = "BE";
+          break;
+        }
+        default:
+        {
+          Assert(false, ExcNotImplemented());
+        }
+      }
       break;
     }
-    case TransportParameters<dim>::TemporalDiscretization::CN:
+    case TemporalDiscretization::ssprk: // SSPRK method
     {
-      timedisc_string = "CN";
+      switch (parameters.ssprk_method)
+      {
+        case SSPRKMethod::FE:
+        {
+          timedisc_string = "FE";
+          break;
+        }
+        case SSPRKMethod::SSP2:
+        {
+          timedisc_string = "SSP2";
+          break;
+        }
+        case SSPRKMethod::SSP3:
+        {
+          timedisc_string = "SSP3";
+          break;
+        }
+        default:
+        {
+          Assert(false, ExcNotImplemented());
+        }
+      }
       break;
-    }
-    case TransportParameters<dim>::TemporalDiscretization::BE:
-    {
-      timedisc_string = "BE";
-      break;
-    }
-    case TransportParameters<dim>::TemporalDiscretization::SSP2:
-    {
-      timedisc_string = "SSPRK22";
-      break;
-    }
-    case TransportParameters<dim>::TemporalDiscretization::SSP3:
-    {
-      timedisc_string = "SSPRK33";
-      break;
-    }
-    default:
-    {
-      ExcNotImplemented();
     }
   }
 
@@ -264,7 +287,7 @@ void PostProcessor<dim>::output_solution(const Vector<double> & solution,
     if (dim == 1)
       filename_extension = ".gpl";
     else
-      filename_extension = ".vtk";
+      filename_extension = ".vtu";
 
     std::stringstream filename_ss;
     filename_ss << output_dir << output_string << filename_extension;
@@ -277,7 +300,7 @@ void PostProcessor<dim>::output_solution(const Vector<double> & solution,
     if (dim == 1)
       data_out.write_gnuplot(output_filestream);
     else
-      data_out.write_vtk(output_filestream);
+      data_out.write_vtu(output_filestream);
   }
 }
 
@@ -315,7 +338,7 @@ void PostProcessor<dim>::output_viscosity(
   if (dim == 1)
     filename_extension = ".gpl";
   else
-    filename_extension = ".vtk";
+    filename_extension = ".vtu";
 
   // create output filestream
   std::string viscosity_filename =
@@ -327,7 +350,7 @@ void PostProcessor<dim>::output_viscosity(
   if (dim == 1)
     visc_out.write_gnuplot(viscosity_outstream);
   else
-    visc_out.write_vtk(viscosity_outstream);
+    visc_out.write_vtu(viscosity_outstream);
 }
 
 /** \brief evaluate error between numerical and exact solution

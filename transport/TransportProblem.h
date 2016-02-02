@@ -41,6 +41,10 @@ template <int dim>
 class TransportProblem
 {
 public:
+  /** \brief Alias for temporal discretization */
+  using TemporalDiscretization =
+    typename TransportParameters<dim>::TemporalDiscretization;
+
   TransportProblem(const TransportParameters<dim> & parameters);
   ~TransportProblem();
 

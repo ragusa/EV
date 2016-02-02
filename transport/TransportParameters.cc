@@ -3,17 +3,20 @@
  */
 template <int dim>
 TransportParameters<dim>::TransportParameters()
-  : problem_id(1),
+  : temporal_discretization(TemporalDiscretization::ssprk),
+    entropy_temporal_discretization(EntropyTemporalDiscretization::BE),
+    ssprk_method(SSPRKMethod::FE),
+    theta_method(ThetaMethod::FE),
+    theta(0.0),
+    problem_id(1),
     end_time(1.0),
     time_step_size(0.001),
     CFL_limit(0.5),
-    time_discretization_option(TemporalDiscretization::FE),
     viscosity_option(0),
     entropy_string("0.5*u*u"),
     entropy_derivative_string("u"),
     entropy_residual_coefficient(1.0),
     jump_coefficient(1.0),
-    EV_time_discretization(TemporalDiscretization::BE),
     do_not_limit(false),
     refinement_mode(RefinementMode::space),
     time_refinement_factor(0.5),
@@ -37,7 +40,8 @@ TransportParameters<dim>::TransportParameters()
 {
 }
 
-/** \brief defines all of the input parameters
+/**
+ * \brief defines all of the input parameters
  */
 template <int dim>
 void TransportParameters<dim>::declare_parameters(ParameterHandler & prm)
@@ -66,10 +70,22 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler & prm)
   // time parameters
   prm.enter_subsection("time");
   {
-    prm.declare_entry("Time discretization option",
-                      "FE",
-                      Patterns::Selection("SS|FE|CN|BE|SSP2|SSP3"),
+    prm.declare_entry("Time discretization",
+                      "ssprk",
+                      Patterns::Selection("ss|theta|ssprk"),
                       "Choice of temporal discretization");
+    prm.declare_entry("Entropy time discretization",
+                      "BE",
+                      Patterns::Selection("FE|CN|BE|BDF2"),
+                      "Choice of temporal discretization for entropy");
+    prm.declare_entry("SSPRK method",
+                      "FE",
+                      Patterns::Selection("FE|SSP2|SSP3"),
+                      "Choice of SSPRK method");
+    prm.declare_entry("Theta method",
+                      "FE",
+                      Patterns::Selection("FE|CN|BE"),
+                      "Choice of theta time discretization method");
     prm.declare_entry("End time",
                       "1.0",
                       Patterns::Double(),
@@ -256,36 +272,91 @@ void TransportParameters<dim>::get_parameters(ParameterHandler & prm)
   // time parameters
   prm.enter_subsection("time");
   {
-    std::string time_discretization_string =
-      prm.get("Time discretization option");
-    if (time_discretization_string == "SS")
+    // get temporal discretization
+    std::string temporal_discretization_string = prm.get("Time discretization");
+    if (temporal_discretization_string == "ss")
     {
-      time_discretization_option = TemporalDiscretization::SS;
+      temporal_discretization = TemporalDiscretization::ss;
     }
-    else if (time_discretization_string == "FE")
+    else if (temporal_discretization_string == "theta")
     {
-      time_discretization_option = TemporalDiscretization::FE;
+      temporal_discretization = TemporalDiscretization::theta;
     }
-    else if (time_discretization_string == "CN")
+    else if (temporal_discretization_string == "ssprk")
     {
-      time_discretization_option = TemporalDiscretization::CN;
-    }
-    else if (time_discretization_string == "BE")
-    {
-      time_discretization_option = TemporalDiscretization::BE;
-    }
-    else if (time_discretization_string == "SSP2")
-    {
-      time_discretization_option = TemporalDiscretization::SSP2;
-    }
-    else if (time_discretization_string == "SSP3")
-    {
-      time_discretization_option = TemporalDiscretization::SSP3;
+      temporal_discretization = TemporalDiscretization::ssprk;
     }
     else
     {
-      ExcNotImplemented();
+      Assert(false, ExcNotImplemented());
     }
+
+    // get temporal discretization for entropy
+    std::string entropy_temporal_discretization_string =
+      prm.get("Entropy time discretization");
+    if (entropy_temporal_discretization_string == "FE")
+    {
+      entropy_temporal_discretization = EntropyTemporalDiscretization::FE;
+    }
+    else if (entropy_temporal_discretization_string == "CN")
+    {
+      entropy_temporal_discretization = EntropyTemporalDiscretization::CN;
+    }
+    else if (entropy_temporal_discretization_string == "BE")
+    {
+      entropy_temporal_discretization = EntropyTemporalDiscretization::BE;
+    }
+    else if (entropy_temporal_discretization_string == "BDF2")
+    {
+      entropy_temporal_discretization = EntropyTemporalDiscretization::BDF2;
+    }
+    else
+    {
+      Assert(false, ExcNotImplemented());
+    }
+
+    // get SSPRK method
+    std::string ssprk_method_string = prm.get("SSPRK method");
+    if (ssprk_method_string == "FE")
+    {
+      ssprk_method = SSPRKMethod::FE;
+    }
+    else if (ssprk_method_string == "SSP2")
+    {
+      ssprk_method = SSPRKMethod::SSP2;
+    }
+    else if (ssprk_method_string == "SSP3")
+    {
+      ssprk_method = SSPRKMethod::SSP3;
+    }
+    else
+    {
+      Assert(false, ExcNotImplemented());
+    }
+
+    // get theta method and corresponding parameter
+    std::string theta_method_string = prm.get("Theta method");
+    if (theta_method_string == "FE")
+    {
+      theta_method = ThetaMethod::FE;
+      theta = 0.0;
+    }
+    else if (theta_method_string == "CN")
+    {
+      theta_method = ThetaMethod::CN;
+      theta = 0.5;
+    }
+    else if (theta_method_string == "BE")
+    {
+      theta_method = ThetaMethod::BE;
+      theta = 1.0;
+    }
+    else
+    {
+      Assert(false, ExcNotImplemented());
+    }
+
+    // get other parameters
     end_time = prm.get_double("End time");
     time_step_size = prm.get_double("Time step size");
     CFL_limit = prm.get_double("CFL limit");
@@ -306,7 +377,7 @@ void TransportParameters<dim>::get_parameters(ParameterHandler & prm)
     }
     else
     {
-      ExcNotImplemented();
+      Assert(false, ExcNotImplemented());
     }
 
     time_refinement_factor = prm.get_double("Time refinement factor");
@@ -347,29 +418,6 @@ void TransportParameters<dim>::get_parameters(ParameterHandler & prm)
     entropy_derivative_string = prm.get("Entropy derivative string");
     entropy_residual_coefficient = prm.get_double("Entropy residual coefficient");
     jump_coefficient = prm.get_double("Jump coefficient");
-
-    std::string EV_time_discretization_string =
-      prm.get("EV temporal discretization");
-    if (EV_time_discretization_string == "FE")
-    {
-      EV_time_discretization = TemporalDiscretization::FE;
-    }
-    else if (EV_time_discretization_string == "BE")
-    {
-      EV_time_discretization = TemporalDiscretization::BE;
-    }
-    else if (EV_time_discretization_string == "CN")
-    {
-      EV_time_discretization = TemporalDiscretization::CN;
-    }
-    else if (EV_time_discretization_string == "BDF2")
-    {
-      EV_time_discretization = TemporalDiscretization::BDF2;
-    }
-    else
-    {
-      ExcNotImplemented();
-    }
   }
   prm.leave_subsection();
 

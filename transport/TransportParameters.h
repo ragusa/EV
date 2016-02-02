@@ -12,26 +12,57 @@ template <int dim>
 class TransportParameters
 {
 public:
-  enum TemporalDiscretization
+  TransportParameters();
+
+  /** \brief Enumeration for types of temporal discretizations */
+  enum class TemporalDiscretization
   {
-    SS,
+    ss,
+    theta,
+    ssprk
+  };
+  TemporalDiscretization temporal_discretization;
+
+  /** \brief Enumeration for types of temporal discretizations for entropy */
+  enum class EntropyTemporalDiscretization
+  {
     FE,
-    CN,
     BE,
-    BDF2,
+    CN,
+    BDF2
+  };
+  EntropyTemporalDiscretization entropy_temporal_discretization;
+
+  /** \brief Enumeration for SSPRK methods */
+  enum class SSPRKMethod
+  {
+    FE,
     SSP2,
     SSP3
   };
+  SSPRKMethod ssprk_method;
 
-  enum RefinementMode
+  /** \brief Enumeration for theta time discretization methods */
+  enum class ThetaMethod
+  {
+    FE,
+    CN,
+    BE
+  };
+  ThetaMethod theta_method;
+
+  /** \brief Theta parameter \f$\theta\f$ for theta time discretization */
+  double theta;
+
+  /** \brief Enumeration for refinement mode (space or time) */
+  enum class RefinementMode
   {
     space,
     time
   };
 
-  TransportParameters();
-
   static void declare_parameters(ParameterHandler & prm);
+
   void get_parameters(ParameterHandler & prm);
 
   // problem parameters
@@ -51,7 +82,6 @@ public:
   std::string entropy_derivative_string; // string for entropy derivative function
   double entropy_residual_coefficient;   // value of entropy residual coefficient
   double jump_coefficient;               // value of jump coefficient
-  TemporalDiscretization EV_time_discretization;
 
   // fct parameters
   bool do_not_limit; // flag to turn off limiting for high order solution

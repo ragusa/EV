@@ -20,8 +20,7 @@ EntropyViscosity<dim>::EntropyViscosity(
   const double & entropy_residual_coefficient,
   const double & jump_coefficient,
   const double & domain_volume,
-  const typename TransportParameters<dim>::TemporalDiscretization
-    temporal_discretization,
+  const EntropyTemporalDiscretization & temporal_discretization,
   const LowOrderViscosity<dim> & low_order_viscosity,
   const SparseMatrix<double> & inviscid_matrix,
   SparseMatrix<double> & diffusion_matrix,
@@ -55,14 +54,6 @@ EntropyViscosity<dim>::EntropyViscosity(
   entropy_function.initialize("u", entropy_string, constants, false);
   entropy_derivative_function.initialize(
     "u", entropy_derivative_string, constants, false);
-}
-
-/**
- * Destructor.
- */
-template <int dim>
-EntropyViscosity<dim>::~EntropyViscosity()
-{
 }
 
 /**
@@ -403,7 +394,7 @@ void EntropyViscosity<dim>::compute_temporal_discretization_constants(
 {
   switch (temporal_discretization)
   {
-    case TransportParameters<dim>::TemporalDiscretization::FE:
+    case EntropyTemporalDiscretization::FE:
     {
       a_old = 1.0 / old_dt;
       a_older = -1.0 / old_dt;
@@ -412,7 +403,7 @@ void EntropyViscosity<dim>::compute_temporal_discretization_constants(
       b_older = 0.0;
       break;
     }
-    case TransportParameters<dim>::TemporalDiscretization::BE:
+    case EntropyTemporalDiscretization::BE:
     {
       a_old = 1.0 / old_dt;
       a_older = -1.0 / old_dt;
@@ -421,7 +412,7 @@ void EntropyViscosity<dim>::compute_temporal_discretization_constants(
       b_older = 0.0;
       break;
     }
-    case TransportParameters<dim>::TemporalDiscretization::CN:
+    case EntropyTemporalDiscretization::CN:
     {
       a_old = 1.0 / old_dt;
       a_older = -1.0 / old_dt;
@@ -430,7 +421,7 @@ void EntropyViscosity<dim>::compute_temporal_discretization_constants(
       b_older = 0.5;
       break;
     }
-    case TransportParameters<dim>::TemporalDiscretization::BDF2:
+    case EntropyTemporalDiscretization::BDF2:
     {
       a_old = (older_dt + 2 * old_dt) / (old_dt * (older_dt + old_dt));
       a_older = -(older_dt + old_dt) / (older_dt * old_dt);
@@ -441,7 +432,7 @@ void EntropyViscosity<dim>::compute_temporal_discretization_constants(
     }
     default:
     {
-      ExcNotImplemented();
+      Assert(false, ExcNotImplemented());
     }
   }
 }

@@ -11,8 +11,7 @@ LowOrderViscosity<dim>::LowOrderViscosity(
   SparseMatrix<double> & total_matrix)
   :
 
-    Viscosity<dim>(n_cells, dofs_per_cell, dof_handler, constraints) //,
-// dof_handler(&dof_handler)
+    Viscosity<dim>(n_cells, dofs_per_cell, dof_handler, constraints)
 {
   // create sparse matrix for viscous bilinear forms
   DynamicSparsityPattern dsp(this->n_dofs);
@@ -31,12 +30,6 @@ LowOrderViscosity<dim>::LowOrderViscosity(
 
   // add diffusion matrix
   this->add_diffusion_matrix(inviscid_matrix, diffusion_matrix, total_matrix);
-
-  /*
-     // allocate memory for vectors
-     solution_min.reinit(dof_handler.n_dofs());
-     solution_max.reinit(dof_handler.n_dofs());
-  */
 }
 
 /** \brief Destructor.

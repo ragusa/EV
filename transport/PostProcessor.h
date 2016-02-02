@@ -22,6 +22,16 @@ template <int dim>
 class PostProcessor
 {
 public:
+  /** \brief Alias for temporal discretization */
+  using TemporalDiscretization =
+    typename TransportParameters<dim>::TemporalDiscretization;
+
+  /** \brief Alias for theta method */
+  using ThetaMethod = typename TransportParameters<dim>::ThetaMethod;
+
+  /** \brief Alias for SSPRK method */
+  using SSPRKMethod = typename TransportParameters<dim>::SSPRKMethod;
+
   PostProcessor(const TransportParameters<dim> & parameters,
                 const bool has_exact_solution,
                 std::shared_ptr<Function<dim>> & exact_solution_function);

@@ -25,6 +25,10 @@ template <int dim>
 class EntropyViscosity : public Viscosity<dim>
 {
 public:
+  /** \brief Alias for temporal discretization of entropy */
+  using EntropyTemporalDiscretization =
+    typename TransportParameters<dim>::EntropyTemporalDiscretization;
+
   EntropyViscosity(const FESystem<dim> & fe,
                    const unsigned int & n_cells,
                    const DoFHandler<dim> & dof_handler,
@@ -39,14 +43,11 @@ public:
                    const double & entropy_residual_coefficient,
                    const double & jump_coefficient,
                    const double & domain_volume,
-                   const typename TransportParameters<dim>::TemporalDiscretization
-                     temporal_discretization,
+                   const EntropyTemporalDiscretization & temporal_discretization,
                    const LowOrderViscosity<dim> & low_order_viscosity,
                    const SparseMatrix<double> & inviscid_matrix,
                    SparseMatrix<double> & diffusion_matrix,
                    SparseMatrix<double> & total_matrix);
-
-  ~EntropyViscosity();
 
   void recomputeHighOrderSteadyStateMatrix(const Vector<double> & solution);
 
@@ -64,7 +65,9 @@ private:
                                  const double & old_dt,
                                  const double & older_dt,
                                  const double & time);
+
   void compute_normalization_constant(const Vector<double> & old_solution);
+
   void compute_temporal_discretization_constants(const double old_dt,
                                                  const double older_dt);
 
@@ -100,8 +103,7 @@ private:
   Vector<double> entropy_viscosity;
 
   // temporal discretization for entropy residual
-  typename TransportParameters<dim>::TemporalDiscretization
-    temporal_discretization;
+  const EntropyTemporalDiscretization temporal_discretization;
 
   // coefficients for entropy residual
   double a_old;
@@ -120,4 +122,5 @@ private:
 };
 
 #include "EntropyViscosity.cc"
+
 #endif

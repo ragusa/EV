@@ -23,14 +23,6 @@ SteadyStateExecutioner<dim>::SteadyStateExecutioner(
 }
 
 /**
- * Destructor.
- */
-template <int dim>
-SteadyStateExecutioner<dim>::~SteadyStateExecutioner()
-{
-}
-
-/**
  * Runs steady-state executioner.
  */
 template <int dim>
@@ -38,7 +30,7 @@ void SteadyStateExecutioner<dim>::run()
 {
   // compute inviscid system matrix and steady-state right hand side (ss_rhs)
   this->assembleInviscidSteadyStateMatrix();
-  this->assembleSteadyStateRHS(0.0);
+  this->assembleSteadyStateRHS(this->ss_rhs, 0.0);
 
   switch (this->parameters.viscosity_option)
   {
@@ -100,7 +92,7 @@ void SteadyStateExecutioner<dim>::run()
         this->parameters.entropy_residual_coefficient,
         this->parameters.jump_coefficient,
         this->domain_volume,
-        this->parameters.EV_time_discretization,
+        this->parameters.entropy_temporal_discretization,
         low_order_viscosity,
         this->inviscid_ss_matrix,
         this->high_order_diffusion_matrix,
@@ -159,7 +151,7 @@ void SteadyStateExecutioner<dim>::run()
         this->parameters.entropy_residual_coefficient,
         this->parameters.jump_coefficient,
         this->domain_volume,
-        this->parameters.EV_time_discretization,
+        this->parameters.entropy_temporal_discretization,
         low_order_viscosity,
         this->inviscid_ss_matrix,
         this->high_order_diffusion_matrix,
@@ -222,7 +214,7 @@ void SteadyStateExecutioner<dim>::run()
     }
     default:
     {
-      ExcNotImplemented();
+      Assert(false, ExcNotImplemented());
     }
   }
 

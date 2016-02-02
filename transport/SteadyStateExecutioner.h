@@ -20,7 +20,6 @@ public:
                          Function<dim> & incoming_function,
                          const double & domain_volume,
                          PostProcessor<dim> & postprocessor);
-  ~SteadyStateExecutioner();
 
   void run() override;
 

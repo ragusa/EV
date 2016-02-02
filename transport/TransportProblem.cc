@@ -8,7 +8,7 @@ TransportProblem<dim>::TransportProblem(
   const TransportParameters<dim> & parameters)
   : parameters(parameters),
     is_time_dependent(
-      !(parameters.time_discretization_option == TransportParameters<dim>::SS)),
+      !(parameters.temporal_discretization == TemporalDiscretization::ss)),
     transport_direction(),
     exact_solution_option(ExactSolutionOption::none),
     has_exact_solution(false),

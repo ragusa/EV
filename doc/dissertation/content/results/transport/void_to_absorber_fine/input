@@ -18,12 +18,9 @@ end
 
 subsection time
    set End time = 1.0
-   set Time step size = 1.000
+   set Time step size = 0.001
    set CFL limit = 0.5
-   set Time discretization = ssprk       # <ss|theta|ssprk>
-   set Entropy time discretization = BE  # <FE|CN|BE|BDF2>
-   set SSPRK method = FE                 # <FE|SSP2|SSP3>
-   set Theta method = CN                 # <FE|CN|BE>
+   set Time discretization option = SSP3  # <SS|FE|CN|BE|SSP2|SSP3>
 end
 
 subsection viscosity

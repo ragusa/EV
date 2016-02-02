@@ -10,9 +10,9 @@ quadrature.nq = 3;                  % number of quadrature points per cell
 %--------------------------------------------------------------------------
 % spatial method options
 %--------------------------------------------------------------------------
-compute_low_order  = false; % compute and plot low-order solution?
+compute_low_order  = true; % compute and plot low-order solution?
 compute_high_order = false; % compute and plot high-order solution?
-compute_FCT        = true; % compute and plot FCT solution?
+compute_FCT        = false; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
 %                   2 = graph-theoretic low-order scheme
@@ -20,7 +20,7 @@ low_order_scheme  = 2;
 
 % high_order_scheme: 1 = Galerkin
 %                    2 = Entropy viscosity
-high_order_scheme = 2;
+high_order_scheme = 1;
 
 % entropy viscosity options:
 ev.cE = 0.1; % coefficient for entropy residual in entropy viscosity
@@ -36,10 +36,10 @@ ev.smoothing_weight = 0.0; % weight for center value in smoothing
 %                  1 = SSPRK(1,1) (Explicit Euler)
 %                  2 = SSPRK(3,3) (Shu-Osher)
 %                  3 = theta method
-temporal_scheme = 0; % temporal discretization scheme
+temporal_scheme = 3; % temporal discretization scheme
 
 theta = 0.5;     % theta parameter to use if using a theta method
-CFL = 2.0;       % CFL number
+CFL = 0.5;       % CFL number
 ss_tol = 1.0e-5; % steady-state tolerance
 t_end = 0.3;     % max time to run
 %--------------------------------------------------------------------------
@@ -66,12 +66,14 @@ prelimit = 0;
 %            3: void with    source -> absorber without source
 %            4: void
 %            5: MMS-1
-problemID = 3;
+problemID = 2;
 
 % IC_option: 0: zero
 %            1: exponential pulse
 %            2: exponential and square pulse
 IC_option = 0;
+
+impose_BC_on_IC = 1; % option to impose Dirichlet BC on IC
 
 mesh.x_min = 0.0;         % left end of domain
 mesh.x_max = 1.0;         % right end of domain
@@ -132,7 +134,7 @@ switch problemID
         phys.periodic_BC = false;
         phys.inc    = 1.0;
         phys.mu     = 1.0;
-        phys.sigma  = @(x,t) 10.0*(x >= 0.5);
+        phys.sigma  = @(x,t) 100.0*(x >= 0.5);
         phys.source = @(x,t) 0.0;
         phys.speed  = 1;
         
@@ -301,7 +303,7 @@ assert(phys.speed ~= 0,'Speed cannot be zero.');
 % steps will be equal between explicit and implicit, for comparison
 max_speed_dx = 0.0;
 for i = 1:dof_handler.n_dof
-    max_speed_dx = max(max_speed_dx, AL(i,i)/ML(i,i));
+    max_speed_dx = max(max_speed_dx, abs(AL(i,i))/ML(i,i));
 end
 dtCFL = CFL / max_speed_dx;
 
@@ -335,6 +337,9 @@ if (compute_low_order)
     else % transient
         % compute initial conditions
         u_old = phys.IC(mesh.x);
+        if impose_BC_on_IC
+          u_old(1) = phys.inc;
+        end
         b_old = b;
         b_new = b_old;
         t = 0;
@@ -446,6 +451,9 @@ if (compute_high_order)
     else % transient
         % compute initial conditions
         u_old = phys.IC(mesh.x);
+        if impose_BC_on_IC
+          u_old(1) = phys.inc;
+        end
         u_older = u_old;
         b_old = b;
         b_new = b_old;
@@ -622,6 +630,9 @@ if (compute_FCT)
     else
         % compute initial conditions
         u_old = phys.IC(mesh.x);
+        if impose_BC_on_IC
+          u_old(1) = phys.inc;
+        end
         u_older = u_old;
         b_old = b;
         b_new = b_old;

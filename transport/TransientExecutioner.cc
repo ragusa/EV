@@ -21,8 +21,10 @@ TransientExecutioner<dim>::TransientExecutioner(
                      incoming_function_,
                      domain_volume_,
                      postprocessor_),
+    temporal_discretization(this->parameters.temporal_discretization),
     initial_conditions_function(&initial_conditions_function_),
-    source_is_time_dependent(source_is_time_dependent_)
+    source_is_time_dependent(source_is_time_dependent_),
+    theta(this->parameters.theta)
 {
   // initialize mass matrices
   consistent_mass_matrix.reinit(this->constrained_sparsity_pattern);
@@ -69,25 +71,23 @@ TransientExecutioner<dim>::TransientExecutioner(
   older_solution.reinit(this->n_dofs);
   oldest_solution.reinit(this->n_dofs);
   old_stage_solution.reinit(this->n_dofs);
+  ss_rhs_new.reinit(this->n_dofs);
+  tmp_vector.reinit(this->n_dofs);
 }
 
 /**
- * Destructor.
- */
-template <int dim>
-TransientExecutioner<dim>::~TransientExecutioner()
-{
-}
-
-/**
- * Runs transient executioner.
+ * \brief Runs transient executioner.
  */
 template <int dim>
 void TransientExecutioner<dim>::run()
 {
-  // assemble inviscid steady-state matrix and steady-state rhs
+  // assemble inviscid steady-state matrix
   this->assembleInviscidSteadyStateMatrix();
-  this->assembleSteadyStateRHS(0.0);
+
+  // assemble steady-state rhs
+  this->assembleSteadyStateRHS(this->ss_rhs, 0.0);
+  if (!source_is_time_dependent)
+    ss_rhs_new = this->ss_rhs;
 
   // assemble mass matrices
   assembleMassMatrices();
@@ -119,7 +119,7 @@ void TransientExecutioner<dim>::run()
                            this->parameters.entropy_residual_coefficient,
                            this->parameters.jump_coefficient,
                            this->domain_volume,
-                           this->parameters.EV_time_discretization,
+                           this->parameters.entropy_temporal_discretization,
                            low_order_viscosity,
                            this->inviscid_ss_matrix,
                            this->high_order_diffusion_matrix,
@@ -137,25 +137,35 @@ void TransientExecutioner<dim>::run()
                this->dofs_per_cell,
                this->parameters.do_not_limit);
 
-  // create SSP Runge-Kutta time integrator object
-  SSPRKTimeIntegrator<dim> ssprk(this->parameters.time_discretization_option,
-                                 this->n_dofs,
-                                 this->linear_solver,
-                                 this->constrained_sparsity_pattern);
+  // create objects required by temporal integrator
+  std::shared_ptr<SSPRKTimeIntegrator<dim>> ssprk;
+  if (temporal_discretization == TemporalDiscretization::ssprk)
+  {
+    ssprk = std::make_shared<SSPRKTimeIntegrator<dim>>(
+      this->parameters.ssprk_method,
+      this->n_dofs,
+      this->linear_solver,
+      this->constrained_sparsity_pattern);
+  }
+  else if (temporal_discretization == TemporalDiscretization::theta)
+  {
+    //
+  }
 
-  // time loop
+  const double t_end = this->parameters.end_time;
   double t_new = 0.0;
   double t_old = 0.0;
   double dt = dt_nominal;
   double dt_old = dt_nominal;
   double dt_older = dt_nominal;
+
   old_solution = this->new_solution;
   older_solution = this->new_solution;
   oldest_solution = this->new_solution;
-  const double t_end = this->parameters.end_time;
-  bool in_transient = true;
-  Vector<double> tmp_vector(this->n_dofs);
+
+  // time loop
   unsigned int n = 1; // time step index
+  bool in_transient = true;
   while (in_transient)
   {
     // shorten time step size if new time would overshoot end time
@@ -165,45 +175,96 @@ void TransientExecutioner<dim>::run()
       dt = t_end - t_old;
       in_transient = false;
     }
+
+    // compute new time
     t_new = t_old + dt;
+
     std::cout << "   time step " << n << ": t = " << t_old << "->" << t_new
               << std::endl;
 
-    // initialize SSPRK time step
-    ssprk.initialize_time_step(old_solution, dt);
-
-    switch (this->parameters.viscosity_option)
+    if (temporal_discretization == TemporalDiscretization::ssprk) // SSPRK
     {
-      case 0: // Galerkin scheme
+      // initialize SSPRK time step
+      ssprk->initialize_time_step(old_solution, dt);
+
+      switch (this->parameters.viscosity_option)
       {
-        takeGalerkinStep(ssprk);
-        break;
+        case 0: // Galerkin scheme
+        {
+          takeGalerkinStep_ssprk(*ssprk);
+          break;
+        }
+        case 1: // Low-order scheme
+        {
+          takeLowOrderStep_ssprk(*ssprk);
+          break;
+        }
+        case 2: // Entropy viscosity scheme
+        {
+          takeEntropyViscosityStep_ssprk(*ssprk, EV, dt, dt_old, dt_older, t_old);
+          break;
+        }
+        case 3: // Entropy viscosity FCT scheme
+        {
+          takeEntropyViscosityFCTStep_ssprk(*ssprk, fct, EV, dt, dt_old);
+          break;
+        }
+        case 4: // Galerkin FCT scheme
+        {
+          takeGalerkinFCTStep_ssprk(*ssprk, fct, dt);
+          break;
+        }
+        default:
+        {
+          Assert(false, ExcNotImplemented());
+          break;
+        }
       }
-      case 1: // Low-order scheme
+    }
+    else if (temporal_discretization == TemporalDiscretization::theta) // Theta
+    {
+      switch (this->parameters.viscosity_option)
       {
-        takeLowOrderStep(ssprk);
-        break;
+        case 0: // Galerkin scheme
+        {
+          takeGalerkinStep_theta(dt, t_new);
+          break;
+        }
+        case 1: // Low-order scheme
+        {
+          takeLowOrderStep_theta(dt, t_new);
+          break;
+        }
+        /*
+              case 2: // Entropy viscosity scheme
+              {
+                takeEntropyViscosityStep_theta(EV, dt, dt_old, dt_older, t_old);
+                break;
+              }
+              case 3: // Entropy viscosity FCT scheme
+              {
+                takeEntropyViscosityFCTStep_theta(fct, EV, dt, dt_old);
+                break;
+              }
+              case 4: // Galerkin FCT scheme
+              {
+                takeGalerkinFCTStep_theta(fct, dt);
+                break;
+              }
+        */
+        default:
+        {
+          Assert(false, ExcNotImplemented());
+          break;
+        }
       }
-      case 2: // Entropy viscosity scheme
-      {
-        takeEntropyViscosityStep(ssprk, EV, dt, dt_old, dt_older, t_old);
-        break;
-      }
-      case 3: // Entropy viscosity FCT scheme
-      {
-        takeEntropyViscosityFCTStep(ssprk, fct, EV, dt, dt_old);
-        break;
-      }
-      case 4: // Galerkin FCT scheme
-      {
-        takeGalerkinFCTStep(ssprk, fct, dt);
-        break;
-      }
-      default:
-      {
-        Assert(false, ExcNotImplemented());
-        break;
-      }
+
+      // save old quantities
+      this->ss_rhs = ss_rhs_new;
+    }
+    else
+    {
+      Assert(false, ExcNotImplemented());
     }
 
     // update old solution, time, and time step size
@@ -316,10 +377,11 @@ double TransientExecutioner<dim>::enforceCFLCondition(
 }
 
 /**
- * Takes time step with the Galerkin method.
+ * \brief Takes time step with the Galerkin method using an SSPRK method.
  */
 template <int dim>
-void TransientExecutioner<dim>::takeGalerkinStep(SSPRKTimeIntegrator<dim> & ssprk)
+void TransientExecutioner<dim>::takeGalerkinStep_ssprk(
+  SSPRKTimeIntegrator<dim> & ssprk)
 {
   for (unsigned int i = 0; i < ssprk.n_stages; ++i)
   {
@@ -329,7 +391,7 @@ void TransientExecutioner<dim>::takeGalerkinStep(SSPRKTimeIntegrator<dim> & sspr
     // recompute steady-state rhs if it is time-dependent
     if (source_is_time_dependent)
     {
-      this->assembleSteadyStateRHS(t_stage);
+      this->assembleSteadyStateRHS(this->ss_rhs, t_stage);
     }
 
     // advance by an SSPRK step
@@ -341,10 +403,43 @@ void TransientExecutioner<dim>::takeGalerkinStep(SSPRKTimeIntegrator<dim> & sspr
 }
 
 /**
- * Takes time step with the low-order viscosity method.
+ * \brief Takes time step with the Galerkin method using a theta method.
+ *
+ * \param[in] dt time step size
+ * \param[in] t_new new time
  */
 template <int dim>
-void TransientExecutioner<dim>::takeLowOrderStep(SSPRKTimeIntegrator<dim> & ssprk)
+void TransientExecutioner<dim>::takeGalerkinStep_theta(const double & dt,
+                                                       const double & t_new)
+{
+  // compute new steady-state right-hand-side vector b_new
+  if (source_is_time_dependent)
+    this->assembleSteadyStateRHS(ss_rhs_new, t_new);
+
+  // compute system matrix
+  // matrix = M^C + theta*dt*A
+  this->system_matrix.copy_from(consistent_mass_matrix);
+  this->system_matrix.add(theta * dt, this->inviscid_ss_matrix);
+
+  // compute system right-hand-side vector
+  // rhs = M^C*u_old + dt*((1-theta)*b_old + theta*b_new - (1-theta)*A*u_old)
+  consistent_mass_matrix.vmult(this->system_rhs, old_solution);
+  this->inviscid_ss_matrix.vmult(tmp_vector, old_solution);
+  this->system_rhs.add(-(1.0 - theta) * dt, tmp_vector);
+  this->system_rhs.add((1.0 - theta) * dt, this->ss_rhs);
+  this->system_rhs.add(theta * dt, ss_rhs_new);
+
+  // solve linear system
+  this->linear_solver.solve(
+    this->system_matrix, this->new_solution, this->system_rhs, true, t_new);
+}
+
+/**
+ * Takes time step with the low-order method using an SSPRK method.
+ */
+template <int dim>
+void TransientExecutioner<dim>::takeLowOrderStep_ssprk(
+  SSPRKTimeIntegrator<dim> & ssprk)
 {
   for (unsigned int i = 0; i < ssprk.n_stages; ++i)
   {
@@ -354,7 +449,7 @@ void TransientExecutioner<dim>::takeLowOrderStep(SSPRKTimeIntegrator<dim> & sspr
     // recompute steady-state rhs if it is time-dependent
     if (source_is_time_dependent)
     {
-      this->assembleSteadyStateRHS(t_stage);
+      this->assembleSteadyStateRHS(this->ss_rhs, t_stage);
     }
 
     // advance by an SSPRK step
@@ -365,10 +460,42 @@ void TransientExecutioner<dim>::takeLowOrderStep(SSPRKTimeIntegrator<dim> & sspr
 }
 
 /**
+ * \brief Takes time step with the low-order method using a theta method.
+ *
+ * \param[in] dt time step size
+ * \param[in] t_new new time
+ */
+template <int dim>
+void TransientExecutioner<dim>::takeLowOrderStep_theta(const double & dt,
+                                                       const double & t_new)
+{
+  // compute new steady-state right-hand-side vector b_new
+  if (source_is_time_dependent)
+    this->assembleSteadyStateRHS(ss_rhs_new, t_new);
+
+  // compute system matrix
+  // matrix = M^L + theta*dt*A^L
+  this->system_matrix.copy_from(lumped_mass_matrix);
+  this->system_matrix.add(theta * dt, this->low_order_ss_matrix);
+
+  // compute system right-hand-side vector
+  // rhs = M^L*u_old + dt*((1-theta)*b_old + theta*b_new - (1-theta)*A^L*u_old)
+  lumped_mass_matrix.vmult(this->system_rhs, old_solution);
+  this->low_order_ss_matrix.vmult(tmp_vector, old_solution);
+  this->system_rhs.add(-(1.0 - theta) * dt, tmp_vector);
+  this->system_rhs.add((1.0 - theta) * dt, this->ss_rhs);
+  this->system_rhs.add(theta * dt, ss_rhs_new);
+
+  // solve linear system
+  this->linear_solver.solve(
+    this->system_matrix, this->new_solution, this->system_rhs, true, t_new);
+}
+
+/**
  * Takes time step with the entropy viscosity method.
  */
 template <int dim>
-void TransientExecutioner<dim>::takeEntropyViscosityStep(
+void TransientExecutioner<dim>::takeEntropyViscosityStep_ssprk(
   SSPRKTimeIntegrator<dim> & ssprk,
   EntropyViscosity<dim> & EV,
   const double & dt,
@@ -377,8 +504,8 @@ void TransientExecutioner<dim>::takeEntropyViscosityStep(
   const double & t_old)
 {
   // compute EV only at beginning of time step
-  if (this->parameters.EV_time_discretization !=
-      TransportParameters<dim>::TemporalDiscretization::FE)
+  if (this->parameters.entropy_temporal_discretization !=
+      EntropyTemporalDiscretization::FE)
   {
     // recompute high-order steady-state matrix
     EV.recompute_high_order_ss_matrix(
@@ -392,10 +519,10 @@ void TransientExecutioner<dim>::takeEntropyViscosityStep(
 
     // recompute steady-state rhs if it is time-dependent
     if (source_is_time_dependent)
-      this->assembleSteadyStateRHS(t_stage);
+      this->assembleSteadyStateRHS(this->ss_rhs, t_stage);
 
-    if (this->parameters.EV_time_discretization ==
-        TransportParameters<dim>::TemporalDiscretization::FE)
+    if (this->parameters.entropy_temporal_discretization ==
+        EntropyTemporalDiscretization::FE)
     {
       // compute Galerkin solution
       ssprk.step(
@@ -428,7 +555,7 @@ void TransientExecutioner<dim>::takeEntropyViscosityStep(
  * Takes time step with the entropy viscosity method with FCT.
  */
 template <int dim>
-void TransientExecutioner<dim>::takeEntropyViscosityFCTStep(
+void TransientExecutioner<dim>::takeEntropyViscosityFCTStep_ssprk(
   SSPRKTimeIntegrator<dim> & ssprk,
   FCT<dim> & fct,
   EntropyViscosity<dim> & EV,
@@ -442,7 +569,7 @@ void TransientExecutioner<dim>::takeEntropyViscosityFCTStep(
 
     // recompute steady-state rhs if it is time-dependent
     if (source_is_time_dependent)
-      this->assembleSteadyStateRHS(t_stage);
+      this->assembleSteadyStateRHS(this->ss_rhs, t_stage);
 
     // compute Galerkin solution
     ssprk.step(
@@ -491,7 +618,7 @@ void TransientExecutioner<dim>::takeEntropyViscosityFCTStep(
  * Takes time step with the Galerkin method with FCT.
  */
 template <int dim>
-void TransientExecutioner<dim>::takeGalerkinFCTStep(
+void TransientExecutioner<dim>::takeGalerkinFCTStep_ssprk(
   SSPRKTimeIntegrator<dim> & ssprk, FCT<dim> & fct, const double & dt)
 {
   for (unsigned int i = 0; i < ssprk.n_stages; ++i)
@@ -501,7 +628,7 @@ void TransientExecutioner<dim>::takeGalerkinFCTStep(
 
     // recompute steady-state rhs if it is time-dependent
     if (source_is_time_dependent)
-      this->assembleSteadyStateRHS(t_stage);
+      this->assembleSteadyStateRHS(this->ss_rhs, t_stage);
 
     // compute Galerkin solution
     ssprk.step(

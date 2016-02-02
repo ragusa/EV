@@ -3,7 +3,7 @@
  */
 template <int dim>
 SSPRKTimeIntegrator<dim>::SSPRKTimeIntegrator(
-  const typename TransportParameters<dim>::TemporalDiscretization & ssprk_method,
+  const SSPRKMethod & ssprk_method,
   const unsigned int & system_size,
   const LinearSolver<dim> & linear_solver,
   const SparsityPattern & sparsity_pattern)
@@ -12,13 +12,13 @@ SSPRKTimeIntegrator<dim>::SSPRKTimeIntegrator(
   // determine number of stages for chosen method
   switch (ssprk_method)
   {
-    case TransportParameters<dim>::TemporalDiscretization::FE:
+    case SSPRKMethod::FE:
       n_stages = 1;
       break;
-    case TransportParameters<dim>::TemporalDiscretization::SSP2:
+    case SSPRKMethod::SSP2:
       n_stages = 2;
       break;
-    case TransportParameters<dim>::TemporalDiscretization::SSP3:
+    case SSPRKMethod::SSP3:
       n_stages = 3;
       break;
     default:
@@ -37,12 +37,12 @@ SSPRKTimeIntegrator<dim>::SSPRKTimeIntegrator(
   // assign RK parameters a, b, and c
   switch (ssprk_method)
   {
-    case TransportParameters<dim>::TemporalDiscretization::FE:
+    case SSPRKMethod::FE:
       a[0] = 0.0;
       b[0] = 1.0;
       c[0] = 0.0;
       break;
-    case TransportParameters<dim>::TemporalDiscretization::SSP2:
+    case SSPRKMethod::SSP2:
       a[0] = 0.0;
       b[0] = 1.0;
       c[0] = 0.0;
@@ -50,7 +50,7 @@ SSPRKTimeIntegrator<dim>::SSPRKTimeIntegrator(
       b[1] = 0.5;
       c[1] = 1.0;
       break;
-    case TransportParameters<dim>::TemporalDiscretization::SSP3:
+    case SSPRKMethod::SSP3:
       a[0] = 0.0;
       b[0] = 1.0;
       c[0] = 0.0;
@@ -79,13 +79,6 @@ SSPRKTimeIntegrator<dim>::SSPRKTimeIntegrator(
 
   // initialize sparse matrix
   system_matrix.reinit(sparsity_pattern);
-}
-
-/** \brief destructor; deallocates memory for constants and stage solutions.
- */
-template <int dim>
-SSPRKTimeIntegrator<dim>::~SSPRKTimeIntegrator()
-{
 }
 
 /** \brief resets the current stage index, old solution, and time step size

@@ -11,7 +11,7 @@
 rm ./*.bak 2>/dev/null
 
 # list of file extensions to remove from output directories
-rm_extensions=("vtu" "pvd" "pdf" "gpl")
+rm_extensions=("vtk" "vtu" "pvd" "pdf" "gpl")
 
 # remove files in output directories
 for dir in $(ls output); do

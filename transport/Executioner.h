@@ -31,7 +31,6 @@ public:
               Function<dim> & incoming_function,
               const double & domain_volume,
               PostProcessor<dim> & postprocessor);
-  virtual ~Executioner();
 
   virtual void run() = 0;
 
@@ -40,7 +39,7 @@ public:
 protected:
   void setupSystem();
   void assembleInviscidSteadyStateMatrix();
-  void assembleSteadyStateRHS(const double & t);
+  void assembleSteadyStateRHS(Vector<double> & rhs, const double & t);
   void setBoundaryIndicators();
   void getDirichletNodes();
   void applyDirichletBC(SparseMatrix<double> & A,

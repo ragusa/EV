@@ -24,7 +24,9 @@ if ($#ARGV != 0) {
 
 # search variables
 my @search_strings = ("set Problem ID",
-                      "set Time discretization option");
+                      "set Time discretization",
+                      "set SSPRK method",
+                      "set Theta method");
 my @values;
 my @found_strings;
 for (my $i = 0; $i <= $#search_strings; $i++) {
@@ -35,6 +37,8 @@ for (my $i = 0; $i <= $#search_strings; $i++) {
 # associate variables with indices in search arrays
 my $problem_id_i = 0;
 my $time_integrator_i = 1;
+my $ssprk_method_i = 2;
+my $theta_method_i = 3;
 
 # read input file to determine the test problem ID and time integrator
 my $input_file = "input";
@@ -56,23 +60,57 @@ for (my $i = 0; $i < $#search_strings; $i++) {
 # extract values
 my $problem_ID = $values[$problem_id_i];
 my $time_integrator = $values[$time_integrator_i];
+my $ssprk_method = $values[$ssprk_method_i];
+my $theta_method = $values[$theta_method_i];
 
 # determine time integrator string based on time integrator option integer
 my $time_integrator_string;
-my %time_disc_hash = (
-  SS => 'SS',
-  FE => 'FE',
-  CN => 'CN',
-  BE => 'BE',
-  SSP2 => 'SSPRK22',
-  SSP3 => 'SSPRK33'
-);
-if (exists($time_disc_hash{$time_integrator}))
+my @time_integrator_array = ("ss","theta","ssprk");
+my %time_integrator_hash = map { $_ => 1 } @time_integrator_array;
+if (exists($time_integrator_hash{$time_integrator}))
 {
-  $time_integrator_string = $time_disc_hash{$time_integrator}
-} else {
-  die "Invalid time integrator option: $time_integrator\n";
+  if ($time_integrator eq "ss")
+  {
+    $time_integrator_string = "SS";#$time_disc_hash{$time_integrator}
+  }
+  elsif ($time_integrator eq "theta")
+  {
+    my %theta_method_hash = (
+      FE => 'FE',
+      CN => 'CN',
+      BE => 'BE'
+    );
+    if (exists($theta_method_hash{$theta_method}))
+    {
+      $time_integrator_string = $theta_method_hash{$theta_method}
+    }
+    else
+    {
+      die "Invalid theta method: $theta_method\n";
+    }
+  }
+  elsif ($time_integrator eq "ssprk")
+  {
+    my %ssprk_method_hash = (
+      FE => 'FE',
+      SSP2 => 'SSPRK22',
+      SSP3 => 'SSPRK33'
+    );
+    if (exists($ssprk_method_hash{$ssprk_method}))
+    {
+      $time_integrator_string = $ssprk_method_hash{$ssprk_method}
+    }
+    else
+    {
+      die "Invalid ssprk method: $ssprk_method\n";
+    }
+  }
 }
+else
+{
+  die "Invalid time discretization: $time_integrator\n";
+}
+
 
 # determine if steady-state
 my $is_ss;

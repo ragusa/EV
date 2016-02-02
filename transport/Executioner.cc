@@ -75,14 +75,6 @@ Executioner<dim>::Executioner(const TransportParameters<dim> & parameters_,
 }
 
 /**
- * Destructor.
- */
-template <int dim>
-Executioner<dim>::~Executioner()
-{
-}
-
-/**
  * Assembles the inviscid steady-state matrix.
  */
 template <int dim>
@@ -161,13 +153,15 @@ void Executioner<dim>::assembleInviscidSteadyStateMatrix()
 /**
  * Assembles the steady-state rhs.
  *
- * @param[in] t time at which to evaluate rhs
+ * \param[out] rhs vector which to store the steady-state rhs
+ * \param[in] t time at which to evaluate rhs
  */
 template <int dim>
-void Executioner<dim>::assembleSteadyStateRHS(const double & t)
+void Executioner<dim>::assembleSteadyStateRHS(Vector<double> & rhs,
+                                              const double & t)
 {
   // reset steady-state rhs
-  ss_rhs = 0;
+  rhs = 0;
 
   // set the time to be used in the source function
   source_function->set_time(t);
@@ -215,7 +209,7 @@ void Executioner<dim>::assembleSteadyStateRHS(const double & t)
           fe_values[flux].value(i, q) * source_values[q] * fe_values.JxW(q);
 
     // aggregate local matrix and rhs to global matrix and rhs
-    constraints.distribute_local_to_global(cell_rhs, local_dof_indices, ss_rhs);
+    constraints.distribute_local_to_global(cell_rhs, local_dof_indices, rhs);
   } // end cell
 }
 
