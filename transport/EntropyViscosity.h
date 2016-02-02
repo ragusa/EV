@@ -49,14 +49,25 @@ public:
                    SparseMatrix<double> & diffusion_matrix,
                    SparseMatrix<double> & total_matrix);
 
-  void recomputeHighOrderSteadyStateMatrix(const Vector<double> & solution);
+  void recompute_high_order_diffusion_matrix(
+    const Vector<double> & old_solution,
+    const Vector<double> & older_solution,
+    const Vector<double> & oldest_solution,
+    const double & old_dt,
+    const double & older_dt,
+    const double & time,
+    SparseMatrix<double> & diffusion_matrix);
 
   void recompute_high_order_ss_matrix(const Vector<double> & old_solution,
                                       const Vector<double> & older_solution,
                                       const Vector<double> & oldest_solution,
                                       const double & old_dt,
                                       const double & older_dt,
-                                      const double & time);
+                                      const double & time,
+                                      SparseMatrix<double> & diffusion_matrix,
+                                      SparseMatrix<double> & ss_matrix);
+
+  void recompute_high_order_ss_matrix(const Vector<double> & solution);
 
 private:
   void compute_entropy_viscosity(const Vector<double> & old_solution,
@@ -117,7 +128,7 @@ private:
 
   // matrices
   const SparseMatrix<double> * const inviscid_matrix;
-  SparseMatrix<double> * const diffusion_matrix;
+  SparseMatrix<double> * const high_order_diffusion_matrix;
   SparseMatrix<double> * const total_matrix;
 };
 

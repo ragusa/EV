@@ -23,7 +23,7 @@ EntropyViscosity<dim>::EntropyViscosity(
   const EntropyTemporalDiscretization & temporal_discretization,
   const LowOrderViscosity<dim> & low_order_viscosity,
   const SparseMatrix<double> & inviscid_matrix,
-  SparseMatrix<double> & diffusion_matrix,
+  SparseMatrix<double> & high_order_diffusion_matrix,
   SparseMatrix<double> & total_matrix)
   : Viscosity<dim>(n_cells, fe.dofs_per_cell, dof_handler, constraints),
     fe(&fe),
@@ -46,7 +46,7 @@ EntropyViscosity<dim>::EntropyViscosity(
     temporal_discretization(temporal_discretization),
     low_order_viscosity(&low_order_viscosity),
     inviscid_matrix(&inviscid_matrix),
-    diffusion_matrix(&diffusion_matrix),
+    high_order_diffusion_matrix(&high_order_diffusion_matrix),
     total_matrix(&total_matrix)
 {
   // initialize entropy function
@@ -57,7 +57,72 @@ EntropyViscosity<dim>::EntropyViscosity(
 }
 
 /**
- * Recomputes the high-order steady-state matrix.
+ * \brief Recomputes the high-order diffusion matrix.
+ *
+ * \param[in] old_solution  old solution
+ * \param[in] older_solution  older solution
+ * \param[in] oldest_solution  oldest solution
+ * \param[in] old_dt  old time step size
+ * \param[in] older_dt  older time step size
+ * \param[in] time  time at which to evaluate entropy residual
+ * \param[out] diffusion_matrix  diffusion matrix
+ */
+template <int dim>
+void EntropyViscosity<dim>::recompute_high_order_diffusion_matrix(
+  const Vector<double> & old_solution,
+  const Vector<double> & older_solution,
+  const Vector<double> & oldest_solution,
+  const double & old_dt,
+  const double & older_dt,
+  const double & time,
+  SparseMatrix<double> & diffusion_matrix)
+{
+  // recompute entropy viscosity
+  compute_entropy_viscosity(
+    old_solution, older_solution, oldest_solution, old_dt, older_dt, time);
+
+  // compute diffusion matrix
+  this->compute_diffusion_matrix(diffusion_matrix);
+}
+
+/**
+ * \brief Recomputes the high-order steady-state matrix.
+ *
+ * \param[in] old_solution  old solution
+ * \param[in] older_solution  older solution
+ * \param[in] oldest_solution  oldest solution
+ * \param[in] old_dt  old time step size
+ * \param[in] older_dt  older time step size
+ * \param[in] time  time at which to evaluate entropy residual
+ * \param[out] diffusion_matrix  diffusion matrix
+ * \param[out] ss_matrix  steady-state matrix
+ */
+template <int dim>
+void EntropyViscosity<dim>::recompute_high_order_ss_matrix(
+  const Vector<double> & old_solution,
+  const Vector<double> & older_solution,
+  const Vector<double> & oldest_solution,
+  const double & old_dt,
+  const double & older_dt,
+  const double & time,
+  SparseMatrix<double> & diffusion_matrix,
+  SparseMatrix<double> & ss_matrix)
+{
+  // compute diffusion matrix
+  recompute_high_order_diffusion_matrix(old_solution,
+                                        older_solution,
+                                        oldest_solution,
+                                        old_dt,
+                                        older_dt,
+                                        time,
+                                        diffusion_matrix);
+
+  // add diffusion matrix
+  this->add_diffusion_matrix(*inviscid_matrix, diffusion_matrix, ss_matrix);
+}
+
+/**
+ * \brief Recomputes the high-order steady-state matrix.
  *
  * This version of the function is for steady-state computations.
  * It employs the same function used to compute entropy viscosity
@@ -65,10 +130,10 @@ EntropyViscosity<dim>::EntropyViscosity(
  * step size and time parameters to trick the function into computing
  * the steady-state entropy residual.
  *
- * @param[in] solution  solution
+ * \param[in] solution  solution
  */
 template <int dim>
-void EntropyViscosity<dim>::recomputeHighOrderSteadyStateMatrix(
+void EntropyViscosity<dim>::recompute_high_order_ss_matrix(
   const Vector<double> & solution)
 {
   // recompute entropy viscosity
@@ -80,40 +145,11 @@ void EntropyViscosity<dim>::recomputeHighOrderSteadyStateMatrix(
                             0.0); // arbitrary value for time
 
   // compute diffusion matrix
-  this->compute_diffusion_matrix(*diffusion_matrix);
+  this->compute_diffusion_matrix(*high_order_diffusion_matrix);
 
   // add diffusion matrix
-  this->add_diffusion_matrix(*inviscid_matrix, *diffusion_matrix, *total_matrix);
-}
-
-/**
- * Recomputes the high-order steady-state matrix.
- *
- * @param[in] old_solution  old solution
- * @param[in] older_solution  older solution
- * @param[in] oldest_solution  oldest solution
- * @param[in] old_dt  old time step size
- * @param[in] older_dt  older time step size
- * @param[in] time  time at which to evaluate entropy residual
- */
-template <int dim>
-void EntropyViscosity<dim>::recompute_high_order_ss_matrix(
-  const Vector<double> & old_solution,
-  const Vector<double> & older_solution,
-  const Vector<double> & oldest_solution,
-  const double & old_dt,
-  const double & older_dt,
-  const double & time)
-{
-  // recompute entropy viscosity
-  compute_entropy_viscosity(
-    old_solution, older_solution, oldest_solution, old_dt, older_dt, time);
-
-  // compute diffusion matrix
-  this->compute_diffusion_matrix(*diffusion_matrix);
-
-  // add diffusion matrix
-  this->add_diffusion_matrix(*inviscid_matrix, *diffusion_matrix, *total_matrix);
+  this->add_diffusion_matrix(
+    *inviscid_matrix, *high_order_diffusion_matrix, *total_matrix);
 }
 
 /**
@@ -386,7 +422,8 @@ void EntropyViscosity<dim>::compute_entropy_viscosity(
 }
 
 /**
- * Computes the temporal discretization constants used in the entropy residual.
+ * \brief Computes the temporal discretization constants used in the entropy
+ *        residual.
  */
 template <int dim>
 void EntropyViscosity<dim>::compute_temporal_discretization_constants(
@@ -394,15 +431,6 @@ void EntropyViscosity<dim>::compute_temporal_discretization_constants(
 {
   switch (temporal_discretization)
   {
-    case EntropyTemporalDiscretization::FE:
-    {
-      a_old = 1.0 / old_dt;
-      a_older = -1.0 / old_dt;
-      a_oldest = 0.0;
-      b_old = 1.0;
-      b_older = 0.0;
-      break;
-    }
     case EntropyTemporalDiscretization::BE:
     {
       a_old = 1.0 / old_dt;

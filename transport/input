@@ -13,15 +13,15 @@ subsection problem
    # 13 = source-in-void to absorber
    # 14 = 5-region
    # 15 = 2-region saturation
-   set Problem ID = 2
+   set Problem ID = 13
 end
 
 subsection time
-   set End time = 1.0
+   set End time = 0.3
    set Time step size = 1.000
    set CFL limit = 0.5
-   set Time discretization = ssprk       # <ss|theta|ssprk>
-   set Entropy time discretization = BE  # <FE|CN|BE|BDF2>
+   set Time discretization = ss       # <ss|theta|ssprk>
+   set Entropy time discretization = BE  # <CN|BE|BDF2>
    set SSPRK method = FE                 # <FE|SSP2|SSP3>
    set Theta method = CN                 # <FE|CN|BE>
 end
@@ -32,7 +32,7 @@ subsection viscosity
    # 2 = EV
    # 3 = EV+FCT
    # 4 = Galerkin+FCT
-   set Viscosity option = 3
+   set Viscosity option = 4
 end
 
 subsection entropy viscosity
@@ -51,7 +51,7 @@ subsection refinement
    set Refinement mode = space # <space|time>
    set Time refinement factor = 0.5
    set Use adaptive refinement = false
-   set Initial refinement level = 7
+   set Initial refinement level = 5
    set Number of refinement cycles = 1
 end
 

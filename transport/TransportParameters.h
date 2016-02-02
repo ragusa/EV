@@ -26,7 +26,6 @@ public:
   /** \brief Enumeration for types of temporal discretizations for entropy */
   enum class EntropyTemporalDiscretization
   {
-    FE,
     BE,
     CN,
     BDF2

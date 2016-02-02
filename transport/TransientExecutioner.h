@@ -39,28 +39,32 @@ private:
 
   double enforceCFLCondition(const double & dt_proposed) const;
 
-  void takeGalerkinStep_ssprk(SSPRKTimeIntegrator<dim> & ssprk);
+  void compute_galerkin_solution_ssprk(SSPRKTimeIntegrator<dim> & ssprk);
 
-  void takeGalerkinStep_theta(const double & dt, const double & t_new);
+  void compute_galerkin_solution_theta(const double & dt, const double & t_new);
 
-  void takeLowOrderStep_ssprk(SSPRKTimeIntegrator<dim> & ssprk);
+  void compute_low_order_solution_ssprk(SSPRKTimeIntegrator<dim> & ssprk);
 
-  void takeLowOrderStep_theta(const double & dt, const double & t_new);
+  void compute_low_order_solution_theta(const double & dt, const double & t_new);
 
-  void takeEntropyViscosityStep_ssprk(SSPRKTimeIntegrator<dim> & ssprk,
+  void compute_entropy_viscosity_solution_ssprk(SSPRKTimeIntegrator<dim> & ssprk,
                                       EntropyViscosity<dim> & EV,
-                                      const double & dt,
                                       const double & dt_old,
                                       const double & dt_older,
                                       const double & t_old);
 
-  void takeEntropyViscosityFCTStep_ssprk(SSPRKTimeIntegrator<dim> & ssprk,
+  void compute_entropy_viscosity_solution_theta(EntropyViscosity<dim> & EV,
+                                      const double & dt,
+                                      const double & dt_old,
+                                      const double & t_new);
+
+  void compute_entropy_viscosity_fct_solution_ssprk(SSPRKTimeIntegrator<dim> & ssprk,
                                          FCT<dim> & fct,
                                          EntropyViscosity<dim> & EV,
                                          const double & dt,
                                          const double & dt_old);
 
-  void takeGalerkinFCTStep_ssprk(SSPRKTimeIntegrator<dim> & ssprk,
+  void compute_galerkin_fct_solution_ssprk(SSPRKTimeIntegrator<dim> & ssprk,
                                  FCT<dim> & fct,
                                  const double & dt);
 
@@ -82,6 +86,10 @@ private:
   Vector<double> old_stage_solution;
 
   const bool source_is_time_dependent;
+
+  SparseMatrix<double> high_order_diffusion_matrix_new;
+
+  SparseMatrix<double> high_order_ss_matrix_new;
 
   Vector<double> ss_rhs_new;
 

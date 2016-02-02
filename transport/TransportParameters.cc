@@ -198,7 +198,7 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler & prm)
                       "Coefficient for jumps used with entropy viscosity");
     prm.declare_entry("EV temporal discretization",
                       "BE",
-                      Patterns::Selection("FE|BE|CN|BDF2"),
+                      Patterns::Selection("BE|CN|BDF2"),
                       "Temporal discretization for entropy residual");
   }
   prm.leave_subsection();
@@ -294,11 +294,7 @@ void TransportParameters<dim>::get_parameters(ParameterHandler & prm)
     // get temporal discretization for entropy
     std::string entropy_temporal_discretization_string =
       prm.get("Entropy time discretization");
-    if (entropy_temporal_discretization_string == "FE")
-    {
-      entropy_temporal_discretization = EntropyTemporalDiscretization::FE;
-    }
-    else if (entropy_temporal_discretization_string == "CN")
+    if (entropy_temporal_discretization_string == "CN")
     {
       entropy_temporal_discretization = EntropyTemporalDiscretization::CN;
     }

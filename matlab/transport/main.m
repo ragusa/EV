@@ -10,8 +10,8 @@ quadrature.nq = 3;                  % number of quadrature points per cell
 %--------------------------------------------------------------------------
 % spatial method options
 %--------------------------------------------------------------------------
-compute_low_order  = true; % compute and plot low-order solution?
-compute_high_order = false; % compute and plot high-order solution?
+compute_low_order  = false; % compute and plot low-order solution?
+compute_high_order = true; % compute and plot high-order solution?
 compute_FCT        = false; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
@@ -20,7 +20,7 @@ low_order_scheme  = 2;
 
 % high_order_scheme: 1 = Galerkin
 %                    2 = Entropy viscosity
-high_order_scheme = 1;
+high_order_scheme = 2;
 
 % entropy viscosity options:
 ev.cE = 0.1; % coefficient for entropy residual in entropy viscosity
@@ -66,7 +66,7 @@ prelimit = 0;
 %            3: void with    source -> absorber without source
 %            4: void
 %            5: MMS-1
-problemID = 2;
+problemID = 3;
 
 % IC_option: 0: zero
 %            1: exponential pulse
