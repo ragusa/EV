@@ -48,25 +48,26 @@ private:
   void compute_low_order_solution_theta(const double & dt, const double & t_new);
 
   void compute_entropy_viscosity_solution_ssprk(SSPRKTimeIntegrator<dim> & ssprk,
-                                      EntropyViscosity<dim> & EV,
-                                      const double & dt_old,
-                                      const double & dt_older,
-                                      const double & t_old);
+                                                EntropyViscosity<dim> & EV,
+                                                const double & dt_old,
+                                                const double & dt_older,
+                                                const double & t_old);
 
   void compute_entropy_viscosity_solution_theta(EntropyViscosity<dim> & EV,
-                                      const double & dt,
-                                      const double & dt_old,
-                                      const double & t_new);
+                                                const double & dt,
+                                                const double & dt_old,
+                                                const double & t_new);
 
-  void compute_entropy_viscosity_fct_solution_ssprk(SSPRKTimeIntegrator<dim> & ssprk,
-                                         FCT<dim> & fct,
-                                         EntropyViscosity<dim> & EV,
-                                         const double & dt,
-                                         const double & dt_old);
+  void compute_entropy_viscosity_fct_solution_ssprk(
+    SSPRKTimeIntegrator<dim> & ssprk,
+    FCT<dim> & fct,
+    EntropyViscosity<dim> & EV,
+    const double & dt,
+    const double & dt_old);
 
   void compute_galerkin_fct_solution_ssprk(SSPRKTimeIntegrator<dim> & ssprk,
-                                 FCT<dim> & fct,
-                                 const double & dt);
+                                           FCT<dim> & fct,
+                                           const double & dt);
 
   const TemporalDiscretization temporal_discretization;
 

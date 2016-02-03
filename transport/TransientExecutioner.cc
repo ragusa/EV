@@ -212,12 +212,14 @@ void TransientExecutioner<dim>::run()
         }
         case 2: // Entropy viscosity scheme
         {
-          compute_entropy_viscosity_solution_ssprk(*ssprk, EV, dt_old, dt_older, t_old);
+          compute_entropy_viscosity_solution_ssprk(
+            *ssprk, EV, dt_old, dt_older, t_old);
           break;
         }
         case 3: // Entropy viscosity FCT scheme
         {
-          compute_entropy_viscosity_fct_solution_ssprk(*ssprk, fct, EV, dt, dt_old);
+          compute_entropy_viscosity_fct_solution_ssprk(
+            *ssprk, fct, EV, dt, dt_old);
           break;
         }
         case 4: // Galerkin FCT scheme
@@ -257,7 +259,6 @@ void TransientExecutioner<dim>::run()
                 compute_entropy_viscosity_fct_solution_theta(fct, EV, dt, dt_old);
                 break;
               }
-        */
               case 4: // Galerkin FCT scheme
               {
           // compute Galerkin solution
@@ -268,6 +269,7 @@ void TransientExecutioner<dim>::run()
 
                 break;
               }
+        */
         default:
         {
           Assert(false, ExcNotImplemented());
@@ -277,7 +279,8 @@ void TransientExecutioner<dim>::run()
 
       // save old quantities
       this->ss_rhs = ss_rhs_new;
-      this->high_order_diffusion_matrix.copy_from(high_order_diffusion_matrix_new);
+      this->high_order_diffusion_matrix.copy_from(
+        high_order_diffusion_matrix_new);
       this->high_order_ss_matrix.copy_from(high_order_ss_matrix_new);
     }
     else
@@ -427,8 +430,8 @@ void TransientExecutioner<dim>::compute_galerkin_solution_ssprk(
  * \param[in] t_new new time
  */
 template <int dim>
-void TransientExecutioner<dim>::compute_galerkin_solution_theta(const double & dt,
-                                                       const double & t_new)
+void TransientExecutioner<dim>::compute_galerkin_solution_theta(
+  const double & dt, const double & t_new)
 {
   // compute new steady-state right-hand-side vector b_new
   if (source_is_time_dependent)
@@ -484,8 +487,8 @@ void TransientExecutioner<dim>::compute_low_order_solution_ssprk(
  * \param[in] t_new new time
  */
 template <int dim>
-void TransientExecutioner<dim>::compute_low_order_solution_theta(const double & dt,
-                                                       const double & t_new)
+void TransientExecutioner<dim>::compute_low_order_solution_theta(
+  const double & dt, const double & t_new)
 {
   // compute new steady-state right-hand-side vector b_new
   if (source_is_time_dependent)
@@ -760,11 +763,13 @@ void TransientExecutioner<dim>::compute_fct_solution_theta(const double & dt,
  *
  * \param[in] dt  time step size
  */
+/*
 template <int dim>
 void TransientExecutioner<dim>::compute_fct_solution_theta(const double & dt)
 {
   // references
-  const SparseMatrix<double> & high_order_diffusion_matrix_old = this->high_order_diffusion_matrix;
+  const SparseMatrix<double> & high_order_diffusion_matrix_old =
+this->high_order_diffusion_matrix;
 
   // compute flux corrections
   fct.compute_flux_corrections_theta(this->new_solution,
@@ -807,3 +812,4 @@ this->old_solution, dt,
       this->nonlinear_solver.update(this->system_matrix, this->system_rhs);
   }
 }
+*/
