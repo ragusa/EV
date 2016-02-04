@@ -20,7 +20,7 @@ subsection time
    set End time = 0.3
    set Time step size = 1.000
    set CFL limit = 0.5
-   set Time discretization = ss       # <ss|theta|ssprk>
+   set Time discretization = theta       # <ss|theta|ssprk>
    set Entropy time discretization = BE  # <CN|BE|BDF2>
    set SSPRK method = FE                 # <FE|SSP2|SSP3>
    set Theta method = CN                 # <FE|CN|BE>

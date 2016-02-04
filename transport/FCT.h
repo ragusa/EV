@@ -27,7 +27,8 @@ public:
       const std::vector<unsigned int> & dirichlet_nodes,
       const unsigned int & n_dofs,
       const unsigned int & dofs_per_cell,
-      const bool & do_not_limit);
+      const bool & do_not_limit,
+      const double & theta);
 
   FCT(const DoFHandler<dim> & dof_handler,
       Triangulation<dim> & triangulation,
@@ -38,47 +39,73 @@ public:
       const unsigned int & dofs_per_cell,
       const bool & do_not_limit);
 
-  void solve_FCT_system(Vector<double> & new_solution,
-                        const Vector<double> & old_solution,
-                        const SparseMatrix<double> & low_order_ss_matrix,
-                        const Vector<double> & ss_rhs,
-                        const double & dt,
-                        const SparseMatrix<double> & low_order_diffusion_matrix,
-                        const SparseMatrix<double> & high_order_diffusion_matrix);
+  void solve_FCT_system_fe(
+    Vector<double> & new_solution,
+    const Vector<double> & old_solution,
+    const SparseMatrix<double> & low_order_ss_matrix,
+    const Vector<double> & ss_rhs,
+    const double & dt,
+    const SparseMatrix<double> & low_order_diffusion_matrix,
+    const SparseMatrix<double> & high_order_diffusion_matrix);
 
-  bool check_DMP_satisfied();
+  void compute_bounds_fe(const Vector<double> & old_solution,
+                         const SparseMatrix<double> & low_order_ss_matrix,
+                         const Vector<double> & ss_rhs,
+                         const double & dt);
 
-  void compute_bounds(const Vector<double> & old_solution,
-                      const SparseMatrix<double> & low_order_ss_matrix,
-                      const Vector<double> & ss_rhs,
-                      const double & dt);
+  void compute_bounds_theta(const Vector<double> & new_solution,
+                            const Vector<double> & old_solution,
+                            const SparseMatrix<double> & low_order_ss_matrix,
+                            const Vector<double> & ss_rhs_new,
+                            const Vector<double> & ss_rhs_old,
+                            const double & dt);
 
   void compute_bounds_ss(const Vector<double> & solution,
                          const SparseMatrix<double> & low_order_ss_matrix,
                          const Vector<double> & ss_rhs);
 
-  void compute_flux_corrections(
+  void compute_flux_corrections_fe(
     const Vector<double> & high_order_solution,
     const Vector<double> & old_solution,
     const double & dt,
     const SparseMatrix<double> & low_order_diffusion_matrix,
     const SparseMatrix<double> & high_order_diffusion_matrix);
 
+  void compute_flux_corrections_theta(
+    const Vector<double> & high_order_solution,
+    const Vector<double> & old_solution,
+    const double & dt,
+    const SparseMatrix<double> & low_order_diffusion_matrix,
+    const SparseMatrix<double> & high_order_diffusion_matrix_new,
+    const SparseMatrix<double> & high_order_diffusion_matrix_old);
+
   void compute_flux_corrections_ss(
     const Vector<double> & high_order_solution,
     const SparseMatrix<double> & low_order_diffusion_matrix,
     const SparseMatrix<double> & high_order_diffusion_matrix);
 
-  void compute_limiting_coefficients(
+  void compute_limited_flux_bounds_fe(
     const Vector<double> & old_solution,
     const SparseMatrix<double> & low_order_ss_matrix,
     const Vector<double> & ss_rhs,
     const double & dt);
 
-  void compute_limiting_coefficients_ss(
+  void compute_limited_flux_bounds_theta(
+    const Vector<double> & new_solution,
+    const Vector<double> & old_solution,
+    const SparseMatrix<double> & low_order_ss_matrix,
+    const Vector<double> & ss_rhs_new,
+    const Vector<double> & ss_rhs_old,
+    const double & dt);
+
+  void compute_limited_flux_bounds_ss(
     const Vector<double> & solution,
     const SparseMatrix<double> & low_order_ss_matrix,
     const Vector<double> & ss_rhs);
+
+  void compute_limited_fluxes();
+
+  bool check_DMP_satisfied();
 
   bool check_max_principle(const Vector<double> & new_solution,
                            const SparseMatrix<double> & low_order_ss_matrix,
@@ -110,6 +137,8 @@ protected:
   SparseMatrix<double> flux_correction_matrix;
   Vector<double> solution_min;
   Vector<double> solution_max;
+  Vector<double> solution_min_new;
+  Vector<double> solution_max_new;
 
   SparseMatrix<double> system_matrix;
   Vector<double> system_rhs;
@@ -130,6 +159,9 @@ protected:
   const bool do_not_limit;
 
   bool DMP_satisfied;
+
+  /** \brief Theta parameter for theta time discretization schemes */
+  const double theta;
 };
 
 #include "FCT.cc"

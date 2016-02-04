@@ -11,8 +11,8 @@ quadrature.nq = 3;                  % number of quadrature points per cell
 % spatial method options
 %--------------------------------------------------------------------------
 compute_low_order  = false; % compute and plot low-order solution?
-compute_high_order = true; % compute and plot high-order solution?
-compute_FCT        = false; % compute and plot FCT solution?
+compute_high_order = false; % compute and plot high-order solution?
+compute_FCT        = true; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
 %                   2 = graph-theoretic low-order scheme
@@ -20,7 +20,7 @@ low_order_scheme  = 2;
 
 % high_order_scheme: 1 = Galerkin
 %                    2 = Entropy viscosity
-high_order_scheme = 2;
+high_order_scheme = 1;
 
 % entropy viscosity options:
 ev.cE = 0.1; % coefficient for entropy residual in entropy viscosity
@@ -743,7 +743,7 @@ if (compute_FCT)
                         u_old,dt,MC,A,AH,b_old,b_new,viscL,quadrature,...
                         mesh,dof_handler,phys,ev,numerics_opts,...
                         nonlin_solver_opts);
-                    
+
                     % compute flux correction matrix
                     F = flux_correction_matrix(u_old,uH,dt,DH,DL,MC,theta);
                     
@@ -756,7 +756,8 @@ if (compute_FCT)
                         modify_for_strong_DirichletBC);
                     
                     % initialize solution iterate
-                    uFCT = uL;
+                    %uFCT = uL;
+                    uFCT = zeros(dof_handler.n_dof,1);
                     
                     % iteration loop
                     for iter = 1:max_iter

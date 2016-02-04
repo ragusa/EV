@@ -136,7 +136,8 @@ void TransientExecutioner<dim>::run()
                this->dirichlet_nodes,
                this->n_dofs,
                this->dofs_per_cell,
-               this->parameters.do_not_limit);
+               this->parameters.do_not_limit,
+               this->parameters.theta);
 
   // create objects required by temporal integrator
   std::shared_ptr<SSPRKTimeIntegrator<dim>> ssprk;
@@ -253,23 +254,26 @@ void TransientExecutioner<dim>::run()
           compute_entropy_viscosity_solution_theta(EV, dt, dt_old, t_new);
           break;
         }
-        /*
-              case 3: // Entropy viscosity FCT scheme
-              {
-                compute_entropy_viscosity_fct_solution_theta(fct, EV, dt, dt_old);
-                break;
-              }
-              case 4: // Galerkin FCT scheme
-              {
+        case 3: // Entropy viscosity FCT scheme
+        {
+          // compute entropy viscosity solution
+          compute_entropy_viscosity_solution_theta(EV, dt, dt_old, t_new);
+
+          // compute FCT solution
+          compute_fct_solution_theta(fct, dt);
+
+          break;
+        }
+        case 4: // Galerkin FCT scheme
+        {
           // compute Galerkin solution
           compute_galerkin_solution_theta(dt, t_new);
 
           // compute FCT solution
           compute_fct_solution_theta(fct, dt);
 
-                break;
-              }
-        */
+          break;
+        }
         default:
         {
           Assert(false, ExcNotImplemented());
@@ -660,13 +664,13 @@ void TransientExecutioner<dim>::compute_entropy_viscosity_fct_solution_ssprk(
     ssprk.get_intermediate_solution(this->new_solution);
 
     // perform FCT
-    fct.solve_FCT_system(this->new_solution,
-                         old_stage_solution,
-                         this->low_order_ss_matrix,
-                         this->ss_rhs,
-                         dt,
-                         this->low_order_diffusion_matrix,
-                         this->high_order_diffusion_matrix);
+    fct.solve_FCT_system_fe(this->new_solution,
+                            old_stage_solution,
+                            this->low_order_ss_matrix,
+                            this->ss_rhs,
+                            dt,
+                            this->low_order_diffusion_matrix,
+                            this->high_order_diffusion_matrix);
 
     // set stage solution to be FCT solution for this stage
     ssprk.set_intermediate_solution(this->new_solution);
@@ -705,13 +709,13 @@ void TransientExecutioner<dim>::compute_galerkin_fct_solution_ssprk(
     ssprk.get_stage_solution(i, old_stage_solution);
 
     // perform FCT
-    fct.solve_FCT_system(this->new_solution,
-                         old_stage_solution,
-                         this->low_order_ss_matrix,
-                         this->ss_rhs,
-                         dt,
-                         this->low_order_diffusion_matrix,
-                         this->high_order_diffusion_matrix);
+    fct.solve_FCT_system_fe(this->new_solution,
+                            old_stage_solution,
+                            this->low_order_ss_matrix,
+                            this->ss_rhs,
+                            dt,
+                            this->low_order_diffusion_matrix,
+                            this->high_order_diffusion_matrix);
 
     // set stage solution to be FCT solution for this stage
     ssprk.set_intermediate_solution(this->new_solution);
@@ -727,61 +731,28 @@ void TransientExecutioner<dim>::compute_galerkin_fct_solution_ssprk(
 /**
  * \brief Computes the FCT solution using a theta method.
  *
- * \param[in] dt time step size
- * \param[in] t_new new time
- */
-/*
-template <int dim>
-void TransientExecutioner<dim>::compute_fct_solution_theta(const double & dt,
-                                                       const double & t_new)
-{
-  // compute new steady-state right-hand-side vector b_new
-  if (source_is_time_dependent)
-    this->assembleSteadyStateRHS(ss_rhs_new, t_new);
-
-  // compute system matrix
-  // matrix = M^C + theta*dt*A
-  this->system_matrix.copy_from(consistent_mass_matrix);
-  this->system_matrix.add(theta * dt, this->inviscid_ss_matrix);
-
-  // compute system right-hand-side vector
-  // rhs = M^C*u_old + dt*((1-theta)*b_old + theta*b_new - (1-theta)*A*u_old)
-  consistent_mass_matrix.vmult(this->system_rhs, old_solution);
-  this->inviscid_ss_matrix.vmult(tmp_vector, old_solution);
-  this->system_rhs.add(-(1.0 - theta) * dt, tmp_vector);
-  this->system_rhs.add((1.0 - theta) * dt, this->ss_rhs);
-  this->system_rhs.add(theta * dt, ss_rhs_new);
-
-  // solve linear system
-  this->linear_solver.solve(
-    this->system_matrix, this->new_solution, this->system_rhs, true, t_new);
-}
-*/
-
-/**
- * \brief Computes the FCT solution using a theta method.
- *
  * \param[in] dt  time step size
  */
-/*
 template <int dim>
-void TransientExecutioner<dim>::compute_fct_solution_theta(const double & dt)
+void TransientExecutioner<dim>::compute_fct_solution_theta(FCT<dim> & fct,
+                                                           const double & dt)
 {
   // references
+  const Vector<double> & ss_rhs_old = this->ss_rhs;
   const SparseMatrix<double> & high_order_diffusion_matrix_old =
-this->high_order_diffusion_matrix;
+    this->high_order_diffusion_matrix;
 
   // compute flux corrections
   fct.compute_flux_corrections_theta(this->new_solution,
-this->old_solution, dt,
-                                  this->low_order_diffusion_matrix,
-                                  high_order_diffusion_matrix_old,
-                                  high_order_diffusion_matrix_new
-);
+                                     old_solution,
+                                     dt,
+                                     this->low_order_diffusion_matrix,
+                                     high_order_diffusion_matrix_old,
+                                     high_order_diffusion_matrix_new);
 
   // compute system matrix
   this->system_matrix.copy_from(lumped_mass_matrix);
-  this->system_matrix.add(theta*dt, low_order_ss_matrix_new);
+  this->system_matrix.add(theta * dt, this->low_order_ss_matrix);
 
   // initialize guess for nonlinear solver
   this->new_solution = 0.0;
@@ -792,16 +763,33 @@ this->old_solution, dt,
   while (!converged)
   {
     // compute max principle min and max values
-    fct.compute_bounds_theta(
-      this->new_solution, this->low_order_ss_matrix, this->ss_rhs);
+    fct.compute_bounds_theta(this->new_solution,
+                             old_solution,
+                             this->low_order_ss_matrix,
+                             ss_rhs_new,
+                             ss_rhs_old,
+                             dt);
 
-    // compute limited flux correction sum and add it to rhs
-    fct.compute_limiting_coefficients_theta(
-      this->new_solution, this->low_order_ss_matrix, this->ss_rhs);
+    // compute limited flux bounds
+    fct.compute_limited_flux_bounds_theta(this->new_solution,
+                                          old_solution,
+                                          this->low_order_ss_matrix,
+                                          ss_rhs_new,
+                                          ss_rhs_old,
+                                          dt);
+
+    // compute limited flux sums
+    fct.compute_limited_fluxes();
 
     // create system rhs
-    this->system_rhs = this->ss_rhs;
-    this->system_rhs.add(1.0, fct.get_flux_correction_vector());
+    this->system_rhs = 0;
+    this->system_rhs.add((1.0 - theta) * dt, ss_rhs_old);
+    this->system_rhs.add(theta * dt, ss_rhs_new);
+    lumped_mass_matrix.vmult(tmp_vector, old_solution);
+    this->system_rhs.add(1.0, tmp_vector);
+    this->low_order_ss_matrix.vmult(tmp_vector, old_solution);
+    this->system_rhs.add(-(1.0 - theta) * dt, tmp_vector);
+    this->system_rhs.add(dt, fct.get_flux_correction_vector());
 
     // apply Dirichlet BC here
     this->applyDirichletBC(
@@ -812,4 +800,3 @@ this->old_solution, dt,
       this->nonlinear_solver.update(this->system_matrix, this->system_rhs);
   }
 }
-*/

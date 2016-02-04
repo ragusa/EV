@@ -234,9 +234,12 @@ void SteadyStateExecutioner<dim>::compute_FCT_solution()
     fct.compute_bounds_ss(
       this->new_solution, this->low_order_ss_matrix, this->ss_rhs);
 
-    // compute limited flux correction sum and add it to rhs
-    fct.compute_limiting_coefficients_ss(
+    // compute limited flux bounds
+    fct.compute_limited_flux_bounds_ss(
       this->new_solution, this->low_order_ss_matrix, this->ss_rhs);
+
+    // compute limited flux correction sum and add it to rhs
+    fct.compute_limited_fluxes();
 
     // create system rhs
     this->system_rhs = this->ss_rhs;

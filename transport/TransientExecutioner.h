@@ -69,6 +69,8 @@ private:
                                            FCT<dim> & fct,
                                            const double & dt);
 
+  void compute_fct_solution_theta(FCT<dim> & fct, const double & dt);
+
   const TemporalDiscretization temporal_discretization;
 
   SparseMatrix<double> consistent_mass_matrix;
