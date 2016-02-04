@@ -117,9 +117,12 @@ void SteadyStateExecutioner<dim>::compute_galerkin_solution()
   // copy inviscid steady-state matrix to system matrix
   this->system_matrix.copy_from(this->inviscid_ss_matrix);
 
+  // copy steady-state right-hand-side vector to system rhs
+  this->system_rhs = this->ss_rhs;
+
   // solve the linear system: ss_matrix*new_solution = ss_rhs
   this->linear_solver.solve(
-    this->system_matrix, this->new_solution, this->ss_rhs, true);
+    this->system_matrix, this->new_solution, this->system_rhs, true);
 }
 
 /**
@@ -214,49 +217,88 @@ void SteadyStateExecutioner<dim>::compute_FCT_solution()
                this->dofs_per_cell,
                this->parameters.do_not_limit);
 
-  // compute flux corrections
-  fct.compute_flux_corrections_ss(this->new_solution,
-                                  this->low_order_diffusion_matrix,
-                                  this->high_order_diffusion_matrix);
-
-  // copy low-order steady-state matrix to system matrix
-  this->system_matrix.copy_from(this->low_order_ss_matrix);
-
-  // initialize guess for nonlinear solver
-  //this->new_solution = 0.0;
-  //compute_low_order_solution();
-  this->nonlinear_solver.initialize(this->new_solution);
-
-  // begin iteration
-  bool converged = false;
-  while (!converged)
+  // check if high-order solution satisfies bounds - if so, do not use FCT
+  bool skip_fct = false;
+  if (this->parameters.skip_fct_if_bounds_satisfied)
   {
     // compute max principle min and max values
     fct.compute_bounds_ss(
       this->new_solution, this->low_order_ss_matrix, this->ss_rhs);
 
-    // compute limited flux bounds
-    fct.compute_limited_flux_bounds_ss(
-      this->new_solution, this->low_order_ss_matrix, this->ss_rhs);
+    // check bounds
+    skip_fct = fct.check_fct_bounds(this->new_solution);
+  }
 
-    // compute limited flux correction sum and add it to rhs
-    fct.compute_limited_fluxes();
+  if (!skip_fct)
+  {
+    // compute flux corrections
+    fct.compute_flux_corrections_ss(this->new_solution,
+                                    this->low_order_diffusion_matrix,
+                                    this->high_order_diffusion_matrix);
 
-    // create system rhs
-    this->system_rhs = this->ss_rhs;
-    this->system_rhs.add(1.0, fct.get_flux_correction_vector());
+    // copy low-order steady-state matrix to system matrix
+    this->system_matrix.copy_from(this->low_order_ss_matrix);
 
-    // apply Dirichlet BC here
-    this->applyDirichletBC(
-      this->system_matrix, this->system_rhs, this->new_solution);
+    // initialize guess for nonlinear solver
+    switch (this->parameters.fct_initialization_option)
+    {
+      case FCTInitializationOption::zero:
+      {
+        // set to zero
+        this->new_solution = 0.0;
+        
+        break;
+      }
+      case FCTInitializationOption::low:
+      {
+        // compute low-order solution
+        compute_low_order_solution();
+        break;
+      }
+      case FCTInitializationOption::high:
+      {
+        // do nothing, solution vector already contains high-order solution
+        break;
+      }
+      default:
+      {
+        Assert(false, ExcNotImplemented());
+      }
+    }
+    this->nonlinear_solver.initialize(this->new_solution);
 
-    // check convergence and perform update if necessary
-    converged =
-      this->nonlinear_solver.update(this->system_matrix, this->system_rhs);
+    // begin iteration
+    bool converged = false;
+    while (!converged)
+    {
+      // compute max principle min and max values
+      fct.compute_bounds_ss(
+        this->new_solution, this->low_order_ss_matrix, this->ss_rhs);
+
+      // compute limited flux bounds
+      fct.compute_limited_flux_bounds_ss(
+        this->new_solution, this->low_order_ss_matrix, this->ss_rhs);
+
+      // compute limited flux correction sum and add it to rhs
+      fct.compute_limited_fluxes();
+
+      // create system rhs
+      this->system_rhs = this->ss_rhs;
+      this->system_rhs.add(1.0, fct.get_flux_correction_vector());
+
+      // apply Dirichlet BC here
+      this->applyDirichletBC(
+        this->system_matrix, this->system_rhs, this->new_solution);
+
+      // check convergence and perform update if necessary
+      converged =
+        this->nonlinear_solver.update(this->system_matrix, this->system_rhs);
+this->new_solution.print(std::cout, 6, false, false);
+std::exit(0);
+    }
   }
 
   // output FCT bounds if requested
   if (this->parameters.output_DMP_bounds)
-    if (this->parameters.viscosity_option == 3 || this->parameters.viscosity_option == 4) // FCT
-      fct.output_bounds(*(this->postprocessor));
+    fct.output_bounds(*(this->postprocessor));
 }

@@ -60,6 +60,15 @@ public:
     time
   };
 
+  /** \brief Initialization option for FCT */
+  enum class FCTInitializationOption
+  {
+    zero,
+    low,
+    high
+  };
+  FCTInitializationOption fct_initialization_option;
+
   static void declare_parameters(ParameterHandler & prm);
 
   void get_parameters(ParameterHandler & prm);
@@ -84,6 +93,8 @@ public:
 
   // fct parameters
   bool do_not_limit; // flag to turn off limiting for high order solution
+  bool skip_fct_if_bounds_satisfied; // option to skip FCT if high-order
+                                     // solution already satisfies bounds
 
   // refinement parameters
   RefinementMode refinement_mode;

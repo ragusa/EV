@@ -12,6 +12,10 @@ template <int dim>
 class SteadyStateExecutioner : public Executioner<dim>
 {
 public:
+  /** \brief Alias for FCT initialization option */
+  using FCTInitializationOption =
+    typename TransportParameters<dim>::FCTInitializationOption;
+
   SteadyStateExecutioner(const TransportParameters<dim> & parameters,
                          Triangulation<dim> & triangulation,
                          const Tensor<1, dim> & transport_direction,

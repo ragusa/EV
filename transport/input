@@ -6,14 +6,14 @@ subsection problem
    # 6 = MMS-2:  TR:x*exp(-t)          SS:N/a
    # 7 = MMS-3:  TR:exp(-t)*sin(pi*x)  SS:N/a
    # 8 = source in left half
-   # 9 = MMS-4:  TR:x*t                SS:N/a
+   # 9 = MMS-4:  TR:x*t                SS:x
    # 10 = MMS-5: TR:t                  SS:1
    # 11 = skew void-to-absorber
    # 12 = 3-region
    # 13 = source-in-void to absorber
    # 14 = 5-region
    # 15 = 2-region saturation
-   set Problem ID = 5
+   set Problem ID = 1
 end
 
 subsection time
@@ -44,7 +44,9 @@ subsection entropy viscosity
 end
 
 subsection fct
+   set FCT initialization option = zero # <zero|low|high>
    set Do not limit = false
+   set Skip fct if bounds satisfied = false
 end
 
 subsection refinement

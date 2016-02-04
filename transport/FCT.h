@@ -107,9 +107,7 @@ public:
 
   bool check_DMP_satisfied();
 
-  bool check_max_principle(const Vector<double> & new_solution,
-                           const SparseMatrix<double> & low_order_ss_matrix,
-                           const double & dt);
+  bool check_fct_bounds(const Vector<double> & solution) const;
 
   void output_bounds(const PostProcessor<dim> & postprocessor) const;
 

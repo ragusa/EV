@@ -8,6 +8,7 @@ TransportParameters<dim>::TransportParameters()
     ssprk_method(SSPRKMethod::FE),
     theta_method(ThetaMethod::FE),
     theta(0.0),
+    fct_initialization_option(FCTInitializationOption::zero),
     problem_id(1),
     end_time(1.0),
     time_step_size(0.001),
@@ -18,6 +19,7 @@ TransportParameters<dim>::TransportParameters()
     entropy_residual_coefficient(1.0),
     jump_coefficient(1.0),
     do_not_limit(false),
+    skip_fct_if_bounds_satisfied(false),
     refinement_mode(RefinementMode::space),
     time_refinement_factor(0.5),
     use_adaptive_refinement(false),
@@ -240,11 +242,20 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler & prm)
   // fct parameters
   prm.enter_subsection("fct");
   {
+    prm.declare_entry("FCT initialization option",
+                      "zero",
+                      Patterns::Anything(),
+                      "Initialization option for implicit FCT schemes");
     prm.declare_entry(
       "Do not limit",
       "false",
       Patterns::Bool(),
       "Option to choose not to limit when constructing high-order solution");
+    prm.declare_entry(
+      "Skip fct if bounds satisfied",
+      "false",
+      Patterns::Bool(),
+      "Option to skip FCT if high-order solution satisfies bounds");
   }
   prm.leave_subsection();
 }
@@ -434,7 +445,27 @@ void TransportParameters<dim>::get_parameters(ParameterHandler & prm)
   // fct parameters
   prm.enter_subsection("fct");
   {
+    std::string fct_initialization_string = prm.get("FCT initialization option");
+    if (fct_initialization_string == "zero")
+    {
+      fct_initialization_option = FCTInitializationOption::zero;
+    }
+    else if (fct_initialization_string == "low")
+    {
+      fct_initialization_option = FCTInitializationOption::low;
+    }
+    else if (fct_initialization_string == "high")
+    {
+      fct_initialization_option = FCTInitializationOption::high;
+    }
+    else
+    {
+      Assert(false, ExcNotImplemented());
+    }
+
     do_not_limit = prm.get_bool("Do not limit");
+
+    skip_fct_if_bounds_satisfied = prm.get_bool("Skip fct if bounds satisfied");
   }
   prm.leave_subsection();
 }

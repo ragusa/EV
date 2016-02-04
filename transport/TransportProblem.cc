@@ -355,9 +355,8 @@ void TransportProblem<dim>::processProblemID()
       break;
     }
     case 9:
-    {                                                 // MMS-4
-      Assert(dim == 1, ExcNotImplemented());          // assume 1-D
-      Assert(is_time_dependent, ExcNotImplemented()); // assume not steady-state
+    {                                        // MMS-4
+      Assert(dim == 1, ExcNotImplemented()); // assume 1-D
 
       x_min = 0.0;
       x_max = 1.0;
@@ -366,13 +365,22 @@ void TransportProblem<dim>::processProblemID()
 
       incoming_string = "0";
 
-      cross_section_string = "1";
+      cross_section_string = "sigma";
+      function_parser_constants["sigma"] = 1.0;
 
       exact_solution_option = ExactSolutionOption::parser;
-      exact_solution_string = "x*t"; // assume omega_x = 1 and c = 1
-
-      source_string = "x + t + x*t";
-      source_time_dependent = true;
+      if (is_time_dependent)
+      {
+        exact_solution_string = "x*t"; // assume omega_x = 1 and c = 1
+        source_string = "x + t + sigma*x*t";
+        source_time_dependent = true;
+      }
+      else
+      {
+        exact_solution_string = "x";
+        source_string = "1 + sigma*x";
+        source_time_dependent = false;
+      }
 
       initial_conditions_string = exact_solution_string;
 

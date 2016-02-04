@@ -10,8 +10,8 @@ quadrature.nq = 3;                  % number of quadrature points per cell
 %--------------------------------------------------------------------------
 % spatial method options
 %--------------------------------------------------------------------------
-compute_low_order  = false; % compute and plot low-order solution?
-compute_high_order = false; % compute and plot high-order solution?
+compute_low_order  = true; % compute and plot low-order solution?
+compute_high_order = true; % compute and plot high-order solution?
 compute_FCT        = true; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
@@ -66,7 +66,7 @@ prelimit = 0;
 %            3: void with    source -> absorber without source
 %            4: void
 %            5: MMS-1
-problemID = 3;
+problemID = 1;
 
 % IC_option: 0: zero
 %            1: exponential pulse
@@ -120,28 +120,36 @@ switch problemID
         phys.periodic_BC = false;
         phys.inc    = 1.0;
         phys.mu     = 1.0;
-        phys.sigma  = @(x,t) 10.0;
+        phys.sigma  = @(x,t) 1.0;
         phys.source = @(x,t) 0.0;
         phys.speed  = 1;
         
         IC_option = 0;
         source_is_time_dependent = false;
         exact_solution_known = true;
-        exact = @(x,t) (t>=x).*exp(-10*x);
+        if temporal_scheme == 0
+          exact = @(x,t) exp(-1*x);
+        else
+          exact = @(x,t) (t>=x).*exp(-10*x);
+        end
     case 2 % void without source -> absorber without source
         mesh.x_min = 0.0;
         mesh.x_max = 1.0;
         phys.periodic_BC = false;
         phys.inc    = 1.0;
         phys.mu     = 1.0;
-        phys.sigma  = @(x,t) 100.0*(x >= 0.5);
+        phys.sigma  = @(x,t) 10.0*(x >= 0.5);
         phys.source = @(x,t) 0.0;
         phys.speed  = 1;
         
         IC_option = 0;
         source_is_time_dependent = false;
         exact_solution_known = true;
-        exact = @(x,t) (t>=x).*((x<0.5) + (x>=0.5).*(exp(-10*(x-0.5))));
+        if temporal_scheme == 0
+          exact = @(x,t) (x<0.5) + (x>=0.5).*(exp(-10*(x-0.5)));
+        else
+          exact = @(x,t) (t>=x).*((x<0.5) + (x>=0.5).*(exp(-10*(x-0.5))));
+        end
     case 3 % void with source -> absorber without source
         mesh.x_min = 0.0;
         mesh.x_max = 1.0;
@@ -605,7 +613,8 @@ if (compute_FCT)
         % iteration loop
         for iter = 1:max_iter
             % compute limited flux correction sum
-            flim = compute_limited_flux_sums_ss(uFCT,F,AL_mod,b_mod,...
+            %flim = compute_limited_flux_sums_ss(uFCT,F,AL_mod,b_mod,...
+            flim = compute_limited_flux_sums_ss(uFCT,F,AL,b,...
                 sigma_min,sigma_max,source_min,source_max,phys,...
                 dof_handler.n_dof,DMP_option,limiting_option);
             
@@ -627,6 +636,8 @@ if (compute_FCT)
 
             % solve modified system
             uFCT = uFCT + AL_mod \ ss_res;
+%uFCT
+%error('alsfj');
         end
         
         if (~converged)

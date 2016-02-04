@@ -122,8 +122,7 @@ void FCT<dim>::solve_FCT_system_fe(
   linear_solver.solve(system_matrix, new_solution, system_rhs, true);
 
   // check that local discrete maximum principle is satisfied at all time steps
-  bool DMP_satisfied_this_step =
-    check_max_principle(new_solution, low_order_ss_matrix, dt);
+  bool DMP_satisfied_this_step = check_fct_bounds(new_solution);
   DMP_satisfied = DMP_satisfied and DMP_satisfied_this_step;
 }
 
@@ -307,6 +306,10 @@ void FCT<dim>::compute_bounds_ss(const Vector<double> & solution,
                                  const SparseMatrix<double> & low_order_ss_matrix,
                                  const Vector<double> & ss_rhs)
 {
+//std::cout << std::endl;
+//solution.print(std::cout, 6, false, false);
+//ss_rhs.print(std::cout, 6, false, false);
+//std::exit(0);
   // initialize min and max values
   for (unsigned int i = 0; i < n_dofs; ++i)
   {
@@ -346,26 +349,35 @@ void FCT<dim>::compute_bounds_ss(const Vector<double> & solution,
   // compute the upper and lower bounds for the maximum principle
   for (unsigned int i = 0; i < n_dofs; ++i)
   {
-    // get nonzero entries of row i of A
-    std::vector<double> row_values;
-    std::vector<unsigned int> row_indices;
-    unsigned int n_col;
-    get_matrix_row(low_order_ss_matrix, i, row_values, row_indices, n_col);
+    if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) ==
+        dirichlet_nodes.end())
+    {
+      // get nonzero entries of row i of A
+      std::vector<double> row_values;
+      std::vector<unsigned int> row_indices;
+      unsigned int n_col;
+      get_matrix_row(low_order_ss_matrix, i, row_values, row_indices, n_col);
 
-    // add nonzero entries to get the row sum
-    double diagonal_term = 0.0;
-    double off_diagonal_sum = 0.0;
-    for (unsigned int k = 0; k < n_col; ++k)
-      if (row_indices[k] == i)
-        diagonal_term = row_values[k];
-      else
-        off_diagonal_sum += row_values[k];
+      // add nonzero entries to get the row sum
+      double diagonal_term = 0.0;
+      double off_diagonal_sum = 0.0;
+      for (unsigned int k = 0; k < n_col; ++k)
+        if (row_indices[k] == i)
+          diagonal_term = row_values[k];
+        else
+          off_diagonal_sum += row_values[k];
 
-    // compute the max and min values for the maximum principle
-    solution_max(i) = -off_diagonal_sum / diagonal_term * solution_max(i) +
-      ss_rhs(i) / diagonal_term;
-    solution_min(i) = -off_diagonal_sum / diagonal_term * solution_min(i) +
-      ss_rhs(i) / diagonal_term;
+      // compute the max and min values for the maximum principle
+      solution_max(i) = -off_diagonal_sum / diagonal_term * solution_max(i) +
+        ss_rhs(i) / diagonal_term;
+      solution_min(i) = -off_diagonal_sum / diagonal_term * solution_min(i) +
+        ss_rhs(i) / diagonal_term;
+    }
+    else
+    {
+      solution_max(i) = solution(i);
+      solution_min(i) = solution(i);
+    }
   }
 }
 
@@ -634,6 +646,12 @@ void FCT<dim>::compute_limited_flux_bounds_ss(
       }
     }
   }
+/*
+Q_minus.print(std::cout, 6, false, false);
+std::cout << std::endl;
+Q_plus.print(std::cout, 6, false, false);
+std::exit(0);
+*/
 }
 
 /**
@@ -765,46 +783,39 @@ void FCT<dim>::get_matrix_row(const SparseMatrix<double> & matrix,
  * \brief Check that the DMP is satisfied for a time step.
  */
 template <int dim>
-bool FCT<dim>::check_max_principle(
-  const Vector<double> & new_solution,
-  const SparseMatrix<double> & low_order_ss_matrix,
-  const double & dt)
+bool FCT<dim>::check_fct_bounds(const Vector<double> & solution) const
 {
   // machine precision for floating point comparisons
-  const double machine_tolerance = 1.0e-12;
+  const double machine_tolerance = 1.0e-15;
 
   // now set new precision
   std::cout.precision(15);
 
   // check that each dof value is bounded by its neighbors
-  bool local_max_principle_satisfied = true;
+  bool fct_bounds_satisfied = true;
   for (unsigned int i = 0; i < n_dofs; ++i)
   {
-    // check if dof is a Dirichlet node or not - if it is, don't check max
-    // principle
+    // check bounds if dof does not correspond to a Dirichlet node
     if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) ==
         dirichlet_nodes.end())
     {
-      double value_i = new_solution(i);
+      double value_i = solution(i);
+
       // check lower bound
       if (value_i < solution_min(i) - machine_tolerance)
       {
-        local_max_principle_satisfied = false;
-        // determine which condition was violated
-        std::cout << "      Max principle lower bound violated with dof " << i
-                  << " of low-order solution: " << std::scientific << value_i
+        fct_bounds_satisfied = false;
+
+        std::cout << "FCT bounds violated by dof " << i << ": " << value_i
                   << " < " << solution_min(i) << std::endl;
-        debug_max_principle_low_order(i, low_order_ss_matrix, dt);
       }
       // check upper bound
       if (value_i > solution_max(i) + machine_tolerance)
       {
-        local_max_principle_satisfied = false;
-        // determine which condition was violated
-        std::cout << "      Max principle upper bound violated with dof " << i
-                  << " of low-order solution: " << std::scientific << value_i
+        fct_bounds_satisfied = false;
+
+        std::cout << "FCT bounds violated by dof " << i << ": " << value_i
                   << " > " << solution_max(i) << std::endl;
-        debug_max_principle_low_order(i, low_order_ss_matrix, dt);
       }
     }
   }
@@ -812,16 +823,8 @@ bool FCT<dim>::check_max_principle(
   // restore default precision and format
   std::cout.unsetf(std::ios_base::floatfield);
 
-  // exit if max principle was violated
-  if (not local_max_principle_satisfied)
-  {
-    std::cout << "Program terminated due to max-principle violation."
-              << std::endl;
-    std::exit(0);
-  }
-
   // return boolean for satisfaction of DMP
-  return local_max_principle_satisfied;
+  return fct_bounds_satisfied;
 }
 
 /** \brief Debugging function used for determining why the maximum

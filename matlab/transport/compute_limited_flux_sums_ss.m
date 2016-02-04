@@ -10,7 +10,10 @@ if DMP_option == 2
     Wplus = max(Wplus,WplusCMP);
     Wminus = min(Wminus,WminusCMP);
 end
+
 [Qplus,Qminus] = compute_Q_ss(u,Wplus,Wminus,AL_mod,b_mod);
+%[Qminus,Qplus]
+%error('lajsf');
 
 % compute limiting coefficients
 switch limiting_option
