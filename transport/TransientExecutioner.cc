@@ -149,10 +149,6 @@ void TransientExecutioner<dim>::run()
       this->linear_solver,
       this->constrained_sparsity_pattern);
   }
-  else if (temporal_discretization == TemporalDiscretization::theta)
-  {
-    //
-  }
 
   const double t_end = this->parameters.end_time;
   double t_new = 0.0;

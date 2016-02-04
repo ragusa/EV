@@ -13,14 +13,14 @@ subsection problem
    # 13 = source-in-void to absorber
    # 14 = 5-region
    # 15 = 2-region saturation
-   set Problem ID = 13
+   set Problem ID = 5
 end
 
 subsection time
    set End time = 0.3
    set Time step size = 1.000
    set CFL limit = 0.5
-   set Time discretization = theta       # <ss|theta|ssprk>
+   set Time discretization = ss       # <ss|theta|ssprk>
    set Entropy time discretization = BE  # <CN|BE|BDF2>
    set SSPRK method = FE                 # <FE|SSP2|SSP3>
    set Theta method = CN                 # <FE|CN|BE>
@@ -76,7 +76,7 @@ subsection output
    set Output exact solution = true
    set Exact solution refinement level = 7
    set Output initial solution = true 
-   set Output DMP bounds = false
+   set Output DMP bounds = true
    set Save convergence results = false
    set Print solution = false
 end

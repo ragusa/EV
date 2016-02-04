@@ -28,7 +28,7 @@ public:
                             const SparseMatrix<double> &low_order_ss_matrix,
                             const Vector<double>       &ss_rhs,
                             const double               &dt);
-        void output_bounds(const PostProcessor<dim> &postprocessor) const;
+  void output_bounds(const PostProcessor<dim> &postprocessor) const;
   */
 
 private:

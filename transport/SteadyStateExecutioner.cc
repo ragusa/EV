@@ -223,7 +223,8 @@ void SteadyStateExecutioner<dim>::compute_FCT_solution()
   this->system_matrix.copy_from(this->low_order_ss_matrix);
 
   // initialize guess for nonlinear solver
-  this->new_solution = 0.0;
+  //this->new_solution = 0.0;
+  //compute_low_order_solution();
   this->nonlinear_solver.initialize(this->new_solution);
 
   // begin iteration
@@ -253,4 +254,9 @@ void SteadyStateExecutioner<dim>::compute_FCT_solution()
     converged =
       this->nonlinear_solver.update(this->system_matrix, this->system_rhs);
   }
+
+  // output FCT bounds if requested
+  if (this->parameters.output_DMP_bounds)
+    if (this->parameters.viscosity_option == 3 || this->parameters.viscosity_option == 4) // FCT
+      fct.output_bounds(*(this->postprocessor));
 }

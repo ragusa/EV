@@ -201,7 +201,8 @@ dt/(*lumped_mass_matrix)(i,i)*row_sum)
 }
 */
 
-/** \brief Outputs bounds to files.
+/**
+ * \brief Outputs bounds to files.
  */
 /*
 template<int dim>

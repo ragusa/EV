@@ -36,7 +36,7 @@ ev.smoothing_weight = 0.0; % weight for center value in smoothing
 %                  1 = SSPRK(1,1) (Explicit Euler)
 %                  2 = SSPRK(3,3) (Shu-Osher)
 %                  3 = theta method
-temporal_scheme = 3; % temporal discretization scheme
+temporal_scheme = 0; % temporal discretization scheme
 
 theta = 0.5;     % theta parameter to use if using a theta method
 CFL = 0.5;       % CFL number
@@ -185,13 +185,18 @@ switch problemID
         phys.inc    = 0.0;
         phys.mu     = 1.0;
         phys.sigma  = @(x,t) 1.0;
-        phys.source = @(x,t) sin(pi*x)+pi*t*cos(pi*x)+t*sin(pi*x);
         phys.speed  = 1;
-        
         IC_option = 0;
-        source_is_time_dependent = true;
         exact_solution_known = true;
-        exact = @(x,t) t*sin(pi*x);
+        if temporal_scheme == 0 % steady-state
+          source_is_time_dependent = false;
+          phys.source = @(x,t) pi*cos(pi*x)+sin(pi*x);
+          exact = @(x,t) sin(pi*x);
+        else
+          source_is_time_dependent = true;
+          phys.source = @(x,t) sin(pi*x)+pi*t*cos(pi*x)+t*sin(pi*x);
+          exact = @(x,t) t*sin(pi*x);
+        end
     otherwise
         error('Invalid problem ID chosen');
 end

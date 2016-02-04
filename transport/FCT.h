@@ -111,8 +111,7 @@ public:
                            const SparseMatrix<double> & low_order_ss_matrix,
                            const double & dt);
 
-  void output_bounds(const PostProcessor<dim> & postprocessor,
-                     const std::string & description_string) const;
+  void output_bounds(const PostProcessor<dim> & postprocessor) const;
 
   Vector<double> get_flux_correction_vector() const;
 
