@@ -30,7 +30,8 @@ public:
                        FunctionParser<dim> & initial_conditions_function,
                        const double & domain_volume,
                        PostProcessor<dim> & postprocessor,
-                       const bool & source_is_time_dependent);
+                       const bool & source_is_time_dependent,
+                       const double & nominal_dt);
 
   void run() override;
 

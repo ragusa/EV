@@ -8,15 +8,8 @@ RefinementHandler<dim>::RefinementHandler(
   : triangulation(&triangulation_),
     refinement_mode(parameters_.refinement_mode),
     use_adaptive_refinement(parameters_.use_adaptive_refinement),
-    time_refinement_factor(parameters_.time_refinement_factor)
-{
-}
-
-/**
- * Destructor.
- */
-template <int dim>
-RefinementHandler<dim>::~RefinementHandler()
+    time_refinement_factor(parameters_.time_refinement_factor),
+    nominal_dt(parameters_.time_step_size)
 {
 }
 
@@ -24,7 +17,7 @@ RefinementHandler<dim>::~RefinementHandler()
  * Refine the grid or time step size.
  */
 template <int dim>
-void RefinementHandler<dim>::refine(unsigned int cycle) const
+void RefinementHandler<dim>::refine(unsigned int cycle)
 {
   if (cycle != 0)
   {
@@ -38,12 +31,12 @@ void RefinementHandler<dim>::refine(unsigned int cycle) const
       }
       case TransportParameters<dim>::RefinementMode::time:
       { // refine time
-        ExcNotImplemented();
+        nominal_dt *= time_refinement_factor;
         break;
       }
       default:
       {
-        ExcNotImplemented();
+        Assert(false, ExcNotImplemented());
       }
     }
   }
@@ -74,3 +67,15 @@ void RefinementHandler<dim>::refineGrid() const
   // refine uniformly
   triangulation->refine_global(1);
 }
+
+/**
+ * \brief Returns the nominal time step size for this cycle
+ *
+ * \return nominal time step size for this cycle
+ */
+template <int dim>
+double RefinementHandler<dim>::get_nominal_time_step_size() const
+{
+  return nominal_dt;
+}
+

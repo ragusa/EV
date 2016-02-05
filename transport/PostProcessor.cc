@@ -203,7 +203,7 @@ void PostProcessor<dim>::output_results(const Vector<double> & solution,
       // format columns
       convergence_table.set_precision("dx", 3);
       convergence_table.set_scientific("dx", true);
-      if (not is_steady_state)
+      if (!is_steady_state)
       {
         convergence_table.set_precision("dt", 3);
         convergence_table.set_scientific("dt", true);
@@ -235,7 +235,7 @@ void PostProcessor<dim>::output_results(const Vector<double> & solution,
         }
         default:
         {
-          ExcNotImplemented();
+          Assert(false, ExcNotImplemented());
         }
       }
       // print convergence table to console
@@ -409,7 +409,7 @@ void PostProcessor<dim>::evaluate_error(const Vector<double> & solution,
     convergence_table.add_value("cells", n_cells);
     convergence_table.add_value("dofs", dof_handler.n_dofs());
     convergence_table.add_value("dx", avg_cell_volume);
-    if (not is_steady_state)
+    if (!is_steady_state)
     {
       convergence_table.add_value("dt", dt_nominal);
       convergence_table.add_value("1/dt", 1.0 / dt_nominal);

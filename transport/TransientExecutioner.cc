@@ -12,7 +12,8 @@ TransientExecutioner<dim>::TransientExecutioner(
   FunctionParser<dim> & initial_conditions_function_,
   const double & domain_volume_,
   PostProcessor<dim> & postprocessor_,
-  const bool & source_is_time_dependent_)
+  const bool & source_is_time_dependent_,
+  const double & nominal_dt_)
   : Executioner<dim>(parameters_,
                      triangulation_,
                      transport_direction_,
@@ -23,6 +24,7 @@ TransientExecutioner<dim>::TransientExecutioner(
                      postprocessor_),
     temporal_discretization(this->parameters.temporal_discretization),
     initial_conditions_function(&initial_conditions_function_),
+    dt_nominal(nominal_dt_),
     source_is_time_dependent(source_is_time_dependent_),
     theta(this->parameters.theta)
 {
@@ -31,9 +33,6 @@ TransientExecutioner<dim>::TransientExecutioner(
   lumped_mass_matrix.reinit(this->constrained_sparsity_pattern);
   high_order_diffusion_matrix_new.reinit(this->constrained_sparsity_pattern);
   high_order_ss_matrix_new.reinit(this->constrained_sparsity_pattern);
-
-  // compute nominal time step size
-  dt_nominal = this->parameters.time_step_size;
 
   // compute minimum cell diameter for CFL condition
   typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler
@@ -105,6 +104,9 @@ void TransientExecutioner<dim>::run()
 
   // enforce CFL condition on nominal time step size
   dt_nominal = enforceCFLCondition(dt_nominal);
+
+  // update nominal dt reported on convergence table
+  this->postprocessor->update_dt(dt_nominal);
 
   // create entropy viscosity
   EntropyViscosity<dim> EV(this->fe,

@@ -306,10 +306,6 @@ void FCT<dim>::compute_bounds_ss(const Vector<double> & solution,
                                  const SparseMatrix<double> & low_order_ss_matrix,
                                  const Vector<double> & ss_rhs)
 {
-//std::cout << std::endl;
-//solution.print(std::cout, 6, false, false);
-//ss_rhs.print(std::cout, 6, false, false);
-//std::exit(0);
   // initialize min and max values
   for (unsigned int i = 0; i < n_dofs; ++i)
   {
@@ -646,12 +642,6 @@ void FCT<dim>::compute_limited_flux_bounds_ss(
       }
     }
   }
-/*
-Q_minus.print(std::cout, 6, false, false);
-std::cout << std::endl;
-Q_plus.print(std::cout, 6, false, false);
-std::exit(0);
-*/
 }
 
 /**

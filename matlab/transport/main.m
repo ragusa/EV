@@ -596,8 +596,6 @@ if (compute_FCT)
         
         % compute flux correction matrix
         F = flux_correction_matrix_ss(uH,DL-DH);
-        dlmwrite('output/ML.txt',full(ML),' ');
-        dlmwrite('output/flux.txt',full(F),' ');
         
         % compute low-order solution
         uL = AL_mod \ b_mod;
@@ -635,9 +633,8 @@ if (compute_FCT)
             end
 
             % solve modified system
-            uFCT = uFCT + AL_mod \ ss_res;
-%uFCT
-%error('alsfj');
+            du = AL_mod \ ss_res;
+            uFCT = uFCT + du;
         end
         
         if (~converged)

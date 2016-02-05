@@ -763,6 +763,9 @@ void TransportProblem<dim>::run()
       // timer
       TimerOutput::Scope t_solve(timer, "solve");
 
+      // get nominal time step size for cycle
+      const double nominal_dt = refinement_handler.get_nominal_time_step_size();
+
       // create and run transient executioner
       TransientExecutioner<dim> executioner(parameters,
                                             triangulation,
@@ -773,7 +776,8 @@ void TransportProblem<dim>::run()
                                             initial_conditions,
                                             domain_volume,
                                             postprocessor,
-                                            source_time_dependent);
+                                            source_time_dependent,
+                                            nominal_dt);
       executioner.run();
     }
     else

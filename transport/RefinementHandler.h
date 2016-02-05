@@ -15,9 +15,10 @@ class RefinementHandler
 public:
   RefinementHandler(const TransportParameters<dim> & parameters,
                     Triangulation<dim> & triangulation);
-  ~RefinementHandler();
 
-  void refine(unsigned int cycle) const;
+  void refine(unsigned int cycle);
+
+  double get_nominal_time_step_size() const;
 
 private:
   void refineGrid() const;
@@ -33,6 +34,9 @@ private:
 
   /** factor to be applied to time step size if it is refined */
   const double time_refinement_factor;
+
+  /** nominal time step size for current cycle */
+  double nominal_dt;
 };
 
 #include "RefinementHandler.cc"

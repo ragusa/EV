@@ -236,9 +236,6 @@ void SteadyStateExecutioner<dim>::compute_FCT_solution()
                                     this->low_order_diffusion_matrix,
                                     this->high_order_diffusion_matrix);
 
-    // copy low-order steady-state matrix to system matrix
-    this->system_matrix.copy_from(this->low_order_ss_matrix);
-
     // initialize guess for nonlinear solver
     switch (this->parameters.fct_initialization_option)
     {
@@ -246,7 +243,7 @@ void SteadyStateExecutioner<dim>::compute_FCT_solution()
       {
         // set to zero
         this->new_solution = 0.0;
-        
+
         break;
       }
       case FCTInitializationOption::low:
@@ -286,6 +283,11 @@ void SteadyStateExecutioner<dim>::compute_FCT_solution()
       this->system_rhs = this->ss_rhs;
       this->system_rhs.add(1.0, fct.get_flux_correction_vector());
 
+      // create system matrix. Note that although the underlying system matrix
+      // does not change in each iteration, the Dirichlet-modified system matrix
+      // does change
+      this->system_matrix.copy_from(this->low_order_ss_matrix);
+
       // apply Dirichlet BC here
       this->applyDirichletBC(
         this->system_matrix, this->system_rhs, this->new_solution);
@@ -293,8 +295,6 @@ void SteadyStateExecutioner<dim>::compute_FCT_solution()
       // check convergence and perform update if necessary
       converged =
         this->nonlinear_solver.update(this->system_matrix, this->system_rhs);
-this->new_solution.print(std::cout, 6, false, false);
-std::exit(0);
     }
   }
 
