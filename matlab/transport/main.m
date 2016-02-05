@@ -47,13 +47,18 @@ t_end = 0.3;     % max time to run
 %--------------------------------------------------------------------------
 % DMP option: 1 = low-order DMP
 %             2 = max/min(low-order DMP, analytic DMP)
-DMP_option = 1;
+DMP_option = 2;
 
 % limiter option: 0 = All 0 (no correction; low-order)
 %                 1 = All 1 (full correction; high-order)
 %                 2 = Zalesak limiter
 %                 3 = Josh limiter
-limiting_option = 2;
+limiting_option = 3;
+
+% FCT initialization option: 1 = zeros
+%                            2 = low-order solution
+%                            3 = high-order solution
+FCT_initialization = 3;
 
 % prelimit correction fluxes: 0 = do not prelimit, 1 = prelimit
 prelimit = 0;
@@ -66,7 +71,8 @@ prelimit = 0;
 %            3: void with    source -> absorber without source
 %            4: void
 %            5: MMS-1
-problemID = 1;
+%            6: MMS: TR: u = x*t, SS: u = x
+problemID = 6;
 
 % IC_option: 0: zero
 %            1: exponential pulse
@@ -204,6 +210,25 @@ switch problemID
           source_is_time_dependent = true;
           phys.source = @(x,t) sin(pi*x)+pi*t*cos(pi*x)+t*sin(pi*x);
           exact = @(x,t) t*sin(pi*x);
+        end
+    case 6 % MMS: TR: u = x*t, SS: u = x
+        mesh.x_min = 0.0;
+        mesh.x_max = 1.0;
+        phys.periodic_BC = false;
+        phys.inc    = 0.0;
+        phys.mu     = 1.0;
+        phys.sigma  = @(x,t) 1.0;
+        phys.speed  = 1;
+        IC_option = 0;
+        exact_solution_known = true;
+        if temporal_scheme == 0 % steady-state
+          source_is_time_dependent = false;
+          phys.source = @(x,t) 1 + x;
+          exact = @(x,t) x;
+        else
+          source_is_time_dependent = true;
+          phys.source = @(x,t) x + t + x*t;
+          exact = @(x,t) x*t;
         end
     otherwise
         error('Invalid problem ID chosen');
@@ -596,6 +621,7 @@ if (compute_FCT)
         
         % compute flux correction matrix
         F = flux_correction_matrix_ss(uH,DL-DH);
+        fluxvector = convert_matrix_to_edge_vector(F);
         
         % compute low-order solution
         uL = AL_mod \ b_mod;
@@ -606,13 +632,22 @@ if (compute_FCT)
         end
         
         % initialize solution iterate
-        uFCT = zeros(dof_handler.n_dof,1);
+        switch FCT_initialization
+            case 1 % zero
+                uFCT = zeros(dof_handler.n_dof,1);
+            case 2 % low-order
+                uFCT = uL;
+            case 3 % high-order
+                uFCT = uH;
+            otherwise
+                error('Invalid FCT initialization option');
+        end
         
         % iteration loop
         for iter = 1:max_iter
             % compute limited flux correction sum
-            %flim = compute_limited_flux_sums_ss(uFCT,F,AL_mod,b_mod,...
-            flim = compute_limited_flux_sums_ss(uFCT,F,AL,b,...
+            [flim,Wminus,Wplus] = compute_limited_flux_sums_ss(uFCT,F,...
+                AL_mod,b_mod,...
                 sigma_min,sigma_max,source_min,source_max,phys,...
                 dof_handler.n_dof,DMP_option,limiting_option);
             
@@ -635,6 +670,21 @@ if (compute_FCT)
             % solve modified system
             du = AL_mod \ ss_res;
             uFCT = uFCT + du;
+
+            % plot
+            if (plot_FCT_transient)
+                figure(1);
+                clf;
+                hold on;
+                plot(mesh.x,uH,'rx');
+                plot(mesh.x,uL,'b+');
+                plot(mesh.x,uFCT,'g');
+                plot(mesh.x,Wminus,'k.');
+                plot(mesh.x,Wplus,'ko');
+                legend('High','Low','FCT(l+1)','W-(l)','W+(l)',...
+                    'Location',legend_location);
+                w = waitforbuttonpress;
+            end
         end
         
         if (~converged)

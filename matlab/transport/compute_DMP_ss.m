@@ -14,8 +14,10 @@ for i = 2:n
     u_max = max(u(i1:i2));
     u_min = min(u(i1:i2));
     % compute bounds
-    Wplus(i)  = (1-sum(AL(i,:))/AL(i,i))*u_max + b(i)/AL(i,i);
-    Wminus(i) = (1-sum(AL(i,:))/AL(i,i))*u_min + b(i)/AL(i,i);
+    %Wplus(i)  = (1-sum(AL(i,:))/AL(i,i))*u_max + b(i)/AL(i,i);
+    %Wminus(i) = (1-sum(AL(i,:))/AL(i,i))*u_min + b(i)/AL(i,i);
+    Wplus(i)  = -(sum(AL(i,:))-AL(i,i))/AL(i,i)*u_max + b(i)/AL(i,i);
+    Wminus(i) = -(sum(AL(i,:))-AL(i,i))/AL(i,i)*u_min + b(i)/AL(i,i);
 end
 
 end

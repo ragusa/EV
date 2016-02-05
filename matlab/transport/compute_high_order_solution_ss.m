@@ -11,9 +11,6 @@ for iter = 1:max_iter
     [DH,viscE] = compute_high_order_diffusion_matrix(uH,...
         uH,1.0,viscL,mesh,phys,quadrature,ev,...
         dof_handler,high_order_scheme);
-%if (iter == 2)
-%error('Done');
-%end
     
     % compute system matrix and rhs
     system_matrix = A + DH;

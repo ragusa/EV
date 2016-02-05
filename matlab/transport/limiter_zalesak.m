@@ -28,20 +28,24 @@ for i = 1:n
     end
 end
 
-if ~ periodic_BC
+if ~periodic_BC
     % set R+ and R- = 1 for Dirichlet node as Kuzmin recommended. This
     % prevents L_ij from automatically being 0 for j in the support of i
-    Rplus(1)  = 1.0;
-    Rminus(1) = 1.0;
+    %Rplus(1)  = 1.0;
+    %Rminus(1) = 1.0;
+    Rplus(1)  = 0.0;
+    Rminus(1) = 0.0;
 end
 
 % limiting coefficients
 for i=1:n
     for j=1:n
         if(F(i,j)>=0)
-            flim(i) = flim(i) + min(Rplus(i),Rminus(j))*F(i,j);
+            Lij = min(Rplus(i),Rminus(j));
+            flim(i) = flim(i) + Lij*F(i,j);
         else
-            flim(i) = flim(i) + min(Rminus(i),Rplus(j))*F(i,j);
+            Lij = min(Rminus(i),Rplus(j));
+            flim(i) = flim(i) + Lij*F(i,j);
         end
     end
 end

@@ -9,7 +9,8 @@ for edge = 1:n-1
     j = i+1;  % downwind node
     if (F(i,j) > 0)
         if (i == 1)
-            Rplus_i = 1;
+            %Rplus_i = 1;
+            Rplus_i = 0;
         else
             Rplus_i = min((Qplus(i) - Flim(i))/F(i,j),1);
         end
@@ -19,7 +20,8 @@ for edge = 1:n-1
         Flim(j) = Flim(j) + lim*F(j,i);
     elseif (F(i,j) < 0)
         if (i == 1)
-            Rminus_i = 1;
+            %Rminus_i = 1;
+            Rminus_i = 0;
         else
             Rminus_i = min((Qminus(i) - Flim(i))/F(i,j),1);
         end
