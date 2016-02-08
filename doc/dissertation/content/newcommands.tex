@@ -208,6 +208,12 @@
 \newcommand{\correctionfluxij}{\correctionfluxentry_{i,j}}
 \newcommand{\correctionfluxji}{\correctionfluxentry_{j,i}}
 \newcommand{\correctionfluxmatrix}{\mathbf{\MakeUppercase{\correctionfluxletter}}}
+\newcommand{\correctionfluxmatrixremainder}{\Delta\correctionfluxmatrix}
+\newcommand{\limitedcorrectionfluxmatrixremainder}
+  {\bar{\correctionfluxmatrixremainder}}
+\newcommand{\cumulativecorrectionfluxvector}{\bar{\correctionfluxvector}}
+\newcommand{\cumulativecorrectionfluxvectorchange}
+  {\Delta\cumulativecorrectionfluxvector}
 \newcommand{\correctionfluxsumsi}{\MakeUppercase{\correctionfluxletter}^\pm_i}
 \newcommand{\limitedfluxsum}{\limitermatrix\cdot\correctionfluxmatrix}
 \newcommand{\limitedfluxsumi}{\sumj\limiterletter\ij
@@ -409,3 +415,4 @@
 % boundary conditions
 \newcommand{\dirichlet}[1]{\tilde{#1}}
 
+\newcommand{\rowsum}[1]{#1\mathbf{1}}

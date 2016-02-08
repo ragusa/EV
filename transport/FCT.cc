@@ -660,8 +660,10 @@ void FCT<dim>::compute_limited_fluxes()
     if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) !=
         dirichlet_nodes.end())
     {
-      R_minus(i) = 1.0;
-      R_plus(i) = 1.0;
+      //R_minus(i) = 1.0;
+      //R_plus(i) = 1.0;
+      R_minus(i) = 0.0;
+      R_plus(i) = 0.0;
     }
     else
     {

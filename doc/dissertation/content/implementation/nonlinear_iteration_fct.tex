@@ -1,0 +1,86 @@
+In this section, an alternative nonlinear iteration scheme is given for the
+implicit FCT schemes described in Section \ref{sec:nonlinear_iteration}.
+This alternative scheme is based on a scheme given in \cite{kuzmin_FCT};
+the main idea is to keep the limited antidiffusion used in previous iterations
+$\cumulativecorrectionfluxvector^{(\ell)}$
+and only limit the remainder of the original antidiffusion correction flux,
+which is denoted by $\correctionfluxmatrixremainder^{(\ell)}$.
+
+Thus the steady-state FCT iterative scheme becomes
+\begin{equation}
+  \loworderssmatrix\solutionvector^{(\ell+1)} = \ssrhs
+  + \cumulativecorrectionfluxvector^{(\ell)}
+  + \limitermatrix(\solutionvector^{(\ell)})
+  \cdot\correctionfluxmatrixremainder^{(\ell)} \eqp
+\end{equation}
+Noting that $\cumulativecorrectionfluxvector^{(\ell+1)} =
+  \cumulativecorrectionfluxvector^{(\ell)}
+  + \limitermatrix(\solutionvector^{(\ell)})
+  \cdot\correctionfluxmatrixremainder^{(\ell)}$,
+the right hand side vector definition becomes
+\begin{equation}
+  \nonlinearrhs^{(\ell)} \equiv \ssrhs
+    + \cumulativecorrectionfluxvector^{(\ell+1)} \eqp
+\end{equation}
+Similarly the theta discretization FCT iteration scheme becomes
+\begin{equation}
+  (\lumpedmassmatrix + \theta\dt\loworderssmatrix)\solutionvector^{(\ell+1)} =
+    \lumpedmassmatrix\solutionvector^n
+      - (1-\theta)\dt\loworderssmatrix\solutionvector^n
+      + (1-\theta)\dt\ssrhs^n + \theta\dt\ssrhs^{n+1}
+      + \dt\cumulativecorrectionfluxvector^{(\ell+1)} \eqc
+\end{equation}
+which has the right hand side vector
+\begin{equation}
+  \nonlinearrhs^{(\ell)} \equiv
+    \lumpedmassmatrix\solutionvector^n
+      - (1-\theta)\dt\loworderssmatrix\solutionvector^n
+      + (1-\theta)\dt\ssrhs^n + \theta\dt\ssrhs^{n+1}
+      + \dt\cumulativecorrectionfluxvector^{(\ell+1)} \eqp
+\end{equation}
+
+The pseudocode for this alternative defect correction scheme is given
+in Algorithm \ref{alg:defect_correction_fct}.
+
+\begin{algorithm}[H]
+\caption{Alternate Defect Correction Algorithm for FCT}
+\label{alg:defect_correction_fct}
+\begin{algorithmic}
+\State $\nonlinearmatrix \gets \nonlinearmatrix$
+\State $\cumulativecorrectionfluxvector^{(0)} \gets \mathbf{0}$
+\State $\correctionfluxmatrixremainder^{(0)} \gets \correctionfluxmatrix$
+\State $\solutionvector^{(0)} \gets \solutionvector^{\text{guess}}$
+\State \texttt{converged} $\gets$ \texttt{FALSE}
+\For{$\ell\gets 0, \ell_{\text{max}}$}
+  \State $\limitedcorrectionfluxmatrixremainder^{(\ell)} \gets
+    \limitermatrix(\solutionvector^{(\ell)})\odot
+    \correctionfluxmatrixremainder^{(\ell)}$
+  \State $\cumulativecorrectionfluxvectorchange^{(\ell)} \gets
+    \rowsum{\limitedcorrectionfluxmatrixremainder^{(\ell)}}$
+  \State $\cumulativecorrectionfluxvector^{(\ell+1)} \gets
+    \cumulativecorrectionfluxvector^{(\ell)}
+    + \cumulativecorrectionfluxvectorchange^{(\ell)}$
+  \State $\nonlinearrhs^{(\ell)} \gets
+    \nonlinearrhs(\solutionvector^{(\ell)})$
+  \State $\nonlinearmatrix^{(\ell)} \rightarrow
+    \dirichlet{\nonlinearmatrix}^{(\ell)}$,
+    $\nonlinearrhs^{(\ell)} \rightarrow \dirichlet{\nonlinearrhs}^{(\ell)}$,
+  \State $\ssres^{(\ell)} \gets \dirichlet{\nonlinearrhs}^{(\ell)}
+    - \dirichlet{\nonlinearmatrix}^{(\ell)}\solutionvector^{(\ell)}$
+  \If{$\|\ssres^{(\ell)}\|_X < \nonlineartolerance$}
+    \State \texttt{converged} $\gets$ \texttt{TRUE}
+    \Break
+  \EndIf
+  \State $\Delta\solutionvector^{(\ell+1)}
+    \gets \sq{\dirichlet{\nonlinearmatrix}^{(\ell)}}^{-1}\ssres^{(\ell)}$
+  \State $\solutionvector^{(\ell+1)} \gets \solutionvector^{(\ell)}
+    + \relaxationparameter\Delta\solutionvector^{(\ell+1)}$
+  \State $\correctionfluxmatrixremainder^{(\ell+1)} \gets 
+    \correctionfluxmatrixremainder^{(\ell)}
+    - \limitedcorrectionfluxmatrixremainder^{(\ell)}$
+\EndFor
+\If{\Not \texttt{converged}}
+  \Error{Solution did not converge within $\ell_{\text{max}}$ iterations}
+\EndIf
+\end{algorithmic}
+\end{algorithm}
