@@ -35,6 +35,8 @@ protected:
   void compute_entropy_viscosity_solution();
 
   void compute_FCT_solution();
+
+  void compute_FCT_solution_cumulative_antidiffusion();
 };
 
 #include "SteadyStateExecutioner.cc"

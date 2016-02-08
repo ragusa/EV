@@ -105,6 +105,8 @@ public:
 
   void compute_limited_fluxes();
 
+  void compute_limited_flux_matrix(SparseMatrix<double> & limited_flux_matrix);
+
   bool check_DMP_satisfied();
 
   bool check_fct_bounds(const Vector<double> & solution) const;

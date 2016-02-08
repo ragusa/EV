@@ -70,7 +70,10 @@ void SteadyStateExecutioner<dim>::run()
       compute_entropy_viscosity_solution();
 
       // compute FCT solution
-      compute_FCT_solution();
+      if (this->parameters.use_cumulative_antidiffusion_algorithm)
+        compute_FCT_solution_cumulative_antidiffusion();
+      else
+        compute_FCT_solution();
 
       break;
     }
@@ -89,7 +92,10 @@ void SteadyStateExecutioner<dim>::run()
                                                  this->low_order_ss_matrix);
 
       // compute FCT solution
-      compute_FCT_solution();
+      if (this->parameters.use_cumulative_antidiffusion_algorithm)
+        compute_FCT_solution_cumulative_antidiffusion();
+      else
+        compute_FCT_solution();
 
       break;
     }
@@ -206,6 +212,109 @@ void SteadyStateExecutioner<dim>::compute_entropy_viscosity_solution()
  */
 template <int dim>
 void SteadyStateExecutioner<dim>::compute_FCT_solution()
+{
+  // create FCT object
+  FCT<dim> fct(this->dof_handler,
+               *this->triangulation,
+               this->linear_solver,
+               this->constrained_sparsity_pattern,
+               this->dirichlet_nodes,
+               this->n_dofs,
+               this->dofs_per_cell,
+               this->parameters.do_not_limit);
+
+  // check if high-order solution satisfies bounds - if so, do not use FCT
+  bool skip_fct = false;
+  if (this->parameters.skip_fct_if_bounds_satisfied)
+  {
+    // compute max principle min and max values
+    fct.compute_bounds_ss(
+      this->new_solution, this->low_order_ss_matrix, this->ss_rhs);
+
+    // check bounds
+    skip_fct = fct.check_fct_bounds(this->new_solution);
+  }
+
+  if (!skip_fct)
+  {
+    // compute flux corrections
+    fct.compute_flux_corrections_ss(this->new_solution,
+                                    this->low_order_diffusion_matrix,
+                                    this->high_order_diffusion_matrix);
+
+    // initialize guess for nonlinear solver
+    switch (this->parameters.fct_initialization_option)
+    {
+      case FCTInitializationOption::zero:
+      {
+        // set to zero
+        this->new_solution = 0.0;
+
+        break;
+      }
+      case FCTInitializationOption::low:
+      {
+        // compute low-order solution
+        compute_low_order_solution();
+        break;
+      }
+      case FCTInitializationOption::high:
+      {
+        // do nothing, solution vector already contains high-order solution
+        break;
+      }
+      default:
+      {
+        Assert(false, ExcNotImplemented());
+      }
+    }
+    this->nonlinear_solver.initialize(this->new_solution);
+
+    // begin iteration
+    bool converged = false;
+    while (!converged)
+    {
+      // compute max principle min and max values
+      fct.compute_bounds_ss(
+        this->new_solution, this->low_order_ss_matrix, this->ss_rhs);
+
+      // compute limited flux bounds
+      fct.compute_limited_flux_bounds_ss(
+        this->new_solution, this->low_order_ss_matrix, this->ss_rhs);
+
+      // compute limited flux correction sum and add it to rhs
+      fct.compute_limited_fluxes();
+
+      // create system rhs
+      this->system_rhs = this->ss_rhs;
+      this->system_rhs.add(1.0, fct.get_flux_correction_vector());
+
+      // create system matrix. Note that although the underlying system matrix
+      // does not change in each iteration, the Dirichlet-modified system matrix
+      // does change
+      this->system_matrix.copy_from(this->low_order_ss_matrix);
+
+      // apply Dirichlet BC here
+      this->applyDirichletBC(
+        this->system_matrix, this->system_rhs, this->new_solution);
+
+      // check convergence and perform update if necessary
+      converged =
+        this->nonlinear_solver.update(this->system_matrix, this->system_rhs);
+    }
+  }
+
+  // output FCT bounds if requested
+  if (this->parameters.output_DMP_bounds)
+    fct.output_bounds(*(this->postprocessor));
+}
+
+/**
+ * \brief Solves the steady-state FCT system using an alternative algorithm,
+ *        which keeps antidiffusive flux used in previous iterations.
+ */
+template <int dim>
+void SteadyStateExecutioner<dim>::compute_FCT_solution_cumulative_antidiffusion()
 {
   // create FCT object
   FCT<dim> fct(this->dof_handler,

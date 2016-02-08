@@ -1,6 +1,7 @@
 function flim = compute_limited_flux_sums(u_old,uFCT,dt,ML,AL,b,F,...
     sigma_min,sigma_max,source_min,source_max,theta,n_dof,...
-    speed,inc,periodic_BC,limiting_option,DMP_option)            
+    speed,inc,periodic_BC,limiting_option,DMP_option,...
+    dirichlet_limiting_coefficient)            
 
 % compute solution bounds
 [Wplus,Wminus] = compute_DMP(u_old,uFCT,dt,ML,AL,b,theta,inc,periodic_BC);
@@ -23,9 +24,11 @@ switch limiting_option
     case 1 % full correction (no limiting)
         flim = sum(F,2);
     case 2 % Zalesak's limiter
-        flim = limiter_zalesak(F,Qplus,Qminus,periodic_BC);
+        flim = limiter_zalesak(F,Qplus,Qminus,periodic_BC,...
+            dirichlet_limiting_coefficient);
     case 3 % Josh's limiter
-        flim = limiter_josh(F,Qplus,Qminus,periodic_BC);
+        flim = limiter_josh(F,Qplus,Qminus,periodic_BC,...
+            dirichlet_limiting_coefficient);
     otherwise
         error('Invalid limiting option');
 end

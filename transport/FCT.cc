@@ -738,6 +738,102 @@ void FCT<dim>::compute_limited_fluxes()
   }
 }
 
+/**
+ * \brief Computes the limited flux matrix for any FCT scheme.
+ *
+ * \param[out] limited_flux_matrix  matrix of the limited antidiffusive fluxes
+ */
+template <int dim>
+void FCT<dim>::compute_limited_flux_matrix(SparseMatrix<double> & limited_flux_matrix)
+{
+  // reset limited flux matrix
+  limited_flux_matrix = 0;
+
+  for (unsigned int i = 0; i < n_dofs; ++i)
+  {
+    // for Dirichlet nodes, set R_minus and R_plus to 1 because no limiting is
+    // needed
+    if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) !=
+        dirichlet_nodes.end())
+    {
+      R_minus(i) = 0.0;
+      R_plus(i) = 0.0;
+    }
+    else
+    {
+      // get nonzero entries in row i of flux correction matrix
+      std::vector<double> row_values;
+      std::vector<unsigned int> row_indices;
+      unsigned int n_col;
+      get_matrix_row(flux_correction_matrix, i, row_values, row_indices, n_col);
+
+      double P_plus_i = 0.0;
+      double P_minus_i = 0.0;
+      // compute P_plus, P_minus
+      for (unsigned int k = 0; k < n_col; ++k)
+      {
+        // get value of nonzero entry k
+        double Fij = row_values[k];
+
+        P_plus_i += std::max(0.0, Fij);
+        P_minus_i += std::min(0.0, Fij);
+      }
+
+      // compute R_plus(i)
+      if (P_plus_i != 0.0)
+        R_plus(i) = std::min(1.0, Q_plus(i) / P_plus_i);
+      else
+        R_plus(i) = 1.0;
+
+      // compute R_minus(i)
+      if (P_minus_i != 0.0)
+        R_minus(i) = std::min(1.0, Q_minus(i) / P_minus_i);
+      else
+        R_minus(i) = 1.0;
+    }
+  }
+
+  // if user chose not to limit, set R+ and R- = 1 so that limiting
+  // coefficients will equal 1 and thus no limiting will occur
+  if (do_not_limit)
+  {
+    for (unsigned int i = 0; i < n_dofs; ++i)
+    {
+      R_minus(i) = 1.0;
+      R_plus(i) = 1.0;
+    }
+  }
+
+  // compute limited flux matrix
+  for (unsigned int i = 0; i < n_dofs; ++i)
+  {
+    // get first and one-past-last iterator for row
+    SparseMatrix<double>::const_iterator it_flux = flux_correction_matrix.begin(i);
+    SparseMatrix<double>::iterator it_limflux = limited_flux_matrix.begin(i);
+    SparseMatrix<double>::const_iterator it_flux_end = flux_correction_matrix.end(i);
+
+    // loop over columns in row
+    for (; it_flux != it_flux_end; ++it_flux, ++it_limflux)
+    {
+      // get column index
+      const unsigned int j = it_flux->column();
+
+      // get flux value
+      const double Pij = it_flux->value();
+
+      // compute limiting coefficient
+      double Lij;
+      if (Fij >= 0.0)
+        Lij = std::min(R_plus(i), R_minus(j));
+      else
+        Lij = std::min(R_minus(i), R_plus(j));
+
+      // store limited flux
+      it_limflux->value() = Lij*Pij;
+    }
+  }
+}
+
 /** \brief Gets the values and indices of nonzero elements in a row of a sparse
  * matrix.
  *  \param [in] matrix sparse matrix whose row will be retrieved

@@ -47,6 +47,7 @@ subsection fct
    set FCT initialization option = zero # <zero|low|high>
    set Do not limit = false
    set Skip fct if bounds satisfied = false
+   set Use cumulative antidiffusion algorithm = true
 end
 
 subsection refinement

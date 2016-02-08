@@ -1,4 +1,5 @@
-function flim = limiter_zalesak(F,Qplus,Qminus,periodic_BC)
+function flim = limiter_zalesak(F,Qplus,Qminus,periodic_BC,...
+    dirichlet_limiting_coefficient)
 
 n = length(Qplus);
 
@@ -28,13 +29,10 @@ for i = 1:n
     end
 end
 
+% force some bounds for limiting coefficients of dirichlet node
 if ~periodic_BC
-    % set R+ and R- = 1 for Dirichlet node as Kuzmin recommended. This
-    % prevents L_ij from automatically being 0 for j in the support of i
-    %Rplus(1)  = 1.0;
-    %Rminus(1) = 1.0;
-    Rplus(1)  = 0.0;
-    Rminus(1) = 0.0;
+    Rplus(1)  = dirichlet_limiting_coefficient;
+    Rminus(1) = dirichlet_limiting_coefficient;
 end
 
 % limiting coefficients

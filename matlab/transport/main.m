@@ -53,15 +53,18 @@ DMP_option = 2;
 %                 1 = All 1 (full correction; high-order)
 %                 2 = Zalesak limiter
 %                 3 = Josh limiter
-limiting_option = 3;
+limiting_option = 2;
 
 % FCT initialization option: 1 = zeros
 %                            2 = low-order solution
 %                            3 = high-order solution
-FCT_initialization = 3;
+FCT_initialization = 1;
 
 % prelimit correction fluxes: 0 = do not prelimit, 1 = prelimit
 prelimit = 0;
+
+dirichlet_limiting_coefficient = 1.0; % limiting coefficient bounds for
+                                      % Dirichlet nodes
 %--------------------------------------------------------------------------
 % physics options
 %--------------------------------------------------------------------------
@@ -70,9 +73,9 @@ prelimit = 0;
 %            2: void without source -> absorber without source
 %            3: void with    source -> absorber without source
 %            4: void
-%            5: MMS-1
-%            6: MMS: TR: u = x*t, SS: u = x
-problemID = 6;
+%            5: MMS: TR: u = t*sin(pi*x)  SS: u = sin(pi*x)
+%            6: MMS: TR: u = x*t          SS: u = x
+problemID = 5;
 
 % IC_option: 0: zero
 %            1: exponential pulse
@@ -93,7 +96,7 @@ source_is_time_dependent = false; % is source time-dependent?
 %--------------------------------------------------------------------------
 % nonlinear solver options
 %--------------------------------------------------------------------------
-max_iter = 100;           % maximum number of nonlinear solver iterations
+max_iter = 1000;           % maximum number of nonlinear solver iterations
 nonlin_tol = 1e-10;       % nonlinear solver tolerance for discrete L2 norm
 relaxation_parameter = 1.0; % relaxation parameter for iteration
 %--------------------------------------------------------------------------
@@ -192,7 +195,7 @@ switch problemID
         source_is_time_dependent = false;
         exact_solution_known = true;
         exact = @(x,t) t >= x;
-    case 5 % MMS-1
+    case 5 % MMS: TR: u = t*sin(pi*x), SS: u = sin(pi*x)
         mesh.x_min = 0.0;
         mesh.x_max = 1.0;
         phys.periodic_BC = false;
@@ -649,7 +652,8 @@ if (compute_FCT)
             [flim,Wminus,Wplus] = compute_limited_flux_sums_ss(uFCT,F,...
                 AL_mod,b_mod,...
                 sigma_min,sigma_max,source_min,source_max,phys,...
-                dof_handler.n_dof,DMP_option,limiting_option);
+                dof_handler.n_dof,DMP_option,limiting_option,...
+                dirichlet_limiting_coefficient);
             
             % compute correction rhs and modify for Dirichlet BC
             system_rhs = b + flim;
@@ -829,7 +833,8 @@ if (compute_FCT)
                             ML,AL,b,F,sigma_min,sigma_max,source_min,...
                             source_max,theta,dof_handler.n_dof,...
                             phys.speed,phys.inc,phys.periodic_BC,...
-                            limiting_option,DMP_option);
+                            limiting_option,DMP_option,...
+                            dirichlet_limiting_coefficient);
                         
                         % compute system rhs
                         system_rhs = ML*u_old + (1-theta)*dt*ss_res ...

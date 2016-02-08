@@ -1,4 +1,5 @@
-function Flim = limiter_josh(F,Qplus,Qminus,periodic_BC)
+function Flim = limiter_josh(F,Qplus,Qminus,periodic_BC,...
+    dirichlet_limiting_coefficient)            
 
 n = size(F,1);
 
@@ -9,8 +10,7 @@ for edge = 1:n-1
     j = i+1;  % downwind node
     if (F(i,j) > 0)
         if (i == 1)
-            %Rplus_i = 1;
-            Rplus_i = 0;
+            Rplus_i = dirichlet_limiting_coefficient;
         else
             Rplus_i = min((Qplus(i) - Flim(i))/F(i,j),1);
         end
@@ -20,8 +20,7 @@ for edge = 1:n-1
         Flim(j) = Flim(j) + lim*F(j,i);
     elseif (F(i,j) < 0)
         if (i == 1)
-            %Rminus_i = 1;
-            Rminus_i = 0;
+            Rminus_i = dirichlet_limiting_coefficient;
         else
             Rminus_i = min((Qminus(i) - Flim(i))/F(i,j),1);
         end
