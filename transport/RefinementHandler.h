@@ -26,8 +26,11 @@ private:
   /** pointer to triangulation */
   Triangulation<dim> * const triangulation;
 
-  /** type of refinement to occur in each cycle, either spatial or temporal */
-  const typename TransportParameters<dim>::RefinementMode refinement_mode;
+  /** \brief Option to refine space in each refinement cycle */
+  const bool refine_space;
+
+  /** \brief Option to refine time in each refinement cycle */
+  const bool refine_time;
 
   /** flag to use adaptive mesh refinement */
   const bool use_adaptive_refinement;

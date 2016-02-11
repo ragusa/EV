@@ -14,7 +14,7 @@
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
 
-#include "include/parameters/ConservationLawParameters.h"
+#include "include/parameters/RunParameters.h"
 
 using namespace dealii;
 
@@ -26,7 +26,7 @@ class LinearSolver
 {
 public:
   using LinearSolverType =
-    typename ConservationLawParameters<dim>::LinearSolverType;
+    typename RunParameters<dim>::LinearSolverType;
 
   LinearSolver(const LinearSolverType & linear_solver_option,
                const ConstraintMatrix & constraints,

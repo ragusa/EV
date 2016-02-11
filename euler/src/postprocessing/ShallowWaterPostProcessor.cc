@@ -1,4 +1,9 @@
 /**
+ * \file ShallowWaterPostProcessor.cc
+ * \brief Provides the function definitions for the ShallowWaterPostProcessor class.
+ */
+
+/**
  * \brief Constructor.
  */
 template <int dim>

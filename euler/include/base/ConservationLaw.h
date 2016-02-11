@@ -49,7 +49,7 @@
 #include "include/fct/FCT.h"
 #include "include/fe/GradientMatrix.h"
 #include "include/other/Exceptions.h"
-#include "include/parameters/ConservationLawParameters.h"
+#include "include/parameters/RunParameters.h"
 #include "include/postprocessing/PostProcessor.h"
 #include "include/solvers/LinearSolver.h"
 #include "include/time_integrators/SSPRKTimeIntegrator.h"
@@ -93,7 +93,7 @@ template <int dim>
 class ConservationLaw
 {
 public:
-  ConservationLaw(const ConservationLawParameters<dim> & params);
+  ConservationLaw(const RunParameters<dim> & params);
   void run();
 
 protected:
@@ -127,19 +127,19 @@ protected:
   typedef std::map<Cell, double> CellMap;
 
   using TimeStepSizeMethod =
-    typename ConservationLawParameters<dim>::TimeStepSizeMethod;
+    typename RunParameters<dim>::TimeStepSizeMethod;
   using TemporalIntegrator =
-    typename ConservationLawParameters<dim>::TemporalIntegrator;
+    typename RunParameters<dim>::TemporalIntegrator;
   using TemporalDiscretization =
-    typename ConservationLawParameters<dim>::TemporalDiscretization;
-  using Scheme = typename ConservationLawParameters<dim>::Scheme;
-  using LowOrderScheme = typename ConservationLawParameters<dim>::LowOrderScheme;
+    typename RunParameters<dim>::TemporalDiscretization;
+  using Scheme = typename RunParameters<dim>::Scheme;
+  using LowOrderScheme = typename RunParameters<dim>::LowOrderScheme;
   using HighOrderScheme =
-    typename ConservationLawParameters<dim>::HighOrderScheme;
-  using ViscosityType = typename ConservationLawParameters<dim>::ViscosityType;
-  using DiffusionType = typename ConservationLawParameters<dim>::DiffusionType;
+    typename RunParameters<dim>::HighOrderScheme;
+  using ViscosityType = typename RunParameters<dim>::ViscosityType;
+  using DiffusionType = typename RunParameters<dim>::DiffusionType;
   using LinearSolverType =
-    typename ConservationLawParameters<dim>::LinearSolverType;
+    typename RunParameters<dim>::LinearSolverType;
 
   void initialize_system();
   void setup_system();
@@ -336,7 +336,7 @@ protected:
   std::string problem_name;
 
   /** \brief input parameters for conservation law */
-  const ConservationLawParameters<dim> parameters;
+  const RunParameters<dim> parameters;
 
   /** \brief number of components in the system */
   const unsigned int n_components;

@@ -7,7 +7,7 @@
 
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/fe/fe_system.h>
-#include "include/parameters/ConservationLawParameters.h"
+#include "include/parameters/RunParameters.h"
 #include "include/entropy/Entropy.h"
 #include "include/viscosity/Viscosity.h"
 #include "include/fe/GroupFEValuesCell.h"
@@ -48,7 +48,7 @@ public:
   /** \brief Alias for cell iterator map to double */
   using CellMap = typename Viscosity<dim>::CellMap;
 
-  EntropyViscosity(const ConservationLawParameters<dim> & parameters,
+  EntropyViscosity(const RunParameters<dim> & parameters,
                    const std::shared_ptr<Entropy<dim>> & entropy,
                    const CellMap & cell_diameter,
                    const FESystem<dim> & fe,

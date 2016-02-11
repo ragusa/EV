@@ -20,7 +20,7 @@
 #include <deal.II/numerics/data_out.h>
 #include <deal.II/numerics/data_postprocessor.h>
 #include <deal.II/numerics/vector_tools.h>
-#include "include/parameters/ConservationLawParameters.h"
+#include "include/parameters/RunParameters.h"
 #include "include/other/Exceptions.h"
 
 using namespace dealii;
@@ -39,7 +39,7 @@ public:
   typedef std::map<Cell, double> CellMap;
 
   PostProcessor(
-    const ConservationLawParameters<dim> & parameters,
+    const RunParameters<dim> & parameters,
     const double & end_time,
     const bool has_exact_solution,
     std::shared_ptr<Function<dim>> & exact_solution_function,
@@ -146,7 +146,7 @@ private:
   void remove_vtu_files(const std::string & directory,
                         const std::string & filename_base) const;
 
-  const ConservationLawParameters<dim> parameters;
+  const RunParameters<dim> parameters;
 
   const double end_time;
 

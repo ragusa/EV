@@ -12,6 +12,7 @@ TransportParameters<dim>::TransportParameters()
     problem_id(1),
     end_time(1.0),
     time_step_size(0.001),
+    use_adaptive_time_stepping(true),
     CFL_limit(0.5),
     viscosity_option(0),
     entropy_string("0.5*u*u"),
@@ -22,11 +23,13 @@ TransportParameters<dim>::TransportParameters()
     skip_fct_if_bounds_satisfied(false),
     use_cumulative_antidiffusion_algorithm(false),
     include_analytic_bounds(false),
-    refinement_mode(RefinementMode::space),
+    refine_space(true),
+    refine_time(false),
     time_refinement_factor(0.5),
     use_adaptive_refinement(false),
     initial_refinement_level(2),
     n_refinement_cycles(5),
+    use_cell_size_for_convergence_rates(true),
     degree(1),
     n_quadrature_points(3),
     linear_solver_option(1),
@@ -99,6 +102,11 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler & prm)
                       Patterns::Double(),
                       "Time step size if transient problem is run");
     prm.declare_entry(
+      "Use adaptive time stepping",
+      "true",
+      Patterns::Bool(),
+      "Option to automatically adjust time step size to satisfy CFL");
+    prm.declare_entry(
       "CFL limit", "0.5", Patterns::Double(), "Upper bound for the CFL number");
   }
   prm.leave_subsection();
@@ -106,10 +114,16 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler & prm)
   // refinement parameters
   prm.enter_subsection("refinement");
   {
-    prm.declare_entry("Refinement mode",
-                      "space",
-                      Patterns::Selection("space|time"),
-                      "Refinement mode (space or time)");
+    prm.declare_entry(
+      "Refine space",
+      "true",
+      Patterns::Bool(),
+      "Option to refine space in each refinement cycle");
+    prm.declare_entry(
+      "Refine time",
+      "false",
+      Patterns::Bool(),
+      "Option to refine time in each refinement cycle");
     prm.declare_entry("Time refinement factor",
                       "0.5",
                       Patterns::Double(),
@@ -127,6 +141,10 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler & prm)
                       "2",
                       Patterns::Integer(),
                       "Number of refinements for first mesh refinement cycle");
+    prm.declare_entry("Use cell size for convergence rates",
+                      "true",
+                      Patterns::Bool(),
+                      "Option to use cell size, not dt, for convergence rates");
   }
   prm.leave_subsection();
 
@@ -377,6 +395,7 @@ void TransportParameters<dim>::get_parameters(ParameterHandler & prm)
     // get other parameters
     end_time = prm.get_double("End time");
     time_step_size = prm.get_double("Time step size");
+    use_adaptive_time_stepping = prm.get_bool("Use adaptive time stepping");
     CFL_limit = prm.get_double("CFL limit");
   }
   prm.leave_subsection();
@@ -384,24 +403,14 @@ void TransportParameters<dim>::get_parameters(ParameterHandler & prm)
   // refinement parameters
   prm.enter_subsection("refinement");
   {
-    std::string refinement_mode_string = prm.get("Refinement mode");
-    if (refinement_mode_string == "space")
-    {
-      refinement_mode = RefinementMode::space;
-    }
-    else if (refinement_mode_string == "time")
-    {
-      refinement_mode = RefinementMode::time;
-    }
-    else
-    {
-      Assert(false, ExcNotImplemented());
-    }
-
+    refine_space = prm.get_bool("Refine space");
+    refine_time = prm.get_bool("Refine time");
     time_refinement_factor = prm.get_double("Time refinement factor");
     use_adaptive_refinement = prm.get_bool("Use adaptive refinement");
     n_refinement_cycles = prm.get_integer("Number of refinement cycles");
     initial_refinement_level = prm.get_integer("Initial refinement level");
+    use_cell_size_for_convergence_rates =
+      prm.get_bool("Use cell size for convergence rates");
   }
   prm.leave_subsection();
 

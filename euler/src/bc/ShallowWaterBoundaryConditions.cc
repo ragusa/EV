@@ -1,4 +1,9 @@
 /**
+ * \file ShallowWaterBoundaryConditions.cc
+ * \brief Provides the function definitions for the ShallowWaterBoundaryConditions class.
+ */
+
+/**
  * \brief Constructor.
  *
  * \param[in] fe_ finite element system

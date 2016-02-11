@@ -7,7 +7,7 @@
  * \brief Constructor.
  */
 template <int dim>
-FCT<dim>::FCT(const ConservationLawParameters<dim> & parameters_,
+FCT<dim>::FCT(const RunParameters<dim> & parameters_,
               const DoFHandler<dim> & dof_handler_,
               const Triangulation<dim> & triangulation_,
               const SparseMatrix<double> & lumped_mass_matrix_,

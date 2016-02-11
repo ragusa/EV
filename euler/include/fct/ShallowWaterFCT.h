@@ -9,7 +9,7 @@
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/vector.h>
 #include <deal.II/dofs/dof_accessor.h>
-#include "include/parameters/ConservationLawParameters.h"
+#include "include/parameters/RunParameters.h"
 #include "include/postprocessing/PostProcessor.h"
 #include "include/riemann/StarState.h"
 #include "include/solvers/LinearSolver.h"
@@ -60,12 +60,12 @@ class ShallowWaterFCT : public FCT<dim>
 {
 public:
   using AntidiffusionType =
-    typename ConservationLawParameters<dim>::AntidiffusionType;
+    typename RunParameters<dim>::AntidiffusionType;
 
   using FCTSynchronizationType =
-    typename ConservationLawParameters<dim>::FCTSynchronizationType;
+    typename RunParameters<dim>::FCTSynchronizationType;
 
-  ShallowWaterFCT(const ConservationLawParameters<dim> & parameters,
+  ShallowWaterFCT(const RunParameters<dim> & parameters,
                   const DoFHandler<dim> & dof_handler,
                   const SparseMatrix<double> & lumped_mass_matrix,
                   const SparseMatrix<double> & consistent_mass_matrix,

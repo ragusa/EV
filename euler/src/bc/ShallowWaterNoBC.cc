@@ -1,4 +1,9 @@
 /**
+ * \file ShallowWaterNoBC.cc
+ * \brief Provides the function definitions for the ShallowWaterNoBC class.
+ */
+
+/**
  * \brief Constructor.
  *
  * \param[in] fe_ finite element system

@@ -139,7 +139,7 @@ operates on a flag provided by the \c CMake file. With this approach, the serial
 and parallel programs will use the same header and source files.
 
 Each conservation law has its own run parameters class, derived from the
-\link ConservationLawParameters \endlink class, as well as its own class
+\link RunParameters \endlink class, as well as its own class
 for running problems, which is derived from the \link ConservationLaw \endlink
 class.
 

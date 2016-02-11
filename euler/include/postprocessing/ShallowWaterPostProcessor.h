@@ -1,5 +1,5 @@
 /**
- * \file ShallowWaterPostProcessor
+ * \file ShallowWaterPostProcessor.h
  * \brief Contains the header for the ShallowWaterPostProcessor class.
  */
 

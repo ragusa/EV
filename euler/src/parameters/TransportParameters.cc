@@ -20,7 +20,7 @@ void TransportParameters<dim>::declare_parameters(
   ParameterHandler & parameter_handler)
 {
   // declare conservation law parameters
-  ConservationLawParameters<dim>::declare_conservation_law_parameters(
+  RunParameters<dim>::declare_run_parameters(
     parameter_handler);
 
   // problem
@@ -41,7 +41,7 @@ void TransportParameters<dim>::get_parameters(
   ParameterHandler & parameter_handler)
 {
   // get conservation law parameters
-  this->get_conservation_law_parameters(parameter_handler);
+  this->get_run_parameters(parameter_handler);
   this->n_components = 1;
 
   // problem

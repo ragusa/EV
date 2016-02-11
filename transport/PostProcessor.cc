@@ -213,34 +213,25 @@ void PostProcessor<dim>::output_results(const Vector<double> & solution,
       convergence_table.set_scientific("L1 error", true);
       convergence_table.set_precision("L2 error", 3);
       convergence_table.set_scientific("L2 error", true);
-      switch (parameters.refinement_mode)
+
+      // evaluate convergence rates, either with dx or dt
+      if (parameters.use_cell_size_for_convergence_rates && !is_steady_state)
       {
-        case TransportParameters<dim>::RefinementMode::time:
-        {
-          if (!is_steady_state)
-          {
-            // evaluate temporal convergence rates
-            convergence_table.evaluate_convergence_rates(
-              "L1 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
-            convergence_table.evaluate_convergence_rates(
-              "L2 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
-            break;
-          }
-        }
-        case TransportParameters<dim>::RefinementMode::space:
-        {
-          // evaluate spatial convergence rates
-          convergence_table.evaluate_convergence_rates(
-            "L1 error", ConvergenceTable::reduction_rate_log2);
-          convergence_table.evaluate_convergence_rates(
-            "L2 error", ConvergenceTable::reduction_rate_log2);
-          break;
-        }
-        default:
-        {
-          Assert(false, ExcNotImplemented());
-        }
+        // evaluate spatial convergence rates
+        convergence_table.evaluate_convergence_rates(
+          "L1 error", ConvergenceTable::reduction_rate_log2);
+        convergence_table.evaluate_convergence_rates(
+          "L2 error", ConvergenceTable::reduction_rate_log2);
       }
+      else
+      {
+        // evaluate temporal convergence rates
+        convergence_table.evaluate_convergence_rates(
+          "L1 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
+        convergence_table.evaluate_convergence_rates(
+          "L2 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
+      }
+
       // print convergence table to console
       std::cout << std::endl;
       convergence_table.write_text(std::cout);

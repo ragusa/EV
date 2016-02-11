@@ -11,7 +11,7 @@
  */
 template <int dim>
 PostProcessor<dim>::PostProcessor(
-  const ConservationLawParameters<dim> & parameters_,
+  const RunParameters<dim> & parameters_,
   const double & end_time_,
   const bool has_exact_solution_,
   std::shared_ptr<Function<dim>> & exact_solution_function_,
@@ -46,10 +46,10 @@ PostProcessor<dim>::PostProcessor(
   Assert(!problem_name.empty(), ExcInvalidState());
 
   // create map of temporal discretization to string identifier
-  std::map<typename ConservationLawParameters<dim>::TemporalDiscretization,
+  std::map<typename RunParameters<dim>::TemporalDiscretization,
            std::string> temp_discretization_map = {
-    {ConservationLawParameters<dim>::TemporalDiscretization::FE, "FE"},
-    {ConservationLawParameters<dim>::TemporalDiscretization::SSP3, "SSP3"}};
+    {RunParameters<dim>::TemporalDiscretization::FE, "FE"},
+    {RunParameters<dim>::TemporalDiscretization::SSP3, "SSP3"}};
 
   // determine time discretization string
   if (temp_discretization_map.find(parameters.time_discretization) ==
@@ -66,23 +66,23 @@ PostProcessor<dim>::PostProcessor(
   std::string scheme_string;
   switch (parameters.scheme)
   {
-    case ConservationLawParameters<dim>::Scheme::low:
+    case RunParameters<dim>::Scheme::low:
     {
       switch (parameters.low_order_scheme)
       {
-        case ConservationLawParameters<dim>::LowOrderScheme::constant:
+        case RunParameters<dim>::LowOrderScheme::constant:
           scheme_string = "Constant";
           break;
-        case ConservationLawParameters<dim>::LowOrderScheme::standard:
+        case RunParameters<dim>::LowOrderScheme::standard:
           scheme_string = "Low";
           break;
-        case ConservationLawParameters<dim>::LowOrderScheme::dmp:
+        case RunParameters<dim>::LowOrderScheme::dmp:
           scheme_string = "DMP";
           break;
-        case ConservationLawParameters<dim>::LowOrderScheme::di_visc:
+        case RunParameters<dim>::LowOrderScheme::di_visc:
           scheme_string = "DIV";
           break;
-        case ConservationLawParameters<dim>::LowOrderScheme::di_diff:
+        case RunParameters<dim>::LowOrderScheme::di_diff:
           scheme_string = "DID";
           break;
         default:
@@ -91,17 +91,17 @@ PostProcessor<dim>::PostProcessor(
       }
       break;
     }
-    case ConservationLawParameters<dim>::Scheme::high:
+    case RunParameters<dim>::Scheme::high:
     {
       switch (parameters.high_order_scheme)
       {
-        case ConservationLawParameters<dim>::HighOrderScheme::galerkin:
+        case RunParameters<dim>::HighOrderScheme::galerkin:
           scheme_string = "Gal";
           break;
-        case ConservationLawParameters<dim>::HighOrderScheme::entropy_visc:
+        case RunParameters<dim>::HighOrderScheme::entropy_visc:
           scheme_string = "EV";
           break;
-        case ConservationLawParameters<dim>::HighOrderScheme::entropy_diff:
+        case RunParameters<dim>::HighOrderScheme::entropy_diff:
           scheme_string = "ED";
           break;
         default:
@@ -110,17 +110,17 @@ PostProcessor<dim>::PostProcessor(
       }
       break;
     }
-    case ConservationLawParameters<dim>::Scheme::fct:
+    case RunParameters<dim>::Scheme::fct:
     {
       switch (parameters.high_order_scheme)
       {
-        case ConservationLawParameters<dim>::HighOrderScheme::galerkin:
+        case RunParameters<dim>::HighOrderScheme::galerkin:
           scheme_string = "GalFCT";
           break;
-        case ConservationLawParameters<dim>::HighOrderScheme::entropy_visc:
+        case RunParameters<dim>::HighOrderScheme::entropy_visc:
           scheme_string = "EVFCT";
           break;
-        case ConservationLawParameters<dim>::HighOrderScheme::entropy_diff:
+        case RunParameters<dim>::HighOrderScheme::entropy_diff:
           scheme_string = "EDFCT";
           break;
         default:
@@ -566,7 +566,7 @@ void PostProcessor<dim>::output_convergence_data()
     // evaluate convergence rates
     switch (parameters.refinement_mode)
     {
-      case ConservationLawParameters<dim>::RefinementMode::time:
+      case RunParameters<dim>::RefinementMode::time:
       {
         // evaluate temporal convergence rates
         convergence_table.evaluate_convergence_rates(
@@ -575,7 +575,7 @@ void PostProcessor<dim>::output_convergence_data()
           "L2 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
         break;
       }
-      case ConservationLawParameters<dim>::RefinementMode::space:
+      case RunParameters<dim>::RefinementMode::space:
       {
         // evaluate spatial convergence rates
         convergence_table.evaluate_convergence_rates(

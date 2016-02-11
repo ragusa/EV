@@ -1,6 +1,6 @@
 /**
- * \file ConservationLawParameters.cc
- * \brief Provides the function definitions for the ConservationLawParameters
+ * \file RunParameters.cc
+ * \brief Provides the function definitions for the RunParameters
  *        class.
  */
 
@@ -12,7 +12,7 @@
  *  \param prm parameter handler for conservation law parameters
  */
 template <int dim>
-void ConservationLawParameters<dim>::declare_conservation_law_parameters(
+void RunParameters<dim>::declare_run_parameters(
   ParameterHandler & prm)
 {
   // scheme
@@ -292,10 +292,10 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
       "none",
       Patterns::Selection("none|min|compound"),
       "Option for synchronization of limiting coefficients in FCT scheme");
-    prm.declare_entry("fct variables type",
+    prm.declare_entry("fct limitation type",
                       "conservative",
-                      Patterns::Selection("conservative|primitive"),
-                      "Option for set of variables for limiting in FCT");
+                      Patterns::Selection("conservative|characteristic"),
+                      "Option for set of variables to limit in FCT");
     prm.declare_entry("use star states in fct bounds",
                       "false",
                       Patterns::Bool(),
@@ -321,7 +321,7 @@ void ConservationLawParameters<dim>::declare_conservation_law_parameters(
  * \param[in] prm parameter handler for conservation law parameters
  */
 template <int dim>
-void ConservationLawParameters<dim>::get_conservation_law_parameters(
+void RunParameters<dim>::get_run_parameters(
   ParameterHandler & prm)
 {
   // scheme
@@ -564,11 +564,11 @@ void ConservationLawParameters<dim>::get_conservation_law_parameters(
       Assert(false, ExcNotImplemented());
 
     // variables type
-    std::string variables_type_string = prm.get("fct variables type");
+    std::string variables_type_string = prm.get("fct limitation type");
     if (variables_type_string == "conservative")
-      fct_variables_type = FCTVariablesType::conservative;
-    else if (variables_type_string == "primitive")
-      fct_variables_type = FCTVariablesType::primitive;
+      fct_limitation_type = FCTLimitationType::conservative;
+    else if (variables_type_string == "characteristic")
+      fct_limitation_type = FCTLimitationType::characteristic;
     else
       Assert(false, ExcNotImplemented());
 

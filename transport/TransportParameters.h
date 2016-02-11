@@ -53,13 +53,6 @@ public:
   /** \brief Theta parameter \f$\theta\f$ for theta time discretization */
   double theta;
 
-  /** \brief Enumeration for refinement mode (space or time) */
-  enum class RefinementMode
-  {
-    space,
-    time
-  };
-
   /** \brief Initialization option for FCT */
   enum class FCTInitializationOption
   {
@@ -77,9 +70,10 @@ public:
   unsigned int problem_id; // problem ID
 
   // time parameters
-  double end_time;       // end time if transient problem is run
-  double time_step_size; // time step size if transient problem is run
-  double CFL_limit;      // upper bound for the CFL number
+  double end_time;                 // end time if transient problem is run
+  double time_step_size;           // time step size if transient problem is run
+  bool use_adaptive_time_stepping; // option to adjust dt to satisfy CFL
+  double CFL_limit;                // upper bound for the CFL number
   TemporalDiscretization time_discretization_option;
 
   // viscosity parameters
@@ -100,11 +94,13 @@ public:
   bool include_analytic_bounds; // option to widen bounds with analytic bounds
 
   // refinement parameters
-  RefinementMode refinement_mode;
+  bool refine_space;                     // option to refine space
+  bool refine_time;                      // option to refine time
   double time_refinement_factor;         // reduction factor for time refinement
   bool use_adaptive_refinement;          // option to use adaptive mesh refinement
   unsigned int initial_refinement_level; // initial level of refinement
   unsigned int n_refinement_cycles;      // number of refinement cycles
+  bool use_cell_size_for_convergence_rates; // use dx for rates, otherwise dt
 
   // finite element parameters
   unsigned int degree; // polynomial degree of finite elements

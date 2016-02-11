@@ -10,7 +10,7 @@
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/function_parser.h>
 
-#include "include/parameters/ConservationLawParameters.h"
+#include "include/parameters/RunParameters.h"
 
 using namespace dealii;
 
@@ -19,7 +19,7 @@ using namespace dealii;
  * \brief Class for parameters related to the shallow water equations.
  */
 template <int dim>
-class ShallowWaterParameters : public ConservationLawParameters<dim>
+class ShallowWaterParameters : public RunParameters<dim>
 {
 public:
   ShallowWaterParameters();

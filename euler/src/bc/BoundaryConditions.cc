@@ -1,4 +1,9 @@
 /**
+ * \file BoundaryConditions.cc
+ * \brief Provides the function definitions for the BoundaryConditions class.
+ */
+
+/**
  * \brief Constructor.
  *
  * \param[in] fe_ finite element system

@@ -22,7 +22,7 @@ void EulerParameters<dim>::declare_euler_parameters(
   ParameterHandler & parameter_handler)
 {
   // declare conservation law parameters
-  ConservationLawParameters<dim>::declare_conservation_law_parameters(
+  RunParameters<dim>::declare_run_parameters(
     parameter_handler);
 
   // problem
@@ -59,7 +59,7 @@ void EulerParameters<dim>::get_euler_parameters(
 
 {
   // get conservation law parameters
-  this->get_conservation_law_parameters(parameter_handler);
+  this->get_run_parameters(parameter_handler);
   this->n_components = n_euler_components;
 
   // problem

@@ -8,7 +8,7 @@
  */
 template <int dim>
 SSPRKTimeIntegrator<dim>::SSPRKTimeIntegrator(
-  const typename ConservationLawParameters<dim>::TemporalDiscretization &
+  const typename RunParameters<dim>::TemporalDiscretization &
     ssprk_method,
   const unsigned int & system_size,
   const LinearSolver<dim> & linear_solver,
@@ -18,13 +18,13 @@ SSPRKTimeIntegrator<dim>::SSPRKTimeIntegrator(
   // determine number of stages for chosen method
   switch (ssprk_method)
   {
-    case ConservationLawParameters<dim>::TemporalDiscretization::FE:
+    case RunParameters<dim>::TemporalDiscretization::FE:
       n_stages = 1;
       break;
-    case ConservationLawParameters<dim>::TemporalDiscretization::SSP2:
+    case RunParameters<dim>::TemporalDiscretization::SSP2:
       n_stages = 2;
       break;
-    case ConservationLawParameters<dim>::TemporalDiscretization::SSP3:
+    case RunParameters<dim>::TemporalDiscretization::SSP3:
       n_stages = 3;
       break;
     default:
@@ -43,12 +43,12 @@ SSPRKTimeIntegrator<dim>::SSPRKTimeIntegrator(
   // assign RK parameters a, b, and c
   switch (ssprk_method)
   {
-    case ConservationLawParameters<dim>::TemporalDiscretization::FE:
+    case RunParameters<dim>::TemporalDiscretization::FE:
       alpha[0] = 0.0;
       beta[0] = 1.0;
       c[0] = 0.0;
       break;
-    case ConservationLawParameters<dim>::TemporalDiscretization::SSP2:
+    case RunParameters<dim>::TemporalDiscretization::SSP2:
       alpha[0] = 0.0;
       beta[0] = 1.0;
       c[0] = 0.0;
@@ -56,7 +56,7 @@ SSPRKTimeIntegrator<dim>::SSPRKTimeIntegrator(
       beta[1] = 0.5;
       c[1] = 1.0;
       break;
-    case ConservationLawParameters<dim>::TemporalDiscretization::SSP3:
+    case RunParameters<dim>::TemporalDiscretization::SSP3:
       alpha[0] = 0.0;
       beta[0] = 1.0;
       c[0] = 0.0;

@@ -22,7 +22,7 @@ void ShallowWaterParameters<dim>::declare_parameters(
   ParameterHandler & parameter_handler)
 {
   // declare conservation law parameters
-  ConservationLawParameters<dim>::declare_conservation_law_parameters(
+  RunParameters<dim>::declare_run_parameters(
     parameter_handler);
 
   // problem
@@ -65,7 +65,7 @@ void ShallowWaterParameters<dim>::get_parameters(
   ParameterHandler & parameter_handler)
 {
   // get conservation law parameters
-  this->get_conservation_law_parameters(parameter_handler);
+  this->get_run_parameters(parameter_handler);
 
   // set number of components
   this->n_components = dim + 1;

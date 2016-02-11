@@ -394,10 +394,22 @@ double TransientExecutioner<dim>::enforceCFLCondition(
   // compute proposed CFL number
   double proposed_CFL = dt_proposed * max_speed_dx;
 
-  // if computed CFL number is greater than the set limit, then adjust dt
   double dt;
+  // if time step violates CFL limit, then respond accordingly
   if (proposed_CFL > this->parameters.CFL_limit)
-    dt = this->parameters.CFL_limit / max_speed_dx;
+    // if user specified to adjust dt based on CFL
+    if (this->parameters.use_adaptive_time_stepping)
+    {
+      // adjust dt to satisfy CFL
+      dt = this->parameters.CFL_limit / max_speed_dx;
+    }
+    else
+    {
+      // report CFL violation but do not change dt
+      std::cout << "CFL violated for cycle: ";
+      std::cout << "\x1b[1;31m CFL = " << proposed_CFL << "\x1b[0m" << std::endl;
+      dt = dt_proposed;
+    }
   else
     dt = dt_proposed;
 

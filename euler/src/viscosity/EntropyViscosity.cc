@@ -13,7 +13,7 @@
  */
 template <int dim>
 EntropyViscosity<dim>::EntropyViscosity(
-  const ConservationLawParameters<dim> & parameters_,
+  const RunParameters<dim> & parameters_,
   const std::shared_ptr<Entropy<dim>> & entropy_,
   const CellMap & cell_diameter_,
   const FESystem<dim> & fe_,

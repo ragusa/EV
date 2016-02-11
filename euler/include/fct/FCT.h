@@ -11,7 +11,7 @@
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/vector.h>
 #include <deal.II/dofs/dof_accessor.h>
-#include "include/parameters/ConservationLawParameters.h"
+#include "include/parameters/RunParameters.h"
 #include "include/postprocessing/PostProcessor.h"
 #include "include/riemann/StarState.h"
 #include "include/solvers/LinearSolver.h"
@@ -61,18 +61,18 @@ template <int dim>
 class FCT
 {
 public:
-  using FCTBoundsType = typename ConservationLawParameters<dim>::FCTBoundsType;
+  using FCTBoundsType = typename RunParameters<dim>::FCTBoundsType;
 
   using AntidiffusionType =
-    typename ConservationLawParameters<dim>::AntidiffusionType;
+    typename RunParameters<dim>::AntidiffusionType;
 
   using FCTSynchronizationType =
-    typename ConservationLawParameters<dim>::FCTSynchronizationType;
+    typename RunParameters<dim>::FCTSynchronizationType;
 
-  using FCTVariablesType =
-    typename ConservationLawParameters<dim>::FCTVariablesType;
+  using FCTLimitationType =
+    typename RunParameters<dim>::FCTLimitationType;
 
-  FCT(const ConservationLawParameters<dim> & parameters,
+  FCT(const RunParameters<dim> & parameters,
       const DoFHandler<dim> & dof_handler,
       const Triangulation<dim> & triangulation,
       const SparseMatrix<double> & lumped_mass_matrix,
@@ -195,7 +195,7 @@ private:
 
   const FCTSynchronizationType synchronization_type;
 
-  const FCTVariablesType fct_variables_type;
+  const FCTLimitationType fct_limitation_type;
 
   const bool use_star_states_in_fct_bounds;
 

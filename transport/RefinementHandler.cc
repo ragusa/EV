@@ -6,7 +6,8 @@ RefinementHandler<dim>::RefinementHandler(
   const TransportParameters<dim> & parameters_,
   Triangulation<dim> & triangulation_)
   : triangulation(&triangulation_),
-    refinement_mode(parameters_.refinement_mode),
+    refine_space(parameters_.refine_space),
+    refine_time(parameters_.refine_time),
     use_adaptive_refinement(parameters_.use_adaptive_refinement),
     time_refinement_factor(parameters_.time_refinement_factor),
     nominal_dt(parameters_.time_step_size)
@@ -22,23 +23,12 @@ void RefinementHandler<dim>::refine(unsigned int cycle)
   if (cycle != 0)
   {
     // refine mesh if user selected the option
-    switch (refinement_mode)
-    {
-      case TransportParameters<dim>::RefinementMode::space:
-      { // refine space
-        refineGrid();
-        break;
-      }
-      case TransportParameters<dim>::RefinementMode::time:
-      { // refine time
-        nominal_dt *= time_refinement_factor;
-        break;
-      }
-      default:
-      {
-        Assert(false, ExcNotImplemented());
-      }
-    }
+    if (refine_space)
+      refineGrid();
+
+    // refine time
+    if (refine_time)
+      nominal_dt *= time_refinement_factor;
   }
 }
 

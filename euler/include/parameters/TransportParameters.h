@@ -9,7 +9,7 @@
 #include <deal.II/base/parameter_handler.h>
 #include <deal.II/base/function_parser.h>
 
-#include "include/parameters/ConservationLawParameters.h"
+#include "include/parameters/RunParameters.h"
 
 using namespace dealii;
 
@@ -17,7 +17,7 @@ using namespace dealii;
  *  \brief Class for parameters related to a transport equation.
  */
 template <int dim>
-class TransportParameters : public ConservationLawParameters<dim>
+class TransportParameters : public RunParameters<dim>
 {
 public:
   TransportParameters();

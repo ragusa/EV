@@ -8,7 +8,7 @@
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/vector.h>
 #include "include/solvers/LinearSolver.h"
-#include "include/parameters/ConservationLawParameters.h"
+#include "include/parameters/RunParameters.h"
 
 using namespace dealii;
 
@@ -19,7 +19,7 @@ template <int dim>
 class SSPRKTimeIntegrator
 {
 public:
-  SSPRKTimeIntegrator(const typename ConservationLawParameters<
+  SSPRKTimeIntegrator(const typename RunParameters<
                         dim>::TemporalDiscretization & time_discretization,
                       const unsigned int & system_size,
                       const LinearSolver<dim> & linear_solver,

@@ -1,4 +1,9 @@
 /**
+ * \file LinearSolver.cc
+ * \brief Provides the function definitions for the LinearSolver class.
+ */
+
+/**
  * \brief Constructor.
  */
 template <int dim>

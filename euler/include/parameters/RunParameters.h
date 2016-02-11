@@ -1,23 +1,23 @@
-/** \file ConservationLawParameters.h
- *  \brief Provides the header for the ConservationLawParameters class.
+/** \file RunParameters.h
+ *  \brief Provides the header for the RunParameters class.
  */
-#ifndef ConservationLawParameters_h
-#define ConservationLawParameters_h
+#ifndef RunParameters_h
+#define RunParameters_h
 
 #include <deal.II/base/parameter_handler.h>
 
 using namespace dealii;
 
-/** \class ConservationLawParameters
+/** \class RunParameters
  *  \brief Class for parameters related to solving conservation law equations.
  */
 template <int dim>
-class ConservationLawParameters
+class RunParameters
 {
 public:
-  static void declare_conservation_law_parameters(ParameterHandler & prm);
+  static void declare_run_parameters(ParameterHandler & prm);
 
-  void get_conservation_law_parameters(ParameterHandler & prm);
+  void get_run_parameters(ParameterHandler & prm);
 
   /** number of components in solution */
   unsigned int n_components;
@@ -185,12 +185,14 @@ public:
   };
   FCTSynchronizationType fct_synchronization_type;
 
-  enum class FCTVariablesType
+  /** \brief Enumeration for set of variables to limit in FCT */
+  enum class FCTLimitationType
   {
     conservative,
-    primitive
+    characteristic
   };
-  FCTVariablesType fct_variables_type;
+  /** \brief Set of variables to limit in FCT */
+  FCTLimitationType fct_limitation_type;
 
   bool use_star_states_in_fct_bounds;
 
@@ -199,6 +201,6 @@ public:
   bool output_fct_bounds;
 };
 
-#include "src/parameters/ConservationLawParameters.cc"
+#include "src/parameters/RunParameters.cc"
 
 #endif
