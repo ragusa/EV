@@ -78,4 +78,3 @@ double RefinementHandler<dim>::get_nominal_time_step_size() const
 {
   return nominal_dt;
 }
-

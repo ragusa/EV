@@ -96,7 +96,8 @@ public:
   bool skip_fct_if_bounds_satisfied; // option to skip FCT if high-order
                                      // solution already satisfies bounds
   bool use_cumulative_antidiffusion_algorithm; // option to use cumulative
-                                       // antidiffusion algorithm for FCT
+                                               // antidiffusion algorithm for FCT
+  bool include_analytic_bounds; // option to widen bounds with analytic bounds
 
   // refinement parameters
   RefinementMode refinement_mode;

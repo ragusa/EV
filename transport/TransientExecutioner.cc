@@ -139,6 +139,12 @@ void TransientExecutioner<dim>::run()
                this->n_dofs,
                this->dofs_per_cell,
                this->parameters.do_not_limit,
+               this->parameters.include_analytic_bounds,
+               this->fe,
+               this->cell_quadrature,
+               *this->cross_section_function,
+               *this->source_function,
+               source_is_time_dependent,
                this->parameters.theta);
 
   // create objects required by temporal integrator
@@ -218,12 +224,12 @@ void TransientExecutioner<dim>::run()
         case 3: // Entropy viscosity FCT scheme
         {
           compute_entropy_viscosity_fct_solution_ssprk(
-            *ssprk, fct, EV, dt, dt_old);
+            *ssprk, fct, EV, dt, dt_old, t_old);
           break;
         }
         case 4: // Galerkin FCT scheme
         {
-          compute_galerkin_fct_solution_ssprk(*ssprk, fct, dt);
+          compute_galerkin_fct_solution_ssprk(*ssprk, fct, dt, t_old);
           break;
         }
         default:
@@ -258,7 +264,7 @@ void TransientExecutioner<dim>::run()
           compute_entropy_viscosity_solution_theta(EV, dt, dt_old, t_new);
 
           // compute FCT solution
-          compute_fct_solution_theta(fct, dt);
+          compute_fct_solution_theta(fct, dt, t_old);
 
           break;
         }
@@ -268,7 +274,7 @@ void TransientExecutioner<dim>::run()
           compute_galerkin_solution_theta(dt, t_new);
 
           // compute FCT solution
-          compute_fct_solution_theta(fct, dt);
+          compute_fct_solution_theta(fct, dt, t_old);
 
           break;
         }
@@ -620,7 +626,8 @@ void TransientExecutioner<dim>::compute_entropy_viscosity_fct_solution_ssprk(
   FCT<dim> & fct,
   EntropyViscosity<dim> & EV,
   const double & dt,
-  const double & dt_old)
+  const double & dt_old,
+  const double & t_old)
 {
   for (unsigned int i = 0; i < ssprk.n_stages; ++i)
   {
@@ -668,7 +675,8 @@ void TransientExecutioner<dim>::compute_entropy_viscosity_fct_solution_ssprk(
                             this->ss_rhs,
                             dt,
                             this->low_order_diffusion_matrix,
-                            this->high_order_diffusion_matrix);
+                            this->high_order_diffusion_matrix,
+                            t_old);
 
     // set stage solution to be FCT solution for this stage
     ssprk.set_intermediate_solution(this->new_solution);
@@ -685,7 +693,10 @@ void TransientExecutioner<dim>::compute_entropy_viscosity_fct_solution_ssprk(
  */
 template <int dim>
 void TransientExecutioner<dim>::compute_galerkin_fct_solution_ssprk(
-  SSPRKTimeIntegrator<dim> & ssprk, FCT<dim> & fct, const double & dt)
+  SSPRKTimeIntegrator<dim> & ssprk,
+  FCT<dim> & fct,
+  const double & dt,
+  const double & t_old)
 {
   for (unsigned int i = 0; i < ssprk.n_stages; ++i)
   {
@@ -713,7 +724,8 @@ void TransientExecutioner<dim>::compute_galerkin_fct_solution_ssprk(
                             this->ss_rhs,
                             dt,
                             this->low_order_diffusion_matrix,
-                            this->high_order_diffusion_matrix);
+                            this->high_order_diffusion_matrix,
+                            t_old);
 
     // set stage solution to be FCT solution for this stage
     ssprk.set_intermediate_solution(this->new_solution);
@@ -733,7 +745,8 @@ void TransientExecutioner<dim>::compute_galerkin_fct_solution_ssprk(
  */
 template <int dim>
 void TransientExecutioner<dim>::compute_fct_solution_theta(FCT<dim> & fct,
-                                                           const double & dt)
+                                                           const double & dt,
+                                                           const double & t_old)
 {
   // references
   const Vector<double> & ss_rhs_old = this->ss_rhs;
@@ -766,7 +779,8 @@ void TransientExecutioner<dim>::compute_fct_solution_theta(FCT<dim> & fct,
                              this->low_order_ss_matrix,
                              ss_rhs_new,
                              ss_rhs_old,
-                             dt);
+                             dt,
+                             t_old);
 
     // compute limited flux bounds
     fct.compute_limited_flux_bounds_theta(this->new_solution,
@@ -787,7 +801,7 @@ void TransientExecutioner<dim>::compute_fct_solution_theta(FCT<dim> & fct,
     this->system_rhs.add(1.0, tmp_vector);
     this->low_order_ss_matrix.vmult(tmp_vector, old_solution);
     this->system_rhs.add(-(1.0 - theta) * dt, tmp_vector);
-    this->system_rhs.add(dt, fct.get_flux_correction_vector());
+    this->system_rhs.add(dt, fct.get_limited_flux_vector());
 
     // apply Dirichlet BC here
     this->applyDirichletBC(

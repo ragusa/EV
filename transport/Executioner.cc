@@ -63,6 +63,7 @@ Executioner<dim>::Executioner(const TransportParameters<dim> & parameters_,
   system_rhs.reinit(n_dofs);
   ss_rhs.reinit(n_dofs);
   new_solution.reinit(n_dofs);
+  cumulative_antidiffusion.reinit(n_dofs);
 
   // set boundary indicators to distinguish incoming boundary
   setBoundaryIndicators();

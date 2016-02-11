@@ -12,6 +12,12 @@ FCT<dim>::FCT(const DoFHandler<dim> & dof_handler,
               const unsigned int & n_dofs,
               const unsigned int & dofs_per_cell,
               const bool & do_not_limit,
+              const bool & include_analytic_bounds_,
+              const FESystem<dim> & fe_,
+              const QGauss<dim> & cell_quadrature_,
+              const FunctionParser<dim> & cross_section_function_,
+              FunctionParser<dim> & source_function_,
+              const bool & source_is_time_dependent_,
               const double & theta)
   : dof_handler(&dof_handler),
     triangulation(&triangulation),
@@ -22,6 +28,13 @@ FCT<dim>::FCT(const DoFHandler<dim> & dof_handler,
     n_dofs(n_dofs),
     dofs_per_cell(dofs_per_cell),
     do_not_limit(do_not_limit),
+    include_analytic_bounds(include_analytic_bounds_),
+    fe(&fe_),
+    cell_quadrature(&cell_quadrature_),
+    n_q_points_cell(cell_quadrature_.size()),
+    cross_section_function(&cross_section_function_),
+    source_function(&source_function_),
+    source_is_time_dependent(source_is_time_dependent_),
     DMP_satisfied(true),
     theta(theta)
 {
@@ -32,6 +45,12 @@ FCT<dim>::FCT(const DoFHandler<dim> & dof_handler,
   solution_max.reinit(n_dofs);
   solution_min_new.reinit(n_dofs);
   solution_max_new.reinit(n_dofs);
+  reaction_min.reinit(n_dofs);
+  reaction_max.reinit(n_dofs);
+  source_min.reinit(n_dofs);
+  source_max.reinit(n_dofs);
+  lower_bound_analytic.reinit(n_dofs);
+  upper_bound_analytic.reinit(n_dofs);
   flux_correction_vector.reinit(n_dofs);
   Q_minus.reinit(n_dofs);
   Q_plus.reinit(n_dofs);
@@ -41,6 +60,14 @@ FCT<dim>::FCT(const DoFHandler<dim> & dof_handler,
   // initialize sparse matrices
   system_matrix.reinit(sparsity_pattern);
   flux_correction_matrix.reinit(sparsity_pattern);
+  limited_flux_matrix.reinit(sparsity_pattern);
+
+  // compute min and max of reaction coefficients in neighborhood of each DoF
+  compute_function_bounds(*cross_section_function, reaction_min, reaction_max);
+
+  // compute min and max of source in neighborhood of each DoF
+  if (!source_is_time_dependent)
+    compute_function_bounds(*source_function, source_min, source_max);
 }
 
 /**
@@ -54,7 +81,12 @@ FCT<dim>::FCT(const DoFHandler<dim> & dof_handler,
               const std::vector<unsigned int> & dirichlet_nodes,
               const unsigned int & n_dofs,
               const unsigned int & dofs_per_cell,
-              const bool & do_not_limit)
+              const bool & do_not_limit,
+              const bool & include_analytic_bounds_,
+              const FESystem<dim> & fe_,
+              const QGauss<dim> & cell_quadrature_,
+              const FunctionParser<dim> & cross_section_function_,
+              FunctionParser<dim> & source_function_)
   : dof_handler(&dof_handler),
     triangulation(&triangulation),
     linear_solver(linear_solver),
@@ -62,6 +94,13 @@ FCT<dim>::FCT(const DoFHandler<dim> & dof_handler,
     n_dofs(n_dofs),
     dofs_per_cell(dofs_per_cell),
     do_not_limit(do_not_limit),
+    include_analytic_bounds(include_analytic_bounds_),
+    fe(&fe_),
+    cell_quadrature(&cell_quadrature_),
+    n_q_points_cell(cell_quadrature_.size()),
+    cross_section_function(&cross_section_function_),
+    source_function(&source_function_),
+    source_is_time_dependent(false),
     DMP_satisfied(true),
     theta(0.0)
 {
@@ -70,6 +109,12 @@ FCT<dim>::FCT(const DoFHandler<dim> & dof_handler,
   system_rhs.reinit(n_dofs);
   solution_min.reinit(n_dofs);
   solution_max.reinit(n_dofs);
+  reaction_min.reinit(n_dofs);
+  reaction_max.reinit(n_dofs);
+  source_min.reinit(n_dofs);
+  source_max.reinit(n_dofs);
+  lower_bound_analytic.reinit(n_dofs);
+  upper_bound_analytic.reinit(n_dofs);
   flux_correction_vector.reinit(n_dofs);
   Q_minus.reinit(n_dofs);
   Q_plus.reinit(n_dofs);
@@ -79,6 +124,13 @@ FCT<dim>::FCT(const DoFHandler<dim> & dof_handler,
   // initialize sparse matrices
   system_matrix.reinit(sparsity_pattern);
   flux_correction_matrix.reinit(sparsity_pattern);
+  limited_flux_matrix.reinit(sparsity_pattern);
+
+  // compute min and max of reaction coefficients in neighborhood of each DoF
+  compute_function_bounds(*cross_section_function, reaction_min, reaction_max);
+
+  // compute min and max of source in neighborhood of each DoF
+  compute_function_bounds(*source_function, source_min, source_max);
 }
 
 template <int dim>
@@ -89,7 +141,8 @@ void FCT<dim>::solve_FCT_system_fe(
   const Vector<double> & ss_rhs,
   const double & dt,
   const SparseMatrix<double> & low_order_diffusion_matrix,
-  const SparseMatrix<double> & high_order_diffusion_matrix)
+  const SparseMatrix<double> & high_order_diffusion_matrix,
+  const double & t_old)
 {
   // compute flux corrections
   compute_flux_corrections_fe(new_solution,
@@ -99,7 +152,7 @@ void FCT<dim>::solve_FCT_system_fe(
                               high_order_diffusion_matrix);
 
   // compute max principle min and max values
-  compute_bounds_fe(old_solution, low_order_ss_matrix, ss_rhs, dt);
+  compute_bounds_fe(old_solution, low_order_ss_matrix, ss_rhs, dt, t_old);
 
   // compute limited flux bounds Q- and Q+
   compute_limited_flux_bounds_fe(old_solution, low_order_ss_matrix, ss_rhs, dt);
@@ -133,42 +186,11 @@ template <int dim>
 void FCT<dim>::compute_bounds_fe(const Vector<double> & old_solution,
                                  const SparseMatrix<double> & low_order_ss_matrix,
                                  const Vector<double> & ss_rhs,
-                                 const double & dt)
+                                 const double & dt,
+                                 const double & time_old)
 {
-  for (unsigned int i = 0; i < n_dofs; ++i)
-  {
-    solution_max(i) = old_solution(i);
-    solution_min(i) = old_solution(i);
-  }
-
-  // loop over cells
-  typename DoFHandler<dim>::active_cell_iterator cell =
-                                                   dof_handler->begin_active(),
-                                                 endc = dof_handler->end();
-  std::vector<unsigned int> local_dof_indices(dofs_per_cell);
-  for (; cell != endc; ++cell)
-  {
-    // get local dof indices
-    cell->get_dof_indices(local_dof_indices);
-
-    // find min and max values on cell
-    double max_cell = old_solution(local_dof_indices[0]);
-    double min_cell = old_solution(local_dof_indices[0]);
-    for (unsigned int j = 0; j < dofs_per_cell; ++j)
-    {
-      double value_j = old_solution(local_dof_indices[j]);
-      max_cell = std::max(max_cell, value_j);
-      min_cell = std::min(min_cell, value_j);
-    }
-
-    // update the max and min values of neighborhood of each dof
-    for (unsigned int j = 0; j < dofs_per_cell; ++j)
-    {
-      unsigned int i = local_dof_indices[j]; // global index
-      solution_max(i) = std::max(solution_max(i), max_cell);
-      solution_min(i) = std::min(solution_min(i), min_cell);
-    }
-  }
+  // compute min and max of solution in neighborhood of each DoF
+  compute_min_max_solution(old_solution, solution_min, solution_max);
 
   // At this point, the min/max values of the old solution in the support
   // of test function i are stored in solution_min(i) and solution_max(i).
@@ -197,6 +219,10 @@ void FCT<dim>::compute_bounds_fe(const Vector<double> & old_solution,
       solution_min(i) * (1.0 - dt / (*lumped_mass_matrix)(i, i) * row_sum) +
       dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
   }
+
+  // apply analytic bounds if specified
+  if (include_analytic_bounds)
+    compute_and_apply_analytic_bounds(old_solution, dt, time_old);
 }
 
 /**
@@ -209,57 +235,16 @@ void FCT<dim>::compute_bounds_theta(
   const SparseMatrix<double> & low_order_ss_matrix,
   const Vector<double> & ss_rhs_new,
   const Vector<double> & ss_rhs_old,
-  const double & dt)
+  const double & dt,
+  const double & time_old)
 {
   // references
   Vector<double> & solution_max_old = solution_max;
   Vector<double> & solution_min_old = solution_min;
 
-  // initialize min and max of solution
-  for (unsigned int i = 0; i < n_dofs; ++i)
-  {
-    solution_max_new(i) = new_solution(i);
-    solution_min_new(i) = new_solution(i);
-    solution_max_old(i) = old_solution(i);
-    solution_min_old(i) = old_solution(i);
-  }
-
-  // loop over cells
-  typename DoFHandler<dim>::active_cell_iterator cell =
-                                                   dof_handler->begin_active(),
-                                                 endc = dof_handler->end();
-  std::vector<unsigned int> local_dof_indices(dofs_per_cell);
-  for (; cell != endc; ++cell)
-  {
-    // get local dof indices
-    cell->get_dof_indices(local_dof_indices);
-
-    // find min and max values on cell
-    double max_cell_new = new_solution(local_dof_indices[0]);
-    double min_cell_new = new_solution(local_dof_indices[0]);
-    double max_cell_old = old_solution(local_dof_indices[0]);
-    double min_cell_old = old_solution(local_dof_indices[0]);
-    for (unsigned int j = 0; j < dofs_per_cell; ++j)
-    {
-      double value_j_new = new_solution(local_dof_indices[j]);
-      max_cell_new = std::max(max_cell_new, value_j_new);
-      min_cell_new = std::min(min_cell_new, value_j_new);
-
-      double value_j_old = old_solution(local_dof_indices[j]);
-      max_cell_old = std::max(max_cell_old, value_j_old);
-      min_cell_old = std::min(min_cell_old, value_j_old);
-    }
-
-    // update the max and min values of neighborhood of each dof
-    for (unsigned int j = 0; j < dofs_per_cell; ++j)
-    {
-      unsigned int i = local_dof_indices[j]; // global index
-      solution_max_new(i) = std::max(solution_max_new(i), max_cell_new);
-      solution_min_new(i) = std::min(solution_min_new(i), min_cell_new);
-      solution_max_old(i) = std::max(solution_max_old(i), max_cell_old);
-      solution_min_old(i) = std::min(solution_min_old(i), min_cell_old);
-    }
-  }
+  // compute min and max of solution in neighborhood of each DoF
+  compute_min_max_solution(old_solution, solution_min_old, solution_max_old);
+  compute_min_max_solution(new_solution, solution_min_new, solution_max_new);
 
   // compute the upper and lower bounds for the maximum principle
   for (unsigned int i = 0; i < n_dofs; ++i)
@@ -296,6 +281,10 @@ void FCT<dim>::compute_bounds_theta(
        dt / m_i * ((1 - theta) * ss_rhs_old(i) + theta * ss_rhs_new(i))) /
       (1.0 + theta * dt / m_i * diagonal_term);
   }
+
+  // apply analytic bounds if specified
+  if (include_analytic_bounds)
+    compute_and_apply_analytic_bounds(old_solution, dt, time_old);
 }
 
 /**
@@ -306,41 +295,8 @@ void FCT<dim>::compute_bounds_ss(const Vector<double> & solution,
                                  const SparseMatrix<double> & low_order_ss_matrix,
                                  const Vector<double> & ss_rhs)
 {
-  // initialize min and max values
-  for (unsigned int i = 0; i < n_dofs; ++i)
-  {
-    solution_max(i) = solution(i);
-    solution_min(i) = solution(i);
-  }
-
-  // loop over cells to get min and max solution values
-  typename DoFHandler<dim>::active_cell_iterator cell =
-                                                   dof_handler->begin_active(),
-                                                 endc = dof_handler->end();
-  std::vector<unsigned int> local_dof_indices(dofs_per_cell);
-  for (; cell != endc; ++cell)
-  {
-    // get local dof indices
-    cell->get_dof_indices(local_dof_indices);
-
-    // find min and max values on cell
-    double max_cell = solution(local_dof_indices[0]);
-    double min_cell = solution(local_dof_indices[0]);
-    for (unsigned int j = 0; j < dofs_per_cell; ++j)
-    {
-      double value_j = solution(local_dof_indices[j]);
-      max_cell = std::max(max_cell, value_j);
-      min_cell = std::min(min_cell, value_j);
-    }
-
-    // update the max and min values of neighborhood of each dof
-    for (unsigned int j = 0; j < dofs_per_cell; ++j)
-    {
-      unsigned int i = local_dof_indices[j]; // global index
-      solution_max(i) = std::max(solution_max(i), max_cell);
-      solution_min(i) = std::min(solution_min(i), min_cell);
-    }
-  }
+  // compute min and max of solution in neighborhood of each DoF
+  compute_min_max_solution(solution, solution_min, solution_max);
 
   // compute the upper and lower bounds for the maximum principle
   for (unsigned int i = 0; i < n_dofs; ++i)
@@ -375,6 +331,10 @@ void FCT<dim>::compute_bounds_ss(const Vector<double> & solution,
       solution_min(i) = solution(i);
     }
   }
+
+  // apply analytic bounds if specified
+  if (include_analytic_bounds)
+    compute_and_apply_analytic_bounds(solution, 0.0, 0.0);
 }
 
 /**
@@ -650,101 +610,18 @@ void FCT<dim>::compute_limited_flux_bounds_ss(
 template <int dim>
 void FCT<dim>::compute_limited_fluxes()
 {
-  // reset flux correction vector
-  flux_correction_vector = 0;
+  // compute the limited flux correction matrix: L * P
+  compute_limited_flux_matrix();
 
-  for (unsigned int i = 0; i < n_dofs; ++i)
-  {
-    // for Dirichlet nodes, set R_minus and R_plus to 1 because no limiting is
-    // needed
-    if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) !=
-        dirichlet_nodes.end())
-    {
-      //R_minus(i) = 1.0;
-      //R_plus(i) = 1.0;
-      R_minus(i) = 0.0;
-      R_plus(i) = 0.0;
-    }
-    else
-    {
-      // get nonzero entries in row i of flux correction matrix
-      std::vector<double> row_values;
-      std::vector<unsigned int> row_indices;
-      unsigned int n_col;
-      get_matrix_row(flux_correction_matrix, i, row_values, row_indices, n_col);
-
-      double P_plus_i = 0.0;
-      double P_minus_i = 0.0;
-      // compute P_plus, P_minus
-      for (unsigned int k = 0; k < n_col; ++k)
-      {
-        // get value of nonzero entry k
-        double Fij = row_values[k];
-
-        P_plus_i += std::max(0.0, Fij);
-        P_minus_i += std::min(0.0, Fij);
-      }
-
-      // compute R_plus(i)
-      if (P_plus_i != 0.0)
-        R_plus(i) = std::min(1.0, Q_plus(i) / P_plus_i);
-      else
-        R_plus(i) = 1.0;
-
-      // compute R_minus(i)
-      if (P_minus_i != 0.0)
-        R_minus(i) = std::min(1.0, Q_minus(i) / P_minus_i);
-      else
-        R_minus(i) = 1.0;
-    }
-  }
-
-  // if user chose not to limit, set R+ and R- = 1 so that limiting
-  // coefficients will equal 1 and thus no limiting will occur
-  if (do_not_limit)
-  {
-    for (unsigned int i = 0; i < n_dofs; ++i)
-    {
-      R_minus(i) = 1.0;
-      R_plus(i) = 1.0;
-    }
-  }
-
-  // compute limited flux correction sum
-  for (unsigned int i = 0; i < n_dofs; ++i)
-  {
-    // get values and indices of nonzero entries in row i of coefficient matrix A
-    std::vector<double> row_values;
-    std::vector<unsigned int> row_indices;
-    unsigned int n_col;
-    get_matrix_row(flux_correction_matrix, i, row_values, row_indices, n_col);
-
-    // perform flux correction for dof i
-    // Note that flux correction sum is sum_{j in I(S_i)} of Lij*Fij.
-    for (unsigned int k = 0; k < n_col; ++k)
-    {
-      unsigned int j = row_indices[k];
-      double Fij = row_values[k];
-      // compute limiting coefficient Lij
-      double Lij;
-      if (Fij >= 0.0)
-        Lij = std::min(R_plus(i), R_minus(j));
-      else
-        Lij = std::min(R_minus(i), R_plus(j));
-
-      // add Lij*Fij to flux correction sum
-      flux_correction_vector(i) += Lij * Fij;
-    }
-  }
+  // compute the row-sum of the limited flux correction matrix: row_sum(L * P)
+  compute_row_sums(limited_flux_matrix, flux_correction_vector);
 }
 
 /**
  * \brief Computes the limited flux matrix for any FCT scheme.
- *
- * \param[out] limited_flux_matrix  matrix of the limited antidiffusive fluxes
  */
 template <int dim>
-void FCT<dim>::compute_limited_flux_matrix(SparseMatrix<double> & limited_flux_matrix)
+void FCT<dim>::compute_limited_flux_matrix()
 {
   // reset limited flux matrix
   limited_flux_matrix = 0;
@@ -756,8 +633,8 @@ void FCT<dim>::compute_limited_flux_matrix(SparseMatrix<double> & limited_flux_m
     if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) !=
         dirichlet_nodes.end())
     {
-      R_minus(i) = 0.0;
-      R_plus(i) = 0.0;
+      R_minus(i) = 1.0;
+      R_plus(i) = 1.0;
     }
     else
     {
@@ -808,9 +685,11 @@ void FCT<dim>::compute_limited_flux_matrix(SparseMatrix<double> & limited_flux_m
   for (unsigned int i = 0; i < n_dofs; ++i)
   {
     // get first and one-past-last iterator for row
-    SparseMatrix<double>::const_iterator it_flux = flux_correction_matrix.begin(i);
+    SparseMatrix<double>::const_iterator it_flux =
+      flux_correction_matrix.begin(i);
     SparseMatrix<double>::iterator it_limflux = limited_flux_matrix.begin(i);
-    SparseMatrix<double>::const_iterator it_flux_end = flux_correction_matrix.end(i);
+    SparseMatrix<double>::const_iterator it_flux_end =
+      flux_correction_matrix.end(i);
 
     // loop over columns in row
     for (; it_flux != it_flux_end; ++it_flux, ++it_limflux)
@@ -823,13 +702,13 @@ void FCT<dim>::compute_limited_flux_matrix(SparseMatrix<double> & limited_flux_m
 
       // compute limiting coefficient
       double Lij;
-      if (Fij >= 0.0)
+      if (Pij >= 0.0)
         Lij = std::min(R_plus(i), R_minus(j));
       else
         Lij = std::min(R_minus(i), R_plus(j));
 
       // store limited flux
-      it_limflux->value() = Lij*Pij;
+      it_limflux->value() = Lij * Pij;
     }
   }
 }
@@ -1021,7 +900,226 @@ void FCT<dim>::output_bounds(const PostProcessor<dim> & postprocessor) const
  * \return the limited flux correction vector
  */
 template <int dim>
-Vector<double> FCT<dim>::get_flux_correction_vector() const
+Vector<double> FCT<dim>::get_limited_flux_vector() const
 {
   return flux_correction_vector;
+}
+
+/**
+ * \brief Computes the minimum and maximum of a time-dependent function
+ *        in the neighborhood of each degree of freedom.
+ *
+ * \param[in] function     function
+ * \param[in] time         time at which to evaluate function if time-dependent
+ * \param[out] min_values  vector of minimum values in neighborhood of each DoF
+ * \param[out] max_values  vector of maximum values in neighborhood of each DoF
+ */
+template <int dim>
+void FCT<dim>::compute_function_bounds(FunctionParser<dim> & function,
+                                       const double & time,
+                                       Vector<double> & min_values,
+                                       Vector<double> & max_values) const
+{
+  // set time for function
+  function.set_time(time);
+
+  // call time-independent version of function
+  compute_function_bounds(function, min_values, max_values);
+}
+
+/**
+ * \brief Computes the minimum and maximum of a function
+ *        in the neighborhood of each degree of freedom.
+ *
+ * \param[in] function     function
+ * \param[out] min_values  vector of minimum values in neighborhood of each DoF
+ * \param[out] max_values  vector of maximum values in neighborhood of each DoF
+ */
+template <int dim>
+void FCT<dim>::compute_function_bounds(const FunctionParser<dim> & function,
+                                       Vector<double> & min_values,
+                                       Vector<double> & max_values) const
+{
+  // initialize min and max values
+  for (unsigned int i = 0; i < n_dofs; ++i)
+  {
+    min_values(i) = 1.0e15;
+    max_values(i) = -1.0e15;
+  }
+
+  // FE values
+  FEValues<dim> fe_values(*fe, *cell_quadrature, update_quadrature_points);
+
+  // loop over cells
+  Cell cell = dof_handler->begin_active(), endc = dof_handler->end();
+  std::vector<unsigned int> local_dof_indices(dofs_per_cell);
+  for (; cell != endc; ++cell)
+  {
+    // reinitialize FE values
+    fe_values.reinit(cell);
+
+    // get quadrature points on cell
+    std::vector<Point<dim>> points(n_q_points_cell);
+    points = fe_values.get_quadrature_points();
+
+    // find min and max values on cell
+    double min_cell = 1.0e15;
+    double max_cell = -1.0e15;
+    for (unsigned int q = 0; q < n_q_points_cell; ++q)
+    {
+      // update min and max values on cell
+      const double value_q = function.value(points[q]);
+      min_cell = std::min(min_cell, value_q);
+      max_cell = std::max(max_cell, value_q);
+    }
+
+    // get local dof indices
+    cell->get_dof_indices(local_dof_indices);
+
+    // update min and max values in neighborhood of each dof
+    for (unsigned int j = 0; j < dofs_per_cell; ++j)
+    {
+      unsigned int i = local_dof_indices[j]; // global index
+      min_values(i) = std::min(min_values(i), min_cell);
+      max_values(i) = std::max(max_values(i), max_cell);
+    }
+  }
+}
+
+/**
+ * \brief Computes the minimum and maximum of the solution
+ *        in the neighborhood of each degree of freedom.
+ *
+ * \param[in] solution       solution at which to evaluate min/max
+ * \param[out] min_solution  min solution in neighborhood of each DoF
+ * \param[out] max_solution  max solution in neighborhood of each DoF
+ */
+template <int dim>
+void FCT<dim>::compute_min_max_solution(const Vector<double> & solution,
+                                        Vector<double> & min_solution,
+                                        Vector<double> & max_solution) const
+{
+  // initialize min and max
+  for (unsigned int i = 0; i < n_dofs; ++i)
+  {
+    min_solution(i) = solution(i);
+    max_solution(i) = solution(i);
+  }
+
+  // loop over cells
+  Cell cell = dof_handler->begin_active(), endc = dof_handler->end();
+  std::vector<unsigned int> local_dof_indices(dofs_per_cell);
+  for (; cell != endc; ++cell)
+  {
+    // get local dof indices
+    cell->get_dof_indices(local_dof_indices);
+
+    // find min and max values on cell
+    double max_cell = solution(local_dof_indices[0]);
+    double min_cell = solution(local_dof_indices[0]);
+    for (unsigned int j = 0; j < dofs_per_cell; ++j)
+    {
+      double value_j = solution(local_dof_indices[j]);
+      max_cell = std::max(max_cell, value_j);
+      min_cell = std::min(min_cell, value_j);
+    }
+
+    // update the max and min values of neighborhood of each dof
+    for (unsigned int j = 0; j < dofs_per_cell; ++j)
+    {
+      unsigned int i = local_dof_indices[j]; // global index
+      min_solution(i) = std::min(min_solution(i), min_cell);
+      max_solution(i) = std::max(max_solution(i), max_cell);
+    }
+  }
+}
+
+/**
+ * \brief Computes and applies the analytic solution bounds.
+ *
+ * Note that speed is assumed to be equal to one.
+ *
+ * \param[in] solution  solution at which to evaluate min/max
+ * \param[in] dt        time step size
+ * \param[in] time_old  old time
+ */
+template <int dim>
+void FCT<dim>::compute_and_apply_analytic_bounds(const Vector<double> & solution,
+                                                 const double & dt,
+                                                 const double & time_old)
+{
+  // compute min and max of source in neighborhood of each DoF if source
+  // is time-dependent
+  if (source_is_time_dependent)
+    compute_function_bounds(*source_function, time_old, source_min, source_max);
+  else
+    compute_function_bounds(*source_function, source_min, source_max);
+
+  // compute min and max of solution in neighborhood of each DoF
+  compute_min_max_solution(solution, lower_bound_analytic, upper_bound_analytic);
+
+  for (unsigned int i = 0; i < n_dofs; ++i)
+  {
+    // branch on minimum reaction coefficient to avoid division by zero
+    double min_source_term;
+    if (std::abs(reaction_max[i]) < 1.0e-15) // equal to zero within precision
+      min_source_term = dt * source_min[i];
+    else
+      min_source_term =
+        source_min[i] / reaction_max[i] * (1.0 - std::exp(-dt * reaction_max[i]));
+
+    // branch on maximum reaction coefficient to avoid division by zero
+    double max_source_term;
+    if (std::abs(reaction_min[i]) < 1.0e-15) // equal to zero within precision
+      max_source_term = dt * source_max[i];
+    else
+      max_source_term =
+        source_max[i] / reaction_min[i] * (1.0 - std::exp(-dt * reaction_min[i]));
+
+    // compute bounds
+    lower_bound_analytic[i] =
+      lower_bound_analytic[i] * std::exp(-dt * reaction_max[i]) + min_source_term;
+    upper_bound_analytic[i] =
+      upper_bound_analytic[i] * std::exp(-dt * reaction_min[i]) + max_source_term;
+
+    // apply bounds
+    solution_min[i] = std::min(solution_min[i], lower_bound_analytic[i]);
+    solution_max[i] = std::max(solution_max[i], upper_bound_analytic[i]);
+  }
+}
+
+/**
+ * \brief Computes the row-sum vector of a matrix.
+ *
+ * \param[in]  matrix   matrix
+ * \param[out] row_sum  vector of row-sums
+ */
+template <int dim>
+void FCT<dim>::compute_row_sums(const SparseMatrix<double> & matrix,
+                                Vector<double> & row_sums) const
+{
+  for (unsigned int i = 0; i < n_dofs; ++i)
+  {
+    // get first and one-past-last iterator for row
+    SparseMatrix<double>::const_iterator matrix_iterator = matrix.begin(i);
+    SparseMatrix<double>::const_iterator matrix_iterator_end = matrix.end(i);
+
+    // compute row sum
+    row_sums(i) = 0.0;
+    for (; matrix_iterator != matrix_iterator_end; ++matrix_iterator)
+      row_sums(i) += matrix_iterator->value();
+  }
+}
+
+/**
+ * \brief Subtracts the limited flux correction matrix from the remaining flux
+ *        correction matrix.
+ *
+ * This function is to be used with the cumulative antidiffusive flux algorithm
+ * for implicit schemes.
+ */
+template <int dim>
+void FCT<dim>::subtract_limited_flux_correction_matrix()
+{
+  flux_correction_matrix.add(-1.0, limited_flux_matrix);
 }

@@ -217,12 +217,15 @@ void PostProcessor<dim>::output_results(const Vector<double> & solution,
       {
         case TransportParameters<dim>::RefinementMode::time:
         {
-          // evaluate temporal convergence rates
-          convergence_table.evaluate_convergence_rates(
-            "L1 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
-          convergence_table.evaluate_convergence_rates(
-            "L2 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
-          break;
+          if (!is_steady_state)
+          {
+            // evaluate temporal convergence rates
+            convergence_table.evaluate_convergence_rates(
+              "L1 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
+            convergence_table.evaluate_convergence_rates(
+              "L2 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
+            break;
+          }
         }
         case TransportParameters<dim>::RefinementMode::space:
         {

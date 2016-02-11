@@ -11,12 +11,12 @@ If the CFL-like condition
 is satisfied, then the low-order solution obtained using the Theta scheme
 satisfies the following discrete maximum principle:
 \begin{equation}\label{eq:theta_dmp}
-  \DMPbound_i^-\leq \solutionletter_i^{L,\timeindex+1}\leq \DMPbound_i^+
+  \DMPbound_i^{L,-}\leq \solutionletter_i^{L,\timeindex+1}\leq \DMPbound_i^{L,+}
   \quad\forall i \eqc
 \end{equation}
 where
 \begin{multline}\label{eq:theta_bounds}
-   \DMPbound_i^\pm
+   \DMPbound_i^{L,\pm}
    \equiv \frac{1}{1+\frac{\theta\timestepsize}{\massmatrixletter^L_{i,i}}
      \ssmatrixletter_{i,i}^{L,\timeindex+1}}\Bigg[\pr{1
      - \frac{(1-\theta)\timestepsize}{\massmatrixletter^L_{i,i}}

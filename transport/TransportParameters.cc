@@ -21,6 +21,7 @@ TransportParameters<dim>::TransportParameters()
     do_not_limit(false),
     skip_fct_if_bounds_satisfied(false),
     use_cumulative_antidiffusion_algorithm(false),
+    include_analytic_bounds(false),
     refinement_mode(RefinementMode::space),
     time_refinement_factor(0.5),
     use_adaptive_refinement(false),
@@ -262,6 +263,10 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler & prm)
       "false",
       Patterns::Bool(),
       "Option to use cumulative antidiffusion algorithm for implicit FCT");
+    prm.declare_entry("Include analytic bounds",
+                      "false",
+                      Patterns::Bool(),
+                      "Option to extend FCT bounds using analytic DMP");
   }
   prm.leave_subsection();
 }
@@ -473,8 +478,10 @@ void TransportParameters<dim>::get_parameters(ParameterHandler & prm)
 
     skip_fct_if_bounds_satisfied = prm.get_bool("Skip fct if bounds satisfied");
 
-    use_cumulative_antidiffusion_algorithm
-      = prm.get_bool("Use cumulative antidiffusion algorithm");
+    use_cumulative_antidiffusion_algorithm =
+      prm.get_bool("Use cumulative antidiffusion algorithm");
+
+    include_analytic_bounds = prm.get_bool("Include analytic bounds");
   }
   prm.leave_subsection();
 }

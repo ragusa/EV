@@ -64,13 +64,17 @@ private:
     FCT<dim> & fct,
     EntropyViscosity<dim> & EV,
     const double & dt,
-    const double & dt_old);
+    const double & dt_old,
+    const double & t_old);
 
   void compute_galerkin_fct_solution_ssprk(SSPRKTimeIntegrator<dim> & ssprk,
                                            FCT<dim> & fct,
-                                           const double & dt);
+                                           const double & dt,
+                                           const double & t_old);
 
-  void compute_fct_solution_theta(FCT<dim> & fct, const double & dt);
+  void compute_fct_solution_theta(FCT<dim> & fct,
+                                  const double & dt,
+                                  const double & t_old);
 
   const TemporalDiscretization temporal_discretization;
 

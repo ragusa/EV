@@ -83,6 +83,7 @@ protected:
   Vector<double> system_rhs;
   Vector<double> ss_rhs;
   Vector<double> new_solution;
+  Vector<double> cumulative_antidiffusion;
 
   std::vector<unsigned int> dirichlet_nodes;
 
