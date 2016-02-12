@@ -3,8 +3,8 @@
 ##
 
 # add option to prevent c++11 standard error
-SET(GNUXX_FLAGS "-std=c++0x")
-ADD_DEFINITIONS(${GNUXX_FLAGS})
+#SET(GNUXX_FLAGS "-std=c++0x")
+#ADD_DEFINITIONS(${GNUXX_FLAGS})
 
 # Usually, you will not need to modify anything beyond this point...
 
