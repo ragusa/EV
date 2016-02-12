@@ -1,0 +1,98 @@
+A number of test problems were used to evaluate spatial and temporal
+convergence rates. Before describing these problems, the methodology for
+evaluating these rates will be described. The error in the numerical solution
+$\approximatescalarsolution\xt$ has a number of components:
+\begin{itemize}
+  \item Spatial discretization error,
+  \item Temporal discretization error, and
+  \item Computer precision (round-off) error.
+\end{itemize}
+Round-off error arises from limited precision of floating point numbers and
+becomes relevant here only when measuring errors on the order of the computer
+precision, $\sim\order(10^{-15})$; this becomes the bottleneck of improvement
+of convergence at fine refinements. For larger magnitude error, the important
+components are thus spatial and temporal discretization error.
+
+Of course, for steady-state problems, there is no temporal discretization
+error. Omitting higher order terms, for a steady-state problem, the error of the
+approximate solution in some norm has the form
+\begin{equation}
+  \err = c_{x}\dx^m \eqc
+\end{equation}
+where $\Delta x$ is the spatial element size, $m$ is the spatial convergence
+rate, and $c_{x}$ is the leading coefficient. Taking the logarithm of
+this equation gives
+\begin{equation}
+  \log(\err) = m\log(\dx) + c \eqc
+\end{equation}
+where $c$ is some constant. Thus one can make two measurements $(\dx_i,\err_i)$
+and $(\dx_{i+1},\err_{i+1})$ to compute a slope $m_{i+\half}$ on a log-log
+plot to estimate the convergence rate:
+\begin{equation}\label{eq:convrate}
+  m_{i+\half} = \frac{\log(\err_{i+1}) - \log(\err_i)}
+    {\log(\dx_{i+1}) - \log(\dx_i)}
+  \eqp
+\end{equation}
+
+For time-dependent solutions, the situation is more complicated:
+\begin{equation}
+  \err = c_{x}\dx^m + c_{t}\dt^p \eqc
+\end{equation}
+where $\dt$ is the time step size, $p$ is the temporal convergence rate,
+and $c_{t}$ is the leading coefficient for temporal error. Taking the
+logarithm of both sides of this equation does not yield the same
+linear relationship as in the steady-state case:
+\begin{equation}\label{eq:logeq}
+  \log(\err) = \log(c_{x}\dx^m + c_{t}\dt^p) \eqp
+\end{equation}
+One may be interested in measuring the spatial convergence rate $m$,
+but temporal errors may prevent the rate from being recovered.
+Similarly, One may be interested in measuring the temporal convergence rate $p$,
+but spatial errors may prevent the rate from being recovered.
+There are three main strategies for overcoming this difficulty:
+\begin{itemize}
+  \item \textbf{For measuring spatial/temporal convergence rates, choose a test problem
+    such that no temporal/spatial error arises.} For example, for measuring
+    convergence rates, one can choose a problem with a solution that is not
+    a function of time or that is linear in time, since the time discretization
+    should be able to exactly integrate linear functions of time.
+    Similarly, if one knows that a spatial discretization can exactly
+    approximate a linear solution, then there is no spatial error and thus
+    temporal convergence rates can be measured.
+  \item \textbf{For measuring spatial/temporal convergence rates, use a very
+    fine temporal/spatial refinement level.}
+    This is an obvious approach; however, this is often undesirable because it is
+    a computationally costly approach.
+  \item \textbf{Refine both space and time using knowledge of expected
+    convergence rates.}
+    The idea of this approach is to use a certain relation between mesh size
+    and time step size to recover either the spatial or temporal convergence
+    rate. If one would like to recover the spatial convergence rate $m$, then
+    one can assume that time step size has the relation
+    \begin{equation}
+      \dt^p = \dx^m \eqc
+    \end{equation}
+    so that $\dt = \dx^{m/p}$. Then Equation \eqref{eq:logeq} becomes
+    \begin{equation}
+      \log(\err) = \log(c_{x}\dx^m + c_{t}\dx^m) = m\log(\dx) + c \eqp
+    \end{equation}
+    Similarly one can use the relation $\dx = \dt^{p/m}$ to recover
+    \begin{equation}
+      \log(\err) = \log(c_{x}\dt^p + c_{t}\dt^p) = p\log(\dt) + c \eqp
+    \end{equation}
+    Then rates can be measured just as given in Equation \eqref{eq:convrate}.
+    For example, suppose that one wishes to measure temporal convergence rate
+    and refines mesh size by a factor of $\half$ in each cycle:
+    $\dx_{i+1} = \half\dx_i$. Suppose that the spatial discretization is of
+    order $m$ and the temporal discretization is supposedly of order $p$.
+    Then using $\dt_{i+1} = \dx_{i+1}^{m/p} = (\half\dx_i)^{m/p} =
+    (\half)^{m/p}\dt_i$. Therefore the temporal refinement factor should
+    be $(\half)^{m/p}$. Then the temporal convergence rate can be measured:
+    \begin{equation}
+      p_{i+\half} = \frac{\log(\err_{i+1}) - \log(\err_i)}
+        {\log(\dt_{i+1}) - \log(\dt_i)}
+      \eqp
+    \end{equation}
+\end{itemize}
+The first and third of these approaches are used in sections that follow.
+
