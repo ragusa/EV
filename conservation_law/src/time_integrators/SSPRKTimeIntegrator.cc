@@ -8,8 +8,7 @@
  */
 template <int dim>
 SSPRKTimeIntegrator<dim>::SSPRKTimeIntegrator(
-  const typename RunParameters<dim>::TemporalDiscretization &
-    ssprk_method,
+  const typename RunParameters<dim>::TemporalDiscretization & ssprk_method,
   const unsigned int & system_size,
   const LinearSolver<dim> & linear_solver,
   const SparsityPattern & sparsity_pattern)

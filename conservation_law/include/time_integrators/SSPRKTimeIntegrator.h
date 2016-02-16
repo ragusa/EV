@@ -19,8 +19,8 @@ template <int dim>
 class SSPRKTimeIntegrator
 {
 public:
-  SSPRKTimeIntegrator(const typename RunParameters<
-                        dim>::TemporalDiscretization & time_discretization,
+  SSPRKTimeIntegrator(const typename RunParameters<dim>::TemporalDiscretization &
+                        time_discretization,
                       const unsigned int & system_size,
                       const LinearSolver<dim> & linear_solver,
                       const SparsityPattern & sparsity_pattern);

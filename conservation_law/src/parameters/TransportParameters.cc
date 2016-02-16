@@ -20,8 +20,7 @@ void TransportParameters<dim>::declare_parameters(
   ParameterHandler & parameter_handler)
 {
   // declare conservation law parameters
-  RunParameters<dim>::declare_run_parameters(
-    parameter_handler);
+  RunParameters<dim>::declare_run_parameters(parameter_handler);
 
   // problem
   parameter_handler.enter_subsection("problem");

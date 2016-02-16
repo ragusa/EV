@@ -1,6 +1,7 @@
 /**
  * \file ShallowWaterSubcriticalWallBC1D.cc
- * \brief Provides the function definitions for the ShallowWaterSubcriticalWallBC1D class.
+ * \brief Provides the function definitions for the
+ * ShallowWaterSubcriticalWallBC1D class.
  */
 
 /**

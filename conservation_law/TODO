@@ -15,3 +15,7 @@ The following is a list of things to do:
 4. Remove the assumption of the DoF ordering.
 5. More documentation.
 6. Implement parallelization.
+7. Make sure there are no Assert statements in a one-line "else" statement - for
+   release mode, the statement following the conditional branch would then be
+   used as the else statement - curly brackets need to surround the Assert
+   statement.

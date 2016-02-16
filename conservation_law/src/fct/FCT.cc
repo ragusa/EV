@@ -5,6 +5,20 @@
 
 /**
  * \brief Constructor.
+ *
+ * \param[in] parameters_  parameters
+ * \param[in] dof_handler_  DoF handler
+ * \param[in] triangulation_  triangulation
+ * \param[in] lumped_mass_matrix_  lumped mass matrix \f$\mathbf{M}^L\f$
+ * \param[in] consistent_mass_matrix_  consistent mass matrix \f$\mathbf{M}^C\f$
+ * \param[in] star_state_  star state object for computing
+ *                         \f$\mathbf{U}^*_{i,j}\f$
+ * \param[in] linear_solver_  linear solver
+ * \param[in] sparsity_pattern_  sparsity pattern
+ * \param[in] dirichlet_nodes_  vector of Dirichlet nodes
+ * \param[in] n_components_  number of components
+ * \param[in] dofs_per_cell_  number of degrees of freedom per cell
+ * \param[in] component_names_  list of component names
  */
 template <int dim>
 FCT<dim>::FCT(const RunParameters<dim> & parameters_,
@@ -18,7 +32,7 @@ FCT<dim>::FCT(const RunParameters<dim> & parameters_,
               const std::vector<unsigned int> & dirichlet_nodes_,
               const unsigned int & n_components_,
               const unsigned int & dofs_per_cell_,
-              const std::vector<std::string> & component_names)
+              const std::vector<std::string> & component_names_)
   : fe_scalar(1),
     dof_handler(&dof_handler_),
     dof_handler_scalar(triangulation_),
@@ -36,13 +50,13 @@ FCT<dim>::FCT(const RunParameters<dim> & parameters_,
     fct_bounds_type(parameters_.fct_bounds_type),
     antidiffusion_type(parameters_.antidiffusion_type),
     synchronization_type(parameters_.fct_synchronization_type),
-    fct_variables_type(parameters_.fct_variables_type),
+    fct_limitation_type(parameters_.fct_limitation_type),
     use_star_states_in_fct_bounds(parameters_.use_star_states_in_fct_bounds),
     DMP_satisfied_at_all_steps(true),
     bounds_transient_file_index(1)
 {
   // assert that DMP bounds are not used for the non-scalar case
-  //if (fct_bounds_type == FCTBoundsType::dmp)
+  // if (fct_bounds_type == FCTBoundsType::dmp)
   //  Assert(n_components == 1, ExcNotImplemented());
 
   // distribute degrees of freedom in scalar degree of freedom handler
@@ -71,8 +85,8 @@ FCT<dim>::FCT(const RunParameters<dim> & parameters_,
   flux_correction_matrix.reinit(sparsity_pattern_);
 
   // create bounds component names
-  lower_bound_component_names = component_names;
-  upper_bound_component_names = component_names;
+  lower_bound_component_names = component_names_;
+  upper_bound_component_names = component_names_;
   for (unsigned int m = 0; m < n_components; ++m)
   {
     lower_bound_component_names[m] += "_FCTmin";
@@ -196,24 +210,13 @@ void FCT<dim>::compute_bounds(const Vector<double> & old_solution,
                               const Vector<double> & ss_rhs,
                               const double & dt)
 {
+  // initialize solution min and max
   for (unsigned int i = 0; i < n_dofs; ++i)
   {
-/*
-    solution_max(i) = old_solution(i);
     solution_min(i) = old_solution(i);
-*/
-
-    if (i % 2 == 0) // height
-    {
-      solution_max(i) = 3.0;
-      solution_min(i) = 1.0;
-    } else {
-      solution_max(i) = 1000.0;
-      solution_min(i) = 0.0;
-    }
+    solution_max(i) = old_solution(i);
   }
 
-/*
   // loop over cells
   typename DoFHandler<dim>::active_cell_iterator cell =
                                                    dof_handler->begin_active(),
@@ -248,12 +251,6 @@ void FCT<dim>::compute_bounds(const Vector<double> & old_solution,
       }
     }
   }
-*/
-/*
-for (unsigned int i = 0; i < n_dofs; ++i)
-  std::cout << i << " " << solution_min(i) << std::endl;
-std::exit(0);
-*/
 
   // consider star states in bounds if specified
   if (use_star_states_in_fct_bounds)
@@ -292,23 +289,6 @@ std::exit(0);
   // compute the upper and lower bounds for the FCT solution
   switch (fct_bounds_type)
   {
-    case FCTBoundsType::led:
-    {
-/*
-            // nothing else needs to be done
-            for (unsigned int i = 0; i < n_dofs; ++i)
-            {
-              solution_max(i) = solution_max(i) *
-                  (1.0 - dt / (*lumped_mass_matrix)(i, i) * ss_reaction(i)) +
-                dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
-
-              solution_min(i) = solution_min(i) *
-                  (1.0 - dt / (*lumped_mass_matrix)(i, i) * ss_reaction(i)) +
-                dt / (*lumped_mass_matrix)(i, i) * ss_rhs(i);
-            }
-*/
-      break;
-    }
     case FCTBoundsType::dmp:
     {
       for (unsigned int i = 0; i < n_dofs; ++i)
@@ -612,154 +592,6 @@ void FCT<dim>::get_matrix_row(const SparseMatrix<double> & matrix,
 }
 
 /**
- * \brief Checks that the imposed bounds are satisfied for a time step.
- */
-/*
-template <int dim>
-bool FCT<dim>::check_max_principle(
-  const Vector<double> & new_solution,
-  const SparseMatrix<double> & low_order_ss_matrix,
-  const double & dt)
-{
-  // machine precision for floating point comparisons
-  const double machine_tolerance = 1.0e-12;
-
-  // now set new precision
-  std::cout.precision(15);
-
-  // check that each dof value is bounded by its neighbors
-  bool local_max_principle_satisfied = true;
-  for (unsigned int i = 0; i < n_dofs; ++i)
-  {
-    // check if dof is a Dirichlet node or not - if it is, don't check max
-    // principle
-    if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) ==
-        dirichlet_nodes.end())
-    {
-      double value_i = new_solution(i);
-      // check lower bound
-      if (value_i < solution_min(i) - machine_tolerance)
-      {
-        local_max_principle_satisfied = false;
-        // determine which condition was violated
-        std::cout << "      Max principle lower bound violated with dof " << i
-                  << " of low-order solution: " << std::scientific << value_i
-                  << " < " << solution_min(i) << std::endl;
-        debug_max_principle_low_order(i, low_order_ss_matrix, dt);
-      }
-      // check upper bound
-      if (value_i > solution_max(i) + machine_tolerance)
-      {
-        local_max_principle_satisfied = false;
-        // determine which condition was violated
-        std::cout << "      Max principle upper bound violated with dof " << i
-                  << " of low-order solution: " << std::scientific << value_i
-                  << " > " << solution_max(i) << std::endl;
-        debug_max_principle_low_order(i, low_order_ss_matrix, dt);
-      }
-    }
-  }
-
-  // restore default precision and format
-  std::cout.unsetf(std::ios_base::floatfield);
-
-  // exit if max principle was violated
-  if (not local_max_principle_satisfied)
-  {
-    std::cout << "Program terminated due to max-principle violation."
-              << std::endl;
-    std::exit(0);
-  }
-
-  // return boolean for satisfaction of DMP
-  return local_max_principle_satisfied;
-}
-*/
-
-/** \brief Debugging function used for determining why the maximum
- *         principle is failing for the low-order method;
- *         examines the conditions that are required to be met for
- *         the principle to be satisfied.
- */
-/*
-template <int dim>
-void FCT<dim>::debug_max_principle_low_order(
-  const unsigned int & i,
-  const SparseMatrix<double> & low_order_ss_matrix,
-  const double & dt)
-{
-  // flag to determine if no conditions were violated
-  bool condition_violated = false;
-
-  // get nonzero entries of row i of A
-  std::vector<double> row_values;
-  std::vector<unsigned int> row_indices;
-  unsigned int n_col;
-  get_matrix_row(low_order_ss_matrix, i, row_values, row_indices, n_col);
-
-  // diagonal entry
-  double Aii = low_order_ss_matrix(i, i);
-
-  // check that system matrix diagonal elements are non-negative
-  if (Aii < 0.0)
-  {
-    std::cout << "         DEBUG: diagonal element is negative: " << Aii
-              << std::endl;
-    condition_violated = true;
-  }
-
-  // loop over nonzero entries in row i to compute off-diagonal sum
-  // for diagonal dominance check and also check that each off-diagonal
-  // element is non-positive
-  double off_diagonal_sum = 0.0;
-  for (unsigned int k = 0; k < n_col; ++k)
-  {
-    unsigned int j = row_indices[k];
-    double Aij = row_values[k];
-
-    if (j != i)
-    {
-      // add to off-diagonal sum
-      off_diagonal_sum += std::abs(Aij);
-      // check that system matrix off-diagonal elements are non-positive
-      if (Aij > 0.0)
-      {
-        std::cout << "         DEBUG: off-diagonal element (" << i << "," << j
-                  << ") is positive: " << Aij << std::endl;
-        condition_violated = true;
-      }
-    }
-  }
-
-  // check that system matrix is diagonally dominant
-  if (Aii < off_diagonal_sum)
-  {
-    std::cout << "         DEBUG: row is not diagonally dominant: Aii = " << Aii
-              << ", off-diagonal sum = " << off_diagonal_sum << std::endl;
-    condition_violated = true;
-  }
-
-  // check that CFL condition is satisfied if transient problem
-  // if (!parameters.is_steady_state)
-  //{
-  double cfl = dt / (*lumped_mass_matrix)(i, i) * low_order_ss_matrix(i, i);
-  if (cfl > 1.0)
-  {
-    std::cout << "         DEBUG: row does not satisfy CFL condition: CFL = "
-              << cfl << std::endl;
-    condition_violated = true;
-  }
-  //}
-
-  // report if no conditions were violated
-  if (not condition_violated)
-    std::cout << "         DEBUG: No checks returned flags; deeper debugging is "
-                 "necessary."
-              << std::endl;
-}
-*/
-
-/**
  * \brief Check to see if the DMP was satisfied at all time steps.
  *
  * \return flag telling whether imposed bounds were satisfied at all steps
@@ -808,13 +640,47 @@ void FCT<dim>::synchronize_min()
 }
 
 /**
- * \brief Computes the limited flux correction sum to ensure it is zero.
+ * \brief Computes a local characteristic transformation matrix.
+ *
+ * This function throws an exception in this base class.
+ *
+ * \param[in] solution  solution vector \f$\mathbf{u}\f$ at which to evaluate
+ *                      transformation
+ *
+ * \return transformation matrix \f$\mathbf{T}(\mathbf{u})\f$
+ */
+FullMatrix<double> FCT<dim>::compute_transformation_matrix(
+  const Vector<double> & solution) const
+{
+  // throw exception if not overridden by derived class
+  AssertThrow(false, ExcNotImplemented());
+}
+
+/**
+ * \brief Computes a local characteristic transformation matrix inverse.
+ *
+ * This function throws an exception in this base class.
+ *
+ * \param[in] solution  solution vector \f$\mathbf{u}\f$ at which to evaluate
+ *                      transformation
+ *
+ * \return transformation matrix inverse \f$\mathbf{T}^{-1}(\mathbf{u})\f$
+ */
+FullMatrix<double> FCT<dim>::compute_transformation_matrix_inverse(
+  const Vector<double> & solution) const
+{
+  // throw exception if not overridden by derived class
+  AssertThrow(false, ExcNotImplemented());
+}
+
+/**
+ * \brief Checks conservation by ensuring that the sum of the limited flux
+ *        correction sum is zero.
  *
  * \param[in] flux_vector limited correction flux sum vector
  */
 template <int dim>
-void FCT<dim>::check_limited_flux_correction_sum(
-  const Vector<double> & flux_vector)
+void FCT<dim>::check_conservation(const Vector<double> & flux_vector)
 {
   // compute limited flux sum
   double sum = 0.0;

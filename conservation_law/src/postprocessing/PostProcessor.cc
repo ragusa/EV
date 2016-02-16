@@ -46,10 +46,10 @@ PostProcessor<dim>::PostProcessor(
   Assert(!problem_name.empty(), ExcInvalidState());
 
   // create map of temporal discretization to string identifier
-  std::map<typename RunParameters<dim>::TemporalDiscretization,
-           std::string> temp_discretization_map = {
-    {RunParameters<dim>::TemporalDiscretization::FE, "FE"},
-    {RunParameters<dim>::TemporalDiscretization::SSP3, "SSP3"}};
+  std::map<typename RunParameters<dim>::TemporalDiscretization, std::string>
+    temp_discretization_map = {
+      {RunParameters<dim>::TemporalDiscretization::FE, "FE"},
+      {RunParameters<dim>::TemporalDiscretization::SSP3, "SSP3"}};
 
   // determine time discretization string
   if (temp_discretization_map.find(parameters.time_discretization) ==

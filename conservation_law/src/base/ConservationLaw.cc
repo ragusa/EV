@@ -9,8 +9,7 @@
  * \param[in] params conservation law parameters
  */
 template <int dim>
-ConservationLaw<dim>::ConservationLaw(
-  const RunParameters<dim> & params)
+ConservationLaw<dim>::ConservationLaw(const RunParameters<dim> & params)
   :
 #ifdef IS_PARALLEL
     mpi_communicator(MPI_COMM_WORLD),

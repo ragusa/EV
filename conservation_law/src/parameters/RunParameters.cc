@@ -12,8 +12,7 @@
  *  \param prm parameter handler for conservation law parameters
  */
 template <int dim>
-void RunParameters<dim>::declare_run_parameters(
-  ParameterHandler & prm)
+void RunParameters<dim>::declare_run_parameters(ParameterHandler & prm)
 {
   // scheme
   prm.enter_subsection("scheme");
@@ -280,8 +279,8 @@ void RunParameters<dim>::declare_run_parameters(
   prm.enter_subsection("fct");
   {
     prm.declare_entry("fct bounds type",
-                      "led",
-                      Patterns::Selection("led|dmp"),
+                      "dmp",
+                      Patterns::Selection("dmp"),
                       "Type of bounds to impose on FCT solution");
     prm.declare_entry("antidiffusion",
                       "limited",
@@ -321,8 +320,7 @@ void RunParameters<dim>::declare_run_parameters(
  * \param[in] prm parameter handler for conservation law parameters
  */
 template <int dim>
-void RunParameters<dim>::get_run_parameters(
-  ParameterHandler & prm)
+void RunParameters<dim>::get_run_parameters(ParameterHandler & prm)
 {
   // scheme
   prm.enter_subsection("scheme");
@@ -336,7 +334,9 @@ void RunParameters<dim>::get_run_parameters(
     else if (scheme_string == "fct")
       scheme = Scheme::fct;
     else
+    {
       Assert(false, ExcNotImplemented());
+    }
 
     // low-order scheme
     std::string low_order_scheme_string = prm.get("low order scheme");
@@ -351,7 +351,9 @@ void RunParameters<dim>::get_run_parameters(
     else if (low_order_scheme_string == "di_diff")
       low_order_scheme = LowOrderScheme::di_diff;
     else
+    {
       Assert(false, ExcNotImplemented());
+    }
 
     // high-order scheme
     std::string high_order_scheme_string = prm.get("high order scheme");
@@ -362,7 +364,9 @@ void RunParameters<dim>::get_run_parameters(
     else if (high_order_scheme_string == "entropy_diff")
       high_order_scheme = HighOrderScheme::entropy_diff;
     else
+    {
       Assert(false, ExcNotImplemented());
+    }
   }
   prm.leave_subsection();
 
@@ -394,7 +398,7 @@ void RunParameters<dim>::get_run_parameters(
     }
     else
     {
-      ExcNotImplemented();
+      Assert(false, ExcNotImplemented());
     }
 
     initial_refinement_level = prm.get_integer("initial refinement level");
@@ -413,7 +417,9 @@ void RunParameters<dim>::get_run_parameters(
     else if (time_choice == "cfl")
       time_step_size_method = TimeStepSizeMethod::cfl;
     else
+    {
       Assert(false, ExcNotImplemented());
+    }
 
     use_default_end_time = prm.get_bool("use default end time");
     end_time = prm.get_double("final time");
@@ -430,7 +436,9 @@ void RunParameters<dim>::get_run_parameters(
     if (temporal_choice == "runge_kutta")
       temporal_integrator = TemporalIntegrator::runge_kutta;
     else
+    {
       Assert(false, ExcNotImplemented());
+    }
 
     const std::string rk_choice = prm.get("runge kutta method");
     if (rk_choice == "FE")
@@ -440,7 +448,9 @@ void RunParameters<dim>::get_run_parameters(
     else if (rk_choice == "SSP3")
       time_discretization = TemporalDiscretization::SSP3;
     else
+    {
       Assert(false, ExcNotImplemented());
+    }
   }
   prm.leave_subsection();
 
@@ -534,12 +544,12 @@ void RunParameters<dim>::get_run_parameters(
   {
     // FCT bounds type
     std::string fct_bounds_string = prm.get("fct bounds type");
-    if (fct_bounds_string == "led")
-      fct_bounds_type = FCTBoundsType::led;
-    else if (fct_bounds_string == "dmp")
+    if (fct_bounds_string == "dmp")
       fct_bounds_type = FCTBoundsType::dmp;
     else
+    {
       Assert(false, ExcNotImplemented());
+    }
 
     // antidiffusion
     std::string antidiffusion_string = prm.get("antidiffusion");
@@ -550,7 +560,9 @@ void RunParameters<dim>::get_run_parameters(
     else if (antidiffusion_string == "none")
       antidiffusion_type = AntidiffusionType::none;
     else
+    {
       Assert(false, ExcNotImplemented());
+    }
 
     // synchronization
     std::string synchronization_string = prm.get("fct synchronization");
@@ -561,16 +573,20 @@ void RunParameters<dim>::get_run_parameters(
     else if (synchronization_string == "compound")
       fct_synchronization_type = FCTSynchronizationType::compound;
     else
+    {
       Assert(false, ExcNotImplemented());
+    }
 
-    // variables type
-    std::string variables_type_string = prm.get("fct limitation type");
-    if (variables_type_string == "conservative")
+    // limitation type
+    std::string limitation_type_string = prm.get("fct limitation type");
+    if (limitation_type_string == "conservative")
       fct_limitation_type = FCTLimitationType::conservative;
-    else if (variables_type_string == "characteristic")
+    else if (limitation_type_string == "characteristic")
       fct_limitation_type = FCTLimitationType::characteristic;
     else
+    {
       Assert(false, ExcNotImplemented());
+    }
 
     // star states
     use_star_states_in_fct_bounds = prm.get_bool("use star states in fct bounds");

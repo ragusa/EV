@@ -1,6 +1,7 @@
 /**
  * \file ShallowWaterPostProcessor.cc
- * \brief Provides the function definitions for the ShallowWaterPostProcessor class.
+ * \brief Provides the function definitions for the ShallowWaterPostProcessor
+ * class.
  */
 
 /**

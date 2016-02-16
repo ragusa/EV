@@ -163,8 +163,7 @@ public:
   /** \brief Enumeration for type of bounds to impose on FCT solution */
   enum class FCTBoundsType
   {
-    dmp,
-    led
+    dmp
   };
   /** \brief Type of bounds to impose on FCT solution */
   FCTBoundsType fct_bounds_type;

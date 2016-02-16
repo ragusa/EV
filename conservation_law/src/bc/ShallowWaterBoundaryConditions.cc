@@ -1,6 +1,7 @@
 /**
  * \file ShallowWaterBoundaryConditions.cc
- * \brief Provides the function definitions for the ShallowWaterBoundaryConditions class.
+ * \brief Provides the function definitions for the ShallowWaterBoundaryConditions
+ * class.
  */
 
 /**

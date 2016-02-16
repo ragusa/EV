@@ -101,7 +101,7 @@ end
 
 subsection fct
    set fct limitation type = conservative # conservative | characteristic
-   set fct bounds type = led # led | dmp
+   set fct bounds type = dmp # dmp
    set antidiffusion = limited # limited | full | none
    set fct synchronization = min # none | min | compound
    set use star states in fct bounds = false

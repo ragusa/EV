@@ -8,6 +8,7 @@
 
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/grid/tria.h>
+#include <deal.II/lac/full_matrix.h>
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/vector.h>
 #include <deal.II/dofs/dof_accessor.h>
@@ -63,14 +64,12 @@ class FCT
 public:
   using FCTBoundsType = typename RunParameters<dim>::FCTBoundsType;
 
-  using AntidiffusionType =
-    typename RunParameters<dim>::AntidiffusionType;
+  using AntidiffusionType = typename RunParameters<dim>::AntidiffusionType;
 
   using FCTSynchronizationType =
     typename RunParameters<dim>::FCTSynchronizationType;
 
-  using FCTVariablesType =
-    typename RunParameters<dim>::FCTVariablesType;
+  using FCTLimitationType = typename RunParameters<dim>::FCTLimitationType;
 
   FCT(const RunParameters<dim> & parameters,
       const DoFHandler<dim> & dof_handler,
@@ -106,7 +105,7 @@ public:
   void output_bounds_transient(PostProcessor<dim> & postprocessor,
                                const double & time);
 
-private:
+protected:
   void compute_flux_corrections(
     const Vector<double> & high_order_solution,
     const Vector<double> & old_solution,
@@ -133,18 +132,14 @@ private:
 
   void synchronize_min();
 
-  void check_limited_flux_correction_sum(
-    const Vector<double> & flux_correction_vector);
+  virtual FullMatrix<double> compute_transformation_matrix(
+    const Vector<double> & solution) const;
 
-  /*
-  bool check_max_principle(const Vector<double> & new_solution,
-                           const SparseMatrix<double> & low_order_ss_matrix,
-                           const double & dt);
-  void debug_max_principle_low_order(
-    const unsigned int & i,
-    const SparseMatrix<double> & low_order_ss_matrix,
-    const double & dt);
-*/
+  virtual FullMatrix<double> compute_transformation_matrix_inverse(
+    const Vector<double> & solution) const;
+
+  void check_conservation(const Vector<double> & flux_correction_vector);
+
   const FE_Q<dim> fe_scalar;
 
   /** \brief scalar sparsity pattern */
@@ -195,7 +190,7 @@ private:
 
   const FCTSynchronizationType synchronization_type;
 
-  const FCTVariablesType fct_variables_type;
+  const FCTLimitationType fct_limitation_type;
 
   const bool use_star_states_in_fct_bounds;
 
