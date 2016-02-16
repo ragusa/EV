@@ -69,8 +69,8 @@ public:
   using FCTSynchronizationType =
     typename RunParameters<dim>::FCTSynchronizationType;
 
-  using FCTLimitationType =
-    typename RunParameters<dim>::FCTLimitationType;
+  using FCTVariablesType =
+    typename RunParameters<dim>::FCTVariablesType;
 
   FCT(const RunParameters<dim> & parameters,
       const DoFHandler<dim> & dof_handler,
@@ -123,7 +123,7 @@ private:
 
   void compute_limited_flux_correction_vector();
 
-  void compute_full_flux_correction();
+  void compute_full_flux_correction_vector();
 
   void get_matrix_row(const SparseMatrix<double> & matrix,
                       const unsigned int & i,
@@ -195,7 +195,7 @@ private:
 
   const FCTSynchronizationType synchronization_type;
 
-  const FCTLimitationType fct_limitation_type;
+  const FCTVariablesType fct_variables_type;
 
   const bool use_star_states_in_fct_bounds;
 

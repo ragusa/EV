@@ -139,7 +139,7 @@ void FCT<dim>::solve_fct_system(
       compute_limited_flux_correction_vector();
       break;
     case AntidiffusionType::full:
-      compute_full_flux_correction();
+      compute_full_flux_correction_vector();
       break;
     case AntidiffusionType::none:
       flux_correction_vector = 0;
@@ -382,9 +382,26 @@ void FCT<dim>::compute_flux_corrections(
 }
 
 /**
- * \brief Computes the limiting coefficient vectors \f$R^+\f$ and \f$R^-\f$,
- *        used for computing the high-order solution from the low-order
- *        solution.
+ * \brief Computes the limiting coefficient matrix.
+ *
+ * This function computes the limiting coefficient matrix \f$\mathbf{L}\f$
+ * and stores it in \link limiter_matrix \endlink.
+ *
+ * \pre This function assumes
+ * - the FCT solution bounds \f$\mathbf{W}^\pm\f$
+ *   have been computed and stored in \link solution_max \endlink and \link
+ *   solution_min \endlink, respectively.
+ * - the antidiffusive correction flux matrix \f$\mathbf{P}\f$ has been computed
+ *   and stored in \link flux_correction_matrix \endlink.
+ *
+ * \param[in] old_solution  old solution \f$\mathbf{U}^n\f$
+ * \param[in] ss_flux  steady-state inviscid flux vector
+ *   (entries are \f$(\mathbf{A}\mathbf{U}^n)_i\f$ for scalar case,
+ *   \f$\sum\limits_j\mathbf{c}_{i,j}\cdot\mathrm{F}^n_j\f$ for systems case)
+ * \param[in] ss_rhs  steady-state right hand side vector \f$\mathbf{b}^n\f$
+ * \param[in] low_order_diffusion_matrix  low-order diffusion matrix
+ *   \f$\mathbf{D}^L\f$
+ * \param[in] dt  time step size \f$\Delta t\f$
  */
 template <int dim>
 void FCT<dim>::compute_limiting_coefficients_zalesak(
@@ -401,10 +418,10 @@ void FCT<dim>::compute_limiting_coefficients_zalesak(
   Q_plus = 0;
   lumped_mass_matrix->vmult(tmp_vector, old_solution);
   Q_plus.add(-1.0 / dt, tmp_vector);
-    Q_plus.add(1.0, ss_flux);
-    low_order_diffusion_matrix.vmult(tmp_vector, old_solution);
-    Q_plus.add(1.0, tmp_vector);
-    Q_plus.add(-1.0, ss_rhs);
+  Q_plus.add(1.0, ss_flux);
+  low_order_diffusion_matrix.vmult(tmp_vector, old_solution);
+  Q_plus.add(1.0, tmp_vector);
+  Q_plus.add(-1.0, ss_rhs);
 
   // copy current contents of Q+ as these components are identical
   Q_minus = Q_plus;
@@ -482,13 +499,27 @@ void FCT<dim>::compute_limiting_coefficients_zalesak(
       else
         Lij = std::min(R_minus(i), R_plus(j));
 
+      // store entry in limiter matrix
       limiter_matrix.set(i, j, Lij);
     }
   }
 }
 
 /**
- * \brief Computes limited flux correction vector.
+ * \brief Computes limited antidiffusive correction flux vector.
+ *
+ * This function computes the limited antidiffusive flux vector
+ * \f$\bar{\mathbf{p}}\f$, which has the following entries:
+ * \f[
+ *   \bar{p}_i = \sum\limits_j L_{i,j} P_{i,j} \,.
+ * \f]
+ * The result is stored in \link flux_correction_vector \endlink.
+ *
+ * \pre This function assumes
+ * - the antidiffusive correction flux matrix \f$\mathbf{P}\f$ has been computed
+ *   and stored in \link flux_correction_matrix \endlink
+ * - the limiter flux matrix \f$\mathbf{L}\f$ has been computed
+ *   and stored in \link limiter_matrix \endlink
  */
 template <int dim>
 void FCT<dim>::compute_limited_flux_correction_vector()
@@ -513,10 +544,21 @@ void FCT<dim>::compute_limited_flux_correction_vector()
 }
 
 /**
- * \brief Computes the full flux correction vector (without any limitation)
+ * \brief Computes antidiffusive correction flux vector without any limitation.
+ *
+ * This function computes the full antidiffusive flux vector
+ * \f$\mathbf{p}\f$, which has the following entries:
+ * \f[
+ *   p_i = \sum\limits_j P_{i,j} \,.
+ * \f]
+ * The result is stored in \link flux_correction_vector \endlink.
+ *
+ * \pre This function assumes that the antidiffusive correction flux matrix
+ * \f$\mathbf{P}\f$ has been computed and stored in \link flux_correction_matrix
+ * \endlink.
  */
 template <int dim>
-void FCT<dim>::compute_full_flux_correction()
+void FCT<dim>::compute_full_flux_correction_vector()
 {
   // reset vector
   flux_correction_vector = 0;

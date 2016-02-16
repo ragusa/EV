@@ -1,11 +1,19 @@
 #!/bin/bash
 
-# compile html
-doxygen Doxyfile
+# check if current directory is valid
+directory=${PWD##*/}
+if [ $directory == "conservation_law" -o $directory == "transport" ]; then
+  # create doxygen output directory if it does not exist
+  mkdir -p doxygen
 
-# view html using Google-Chrome
-google-chrome doxygen/html/index.html
-
-# switch focus to window with doxygen output
-wmctrl -a Google Chrome
-
+  # compile html
+  doxygen Doxyfile
+  
+  # view html using Google-Chrome
+  google-chrome doxygen/html/index.html
+  
+  # switch focus to window with doxygen output
+  wmctrl -a Google Chrome
+else
+  echo "Not a valid directory: must be in \"conservation_law\" or \"transport\""
+fi
