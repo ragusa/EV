@@ -41,7 +41,6 @@ void TransportParameters<dim>::get_parameters(
 {
   // get conservation law parameters
   this->get_run_parameters(parameter_handler);
-  this->n_components = 1;
 
   // problem
   parameter_handler.enter_subsection("problem");

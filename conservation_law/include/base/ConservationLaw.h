@@ -93,7 +93,9 @@ template <int dim>
 class ConservationLaw
 {
 public:
-  ConservationLaw(const RunParameters<dim> & params);
+  ConservationLaw(const RunParameters<dim> & params,
+                  const unsigned int & n_components,
+                  const bool & are_star_states);
   void run();
 
 protected:
@@ -265,7 +267,7 @@ protected:
    *
    * \return pointer to created star state object
    */
-  virtual std::shared_ptr<StarState<dim>> create_star_state() const = 0;
+  virtual std::shared_ptr<StarState<dim>> create_star_state() const;
 
   /**
    * \brief Returns the names of each component.
@@ -336,6 +338,10 @@ protected:
 
   /** \brief number of components in the system */
   const unsigned int n_components;
+
+  /** \brief Flag to signal if star states arise in Riemann problem of
+   *         conservaiton law */
+  const bool are_star_states;
 
   /** \brief finite element system */
   const FESystem<dim> fe;

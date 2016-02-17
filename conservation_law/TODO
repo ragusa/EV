@@ -19,3 +19,4 @@ The following is a list of things to do:
    release mode, the statement following the conditional branch would then be
    used as the else statement - curly brackets need to surround the Assert
    statement.
+8. Move ShallowWaterFCT.cc to src folder and add it with git.

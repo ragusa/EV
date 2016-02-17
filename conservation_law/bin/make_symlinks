@@ -20,3 +20,7 @@ for dir in $(ls include); do
     ln -s include/$dir/$file $filebase.h
   done
 done
+
+# add symbolic links to .gitignore file
+cp .gitignorebase .gitignore
+find * -type l >> .gitignore

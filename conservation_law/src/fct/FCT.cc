@@ -19,6 +19,8 @@
  * \param[in] n_components_  number of components
  * \param[in] dofs_per_cell_  number of degrees of freedom per cell
  * \param[in] component_names_  list of component names
+ * \param[in] use_star_states_in_fct_bounds_  flag to signal that star states are
+ *            to be used in FCT bounds
  */
 template <int dim>
 FCT<dim>::FCT(const RunParameters<dim> & parameters_,
@@ -32,7 +34,8 @@ FCT<dim>::FCT(const RunParameters<dim> & parameters_,
               const std::vector<unsigned int> & dirichlet_nodes_,
               const unsigned int & n_components_,
               const unsigned int & dofs_per_cell_,
-              const std::vector<std::string> & component_names_)
+              const std::vector<std::string> & component_names_,
+              const bool & use_star_states_in_fct_bounds_)
   : fe_scalar(1),
     dof_handler(&dof_handler_),
     dof_handler_scalar(triangulation_),
@@ -51,7 +54,7 @@ FCT<dim>::FCT(const RunParameters<dim> & parameters_,
     antidiffusion_type(parameters_.antidiffusion_type),
     synchronization_type(parameters_.fct_synchronization_type),
     fct_limitation_type(parameters_.fct_limitation_type),
-    use_star_states_in_fct_bounds(parameters_.use_star_states_in_fct_bounds),
+    use_star_states_in_fct_bounds(use_star_states_in_fct_bounds_),
     DMP_satisfied_at_all_steps(true),
     bounds_transient_file_index(1)
 {
@@ -59,14 +62,30 @@ FCT<dim>::FCT(const RunParameters<dim> & parameters_,
   // if (fct_bounds_type == FCTBoundsType::dmp)
   //  Assert(n_components == 1, ExcNotImplemented());
 
+  // reinitialize
+  reinitialize(sparsity_pattern_);
+
+  // create bounds component names
+  lower_bound_component_names = component_names_;
+  upper_bound_component_names = component_names_;
+  for (unsigned int m = 0; m < n_components; ++m)
+  {
+    lower_bound_component_names[m] += "_FCTmin";
+    upper_bound_component_names[m] += "_FCTmax";
+  }
+}
+
+/**
+ * \brief Reinitializes.
+ *
+ * \param[in] sparsity_pattern  sparsity pattern
+ */
+template <int dim>
+void FCT<dim>::reinitialize(const SparsityPattern & sparsity_pattern)
+{
   // distribute degrees of freedom in scalar degree of freedom handler
   dof_handler_scalar.clear();
   dof_handler_scalar.distribute_dofs(fe_scalar);
-
-  // create scalar sparsity pattern
-  DynamicSparsityPattern dsp(n_dofs_scalar);
-  DoFTools::make_sparsity_pattern(dof_handler_scalar, dsp);
-  scalar_sparsity_pattern.copy_from(dsp);
 
   // allocate memory for vectors
   tmp_vector.reinit(n_dofs);
@@ -79,20 +98,19 @@ FCT<dim>::FCT(const RunParameters<dim> & parameters_,
   R_minus.reinit(n_dofs);
   R_plus.reinit(n_dofs);
 
-  // initialize sparse matrices
-  system_matrix.reinit(sparsity_pattern_);
-  limiter_matrix.reinit(sparsity_pattern_);
-  flux_correction_matrix.reinit(sparsity_pattern_);
+  // create scalar sparsity pattern
+  DynamicSparsityPattern dsp(n_dofs_scalar);
+  DoFTools::make_sparsity_pattern(dof_handler_scalar, dsp);
+  scalar_sparsity_pattern.copy_from(dsp);
 
-  // create bounds component names
-  lower_bound_component_names = component_names_;
-  upper_bound_component_names = component_names_;
-  for (unsigned int m = 0; m < n_components; ++m)
-  {
-    lower_bound_component_names[m] += "_FCTmin";
-    upper_bound_component_names[m] += "_FCTmax";
-    std::cout << lower_bound_component_names[m] << std::endl;
-  }
+  // initialize sparse matrices
+  system_matrix.reinit(sparsity_pattern);
+  limiter_matrix.reinit(sparsity_pattern);
+  flux_correction_matrix.reinit(sparsity_pattern);
+
+  // if needed, create lists of DoF indices; this is needed if limiting is
+  // performed on a non-conservative set of variables such as characteristic
+  create_dof_indices_lists();
 }
 
 /**
@@ -649,11 +667,16 @@ void FCT<dim>::synchronize_min()
  *
  * \return transformation matrix \f$\mathbf{T}(\mathbf{u})\f$
  */
+template <int dim>
 FullMatrix<double> FCT<dim>::compute_transformation_matrix(
-  const Vector<double> & solution) const
+  const Vector<double> &) const
 {
   // throw exception if not overridden by derived class
   AssertThrow(false, ExcNotImplemented());
+
+  // return dummy matrix to avoid compiler warning about not returning anything
+  FullMatrix<double> dummy_matrix(n_components, n_components);
+  return dummy_matrix;
 }
 
 /**
@@ -666,11 +689,145 @@ FullMatrix<double> FCT<dim>::compute_transformation_matrix(
  *
  * \return transformation matrix inverse \f$\mathbf{T}^{-1}(\mathbf{u})\f$
  */
+template <int dim>
 FullMatrix<double> FCT<dim>::compute_transformation_matrix_inverse(
-  const Vector<double> & solution) const
+  const Vector<double> &) const
 {
   // throw exception if not overridden by derived class
   AssertThrow(false, ExcNotImplemented());
+
+  // return dummy matrix to avoid compiler warning about not returning anything
+  FullMatrix<double> dummy_matrix(n_components, n_components);
+  return dummy_matrix;
+}
+
+/**
+ * \brief Transforms a vector in terms of conservative variables to a vector
+ *        in terms of characteristic variables.
+ *
+ * This function applies a local transformation evaluated with the solution
+ * \f$\mathbf{U}\f$ to characteristic variables on a vector \f$\mathbf{y}\f$:
+ * \f[
+ *   \hat{\mathbf{y}}_i = \mathbf{T}^{-1}(\mathbf{U}_i)\mathbf{y}_i \,,
+ * \f]
+ * where \f$\hat{\mathbf{y}}\f$ is the transformed vector, and \f$i\f$ is a
+ * node index.
+ *
+ * \param[in] solution  solution vector \f$\mathbf{U}\f$ at which to evaluate
+ *                      transformations
+ * \param[in] vector_original  vector \f$\mathbf{y}\f$ to be transformed
+ * \param[in] vector_transformed  transformed vector \f$\hat{\mathbf{y}}\f$
+ */
+template <int dim>
+void FCT<dim>::transform_vector(const Vector<double> & solution,
+                                const Vector<double> & vector_original,
+                                Vector<double> & vector_transformed) const
+{
+  // loop over nodes
+  for (unsigned int n = 0; n < n_nodes; ++n)
+  {
+    // assemble solution vector on node
+    Vector<double> solution_node(n_components);
+    for (unsigned int m = 0; m < n_components; ++m)
+      solution_node[m] = solution[node_dof_indices[n][m]];
+
+    // compute local transformation matrix inverse on node
+    const FullMatrix<double> transformation_matrix_inverse =
+      compute_transformation_matrix_inverse(solution_node);
+
+    // apply local transformation matrix inverse to vector
+    // loop over rows of matrix
+    for (unsigned int m = 0; m < n_components; ++m)
+    {
+      // initialize sum for matrix-vector product for row
+      const unsigned int i = node_dof_indices[n][m];
+      vector_transformed[i] = 0.0;
+
+      // loop over columns of matrix to compute matrix-vector product for row
+      for (unsigned int mm = 0; mm < n_components; ++mm)
+      {
+        const unsigned int j = node_dof_indices[n][mm];
+        vector_transformed[i] +=
+          transformation_matrix_inverse[m][mm] * vector_original[j];
+      }
+    }
+  }
+}
+
+/**
+ * \brief Creates lists of degree of freedom indices lists such as node list,
+ *        component list, and nodal degrees of freedom.
+ *
+ * \c deal.II documentation states that \e local degree of freedom indices have a
+ * a standard ordering: vertex 0 DoFs, vertex 1 DoFs, etc. Within each vertex,
+ * it is assumed here that local ordering is by component index.
+ */
+template <int dim>
+void FCT<dim>::create_dof_indices_lists()
+{
+  // initialize
+  node_indices.resize(n_dofs);
+  component_indices.resize(n_dofs);
+  node_dof_indices.clear();
+
+  // create vector for flagging whether a node index has been assigned or not
+  std::vector<bool> assigned_node(n_dofs, false);
+
+  // global degree of freedom indices in cell
+  std::vector<unsigned int> local_dof_indices(dofs_per_cell);
+
+  unsigned int node_index = 0; // current node index
+  Cell cell = dof_handler->begin_active();
+  Cell endc = dof_handler->end();
+  for (; cell != endc; ++cell)
+  {
+    // get list of degrees of freedom on cell
+    cell->get_dof_indices(local_dof_indices);
+
+    // loop over nodes on cell
+    for (unsigned int i_node = 0; i_node < dofs_per_cell_per_component; ++i_node)
+    {
+      // get DoF index of first DoF on node
+      const unsigned int i_local0 = i_node * n_components;
+      const unsigned int i0 = local_dof_indices[i_local0];
+
+      // check if this DoF already has been assigned a node index
+      if (!assigned_node[i0])
+      {
+        // vector of DoF indices on this node
+        std::vector<unsigned int> this_node_dof_indices(n_components);
+
+        // loop over DoFs on node
+        for (unsigned int m = 0; m < n_components; ++m)
+        {
+          // determine global DoF index for component
+          const unsigned int i_local = i_node * n_components + m;
+          const unsigned int i = local_dof_indices[i_local];
+
+          // assign node index for DoF
+          node_indices[i] = node_index;
+
+          // assign component index for DoF
+          component_indices[i] = m;
+
+          // assign DoF index to list of DoF indices on node
+          this_node_dof_indices[m] = i;
+        }
+
+        // push back nodal DoF indices list
+        node_dof_indices.push_back(this_node_dof_indices);
+
+        // flag that node index has been assigned for the first DoF on node
+        assigned_node[i0] = true;
+
+        // increment node index
+        node_index++;
+      }
+    }
+  }
+
+  // keep number of nodes
+  n_nodes = node_index;
 }
 
 /**

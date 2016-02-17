@@ -10,7 +10,7 @@
  */
 template <int dim>
 Transport<dim>::Transport(const TransportParameters<dim> & params)
-  : ConservationLaw<dim>(params),
+  : ConservationLaw<dim>(params, 1, false),
     transport_parameters(params),
     extractor(0),
     cross_section_function(1),
@@ -189,7 +189,7 @@ void Transport<dim>::define_problem()
 
       // create and initialize function parser for exact solution
       std::shared_ptr<FunctionParser<dim>> exact_solution_function_derived =
-        std::make_shared<FunctionParser<dim>>(this->parameters.n_components);
+        std::make_shared<FunctionParser<dim>>(this->n_components);
       exact_solution_function_derived->initialize(
         FunctionParser<dim>::default_variable_names() + ",t",
         this->exact_solution_strings,

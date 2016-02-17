@@ -12,6 +12,7 @@
 template <int dim>
 PostProcessor<dim>::PostProcessor(
   const RunParameters<dim> & parameters_,
+  const unsigned int & n_components_,
   const double & end_time_,
   const bool has_exact_solution_,
   std::shared_ptr<Function<dim>> & exact_solution_function_,
@@ -29,7 +30,7 @@ PostProcessor<dim>::PostProcessor(
     solution_component_names(solution_component_names_),
     solution_component_interpretations(solution_component_interpretations_),
     is_steady_state(false),
-    fe(FE_Q<dim>(parameters.degree), parameters_.n_components),
+    fe(FE_Q<dim>(parameters.degree), n_components_),
     cell_quadrature(parameters.n_quadrature_points),
     n_cells(triangulation_.n_active_cells()),
     current_cycle(0),

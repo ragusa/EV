@@ -18,7 +18,7 @@ template <int dim>
 class MaxWaveSpeed
 {
 public:
-  MaxWaveSpeed(const std::shared_ptr<StarState<dim>> & star_state);
+  MaxWaveSpeed(const std::shared_ptr<StarState<dim>> & star_state = nullptr);
 
   virtual double compute(const std::vector<double> & solution_left,
                          const std::vector<double> & solution_right,

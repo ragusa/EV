@@ -10,7 +10,7 @@
  */
 template <int dim>
 ShallowWater<dim>::ShallowWater(const ShallowWaterParameters<dim> & params)
-  : ConservationLaw<dim>(params),
+  : ConservationLaw<dim>(params, dim + 1, true),
     sw_parameters(params),
     height_extractor(0),
     momentum_extractor(1),
@@ -274,7 +274,7 @@ void ShallowWater<dim>::define_problem()
 
       // create and initialize function parser for exact solution
       std::shared_ptr<FunctionParser<dim>> exact_solution_function_derived =
-        std::make_shared<FunctionParser<dim>>(this->parameters.n_components);
+        std::make_shared<FunctionParser<dim>>(this->n_components);
       exact_solution_function_derived->initialize(
         FunctionParser<dim>::default_variable_names() + ",t",
         this->exact_solution_strings,
@@ -363,21 +363,6 @@ std::shared_ptr<MaxWaveSpeed<dim>> ShallowWater<dim>::create_max_wave_speed()
 
   return max_wave_speed;
 }
-
-/**
- * \brief Creates a star state object
- *
- * \return pointer to created star state object
- */
-/*
-template <int dim>
-std::shared_ptr<StarState<dim>> ShallowWater<dim>::create_star_state() const
-{
-  auto star_state = std::make_shared<ShallowWaterStarState<dim>>(gravity);
-
-  return star_state;
-}
-*/
 
 /**
  * \brief Interpolates the bathymetry FE vector from its function.

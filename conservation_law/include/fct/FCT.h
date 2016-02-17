@@ -71,6 +71,9 @@ public:
 
   using FCTLimitationType = typename RunParameters<dim>::FCTLimitationType;
 
+  /** \brief Alias for cell iterator */
+  using Cell = typename DoFHandler<dim>::active_cell_iterator;
+
   FCT(const RunParameters<dim> & parameters,
       const DoFHandler<dim> & dof_handler,
       const Triangulation<dim> & triangulation,
@@ -82,7 +85,10 @@ public:
       const std::vector<unsigned int> & dirichlet_nodes,
       const unsigned int & n_components,
       const unsigned int & dofs_per_cell,
-      const std::vector<std::string> & component_names);
+      const std::vector<std::string> & component_names,
+      const bool & use_star_states_in_fct_bounds);
+
+  void reinitialize(const SparsityPattern & sparsity_pattern);
 
   void solve_fct_system(Vector<double> & new_solution,
                         const Vector<double> & old_solution,
@@ -137,6 +143,12 @@ protected:
 
   virtual FullMatrix<double> compute_transformation_matrix_inverse(
     const Vector<double> & solution) const;
+
+  void transform_vector(const Vector<double> & solution,
+                        const Vector<double> & vector_original,
+                        Vector<double> & vector_transformed) const;
+
+  void create_dof_indices_lists();
 
   void check_conservation(const Vector<double> & flux_correction_vector);
 
@@ -207,6 +219,18 @@ protected:
 
   /** \brief vector of times and corresponding upper bound file names */
   std::vector<std::pair<double, std::string>> times_and_upper_bound_filenames;
+
+  /** \brief list of node index of each degree of freedom */
+  std::vector<unsigned int> node_indices;
+
+  /** \brief list of component index of each degree of freedom */
+  std::vector<unsigned int> component_indices;
+
+  /** \brief list of degree of freedom indices for each node */
+  std::vector<std::vector<unsigned int>> node_dof_indices;
+
+  /** \brief number of nodes */
+  unsigned int n_nodes;
 };
 
 #include "src/fct/FCT.cc"

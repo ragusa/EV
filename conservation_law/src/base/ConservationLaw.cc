@@ -7,9 +7,14 @@
  * \brief Constructor.
  *
  * \param[in] params conservation law parameters
+ * \param[in] n_components_  number of components for conservation law
+ * \param[in] are_star_states_  flag to signal if a conservation law has
+ *            star states
  */
 template <int dim>
-ConservationLaw<dim>::ConservationLaw(const RunParameters<dim> & params)
+ConservationLaw<dim>::ConservationLaw(const RunParameters<dim> & params,
+                                      const unsigned int & n_components_,
+                                      const bool & are_star_states_)
   :
 #ifdef IS_PARALLEL
     mpi_communicator(MPI_COMM_WORLD),
@@ -29,8 +34,9 @@ ConservationLaw<dim>::ConservationLaw(const RunParameters<dim> & params)
     triangulation(),
 #endif
     parameters(params),
-    n_components(params.n_components),
-    fe(FE_Q<dim>(params.degree), params.n_components),
+    n_components(n_components_),
+    are_star_states(are_star_states_),
+    fe(FE_Q<dim>(params.degree), n_components_),
     dofs_per_cell(fe.dofs_per_cell),
     faces_per_cell(GeometryInfo<dim>::faces_per_cell),
     dof_handler(triangulation),
@@ -39,9 +45,9 @@ ConservationLaw<dim>::ConservationLaw(const RunParameters<dim> & params)
     face_quadrature(n_q_points_per_dim),
     n_q_points_cell(cell_quadrature.size()),
     n_q_points_face(face_quadrature.size()),
-    initial_conditions_strings(params.n_components),
-    initial_conditions_function(params.n_components),
-    exact_solution_strings(params.n_components),
+    initial_conditions_strings(n_components_),
+    initial_conditions_function(n_components_),
+    exact_solution_strings(n_components_),
     exact_solution_function()
 {
 }
@@ -61,6 +67,7 @@ void ConservationLaw<dim>::run()
 
   // create post-processor object
   PostProcessor<dim> postprocessor(parameters,
+                                   n_components,
                                    end_time,
                                    has_exact_solution,
                                    exact_solution_function,
@@ -288,7 +295,8 @@ void ConservationLaw<dim>::initialize_system()
     triangulation, cell_quadrature, n_components);
 
   // create star state
-  star_state = create_star_state();
+  if (are_star_states)
+    star_state = create_star_state();
 }
 
 /**
@@ -486,7 +494,8 @@ void ConservationLaw<dim>::setup_system()
 #endif
 
   // reinitialize objects
-  star_state->reinitialize();
+  if (are_star_states)
+    star_state->reinitialize();
 
   // create low-order viscosity
   switch (low_order_viscosity_type)
@@ -816,6 +825,11 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
   // create FCT if applicable
   std::shared_ptr<FCT<dim>> fct;
   if (parameters.scheme == Scheme::fct)
+  {
+    // determine if star states are to be used in FCT bounds
+    const bool use_star_states_in_fct_bounds =
+      are_star_states && parameters.use_star_states_in_fct_bounds;
+
     fct = std::make_shared<FCT<dim>>(parameters,
                                      dof_handler,
                                      triangulation,
@@ -827,7 +841,9 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
                                      dirichlet_dof_indices,
                                      n_components,
                                      dofs_per_cell,
-                                     component_names);
+                                     component_names,
+                                     use_star_states_in_fct_bounds);
+  }
 
   // initialize old time, time index, and transient flag
   old_time = 0.0;
@@ -920,9 +936,6 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
       switch (parameters.scheme)
       {
         case Scheme::low:
-          // update star states
-          // star_state->compute_star_states(old_stage_solution);
-
           low_order_viscosity->update(
             old_stage_solution, older_solution, old_stage_dt, n);
           low_order_diffusion->compute_diffusion_matrix(
@@ -1172,7 +1185,8 @@ void ConservationLaw<dim>::perform_fct_ssprk_step(
   SSPRKTimeIntegrator<dim> & ssprk)
 {
   // update star states
-  star_state->compute_star_states(old_stage_solution);
+  if (are_star_states)
+    star_state->compute_star_states(old_stage_solution);
 
   // update low-order diffusion
   low_order_viscosity->update(
@@ -1249,4 +1263,21 @@ void ConservationLaw<dim>::get_dirichlet_dof_indices(
          ++it)
       dirichlet_dof_indices.push_back(it->first);
   }
+}
+
+/**
+ * \brief Creates a star state object and returns the pointer.
+ *
+ * This function throws an exception in this base class.
+ *
+ * \return star state object pointer
+ */
+template <int dim>
+std::shared_ptr<StarState<dim>> ConservationLaw<dim>::create_star_state() const
+{
+  // throw exception if not overridden by derived class
+  AssertThrow(false, ExcNotImplemented());
+
+  // return null pointer to avoid compiler warning about not returning anything
+  return nullptr;
 }

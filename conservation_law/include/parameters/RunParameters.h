@@ -19,9 +19,6 @@ public:
 
   void get_run_parameters(ParameterHandler & prm);
 
-  /** number of components in solution */
-  unsigned int n_components;
-
   // refinement parameters
   enum class RefinementMode
   {

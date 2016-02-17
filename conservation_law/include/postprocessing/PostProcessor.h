@@ -40,6 +40,7 @@ public:
 
   PostProcessor(
     const RunParameters<dim> & parameters,
+    const unsigned int & n_components,
     const double & end_time,
     const bool has_exact_solution,
     std::shared_ptr<Function<dim>> & exact_solution_function,
