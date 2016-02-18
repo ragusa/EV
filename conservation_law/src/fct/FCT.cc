@@ -55,7 +55,7 @@ FCT<dim>::FCT(const RunParameters<dim> & parameters_,
     synchronization_type(parameters_.fct_synchronization_type),
     fct_limitation_type(parameters_.fct_limitation_type),
     use_star_states_in_fct_bounds(use_star_states_in_fct_bounds_),
-    DMP_satisfied_at_all_steps(true),
+    fct_bounds_satisfied_at_all_steps(true),
     bounds_transient_file_index(1)
 {
   // assert that DMP bounds are not used for the non-scalar case
@@ -88,6 +88,7 @@ void FCT<dim>::reinitialize(const SparsityPattern & sparsity_pattern)
   dof_handler_scalar.distribute_dofs(fe_scalar);
 
   // allocate memory for vectors
+  old_solution_characteristic.reinit(n_dofs);
   tmp_vector.reinit(n_dofs);
   system_rhs.reinit(n_dofs);
   solution_min.reinit(n_dofs);
@@ -107,6 +108,7 @@ void FCT<dim>::reinitialize(const SparsityPattern & sparsity_pattern)
   system_matrix.reinit(sparsity_pattern);
   limiter_matrix.reinit(sparsity_pattern);
   flux_correction_matrix.reinit(sparsity_pattern);
+  flux_correction_matrix_transformed.reinit(sparsity_pattern);
 
   // if needed, create lists of DoF indices; this is needed if limiting is
   // performed on a non-conservative set of variables such as characteristic
@@ -145,15 +147,45 @@ void FCT<dim>::solve_fct_system(
                            low_order_diffusion_matrix,
                            high_order_diffusion_matrix);
 
-  // compute max principle min and max values
-  compute_bounds(old_solution, ss_reaction, ss_rhs, dt);
+  // branch on type of limitation: conservative variables or characteristic
+  switch (fct_limitation_type)
+  {
+    case FCTLimitationType::conservative:
+      // compute FCT solution bounds W- and W+
+      compute_solution_bounds(old_solution, ss_reaction, ss_rhs, dt);
+
+      // compute antidiffusion bounds Q- and Q+
+      compute_antidiffusion_bounds(
+        old_solution, ss_flux, ss_rhs, low_order_diffusion_matrix, dt);
+
+      break;
+    case FCTLimitationType::characteristic:
+      // compute characteristic FCT solution bounds \hat{W}- and \hat{W}+
+      compute_solution_bounds_characteristic(
+        old_solution, ss_reaction, ss_rhs, dt);
+
+      // transform antidiffusive fluxes: P_{i,j} -> \hat{P}_{i,j}
+      transform_matrix(
+        old_solution, flux_correction_matrix, flux_correction_matrix_transformed);
+
+      // compute characteristic antidiffusion bounds \hat{Q}- and \hat{Q}+
+      compute_antidiffusion_bounds_characteristic(
+        old_solution, ss_flux, ss_rhs, low_order_diffusion_matrix, dt);
+
+      break;
+    default:
+      Assert(false, ExcNotImplemented());
+      break;
+  }
 
   // compute limited flux correction sum and add it to rhs
   switch (antidiffusion_type)
   {
-    case AntidiffusionType::limited:
-      compute_limiting_coefficients_zalesak(
-        old_solution, ss_flux, ss_rhs, low_order_diffusion_matrix, dt);
+    case AntidiffusionType::limited: // normal, limited antidiffusion flux
+      // compute limiter matrix
+      compute_limiting_coefficients_zalesak();
+
+      // synchronize limiting coefficients if requested
       switch (synchronization_type)
       {
         case FCTSynchronizationType::none:
@@ -168,12 +200,15 @@ void FCT<dim>::solve_fct_system(
           Assert(false, ExcNotImplemented());
           break;
       }
+
+      // compute limited flux sums
       compute_limited_flux_correction_vector();
+
       break;
-    case AntidiffusionType::full:
+    case AntidiffusionType::full: // full antidiffusion flux
       compute_full_flux_correction_vector();
       break;
-    case AntidiffusionType::none:
+    case AntidiffusionType::none: // no antidiffusion flux
       flux_correction_vector = 0;
       break;
     default:
@@ -195,13 +230,65 @@ void FCT<dim>::solve_fct_system(
   system_matrix.copy_from(*lumped_mass_matrix);
   linear_solver.solve(system_matrix, new_solution, system_rhs);
 
-  /*
   // check that local discrete maximum principle is satisfied at all time steps
-  bool DMP_satisfied_this_step =
-    check_max_principle(new_solution, low_order_ss_matrix, dt);
-  DMP_satisfied_at_all_steps =
-    DMP_satisfied_at_all_steps and DMP_satisfied_this_step;
-  */
+  bool fct_bounds_satisfied_this_step = check_fct_bounds_satisfied(new_solution);
+  fct_bounds_satisfied_at_all_steps =
+    fct_bounds_satisfied_at_all_steps && fct_bounds_satisfied_this_step;
+}
+
+/**
+ * \brief Computes the minimum and maximum degree of freedom values in the
+ *        support of each degree of freedom.
+ *
+ * \param[in] solution  solution vector \f$\mathbf{U}\f$
+ * \param[out] min_values  minimum values of solution:
+ *             \f$U_{min,i}\equiv\min\limits_{j\in \mathcal{I}(S_i)} U_j\f$
+ * \param[out] max_values  maximum values of solution:
+ *             \f$U_{max,i}\equiv\max\limits_{j\in \mathcal{I}(S_i)} U_j\f$
+ */
+template <int dim>
+void FCT<dim>::compute_min_and_max_of_solution(const Vector<double> & solution,
+                                               Vector<double> & min_values,
+                                               Vector<double> & max_values) const
+{
+  // initialize solution min and max
+  for (unsigned int i = 0; i < n_dofs; ++i)
+  {
+    min_values(i) = solution(i);
+    max_values(i) = solution(i);
+  }
+
+  // loop over cells
+  Cell cell = dof_handler->begin_active(), endc = dof_handler->end();
+  std::vector<unsigned int> local_dof_indices(dofs_per_cell);
+  for (; cell != endc; ++cell)
+  {
+    // get local dof indices
+    cell->get_dof_indices(local_dof_indices);
+
+    // loop over solution components
+    for (unsigned int m = 0; m < n_components; ++m)
+    {
+      // find min and max values on cell for this component
+      double max_cell = solution(local_dof_indices[m]);
+      double min_cell = solution(local_dof_indices[m]);
+      for (unsigned int j = 0; j < dofs_per_cell_per_component; ++j)
+      {
+        // consider old states
+        const double value_j = solution(local_dof_indices[j * n_components + m]);
+        max_cell = std::max(max_cell, value_j);
+        min_cell = std::min(min_cell, value_j);
+      }
+
+      // update the max and min values of neighborhood of each dof
+      for (unsigned int j = 0; j < dofs_per_cell_per_component; ++j)
+      {
+        unsigned int i = local_dof_indices[j * n_components + m]; // global index
+        max_values(i) = std::max(max_values(i), max_cell);
+        min_values(i) = std::min(min_values(i), min_cell);
+      }
+    }
+  }
 }
 
 /**
@@ -219,56 +306,26 @@ void FCT<dim>::solve_fct_system(
  *     - \frac{\Delta t}{M^L_{i,i}}\sigma_i\right)
  *     + \frac{\Delta t}{M^L_{i,i}}b_i^n \,,
  * \f]
- * where \f$U_{min,i}^n\equiv\min\limits_j U_j^n\f$ and
- * \f$U_{max,i}^n\equiv\max\limits_j U_j^n\f$.
+ * where \f$U_{min,i}\equiv\min\limits_{j\in \mathcal{I}(S_i)} U_j\f$ and
+ * \f$U_{max,i}\equiv\max\limits_{j\in \mathcal{I}(S_i)} U_j\f$.
+ *
+ * \param[in] old_solution  old solution vector \f$\mathbf{U}^n\f$
+ * \param[in] ss_reaction  steady-state reaction vector \f$\mathbf{\sigma}\f$,
+ *            where \f$
+ *   \sigma_i = \int\limits_{S_i}\varphi_i(\mathbf{x})\sigma(\mathbf{x})dV
+ *     = \sum\limits_j\int\limits_{S_{i,j}}
+ *     \varphi_i(\mathbf{x})\varphi_j(\mathbf{x})\sigma(\mathbf{x})dV \f$
+ * \param[in] ss_rhs  old steady-state right hand side vector \f$\mathbf{b}^n\f$
+ * \param[in] dt  time step size \f$\Delta t\f$
  */
 template <int dim>
-void FCT<dim>::compute_bounds(const Vector<double> & old_solution,
-                              const Vector<double> & ss_reaction,
-                              const Vector<double> & ss_rhs,
-                              const double & dt)
+void FCT<dim>::compute_solution_bounds(const Vector<double> & old_solution,
+                                       const Vector<double> & ss_reaction,
+                                       const Vector<double> & ss_rhs,
+                                       const double & dt)
 {
-  // initialize solution min and max
-  for (unsigned int i = 0; i < n_dofs; ++i)
-  {
-    solution_min(i) = old_solution(i);
-    solution_max(i) = old_solution(i);
-  }
-
-  // loop over cells
-  typename DoFHandler<dim>::active_cell_iterator cell =
-                                                   dof_handler->begin_active(),
-                                                 endc = dof_handler->end();
-  std::vector<unsigned int> local_dof_indices(dofs_per_cell);
-  for (; cell != endc; ++cell)
-  {
-    // get local dof indices
-    cell->get_dof_indices(local_dof_indices);
-
-    // loop over solution components
-    for (unsigned int m = 0; m < n_components; ++m)
-    {
-      // find min and max values on cell for this component
-      double max_cell = old_solution(local_dof_indices[m]);
-      double min_cell = old_solution(local_dof_indices[m]);
-      for (unsigned int j = 0; j < dofs_per_cell_per_component; ++j)
-      {
-        // consider old states
-        const double value_j =
-          old_solution(local_dof_indices[j * n_components + m]);
-        max_cell = std::max(max_cell, value_j);
-        min_cell = std::min(min_cell, value_j);
-      }
-
-      // update the max and min values of neighborhood of each dof
-      for (unsigned int j = 0; j < dofs_per_cell_per_component; ++j)
-      {
-        unsigned int i = local_dof_indices[j * n_components + m]; // global index
-        solution_max(i) = std::max(solution_max(i), max_cell);
-        solution_min(i) = std::min(solution_min(i), min_cell);
-      }
-    }
-  }
+  // compute minimum and maximum values of solution
+  compute_min_and_max_of_solution(old_solution, solution_min, solution_max);
 
   // consider star states in bounds if specified
   if (use_star_states_in_fct_bounds)
@@ -330,6 +387,47 @@ void FCT<dim>::compute_bounds(const Vector<double> & old_solution,
 }
 
 /**
+ * \brief Computes FCT solution bounds for use with the characteristic limiter,
+ *        \f$\hat{W}_i^-\f$ and \f$\hat{W}_i^+\f$.
+ *
+ * The bounds are computed as
+ * \f[
+ *   \hat{W}_i^-(\mathrm{U}^n) = \hat{U}_{min,i}^n \,,
+ * \f]
+ * \f[
+ *   \hat{W}_i^+(\mathrm{U}^n) = \hat{U}_{max,i}^n \,,
+ * \f]
+ * where \f$\hat{U}_{min,i}\equiv\min\limits_{j\in \mathcal{I}(S_i)} \hat{U}_j\f$
+ * and \f$\hat{U}_{max,i}\equiv\max\limits_{j\in \mathcal{I}(S_i)} \hat{U}_j\f$.
+ *
+ * \warning These bounds currently assume
+ * - no reaction term
+ * - no source term
+ *
+ * \param[in] old_solution  old solution vector \f$\mathbf{U}^n\f$
+ * \param[in] ss_reaction  steady-state reaction vector \f$\mathbf{\sigma}\f$,
+ *            where \f$
+ *   \sigma_i = \int\limits_{S_i}\varphi_i(\mathbf{x})\sigma(\mathbf{x})dV
+ *     = \sum\limits_j\int\limits_{S_{i,j}}
+ *     \varphi_i(\mathbf{x})\varphi_j(\mathbf{x})\sigma(\mathbf{x})dV \f$
+ * \param[in] ss_rhs  old steady-state right hand side vector \f$\mathbf{b}^n\f$
+ * \param[in] dt  time step size \f$\Delta t\f$
+ */
+template <int dim>
+void FCT<dim>::compute_solution_bounds_characteristic(
+  const Vector<double> & old_solution,
+  const Vector<double> &,
+  const Vector<double> &,
+  const double &)
+{
+  // transform old solution vector to characteristic variables
+  transform_vector(old_solution, old_solution, old_solution_characteristic);
+
+  // compute minimum and maximum values of solution
+  compute_min_and_max_of_solution(old_solution, solution_min, solution_max);
+}
+
+/**
  * \brief Assembles the flux correction matrix \f$\mathrm{P}\f$.
  *
  * \param [in] dt current time step size
@@ -380,17 +478,7 @@ void FCT<dim>::compute_flux_corrections(
 }
 
 /**
- * \brief Computes the limiting coefficient matrix.
- *
- * This function computes the limiting coefficient matrix \f$\mathbf{L}\f$
- * and stores it in \link limiter_matrix \endlink.
- *
- * \pre This function assumes
- * - the FCT solution bounds \f$\mathbf{W}^\pm\f$
- *   have been computed and stored in \link solution_max \endlink and \link
- *   solution_min \endlink, respectively.
- * - the antidiffusive correction flux matrix \f$\mathbf{P}\f$ has been computed
- *   and stored in \link flux_correction_matrix \endlink.
+ * \brief Computes the antidiffusion bounds \f$\mathbf{Q}^\pm\f$.
  *
  * \param[in] old_solution  old solution \f$\mathbf{U}^n\f$
  * \param[in] ss_flux  steady-state inviscid flux vector
@@ -402,16 +490,13 @@ void FCT<dim>::compute_flux_corrections(
  * \param[in] dt  time step size \f$\Delta t\f$
  */
 template <int dim>
-void FCT<dim>::compute_limiting_coefficients_zalesak(
+void FCT<dim>::compute_antidiffusion_bounds(
   const Vector<double> & old_solution,
   const Vector<double> & ss_flux,
   const Vector<double> & ss_rhs,
   const SparseMatrix<double> & low_order_diffusion_matrix,
   const double & dt)
 {
-  // reset limiter matrix
-  limiter_matrix = 0;
-
   // start computing Q+
   Q_plus = 0;
   lumped_mass_matrix->vmult(tmp_vector, old_solution);
@@ -429,7 +514,73 @@ void FCT<dim>::compute_limiting_coefficients_zalesak(
   Q_plus.add(1.0 / dt, tmp_vector);
   lumped_mass_matrix->vmult(tmp_vector, solution_min);
   Q_minus.add(1.0 / dt, tmp_vector);
+}
 
+/**
+ * \brief Computes the characteristic antidiffusion bounds
+ *        \f$\hat{\mathbf{Q}}^\pm\f$.
+ *
+ * \param[in] old_solution  old solution \f$\mathbf{U}^n\f$
+ * \param[in] ss_flux  steady-state inviscid flux vector
+ *   (entries are \f$(\mathbf{A}\mathbf{U}^n)_i\f$ for scalar case,
+ *   \f$\sum\limits_j\mathbf{c}_{i,j}\cdot\mathrm{F}^n_j\f$ for systems case)
+ * \param[in] ss_rhs  steady-state right hand side vector \f$\mathbf{b}^n\f$
+ * \param[in] low_order_diffusion_matrix  low-order diffusion matrix
+ *   \f$\mathbf{D}^L\f$
+ * \param[in] dt  time step size \f$\Delta t\f$
+ */
+template <int dim>
+void FCT<dim>::compute_antidiffusion_bounds_characteristic(
+  const Vector<double> & old_solution,
+  const Vector<double> & ss_flux,
+  const Vector<double> & ss_rhs,
+  const SparseMatrix<double> & low_order_diffusion_matrix,
+  const double & dt)
+{
+  // compute auxiliary vector for transformation to characteristic
+  // variables but use Q_plus as storage space
+  Vector<double> & aux_vector = Q_plus;
+  aux_vector = 0.0;
+  lumped_mass_matrix->vmult(tmp_vector, old_solution);
+  aux_vector.add(-1.0 / dt, tmp_vector);
+  aux_vector.add(1.0, ss_flux);
+  low_order_diffusion_matrix.vmult(tmp_vector, old_solution);
+  aux_vector.add(1.0, tmp_vector);
+  aux_vector.add(-1.0, ss_rhs);
+
+  // transform to characteristic variables; use Q_minus for result
+  transform_vector(old_solution, aux_vector, Q_minus);
+
+  // copy Q_minus to Q_plus
+  Q_plus = Q_minus;
+
+  // finish computing Q+ and Q-
+  lumped_mass_matrix->vmult(tmp_vector, solution_max);
+  Q_plus.add(1.0 / dt, tmp_vector);
+  lumped_mass_matrix->vmult(tmp_vector, solution_min);
+  Q_minus.add(1.0 / dt, tmp_vector);
+}
+
+/**
+ * \brief Computes the limiting coefficient matrix.
+ *
+ * This function computes the limiting coefficient matrix \f$\mathbf{L}\f$
+ * and stores it in \link limiter_matrix \endlink.
+ *
+ * \pre This function assumes
+ * - the FCT solution bounds \f$\mathbf{W}^\pm\f$
+ *   have been computed and stored in \link solution_max \endlink and \link
+ *   solution_min \endlink, respectively.
+ * - the antidiffusive correction flux matrix \f$\mathbf{P}\f$ has been computed
+ *   and stored in \link flux_correction_matrix \endlink.
+ */
+template <int dim>
+void FCT<dim>::compute_limiting_coefficients_zalesak()
+{
+  // reset limiter matrix
+  limiter_matrix = 0;
+
+  // compute R- and R+
   for (unsigned int i = 0; i < n_dofs; ++i)
   {
     // for Dirichlet nodes, set R_minus and R_plus to 1 because no limiting is
@@ -610,14 +761,59 @@ void FCT<dim>::get_matrix_row(const SparseMatrix<double> & matrix,
 }
 
 /**
- * \brief Check to see if the DMP was satisfied at all time steps.
+ * \brief Check to see if the FCT bounds were satisfied at all time steps.
+ *
+ * \param[in] new_solution  new solution vector \f$\mathbf{U}^{n+1}\f$
  *
  * \return flag telling whether imposed bounds were satisfied at all steps
+ *
+ * \note This function should not be used if characteristic limiting was
+ *       used, since the imposed bounds are for the characteristic variables.
  */
 template <int dim>
-bool FCT<dim>::check_DMP_satisfied()
+bool FCT<dim>::check_fct_bounds_satisfied(
+  const Vector<double> & new_solution) const
 {
-  return DMP_satisfied_at_all_steps;
+  // machine precision for floating point comparisons
+  const double machine_tolerance = 1.0e-15;
+
+  // now set new precision
+  std::cout.precision(15);
+
+  // check that each dof value is bounded by its neighbors
+  bool fct_bounds_satisfied = true;
+  for (unsigned int i = 0; i < n_dofs; ++i)
+  {
+    // check bounds if dof does not correspond to a Dirichlet node
+    if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) ==
+        dirichlet_nodes.end())
+    {
+      double value_i = new_solution(i);
+
+      // check lower bound
+      if (value_i < solution_min(i) - machine_tolerance)
+      {
+        fct_bounds_satisfied = false;
+
+        std::cout << "FCT bounds violated by dof " << i << ": " << value_i
+                  << " < " << solution_min(i) << std::endl;
+      }
+      // check upper bound
+      if (value_i > solution_max(i) + machine_tolerance)
+      {
+        fct_bounds_satisfied = false;
+
+        std::cout << "FCT bounds violated by dof " << i << ": " << value_i
+                  << " > " << solution_max(i) << std::endl;
+      }
+    }
+  }
+
+  // restore default precision and format
+  std::cout.unsetf(std::ios_base::floatfield);
+
+  // return boolean for satisfaction of FCT bounds
+  return fct_bounds_satisfied;
 }
 
 /**
@@ -749,6 +945,86 @@ void FCT<dim>::transform_vector(const Vector<double> & solution,
         const unsigned int j = node_dof_indices[n][mm];
         vector_transformed[i] +=
           transformation_matrix_inverse[m][mm] * vector_original[j];
+      }
+    }
+  }
+}
+
+/**
+ * \brief Transforms a matrix in terms of conservative variables to a matrix
+ *        in terms of characteristic variables.
+ *
+ * This function applies a local transformation evaluated with the solution
+ * \f$\mathbf{U}\f$ to characteristic variables on a matrix \f$\mathbf{A}\f$:
+ * \f[
+ *   \hat{\mathbf{A}}_{i,j} = \mathbf{T}^{-1}(\mathbf{U}_i)\mathbf{A}_{i,j} \,,
+ * \f]
+ * where \f$\hat{\mathbf{A}}\f$ is the transformed matrix, and \f$i\f$ and
+ * \f$j\f$ are node indices.
+ *
+ * \param[in] solution  solution vector \f$\mathbf{U}\f$ at which to evaluate
+ *                      transformations
+ * \param[in] matrix_original  matrix \f$\mathbf{A}\f$ to be transformed
+ * \param[in] matrix_transformed  transformed matrix \f$\hat{\mathbf{A}}\f$
+ */
+template <int dim>
+void FCT<dim>::transform_matrix(const Vector<double> & solution,
+                                const SparseMatrix<double> & matrix_original,
+                                SparseMatrix<double> & matrix_transformed) const
+{
+  // loop over nodes
+  for (unsigned int n_i = 0; n_i < n_nodes; ++n_i)
+  {
+    // assemble solution vector on node
+    Vector<double> solution_node(n_components);
+    for (unsigned int m = 0; m < n_components; ++m)
+      solution_node[m] = solution[node_dof_indices[n_i][m]];
+
+    // compute local transformation matrix inverse on node
+    const FullMatrix<double> transformation_matrix_inverse =
+      compute_transformation_matrix_inverse(solution_node);
+
+    // apply local transformation matrix inverse to vector
+    // loop over components
+    for (unsigned int m = 0; m < n_components; ++m)
+    {
+      // row index
+      const unsigned int i = node_dof_indices[n_i][m];
+
+      // loop over nonzero columns in row
+      SparseMatrix<double>::const_iterator it_in = matrix_original.begin(i);
+      SparseMatrix<double>::const_iterator it_end = matrix_original.end(i);
+      SparseMatrix<double>::iterator it_out = matrix_transformed.begin(i);
+      for (; it_in != it_end; ++it_in, ++it_out)
+      {
+        // get column index
+        const unsigned int j = it_in->column();
+
+        // get original matrix value for column
+        const double value = it_in->value();
+
+        // assert that if the value is greater than zero, then i and j correspond
+        // to the same solution component
+        Assert(std::abs(value) < 1.0e-15 || component_indices[j] == m,
+               ExcInvalidState());
+
+        // get node index corresponding to column
+        const unsigned int n_j = node_indices[j];
+
+        // compute transformed matrix value
+        double transformed_value = 0.0;
+        for (unsigned int l = 0; l < n_components; ++l)
+        {
+          const unsigned int k = node_dof_indices[n_i][l];
+          const unsigned int p = node_dof_indices[n_j][l];
+          const double value_original = matrix_original(k, p);
+
+          transformed_value +=
+            transformation_matrix_inverse[m][l] * value_original;
+        }
+
+        // store transformed matrix value
+        it_out->value() = transformed_value;
       }
     }
   }

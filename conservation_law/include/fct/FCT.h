@@ -99,12 +99,21 @@ public:
                         const SparseMatrix<double> & low_order_diffusion_matrix,
                         const SparseMatrix<double> & high_order_diffusion_matrix);
 
-  bool check_DMP_satisfied();
+  bool check_fct_bounds_satisfied(const Vector<double> & new_solution) const;
 
-  virtual void compute_bounds(const Vector<double> & old_solution,
-                              const Vector<double> & ss_reaction,
-                              const Vector<double> & ss_rhs,
-                              const double & dt);
+  void compute_min_and_max_of_solution(const Vector<double> & solution,
+                                       Vector<double> & min_values,
+                                       Vector<double> & max_values) const;
+
+  void compute_solution_bounds(const Vector<double> & old_solution,
+                               const Vector<double> & ss_reaction,
+                               const Vector<double> & ss_rhs,
+                               const double & dt);
+
+  void compute_solution_bounds_characteristic(const Vector<double> & old_solution,
+                                              const Vector<double> & ss_reaction,
+                                              const Vector<double> & ss_rhs,
+                                              const double & dt);
 
   void output_limiter_matrix() const;
 
@@ -119,12 +128,21 @@ protected:
     const SparseMatrix<double> & low_order_diffusion_matrix,
     const SparseMatrix<double> & high_order_diffusion_matrix);
 
-  void compute_limiting_coefficients_zalesak(
+  void compute_antidiffusion_bounds(
     const Vector<double> & old_solution,
     const Vector<double> & ss_flux,
     const Vector<double> & ss_rhs,
     const SparseMatrix<double> & low_order_diffusion_matrix,
     const double & dt);
+
+  void compute_antidiffusion_bounds_characteristic(
+    const Vector<double> & old_solution,
+    const Vector<double> & ss_flux,
+    const Vector<double> & ss_rhs,
+    const SparseMatrix<double> & low_order_diffusion_matrix,
+    const double & dt);
+
+  void compute_limiting_coefficients_zalesak();
 
   void compute_limited_flux_correction_vector();
 
@@ -148,6 +166,10 @@ protected:
                         const Vector<double> & vector_original,
                         Vector<double> & vector_transformed) const;
 
+  void transform_matrix(const Vector<double> & solution,
+                        const SparseMatrix<double> & matrix_original,
+                        SparseMatrix<double> & matrix_transformed) const;
+
   void create_dof_indices_lists();
 
   void check_conservation(const Vector<double> & flux_correction_vector);
@@ -165,9 +187,18 @@ protected:
   const SparseMatrix<double> * const consistent_mass_matrix;
   SparsityPattern sparsity_pattern;
   SparseMatrix<double> limiter_matrix;
+
+  /** \brief matrix of antidiffusive fluxes \f$\mathbf{P}\f$ */
   SparseMatrix<double> flux_correction_matrix;
+
+  /** \brief matrix of transformed antidiffusive fluxes \f$\hat{\mathbf{P}}\f$ */
+  SparseMatrix<double> flux_correction_matrix_transformed;
+
   Vector<double> solution_min;
   Vector<double> solution_max;
+
+  /** \brief old solution vector in characteristic variables \hat{\mathbf{U}}^n */
+  Vector<double> old_solution_characteristic;
 
   SparseMatrix<double> system_matrix;
   Vector<double> system_rhs;
@@ -206,7 +237,7 @@ protected:
 
   const bool use_star_states_in_fct_bounds;
 
-  bool DMP_satisfied_at_all_steps;
+  bool fct_bounds_satisfied_at_all_steps;
 
   unsigned int bounds_transient_file_index;
 

@@ -13,15 +13,15 @@ Direct extension of scalar FCT methodology to the systems case is often met
 with poor results because this extension is typically not physcially valid.
 Kuzmin states that limitation on alternative sets of variables such as
 primitive variables or characteristic variables, rather than conservative
-variables, typically produces better quality FCT results \cite{Kuzmin_FCT}.
+variables, typically produces better quality FCT results \cite{kuzmin_FCT}.
 For example, for the shallow water equations, one may consider the
 following sets of variables:
 \begin{itemize}
-  \item \textbf{Conservative}:
+  \item Conservative:
     $\vectorsolution \equiv [\height,\height\velocityx]\transpose$,
-  \item \textbf{Primitive}:
+  \item Primitive:
     $\check{\vectorsolution} \equiv [\height,\velocityx]\transpose$,
-  \item \textbf{Characteristic}:
+  \item Characteristic:
     $\hat{\vectorsolution} \equiv [\velocityx-2\speedofsound,
       \velocityx+2\speedofsound]\transpose$,
       where $\speedofsound\equiv\sqrt{\gravity\height}$.

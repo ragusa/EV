@@ -82,70 +82,68 @@ where accents denote transformed quantities:
     \correctionfluxmatrix\ij \eqp
 \end{equation}
 One can then choose the limiting coefficients $\limitermatrix\ij$ to satisfy
-bounds on the transformed variables. 
+bounds on the transformed variables: 
+\begin{equation}
+  \hat{\DMPbound}_i^- \leq
+  \hat{\solutionvector}_i^{n+1} \leq
+  \hat{\DMPbound}_i^+ \quad \forall i \eqp
+\end{equation}
+Imposition of these bounds corresponds to bounding the transformed antidiffusion
+flux sums:
+\begin{equation}
+  \hat{\mathbf{\limitedfluxbound}}^-_i \leq
+  \sum\limits_j \limitermatrix\ij\odot\hat{\correctionfluxmatrix}\ij \leq
+  \hat{\mathbf{\limitedfluxbound}}^+_i \eqc
+\end{equation}
+where the bounds are obtained by performing some algebra on the transformed
+system:
+\begin{equation}
+  \hat{\mathbf{\limitedfluxbound}}_i^\pm \equiv
+    \lumpedmassentry\frac{\hat{\solutionvector}_i^\pm
+      -\hat{\solutionvector}_i^n}{\dt}
+    + \sum_j\gradiententry\cdot\hat{\consfluxinterpolant}_j^n
+    + \sum_j\diffusionmatrixletter\ij^{L,n}\hat{\solutionvector}_j^n
+    - \hat{\ssrhs}_i^n \eqp
+\end{equation}
 
-\begin{itemize}
-  \item Choose $\limitermatrix\ij$ to satisfy some solution bounds
-    $\hat{\solutionvector}_{i}^\pm$ and then define corresponding
-    antidiffusive flux bounds $\hat{\mathbf{\limitedfluxbound}}_i^\pm$:
-    \begin{equation}
-      \hat{\mathbf{\limitedfluxbound}}^-_i \leq
-        \sum\limits_j \limitermatrix\ij\odot\hat{\correctionfluxmatrix}\ij \leq
-        \hat{\mathbf{\limitedfluxbound}}^+_i
-      \quad\Rightarrow\quad
-      \hat{\solutionvector}_i^- \leq
-        \hat{\solutionvector}_i^{n+1} \leq
-        \hat{\solutionvector}_i^+ \quad \forall i \eqp
-    \end{equation}
-  \item Performing some algebra gives the definition
-    \begin{equation}
-      \hat{\mathbf{\limitedfluxbound}}_i^\pm \equiv
-        \lumpedmassentry\frac{\hat{\solutionvector}_i^\pm
-          -\hat{\solutionvector}_i^n}{\dt}
-        + \sum_j\gradiententry\cdot\hat{\consfluxinterpolant}_j^n
-        + \sum_j\diffusionmatrixletter\ij^{L,n}\hat{\solutionvector}_j^n
-        - \hat{\ssrhs}_i^n \eqp
-    \end{equation}
-  \item As in the scalar case, negative and positive antidiffusive flux
-    sums are required in the limiting coefficient definitions:
-    \begin{equation}
-      \hat{\correctionfluxletter}_i^{\componentindex,-} \equiv
-        \sum\limits_{j:\hat{\correctionfluxentry}\ij^\componentindex<0}
-        \hat{\correctionfluxentry}\ij^\componentindex \eqc \qquad
-      \hat{\correctionfluxletter}_i^{\componentindex,+} \equiv
-        \sum\limits_{j:\hat{\correctionfluxentry}\ij^\componentindex>0}
-        \hat{\correctionfluxentry}\ij^\componentindex \eqp
-    \end{equation}
-\end{itemize}
+Zalesak's limiter then takes the same form as in the scalar case, but
+now the transformed quantities $\hat{\mathbf{\limitedfluxbound}}^\pm$
+and $\hat{\correctionfluxmatrix}$ are used instead of
+$\mathbf{\limitedfluxbound}^\pm$ and $\correctionfluxmatrix$:
+\begin{equation}
+  \hat{\correctionfluxletter}_i^{-,\componentindex} \equiv
+    \sum\limits_{j:\hat{\correctionfluxentry}\ij^\componentindex<0}
+    \hat{\correctionfluxentry}\ij^\componentindex \eqc \qquad
+  \hat{\correctionfluxletter}_i^{+,\componentindex} \equiv
+    \sum\limits_{j:\hat{\correctionfluxentry}\ij^\componentindex>0}
+    \hat{\correctionfluxentry}\ij^\componentindex \eqc
+\end{equation}
+\begin{equation}
+  \limiterletter_i^{\pm,\componentindex} \equiv\left\{
+    \begin{array}{l l}
+      1 & \hat{\correctionfluxletter}_i^{\pm,\componentindex} = 0\\
+      \min\left(1,\frac{Q_i^{\pm,\componentindex}}
+        {\hat{\correctionfluxletter}_i^{\pm,\componentindex}}\right) &
+      \hat{\correctionfluxletter}_i^{\pm,\componentindex} \ne 0
+    \end{array}
+  \right. \eqc
+\end{equation}
+\begin{equation}
+  \limiterletter\ij^\componentindex \equiv\left\{
+    \begin{array}{l l}
+      \min(L_i^{+,\componentindex},L_j^{-,\componentindex}) &
+        \hat{\correctionfluxentry}\ij^\componentindex \geq 0\\
+      \min(L_i^{-,\componentindex},L_j^{+,\componentindex}) &
+        \hat{\correctionfluxentry}\ij^\componentindex < 0
+    \end{array}
+  \right. \eqp
+\end{equation}
 
-\begin{itemize}
-  \item The limiting coefficients are first computed just as in the scalar case:
-    \begin{equation}
-      \limiterletter_i^{\componentindex,\pm} \equiv\left\{
-        \begin{array}{l l}
-          1 & \hat{\correctionfluxletter}_i^{\componentindex,\pm} = 0\\
-          \min\left(1,\frac{Q_i^{\componentindex,\pm}}
-            {\hat{\correctionfluxletter}_i^{\componentindex,\pm}}\right) &
-          \hat{\correctionfluxletter}_i^{\componentindex,\pm} \ne 0
-        \end{array}
-      \right. \eqp
-    \end{equation}
-    \begin{equation}
-      \limiterletter\ij^\componentindex \equiv\left\{
-        \begin{array}{l l}
-          \min(L_i^{\componentindex,+},L_j^{\componentindex,-}) &
-            \hat{\correctionfluxentry}\ij^\componentindex \geq 0\\
-          \min(L_i^{\componentindex,-},L_j^{\componentindex,+}) &
-            \hat{\correctionfluxentry}\ij^\componentindex < 0
-        \end{array}
-      \right. \eqp
-    \end{equation}
-  \item However, there is a caveat: limiting coefficients may require
-    \hlorange{synchronization}, e.g.,
-    \begin{equation}
-      \limiterletter\ij^\componentindex \mapsfrom
-        \min\limits_k\limiterletter\ij^k \quad \forall\componentindex \eqp
-    \end{equation}
-  \item Otherwise, antidiffusive fluxes in one component can violate the
-    conditions of another component.
-\end{itemize}
+Kuzmin states that for the systems case, the limiting coefficients may require
+synchronization between the components, such as
+\begin{equation}
+  \limiterletter\ij^\componentindex \mapsfrom
+    \min\limits_k\limiterletter\ij^k \quad \forall\componentindex \eqp
+\end{equation}
+Otherwise, antidiffusive fluxes in one component can violate the
+conditions of another component \cite{kuzmin_FCT}.
