@@ -3,10 +3,8 @@
 ##
 
 # add option to prevent c++11 standard error
-#SET(GNUXX_FLAGS "-std=c++0x")
+#SET(GNUXX_FLAGS "-std=c++1y")
 #ADD_DEFINITIONS(${GNUXX_FLAGS})
-
-# Usually, you will not need to modify anything beyond this point...
 
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8)
 

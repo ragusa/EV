@@ -25,6 +25,7 @@
 #include "include/bc/ShallowWaterWallBC.h"
 #include "include/entropy/Entropy.h"
 #include "include/entropy/ShallowWaterEntropy.h"
+#include "include/fct/ShallowWaterFCT.h"
 #include "include/parameters/ShallowWaterParameters.h"
 #include "include/parameters/ShallowWaterProblemParameters.h"
 #include "include/postprocessing/ShallowWaterPostProcessor.h"
@@ -112,6 +113,8 @@ private:
   std::shared_ptr<MaxWaveSpeed<dim>> create_max_wave_speed() const override;
 
   std::shared_ptr<StarState<dim>> create_star_state() const override;
+
+  std::shared_ptr<FCT<dim>> create_fct() const override;
 
   std::shared_ptr<ViscosityMultiplier<dim>> create_viscosity_multiplier()
     const override;

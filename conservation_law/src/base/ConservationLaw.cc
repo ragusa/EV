@@ -813,37 +813,19 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
   compute_ss_reaction(ss_reaction);
 
   // create linear solver
-  LinearSolver<dim> linear_solver(
+  linear_solver = std::make_shared<LinearSolver<dim>>(
     parameters.linear_solver, constraints, dof_handler, dirichlet_function);
 
   // create SSPRK time integrator
   SSPRKTimeIntegrator<dim> ssprk(parameters.time_discretization,
                                  n_dofs,
-                                 linear_solver,
+                                 *linear_solver,
                                  unconstrained_sparsity_pattern);
 
   // create FCT if applicable
   std::shared_ptr<FCT<dim>> fct;
   if (parameters.scheme == Scheme::fct)
-  {
-    // determine if star states are to be used in FCT bounds
-    const bool use_star_states_in_fct_bounds =
-      are_star_states && parameters.use_star_states_in_fct_bounds;
-
-    fct = std::make_shared<FCT<dim>>(parameters,
-                                     dof_handler,
-                                     triangulation,
-                                     lumped_mass_matrix,
-                                     consistent_mass_matrix,
-                                     star_state,
-                                     linear_solver,
-                                     unconstrained_sparsity_pattern,
-                                     dirichlet_dof_indices,
-                                     n_components,
-                                     dofs_per_cell,
-                                     component_names,
-                                     use_star_states_in_fct_bounds);
-  }
+    fct = create_fct();
 
   // initialize old time, time index, and transient flag
   old_time = 0.0;
@@ -1280,4 +1262,33 @@ std::shared_ptr<StarState<dim>> ConservationLaw<dim>::create_star_state() const
 
   // return null pointer to avoid compiler warning about not returning anything
   return nullptr;
+}
+
+/**
+ * \brief Creates an FCT object and returns the pointer.
+ *
+ * \return FCT object pointer
+ */
+template <int dim>
+std::shared_ptr<FCT<dim>> ConservationLaw<dim>::create_fct() const
+{
+  // determine if star states are to be used in FCT bounds
+  const bool use_star_states_in_fct_bounds =
+    are_star_states && parameters.use_star_states_in_fct_bounds;
+
+  auto fct = std::make_shared<FCT<dim>>(parameters,
+                                        dof_handler,
+                                        triangulation,
+                                        lumped_mass_matrix,
+                                        consistent_mass_matrix,
+                                        star_state,
+                                        *linear_solver,
+                                        unconstrained_sparsity_pattern,
+                                        dirichlet_dof_indices,
+                                        n_components,
+                                        dofs_per_cell,
+                                        component_names,
+                                        use_star_states_in_fct_bounds);
+
+  return fct;
 }

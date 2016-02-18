@@ -791,3 +791,34 @@ std::shared_ptr<ViscosityMultiplier<dim>> ShallowWater<
 
   return viscosity_multiplier;
 }
+
+/**
+ * \brief Creates an FCT object and returns the pointer.
+ *
+ * \return FCT object pointer
+ */
+template <int dim>
+std::shared_ptr<FCT<dim>> ShallowWater<dim>::create_fct() const
+{
+  // determine if star states are to be used in FCT bounds
+  const bool use_star_states_in_fct_bounds =
+    this->are_star_states && this->parameters.use_star_states_in_fct_bounds;
+
+  auto fct =
+    std::make_shared<ShallowWaterFCT<dim>>(this->parameters,
+                                           this->dof_handler,
+                                           this->triangulation,
+                                           this->lumped_mass_matrix,
+                                           this->consistent_mass_matrix,
+                                           this->star_state,
+                                           *(this->linear_solver),
+                                           this->unconstrained_sparsity_pattern,
+                                           this->dirichlet_dof_indices,
+                                           this->n_components,
+                                           this->dofs_per_cell,
+                                           this->component_names,
+                                           use_star_states_in_fct_bounds,
+                                           gravity);
+
+  return fct;
+}

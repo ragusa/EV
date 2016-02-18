@@ -262,12 +262,9 @@ protected:
    */
   virtual std::shared_ptr<MaxWaveSpeed<dim>> create_max_wave_speed() const = 0;
 
-  /**
-   * \brief Creates a star state object and returns the pointer.
-   *
-   * \return pointer to created star state object
-   */
   virtual std::shared_ptr<StarState<dim>> create_star_state() const;
+
+  virtual std::shared_ptr<FCT<dim>> create_fct() const;
 
   /**
    * \brief Returns the names of each component.
@@ -361,6 +358,9 @@ protected:
 
   /** \brief Pointer to star state */
   std::shared_ptr<StarState<dim>> star_state;
+
+  /** \brief Pointer to linear solver */
+  std::shared_ptr<LinearSolver<dim>> linear_solver;
 
   /** \brief number of quadrature points in each dimension */
   const unsigned int n_q_points_per_dim;

@@ -35,6 +35,7 @@ public:
                   const unsigned int & n_components,
                   const unsigned int & dofs_per_cell,
                   const std::vector<std::string> & component_names,
+                  const bool & use_star_states_in_fct_bounds_,
                   const double & gravity);
 
 protected:

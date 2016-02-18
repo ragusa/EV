@@ -231,9 +231,13 @@ void FCT<dim>::solve_fct_system(
   linear_solver.solve(system_matrix, new_solution, system_rhs);
 
   // check that local discrete maximum principle is satisfied at all time steps
-  bool fct_bounds_satisfied_this_step = check_fct_bounds_satisfied(new_solution);
-  fct_bounds_satisfied_at_all_steps =
-    fct_bounds_satisfied_at_all_steps && fct_bounds_satisfied_this_step;
+  if (fct_limitation_type == FCTLimitationType::conservative)
+  {
+    bool fct_bounds_satisfied_this_step = check_fct_bounds_satisfied(new_solution);
+
+    fct_bounds_satisfied_at_all_steps =
+      fct_bounds_satisfied_at_all_steps && fct_bounds_satisfied_this_step;
+  }
 }
 
 /**
@@ -422,6 +426,9 @@ void FCT<dim>::compute_solution_bounds_characteristic(
 {
   // transform old solution vector to characteristic variables
   transform_vector(old_solution, old_solution, old_solution_characteristic);
+
+for (unsigned int i = 0; i < n_dofs; ++i)
+  std::cout << old_solution[i] << "    " << old_solution_characteristic[i] << std::endl;
 
   // compute minimum and maximum values of solution
   compute_min_and_max_of_solution(old_solution, solution_min, solution_max);
