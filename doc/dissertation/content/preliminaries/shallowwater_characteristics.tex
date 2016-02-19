@@ -58,9 +58,12 @@ second by $\frac{2\gravity}{\speedofsound}$ gives
     + \eigenvaluematrix(\vectorsolution)\pd{\characteristicsolution}{x}
   = \mathbf{0} \eqc
 \end{equation}
-where $\characteristicsolution(\vectorsolution)\equiv
-\eigenvectormatrix(\vectorsolution)^{-1}\vectorsolution$ is the vector of
-characteristic variables, and $\eigenvaluematrix(\vectorsolution)$ is a
+where $\characteristicsolution$ is the vector of characteristic variables,
+for which $\ppt{\characteristicsolution}\equiv
+\eigenvectormatrix(\vectorsolution)^{-1}\ppt{\vectorsolution}$ and
+$\pd{\characteristicsolution}{x}\equiv
+\eigenvectormatrix(\vectorsolution)^{-1}\pd{\vectorsolution}{x}$, and
+$\eigenvaluematrix(\vectorsolution)$ is a
 diagonal matrix with the eigenvalues as the diagonal entries:
 \begin{equation}
   \characteristicsolution(\vectorsolution) = \sq{\begin{array}{c}

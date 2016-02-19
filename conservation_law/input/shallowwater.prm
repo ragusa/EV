@@ -36,10 +36,10 @@ subsection refinement
 end
 
 subsection time
-   set time step size method = constant # constant|cfl
-   set use default end time = false
-   set final time = 0.001
-   set time step size = 0.001
+   set time step size method = cfl # constant|cfl
+   set use default end time = true
+   set final time = 0.01
+   set time step size = 0.01
    set cfl = 0.50
    set steady state tolerance = 1.0e-6
 end
@@ -49,8 +49,8 @@ subsection artificial viscosity
    set first order viscosity coefficient = 0.5
    set multiply low order viscosity by froude = false
    set use low order viscosity for first time step = true
-   set entropy residual coefficient = 1.0
-   set entropy jump coefficient = 1.0
+   set entropy residual coefficient = 0.5
+   set entropy jump coefficient = 0.5
    set entropy normalization = local # constant | average | local
    set constant entropy normalization coefficient = 0.1
    set entropy viscosity smoothing = none # none | max | average
@@ -100,10 +100,10 @@ subsection output
 end
 
 subsection fct
-   set fct limitation type = characteristic # conservative | characteristic
+   set fct limitation type = conservative # conservative | characteristic
    set fct bounds type = dmp # dmp
    set antidiffusion = limited # limited | full | none
-   set fct synchronization = min # none | min | compound
+   set fct synchronization = none # none | min | compound
    set use star states in fct bounds = false
    set output limiter matrix = false
    set output fct bounds = true

@@ -231,7 +231,7 @@ void FCT<dim>::solve_fct_system(
   linear_solver.solve(system_matrix, new_solution, system_rhs);
 
   // check that local discrete maximum principle is satisfied at all time steps
-  if (fct_limitation_type == FCTLimitationType::conservative)
+  if (fct_limitation_type == FCTLimitationType::conservative && antidiffusion_type != AntidiffusionType::full)
   {
     bool fct_bounds_satisfied_this_step = check_fct_bounds_satisfied(new_solution);
 
@@ -427,11 +427,8 @@ void FCT<dim>::compute_solution_bounds_characteristic(
   // transform old solution vector to characteristic variables
   transform_vector(old_solution, old_solution, old_solution_characteristic);
 
-for (unsigned int i = 0; i < n_dofs; ++i)
-  std::cout << old_solution[i] << "    " << old_solution_characteristic[i] << std::endl;
-
   // compute minimum and maximum values of solution
-  compute_min_and_max_of_solution(old_solution, solution_min, solution_max);
+  compute_min_and_max_of_solution(old_solution_characteristic, solution_min, solution_max);
 }
 
 /**
@@ -527,6 +524,11 @@ void FCT<dim>::compute_antidiffusion_bounds(
  * \brief Computes the characteristic antidiffusion bounds
  *        \f$\hat{\mathbf{Q}}^\pm\f$.
  *
+ * \pre This function assumes that
+ * - there is no reaction term or source term
+ * - the characteristic old solution \f$\hat{\mathbf{U}}\f$ has already been
+ *   computed.
+ *
  * \param[in] old_solution  old solution \f$\mathbf{U}^n\f$
  * \param[in] ss_flux  steady-state inviscid flux vector
  *   (entries are \f$(\mathbf{A}\mathbf{U}^n)_i\f$ for scalar case,
@@ -544,28 +546,32 @@ void FCT<dim>::compute_antidiffusion_bounds_characteristic(
   const SparseMatrix<double> & low_order_diffusion_matrix,
   const double & dt)
 {
-  // compute auxiliary vector for transformation to characteristic
-  // variables but use Q_plus as storage space
-  Vector<double> & aux_vector = Q_plus;
-  aux_vector = 0.0;
-  lumped_mass_matrix->vmult(tmp_vector, old_solution);
-  aux_vector.add(-1.0 / dt, tmp_vector);
-  aux_vector.add(1.0, ss_flux);
-  low_order_diffusion_matrix.vmult(tmp_vector, old_solution);
-  aux_vector.add(1.0, tmp_vector);
-  aux_vector.add(-1.0, ss_rhs);
-
-  // transform to characteristic variables; use Q_minus for result
-  transform_vector(old_solution, aux_vector, Q_minus);
-
-  // copy Q_minus to Q_plus
-  Q_plus = Q_minus;
-
-  // finish computing Q+ and Q-
-  lumped_mass_matrix->vmult(tmp_vector, solution_max);
-  Q_plus.add(1.0 / dt, tmp_vector);
+  // compute Q-
+  Q_minus = 0;
   lumped_mass_matrix->vmult(tmp_vector, solution_min);
   Q_minus.add(1.0 / dt, tmp_vector);
+  lumped_mass_matrix->vmult(tmp_vector, old_solution_characteristic);
+  Q_minus.add(-1.0 / dt, tmp_vector);
+
+  // compute Q+
+  Q_plus = 0;
+  lumped_mass_matrix->vmult(tmp_vector, solution_max);
+  Q_plus.add(1.0 / dt, tmp_vector);
+  lumped_mass_matrix->vmult(tmp_vector, old_solution_characteristic);
+  Q_plus.add(-1.0 / dt, tmp_vector);
+/*
+std::cout<<"dt = "<<dt<<std::endl;
+printf("%11s %11s %11s\n","old","min","Q-");
+for (unsigned int i = 0; i < n_dofs; ++i)
+{
+SparseMatrix<double>::const_iterator it = lumped_mass_matrix->begin(i);
+SparseMatrix<double>::const_iterator it_end = lumped_mass_matrix->end(i);
+for (; it != it_end; ++it)
+  printf("ML(%i,%i) = %e\n",i,it->column(),it->value());
+
+  printf("%11.3e %11.3e %11.3e\n",old_solution_characteristic[i],solution_min[i],Q_minus[i]);
+}
+*/
 }
 
 /**
@@ -654,6 +660,8 @@ void FCT<dim>::compute_limiting_coefficients_zalesak()
         Lij = std::min(R_plus(i), R_minus(j));
       else
         Lij = std::min(R_minus(i), R_plus(j));
+
+//std::cout<<"L("<<i<<","<<j<<") = "<<Lij<<std::endl;
 
       // store entry in limiter matrix
       limiter_matrix.set(i, j, Lij);

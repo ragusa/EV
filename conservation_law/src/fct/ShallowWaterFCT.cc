@@ -62,8 +62,8 @@ ShallowWaterFCT<dim>::ShallowWaterFCT(
  * For the shallow water equations, the characteristic transformation matrix is
  * \f[
  *   \mathbf{T}(\mathbf{u}) = \left[\begin{array}{c c}
- *     1   & 1\\
- *     u-a & u+a
+ *     -\frac{h}{4a} & \frac{h}{4a}\\
+ *      \frac{h}{2}  & \frac{h}{2}
  *   \end{array}\right] \,,
  * \f]
  * where \f$u\f$ is the speed, and \f$a\f$ is the ``speed of sound''
@@ -105,9 +105,9 @@ FullMatrix<double> ShallowWaterFCT<dim>::compute_transformation_matrix(
  * For the shallow water equations, the characteristic transformation matrix
  * inverse is
  * \f[
- *   \mathbf{T}^{-1}(\mathbf{u}) = \frac{1}{2a}\left[\begin{array}{c c}
- *     u+a & -1\\
- *     a-u & 1
+ *   \mathbf{T}^{-1}(\mathbf{u}) = \left[\begin{array}{c c}
+ *     -\frac{2g}{a} & \frac{1}{h}\\
+ *      \frac{2g}{a} & \frac{1}{h}
  *   \end{array}\right] \,,
  * \f]
  * where \f$u\f$ is the speed, and \f$a\f$ is the ``speed of sound''
@@ -125,21 +125,16 @@ FullMatrix<double> ShallowWaterFCT<dim>::compute_transformation_matrix_inverse(
 
   // extract solution components
   const double height = solution[0];
-  std::vector<double> momentum(1);
-  for (unsigned int d = 0; d < dim; ++d)
-    momentum[d] = solution[d + 1];
 
   // compute speed and sound speed
-  const double u = momentum[0] / height;
   const double a = std::sqrt(gravity * height);
 
   // compute matrix entries
   FullMatrix<double> matrix(this->n_components, this->n_components);
-  const double factor = 0.5 / a;
-  matrix[0][0] = (u + a) * factor;
-  matrix[0][1] = -factor;
-  matrix[1][0] = (a - u) * factor;
-  matrix[1][1] = factor;
+  matrix[0][0] = -2.0*gravity/a;
+  matrix[0][1] = 1.0/height;
+  matrix[1][0] = 2.0*gravity/a;
+  matrix[1][1] = 1.0/height;
 
   return matrix;
 }
