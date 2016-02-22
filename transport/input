@@ -13,18 +13,18 @@ subsection problem
    # 13 = source-in-void to absorber
    # 14 = 5-region
    # 15 = 2-region saturation
-   set Problem ID = 7
+   set Problem ID = 3
 end
 
 subsection time
-   set End time = 0.1 #0.001 #0.01
+   set End time = 0.001 #0.001 #0.01
    set Time step size = 0.001 #0.0005 #0.005
-   set Use adaptive time stepping = false
+   set Use adaptive time stepping = true
    set CFL limit = 0.5
    set Time discretization = theta       # <ss|theta|ssprk>
    set Entropy time discretization = BE  # <CN|BE|BDF2>
-   set SSPRK method = SSP3                 # <FE|SSP2|SSP3>
-   set Theta method = CN                 # <FE|CN|BE>
+   set SSPRK method = FE                 # <FE|SSP2|SSP3>
+   set Theta method = BE                 # <FE|CN|BE>
 end
 
 subsection viscosity
@@ -58,7 +58,7 @@ subsection refinement
    set Time refinement factor = 0.5 # (0.5)^(2/3) = 0.6299605
    set Use adaptive refinement = false
    set Initial refinement level = 5
-   set Number of refinement cycles = 3
+   set Number of refinement cycles = 1
    set Use cell size for convergence rates = false
 end
 
@@ -83,7 +83,7 @@ subsection output
    set Output exact solution = true
    set Exact solution refinement level = 7
    set Output initial solution = false 
-   set Output DMP bounds = false
-   set Save convergence results = true
+   set Output DMP bounds = true
+   set Save convergence results = false
    set Print solution = false
 end

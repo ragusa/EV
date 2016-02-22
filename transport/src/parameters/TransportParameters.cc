@@ -114,16 +114,14 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler & prm)
   // refinement parameters
   prm.enter_subsection("refinement");
   {
-    prm.declare_entry(
-      "Refine space",
-      "true",
-      Patterns::Bool(),
-      "Option to refine space in each refinement cycle");
-    prm.declare_entry(
-      "Refine time",
-      "false",
-      Patterns::Bool(),
-      "Option to refine time in each refinement cycle");
+    prm.declare_entry("Refine space",
+                      "true",
+                      Patterns::Bool(),
+                      "Option to refine space in each refinement cycle");
+    prm.declare_entry("Refine time",
+                      "false",
+                      Patterns::Bool(),
+                      "Option to refine time in each refinement cycle");
     prm.declare_entry("Time refinement factor",
                       "0.5",
                       Patterns::Double(),

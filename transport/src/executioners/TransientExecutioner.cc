@@ -316,6 +316,10 @@ void TransientExecutioner<dim>::run()
   this->postprocessor->output_results(
     this->new_solution, this->dof_handler, *this->triangulation);
 
+  // output FCT bounds if requested
+  if (this->parameters.output_DMP_bounds)
+    fct.output_bounds(*(this->postprocessor));
+
   // print final solution if specified
   if (this->parameters.print_solution)
   {
@@ -781,6 +785,9 @@ void TransientExecutioner<dim>::compute_fct_solution_theta(FCT<dim> & fct,
   this->new_solution = 0.0;
   this->nonlinear_solver.initialize(this->new_solution);
 
+  // initialize cumulative antidiffusion vector
+  this->cumulative_antidiffusion = 0.0;
+
   // begin iteration
   bool converged = false;
   while (!converged)
@@ -805,6 +812,22 @@ void TransientExecutioner<dim>::compute_fct_solution_theta(FCT<dim> & fct,
     // compute limited flux sums
     fct.compute_limited_fluxes();
 
+    // if using cumulative antidiffusion algorithm, then update cumulative
+    // antidiffusion and remainder antidiffusive fluxes
+    if (this->parameters.use_cumulative_antidiffusion_algorithm)
+    {
+      // add to cumulative antidiffusion vector: p^(l+1) = p^(l) + dp^(l)
+      this->cumulative_antidiffusion.add(1.0, fct.get_limited_flux_vector());
+
+      // subtract used antidiffusive flux: DP^(l+1) = DP^(l) - dP^(l)
+      fct.subtract_limited_flux_correction_matrix();
+    }
+    else
+    {
+      // throw away accumulated antidiffusive flux
+      this->cumulative_antidiffusion = fct.get_limited_flux_vector();
+    }
+
     // create system rhs
     this->system_rhs = 0;
     this->system_rhs.add((1.0 - theta) * dt, ss_rhs_old);
@@ -813,6 +836,7 @@ void TransientExecutioner<dim>::compute_fct_solution_theta(FCT<dim> & fct,
     this->system_rhs.add(1.0, tmp_vector);
     this->low_order_ss_matrix.vmult(tmp_vector, old_solution);
     this->system_rhs.add(-(1.0 - theta) * dt, tmp_vector);
+    //this->system_rhs.add(dt, this->cumulative_antidiffusion);
     this->system_rhs.add(dt, fct.get_limited_flux_vector());
 
     // apply Dirichlet BC here
@@ -822,5 +846,10 @@ void TransientExecutioner<dim>::compute_fct_solution_theta(FCT<dim> & fct,
     // check convergence and perform update if necessary
     converged =
       this->nonlinear_solver.update(this->system_matrix, this->system_rhs);
+//std::cout<<"new_solution = "<<std::endl;
+//this->new_solution.print(std::cout,5,false,false);
   }
+
+  // check FCT solution
+  fct.check_fct_bounds(this->new_solution);
 }

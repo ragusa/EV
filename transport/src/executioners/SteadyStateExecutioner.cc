@@ -325,4 +325,7 @@ void SteadyStateExecutioner<dim>::compute_FCT_solution()
   // output FCT bounds if requested
   if (this->parameters.output_DMP_bounds)
     fct.output_bounds(*(this->postprocessor));
+
+  // check FCT bounds
+  fct.check_fct_bounds(this->new_solution);
 }
