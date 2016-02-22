@@ -836,8 +836,13 @@ void TransientExecutioner<dim>::compute_fct_solution_theta(FCT<dim> & fct,
     this->system_rhs.add(1.0, tmp_vector);
     this->low_order_ss_matrix.vmult(tmp_vector, old_solution);
     this->system_rhs.add(-(1.0 - theta) * dt, tmp_vector);
-    //this->system_rhs.add(dt, this->cumulative_antidiffusion);
-    this->system_rhs.add(dt, fct.get_limited_flux_vector());
+    this->system_rhs.add(dt, this->cumulative_antidiffusion);
+
+    // create system matrix. Note that although the underlying system matrix
+    // does not change in each iteration, the Dirichlet-modified system matrix
+    // does change
+    this->system_matrix.copy_from(lumped_mass_matrix);
+    this->system_matrix.add(theta * dt, this->low_order_ss_matrix);
 
     // apply Dirichlet BC here
     this->applyDirichletBC(
@@ -846,8 +851,6 @@ void TransientExecutioner<dim>::compute_fct_solution_theta(FCT<dim> & fct,
     // check convergence and perform update if necessary
     converged =
       this->nonlinear_solver.update(this->system_matrix, this->system_rhs);
-//std::cout<<"new_solution = "<<std::endl;
-//this->new_solution.print(std::cout,5,false,false);
   }
 
   // check FCT solution

@@ -17,8 +17,8 @@ subsection problem
 end
 
 subsection time
-   set End time = 0.001 #0.001 #0.01
-   set Time step size = 0.001 #0.0005 #0.005
+   set End time = 0.3 #0.001 #0.01
+   set Time step size = 0.1 #0.0005 #0.005
    set Use adaptive time stepping = true
    set CFL limit = 0.5
    set Time discretization = theta       # <ss|theta|ssprk>

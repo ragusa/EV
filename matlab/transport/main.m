@@ -110,6 +110,7 @@ plot_viscosity            = false; % plot viscosities?
 plot_low_order_transient  = false; % plot low-order transient?
 plot_high_order_transient = false; % plot high-order transient?
 plot_FCT_transient        = false; % plot FCT transient?
+plot_FCT_iteration        = false; % plot FCT iteration?
 pausetime = 0.01;                   % time to pause for transient plots
 legend_location           = 'NorthEast'; % location of plot legend
 %--------------------------------------------------------------------------
@@ -680,7 +681,7 @@ if (compute_FCT)
             uFCT = uFCT + du;
 
             % plot
-            if (plot_FCT_transient)
+            if (plot_FCT_iteration)
                 figure(1);
                 clf;
                 hold on;
@@ -827,13 +828,13 @@ if (compute_FCT)
                         modify_for_strong_DirichletBC);
                     
                     % initialize solution iterate
-                    %uFCT = uL;
                     uFCT = zeros(dof_handler.n_dof,1);
                     
                     % iteration loop
                     for iter = 1:max_iter
                         % compute limited flux correction sum
-                        [flim,Wminus,Wplus] = compute_limited_flux_sums(u_old,uFCT,dt,...
+                        [flim,Wminus,Wplus] = compute_limited_flux_sums(...
+                            u_old,uFCT,dt,...
                             ML,AL,b,F,sigma_min,sigma_max,source_min,...
                             source_max,theta,dof_handler.n_dof,...
                             phys.speed,phys.inc,phys.periodic_BC,...
@@ -864,7 +865,7 @@ if (compute_FCT)
                         uFCT = uFCT + relaxation_parameter * du;
 
                         % plot
-                        if (plot_FCT_transient)
+                        if (plot_FCT_iteration)
                             figure(1);
                             clf;
                             hold on;
@@ -877,7 +878,6 @@ if (compute_FCT)
                                 'Location',legend_location);
                             w = waitforbuttonpress;
                         end
-uFCT
                     end
                     
                     % report if the solution did not converge
