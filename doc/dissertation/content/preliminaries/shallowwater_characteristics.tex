@@ -1,4 +1,5 @@
 In this section, characteristics are considered for the shallow water equations.
+
 The 1-D shallow water equations (with flat bottom topography) can be expressed as
 \begin{equation}\label{eq:1dshallowwater}
   \ppt{\vectorsolution} + \pd{\consfluxvector}{x}
@@ -78,6 +79,120 @@ diagonal matrix with the eigenvalues as the diagonal entries:
         0 & \eigenvalue_2(\vectorsolution)\end{array}} \eqp
 \end{equation}
 
-
-
-
+The 2-D shallow water equations (with flat bottom topography) can be expressed as
+\begin{subequations}\label{eq:2dshallowwater}
+\begin{equation}
+  \ppt{\vectorsolution} + \nabla\cdot[\consfluxvector(\vectorsolution),
+    \consfluxvectory(\vectorsolution)]
+  = \mathbf{0} \eqc \quad
+  \vectorsolution = \sq{\begin{array}{c}
+    \height\\\heightmomentumx\\\heightmomentumy\end{array}} \eqc
+\end{equation}
+\begin{equation}
+  \consfluxvector(\vectorsolution)
+    = \left[\begin{array}{c}
+      \heightmomentumx\\
+      \frac{\heightmomentumx^2}{\height} + \half\gravity\height^2\\
+      \frac{\heightmomentumx\heightmomentumy}{\height}
+    \end{array}\right] \eqc \quad
+  \consfluxvectory(\vectorsolution)
+    = \left[\begin{array}{c}
+      \heightmomentumy\\
+      \frac{\heightmomentumx\heightmomentumy}{\height}\\
+      \frac{\heightmomentumy^2}{\height} + \half\gravity\height^2
+    \end{array}\right]
+  \eqp
+\end{equation}
+\end{subequations}
+The spatial derivatives of the flux functions can be evaluated using chain rule,
+giving
+\begin{equation}
+  \ppt{\vectorsolution} + \jacobianx(\vectorsolution)\pd{\vectorsolution}{x}
+    + \jacobiany(\vectorsolution)\pd{\vectorsolution}{y}
+    = \mathbf{0} \eqc \quad
+%  \jacobianx(\vectorsolution) \equiv \pd{\consfluxvector}{\vectorsolution} =
+%    \sq{\begin{array}{c c}0 & 1\\
+%      \speedofsound^2-\velocityx^2 & 2\velocityx\end{array}} \eqc
+\end{equation}
+where $\jacobianx(\vectorsolution) \equiv \pd{\consfluxvector}{\vectorsolution}$
+is the Jacobian matrix in the x-direction,
+and   $\jacobiany(\vectorsolution) \equiv \pd{\consfluxvectory}{\vectorsolution}$
+is the Jacobian matrix in the y-direction.
+Unfortunately, these Jacobians cannot be diagonalized simultaneously; instead,
+here the projection of the flux
+$[\consfluxvector(\vectorsolution), \consfluxvectory(\vectorsolution)]$ in the
+unit direction $\normalvector$ is considered. The Jacobian of
+$\consfluxvectorn(\vectorsolution) \equiv [\consfluxvector(\vectorsolution),
+\consfluxvectory(\vectorsolution)]\cdot\normalvector$
+is denoted by $\jacobiann(\vectorsolution)$ and is given by
+\begin{subequations}
+\begin{equation}
+  \jacobiann(\vectorsolution) \equiv \pd{\consfluxvectorn}{\vectorsolution}
+  = \nx\jacobianx(\vectorsolution) + \ny\jacobiany(\vectorsolution) \eqc
+\end{equation}
+\begin{equation}
+  \jacobiann(\vectorsolution) \equiv 
+    \sq{\begin{array}{c c c}
+      % row 1
+      0 & \nx & \ny\\
+      % row 2
+      \pr{\gravity\height - \frac{\heightmomentumx^2}{\height^2}}\nx
+        - \frac{\heightmomentumx\heightmomentumy}{\height^2}\ny &
+      \frac{\heightmomentumy}{\height}\ny + \frac{2\heightmomentumx}{\height}\nx &
+      \frac{\heightmomentumy}{\height}\ny\\
+      % row 3
+      \pr{\gravity\height - \frac{\heightmomentumy^2}{\height^2}}\ny
+        - \frac{\heightmomentumx\heightmomentumy}{\height^2}\nx &
+      \frac{\heightmomentumy}{\height}\nx &
+      \frac{\heightmomentumx}{\height}\nx + \frac{2\heightmomentumy}{\height}\ny
+    \end{array}} \eqp
+\end{equation}
+\end{subequations}
+The eigenvalues and corresponding eigenvectors of this matrix are
+\begin{equation}
+  \eigenvalue_1(\vectorsolution) = \velocityn + \speedofsound \eqc \quad
+  \eigenvalue_2(\vectorsolution) = \velocityn \eqc \quad
+  \eigenvalue_3(\vectorsolution) = \velocityn - \speedofsound \eqc \quad
+\end{equation}
+\begin{equation}
+  \eigenvector_1(\vectorsolution) = \sq{\begin{array}{c}
+    1\\\velocityx+\speedofsound\nx\\\velocityy+\speedofsound\ny\end{array}}
+  \eqc \quad
+  \eigenvector_2(\vectorsolution) = \sq{\begin{array}{c}
+    0\\-\speedofsound\ny\\\speedofsound\nx\end{array}} \eqc \quad
+  \eigenvector_3(\vectorsolution) = \sq{\begin{array}{c}
+    1\\\velocityx-\speedofsound\nx\\\velocityy-\speedofsound\ny\end{array}}
+  \eqp
+\end{equation}
+Forming a matrix $\eigenvectormatrix(\vectorsolution)$ using the eigenvectors
+as columns and then taking its inverse gives
+\begin{subequations}
+\begin{equation}
+  \eigenvectormatrix(\vectorsolution) = \sq{\begin{array}{c c c}
+    1 & 0 & 1\\
+    \velocityx+\speedofsound\nx & -\speedofsound\ny & \velocityx-\speedofsound\nx\\
+    \velocityy+\speedofsound\ny &  \speedofsound\nx & \velocityy-\speedofsound\ny
+    \end{array}} \eqc
+\end{equation}
+\begin{equation}
+  \eigenvectormatrix(\vectorsolution)^{-1} = \frac{1}{2\speedofsound}\sq{
+    \begin{array}{c c c}
+      \speedofsound - \vn & \nx   & \ny\\
+      2(\ny\vx-\nx\vy)    & -2\ny & 2\nx\\
+      \speedofsound + \vn & -\nx  & -\ny\\
+    \end{array}} \eqp
+\end{equation}
+\end{subequations}
+The characteristic variables $\characteristicsolution$ for the direction
+$\normalvector$ are then such that $\ppt{\characteristicsolution}\equiv
+\eigenvectormatrix(\vectorsolution)^{-1}\ppt{\vectorsolution}$ and
+$\pd{\characteristicsolution}{x}\equiv
+\eigenvectormatrix(\vectorsolution)^{-1}\pd{\vectorsolution}{x}$. This
+gives the characteristic variables to be
+\begin{equation}
+  \characteristicsolution(\vectorsolution) = \sq{\begin{array}{c}
+      \vn + 2\speedofsound\\
+      \ny\vx - \nx\vy\\
+      \vn - 2\speedofsound\\
+    \end{array}} \eqp
+\end{equation}

@@ -24,10 +24,20 @@
 \newcommand{\speed}{v}
 \newcommand{\velocity}{\mathbf{\speed}}
 \newcommand{\velocityx}{u}
+\newcommand{\velocityy}{v}
+\newcommand{\velocityn}{v_n}
+\newcommand{\vx}{\velocityx}
+\newcommand{\vy}{\velocityy}
+\newcommand{\vn}{\velocityn}
+
+% normal vector
 \newcommand{\normalvectorletter}{n}
 \newcommand{\normalvector}{\mathbf{\normalvectorletter}}
 \newcommand{\normalx}{\normalvectorletter_x}
 \newcommand{\normaly}{\normalvectorletter_y}
+\newcommand{\nx}{\normalx}
+\newcommand{\ny}{\normaly}
+
 \newcommand{\ndimensions}{N_\text{dim}}
 \newcommand{\ncomponents}{N_\text{comp}}
 \newcommand{\ndofs}{N_\text{dof}}
@@ -106,6 +116,8 @@
 \newcommand{\consfluxsystem}{\mathbf{\MakeUppercase{\consfluxletter}}}
 \newcommand{\consfluxscalar}[1][\scalarsolution]{\mathbf{\consfluxletter}(#1)}
 \newcommand{\consfluxvector}{\mathbf{\MakeUppercase{\consfluxletter}}}
+\newcommand{\consfluxvectory}{\mathbf{G}}
+\newcommand{\consfluxvectorn}{\consfluxvector_{n}}
 \newcommand{\consfluxinterpolant}{\mathrm{F}}
 \newcommand{\conssource}{\mathbf{s}}
 
@@ -264,6 +276,8 @@
 \newcommand{\eigenvector}{\mathbf{k}}
 \newcommand{\eigenvectormatrix}{\mathbf{K}}
 \newcommand{\jacobianx}{\mathbf{A}}
+\newcommand{\jacobiany}{\mathbf{B}}
+\newcommand{\jacobiann}{\jacobianx_{n}}
 \newcommand{\characteristicsolution}{\mathbf{w}}
 \newcommand{\wavespeed}{\eigenvalue}
 \newcommand{\maxwavespeed}[1][]{
@@ -302,8 +316,8 @@
 \newcommand{\ltwonorm}[1]{\left\|#1\right\|_{L^2}} % L-2 norm
 
 % BC
-\newcommand{\interior}{_{\text{in}}}
-\newcommand{\BC}{_{\text{BC}}}
+\newcommand{\interior}{^{\text{in}}}
+\newcommand{\BC}{^{\text{BC}}}
 
 % common fractions
 \newcommand{\half}{\frac{1}{2}}
