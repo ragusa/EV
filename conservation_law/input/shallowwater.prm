@@ -29,7 +29,7 @@ end
 subsection refinement
    # refinementlevel:n_cells
    # 5:32, 8:256, 9:512, 10:1024, 11:2048
-   set initial refinement level = 5
+   set initial refinement level = 8
    set refinement cycles = 1
    set refinement fraction = 0.3
    set coarsening fraction = 0.03
@@ -40,7 +40,7 @@ subsection time
    set use default end time = true
    set final time = 0.01
    set time step size = 0.01
-   set cfl = 0.50
+   set cfl = 0.10
    set steady state tolerance = 1.0e-6
 end
 
@@ -103,7 +103,7 @@ subsection fct
    set fct limitation type = conservative # conservative | characteristic
    set fct bounds type = dmp # dmp
    set antidiffusion = limited # limited | full | none
-   set fct synchronization = none # none | min | compound
+   set fct synchronization = min # none | min | compound
    set use star states in fct bounds = false
    set output limiter matrix = false
    set output fct bounds = true

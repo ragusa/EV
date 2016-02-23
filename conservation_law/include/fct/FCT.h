@@ -137,9 +137,6 @@ protected:
 
   void compute_antidiffusion_bounds_characteristic(
     const Vector<double> & old_solution,
-    const Vector<double> & ss_flux,
-    const Vector<double> & ss_rhs,
-    const SparseMatrix<double> & low_order_diffusion_matrix,
     const double & dt);
 
   void compute_limiting_coefficients_zalesak();

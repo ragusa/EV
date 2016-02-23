@@ -185,7 +185,8 @@ public:
   enum class FCTLimitationType
   {
     conservative,
-    characteristic
+    characteristic,
+    sw_heightonly
   };
   /** \brief Set of variables to limit in FCT */
   FCTLimitationType fct_limitation_type;

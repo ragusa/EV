@@ -40,4 +40,10 @@ DeclException2(ExcSizesInconsistent,
 /** \brief Exception for diffusion type being invalid */
 DeclException0(ExcInvalidDiffusionType);
 
+/** \brief Exception for negativity encountered */
+DeclException2(ExcNegativity,
+               std::string,
+               double,
+               << arg1 << " is negative: " << arg2);
+
 #endif

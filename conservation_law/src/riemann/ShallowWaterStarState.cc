@@ -44,6 +44,8 @@ std::vector<double> ShallowWaterStarState<dim>::compute(
   // extract solution components from solution vector
   const double height_left = solution_left[0];
   const double height_right = solution_right[0];
+  Assert(height_left >= 0.0,  ExcNegativity("height",height_left));
+  Assert(height_right >= 0.0, ExcNegativity("height",height_right));
   Tensor<1, dim> momentum_left_multidim;
   Tensor<1, dim> momentum_right_multidim;
   for (unsigned int d = 0; d < dim; ++d)

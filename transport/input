@@ -17,7 +17,7 @@ subsection problem
 end
 
 subsection time
-   set End time = 0.3 #0.001 #0.01
+   set End time = 0.001 #0.001 #0.01
    set Time step size = 0.1 #0.0005 #0.005
    set Use adaptive time stepping = true
    set CFL limit = 0.5
@@ -33,7 +33,7 @@ subsection viscosity
    # 2 = EV
    # 3 = EV+FCT
    # 4 = Galerkin+FCT
-   set Viscosity option = 4
+   set Viscosity option = 3
 end
 
 subsection entropy viscosity
@@ -48,7 +48,7 @@ subsection fct
    set FCT initialization option = zero # <zero|low|high>
    set Do not limit = false
    set Skip fct if bounds satisfied = false
-   set Use cumulative antidiffusion algorithm = false
+   set Use cumulative antidiffusion algorithm = true
    set Include analytic bounds = false
 end
 
@@ -74,7 +74,7 @@ end
 subsection nonlinear solver
    set Nonlinear solver option = 1   # 1 = defect correction
    set Nonlinear tolerance = 1.0e-10
-   set Nonlinear max iteration = 1000
+   set Nonlinear max iteration = 100
    set Relaxation factor = 1.0
 end
 
@@ -83,7 +83,7 @@ subsection output
    set Output exact solution = true
    set Exact solution refinement level = 7
    set Output initial solution = false 
-   set Output DMP bounds = true
+   set Output DMP bounds = false
    set Save convergence results = false
    set Print solution = false
 end

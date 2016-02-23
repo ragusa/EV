@@ -170,7 +170,7 @@ void FCT<dim>::solve_fct_system(
 
       // compute characteristic antidiffusion bounds \hat{Q}- and \hat{Q}+
       compute_antidiffusion_bounds_characteristic(
-        old_solution, ss_flux, ss_rhs, low_order_diffusion_matrix, dt);
+        old_solution_characteristic, dt);
 
       break;
     default:
@@ -231,9 +231,11 @@ void FCT<dim>::solve_fct_system(
   linear_solver.solve(system_matrix, new_solution, system_rhs);
 
   // check that local discrete maximum principle is satisfied at all time steps
-  if (fct_limitation_type == FCTLimitationType::conservative && antidiffusion_type != AntidiffusionType::full)
+  if (fct_limitation_type == FCTLimitationType::conservative &&
+      antidiffusion_type != AntidiffusionType::full)
   {
-    bool fct_bounds_satisfied_this_step = check_fct_bounds_satisfied(new_solution);
+    bool fct_bounds_satisfied_this_step =
+      check_fct_bounds_satisfied(new_solution);
 
     fct_bounds_satisfied_at_all_steps =
       fct_bounds_satisfied_at_all_steps && fct_bounds_satisfied_this_step;
@@ -428,7 +430,8 @@ void FCT<dim>::compute_solution_bounds_characteristic(
   transform_vector(old_solution, old_solution, old_solution_characteristic);
 
   // compute minimum and maximum values of solution
-  compute_min_and_max_of_solution(old_solution_characteristic, solution_min, solution_max);
+  compute_min_and_max_of_solution(
+    old_solution_characteristic, solution_min, solution_max);
 }
 
 /**
@@ -524,54 +527,27 @@ void FCT<dim>::compute_antidiffusion_bounds(
  * \brief Computes the characteristic antidiffusion bounds
  *        \f$\hat{\mathbf{Q}}^\pm\f$.
  *
- * \pre This function assumes that
- * - there is no reaction term or source term
- * - the characteristic old solution \f$\hat{\mathbf{U}}\f$ has already been
- *   computed.
- *
- * \param[in] old_solution  old solution \f$\mathbf{U}^n\f$
- * \param[in] ss_flux  steady-state inviscid flux vector
- *   (entries are \f$(\mathbf{A}\mathbf{U}^n)_i\f$ for scalar case,
- *   \f$\sum\limits_j\mathbf{c}_{i,j}\cdot\mathrm{F}^n_j\f$ for systems case)
- * \param[in] ss_rhs  steady-state right hand side vector \f$\mathbf{b}^n\f$
- * \param[in] low_order_diffusion_matrix  low-order diffusion matrix
- *   \f$\mathbf{D}^L\f$
+ * \param[in] old_solution  characteristic old solution \f$\hat{\mathbf{U}}^n\f$
  * \param[in] dt  time step size \f$\Delta t\f$
  */
 template <int dim>
 void FCT<dim>::compute_antidiffusion_bounds_characteristic(
   const Vector<double> & old_solution,
-  const Vector<double> & ss_flux,
-  const Vector<double> & ss_rhs,
-  const SparseMatrix<double> & low_order_diffusion_matrix,
   const double & dt)
 {
   // compute Q-
   Q_minus = 0;
   lumped_mass_matrix->vmult(tmp_vector, solution_min);
   Q_minus.add(1.0 / dt, tmp_vector);
-  lumped_mass_matrix->vmult(tmp_vector, old_solution_characteristic);
+  lumped_mass_matrix->vmult(tmp_vector, old_solution);
   Q_minus.add(-1.0 / dt, tmp_vector);
 
   // compute Q+
   Q_plus = 0;
   lumped_mass_matrix->vmult(tmp_vector, solution_max);
   Q_plus.add(1.0 / dt, tmp_vector);
-  lumped_mass_matrix->vmult(tmp_vector, old_solution_characteristic);
+  lumped_mass_matrix->vmult(tmp_vector, old_solution);
   Q_plus.add(-1.0 / dt, tmp_vector);
-/*
-std::cout<<"dt = "<<dt<<std::endl;
-printf("%11s %11s %11s\n","old","min","Q-");
-for (unsigned int i = 0; i < n_dofs; ++i)
-{
-SparseMatrix<double>::const_iterator it = lumped_mass_matrix->begin(i);
-SparseMatrix<double>::const_iterator it_end = lumped_mass_matrix->end(i);
-for (; it != it_end; ++it)
-  printf("ML(%i,%i) = %e\n",i,it->column(),it->value());
-
-  printf("%11.3e %11.3e %11.3e\n",old_solution_characteristic[i],solution_min[i],Q_minus[i]);
-}
-*/
 }
 
 /**
@@ -661,7 +637,7 @@ void FCT<dim>::compute_limiting_coefficients_zalesak()
       else
         Lij = std::min(R_minus(i), R_plus(j));
 
-//std::cout<<"L("<<i<<","<<j<<") = "<<Lij<<std::endl;
+      // std::cout<<"L("<<i<<","<<j<<") = "<<Lij<<std::endl;
 
       // store entry in limiter matrix
       limiter_matrix.set(i, j, Lij);

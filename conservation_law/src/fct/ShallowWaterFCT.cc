@@ -131,10 +131,10 @@ FullMatrix<double> ShallowWaterFCT<dim>::compute_transformation_matrix_inverse(
 
   // compute matrix entries
   FullMatrix<double> matrix(this->n_components, this->n_components);
-  matrix[0][0] = -2.0*gravity/a;
-  matrix[0][1] = 1.0/height;
-  matrix[1][0] = 2.0*gravity/a;
-  matrix[1][1] = 1.0/height;
+  matrix[0][0] = -2.0 * gravity / a;
+  matrix[0][1] = 1.0 / height;
+  matrix[1][0] = 2.0 * gravity / a;
+  matrix[1][1] = 1.0 / height;
 
   return matrix;
 }
