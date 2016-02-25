@@ -9,7 +9,7 @@ TransportParameters<dim>::TransportParameters()
     theta_method(ThetaMethod::FE),
     theta(0.0),
     fct_initialization_option(FCTInitializationOption::zero),
-    problem_id(1),
+    // problem_id(1),
     end_time(1.0),
     time_step_size(0.001),
     use_adaptive_time_stepping(true),
@@ -56,8 +56,9 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler & prm)
   // problem parameters
   prm.enter_subsection("problem");
   {
-    prm.declare_entry("Problem ID", "1", Patterns::Integer(), "Problem ID");
-    prm.declare_entry("problem name", "invalidproblem", Patterns::Anything(), "Problem name");
+    // prm.declare_entry("Problem ID", "1", Patterns::Integer(), "Problem ID");
+    prm.declare_entry(
+      "problem name", "invalidproblem", Patterns::Anything(), "Problem name");
   }
   prm.leave_subsection();
 
@@ -296,7 +297,7 @@ void TransportParameters<dim>::get_parameters(ParameterHandler & prm)
   // problem parameters
   prm.enter_subsection("problem");
   {
-    problem_id = prm.get_integer("Problem ID");
+    // problem_id = prm.get_integer("Problem ID");
     problem_name = prm.get("problem name");
   }
   prm.leave_subsection();

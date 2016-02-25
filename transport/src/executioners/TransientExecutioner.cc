@@ -62,7 +62,7 @@ TransientExecutioner<dim>::TransientExecutioner(
   if (parameters_.output_initial_solution)
   {
     std::stringstream IC_filename_ss;
-    IC_filename_ss << "solution_" << parameters_.problem_id << "_initial";
+    IC_filename_ss << "solution_initial";
     postprocessor_.output_solution(
       this->new_solution, this->dof_handler, IC_filename_ss.str());
   }

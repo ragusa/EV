@@ -67,8 +67,8 @@ public:
   void get_parameters(ParameterHandler & prm);
 
   // problem parameters
-  unsigned int problem_id; // problem ID
-  std::string problem_name;
+  // unsigned int problem_id; // problem ID
+  std::string problem_name; // problem name
 
   // time parameters
   double end_time;                 // end time if transient problem is run
@@ -104,9 +104,8 @@ public:
   bool use_cell_size_for_convergence_rates; // use dx for rates, otherwise dt
 
   // finite element parameters
-  unsigned int degree; // polynomial degree of finite elements
-  unsigned int
-    n_quadrature_points; // number of quadrature points to use in formula
+  unsigned int degree;              // polynomial degree of finite elements
+  unsigned int n_quadrature_points; // number of quadrature points
 
   // linear solver options
   unsigned int linear_solver_option; // linear solver option

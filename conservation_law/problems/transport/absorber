@@ -13,11 +13,12 @@ subsection physics
   set normalize transport direction = false
   set cross section = sigma1  # see constants section for value
   set source = source         # see constants section for value
+  set source is time dependent = false
 end
 
 subsection constants
   set incoming value = 1.0      # called "incoming"
-  set sigma1 = 1.0              # called "sigma1"
+  set sigma1 = 10.0             # called "sigma1"
   set source value = 0.0        # called "source"
 end
 
@@ -35,6 +36,7 @@ subsection boundary conditions
   set boundary conditions type = dirichlet
   set use exact solution as dirichlet bc = false
   set dirichlet function = incoming
+  set boundary id scheme = incoming
 end
 
 subsection initial conditions

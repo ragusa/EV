@@ -11,13 +11,12 @@ LinearSolver<dim>::LinearSolver(
   const LinearSolverType & linear_solver_type_,
   const ConstraintMatrix & constraints_,
   const DoFHandler<dim> & dof_handler_,
-  std::vector<FunctionParser<dim> *> dirichlet_functions_)
+  std::shared_ptr<Function<dim>> dirichlet_function_)
   : linear_solver_type(linear_solver_type_),
     constraints(&constraints_),
     dof_handler(&dof_handler_),
-    dirichlet_functions(dirichlet_functions_),
-    n_dirichlet_boundaries(dirichlet_functions_.size()),
-    have_dirichlet_bc(n_dirichlet_boundaries > 0),
+    dirichlet_function(dirichlet_function_),
+    have_dirichlet_bc(dirichlet_function != nullptr),
     n_components(dof_handler_.get_fe().n_components())
 {
 }
@@ -85,25 +84,20 @@ void LinearSolver<dim>::apply_dirichlet_bc(SparseMatrix<double> & A,
   // create map of dofs to boundary values to be imposed
   std::map<unsigned int, double> boundary_values;
 
-  // loop over boundary IDs
-  for (unsigned int boundary = 0; boundary < n_dirichlet_boundaries; ++boundary)
-    // loop over components
-    for (unsigned int component = 0; component < n_components; ++component)
-    {
-      // set time for dirichlet function
-      dirichlet_functions[boundary]->set_time(t);
+  // loop over components
+  for (unsigned int component = 0; component < n_components; ++component)
+  {
+    // set time for dirichlet function
+    dirichlet_function->set_time(t);
 
-      // mask other components
-      std::vector<bool> component_mask(n_components, false);
-      component_mask[component] = true;
+    // mask other components
+    std::vector<bool> component_mask(n_components, false);
+    component_mask[component] = true;
 
-      // fill boundary_values with boundary values
-      VectorTools::interpolate_boundary_values(*dof_handler,
-                                               boundary,
-                                               *(dirichlet_functions[boundary]),
-                                               boundary_values,
-                                               component_mask);
-    }
+    // fill boundary_values with boundary values
+    VectorTools::interpolate_boundary_values(
+      *dof_handler, 0, *(dirichlet_function), boundary_values, component_mask);
+  }
 
   // apply boundary values to system
   MatrixTools::apply_boundary_values(boundary_values, A, x, b);

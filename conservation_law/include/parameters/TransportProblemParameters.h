@@ -18,10 +18,7 @@ template <int dim>
 class TransportProblemParameters : public ProblemParameters<dim>
 {
 public:
-  TransportProblemParameters();
-
-  void set_boundary_ids_incoming(
-  Triangulation<dim> & triangulation, FEFaceValues<dim> & fe_face_values);
+  TransportProblemParameters(const std::string & problem_name);
 
   /** \brief Transport speed \f$v\f$ */
   double transport_speed;
@@ -34,6 +31,9 @@ public:
 
   /** \brief Function parser of source \f$q\f$ */
   FunctionParser<dim> source_function;
+
+  /** \brief Flag that source is time-dependent */
+  bool source_is_time_dependent;
 
 protected:
   /** \brief Specification type for transport direction */
@@ -99,12 +99,18 @@ protected:
   double y3;
 
 private:
-
   void declare_derived_parameters() override;
 
   void get_derived_parameters() override;
 
-  void process_derived_parameters() override;
+  void process_derived_parameters(
+    Triangulation<dim> & triangulation,
+    const FESystem<dim> & fe,
+    const QGauss<dim - 1> & face_quadrature) override;
+
+  void set_boundary_ids_incoming(Triangulation<dim> & triangulation,
+                                 const FESystem<dim> & fe,
+                                 const QGauss<dim - 1> & face_quadrature);
 };
 
 #include "src/parameters/TransportProblemParameters.cc"

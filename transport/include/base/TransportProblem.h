@@ -28,6 +28,7 @@
 #include "CMakeVars.h"
 #include "Exceptions.h"
 #include "TransportParameters.h"
+//#include "TransportRunParameters.h"
 #include "TransportProblemParameters.h"
 #include "PostProcessor.h"
 #include "ExactSolutions.h"
@@ -49,43 +50,49 @@ public:
     typename TransportParameters<dim>::TemporalDiscretization;
 
   TransportProblem(const TransportParameters<dim> & parameters);
-  ~TransportProblem();
+  // TransportProblem(const TransportRunParameters<dim> & parameters);
 
   void run();
 
 private:
   void initializeSystem();
-  void processProblemID();
-  void processProblemID_alt();
+  // void processProblemID();
+  void get_problem_parameters();
 
   // input parameters
   const TransportParameters<dim> parameters;
+  // const TransportRunParameters<dim> parameters;
+
+  // problem parameters
+  TransportProblemParameters<dim> problem_parameters;
 
   // mesh
   Triangulation<dim> triangulation;
 
   // physics data
   const bool is_time_dependent;
-  std::map<std::string, double> function_parser_constants;
-  Tensor<1, dim> transport_direction;
-  FunctionParser<dim> initial_conditions;
-  std::shared_ptr<Function<dim>> exact_solution_function;
-  FunctionParser<dim> source_function;
-  FunctionParser<dim> cross_section_function;
-  FunctionParser<dim> incoming_function;
-  std::string initial_conditions_string;
-  std::string exact_solution_string;
-  std::string source_string;
-  std::string cross_section_string;
-  std::string incoming_string;
-  ExactSolutionOption exact_solution_option;
-  bool has_exact_solution;
-  bool source_time_dependent;
-  double x_min;
-  double x_max;
-  double domain_volume;
+  /*
+    std::map<std::string, double> function_parser_constants;
+    Tensor<1, dim> transport_direction;
+    FunctionParser<dim> initial_conditions;
+    std::shared_ptr<Function<dim>> exact_solution_function;
+    FunctionParser<dim> source_function;
+    FunctionParser<dim> cross_section_function;
+    FunctionParser<dim> incoming_function;
+    std::string initial_conditions_string;
+    std::string exact_solution_string;
+    std::string source_string;
+    std::string cross_section_string;
+    std::string incoming_string;
+    ExactSolutionOption exact_solution_option;
+    bool has_exact_solution;
+    bool source_time_dependent;
+    double x_min;
+    double x_max;
+    double domain_volume;
 
-  std::string problem_name;
+    std::string problem_name;
+  */
 
   // timer
   TimerOutput timer;

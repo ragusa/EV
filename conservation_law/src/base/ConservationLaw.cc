@@ -44,11 +44,7 @@ ConservationLaw<dim>::ConservationLaw(const RunParameters<dim> & params,
     cell_quadrature(n_q_points_per_dim),
     face_quadrature(n_q_points_per_dim),
     n_q_points_cell(cell_quadrature.size()),
-    n_q_points_face(face_quadrature.size()),
-    initial_conditions_strings(n_components_),
-    initial_conditions_function(n_components_),
-    exact_solution_strings(n_components_),
-    exact_solution_function()
+    n_q_points_face(face_quadrature.size())
 {
 }
 
@@ -66,16 +62,17 @@ void ConservationLaw<dim>::run()
     create_auxiliary_postprocessor();
 
   // create post-processor object
-  PostProcessor<dim> postprocessor(parameters,
-                                   n_components,
-                                   end_time,
-                                   has_exact_solution,
-                                   exact_solution_function,
-                                   problem_name,
-                                   component_names,
-                                   component_interpretations,
-                                   triangulation,
-                                   aux_postprocessor);
+  PostProcessor<dim> postprocessor(
+    parameters,
+    n_components,
+    end_time,
+    problem_base_parameters->has_exact_solution,
+    problem_base_parameters->exact_solution_function,
+    problem_base_parameters->problem_name,
+    component_names,
+    component_interpretations,
+    triangulation,
+    aux_postprocessor);
 
   // loop over adaptive refinement cycles
   for (unsigned int cycle = 0; cycle < parameters.n_refinement_cycles; ++cycle)
@@ -99,8 +96,9 @@ void ConservationLaw<dim>::run()
     cout1 << "  Number of degrees of freedom: " << n_dofs << std::endl;
 
     // interpolate the initial conditions to the grid, and apply constraints
-    VectorTools::interpolate(
-      dof_handler, initial_conditions_function, new_solution);
+    VectorTools::interpolate(dof_handler,
+                             problem_base_parameters->initial_conditions_function,
+                             new_solution);
     constraints.distribute(new_solution);
 
     // set old solutions to the current solution
@@ -182,46 +180,6 @@ void ConservationLaw<dim>::initialize_system()
 
   // define problem parameters
   define_problem();
-
-  // make initial triangulation
-  triangulation.refine_global(parameters.initial_refinement_level);
-
-  // determine end time if chose to use default end time
-  if (parameters.use_default_end_time && has_default_end_time)
-    end_time = default_end_time;
-  else
-    end_time = parameters.end_time;
-
-/*
-  // create constants used for parsed functions
-  constants["pi"] = numbers::PI;
-
-  // create string of variables to be used in function parser objects
-  std::string variables = FunctionParser<dim>::default_variable_names();
-
-  // add t for time-dependent function parser objects
-  std::string time_dependent_variables = variables + ",t";
-
-  // initialize Dirichlet boundary functions if needed
-  if (boundary_conditions_type == "dirichlet" &&
-      !(use_exact_solution_as_dirichlet_bc))
-  {
-    dirichlet_function.resize(n_dirichlet_boundaries);
-    for (unsigned int boundary = 0; boundary < n_dirichlet_boundaries; ++boundary)
-    {
-      dirichlet_function[boundary] = new FunctionParser<dim>(n_components);
-      dirichlet_function[boundary]->initialize(
-        time_dependent_variables,
-        dirichlet_function_strings[boundary],
-        constants,
-        true);
-    }
-  }
-
-  // initialize initial conditions function
-  initial_conditions_function.initialize(
-    variables, initial_conditions_strings, constants, false);
-*/
 
   // determine low-order viscosity and artificial diffusion
   switch (parameters.low_order_scheme)
@@ -385,34 +343,21 @@ void ConservationLaw<dim>::setup_system()
   // hanging node constraints
   DoFTools::make_hanging_node_constraints(dof_handler, constraints);
   // Dirichlet contraints (for t = 0)
-  if (boundary_conditions_type == "dirichlet")
+  if (problem_base_parameters->boundary_conditions_type == "dirichlet")
   {
-    for (unsigned int boundary = 0; boundary < n_dirichlet_boundaries; ++boundary)
-      for (unsigned int component = 0; component < n_components; ++component)
-      {
-        // specify to impose Dirichlet BC for all components of solution
-        std::vector<bool> component_mask(n_components, true);
+    for (unsigned int component = 0; component < n_components; ++component)
+    {
+      // specify to impose Dirichlet BC for all components of solution
+      std::vector<bool> component_mask(n_components, true);
 
-        if (use_exact_solution_as_dirichlet_bc)
-        {
-          exact_solution_function->set_time(0.0);
-          VectorTools::interpolate_boundary_values(dof_handler,
-                                                   boundary,
-                                                   *exact_solution_function,
-                                                   constraints,
-                                                   component_mask);
-        }
-        else
-        {
-          dirichlet_function[boundary]->set_time(0.0);
-          VectorTools::interpolate_boundary_values(
-            dof_handler,
-            boundary,
-            *(dirichlet_function[boundary]),
-            constraints,
-            component_mask);
-        }
-      }
+      problem_base_parameters->dirichlet_function->set_time(0.0);
+      VectorTools::interpolate_boundary_values(
+        dof_handler,
+        0, // boundary ID for Dirichlet boundary
+        *(problem_base_parameters->dirichlet_function),
+        constraints,
+        component_mask);
+    }
   }
   constraints.close();
 
@@ -816,7 +761,10 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
 
   // create linear solver
   linear_solver = std::make_shared<LinearSolver<dim>>(
-    parameters.linear_solver, constraints, dof_handler, dirichlet_function);
+    parameters.linear_solver,
+    constraints,
+    dof_handler,
+    problem_base_parameters->dirichlet_function);
 
   // create SSPRK time integrator
   SSPRKTimeIntegrator<dim> ssprk(parameters.time_discretization,
@@ -1218,27 +1166,26 @@ template <int dim>
 void ConservationLaw<dim>::get_dirichlet_dof_indices(
   std::vector<unsigned int> & dirichlet_dof_indices)
 {
-  if (boundary_conditions_type == "dirichlet")
+  if (problem_base_parameters->boundary_conditions_type == "dirichlet")
   {
     // get map of Dirichlet dof indices to Dirichlet values
     std::map<unsigned int, double> boundary_values;
 
-    // loop over boundary IDs
-    for (unsigned int boundary = 0; boundary < n_dirichlet_boundaries; ++boundary)
-      // loop over components
-      for (unsigned int component = 0; component < n_components; ++component)
-      {
-        // mask other components
-        std::vector<bool> component_mask(n_components, false);
-        component_mask[component] = true;
+    // loop over components
+    for (unsigned int component = 0; component < n_components; ++component)
+    {
+      // mask other components
+      std::vector<bool> component_mask(n_components, false);
+      component_mask[component] = true;
 
-        // fill boundary_values with boundary values
-        VectorTools::interpolate_boundary_values(dof_handler,
-                                                 boundary,
-                                                 *(dirichlet_function[boundary]),
-                                                 boundary_values,
-                                                 component_mask);
-      }
+      // fill boundary_values with boundary values
+      VectorTools::interpolate_boundary_values(
+        dof_handler,
+        0, // boundary ID for Dirichlet boundary
+        *(problem_base_parameters->dirichlet_function),
+        boundary_values,
+        component_mask);
+    }
 
     // extract dof indices from map
     dirichlet_dof_indices.clear();

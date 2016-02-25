@@ -116,18 +116,15 @@ PostProcessor<dim>::PostProcessor(
 
   // create filename appendage
   std::stringstream appendage_ss;
-  appendage_ss << "_" << parameters.problem_id << "_" << viscosity_string << "_"
-               << timedisc_string;
+  appendage_ss << "_" << viscosity_string << "_" << timedisc_string;
   appendage_string = appendage_ss.str();
 
   // create filename for exact solution
-  std::stringstream filename_exact_ss;
-  filename_exact_ss << "solution_" << parameters.problem_id << "_exact";
-  filename_exact = filename_exact_ss.str();
+  filename_exact = "solution_exact";
 
   // create name of output subdirectory
   std::stringstream output_dir_ss;
-  output_dir_ss << "output/problem_" << parameters.problem_id << "/";
+  output_dir_ss << "output/" << parameters.problem_name << "/";
   output_dir = output_dir_ss.str();
 }
 

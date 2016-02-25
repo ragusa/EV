@@ -2,6 +2,7 @@
 
 # Problem names:
 # absorber
+# crooked_pipe
 subsection problem
    set problem name = absorber
 end

@@ -13,16 +13,16 @@ subsection problem
    # 13 = source-in-void to absorber
    # 14 = 5-region
    # 15 = 2-region saturation
-   set Problem ID = 3
-   set problem name = absorber
+   #set Problem ID = 3
+   set problem name = crooked_pipe
 end
 
 subsection time
-   set End time = 0.001 #0.001 #0.01
-   set Time step size = 0.1 #0.0005 #0.005
+   set End time = 0.3 #0.001 #0.01
+   set Time step size = 0.01 #0.0005 #0.005
    set Use adaptive time stepping = true
    set CFL limit = 0.5
-   set Time discretization = theta       # <ss|theta|ssprk>
+   set Time discretization = ssprk       # <ss|theta|ssprk>
    set Entropy time discretization = BE  # <CN|BE|BDF2>
    set SSPRK method = FE                 # <FE|SSP2|SSP3>
    set Theta method = BE                 # <FE|CN|BE>
@@ -34,7 +34,7 @@ subsection viscosity
    # 2 = EV
    # 3 = EV+FCT
    # 4 = Galerkin+FCT
-   set Viscosity option = 3
+   set Viscosity option = 1
 end
 
 subsection entropy viscosity

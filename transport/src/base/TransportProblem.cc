@@ -7,20 +7,15 @@ template <int dim>
 TransportProblem<dim>::TransportProblem(
   const TransportParameters<dim> & parameters)
   : parameters(parameters),
+    problem_parameters(parameters.problem_name),
     is_time_dependent(
       !(parameters.temporal_discretization == TemporalDiscretization::ss)),
-    transport_direction(),
-    exact_solution_option(ExactSolutionOption::none),
-    has_exact_solution(false),
+    /*
+        transport_direction(),
+        exact_solution_option(ExactSolutionOption::none),
+        has_exact_solution(false),
+    */
     timer(std::cout, TimerOutput::summary, TimerOutput::wall_times)
-{
-}
-
-/**
- * Destructor.
- */
-template <int dim>
-TransportProblem<dim>::~TransportProblem()
 {
 }
 
@@ -33,90 +28,93 @@ void TransportProblem<dim>::initializeSystem()
   // timer
   TimerOutput::Scope t_initialize(timer, "initialize");
 
-  // process problem ID
-  //processProblemID();
-  processProblemID_alt();
+  // get problem parameters
+  // processProblemID();
+  get_problem_parameters();
 
-  // determine function variables based on dimension;
-  // this is to be used in initialization of function parser objects
-  std::string variables;
-  if (dim == 1)
-    variables = "x";
-  else if (dim == 2)
-    variables = "x,y";
-  else if (dim == 3)
-    variables = "x,y,z";
-  else
-    Assert(false, ExcInvalidState());
+  /*
+    // determine function variables based on dimension;
+    // this is to be used in initialization of function parser objects
+    std::string variables;
+    if (dim == 1)
+      variables = "x";
+    else if (dim == 2)
+      variables = "x,y";
+    else if (dim == 3)
+      variables = "x,y,z";
+    else
+      Assert(false, ExcInvalidState());
 
-  // add time variable if not steady state
-  if (is_time_dependent)
-    variables += ",t";
+    // add time variable if not steady state
+    if (is_time_dependent)
+      variables += ",t";
 
-  // create function parser constants
-  function_parser_constants["pi"] = numbers::PI;
-  function_parser_constants["x_min"] = x_min;
-  function_parser_constants["x_mid"] = x_min + 0.5 * (x_max - x_min);
-  function_parser_constants["x_max"] = x_max;
+    // create function parser constants
+    function_parser_constants["pi"] = numbers::PI;
+    function_parser_constants["x_min"] = x_min;
+    function_parser_constants["x_mid"] = x_min + 0.5 * (x_max - x_min);
+    function_parser_constants["x_max"] = x_max;
 
-  // set flag for problem having exact solution
-  has_exact_solution = exact_solution_option != ExactSolutionOption::none;
+    // set flag for problem having exact solution
+    has_exact_solution = exact_solution_option != ExactSolutionOption::none;
 
-  // initialize exact solution function
-  if (has_exact_solution)
-  {
-    if (exact_solution_option == ExactSolutionOption::parser)
-    { // function parser
+    // initialize exact solution function
+    if (has_exact_solution)
+    {
+      if (exact_solution_option == ExactSolutionOption::parser)
+      { // function parser
 
-      // create and initialize function parser
-      std::shared_ptr<FunctionParser<dim>> exact_solution_function_derived =
-        std::make_shared<FunctionParser<dim>>();
-      exact_solution_function_derived->initialize(variables,
-                                                  exact_solution_string,
-                                                  function_parser_constants,
-                                                  is_time_dependent);
+        // create and initialize function parser
+        std::shared_ptr<FunctionParser<dim>> exact_solution_function_derived =
+          std::make_shared<FunctionParser<dim>>();
+        exact_solution_function_derived->initialize(variables,
+                                                    exact_solution_string,
+                                                    function_parser_constants,
+                                                    is_time_dependent);
 
-      // point base class shared pointer to derived class function object
-      exact_solution_function = exact_solution_function_derived;
+        // point base class shared pointer to derived class function object
+        exact_solution_function = exact_solution_function_derived;
+      }
+      else if (exact_solution_option != ExactSolutionOption::multi_region)
+      { // multi-region
+        ExcInvalidState();
+      }
     }
-    else if (exact_solution_option != ExactSolutionOption::multi_region)
-    { // multi-region
-      ExcInvalidState();
-    }
-  }
 
-  // initialize initial conditions function
-  if (is_time_dependent)
-    initial_conditions.initialize(variables,
-                                  initial_conditions_string,
-                                  function_parser_constants,
-                                  is_time_dependent);
-
-  // initialize source function
-  source_function.initialize(
-    variables, source_string, function_parser_constants, is_time_dependent);
-
-  // initialize cross section function
-  cross_section_function.initialize(variables,
-                                    cross_section_string,
+    // initialize initial conditions function
+    if (is_time_dependent)
+      initial_conditions.initialize(variables,
+                                    initial_conditions_string,
                                     function_parser_constants,
                                     is_time_dependent);
 
-  // initialize Dirichlet boundary value function
-  incoming_function.initialize(
-    variables, incoming_string, function_parser_constants, is_time_dependent);
+    // initialize source function
+    source_function.initialize(
+      variables, source_string, function_parser_constants, is_time_dependent);
 
-  // create grid for initial refinement level
-  GridGenerator::hyper_cube(triangulation, x_min, x_max);
+    // initialize cross section function
+    cross_section_function.initialize(variables,
+                                      cross_section_string,
+                                      function_parser_constants,
+                                      is_time_dependent);
+
+    // initialize Dirichlet boundary value function
+    dirichlet_function.initialize(
+      variables, incoming_string, function_parser_constants, is_time_dependent);
+
+    // create grid for initial refinement level
+    GridGenerator::hyper_cube(triangulation, x_min, x_max);
+  */
   triangulation.refine_global(parameters.initial_refinement_level);
 
   // compute domain volume - assume hypercube
-  domain_volume = std::pow(x_max - x_min, dim);
+  //  domain_volume = std::pow(x_max - x_min, dim);
 }
 
 /**
  * Processes problem ID.
  */
+/*
 template <int dim>
 void TransportProblem<dim>::processProblemID()
 {
@@ -729,52 +727,34 @@ void TransportProblem<dim>::processProblemID()
     }
   }
 }
+*/
 
 template <int dim>
-void TransportProblem<dim>::processProblemID_alt()
+void TransportProblem<dim>::get_problem_parameters()
 {
-  // determine problem name
-  std::string problem_name = parameters.problem_name;
-
   // get path of source directory from #define created by CMake
   std::stringstream source_path_ss;
   source_path_ss << SOURCE_PATH;
   std::string source_path;
   source_path_ss >> source_path;
 
-  // create problem parameters file name and determine if it exists
+  // create problem parameters file name
   std::string problem_parameters_file =
-    source_path + "/problems/transport/" + problem_name;
-  struct stat buffer;
-  const bool file_exists = stat(problem_parameters_file.c_str(), &buffer) == 0;
-  Assert(file_exists, ExcFileDoesNotExist(problem_parameters_file));
+    source_path + "/problems/transport/" + parameters.problem_name;
 
-  // read problem parameters input file
-  ParameterHandler parameter_handler;
-  TransportProblemParameters<dim>::declare_parameters(parameter_handler);
-  parameter_handler.read_input(problem_parameters_file);
-  TransportProblemParameters<dim> problem_parameters;
-  problem_parameters.get_parameters(parameter_handler);
-
-std::cout << "YAY" << std::endl;
-std::exit(0);
-/*
-  // process problem parameters to create problem data
-  TransportProblemData<dim> problem_data(problem_parameters);
-
-  // for now, extract problem data
-  x_min = problem_data.x_min;
-  x_max = problem_data.x_max;
-  transport_direction = problem_data.transport_direction;
-  function_parser_constants = problem_data.function_parser_constants;
-  incoming_string = problem_data.incoming_string;
-  cross_section_string = problem_data.cross_section_string;
-  source_time_dependent = problem_data.source_time_dependent;
-  source_string = problem_data.source_string;
-  exact_solution_option = problem_data.exact_solution_option;
-  exact_solution_function = problem_data.exact_solution_function;
-  initial_conditions_string = problem_data.initial_conditions_string;
-*/
+  // get and process the problem parameters
+  const FESystem<dim> fe(FE_Q<dim>(parameters.degree), 1);
+  const QGauss<dim - 1> face_quadrature(parameters.n_quadrature_points);
+  problem_parameters.get_and_process_parameters(
+    problem_parameters_file, triangulation, fe, face_quadrature);
+  /*
+    // read problem parameters input file
+    ParameterHandler parameter_handler;
+    TransportProblemParameters<dim>::declare_parameters(parameter_handler);
+    parameter_handler.read_input(problem_parameters_file);
+    TransportProblemParameters<dim> problem_parameters;
+    problem_parameters.get_parameters(parameter_handler);
+  */
 }
 
 /**
@@ -787,8 +767,9 @@ void TransportProblem<dim>::run()
   initializeSystem();
 
   // create post-processor object
-  PostProcessor<dim> postprocessor(
-    parameters, has_exact_solution, exact_solution_function);
+  PostProcessor<dim> postprocessor(parameters,
+                                   problem_parameters.has_exact_solution,
+                                   problem_parameters.exact_solution_function);
 
   // create refinement handler object
   RefinementHandler<dim> refinement_handler(parameters, triangulation);
@@ -815,17 +796,18 @@ void TransportProblem<dim>::run()
       const double nominal_dt = refinement_handler.get_nominal_time_step_size();
 
       // create and run transient executioner
-      TransientExecutioner<dim> executioner(parameters,
-                                            triangulation,
-                                            transport_direction,
-                                            cross_section_function,
-                                            source_function,
-                                            incoming_function,
-                                            initial_conditions,
-                                            domain_volume,
-                                            postprocessor,
-                                            source_time_dependent,
-                                            nominal_dt);
+      TransientExecutioner<dim> executioner(
+        parameters,
+        triangulation,
+        problem_parameters.transport_direction,
+        problem_parameters.cross_section_function,
+        problem_parameters.source_function,
+        *(problem_parameters.dirichlet_function),
+        problem_parameters.initial_conditions_function,
+        problem_parameters.domain_volume,
+        postprocessor,
+        problem_parameters.source_is_time_dependent,
+        nominal_dt);
       executioner.run();
     }
     else
@@ -834,14 +816,15 @@ void TransportProblem<dim>::run()
       TimerOutput::Scope t_solve(timer, "solve");
 
       // create and run steady-state executioner
-      SteadyStateExecutioner<dim> executioner(parameters,
-                                              triangulation,
-                                              transport_direction,
-                                              cross_section_function,
-                                              source_function,
-                                              incoming_function,
-                                              domain_volume,
-                                              postprocessor);
+      SteadyStateExecutioner<dim> executioner(
+        parameters,
+        triangulation,
+        problem_parameters.transport_direction,
+        problem_parameters.cross_section_function,
+        problem_parameters.source_function,
+        *(problem_parameters.dirichlet_function),
+        problem_parameters.domain_volume,
+        postprocessor);
       executioner.run();
     }
   } // end refinement cycle loop

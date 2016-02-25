@@ -6,7 +6,10 @@
 #define ProblemParameters_h
 
 #include <string>
+#include <sys/stat.h>
 #include <deal.II/base/parameter_handler.h>
+#include "include/other/CMakeVars.h"
+#include "include/bc/DirichletBoundaryConditions.h"
 
 using namespace dealii;
 
@@ -18,11 +21,15 @@ template <int dim>
 class ProblemParameters
 {
 public:
-  ProblemParameters();
+  ProblemParameters(const std::string & problem_name);
 
-  void get_and_process_parameters(
-  const std::string & filename, ParameterHandler & parameter_handler,
-                                  Triangulation<dim> & triangulation);
+  void get_and_process_parameters(const std::string & parameters_file,
+                                  Triangulation<dim> & triangulation,
+                                  const FESystem<dim> & fe,
+                                  const QGauss<dim - 1> & face_quadrature);
+
+  /** \brief Problem name */
+  const std::string problem_name;
 
   /** \brief initial conditions function */
   FunctionParser<dim> initial_conditions_function;
@@ -39,8 +46,8 @@ public:
   /** \brief boundary conditions */
   std::shared_ptr<BoundaryConditions<dim>> boundary_conditions;
 
-  /** \brief vector of Dirichlet BC functions for each Dirichlet boundary */
-  std::vector<std::shared_ptr<FunctionParser<dim>>> dirichlet_function;
+  /** \brief Dirichlet BC function */
+  std::shared_ptr<Function<dim>> dirichlet_function;
 
   /** \brief Domain volume */
   double domain_volume;
@@ -52,12 +59,14 @@ public:
   double default_end_time;
 
 protected:
-
   /** \brief Parameter handler */
   ParameterHandler parameter_handler;
 
   /** \brief constants for function parsers */
   std::map<std::string, double> constants;
+
+  /** \brief Number of solution components */
+  unsigned int n_components;
 
   /** \brief Flag that problem is valid in 1-D */
   bool valid_in_1d;
@@ -86,17 +95,11 @@ protected:
   /** \brief Scheme for determination of boundary IDs for each face */
   std::string boundary_id_scheme;
 
-  /** \brief Type of boundary conditions */
-  std::string boundary_conditions_type;
-
   /** \brief Flag that exact solution should be used for Dirichlet BC */
   bool use_exact_solution_as_dirichlet_bc;
 
-  /** \brief number of Dirichlet boundaries */
-  unsigned int n_dirichlet_boundaries;
-
   /** \brief vector of initial condition function strings for each component */
-  std::vector<std::string> initial_condition_strings;
+  std::vector<std::string> initial_conditions_strings;
 
   /** \brief Type of function for exact solution */
   std::string exact_solution_type;
@@ -104,27 +107,32 @@ protected:
   /** \brief vector of exact solution function strings for each component */
   std::vector<std::string> exact_solution_strings;
 
-  /** \brief vector of Dirichlet BC function strings for each Dirichlet
-             boundary and component */
-  std::vector<std::vector<std::string>> dirichlet_function_strings;
+  /** \brief vector of Dirichlet BC function strings for each component */
+  std::vector<std::string> dirichlet_function_strings;
 
 private:
-
   void declare_base_parameters();
 
   void get_base_parameters();
 
-  void process_base_parameters(Triangulation<dim> & triangulation);
+  void process_base_parameters(Triangulation<dim> & triangulation,
+                               const FESystem<dim> & fe,
+                               const QGauss<dim - 1> & face_quadrature);
 
   void generate_mesh_and_compute_volume(Triangulation<dim> & triangulation);
 
-  void set_boundary_ids(Triangulation<dim> & triangulation);
+  void set_boundary_ids(Triangulation<dim> & triangulation,
+                        const FESystem<dim> & fe,
+                        const QGauss<dim - 1> & face_quadrature);
 
   virtual void declare_derived_parameters() = 0;
 
   virtual void get_derived_parameters() = 0;
 
-  virtual void process_derived_parameters() = 0;
+  virtual void process_derived_parameters(
+    Triangulation<dim> & triangulation,
+    const FESystem<dim> & fe,
+    const QGauss<dim - 1> & face_quadrature) = 0;
 };
 
 #include "src/parameters/ProblemParameters.cc"

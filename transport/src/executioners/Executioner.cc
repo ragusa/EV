@@ -66,7 +66,7 @@ Executioner<dim>::Executioner(const TransportParameters<dim> & parameters_,
   cumulative_antidiffusion.reinit(n_dofs);
 
   // set boundary indicators to distinguish incoming boundary
-  setBoundaryIndicators();
+  // setBoundaryIndicators();
 
   // determine Dirichlet nodes
   getDirichletNodes();

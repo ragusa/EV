@@ -5,9 +5,12 @@
 
 /**
  * \brief Constructor.
+ *
+ * \param[in] problem_name_  name of problem
  */
 template <int dim>
-ProblemParameters<dim>::ProblemParameters()
+ProblemParameters<dim>::ProblemParameters(const std::string & problem_name_)
+  : problem_name(problem_name_)
 {
 }
 
@@ -108,13 +111,17 @@ void ProblemParameters<dim>::declare_base_parameters()
 /**
  * \brief Gets and processes base and derived problem parameters.
  *
- * \param[in] filename       parameters file name
- * \param[in] triangulation  triangulation
+ * \param[in] parameters_file  parameters file name
+ * \param[in] triangulation    triangulation
+ * \param[in] fe               finite element system
+ * \param[in] face_quadrature  face quadrature
  */
 template <int dim>
 void ProblemParameters<dim>::get_and_process_parameters(
-  const std::string & filename,
-  Triangulation<dim> & triangulation)
+  const std::string & parameters_file,
+  Triangulation<dim> & triangulation,
+  const FESystem<dim> & fe,
+  const QGauss<dim - 1> & face_quadrature)
 {
   // declare base and derived parameters
   declare_base_parameters();
@@ -122,19 +129,23 @@ void ProblemParameters<dim>::get_and_process_parameters(
 
   // assert that parameters input file exists
   struct stat buffer;
-  const bool file_exists = stat(filename.c_str(), &buffer) == 0;
-  Assert(file_exists, ExcFileDoesNotExist(filename));
+  const bool file_exists = stat(parameters_file.c_str(), &buffer) == 0;
+  Assert(file_exists, ExcFileDoesNotExist(parameters_file));
 
   // read parameters input file
-  parameter_handler.read_input(filename);
+  parameter_handler.read_input(parameters_file);
 
   // get base and derived parameters
   get_base_parameters();
   get_derived_parameters();
 
+  // generate initial mesh, compute domain volume, and set boundary IDs
+  generate_mesh_and_compute_volume(triangulation);
+  set_boundary_ids(triangulation, fe, face_quadrature);
+
   // process derived and base parameters
-  process_derived_parameters();
-  process_base_parameters(triangulation);
+  process_derived_parameters(triangulation, fe, face_quadrature);
+  process_base_parameters(triangulation, fe, face_quadrature);
 }
 
 /**
@@ -195,28 +206,39 @@ void ProblemParameters<dim>::get_base_parameters()
 /**
  * \brief Processes the base parameters to provide necessary public data.
  *
- * \param[in] triangulation  triangulation
+ * \param[in] triangulation    triangulation
+ * \param[in] fe               finite element system
+ * \param[in] face_quadrature  face quadrature
  */
 template <int dim>
 void ProblemParameters<dim>::process_base_parameters(
-  Triangulation<dim> & triangulation)
+  Triangulation<dim> &,
+  const FESystem<dim> & fe,
+  const QGauss<dim - 1> & face_quadrature)
 {
   // assert number of dimensions is valid
-  if (!parameters.valid_in_1d)
+  if (!valid_in_1d)
     Assert(dim != 1, ExcImpossibleInDim(dim));
-  if (!parameters.valid_in_2d)
+  if (!valid_in_2d)
     Assert(dim != 2, ExcImpossibleInDim(dim));
-  if (!parameters.valid_in_3d)
+  if (!valid_in_3d)
     Assert(dim != 3, ExcImpossibleInDim(dim));
 
   // constants for function parsers
   constants["pi"] = numbers::PI;
+  constants["x_min"] = x_start;
+  constants["x_max"] = x_start + x_width;
+  constants["x_mid"] = x_start + 0.5 * x_width;
+  constants["y_min"] = y_start;
+  constants["y_max"] = y_start + y_width;
+  constants["z_min"] = z_start;
+  constants["z_max"] = z_start + z_width;
 
   // exact solution
   if (has_exact_solution)
   {
     // if exact solution was not created in derived class
-    if (!(exact_solution))
+    if (!(exact_solution_function))
     {
       if (exact_solution_type == "function")
       {
@@ -228,7 +250,7 @@ void ProblemParameters<dim>::process_base_parameters(
           exact_solution_strings,
           constants,
           true);
-  
+
         // create base class function pointer
         exact_solution_function = exact_solution_function_derived;
       }
@@ -243,30 +265,27 @@ void ProblemParameters<dim>::process_base_parameters(
   if (boundary_conditions_type == "dirichlet")
   {
     auto derived_boundary_conditions =
-      std::make_shared<DirichletBoundaryConditions<dim>>(this->fe,
-                                                         this->face_quadrature);
+      std::make_shared<DirichletBoundaryConditions<dim>>(fe, face_quadrature);
     boundary_conditions = derived_boundary_conditions;
 
-  // initialize Dirichlet boundary functions if needed
-  if (use_exact_solution_as_dirichlet_bc)
-  {
-      n_dirichlet_boundaries = 1;
-    dirichlet_function.resize(1);
-    dirichlet_function[0] = exact_solution_function;
-  }
-  else
-  {
-    dirichlet_function.resize(n_dirichlet_boundaries);
-    for (unsigned int boundary = 0; boundary < n_dirichlet_boundaries; ++boundary)
+    // initialize Dirichlet boundary functions if needed
+    if (use_exact_solution_as_dirichlet_bc)
     {
-      dirichlet_function[boundary] = std::make_shared<FunctionParser<dim>>(n_components);
-      dirichlet_function[boundary]->initialize(
+      dirichlet_function = exact_solution_function;
+    }
+    else
+    {
+      auto dirichlet_function_derived =
+        std::make_shared<FunctionParser<dim>>(n_components);
+      dirichlet_function_derived->initialize(
         FunctionParser<dim>::default_variable_names() + ",t",
-        dirichlet_function_strings[boundary],
+        dirichlet_function_strings,
         constants,
         true);
+
+      // point base class pointer to derived class object
+      dirichlet_function = dirichlet_function_derived;
     }
-  }
   }
   else
   {
@@ -276,11 +295,9 @@ void ProblemParameters<dim>::process_base_parameters(
   // initialize initial conditions function
   initial_conditions_function.initialize(
     FunctionParser<dim>::default_variable_names(),
-    initial_conditions_strings, constants, false);
-
-  // default end time
-  has_default_end_time = parameters.has_default_end_time;
-  default_end_time = parameters.default_end_time;
+    initial_conditions_strings,
+    constants,
+    false);
 }
 
 /**
@@ -292,38 +309,49 @@ template <int dim>
 void ProblemParameters<dim>::generate_mesh_and_compute_volume(
   Triangulation<dim> & triangulation)
 {
-  if (parameters.domain_shape == "hyper_cube")
+  if (domain_shape == "hyper_cube")
   {
     // compute domain volume
-    const double x_start = parameters.x_start;
-    const double x_width = parameters.x_width;
     domain_volume = std::pow(x_width, dim);
 
     // generate mesh
     GridGenerator::hyper_cube(triangulation, x_start, x_start + x_width);
   }
-  else if (parameters.domain_shape == "hyper_box")
+  else if (domain_shape == "hyper_box")
   {
+    // diagonally opposite begin and end points defining box
+    Point<dim> point_begin;
+    Point<dim> point_end;
+
     // store constants for function parsers
-    const double x_width = parameters.x_width;
-    constants["x_min"] = parameters.x_start;
-    constants["x_max"] = parameters.x_start + x_width;
+    const double x_end = x_start + x_width;
+    point_begin[0] = x_start;
+    point_end[0] = x_end;
+    constants["x_min"] = x_start;
+    constants["x_max"] = x_end;
     domain_volume = x_width; // initialize domain volume
 
     if (dim > 1)
     {
-      const double y_width = parameters.y_width;
-      constants["y_min"] = parameters.y_start;
-      constants["y_max"] = parameters.y_start + y_width;
+      const double y_end = y_start + y_width;
+      point_begin[1] = y_start;
+      point_end[1] = y_end;
+      constants["y_min"] = y_start;
+      constants["y_max"] = y_end;
       domain_volume *= y_width; // update volume
     }
     else // dim == 3
     {
-      const double z_width = parameters.z_width;
-      constants["z_min"] = parameters.z_start;
-      constants["z_max"] = parameters.z_start + z_width;
+      const double z_end = z_start + z_width;
+      point_begin[2] = z_start;
+      point_end[2] = z_end;
+      constants["z_min"] = z_start;
+      constants["z_max"] = z_end;
       domain_volume *= z_width; // update volume
     }
+
+    // generate mesh
+    GridGenerator::hyper_rectangle(triangulation, point_begin, point_end);
   }
   else
   {
@@ -335,12 +363,20 @@ void ProblemParameters<dim>::generate_mesh_and_compute_volume(
  * \brief Sets the boundary IDs.
  *
  * \param[in] triangulation  triangulation
+ * \param[in] fe               finite element system
+ * \param[in] face_quadrature  face quadrature
  */
 template <int dim>
-void ProblemParameters<dim>::set_boundary_ids(Triangulation<dim> & triangulation)
+void ProblemParameters<dim>::set_boundary_ids(
+  Triangulation<dim> & triangulation,
+  const FESystem<dim> & fe,
+  const QGauss<dim - 1> & face_quadrature)
 {
   // compute faces per cell
   const unsigned int faces_per_cell = GeometryInfo<dim>::faces_per_cell;
+
+  // FE face values for getting quadrature points on faces
+  FEFaceValues<dim> fe_face_values(fe, face_quadrature, update_quadrature_points);
 
   // loop over cells
   typename Triangulation<dim>::cell_iterator cell = triangulation.begin();
@@ -351,9 +387,23 @@ void ProblemParameters<dim>::set_boundary_ids(Triangulation<dim> & triangulation
       // if face is a boundary face
       if (cell->face(face)->at_boundary())
       {
+        // get quadrature points on face
+        fe_face_values.reinit(cell, face);
+        std::vector<Point<dim>> points(fe_face_values.get_quadrature_points());
+
         // set boundary ID for face
         if (boundary_id_scheme == "all")
+        {
           cell->face(face)->set_boundary_id(0);
+        }
+        else if (boundary_id_scheme == "left")
+        {
+          // left boundary should have ID of 0
+          if (points[0][0] < x_start + 1.0e-10)
+            cell->face(face)->set_boundary_id(0);
+          else
+            cell->face(face)->set_boundary_id(1);
+        }
         else
         {
           // "incoming" boundary ID scheme is the only scheme implemented in

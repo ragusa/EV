@@ -110,7 +110,8 @@ void LinearSolver<dim>::apply_Dirichlet_BC(SparseMatrix<double> & A,
   // create map of dofs to boundary values to be imposed
   std::map<unsigned int, double> boundary_values;
   VectorTools::interpolate_boundary_values(
-    *dof_handler, 1, *dirichlet_value_function, boundary_values);
+    *dof_handler, 0, *dirichlet_value_function, boundary_values);
+
   // apply boundary values to system
   MatrixTools::apply_boundary_values(boundary_values, A, x, b);
 }

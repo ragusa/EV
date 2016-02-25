@@ -30,7 +30,7 @@ public:
   LinearSolver(const LinearSolverType & linear_solver_option,
                const ConstraintMatrix & constraints,
                const DoFHandler<dim> & dof_handler,
-               std::vector<FunctionParser<dim> *> dirichlet_functions);
+               std::shared_ptr<Function<dim>> dirichlet_function);
 
   void solve(SparseMatrix<double> & A,
              Vector<double> & x,
@@ -50,9 +50,7 @@ private:
 
   const DoFHandler<dim> * const dof_handler;
 
-  std::vector<FunctionParser<dim> *> dirichlet_functions;
-
-  const unsigned int n_dirichlet_boundaries;
+  std::shared_ptr<Function<dim>> dirichlet_function;
 
   const bool have_dirichlet_bc;
 
