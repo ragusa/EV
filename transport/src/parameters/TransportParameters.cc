@@ -57,6 +57,7 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler & prm)
   prm.enter_subsection("problem");
   {
     prm.declare_entry("Problem ID", "1", Patterns::Integer(), "Problem ID");
+    prm.declare_entry("problem name", "invalidproblem", Patterns::Anything(), "Problem name");
   }
   prm.leave_subsection();
 
@@ -296,6 +297,7 @@ void TransportParameters<dim>::get_parameters(ParameterHandler & prm)
   prm.enter_subsection("problem");
   {
     problem_id = prm.get_integer("Problem ID");
+    problem_name = prm.get("problem name");
   }
   prm.leave_subsection();
 

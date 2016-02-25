@@ -20,12 +20,30 @@ class TransportProblemParameters : public ProblemParameters<dim>
 public:
   TransportProblemParameters();
 
-  static void declare_parameters(ParameterHandler & parameter_handler);
-
-  void get_parameters(ParameterHandler & parameter_handler);
+  void set_boundary_ids_incoming(
+  Triangulation<dim> & triangulation, FEFaceValues<dim> & fe_face_values);
 
   /** \brief Transport speed \f$v\f$ */
   double transport_speed;
+
+  /** \brief Transport direction \f$\mathbf{\Omega}\f$ */
+  Tensor<1, dim> transport_direction;
+
+  /** \brief Function parser of cross section \f$\sigma\f$ */
+  FunctionParser<dim> cross_section_function;
+
+  /** \brief Function parser of source \f$q\f$ */
+  FunctionParser<dim> source_function;
+
+protected:
+  /** \brief Specification type for transport direction */
+  std::string transport_direction_specification;
+
+  /** \brief Azimuthal angle \f$\theta\f$ for transport direction */
+  double azimuthal_angle;
+
+  /** \brief Polar angle \f$\varphi\f$ for transport direction */
+  double polar_angle;
 
   /** \brief x-component of transport direction, \f$\Omega_x\f$ */
   double transport_direction_x;
@@ -36,24 +54,57 @@ public:
   /** \brief z-component of transport direction, \f$\Omega_z\f$ */
   double transport_direction_z;
 
+  /** \brief Option to normalize transport direction vector */
+  bool normalize_transport_direction;
+
   /** \brief String for function parser of cross section \f$\sigma\f$ */
   std::string cross_section_string;
 
   /** \brief String for function parser of source \f$q\f$ */
   std::string source_string;
 
+  /** \brief String for function parser of Dirichlet BC */
+  std::string dirichlet_function_angularflux;
+
+  /** \brief String for function parser of initial conditions */
+  std::string initial_condition_angularflux;
+
+  /** \brief String for function parser of exact solution */
+  std::string exact_solution_angularflux;
+
   /** \brief Incoming flux value constant for function parsers */
   double incoming_value;
 
-  /** \brief Cross section value constant for function parsers */
-  double cross_section_value;
+  /** \brief Cross section value 1 */
+  double sigma1;
+  /** \brief Cross section value 2 */
+  double sigma2;
 
   /** \brief Source value constant for function parsers */
   double source_value;
 
-  std::string dirichlet_function;
-  std::string initial_condition;
-  std::string exact_solution;
+  /** \brief x value 1 */
+  double x1;
+  /** \brief x value 2 */
+  double x2;
+  /** \brief x value 3 */
+  double x3;
+  /** \brief x value 4 */
+  double x4;
+  /** \brief y value 1 */
+  double y1;
+  /** \brief y value 2 */
+  double y2;
+  /** \brief y value 3 */
+  double y3;
+
+private:
+
+  void declare_derived_parameters() override;
+
+  void get_derived_parameters() override;
+
+  void process_derived_parameters() override;
 };
 
 #include "src/parameters/TransportProblemParameters.cc"

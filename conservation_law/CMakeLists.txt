@@ -103,3 +103,4 @@ ADD_SUBDIRECTORY(tests/shallowwater_constant_solution)
 ADD_SUBDIRECTORY(tests/shallowwater_low_solution)
 ADD_SUBDIRECTORY(tests/shallowwater_ev_solution)
 ADD_SUBDIRECTORY(tests/shallowwater_low_lakeatrest)
+

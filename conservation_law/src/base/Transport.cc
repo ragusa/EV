@@ -12,9 +12,9 @@ template <int dim>
 Transport<dim>::Transport(const TransportParameters<dim> & params)
   : ConservationLaw<dim>(params, 1, false),
     transport_parameters(params),
-    extractor(0),
-    cross_section_function(1),
-    source_function(1)
+    extractor(0)//,
+//    cross_section_function(1),
+//    source_function(1)
 {
 }
 
@@ -60,17 +60,32 @@ void Transport<dim>::define_problem()
   // create problem parameters file name and determine if it exists
   std::string problem_parameters_file =
     source_path + "/problems/transport/" + this->problem_name;
+/*
   struct stat buffer;
   const bool file_exists = stat(problem_parameters_file.c_str(), &buffer) == 0;
   Assert(file_exists, ExcFileDoesNotExist(problem_parameters_file));
+*/
 
   // read problem parameters input file
+/*
   ParameterHandler parameter_handler;
   TransportProblemParameters<dim>::declare_parameters(parameter_handler);
   parameter_handler.read_input(problem_parameters_file);
   TransportProblemParameters<dim> problem_parameters;
-  problem_parameters.get_parameters(parameter_handler);
+  //problem_parameters.get_parameters(parameter_handler);
+*/
+  TransportProblemParameters<dim> problem_parameters;
+  problem_parameters.get_and_process_parameters(
+    problem_parameters_file, parameter_handler, this->triangulation);
 
+  // set boundary IDs for incoming boundary if applies to problem
+  FEFaceValues<dim> fe_face_values(
+    this->fe, this->face_quadrature, update_normal_vectors);
+  problem_parameters.set_boundary_ids_incoming(this->triangulation, fe_face_values);
+
+std::cout << "YAY" << std::endl;
+std::exit(0);
+/*
   // assert number of dimensions is valid
   if (!problem_parameters.valid_in_1d)
     Assert(dim != 1, ExcImpossibleInDim(dim));
@@ -90,7 +105,8 @@ void Transport<dim>::define_problem()
 
   // store constants for function parsers
   this->constants["incoming"] = problem_parameters.incoming_value;
-  this->constants["sigma"] = problem_parameters.cross_section_value;
+  this->constants["sigma1"] = problem_parameters.sigma1;
+  this->constants["sigma2"] = problem_parameters.sigma2;
   this->constants["source"] = problem_parameters.source_value;
   this->constants["x_min"] = problem_parameters.x_start;
 
@@ -210,6 +226,7 @@ void Transport<dim>::define_problem()
   // default end time
   this->has_default_end_time = problem_parameters.has_default_end_time;
   this->default_end_time = problem_parameters.default_end_time;
+*/
 }
 
 template <int dim>
@@ -256,7 +273,7 @@ template <int dim>
 void Transport<dim>::perform_nonstandard_setup()
 {
   // distinguish boundary IDs for incoming boundary
-  set_boundary_ids();
+  //set_boundary_ids();
 }
 
 /**
@@ -267,6 +284,7 @@ void Transport<dim>::perform_nonstandard_setup()
  * boundary is marked with a boundary ID of 0, while the rest of the boundary has
  * a boundary ID of 1.
  */
+/*
 template <int dim>
 void Transport<dim>::set_boundary_ids()
 {
@@ -308,6 +326,7 @@ void Transport<dim>::set_boundary_ids()
     }
   }
 }
+*/
 
 /**
  * \brief Computes the steady-state flux vector.

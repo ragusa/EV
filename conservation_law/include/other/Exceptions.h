@@ -41,9 +41,7 @@ DeclException2(ExcSizesInconsistent,
 DeclException0(ExcInvalidDiffusionType);
 
 /** \brief Exception for negativity encountered */
-DeclException2(ExcNegativity,
-               std::string,
-               double,
-               << arg1 << " is negative: " << arg2);
+DeclException2(
+  ExcNegativity, std::string, double, << arg1 << " is negative: " << arg2);
 
 #endif

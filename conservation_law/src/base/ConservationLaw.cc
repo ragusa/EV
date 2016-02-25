@@ -192,6 +192,7 @@ void ConservationLaw<dim>::initialize_system()
   else
     end_time = parameters.end_time;
 
+/*
   // create constants used for parsed functions
   constants["pi"] = numbers::PI;
 
@@ -220,6 +221,7 @@ void ConservationLaw<dim>::initialize_system()
   // initialize initial conditions function
   initial_conditions_function.initialize(
     variables, initial_conditions_strings, constants, false);
+*/
 
   // determine low-order viscosity and artificial diffusion
   switch (parameters.low_order_scheme)

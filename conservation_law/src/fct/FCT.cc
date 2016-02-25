@@ -169,8 +169,8 @@ void FCT<dim>::solve_fct_system(
         old_solution, flux_correction_matrix, flux_correction_matrix_transformed);
 
       // compute characteristic antidiffusion bounds \hat{Q}- and \hat{Q}+
-      compute_antidiffusion_bounds_characteristic(
-        old_solution_characteristic, dt);
+      compute_antidiffusion_bounds_characteristic(old_solution_characteristic,
+                                                  dt);
 
       break;
     default:
@@ -532,8 +532,7 @@ void FCT<dim>::compute_antidiffusion_bounds(
  */
 template <int dim>
 void FCT<dim>::compute_antidiffusion_bounds_characteristic(
-  const Vector<double> & old_solution,
-  const double & dt)
+  const Vector<double> & old_solution, const double & dt)
 {
   // compute Q-
   Q_minus = 0;

@@ -14,6 +14,7 @@ subsection problem
    # 14 = 5-region
    # 15 = 2-region saturation
    set Problem ID = 3
+   set problem name = absorber
 end
 
 subsection time

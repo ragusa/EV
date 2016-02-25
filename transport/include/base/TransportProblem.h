@@ -25,7 +25,10 @@
 #include <sstream>
 #include <cstdlib>
 #include <algorithm>
+#include "CMakeVars.h"
+#include "Exceptions.h"
 #include "TransportParameters.h"
+#include "TransportProblemParameters.h"
 #include "PostProcessor.h"
 #include "ExactSolutions.h"
 #include "RefinementHandler.h"
@@ -53,6 +56,7 @@ public:
 private:
   void initializeSystem();
   void processProblemID();
+  void processProblemID_alt();
 
   // input parameters
   const TransportParameters<dim> parameters;
@@ -80,6 +84,8 @@ private:
   double x_min;
   double x_max;
   double domain_volume;
+
+  std::string problem_name;
 
   // timer
   TimerOutput timer;

@@ -1,0 +1,33 @@
+In this section, results are given for a modified version of the ``crooked pipe''
+or ``tophat'' test problem introduced by Gruziani and
+LeBlanc\cite{gruziani2000}\cite{long2014}. The original test problem is
+used primarily for thermal radiative transfer (TRT) problems; however, here
+only a scalar transport model is used (no scattering is considered). The
+source is modified to be a uniform incident flux at an angle $\theta$ on the left
+boundary. The geometry of the problem is given in Figure
+\ref{fig:crooked_pipe_geometry}, an illustration of the problem is given
+in Figure \ref{fig:crooked_pipe_illustration}, and problem parameters are given
+in Table \ref{tab:crooked_pipe_parameters}.
+
+%-------------------------------------------------------------------------------
+\begin{table}[htb]\caption{Crooked Pipe Test Problem Summary}
+\label{tab:crooked_pipe_parameters}
+\centering
+\begin{tabular}{l l}\toprule
+\emph{Parameter} & \emph{Value}\\\midrule
+Domain & $\domain = (0,7\,\text{cm})\times(0,2\,\text{cm})$\\
+Initial Conditions & $u_0(\x)=0\,
+  \frac{\text{cm}}{\text{cm}^3\cdot\text{ns}\cdot\text{ster}}$\\
+Boundary Conditions & $u(0,y,t)=1\,
+  \frac{\text{cm}}{\text{cm}^3\cdot\text{ns}\cdot\text{ster}}$\\
+Direction & $\mathbf{\Omega} = (\cos\theta, \sin\theta)\eqc
+  \quad \theta=20^\circ$\\
+Cross Section & $\sigma(\x)=\left\{\begin{array}{c l}
+   2000\,\text{cm}^{-1}, & \x\in \domain_{\text{absorber}}\\
+   0.2\,\text{cm}^{-1}, & \x\in \domain_{\text{pipe}}\end{array}\right.$\\
+Source & $q(\x,t)=0\,
+  \frac{1}{\text{cm}^3\cdot\text{ns}\cdot\text{ster}}$\\
+Speed & $c=30\,\frac{\text{cm}}{\text{ns}}$\\
+\bottomrule\end{tabular}
+\end{table}
+%-------------------------------------------------------------------------------

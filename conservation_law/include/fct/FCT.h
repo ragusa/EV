@@ -136,8 +136,7 @@ protected:
     const double & dt);
 
   void compute_antidiffusion_bounds_characteristic(
-    const Vector<double> & old_solution,
-    const double & dt);
+    const Vector<double> & old_solution, const double & dt);
 
   void compute_limiting_coefficients_zalesak();
 

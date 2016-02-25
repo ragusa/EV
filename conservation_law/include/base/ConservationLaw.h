@@ -306,6 +306,7 @@ protected:
    * \brief Performs non-standard setup required by a derived class.
    */
   virtual void perform_nonstandard_setup() {}
+
 #ifdef IS_PARALLEL
   /** \brief MPI communicator */
   MPI_Comm mpi_communicator;
@@ -411,34 +412,33 @@ protected:
   LocalMatrix high_order_diffusion_matrix;
 
   /** \brief number of Dirichlet boundaries */
-  unsigned int n_dirichlet_boundaries;
+  //unsigned int n_dirichlet_boundaries;
   /** \brief type of boundary conditions */
-  std::string boundary_conditions_type;
+  //std::string boundary_conditions_type;
   /** \brief boundary conditions */
-  std::shared_ptr<BoundaryConditions<dim>> boundary_conditions;
-  /** \brief option to use exact solution function as Dirichlet boundary
-   *         conditions */
-  bool use_exact_solution_as_dirichlet_bc;
+  //std::shared_ptr<BoundaryConditions<dim>> boundary_conditions;
+  /** \brief Flag that exact solution should be used for Dirichlet BC */
+  //bool use_exact_solution_as_dirichlet_bc;
   /** \brief vector of Dirichlet BC function strings, which will be parsed */
-  std::vector<std::vector<std::string>> dirichlet_function_strings;
+  //std::vector<std::vector<std::string>> dirichlet_function_strings;
   /** \brief vector of Dirichlet BC functions created from parsed strings */
-  std::vector<FunctionParser<dim> *> dirichlet_function;
+  //std::vector<FunctionParser<dim> *> dirichlet_function;
 
   /** \brief initial conditions function strings for each component, which will
    *         be parsed */
-  std::vector<std::string> initial_conditions_strings;
-  /** \brief initial conditions functions */
-  FunctionParser<dim> initial_conditions_function;
+  //std::vector<std::string> initial_conditions_strings;
+  /** \brief initial conditions function */
+  //FunctionParser<dim> initial_conditions_function;
 
   /** \brief constants for function parsers */
-  std::map<std::string, double> constants;
+  //std::map<std::string, double> constants;
 
-  /** \brief option if the problem has an exact solution provided */
-  bool has_exact_solution;
+  /** \brief Flag that problem has an exact solution provided */
+  //bool has_exact_solution;
   /** \brief Exact solution function strings for each component */
-  std::vector<std::string> exact_solution_strings;
+  //std::vector<std::string> exact_solution_strings;
   /** \brief Exact solution function */
-  std::shared_ptr<Function<dim>> exact_solution_function;
+  //std::shared_ptr<Function<dim>> exact_solution_function;
 
   /** \brief Vector of component names */
   std::vector<std::string> component_names;
@@ -477,9 +477,9 @@ protected:
   Vector<float> estimated_error_per_cell;
 
   /** \brief Default end time for test problem */
-  double default_end_time;
+  //double default_end_time;
   /** \brief Flag to signal that test problem has a default end time */
-  bool has_default_end_time;
+  //bool has_default_end_time;
   /** \brief Chosen end time */
   double end_time;
 

@@ -68,6 +68,7 @@ public:
 
   // problem parameters
   unsigned int problem_id; // problem ID
+  std::string problem_name;
 
   // time parameters
   double end_time;                 // end time if transient problem is run

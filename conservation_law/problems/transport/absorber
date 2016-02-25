@@ -6,16 +6,18 @@ end
 
 subsection physics
   set transport speed = 1.0
+  set transport direction specification = components
   set transport direction x = 1.0
   set transport direction y = 0.0
   set transport direction z = 0.0
-  set cross section = sigma  # see constants section for value
-  set source = source        # see constants section for value
+  set normalize transport direction = false
+  set cross section = sigma1  # see constants section for value
+  set source = source         # see constants section for value
 end
 
 subsection constants
   set incoming value = 1.0      # called "incoming"
-  set cross section value = 1.0 # called "sigma"
+  set sigma1 = 1.0              # called "sigma1"
   set source value = 0.0        # called "source"
 end
 
@@ -42,8 +44,8 @@ end
 subsection exact solution
   set has exact solution = true
   set exact solution type = function
-  set exact solution = if(x <= t, source/sigma + (incoming - source/sigma)*\
-    exp(-sigma*(x-x_min)),0)
+  set exact solution = if(x <= t, source/sigma1 + (incoming - source/sigma1)*\
+    exp(-sigma1*(x-x_min)),0)
 end
 
 subsection default end time

@@ -55,7 +55,7 @@ private:
 
   void perform_nonstandard_setup() override;
 
-  void set_boundary_ids();
+  //void set_boundary_ids();
 
   void define_problem() override;
 
@@ -78,25 +78,25 @@ private:
   const FEValuesExtractors::Scalar extractor;
 
   /** \brief Transport speed \f$v\f$ */
-  double transport_speed;
+  //double transport_speed;
 
   /** \brief x-component of transport direction, \f$\Omega_x\f$ */
-  double transport_direction_x;
+  //double transport_direction_x;
 
   /** \brief y-component of transport direction, \f$\Omega_y\f$ */
-  double transport_direction_y;
+  //double transport_direction_y;
 
   /** \brief z-component of transport direction, \f$\Omega_z\f$ */
-  double transport_direction_z;
+  //double transport_direction_z;
 
   /** \brief Transport direction \f$\mathbf{\Omega}\f$ */
-  Tensor<1, dim> transport_direction;
+  //Tensor<1, dim> transport_direction;
 
   /** \brief Function parser of cross section \f$\sigma\f$ */
-  FunctionParser<dim> cross_section_function;
+  //FunctionParser<dim> cross_section_function;
 
   /** \brief Function parser of source \f$q\f$ */
-  FunctionParser<dim> source_function;
+  //FunctionParser<dim> source_function;
 };
 
 #include "src/base/Transport.cc"

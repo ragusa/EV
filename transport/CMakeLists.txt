@@ -64,6 +64,9 @@ LIST(REMOVE_DUPLICATES my_SOURCE_DIRS) # remove duplicates
 INCLUDE_DIRECTORIES(${my_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${my_SOURCE_DIRS})
 
+# specify include directories in other directory
+INCLUDE_DIRECTORIES(../conservation_law)
+
 # don't know what this does
 DEAL_II_INVOKE_AUTOPILOT()
 

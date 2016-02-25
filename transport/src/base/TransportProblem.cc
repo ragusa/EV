@@ -34,7 +34,8 @@ void TransportProblem<dim>::initializeSystem()
   TimerOutput::Scope t_initialize(timer, "initialize");
 
   // process problem ID
-  processProblemID();
+  //processProblemID();
+  processProblemID_alt();
 
   // determine function variables based on dimension;
   // this is to be used in initialization of function parser objects
@@ -727,6 +728,53 @@ void TransportProblem<dim>::processProblemID()
       break;
     }
   }
+}
+
+template <int dim>
+void TransportProblem<dim>::processProblemID_alt()
+{
+  // determine problem name
+  std::string problem_name = parameters.problem_name;
+
+  // get path of source directory from #define created by CMake
+  std::stringstream source_path_ss;
+  source_path_ss << SOURCE_PATH;
+  std::string source_path;
+  source_path_ss >> source_path;
+
+  // create problem parameters file name and determine if it exists
+  std::string problem_parameters_file =
+    source_path + "/problems/transport/" + problem_name;
+  struct stat buffer;
+  const bool file_exists = stat(problem_parameters_file.c_str(), &buffer) == 0;
+  Assert(file_exists, ExcFileDoesNotExist(problem_parameters_file));
+
+  // read problem parameters input file
+  ParameterHandler parameter_handler;
+  TransportProblemParameters<dim>::declare_parameters(parameter_handler);
+  parameter_handler.read_input(problem_parameters_file);
+  TransportProblemParameters<dim> problem_parameters;
+  problem_parameters.get_parameters(parameter_handler);
+
+std::cout << "YAY" << std::endl;
+std::exit(0);
+/*
+  // process problem parameters to create problem data
+  TransportProblemData<dim> problem_data(problem_parameters);
+
+  // for now, extract problem data
+  x_min = problem_data.x_min;
+  x_max = problem_data.x_max;
+  transport_direction = problem_data.transport_direction;
+  function_parser_constants = problem_data.function_parser_constants;
+  incoming_string = problem_data.incoming_string;
+  cross_section_string = problem_data.cross_section_string;
+  source_time_dependent = problem_data.source_time_dependent;
+  source_string = problem_data.source_string;
+  exact_solution_option = problem_data.exact_solution_option;
+  exact_solution_function = problem_data.exact_solution_function;
+  initial_conditions_string = problem_data.initial_conditions_string;
+*/
 }
 
 /**
