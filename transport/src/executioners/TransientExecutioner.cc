@@ -6,6 +6,7 @@ TransientExecutioner<dim>::TransientExecutioner(
   const TransportParameters<dim> & parameters_,
   Triangulation<dim> & triangulation_,
   const Tensor<1, dim> & transport_direction_,
+  const double & transport_speed_,
   const FunctionParser<dim> & cross_section_function_,
   FunctionParser<dim> & source_function_,
   Function<dim> & incoming_function_,
@@ -17,6 +18,7 @@ TransientExecutioner<dim>::TransientExecutioner(
   : Executioner<dim>(parameters_,
                      triangulation_,
                      transport_direction_,
+                     transport_speed_,
                      cross_section_function_,
                      source_function_,
                      incoming_function_,
@@ -49,7 +51,7 @@ TransientExecutioner<dim>::TransientExecutioner(
   // impose Dirichlet BC on initial conditions
   std::map<unsigned int, double> boundary_values;
   VectorTools::interpolate_boundary_values(
-    this->dof_handler, 1, *(this->incoming_function), boundary_values);
+    this->dof_handler, 0, *(this->incoming_function), boundary_values);
   for (std::map<unsigned int, double>::const_iterator it =
          boundary_values.begin();
        it != boundary_values.end();
@@ -116,6 +118,7 @@ void TransientExecutioner<dim>::run()
                            this->cell_quadrature,
                            this->face_quadrature,
                            this->transport_direction,
+                           this->transport_speed,
                            *this->cross_section_function,
                            *this->source_function,
                            this->parameters.entropy_string,
@@ -807,6 +810,7 @@ void TransientExecutioner<dim>::compute_fct_solution_theta(FCT<dim> & fct,
                                           this->low_order_ss_matrix,
                                           ss_rhs_new,
                                           ss_rhs_old,
+                                          this->cumulative_antidiffusion,
                                           dt);
 
     // compute limited flux sums

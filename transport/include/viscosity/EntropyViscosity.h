@@ -36,6 +36,7 @@ public:
                    const QGauss<dim> & cell_quadrature,
                    const QGauss<dim - 1> & face_quadrature,
                    const Tensor<1, dim> & transport_direction,
+                   const double & transport_speed,
                    const FunctionParser<dim> & cross_section_function,
                    FunctionParser<dim> & source_function,
                    const std::string & entropy_string,
@@ -96,6 +97,7 @@ private:
 
   // physics data
   Tensor<1, dim> transport_direction;
+  double transport_speed;
   const FunctionParser<dim> * cross_section_function;
   FunctionParser<dim> * source_function;
 

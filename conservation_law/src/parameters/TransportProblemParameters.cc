@@ -337,7 +337,8 @@ void TransportProblemParameters<dim>::set_boundary_ids_incoming(
         //  quadrature point; therefore, quadrature point 0 is arbitrarily
         //  chosen
         const double small = -1.0e-12;
-        if (fe_face_values.normal_vector(0) * transport_direction < small)
+        const double n_dot_omega = fe_face_values.normal_vector(0) * transport_direction;
+        if (n_dot_omega < small)
         {
           // mark boundary as incoming flux boundary: indicator 0
           cell->face(face)->set_boundary_id(0);

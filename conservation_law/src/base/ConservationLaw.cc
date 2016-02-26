@@ -61,6 +61,13 @@ void ConservationLaw<dim>::run()
   std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor =
     create_auxiliary_postprocessor();
 
+  // compute end time
+  double end_time;
+  if (parameters.use_default_end_time && problem_base_parameters->has_default_end_time)
+    end_time = problem_base_parameters->default_end_time;
+  else
+    end_time = parameters.end_time;
+
   // create post-processor object
   PostProcessor<dim> postprocessor(
     parameters,
@@ -180,6 +187,9 @@ void ConservationLaw<dim>::initialize_system()
 
   // define problem parameters
   define_problem();
+
+  // perform initial mesh refinements
+  triangulation.refine_global(parameters.initial_refinement_level);
 
   // determine low-order viscosity and artificial diffusion
   switch (parameters.low_order_scheme)
@@ -776,6 +786,13 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
   std::shared_ptr<FCT<dim>> fct;
   if (parameters.scheme == Scheme::fct)
     fct = create_fct();
+
+  // compute end time
+  double end_time;
+  if (parameters.use_default_end_time && problem_base_parameters->has_default_end_time)
+    end_time = problem_base_parameters->default_end_time;
+  else
+    end_time = parameters.end_time;
 
   // initialize old time, time index, and transient flag
   old_time = 0.0;

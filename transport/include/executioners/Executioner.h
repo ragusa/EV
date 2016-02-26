@@ -26,6 +26,7 @@ public:
   Executioner(const TransportParameters<dim> & parameters,
               Triangulation<dim> & triangulation,
               const Tensor<1, dim> & transport_direction,
+              const double & transport_speed,
               const FunctionParser<dim> & cross_section_function,
               FunctionParser<dim> & source_function,
               Function<dim> & incoming_function,
@@ -66,6 +67,7 @@ protected:
   NonlinearSolver<dim> nonlinear_solver;
 
   const Tensor<1, dim> transport_direction;
+  const double transport_speed;
   const FunctionParser<dim> * const cross_section_function;
   FunctionParser<dim> * const source_function;
   Function<dim> * const incoming_function;

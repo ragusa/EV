@@ -528,6 +528,7 @@ void FCT<dim>::compute_limited_flux_bounds_theta(
   const SparseMatrix<double> & low_order_ss_matrix,
   const Vector<double> & ss_rhs_new,
   const Vector<double> & ss_rhs_old,
+  const Vector<double> & cumulative_antidiffusion,
   const double & dt)
 {
   // compute Q+
@@ -542,6 +543,7 @@ void FCT<dim>::compute_limited_flux_bounds_theta(
   Q_plus.add(theta, tmp_vector);
   Q_plus.add(-(1.0 - theta), ss_rhs_old);
   Q_plus.add(-theta, ss_rhs_new);
+  Q_plus.add(-1.0, cumulative_antidiffusion);
 
   // compute Q-
   Q_minus = 0;
@@ -555,6 +557,7 @@ void FCT<dim>::compute_limited_flux_bounds_theta(
   Q_minus.add(theta, tmp_vector);
   Q_minus.add(-(1.0 - theta), ss_rhs_old);
   Q_minus.add(-theta, ss_rhs_new);
+  Q_minus.add(-1.0, cumulative_antidiffusion);
 }
 
 /**

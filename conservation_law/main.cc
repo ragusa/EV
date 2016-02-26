@@ -25,7 +25,7 @@ int main(int argc, char * argv[])
     dealii::deallog.depth_console(0);
 
     // spatial dimensions
-    const int dimension = 1;
+    const int dimension = 2;
 
     // declare parameter handler
     ParameterHandler parameter_handler;

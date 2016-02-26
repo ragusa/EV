@@ -113,6 +113,7 @@ public:
     const SparseMatrix<double> & low_order_ss_matrix,
     const Vector<double> & ss_rhs_new,
     const Vector<double> & ss_rhs_old,
+    const Vector<double> & cumulative_antidiffusion,
     const double & dt);
 
   void compute_limited_flux_bounds_ss(

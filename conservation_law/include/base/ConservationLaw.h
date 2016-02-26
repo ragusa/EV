@@ -447,9 +447,6 @@ protected:
   /** \brief Estimation of error per cell for adaptive mesh refinement */
   Vector<float> estimated_error_per_cell;
 
-  /** \brief Chosen end time */
-  double end_time;
-
   /** \brief Indices of DoFs subject to Dirichlet boundary conditions */
   std::vector<unsigned int> dirichlet_dof_indices;
 };

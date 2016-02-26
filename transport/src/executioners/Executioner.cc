@@ -5,6 +5,7 @@ template <int dim>
 Executioner<dim>::Executioner(const TransportParameters<dim> & parameters_,
                               Triangulation<dim> & triangulation_,
                               const Tensor<1, dim> & transport_direction_,
+                              const double & transport_speed_,
                               const FunctionParser<dim> & cross_section_function_,
                               FunctionParser<dim> & source_function_,
                               Function<dim> & incoming_function_,
@@ -26,6 +27,7 @@ Executioner<dim>::Executioner(const TransportParameters<dim> & parameters_,
                   incoming_function_),
     nonlinear_solver(parameters_, constraints, dof_handler, incoming_function_),
     transport_direction(transport_direction_),
+    transport_speed(transport_speed_),
     cross_section_function(&cross_section_function_),
     source_function(&source_function_),
     incoming_function(&incoming_function_),
@@ -139,8 +141,8 @@ void Executioner<dim>::assembleInviscidSteadyStateMatrix()
                 fe_values[flux].gradient(j, q) +
               // total interaction term
               fe_values[flux].value(i, q) * total_cross_section_values[q] *
-                fe_values[flux].value(j, q)) *
-            fe_values.JxW(q);
+                fe_values[flux].value(j, q))
+            * transport_speed * fe_values.JxW(q);
         } // end j
       }   // end i
     }     // end q
@@ -207,7 +209,7 @@ void Executioner<dim>::assembleSteadyStateRHS(Vector<double> & rhs,
     for (unsigned int q = 0; q < n_q_points_cell; ++q)
       for (unsigned int i = 0; i < dofs_per_cell; ++i)
         cell_rhs(i) +=
-          fe_values[flux].value(i, q) * source_values[q] * fe_values.JxW(q);
+          fe_values[flux].value(i, q) * source_values[q] * transport_speed * fe_values.JxW(q);
 
     // aggregate local matrix and rhs to global matrix and rhs
     constraints.distribute_local_to_global(cell_rhs, local_dof_indices, rhs);
@@ -239,7 +241,7 @@ void Executioner<dim>::setBoundaryIndicators()
   for (cell = dof_handler.begin_active(); cell != endc; ++cell)
     for (unsigned int face = 0; face < GeometryInfo<dim>::faces_per_cell; ++face)
       if (cell->face(face)->at_boundary())
-        cell->face(face)->set_boundary_id(0);
+        cell->face(face)->set_boundary_id(1);
 
   // FE face values
   FEFaceValues<dim> fe_face_values(fe, face_quadrature, update_normal_vectors);
@@ -262,7 +264,7 @@ void Executioner<dim>::setBoundaryIndicators()
         if (fe_face_values.normal_vector(0) * transport_direction < small)
         {
           // mark boundary as incoming flux boundary: indicator 1
-          cell->face(face)->set_boundary_id(1);
+          cell->face(face)->set_boundary_id(0);
         }
       }
     }
@@ -281,7 +283,7 @@ void Executioner<dim>::getDirichletNodes()
   // get map of Dirichlet dof indices to Dirichlet values
   std::map<unsigned int, double> boundary_values;
   VectorTools::interpolate_boundary_values(
-    dof_handler, 1, ZeroFunction<dim>(), boundary_values);
+    dof_handler, 0, ZeroFunction<dim>(), boundary_values);
 
   // extract dof indices from map
   dirichlet_nodes.clear();
@@ -311,7 +313,7 @@ void Executioner<dim>::applyDirichletBC(SparseMatrix<double> & A,
   // create map of dofs to boundary values to be imposed
   std::map<unsigned int, double> boundary_values;
   VectorTools::interpolate_boundary_values(
-    dof_handler, 1, *incoming_function, boundary_values);
+    dof_handler, 0, *incoming_function, boundary_values);
 
   // apply boundary values to system
   MatrixTools::apply_boundary_values(boundary_values, A, x, b);

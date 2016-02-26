@@ -14,15 +14,15 @@ subsection problem
    # 14 = 5-region
    # 15 = 2-region saturation
    #set Problem ID = 3
-   set problem name = crooked_pipe
+   set problem name = wall
 end
 
 subsection time
-   set End time = 0.3 #0.001 #0.01
-   set Time step size = 0.01 #0.0005 #0.005
+   set End time = 2.0
+   set Time step size = 1.00 #0.0005 #0.005
    set Use adaptive time stepping = true
-   set CFL limit = 0.5
-   set Time discretization = ssprk       # <ss|theta|ssprk>
+   set CFL limit = 10.0
+   set Time discretization = ss       # <ss|theta|ssprk>
    set Entropy time discretization = BE  # <CN|BE|BDF2>
    set SSPRK method = FE                 # <FE|SSP2|SSP3>
    set Theta method = BE                 # <FE|CN|BE>
@@ -34,7 +34,7 @@ subsection viscosity
    # 2 = EV
    # 3 = EV+FCT
    # 4 = Galerkin+FCT
-   set Viscosity option = 1
+   set Viscosity option = 4
 end
 
 subsection entropy viscosity
@@ -75,7 +75,7 @@ end
 subsection nonlinear solver
    set Nonlinear solver option = 1   # 1 = defect correction
    set Nonlinear tolerance = 1.0e-10
-   set Nonlinear max iteration = 100
+   set Nonlinear max iteration = 1000
    set Relaxation factor = 1.0
 end
 

@@ -24,6 +24,7 @@ public:
   TransientExecutioner(const TransportParameters<dim> & parameters,
                        Triangulation<dim> & triangulation,
                        const Tensor<1, dim> & transport_direction,
+                       const double & transport_speed,
                        const FunctionParser<dim> & cross_section_function,
                        FunctionParser<dim> & source_function,
                        Function<dim> & incoming_function,
