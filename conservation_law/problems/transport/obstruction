@@ -1,26 +1,27 @@
 subsection validity
-  set valid in 1d = true
+  set valid in 1d = false
   set valid in 2d = true
-  set valid in 3d = true
-  set is steady state problem = false
+  set valid in 3d = false
 end
 
 subsection physics
   set transport speed = 1.0
-  set transport direction specification = components
-  set transport direction x = 1.0
-  set transport direction y = 0.0
-  set transport direction z = 0.0
+  set transport direction specification = 2d_angle
+  set azimuthal angle = 45.0 # degrees
+  set cross section =\
+    if(x<x1,sigma1,if(x<x2,if(y<y1,sigma1,sigma2),sigma1))
   set normalize transport direction = false
-  set cross section = sigma1
-  set source = source1
+  set source = 0
   set source is time dependent = false
 end
 
 subsection constants
   set incoming = 1.0
-  set sigma1   = 1.0
-  set source1  = 0.0
+  set sigma1 = 0.0
+  set sigma2 = 2000.0
+  set x1 = 0.25
+  set x2 = 0.5
+  set y1 = 0.75
 end
 
 subsection domain
@@ -29,14 +30,12 @@ subsection domain
   set x width = 1.0
   set y start = 0.0
   set y width = 1.0
-  set z start = 0.0
-  set z width = 1.0
 end
 
 subsection boundary conditions
   set boundary conditions type = dirichlet
   set use exact solution as dirichlet bc = false
-  set dirichlet function = incoming
+  set dirichlet function = if(x<1.0e-10,incoming,0)
   set boundary id scheme = incoming
 end
 
@@ -45,13 +44,10 @@ subsection initial conditions
 end
 
 subsection exact solution
-  set has exact solution = true
-  set exact solution type = parsed
-  set exact solution = if(x <= t, source1/sigma1 + (incoming - source1/sigma1)*\
-    exp(-sigma1*(x-x_min)),0)
+  set has exact solution = false
 end
 
 subsection default end time
   set has default end time = true
-  set default end time = 1.0
+  set default end time = 2.0
 end

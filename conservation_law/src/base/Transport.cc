@@ -12,7 +12,7 @@ template <int dim>
 Transport<dim>::Transport(const TransportParameters<dim> & params)
   : ConservationLaw<dim>(params, 1, false),
     transport_parameters(params),
-    problem_parameters(params.problem_name),
+    problem_parameters(params.problem_name, false),
     extractor(0)
 {
   // point base class problem parameters to derived class problem parameters

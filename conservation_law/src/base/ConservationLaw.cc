@@ -63,7 +63,8 @@ void ConservationLaw<dim>::run()
 
   // compute end time
   double end_time;
-  if (parameters.use_default_end_time && problem_base_parameters->has_default_end_time)
+  if (parameters.use_default_end_time &&
+      problem_base_parameters->has_default_end_time)
     end_time = problem_base_parameters->default_end_time;
   else
     end_time = parameters.end_time;
@@ -789,7 +790,8 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
 
   // compute end time
   double end_time;
-  if (parameters.use_default_end_time && problem_base_parameters->has_default_end_time)
+  if (parameters.use_default_end_time &&
+      problem_base_parameters->has_default_end_time)
     end_time = problem_base_parameters->default_end_time;
   else
     end_time = parameters.end_time;

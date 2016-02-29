@@ -141,8 +141,8 @@ void Executioner<dim>::assembleInviscidSteadyStateMatrix()
                 fe_values[flux].gradient(j, q) +
               // total interaction term
               fe_values[flux].value(i, q) * total_cross_section_values[q] *
-                fe_values[flux].value(j, q))
-            * transport_speed * fe_values.JxW(q);
+                fe_values[flux].value(j, q)) *
+            transport_speed * fe_values.JxW(q);
         } // end j
       }   // end i
     }     // end q
@@ -208,8 +208,8 @@ void Executioner<dim>::assembleSteadyStateRHS(Vector<double> & rhs,
 
     for (unsigned int q = 0; q < n_q_points_cell; ++q)
       for (unsigned int i = 0; i < dofs_per_cell; ++i)
-        cell_rhs(i) +=
-          fe_values[flux].value(i, q) * source_values[q] * transport_speed * fe_values.JxW(q);
+        cell_rhs(i) += fe_values[flux].value(i, q) * source_values[q] *
+          transport_speed * fe_values.JxW(q);
 
     // aggregate local matrix and rhs to global matrix and rhs
     constraints.distribute_local_to_global(cell_rhs, local_dof_indices, rhs);

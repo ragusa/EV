@@ -1,28 +1,26 @@
 subsection problem
-   # 1 = pure absorber
-   # 2 = void-to-absorber
-   # 3 = void
-   # 5 = MMS-1:  TR:t*sin(pi*x)        SS:sin(pi*x)
-   # 6 = MMS-2:  TR:x*exp(-t)          SS:N/a
-   # 7 = MMS-3:  TR:exp(-t)*sin(pi*x)  SS:N/a
-   # 8 = source in left half
-   # 9 = MMS-4:  TR:x*t                SS:x
-   # 10 = MMS-5: TR:t                  SS:1
-   # 11 = skew void-to-absorber
-   # 12 = 3-region
-   # 13 = source-in-void to absorber
-   # 14 = 5-region
-   # 15 = 2-region saturation
-   #set Problem ID = 3
-   set problem name = wall
+   # Problem names:
+   #   void
+   #   absorber
+   #   void_to_absorber
+   #   sourcevoid_to_absorber
+   #   crooked_pipe
+   #   obstruction
+   #   three_region
+   #   mms_tsinx    (TR:t*sin(pi*x)        SS:sin(pi*x))
+   #   mms_xexpt    (TR:x*exp(-t)          SS:N/A      )
+   #   mms_exptsinx (TR:exp(-t)*sin(pi*x)  SS:N/A      )
+   #   mms_xt       (TR:x*t                SS:x        )
+   #   mms_t        (TR:t                  SS:1        )
+   set problem name = three_region
 end
 
 subsection time
-   set End time = 2.0
+   set End time = 1.0
    set Time step size = 1.00 #0.0005 #0.005
    set Use adaptive time stepping = true
-   set CFL limit = 10.0
-   set Time discretization = ss       # <ss|theta|ssprk>
+   set CFL limit = 0.5
+   set Time discretization = theta       # <ss|theta|ssprk>
    set Entropy time discretization = BE  # <CN|BE|BDF2>
    set SSPRK method = FE                 # <FE|SSP2|SSP3>
    set Theta method = BE                 # <FE|CN|BE>
@@ -80,11 +78,11 @@ subsection nonlinear solver
 end
 
 subsection output
-   set Output mesh = false
-   set Output exact solution = true
+   set Output mesh              = false
+   set Output exact solution    = true
    set Exact solution refinement level = 7
-   set Output initial solution = false 
-   set Output DMP bounds = false
+   set Output initial solution  = false 
+   set Output DMP bounds        = false
    set Save convergence results = false
-   set Print solution = false
+   set Print solution           = false
 end

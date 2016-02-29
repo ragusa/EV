@@ -30,7 +30,6 @@
 #include "TransportParameters.h"
 #include "TransportProblemParameters.h"
 #include "PostProcessor.h"
-#include "ExactSolutions.h"
 #include "RefinementHandler.h"
 #include "SteadyStateExecutioner.h"
 #include "TransientExecutioner.h"
@@ -57,20 +56,20 @@ private:
 
   void get_problem_parameters();
 
-  // input parameters
+  /** \brief run parameters */
   const TransportParameters<dim> parameters;
 
-  // problem parameters
-  TransportProblemParameters<dim> problem_parameters;
-
-  // mesh
-  Triangulation<dim> triangulation;
-
-  // physics data
+  /** \brief flag that problem is time-dependent */
   const bool is_time_dependent;
 
-  // timer
+  /** \brief problem parameters */
+  TransportProblemParameters<dim> problem_parameters;
+
+  /** \brief timer */
   TimerOutput timer;
+
+  /** \brief mesh */
+  Triangulation<dim> triangulation;
 };
 
 #include "TransportProblem.cc"

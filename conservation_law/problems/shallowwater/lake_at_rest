@@ -1,4 +1,4 @@
-subsection dimension
+subsection validity
   set valid in 1d = true
   set valid in 2d = false
 end

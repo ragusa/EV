@@ -2,7 +2,7 @@ subsection validity
   set valid in 1d = true
   set valid in 2d = true
   set valid in 3d = true
-  set is steady state problem = false
+  set is steady state problem = true
 end
 
 subsection physics
@@ -40,18 +40,9 @@ subsection boundary conditions
   set boundary id scheme = incoming
 end
 
-subsection initial conditions
-  set initial condition = 0
-end
-
 subsection exact solution
   set has exact solution = true
   set exact solution type = parsed
-  set exact solution = if(x <= t, source1/sigma1 + (incoming - source1/sigma1)*\
-    exp(-sigma1*(x-x_min)),0)
-end
-
-subsection default end time
-  set has default end time = true
-  set default end time = 1.0
+  set exact solution = source1/sigma1 + \
+    (incoming - source1/sigma1)*exp(-sigma1*(x-x_min))
 end

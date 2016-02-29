@@ -91,6 +91,8 @@ LowOrderViscosity.cc
 LowOrderViscosity.h
 MaxWaveSpeed.cc
 MaxWaveSpeed.h
+MultiRegionExactSolution.cc
+MultiRegionExactSolution.h
 NoDiffusion.cc
 NoDiffusion.h
 PostProcessor.cc

@@ -9,12 +9,11 @@
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
-#include <deal.II/grid/grid_in.h>
 #include <deal.II/numerics/data_component_interpretation.h>
-#include <deal.II/fe/mapping.h>
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/fe/fe_values_extractors.h>
 #include <deal.II/lac/vector.h>
+
 #include "include/base/ConservationLaw.h"
 #include "include/entropy/ScalarEntropy.h"
 #include "include/parameters/TransportParameters.h"
@@ -42,6 +41,12 @@ public:
   Transport(const TransportParameters<dim> & params);
 
 private:
+  /** \brief Typedef for cell iterator */
+  using Cell = typename ConservationLaw<dim>::Cell;
+
+  /** \brief Typedef for face iterator */
+  using Face = typename ConservationLaw<dim>::Face;
+
   std::vector<std::string> get_component_names() override;
 
   std::vector<DataComponentInterpretation::DataComponentInterpretation>
@@ -51,11 +56,11 @@ private:
     std::vector<FEValuesExtractors::Scalar> & scalar_extractors,
     std::vector<FEValuesExtractors::Vector> & vector_extractors) const override;
 
+  void define_problem() override;
+
   void assemble_lumped_mass_matrix() override;
 
   void perform_nonstandard_setup() override;
-
-  void define_problem() override;
 
   void compute_ss_flux(const double & dt,
                        const Vector<double> & solution,

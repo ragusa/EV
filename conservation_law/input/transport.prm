@@ -1,10 +1,10 @@
 # Input file for scalar transport
 
 # Problem names:
-# absorber
-# crooked_pipe
+#   absorber
+#   crooked_pipe
 subsection problem
-   set problem name = blah
+   set problem name = absorber
 end
 
 subsection scheme
