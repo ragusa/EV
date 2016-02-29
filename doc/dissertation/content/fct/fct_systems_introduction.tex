@@ -1,0 +1,31 @@
+Recall that for scalar conservation laws, a discrete maximum principle (DMP) can
+be derived for the low-order scheme and used for the evaluation of the
+imposed FCT bounds. In the case of \emph{systems} of conservation laws,
+no DMP is available to use for this purpose. Thus the bounds to impose on
+the FCT solution are unclear. The invariant domain property of the low-order
+scheme for systems is not useful in the manner that the DMP property was
+for scalar conservation laws; this is because while one can prove that the
+low-order solution is in some invariant domain, one does not necessarily
+have knowledge of the extent of the domain itself and thus it cannot
+be translated to solution bounds.
+
+Direct extension of scalar FCT methodology to the systems case is often met
+with poor results because this extension is typically not physcially valid.
+Kuzmin states that limitation on alternative sets of variables such as
+primitive variables or characteristic variables, rather than conservative
+variables, typically produces better quality FCT results \cite{kuzmin_FCT}.
+For example, for the shallow water equations, one may consider the
+following sets of variables:
+\begin{itemize}
+  \item Conservative:
+    $\vectorsolution \equiv [\height,\height\velocityx]\transpose$,
+  \item Primitive:
+    $\check{\vectorsolution} \equiv [\height,\velocityx]\transpose$,
+  \item Characteristic:
+    $\hat{\vectorsolution} \equiv [\velocityx-2\speedofsound,
+      \velocityx+2\speedofsound]\transpose$,
+      where $\speedofsound\equiv\sqrt{\gravity\height}$.
+\end{itemize}
+Section \ref{sec:fct_systems_scheme} gives the general FCT scheme for systems,
+with applicability to those FCT schemes limiting non-conservative sets of
+variables.

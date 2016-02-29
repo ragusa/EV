@@ -1,0 +1,111 @@
+# Input file for shallow water
+
+subsection finite element
+   set degree = 1
+end
+
+subsection quadrature
+   set number of quadrature points = 2
+end
+
+subsection scheme
+   set scheme = fct # low|high|fct
+   set low order scheme = standard # constant|standard|dmp|di_visc|di_diff
+   set high order scheme = galerkin # galerkin|entropy_visc|entropy_diff
+end
+
+# Problem Names:
+#   dam_break_flat
+#   dam_break_bump
+#   lake_at_rest
+#   lake_at_rest_perturbed
+#   lake_at_rest_flat_perturbed
+#   lake_at_rest_2d
+#   lake_at_rest_flat_perturbed_2d
+subsection problem
+   set problem name = dam_break_flat
+end
+
+subsection refinement
+   # refinementlevel:n_cells
+   # 5:32, 8:256, 9:512, 10:1024, 11:2048
+   set initial refinement level = 8
+   set refinement cycles = 1
+   set refinement fraction = 0.3
+   set coarsening fraction = 0.03
+end
+
+subsection time
+   set time step size method = cfl # constant|cfl
+   set use default end time = true
+   set final time = 0.01
+   set time step size = 0.01
+   set cfl = 0.10
+   set steady state tolerance = 1.0e-6
+end
+
+subsection artificial viscosity
+   set constant viscosity value = 1.00
+   set first order viscosity coefficient = 0.5
+   set multiply low order viscosity by froude = false
+   set use low order viscosity for first time step = true
+   set entropy residual coefficient = 0.5
+   set entropy jump coefficient = 0.5
+   set entropy normalization = local # constant | average | local
+   set constant entropy normalization coefficient = 0.1
+   set entropy viscosity smoothing = none # none | max | average
+   set entropy viscosity smoothing weight = 1
+end
+
+subsection temporal integration
+   set temporal integrator = runge_kutta # runge_kutta
+   set runge kutta method = FE # FE|SSP2|SSP3
+end
+
+# this section is not yet applicable
+subsection nonlinear solver
+   set nonlinear verbosity = verbose
+   set nonlinear method = newton
+   set nonlinear absolute tolerance = 1e-8
+   set nonlinear relative tolerance = 1e-8
+   set max nonlinear iterations = 100
+   set damping = 0.9
+end
+
+subsection linear solver
+   set linear verbosity = verbose
+   set linear method = direct
+   set mass matrix linear method = direct
+   set linear absolute tolerance = 1e-10
+   set linear relative tolerance = 1e-10
+   set max linear iterations = 150
+end
+
+subsection output
+   set output period = 0
+   set max transient output size = 1e9
+   set output mesh = false
+   set output mass matrix = false
+   set output viscosity = false
+   set output viscosity transient = false
+   set exact solution refinement level = 7
+   set save convergence results = false
+   set print final solution = false
+
+   # verbosity level:
+   # 0: print only required info
+   # 1: print cycle, time step, stage info
+   # 2: print cycle, time step, stage info, timer summary, and extra info
+   set verbosity level = 2
+end
+
+subsection fct
+   set fct limitation type = conservative # conservative | characteristic
+   set fct bounds type = dmp # dmp
+   set antidiffusion = limited # limited | full | none
+   set fct synchronization = min # none | min | compound
+   set use star states in fct bounds = false
+   set output limiter matrix = false
+   set output fct bounds = true
+end
+

@@ -1,15 +1,15 @@
 # note: this script requires Gnuplot version 4.6 or higher
-# usage: gnuplot -e 'problem_ID=<problem ID>;
+# usage: gnuplot -e 'problem_name=<problem name>;
 #           timeintegrator=<time integrator string>' solutions.gp
 
 # list of possible input files to plot and their corresponding titles
-file_initial  = "solution_".problem_ID."_initial"
-file_exact    = "solution_".problem_ID."_exact"
-file_galerkin = "solution_".problem_ID."_Gal_".timeintegrator
-file_low      = "solution_".problem_ID."_low_".timeintegrator
-file_high     = "solution_".problem_ID."_EV_".timeintegrator
-file_EVFCT    = "solution_".problem_ID."_EVFCT_"     .timeintegrator
-file_GalFCT   = "solution_".problem_ID."_GalFCT_"    .timeintegrator
+file_initial  = "solution_initial"
+file_exact    = "solution_exact"
+file_galerkin = "solution_Gal_"   .timeintegrator
+file_low      = "solution_low_"   .timeintegrator
+file_high     = "solution_EV_"    .timeintegrator
+file_EVFCT    = "solution_EVFCT_" .timeintegrator
+file_GalFCT   = "solution_GalFCT_".timeintegrator
 file_DMPmin  = "DMPmin"
 file_DMPmax  = "DMPmax"
 file_list = file_initial." ".\
@@ -32,10 +32,10 @@ title_list = "Initial\
               DMP-max"
 linetypes = "2 1 1 1 1 1 1 2 2"
 linecolors = "7 -1 1 2 3 4 5 -1 -1"
-symboltypes = "-1 -2 1 2 3 4 6 -2 -2"
+symboltypes = "-1 -2 1 2 3 4 6 10 8"
 
 # define is_missing(x) function for determining if an input file exists
-outdir = "../output/problem_".problem_ID."/"
+outdir = "../output/".problem_name."/"
 is_missing_aux(x)=system("ismissing.sh ".outdir.x)
 is_missing(x)=int(is_missing_aux(x)+0)
 
@@ -70,7 +70,7 @@ do for [i=1:words(file_list)] {
 }
 
 set terminal postscript enhanced color
-output_file = "../plots/solutions_".problem_ID."_".timeintegrator.".pdf"
+output_file = "../output/".problem_name."/solutions_".timeintegrator.".pdf"
 set output '| ps2pdf - '.output_file
 set ylabel "Solution"
 set xlabel "x"

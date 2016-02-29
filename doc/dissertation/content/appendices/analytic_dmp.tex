@@ -1,0 +1,264 @@
+%================================================================================
+\section{Introduction}
+%================================================================================
+In this section, an analytic discrete maximum principle (DMP) is derived for
+scalar conservation laws having a constant, linear flux $\consfluxscalar$,
+i.e., $\consfluxscalar = \velocity u$ with $\nabla\cdot(\velocity u) =
+\velocity\cdot\nabla u$, where $\velocity$ is the constant velocity field. This
+analysis is valid for radiation transport, where the constant velocity field is
+$\velocity=\speed\directionvector$, with $\speed$ being the radiation speed.
+
+The analytic DMPs are derived using the method of characteristics, whereby
+paths in the $x-t$ plane are found, along which the governing PDE becomes an ODE.
+This is simple for the case of constant linear transport because in this case
+the characteristics are constant.
+
+%================================================================================
+\section{Integral Form of the Linear Transport Equation}
+%================================================================================
+\begin{theorem}{Integral Form of the Linear Transport Equation}{}
+   An implicit solution to the initial value problem
+   \begin{equation}\label{PDE}
+      \ppt{\scalarsolution} + \velocity\cdot\nabla\scalarsolution(\x,t)
+      + \reactioncoef(\x)\scalarsolution(\x,t) = \scalarsource(\x,t),
+      \qquad \scalarsolution(\x,0) = \scalarsolution_0(\x)
+   \end{equation}
+   is the following:
+   \begin{equation}\label{eq:integral_form}
+      \scalarsolution(\x,t) = \scalarsolution_0(\x - \velocity t)
+         e^{-\int\limits_0^t \reactioncoef(\x - \velocity(t -t'))dt'} +
+         \int\limits_0^t \scalarsource(\x - \velocity(t -t'),t')
+         e^{-\int\limits_{t'}^t\reactioncoef(\x
+         - \velocity(t -\bar{t}))d\bar{t}} dt' \eqp
+   \end{equation}
+\end{theorem}
+
+\begin{proof}
+   This proof will proceed by using the method of characteristics. The position
+   $\x$ will be regarded as a function of time: $\x=\x(t)$.
+   The characteristic $\x(t)$ is the solution of the following initial value problem:
+   \[
+      \frac{d\x}{dt} = \velocity,\qquad \x(0) = \x_0,
+   \]
+   which is
+   \[
+      \x(t) = \x_0 + \velocity t.
+   \]
+   Taking the derivative of $\scalarsolution(\x(t),t)$ gives
+   \begin{eqnarray*}
+      \frac{d\scalarsolution}{dt} & = &\ppt{\scalarsolution}
+        + \nabla\cdot\scalarsolution(\x(t),t) \frac{d\x}{dt}\\
+        & = & \ppt{\scalarsolution}
+        + \velocity\cdot\nabla\scalarsolution(\x(t),t) \eqc
+   \end{eqnarray*}
+   which when combined with the PDE in Equation \eqref{PDE}, gives
+   \[
+      \ddt{\scalarsolution} + \reactioncoef(\x(t))\scalarsolution(\x(t),t)
+        = \scalarsource(\x,t).
+   \]
+   This is a 1st-order linear ODE, which may be solved using an integrating factor
+   \[
+      \mu(t)=e^{\int\limits_0^t\reactioncoef(\x(t'))dt'}.
+   \]
+   Multiplying both sides by this integrating factor and using the product rule,
+   \[
+      \frac{d}{dt}\left[\scalarsolution(\x(t),t)\mu(t)\right]
+        = \scalarsource(\x(t),t) \mu(t),
+   \]
+   and integrating from $0$ to $t$ gives
+   \[
+      \scalarsolution(\x(t),t)\mu(t)-\scalarsolution(\x(0),0)\mu(0) =
+         \int\limits_0^t \scalarsource(\x(t'),t') \mu(t') dt'.
+   \]
+   Simplifying,
+   \[
+      \scalarsolution(\x(t),t) = \scalarsolution(\x(0),0)
+         e^{-\int\limits_0^t \reactioncoef(\x(t'))dt'} +
+         \left(\int\limits_0^t \scalarsource(\x(t'),t')
+         e^{\int\limits_0^{t'}\reactioncoef(\x(\bar{t}))d\bar{t}} dt'\right)
+         e^{-\int\limits_0^t\reactioncoef(\x(t'))dt'},
+   \]
+   \[
+      \scalarsolution(\x(t),t) = \scalarsolution(\x(0),0)
+         e^{-\int\limits_0^t \reactioncoef(\x(t'))dt'} +
+         \int\limits_0^t \scalarsource(\x(t'),t')
+         e^{-\int\limits_{t'}^t\reactioncoef(\x(\bar{t}))d\bar{t}} dt'.
+   \]
+   Finally, expressing $\x(t)$ in terms of $\x$, $\velocity$,
+   and $t$ gives
+   \[
+      \scalarsolution(\x,t) = \scalarsolution_0(\x - \velocity t)
+         e^{-\int\limits_0^t \reactioncoef(\x - \velocity(t -t'))dt'} +
+         \int\limits_0^t \scalarsource(\x - \velocity(t -t'),t')
+         e^{-\int\limits_{t'}^t\reactioncoef(\x
+         - \velocity(t -\bar{t}))d\bar{t}} dt'.\qed
+   \]
+\end{proof}
+%================================================================================
+\section{Local Maximum Principles}
+%================================================================================
+Before giving an analytic local discrete maximum principle, a local maximum
+principle applying to a general region is given by the following theorem.
+
+\begin{theorem}{Analytic Local Maximum Principle}
+   The following local maximum principle is valid for the solution to the
+   problem given by Equation \eqref{PDE}:
+   \begin{subequations}\label{eq:local_max_principle}
+   \begin{equation}
+      \scalarsolution_{\text{min}} \le \scalarsolution(\x,\tau)
+        \le \scalarsolution_{\text{max}} \eqc
+   \end{equation}
+   \begin{equation}
+      \scalarsolution_{\text{min}}
+        \equiv \scalarsolution_{\min,N}^0 e^{-\tau\reactioncoef_{\max,N}}
+        + \frac{\scalarsource_{\min,N}}{\reactioncoef_{\max,N}}
+        (1 - e^{-\reactioncoef_{\max,N}\tau}) \eqc
+   \end{equation}
+   \begin{equation}
+      \scalarsolution_{\text{max}}
+        \equiv \scalarsolution_{\max,N}^0 e^{-\tau\reactioncoef_{\min,N}}
+        + \frac{\scalarsource_{\max,N}}{\reactioncoef_{\min,N}}
+        (1 - e^{-\reactioncoef_{\min,N}\tau}) \eqc
+   \end{equation}
+   \end{subequations}
+   where $\scalarsolution_{\max,N}^0\equiv\max\limits_{\mathbf{y}\in N(\x)}
+   \scalarsolution(\mathbf{y},0)$,
+   $\reactioncoef_{\max,N}\equiv\max\limits_{\mathbf{y}\in N(\x)}
+   \reactioncoef(\mathbf{y})$, and
+   $\scalarsource_{\max,N}\equiv\max\limits_{\mathbf{y}\in N(\x)}
+   \scalarsource(\mathbf{y})$, 
+   with $\scalarsolution_{\min,N}^0$, $\reactioncoef_{\min,N}$, and
+   $\scalarsource_{\min,N}$ defined similarly, and the neighborhood $N$ is a
+   sphere centered at $\x$ with radius $\speed\tau$:
+   \begin{equation}
+      N(\x)\equiv\left\{\mathbf{y}\in\mathbb{R}^d : 
+         \|\mathbf{y} - \x\| \le \speed\tau\right\}.
+   \end{equation}
+\end{theorem}
+
+\begin{proof}
+   Rewriting Equation \eqref{eq:integral_form} with $t=\tau$ gives
+   \[
+      \scalarsolution(\x,\tau) = \scalarsolution_0(\x - \velocity\tau)
+         e^{-\int\limits_0^\tau \reactioncoef(\x - \velocity(\tau -t'))dt'} +
+         \int\limits_0^\tau \scalarsource(\x - \velocity(\tau -t'),t')
+         e^{-\int\limits_{t'}^\tau\reactioncoef(\x
+         - \velocity(\tau -\bar{t}))d\bar{t}} dt'.
+   \]
+   Let $L(\x)$ be the line segment that spans between 
+   $\x-\velocity\tau$ and $\x$:
+   \[
+      L(\x)\equiv \left\{\mathbf{y}\in\mathbb{R}^d : \mathbf{y}
+         = \x-\velocity t,\qquad t\in(0,\tau) \right\}.
+   \]
+   One can bound the first term in the right hand side of Equation
+   \eqref{eq:integral_form} as follows:
+   \[
+      \scalarsolution_{\min,L}^0 e^{-\tau\reactioncoef_{\max,L}} \le
+      \scalarsolution_0(\x - \velocity\tau)
+         e^{-\int\limits_0^\tau \reactioncoef(\x - \velocity(\tau -t'))dt'} \le
+      \scalarsolution_{\max,L}^0 e^{-\tau\reactioncoef_{\min,L}},
+   \]
+   where $\scalarsolution_{\max,L}^0 \equiv\max\limits_{\mathbf{y}\in L(\x)}
+   \scalarsolution_0(\mathbf{y})$,
+   $\reactioncoef_{\max,L}\equiv\max\limits_{\mathbf{y}\in L(\x)}
+   \reactioncoef(\mathbf{y})$, and
+   $\scalarsource_{\max,L}\equiv\max\limits_{\mathbf{y}\in L(\x)}
+   \scalarsource(\mathbf{y})$,
+   with $\scalarsolution_{\min,L}^0$, $\reactioncoef_{\min,L}$,
+   and $\scalarsource_{\min,L}$ defined similarly.
+   The source term can be bounded as follows:
+   \begin{eqnarray*}
+      \int\limits_0^\tau \scalarsource(\x - \velocity(\tau -t'),t')
+         e^{-\int\limits_{t'}^\tau\reactioncoef(\x
+         - \velocity(\tau -\bar{t}))d\bar{t}} dt' & \le &
+         \scalarsource_{\max,L}\int\limits_0^\tau 
+         e^{-\int\limits_{t'}^\tau\reactioncoef(\x
+         - \velocity(\tau -\bar{t}))d\bar{t}} dt'\\
+      & \le & \scalarsource_{\max,L}\int\limits_0^\tau 
+         e^{-\reactioncoef_{\min,L}\int\limits_{t'}^\tau d\bar{t}} dt'\\
+      & = & \scalarsource_{\max,L} \int\limits_0^\tau
+         e^{-\reactioncoef_{\min,L}(\tau-t')} dt'\\
+      & = & \scalarsource_{\max,L}e^{-\reactioncoef_{\min,L}\tau}
+         \int\limits_0^\tau e^{\reactioncoef_{\min,L}t'} dt'\\
+      & = & \left\{\begin{array}{l l}
+            \frac{\scalarsource_{\max,L}}{\reactioncoef_{\min,L}}
+              (1 - e^{-\reactioncoef_{\min,L}\tau})
+               & \reactioncoef_{\min,L} \ne 0\\
+            \tau \scalarsource_{\max,L} & \reactioncoef_{\min,L} = 0
+            \end{array}\right.
+   \end{eqnarray*}
+   A similar analysis is performed for the lower bound. Putting everything together,
+   the following is a maximum principle on $L(\x)$:
+   \[
+      \scalarsolution_{\text{min}} \le \scalarsolution(\x,\tau)
+        \le \scalarsolution_{\text{max}} \eqc
+   \]
+   \[
+      \scalarsolution_{\text{min}}
+        \equiv \scalarsolution_{\min,L}^0 e^{-\tau\reactioncoef_{\max,L}}
+        + \frac{\scalarsource_{\min,L}}{\reactioncoef_{\max,L}}
+        (1 - e^{-\reactioncoef_{\max,L}\tau}) \eqc
+   \]
+   \[
+      \scalarsolution_{\text{max}}
+        \equiv \scalarsolution_{\max,L}^0 e^{-\tau\reactioncoef_{\min,L}}
+        + \frac{\scalarsource_{\max,L}}{\reactioncoef_{\min,L}}
+        (1 - e^{-\reactioncoef_{\min,L}\tau}) \eqp
+   \]
+   Since $L(\x)\subset N(\x)$, the following is true:
+   \[
+      \scalarsolution_{\text{min}} \le \scalarsolution(\x,\tau)
+        \le \scalarsolution_{\text{max}} \eqc
+   \]
+   \[
+      \scalarsolution_{\text{min}}
+        \equiv \scalarsolution_{\min,N}^0 e^{-\tau\reactioncoef_{\max,N}}
+        + \frac{\scalarsource_{\min,N}}{\reactioncoef_{\max,N}}
+        (1 - e^{-\reactioncoef_{\max,N}\tau}) \eqc
+   \]
+   \[
+      \scalarsolution_{\text{max}}
+        \equiv \scalarsolution_{\max,N}^0 e^{-\tau\reactioncoef_{\min,N}}
+        + \frac{\scalarsource_{\max,N}}{\reactioncoef_{\min,N}}
+        (1 - e^{-\reactioncoef_{\min,N}\tau}) \eqp \qed
+   \]
+\end{proof}
+If one takes the parameter $\tau$ in Equation \eqref{eq:local_max_principle}
+to be the time step size $\dt$, the initial data $\scalarsolution^0$ to
+be the previous time solution $\approximatescalarsolution^n$, and
+the region $N$ to be the support of test function $i$, then the following
+local discrete maximum principle results:
+\begin{subequations}\label{eq:analyticDMP}
+  \begin{equation}
+      \analyticDMPlowerbound_i \le \solutionletter_i^{n+1}
+        \le \analyticDMPupperbound_i \eqc
+  \end{equation}
+  \begin{equation}
+      \analyticDMPlowerbound_i
+        \equiv \solutionletter_{\text{min},i}^n e^{-\dt\reactioncoef_{\max,i}}
+        + \frac{\scalarsource_{\min,i}}{\reactioncoef_{\max,i}}
+        (1 - e^{-\reactioncoef_{\max,i}\dt}) \eqc
+  \end{equation}
+  \begin{equation}
+      \analyticDMPupperbound_i
+        \equiv \solutionletter_{\text{max},i}^n e^{-\dt\reactioncoef_{\min,i}}
+        + \frac{\scalarsource_{\max,i}}{\reactioncoef_{\min,i}}
+        (1 - e^{-\reactioncoef_{\min,i}\dt}) \eqc
+  \end{equation}
+\end{subequations}
+where $\solutionletter_{\text{max},i}^n
+  \equiv\max\limits_{j\in\indices(\support_i)}\solutionletter_j^n$,
+$\reactioncoef_{\text{max},i}
+  \equiv\max\limits_{\x\in\support_i}\reactioncoef(\x)$, and
+$\scalarsource_{\text{max},i}
+  \equiv\max\limits_{\x\in\support_i}\scalarsource(\x)$,
+with $\solutionletter_{\text{min},i}^n$, $\reactioncoef_{\text{max},i}$,
+and $\scalarsource_{\text{max},i}$ defined similarly.
+\begin{remark}
+In practice, one can approximate the maximum/minimum operations
+by taking the maximum/minimum over quadrature points: e.g.,
+$\max\limits_{\x\in\support_i} \approx \max\limits_{\x\in Q(\support_i)}$,
+where $Q(\support_i)$ is the set of quadrature points in $\support_i$.
+\end{remark}
+

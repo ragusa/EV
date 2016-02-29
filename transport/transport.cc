@@ -13,6 +13,7 @@
 #include <deal.II/base/parameter_handler.h>
 #include "TransportParameters.h"
 #include "TransportProblem.h"
+#include "Exceptions.h"
 
 using namespace dealii;
 

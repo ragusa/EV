@@ -1,0 +1,54 @@
+subsection dimension
+  set valid in 1d = false
+  set valid in 2d = true
+  set valid in 3d = false
+end
+
+subsection physics
+  set transport speed = 1.0
+  set transport direction specification = 2d_angle
+  set azimuthal angle = 45.0 # degrees
+  set cross section =\
+    if(x<x1,sigma1,if(x<x2,if(y<y1,sigma1,sigma2),sigma1))
+  set normalize transport direction = false
+  set source = 0
+  set source is time dependent = false
+end
+
+subsection constants
+  set incoming value = 1.0           # called "incoming"
+  set source value = 0.0             # called "source"
+  set sigma1 = 0.0
+  set sigma2 = 2000.0
+  set x1 = 0.25   # called "x1"
+  set x2 = 0.5    # called "x2"
+  set y1 = 0.75   # called "y1"
+end
+
+subsection domain
+  set domain shape = hyper_cube
+  set x start = 0.0
+  set x width = 1.0
+  set y start = 0.0
+  set y width = 1.0
+end
+
+subsection boundary conditions
+  set boundary conditions type = dirichlet
+  set use exact solution as dirichlet bc = false
+  set dirichlet function = if(x<1.0e-10,incoming,0)
+  set boundary id scheme = incoming
+end
+
+subsection initial conditions
+  set initial condition = 0
+end
+
+subsection exact solution
+  set has exact solution = false
+end
+
+subsection default end time
+  set has default end time = true
+  set default end time = 2.0
+end

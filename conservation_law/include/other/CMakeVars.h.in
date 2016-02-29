@@ -1,0 +1,13 @@
+/**
+ * \file CMakeVars.h.h
+ * \brief Template for variable substitutions by CMake to create CMakeVars.h.
+ */
+
+/**
+ * \file CMakeVars.h
+ * \brief Provides variables determined by CMake.
+ */
+
+// This file is to be used by CMake to create a header file
+
+#define SOURCE_PATH "@SOURCE_PATH@"

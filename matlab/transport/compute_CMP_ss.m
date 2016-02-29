@@ -18,12 +18,12 @@ for i = 2:n
     u_min = min(u(i1:i2));
     % compute source bounds
     if (sigma_min(i) == 0)
-        src_max = q_max(i)*s*exp(-sigma_min(i)*s);
+        src_max = q_max(i)*s;
     else
         src_max = q_max(i)/sigma_min(i)*(1 - exp(-sigma_min(i)*s));
     end
     if (sigma_max(i) == 0)
-        src_min = q_min(i)*s*exp(-sigma_max(i)*s);
+        src_min = q_min(i)*s;
     else
         src_min = q_min(i)/sigma_max(i)*(1 - exp(-sigma_max(i)*s));
     end

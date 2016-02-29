@@ -24,17 +24,27 @@
 \newcommand{\speed}{v}
 \newcommand{\velocity}{\mathbf{\speed}}
 \newcommand{\velocityx}{u}
+\newcommand{\velocityy}{v}
+\newcommand{\velocityn}{v_n}
+\newcommand{\vx}{\velocityx}
+\newcommand{\vy}{\velocityy}
+\newcommand{\vn}{\velocityn}
+
+% normal vector
 \newcommand{\normalvectorletter}{n}
 \newcommand{\normalvector}{\mathbf{\normalvectorletter}}
 \newcommand{\normalx}{\normalvectorletter_x}
 \newcommand{\normaly}{\normalvectorletter_y}
+\newcommand{\nx}{\normalx}
+\newcommand{\ny}{\normaly}
+
 \newcommand{\ndimensions}{N_\text{dim}}
 \newcommand{\ncomponents}{N_\text{comp}}
 \newcommand{\ndofs}{N_\text{dof}}
 \newcommand{\nnodes}{N_\text{node}}
 \newcommand{\dofindex}{j}
 \newcommand{\nodeindex}{k}
-\newcommand{\componentindex}{m}
+\newcommand{\componentindex}{p}
 \newcommand{\transpose}{^{\text{T}}}
 
 % schemes
@@ -106,6 +116,8 @@
 \newcommand{\consfluxsystem}{\mathbf{\MakeUppercase{\consfluxletter}}}
 \newcommand{\consfluxscalar}[1][\scalarsolution]{\mathbf{\consfluxletter}(#1)}
 \newcommand{\consfluxvector}{\mathbf{\MakeUppercase{\consfluxletter}}}
+\newcommand{\consfluxvectory}{\mathbf{G}}
+\newcommand{\consfluxvectorn}{\consfluxvector_{n}}
 \newcommand{\consfluxinterpolant}{\mathrm{F}}
 \newcommand{\conssource}{\mathbf{s}}
 
@@ -197,6 +209,9 @@
 
 % FCT
 \newcommand{\DMPbound}{W}
+\newcommand{\analyticDMPbounds}{\DMPbound^{\text{analytic},\pm}}
+\newcommand{\analyticDMPupperbound}{\DMPbound^{\text{analytic},+}}
+\newcommand{\analyticDMPlowerbound}{\DMPbound^{\text{analytic},-}}
 \newcommand{\DMPboundsi}{\DMPbound^\pm_i}
 \newcommand{\limitedfluxbound}{Q}
 \newcommand{\limitedfluxboundsi}{\limitedfluxbound^\pm_i}
@@ -220,6 +235,7 @@
   \MakeUppercase{\correctionfluxletter}\ij}
 \newcommand{\F}{\correctionfluxmatrix}
 \newcommand{\LF}{\limitermatrix\cdot\correctionfluxmatrix}
+\newcommand{\transformationmatrix}{\mathbf{T}}
 
 % radiation transport
 \newcommand{\angularflux}{\psi}
@@ -260,6 +276,8 @@
 \newcommand{\eigenvector}{\mathbf{k}}
 \newcommand{\eigenvectormatrix}{\mathbf{K}}
 \newcommand{\jacobianx}{\mathbf{A}}
+\newcommand{\jacobiany}{\mathbf{B}}
+\newcommand{\jacobiann}{\jacobianx_{n}}
 \newcommand{\characteristicsolution}{\mathbf{w}}
 \newcommand{\wavespeed}{\eigenvalue}
 \newcommand{\maxwavespeed}[1][]{
@@ -298,8 +316,8 @@
 \newcommand{\ltwonorm}[1]{\left\|#1\right\|_{L^2}} % L-2 norm
 
 % BC
-\newcommand{\interior}{_{\text{in}}}
-\newcommand{\BC}{_{\text{BC}}}
+\newcommand{\interior}{^{\text{in}}}
+\newcommand{\BC}{^{\text{BC}}}
 
 % common fractions
 \newcommand{\half}{\frac{1}{2}}
@@ -416,3 +434,9 @@
 \newcommand{\dirichlet}[1]{\tilde{#1}}
 
 \newcommand{\rowsum}[1]{#1\mathbf{1}}
+
+% convergence and error analysis
+\newcommand{\order}{\mathcal{O}}
+\newcommand{\err}{e}
+\newcommand{\dx}{\Delta x}
+

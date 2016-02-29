@@ -1,13 +1,60 @@
+# NOTE: .gitignore should NOT be modified; modify .gitignorebase instead.
+#
+# The file .gitignorebase is used as a base for the actual .gitignore file;
+# whenever the ./bin/make_symlinks script is run to create symbolic links,
+# the .gitignorebase file is copied to .gitignore and then symbolic links
+# are appended afterward. For this reason, .gitignorebase should be the
+# file to modify if any additional files need to be added to the list.
+
+# cmake files
 CMakeCache.txt
 CMakeFiles
+CTestTestfile.cmake
 Makefile
 cmake_install.cmake
+Testing
+
+# executables
 transport
-html
-latex
-tags
-*.asv
-doc/.svn
-.cproject
-.project
-.settings
+
+# doxygen directory
+doxygen
+
+# backup files
+*.bak
+
+# additional files added below
+ConservationLawFlux.h
+EntropyViscosity.cc
+EntropyViscosity.h
+ExactSolutions.h
+Executioner.cc
+Executioner.h
+FCT.cc
+FCT.h
+LinearSolver.cc
+LinearSolver.h
+LinearTransportFlux.cc
+LinearTransportFlux.h
+LowOrderViscosity.cc
+LowOrderViscosity.h
+MultiRegionExactSolution.cc
+NonlinearSolver.cc
+NonlinearSolver.h
+PostProcessor.cc
+PostProcessor.h
+RefinementHandler.cc
+RefinementHandler.h
+SSPRKTimeIntegrator.cc
+SSPRKTimeIntegrator.h
+SteadyStateExecutioner.cc
+SteadyStateExecutioner.h
+TimeIntegrator.h
+TransientExecutioner.cc
+TransientExecutioner.h
+TransportParameters.cc
+TransportParameters.h
+TransportProblem.cc
+TransportProblem.h
+Viscosity.cc
+Viscosity.h

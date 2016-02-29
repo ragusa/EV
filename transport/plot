@@ -23,7 +23,7 @@ if ($#ARGV != 0) {
 }
 
 # search variables
-my @search_strings = ("set Problem ID",
+my @search_strings = ("set problem name",
                       "set Time discretization",
                       "set SSPRK method",
                       "set Theta method");
@@ -35,12 +35,12 @@ for (my $i = 0; $i <= $#search_strings; $i++) {
 }
 
 # associate variables with indices in search arrays
-my $problem_id_i = 0;
+my $problem_name_i = 0;
 my $time_integrator_i = 1;
 my $ssprk_method_i = 2;
 my $theta_method_i = 3;
 
-# read input file to determine the test problem ID and time integrator
+# read input file to determine the test problem name and time integrator
 my $input_file = "input";
 open(IN, '<', $input_file) or die $!;
 my $input_line; # input file line
@@ -58,7 +58,7 @@ for (my $i = 0; $i < $#search_strings; $i++) {
 } 
 
 # extract values
-my $problem_ID = $values[$problem_id_i];
+my $problem_name = $values[$problem_name_i];
 my $time_integrator = $values[$time_integrator_i];
 my $ssprk_method = $values[$ssprk_method_i];
 my $theta_method = $values[$theta_method_i];
@@ -134,13 +134,13 @@ if ($ARGV[0] eq "sol") {
 }
 
 # call gnuplot
-system("gnuplot -e \"problem_ID='$problem_ID';
+system("gnuplot -e \"problem_name='$problem_name';
    timeintegrator='$time_integrator_string';
    is_ss='$is_ss'\" $rootname.gp");
 system("sleep 1");
    
 # name of resulting plot file
-my $output_file = "../plots/$rootname"."_$problem_ID"."_$time_integrator_string.pdf";
+my $output_file = "../output/$problem_name/$rootname"."_$time_integrator_string.pdf";
 
 # crop pdf
 if ($croppdf) {

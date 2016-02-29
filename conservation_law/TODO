@@ -1,0 +1,22 @@
+The following is a list of things to do:
+
+1. Replace cell maps with cell vectors - cell quantities shall be stored in a
+   vector indexed by cell index instead of cell iterator. To get the
+   corresponding cell iterator, one can store a vector indexed by cell index
+   to cell iterators.
+2. Remove unnecessary "auto" usage.
+3. Instead of using MatrixTools to modify linear systems for Dirichlet boundary
+   conditions, implement Dirichlet BC with the constraint matrix. The difficulty
+   with this is that the transient system matrix is possibly composed of several
+   matrices, say A and B. To impose Dirichlet BC on matrices A and B separately
+   using the constraint matrix and then combine them does not yield the correct
+   modification for Dirichlet BC on the matrix A+B. One needs to take care
+   in doing this.
+4. Remove the assumption of the DoF ordering.
+5. More documentation.
+6. Implement parallelization.
+7. Make sure there are no Assert statements in a one-line "else" statement - for
+   release mode, the statement following the conditional branch would then be
+   used as the else statement - curly brackets need to surround the Assert
+   statement.
+8. Move ShallowWaterFCT.cc to src folder and add it with git.

@@ -10,8 +10,8 @@ quadrature.nq = 3;                  % number of quadrature points per cell
 %--------------------------------------------------------------------------
 % spatial method options
 %--------------------------------------------------------------------------
-compute_low_order  = true; % compute and plot low-order solution?
-compute_high_order = true; % compute and plot high-order solution?
+compute_low_order  = false; % compute and plot low-order solution?
+compute_high_order = false; % compute and plot high-order solution?
 compute_FCT        = true; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
@@ -36,18 +36,22 @@ ev.smoothing_weight = 0.0; % weight for center value in smoothing
 %                  1 = SSPRK(1,1) (Explicit Euler)
 %                  2 = SSPRK(3,3) (Shu-Osher)
 %                  3 = theta method
-temporal_scheme = 0; % temporal discretization scheme
+temporal_scheme = 3; % temporal discretization scheme
 
-theta = 0.5;     % theta parameter to use if using a theta method
+% theta parameter to use if using a theta method: 0.0 = FE
+%                                                 0.5 = CN
+%                                                 1.0 = BE
+theta = 1.0;     
+       
 CFL = 0.5;       % CFL number
 ss_tol = 1.0e-5; % steady-state tolerance
-t_end = 0.3;     % max time to run
+t_end = 0.001;     % max time to run
 %--------------------------------------------------------------------------
 % FCT options
 %--------------------------------------------------------------------------
 % DMP option: 1 = low-order DMP
 %             2 = max/min(low-order DMP, analytic DMP)
-DMP_option = 2;
+DMP_option = 1;
 
 % limiter option: 0 = All 0 (no correction; low-order)
 %                 1 = All 1 (full correction; high-order)
@@ -75,7 +79,7 @@ dirichlet_limiting_coefficient = 1.0; % limiting coefficient bounds for
 %            4: void
 %            5: MMS: TR: u = t*sin(pi*x)  SS: u = sin(pi*x)
 %            6: MMS: TR: u = x*t          SS: u = x
-problemID = 5;
+problemID = 4;
 
 % IC_option: 0: zero
 %            1: exponential pulse
@@ -106,6 +110,7 @@ plot_viscosity            = false; % plot viscosities?
 plot_low_order_transient  = false; % plot low-order transient?
 plot_high_order_transient = false; % plot high-order transient?
 plot_FCT_transient        = false; % plot FCT transient?
+plot_FCT_iteration        = false; % plot FCT iteration?
 pausetime = 0.01;                   % time to pause for transient plots
 legend_location           = 'NorthEast'; % location of plot legend
 %--------------------------------------------------------------------------
@@ -676,7 +681,7 @@ if (compute_FCT)
             uFCT = uFCT + du;
 
             % plot
-            if (plot_FCT_transient)
+            if (plot_FCT_iteration)
                 figure(1);
                 clf;
                 hold on;
@@ -823,13 +828,13 @@ if (compute_FCT)
                         modify_for_strong_DirichletBC);
                     
                     % initialize solution iterate
-                    %uFCT = uL;
                     uFCT = zeros(dof_handler.n_dof,1);
                     
                     % iteration loop
                     for iter = 1:max_iter
                         % compute limited flux correction sum
-                        flim = compute_limited_flux_sums(u_old,uFCT,dt,...
+                        [flim,Wminus,Wplus] = compute_limited_flux_sums(...
+                            u_old,uFCT,dt,...
                             ML,AL,b,F,sigma_min,sigma_max,source_min,...
                             source_max,theta,dof_handler.n_dof,...
                             phys.speed,phys.inc,phys.periodic_BC,...
@@ -858,6 +863,21 @@ if (compute_FCT)
     
                         % solve modified system
                         uFCT = uFCT + relaxation_parameter * du;
+
+                        % plot
+                        if (plot_FCT_iteration)
+                            figure(1);
+                            clf;
+                            hold on;
+                            plot(mesh.x,uH,'rx');
+                            plot(mesh.x,uL,'b+');
+                            plot(mesh.x,uFCT,'g');
+                            plot(mesh.x,Wminus,'k.');
+                            plot(mesh.x,Wplus,'ko');
+                            legend('High','Low','FCT(l+1)','W-(l)','W+(l)',...
+                                'Location',legend_location);
+                            w = waitforbuttonpress;
+                        end
                     end
                     
                     % report if the solution did not converge

@@ -1,0 +1,26 @@
+#!/bin/bash
+#
+# Creates symbolic links for all *.cc and *.h files
+#
+# Usage: create_symlinks
+#
+
+# create symbolic links for *.cc files
+for dir in $(ls src); do
+  for file in $(ls src/$dir); do
+    filebase="${file%.*}"
+    ln -s src/$dir/$file $filebase.cc
+  done
+done
+
+# create symbolic links for *.h files
+for dir in $(ls include); do
+  for file in $(ls include/$dir); do
+    filebase="${file%.*}"
+    ln -s include/$dir/$file $filebase.h
+  done
+done
+
+# add symbolic links to .gitignore file
+cp .gitignorebase .gitignore
+find * -type l >> .gitignore

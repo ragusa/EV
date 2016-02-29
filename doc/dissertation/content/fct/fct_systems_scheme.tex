@@ -1,0 +1,149 @@
+The general FCT strategy is the same in the systems case as in the scalar
+case. One first defines antidiffusive correction fluxes such that
+\begin{equation}
+  \lumpedmassentry
+    \frac{\solutionvector_i^{H}-\solutionvector_i^n}{\dt}
+    + \sum_j\gradiententry\cdot\consfluxinterpolant_j^n
+    + \sum_j\diffusionmatrixletter\ij^{L,n}\solutionvector_j^n
+    = \ssrhs_i^n + \correctionfluxvector_i
+  \eqp
+\end{equation}
+Then subtracting the high-order scheme equation from this gives the
+definition of $\correctionfluxvector$:
+\begin{equation}
+  \correctionfluxvector_i \equiv
+    \lumpedmassentry
+      \frac{\solutionvector_i^{H}-\solutionvector_i^n}{\dt}
+    -\sum_j\consistentmassentry
+      \frac{\solutionvector_j^{H}-\solutionvector_j^n}{\dt}
+    +\sum_j(\diffusionmatrixletter\ij^{L,n}-\diffusionmatrixletter\ij^{H,n})
+      \solutionvector_j^n
+  \eqp
+\end{equation}
+As in the scalar case, these fluxes are decomposed into internodal fluxes
+$\correctionfluxmatrix\ij$ such that $\sum_j \correctionfluxmatrix\ij =
+\correctionfluxvector_i$:
+\begin{equation}
+  \correctionfluxmatrix\ij = -M\ij^C\pr{
+      \frac{\solutionvector_j^{H}-\solutionvector_j^n}{\dt}
+      -\frac{\solutionvector_i^{H}-\solutionvector_i^n}{\dt}
+    }
+    + (D\ij^{L,n}-D\ij^{H,n})(\solutionvector_j^n-\solutionvector_i^n) \eqp
+\end{equation}
+Applying a limiting coefficient to each internodal antidiffusive correction
+flux gives
+\begin{equation}\label{eq:fct_scheme_conservative}
+  \lumpedmassentry
+    \frac{\solutionvector_i^{n+1}-\solutionvector_i^n}{\dt}
+    + \sum_j\gradiententry\cdot\consfluxinterpolant_j^n
+    + \sum_j\diffusionmatrixletter\ij^{L,n}\solutionvector_j^n
+    = \ssrhs_i^n + \sum_j\limitermatrix\ij\odot\correctionfluxmatrix\ij \eqc
+\end{equation}
+where the notation $\limitermatrix\ij\odot\correctionfluxmatrix\ij$ denotes an
+element-wise multiplication of $\limitermatrix\ij$ and $\correctionfluxmatrix\ij$:
+$(\limitermatrix\ij\odot\correctionfluxmatrix\ij)^k
+= \limiterletter\ij^k\correctionfluxentry\ij^k$.
+
+As discussed in Section \ref{sec:fct_systems_introduction}, FCT limitation
+for systems of conservation laws may benefit from transformations to other
+sets of variables such as primitive or characteristic variables.
+Consider some set of variables $\hat{\vectorsolution}$, which is produced
+using a transformation matrix $\transformationmatrix(\vectorsolution)$:
+$\hat{\vectorsolution} = \transformationmatrix^{-1}(\vectorsolution)
+\vectorsolution$.
+%To use the original, conservative variables
+%($\hat{\vectorsolution} = \vectorsolution$), the transformation matrix is the
+%identity matrix: $\transformationmatrix(\vectorsolution)=\mathbb{I}$.
+For example, with the shallow water equations, to transform to the characteristic
+variables, one uses the matrix of right eigenvectors of the Jacobian
+$\jacobianx(\vectorsolution)$ as the transformation matrix:
+$\transformationmatrix(\vectorsolution) = \eigenvectormatrix(\vectorsolution)$.
+Applying a local transformation $\transformationmatrix^{-1}(\solutionvector_i^n)$
+to Equation \eqref{eq:fct_scheme_conservative} gives
+\begin{equation}
+  \lumpedmassentry
+    \frac{\hat{\solutionvector}_i^{n+1}-\hat{\solutionvector}_i^n}{\dt}
+    + \sum_j\gradiententry\cdot\hat{\consfluxinterpolant}_j^n
+    + \sum_j\diffusionmatrixletter\ij^{L,n}\hat{\solutionvector}_j^n
+    = \hat{\ssrhs}_i^n + \sum_j\limitermatrix\ij\odot\hat{\correctionfluxmatrix}\ij
+    \eqc
+\end{equation}
+where accents denote transformed quantities:
+\begin{equation}
+  \hat{\solutionvector}_j^{n+1} = \transformationmatrix^{-1}(\solutionvector_i^n)
+    \solutionvector_j^{n+1} \eqc
+\end{equation}
+\begin{equation}
+  \hat{\solutionvector}_j^n = \transformationmatrix^{-1}(\solutionvector_i^n)
+    \solutionvector_j^n \eqc
+\end{equation}
+\begin{equation}
+  \hat{\correctionfluxmatrix}\ij = \transformationmatrix^{-1}(\solutionvector_i^n)
+    \correctionfluxmatrix\ij \eqp
+\end{equation}
+One can then choose the limiting coefficients $\limitermatrix\ij$ to satisfy
+bounds on the transformed variables: 
+\begin{equation}
+  \hat{\DMPbound}_i^- \leq
+  \hat{\solutionvector}_i^{n+1} \leq
+  \hat{\DMPbound}_i^+ \quad \forall i \eqp
+\end{equation}
+Imposition of these bounds corresponds to bounding the transformed antidiffusion
+flux sums:
+\begin{equation}
+  \hat{\mathbf{\limitedfluxbound}}^-_i \leq
+  \sum\limits_j \limitermatrix\ij\odot\hat{\correctionfluxmatrix}\ij \leq
+  \hat{\mathbf{\limitedfluxbound}}^+_i \eqc
+\end{equation}
+where the bounds are obtained by performing some algebra on the transformed
+system:
+\begin{equation}
+  \hat{\mathbf{\limitedfluxbound}}_i^\pm \equiv
+    \lumpedmassentry\frac{\hat{\solutionvector}_i^\pm
+      -\hat{\solutionvector}_i^n}{\dt}
+    + \sum_j\gradiententry\cdot\hat{\consfluxinterpolant}_j^n
+    + \sum_j\diffusionmatrixletter\ij^{L,n}\hat{\solutionvector}_j^n
+    - \hat{\ssrhs}_i^n \eqp
+\end{equation}
+
+Zalesak's limiter then takes the same form as in the scalar case, but
+now the transformed quantities $\hat{\mathbf{\limitedfluxbound}}^\pm$
+and $\hat{\correctionfluxmatrix}$ are used instead of
+$\mathbf{\limitedfluxbound}^\pm$ and $\correctionfluxmatrix$:
+\begin{equation}
+  \hat{\correctionfluxletter}_i^{-,\componentindex} \equiv
+    \sum\limits_{j:\hat{\correctionfluxentry}\ij^\componentindex<0}
+    \hat{\correctionfluxentry}\ij^\componentindex \eqc \qquad
+  \hat{\correctionfluxletter}_i^{+,\componentindex} \equiv
+    \sum\limits_{j:\hat{\correctionfluxentry}\ij^\componentindex>0}
+    \hat{\correctionfluxentry}\ij^\componentindex \eqc
+\end{equation}
+\begin{equation}
+  \limiterletter_i^{\pm,\componentindex} \equiv\left\{
+    \begin{array}{l l}
+      1 & \hat{\correctionfluxletter}_i^{\pm,\componentindex} = 0\\
+      \min\left(1,\frac{Q_i^{\pm,\componentindex}}
+        {\hat{\correctionfluxletter}_i^{\pm,\componentindex}}\right) &
+      \hat{\correctionfluxletter}_i^{\pm,\componentindex} \ne 0
+    \end{array}
+  \right. \eqc
+\end{equation}
+\begin{equation}
+  \limiterletter\ij^\componentindex \equiv\left\{
+    \begin{array}{l l}
+      \min(L_i^{+,\componentindex},L_j^{-,\componentindex}) &
+        \hat{\correctionfluxentry}\ij^\componentindex \geq 0\\
+      \min(L_i^{-,\componentindex},L_j^{+,\componentindex}) &
+        \hat{\correctionfluxentry}\ij^\componentindex < 0
+    \end{array}
+  \right. \eqp
+\end{equation}
+
+Kuzmin states that for the systems case, the limiting coefficients may require
+synchronization between the components, such as
+\begin{equation}
+  \limiterletter\ij^\componentindex \mapsfrom
+    \min\limits_k\limiterletter\ij^k \quad \forall\componentindex \eqp
+\end{equation}
+Otherwise, antidiffusive fluxes in one component can violate the
+conditions of another component \cite{kuzmin_FCT}.

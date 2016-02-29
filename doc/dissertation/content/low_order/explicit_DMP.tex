@@ -13,12 +13,13 @@ If the CFL-like condition
 is satisfied, then the low-order solution obtained using the Explicit Euler
 method satisfies the following discrete maximum principle:
 \begin{equation}\label{eq:explicit_dmp}
-   \DMPbound_i^-\leq \solutionletter_i^{L,\timeindex+1}\leq \DMPbound_i^+\quad\forall i
+   \DMPbound_i^{L,-}\leq \solutionletter_i^{L,\timeindex+1}
+     \leq \DMPbound_i^{L,+}\quad\forall i
    \eqc
 \end{equation}
 where
 \begin{equation}\label{eq:explicit_bounds}
-   \DMPbound_i^\pm\equiv \solutionletter_{\substack{\max\\\min},i}^\timeindex
+   \DMPbound_i^{L,\pm}\equiv \solutionletter_{\substack{\max\\\min},i}^\timeindex
      \pr{1-\frac{\timestepsize}{\massmatrixletter_{i,i}^L}
        \sumj\ssmatrixletter^{L,\timeindex}_{i,j}}
      + \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssrhsletter_i^\timeindex \eqc
