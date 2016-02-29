@@ -1,0 +1,40 @@
+\documentclass{article}
+
+\usepackage{graphicx}   % for graphics
+\usepackage{subcaption} % for subplots
+\usepackage{rotating}   % for landscape figure
+
+% Input
+%------------------------------------------------------------------------------
+% path to figures directory
+\newcommand{\FiguresDir}{../images}
+
+% type of figure: "figure" for portrait or "sidewaysfigure" for landscape
+\newcommand{\FigureType}{figure}
+%------------------------------------------------------------------------------
+
+\begin{document}
+
+\newcommand{\MyFigure}[1]{
+\begin{\FigureType}[htb]
+   \centering
+   \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=1.0\textwidth]{\FiguresDir/EV_#1_threshold.png}
+      \caption{EV}
+   \end{subfigure}
+   \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=1.0\textwidth]{\FiguresDir/EVFCT_#1_threshold.png}
+      \caption{EV-FCT}
+   \end{subfigure}
+   \caption{Comparison of solutions with 16384 cells for the normally-incident
+     absorber test problem using #1 time discretization, showing
+     threshold violations: \emph{blue} indicates solution values greater than the
+     incoming flux value, and \emph{red} indicates negative solution values.}
+\end{\FigureType}
+}
+
+\MyFigure{FE}
+
+\MyFigure{SSPRK33}
+
+\end{document}

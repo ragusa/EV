@@ -1,0 +1,6 @@
+n_cells = 16384
+CFL = 0.5
+cE = 0.1
+cJ = 0.1
+t_end = 1.0
+hash = eacd92acec241e2b1668d58b2b49e9eef33882fb
