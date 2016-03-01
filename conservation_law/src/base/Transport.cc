@@ -354,12 +354,13 @@ void Transport<dim>::update_flux_speeds()
 template <int dim>
 std::shared_ptr<Entropy<dim>> Transport<dim>::create_entropy() const
 {
-  auto entropy = std::make_shared<ScalarEntropy<dim>>(this->domain_volume,
-                                                      this->dof_handler,
-                                                      this->fe,
-                                                      this->triangulation,
-                                                      this->cell_quadrature,
-                                                      this->face_quadrature);
+  auto entropy =
+    std::make_shared<ScalarEntropy<dim>>(problem_parameters.domain_volume,
+                                         this->dof_handler,
+                                         this->fe,
+                                         this->triangulation,
+                                         this->cell_quadrature,
+                                         this->face_quadrature);
   return entropy;
 }
 

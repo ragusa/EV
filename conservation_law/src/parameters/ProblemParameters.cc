@@ -379,6 +379,9 @@ void ProblemParameters<dim>::generate_mesh_and_compute_volume(
   {
     Assert(false, ExcNotImplemented());
   }
+
+  // assert that domain volume be nonzero
+  Assert(std::fabs(domain_volume) > 1.0e-15, ExcInvalidState());
 }
 
 /**

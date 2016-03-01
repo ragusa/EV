@@ -31,7 +31,7 @@ end
 
 subsection exact solution
   set has exact solution = true
-  set exact solution type = function
+  set exact solution type = parsed
   set exact solution height    =  h_unperturbed - \
      bump_height*exp(-5.0*(x-bump_x_center)^2 - 50.0*(y-bump_y_center)^2)
   set exact solution momentumx = 0

@@ -1,6 +1,7 @@
 /**
  * \file ShallowWaterRunParameters.cc
- * \brief Provides the function definitions for the ShallowWaterRunParameters class.
+ * \brief Provides the function definitions for the ShallowWaterRunParameters
+ * class.
  */
 using namespace dealii;
 

@@ -98,7 +98,7 @@ std::shared_ptr<Entropy<dim>> ShallowWater<dim>::create_entropy() const
                                                momentum_extractor,
                                                problem_parameters.gravity,
                                                bathymetry_vector,
-                                               this->domain_volume,
+                                               problem_parameters.domain_volume,
                                                this->dof_handler,
                                                this->fe,
                                                this->triangulation,

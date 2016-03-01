@@ -96,7 +96,6 @@ void Entropy<dim>::compute_average_entropy(const Vector<double> & solution)
 
   // finish computing average entropy
   entropy_average = domain_integral_entropy / domain_volume;
-std::cout << "average entropy = " << entropy_average << std::endl;
 }
 
 /**
@@ -136,7 +135,6 @@ void Entropy<dim>::compute_max_entropy_deviation(const Vector<double> & solution
       max_entropy_deviation =
         std::max(max_entropy_deviation, std::abs(entropy[q] - entropy_average));
   }
-std::cout << "max entropy deviation = " << max_entropy_deviation << std::endl;
 }
 
 /**

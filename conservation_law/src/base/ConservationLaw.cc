@@ -798,7 +798,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
 
   // initialize old time, time index, and transient flag
   old_time = 0.0;
-  double old_dt = 0.0;
+  double old_dt = 1.0; // arbitrary value; shouldn't have any effect
   unsigned int n = 1;
   bool in_transient = true;
 

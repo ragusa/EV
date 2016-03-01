@@ -30,8 +30,8 @@ end
 
 subsection exact solution
   set has exact solution = true
-  set exact solution type = function
-  set exact solution height    = if(abs(x-bump_x_center) < 0.5*bump_x_width, \
+  set exact solution type = parsed
+  set exact solution height = if(abs(x-bump_x_center) < 0.5*bump_x_width, \
     h_unperturbed - bump_height*(1.0 - 4.0/bump_x_width^2*(x - bump_x_center)^2), \
     h_unperturbed)
   set exact solution momentumx = 0
