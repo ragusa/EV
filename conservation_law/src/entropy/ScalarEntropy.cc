@@ -140,6 +140,7 @@ template <int dim>
 std::vector<double> ScalarEntropy<dim>::compute_entropy_normalization(
   const Vector<double> & solution, const Cell & cell) const
 {
+std::cout << "computing scalar entropy normalization" << std::endl;
   // call function pointer
   return this->compute_max_entropy_deviation_normalization(solution, cell);
 }

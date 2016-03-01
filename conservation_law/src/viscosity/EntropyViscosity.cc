@@ -72,11 +72,15 @@ void EntropyViscosity<dim>::update(const Vector<double> & new_solution,
     const double h2 = std::pow(cell_diameter->at(cell), 2);
     this->values[cell] = 0.0;
     for (unsigned int q = 0; q < n_q_points_cell; ++q)
+    {
       this->values[cell] =
         std::max(this->values[cell],
                  h2 * (residual_coefficient * std::abs(entropy_residual[q]) +
                        jump_coefficient * max_entropy_jump) /
                    entropy_normalization[q]);
+      printf("res = %10.4e, norm = %10.4e\n",entropy_residual[q],entropy_normalization[q]);
+    }
+    printf("jump = %10.4e, visc = %10.4e\n",this->values[cell],max_entropy_jump);
   }
 }
 

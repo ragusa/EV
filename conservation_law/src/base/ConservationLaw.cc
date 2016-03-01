@@ -840,15 +840,21 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     const double cfl = compute_cfl_number(dt);
     const bool cfl_is_violated = cfl > parameters.cfl + 1.0e-15;
 
+    // preserve default outstream flags
+    std::ios::fmtflags default_flags(std::cout.flags());
+
     // print CFL in red if it violates CFL condition
     if (cfl_is_violated)
-      cout1 << std::fixed << std::setprecision(2) << "  time step " << n
+      cout1 << std::fixed << std::setprecision(5) << "  time step " << n
             << ": t = \x1b[1;34m" << new_time << "\x1b[0m, CFL = \x1b[1;31m"
             << cfl << "\x1b[0m" << std::endl;
     else
-      cout1 << std::fixed << std::setprecision(2) << "  time step " << n
+      cout1 << std::fixed << std::setprecision(5) << "  time step " << n
             << ": t = \x1b[1;34m" << new_time << "\x1b[0m, CFL = " << cfl
             << std::endl;
+
+    // restore default outstream flags
+    std::cout.flags(default_flags);
 
     // initialize SSPRK time step
     ssprk.initialize_time_step(old_solution, dt);
