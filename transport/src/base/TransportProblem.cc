@@ -6,11 +6,16 @@
 template <int dim>
 TransportProblem<dim>::TransportProblem(
   const TransportParameters<dim> & parameters_)
-  : parameters(parameters_),
+  : 
+    //cout1(std::cout, parameters_.verbosity_level >= 1),
+    //cout2(std::cout, parameters_.verbosity_level >= 2),
+    cout1(std::cout, false),
+    cout2(std::cout, false),
+parameters(parameters_),
     is_time_dependent(
       !(parameters.temporal_discretization == TemporalDiscretization::ss)),
     problem_parameters(parameters.problem_name, !is_time_dependent),
-    timer(std::cout, TimerOutput::summary, TimerOutput::wall_times)
+    timer(cout2, TimerOutput::summary, TimerOutput::wall_times)
 {
 }
 
@@ -80,8 +85,8 @@ void TransportProblem<dim>::run()
     refinement_handler.refine(cycle);
 
     // print information
-    std::cout << std::endl << "Cycle " << cycle << "  (n_cells = ";
-    std::cout << triangulation.n_active_cells() << ")" << std::endl;
+    cout1 << std::endl << "Cycle " << cycle << "  (n_cells = ";
+    cout1 << triangulation.n_active_cells() << ")" << std::endl;
 
     if (is_time_dependent)
     { // run transient problem
@@ -106,6 +111,10 @@ void TransportProblem<dim>::run()
         problem_parameters.source_is_time_dependent,
         nominal_dt);
       executioner.run();
+
+      // print solution
+      if (true)
+        executioner.print_solution();
     }
     else
     { // run steady-state problem

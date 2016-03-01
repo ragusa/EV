@@ -1,8 +1,8 @@
-/** \file TransportParameters.h
- *  \brief Provides the header for the TransportParameters class.
+/** \file TransportRunParameters.h
+ *  \brief Provides the header for the TransportRunParameters class.
  */
-#ifndef TransportParameters_h
-#define TransportParameters_h
+#ifndef TransportRunParameters_h
+#define TransportRunParameters_h
 
 #include <iostream>
 
@@ -13,14 +13,14 @@
 
 using namespace dealii;
 
-/** \class TransportParameters
+/** \class TransportRunParameters
  *  \brief Class for parameters related to a transport equation.
  */
 template <int dim>
-class TransportParameters : public RunParameters<dim>
+class TransportRunParameters : public RunParameters<dim>
 {
 public:
-  TransportParameters();
+  TransportRunParameters();
 
   static void declare_parameters(ParameterHandler & parameter_handler);
 
@@ -29,6 +29,6 @@ public:
   std::string problem_name;
 };
 
-#include "src/parameters/TransportParameters.cc"
+#include "src/parameters/TransportRunParameters.cc"
 
 #endif

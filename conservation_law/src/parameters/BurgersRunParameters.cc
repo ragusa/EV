@@ -1,13 +1,13 @@
-/** \file BurgersParameters.cc
- *  \brief Provides the function definitions for the BurgersParameters class.
+/** \file BurgersRunParameters.cc
+ *  \brief Provides the function definitions for the BurgersRunParameters class.
  */
 using namespace dealii;
 
 /**
- * \brief Constructor for the BurgersParameters class
+ * \brief Constructor for the BurgersRunParameters class
  */
 template <int dim>
-BurgersParameters<dim>::BurgersParameters()
+BurgersRunParameters<dim>::BurgersRunParameters()
 {
 }
 
@@ -16,7 +16,7 @@ BurgersParameters<dim>::BurgersParameters()
  * \param parameter_handler parameter handler for the Burgers class
  */
 template <int dim>
-void BurgersParameters<dim>::declare_parameters(
+void BurgersRunParameters<dim>::declare_parameters(
   ParameterHandler & parameter_handler)
 {
   // declare conservation law parameters
@@ -36,7 +36,7 @@ void BurgersParameters<dim>::declare_parameters(
  * \param parameter_handler parameter handler for the Burgers class
  */
 template <int dim>
-void BurgersParameters<dim>::get_parameters(ParameterHandler & parameter_handler)
+void BurgersRunParameters<dim>::get_parameters(ParameterHandler & parameter_handler)
 {
   // get conservation law parameters
   this->get_run_parameters(parameter_handler);

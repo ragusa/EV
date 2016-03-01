@@ -1,14 +1,14 @@
 /**
- * \file ShallowWaterParameters.cc
- * \brief Provides the function definitions for the ShallowWaterParameters class.
+ * \file ShallowWaterRunParameters.cc
+ * \brief Provides the function definitions for the ShallowWaterRunParameters class.
  */
 using namespace dealii;
 
 /**
- * \brief Constructor for the ShallowWaterParameters class
+ * \brief Constructor for the ShallowWaterRunParameters class
  */
 template <int dim>
-ShallowWaterParameters<dim>::ShallowWaterParameters()
+ShallowWaterRunParameters<dim>::ShallowWaterRunParameters()
 {
 }
 
@@ -18,7 +18,7 @@ ShallowWaterParameters<dim>::ShallowWaterParameters()
  * \param[out] parameter_handler parameter handler for the ShallowWater class
  */
 template <int dim>
-void ShallowWaterParameters<dim>::declare_parameters(
+void ShallowWaterRunParameters<dim>::declare_parameters(
   ParameterHandler & parameter_handler)
 {
   // declare conservation law parameters
@@ -60,7 +60,7 @@ void ShallowWaterParameters<dim>::declare_parameters(
  * \param[in] parameter_handler parameter handler for the ShallowWater class
  */
 template <int dim>
-void ShallowWaterParameters<dim>::get_parameters(
+void ShallowWaterRunParameters<dim>::get_parameters(
   ParameterHandler & parameter_handler)
 {
   // get conservation law parameters

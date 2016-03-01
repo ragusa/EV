@@ -24,7 +24,7 @@
 #include "include/entropy/Entropy.h"
 #include "include/entropy/ShallowWaterEntropy.h"
 #include "include/fct/ShallowWaterFCT.h"
-#include "include/parameters/ShallowWaterParameters.h"
+#include "include/parameters/ShallowWaterRunParameters.h"
 #include "include/parameters/ShallowWaterProblemParameters.h"
 #include "include/postprocessing/ShallowWaterPostProcessor.h"
 #include "include/postprocessing/ShallowWaterRiemannSolver.h"
@@ -58,7 +58,7 @@ template <int dim>
 class ShallowWater : public ConservationLaw<dim>
 {
 public:
-  ShallowWater(const ShallowWaterParameters<dim> & params);
+  ShallowWater(const ShallowWaterRunParameters<dim> & params);
 
 private:
   /** \brief Typedef for cell iterator */
@@ -121,7 +121,7 @@ private:
     const override;
 
   /** \brief Parameters for shallow water equations */
-  ShallowWaterParameters<dim> sw_parameters;
+  ShallowWaterRunParameters<dim> sw_parameters;
 
   /** \brief Problem parameters */
   ShallowWaterProblemParameters<dim> problem_parameters;

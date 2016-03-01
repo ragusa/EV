@@ -16,7 +16,7 @@
 
 #include "include/base/ConservationLaw.h"
 #include "include/entropy/ScalarEntropy.h"
-#include "include/parameters/TransportParameters.h"
+#include "include/parameters/TransportRunParameters.h"
 #include "include/parameters/TransportProblemParameters.h"
 #include "include/viscosity/ConstantMaxWaveSpeed.h"
 
@@ -38,7 +38,7 @@ template <int dim>
 class Transport : public ConservationLaw<dim>
 {
 public:
-  Transport(const TransportParameters<dim> & params);
+  Transport(const TransportRunParameters<dim> & params);
 
 private:
   /** \brief Typedef for cell iterator */
@@ -77,7 +77,7 @@ private:
   std::shared_ptr<MaxWaveSpeed<dim>> create_max_wave_speed() const override;
 
   /** \brief Run parameters */
-  TransportParameters<dim> transport_parameters;
+  TransportRunParameters<dim> transport_parameters;
 
   /** \brief Problem parameters */
   TransportProblemParameters<dim> problem_parameters;

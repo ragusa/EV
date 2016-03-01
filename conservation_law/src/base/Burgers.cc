@@ -9,7 +9,7 @@
  * \param[in] params Burgers equation parameters
  */
 template <int dim>
-Burgers<dim>::Burgers(const BurgersParameters<dim> & params)
+Burgers<dim>::Burgers(const BurgersRunParameters<dim> & params)
   : ConservationLaw<dim>(params),
     burgers_parameters(params),
     velocity_extractor(0)

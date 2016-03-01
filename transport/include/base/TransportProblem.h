@@ -56,6 +56,12 @@ private:
 
   void get_problem_parameters();
 
+  /** \brief Conditional output stream 1 */
+  ConditionalOStream cout1;
+
+  /** \brief Conditional output stream 2 */
+  ConditionalOStream cout2;
+
   /** \brief run parameters */
   const TransportParameters<dim> parameters;
 

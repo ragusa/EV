@@ -9,7 +9,7 @@
  * \param[in] params Transport equation parameters
  */
 template <int dim>
-Transport<dim>::Transport(const TransportParameters<dim> & params)
+Transport<dim>::Transport(const TransportRunParameters<dim> & params)
   : ConservationLaw<dim>(params, 1, false),
     transport_parameters(params),
     problem_parameters(params.problem_name, false),

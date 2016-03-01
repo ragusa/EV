@@ -11,7 +11,12 @@ Executioner<dim>::Executioner(const TransportParameters<dim> & parameters_,
                               Function<dim> & incoming_function_,
                               const double & domain_volume_,
                               PostProcessor<dim> & postprocessor_)
-  : parameters(parameters_),
+  : 
+    //cout1(std::cout, parameters_.verbosity_level >= 1),
+    //cout2(std::cout, parameters_.verbosity_level >= 2),
+    cout1(std::cout, false),
+    cout2(std::cout, false),
+    parameters(parameters_),
     triangulation(&triangulation_),
     fe(FE_Q<dim>(parameters.degree), 1),
     flux(0),
@@ -223,6 +228,16 @@ template <int dim>
 Vector<double> Executioner<dim>::getFinalSolution() const
 {
   return new_solution;
+}
+
+template <int dim>
+void Executioner<dim>::print_solution() const
+{
+    std::cout.precision(10);
+    std::cout.setf(std::ios::scientific);
+
+    for (unsigned int i = 0; i < n_dofs; ++i)
+      std::cout << new_solution[i] << std::endl;
 }
 
 /**

@@ -9,7 +9,7 @@
  * \param[in] params shallow water equation parameters
  */
 template <int dim>
-ShallowWater<dim>::ShallowWater(const ShallowWaterParameters<dim> & params)
+ShallowWater<dim>::ShallowWater(const ShallowWaterRunParameters<dim> & params)
   : ConservationLaw<dim>(params, dim + 1, true),
     sw_parameters(params),
     problem_parameters(params.problem_name, false),

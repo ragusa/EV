@@ -1,8 +1,8 @@
-/** \file BurgersParameters.h
- *  \brief Provides the header for the BurgersParameters class.
+/** \file BurgersRunParameters.h
+ *  \brief Provides the header for the BurgersRunParameters class.
  */
-#ifndef BurgersParameters_h
-#define BurgersParameters_h
+#ifndef BurgersRunParameters_h
+#define BurgersRunParameters_h
 
 #include <iostream>
 
@@ -13,14 +13,14 @@
 
 using namespace dealii;
 
-/** \class BurgersParameters
+/** \class BurgersRunParameters
  *  \brief Class for parameters related to the Burgers equation.
  */
 template <int dim>
-class BurgersParameters : public RunParameters<dim>
+class BurgersRunParameters : public RunParameters<dim>
 {
 public:
-  BurgersParameters();
+  BurgersRunParameters();
 
   static void declare_parameters(ParameterHandler & parameter_handler);
 
@@ -29,6 +29,6 @@ public:
   std::string problem_name;
 };
 
-#include "src/parameters/BurgersParameters.cc"
+#include "src/parameters/BurgersRunParameters.cc"
 
 #endif

@@ -8,9 +8,9 @@ subsection problem
 end
 
 subsection scheme
-   set scheme = low # low|high|fct
-   set low order scheme = di_visc # constant|standard|dmp|di_visc|di_diff
-   set high order scheme = galerkin # galerkin|entropy_visc|entropy_diff
+   set scheme = high # low|high|fct
+   set low order scheme = standard # constant|standard|dmp|di_visc|di_diff
+   set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
 end
 
 subsection refinement
@@ -21,9 +21,9 @@ subsection refinement
 end
 
 subsection time
-   set time step size method = cfl # constant|cfl
+   set time step size method = constant # constant|cfl
    set use default end time = false
-   set final time = 5.0
+   set final time = 0.002
    set time step size = 0.001
    set cfl = 0.50
    set steady state tolerance = 1.0e-6
@@ -33,8 +33,8 @@ subsection artificial viscosity
    set constant viscosity value = 0.02
    set first order viscosity coefficient = 0.5
    set use low order viscosity for first time step = true
-   set entropy residual coefficient = 1.0
-   set entropy jump coefficient = 1.0
+   set entropy residual coefficient = 1000000.0
+   set entropy jump coefficient = 1000000.0
    set entropy viscosity smoothing = none # none|max|average
    set entropy viscosity smoothing weight = 4
 end
@@ -63,15 +63,15 @@ subsection linear solver
 end
 
 subsection output
-   set output period = 1
+   set output period = 0
    set max transient output size = 1e9
    set output mesh = false
    set output mass matrix = false
-   set output viscosity = false
+   set output viscosity = true
    set output viscosity transient = false
    set exact solution refinement level = 7
    set save convergence results = false
-   set print final solution = false
+   set print final solution = true
 
    # verbosity level:
    # 0: print only required info

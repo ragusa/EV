@@ -198,7 +198,7 @@ void TransientExecutioner<dim>::run()
     // compute new time
     t_new = t_old + dt;
 
-    std::cout << "   time step " << n << ": t = " << t_old << "->" << t_new
+    this->cout1 << "   time step " << n << ": t = " << t_old << "->" << t_new
               << std::endl;
 
     if (temporal_discretization == TemporalDiscretization::ssprk) // SSPRK
