@@ -11,7 +11,12 @@ Executioner<dim>::Executioner(const TransportParameters<dim> & parameters_,
                               Function<dim> & incoming_function_,
                               const double & domain_volume_,
                               PostProcessor<dim> & postprocessor_)
-  : parameters(parameters_),
+  : 
+    //cout1(std::cout, parameters_.verbosity_level >= 1),
+    //cout2(std::cout, parameters_.verbosity_level >= 2),
+    cout1(std::cout, false),
+    cout2(std::cout, false),
+    parameters(parameters_),
     triangulation(&triangulation_),
     fe(FE_Q<dim>(parameters.degree), 1),
     flux(0),
@@ -141,8 +146,8 @@ void Executioner<dim>::assembleInviscidSteadyStateMatrix()
                 fe_values[flux].gradient(j, q) +
               // total interaction term
               fe_values[flux].value(i, q) * total_cross_section_values[q] *
-                fe_values[flux].value(j, q))
-            * transport_speed * fe_values.JxW(q);
+                fe_values[flux].value(j, q)) *
+            transport_speed * fe_values.JxW(q);
         } // end j
       }   // end i
     }     // end q
@@ -208,8 +213,8 @@ void Executioner<dim>::assembleSteadyStateRHS(Vector<double> & rhs,
 
     for (unsigned int q = 0; q < n_q_points_cell; ++q)
       for (unsigned int i = 0; i < dofs_per_cell; ++i)
-        cell_rhs(i) +=
-          fe_values[flux].value(i, q) * source_values[q] * transport_speed * fe_values.JxW(q);
+        cell_rhs(i) += fe_values[flux].value(i, q) * source_values[q] *
+          transport_speed * fe_values.JxW(q);
 
     // aggregate local matrix and rhs to global matrix and rhs
     constraints.distribute_local_to_global(cell_rhs, local_dof_indices, rhs);
@@ -223,6 +228,16 @@ template <int dim>
 Vector<double> Executioner<dim>::getFinalSolution() const
 {
   return new_solution;
+}
+
+template <int dim>
+void Executioner<dim>::print_solution() const
+{
+    std::cout.precision(10);
+    std::cout.setf(std::ios::scientific);
+
+    for (unsigned int i = 0; i < n_dofs; ++i)
+      std::cout << new_solution[i] << std::endl;
 }
 
 /**

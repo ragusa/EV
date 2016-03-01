@@ -9,9 +9,10 @@
  * \param[in] params shallow water equation parameters
  */
 template <int dim>
-ShallowWater<dim>::ShallowWater(const ShallowWaterParameters<dim> & params)
+ShallowWater<dim>::ShallowWater(const ShallowWaterRunParameters<dim> & params)
   : ConservationLaw<dim>(params, dim + 1, true),
     sw_parameters(params),
+    problem_parameters(params.problem_name, false),
     height_extractor(0),
     momentum_extractor(1),
     fe_bathymetry(params.degree),
@@ -19,6 +20,9 @@ ShallowWater<dim>::ShallowWater(const ShallowWaterParameters<dim> & params)
 {
   // shallow water equations cannot be 3-D
   Assert(dim < 3, ExcImpossibleInDim(dim));
+
+  // point base class problem parameters to derived class problem parameters
+  this->problem_base_parameters = &problem_parameters;
 }
 
 template <int dim>
@@ -63,9 +67,6 @@ void ShallowWater<dim>::get_fe_extractors(
 template <int dim>
 void ShallowWater<dim>::define_problem()
 {
-  // determine problem name
-  this->problem_name = sw_parameters.problem_name;
-
   // get path of source directory from #define created by CMake
   std::stringstream source_path_ss;
   source_path_ss << SOURCE_PATH;
@@ -74,238 +75,13 @@ void ShallowWater<dim>::define_problem()
 
   // create problem parameters file name and determine if it exists
   std::string problem_parameters_file =
-    source_path + "/problems/shallowwater/" + this->problem_name;
-  struct stat buffer;
-  const bool file_exists = stat(problem_parameters_file.c_str(), &buffer) == 0;
-  Assert(file_exists, ExcFileDoesNotExist(problem_parameters_file));
+    source_path + "/problems/shallowwater/" + sw_parameters.problem_name;
 
-  // read problem parameters input file
-  ParameterHandler parameter_handler;
-  ShallowWaterProblemParameters<dim>::declare_parameters(parameter_handler);
-  parameter_handler.read_input(problem_parameters_file);
-  ShallowWaterProblemParameters<dim> problem_parameters;
-  problem_parameters.get_parameters(parameter_handler);
-
-  // assert number of dimensions is valid
-  if (!problem_parameters.valid_in_1d)
-    Assert(dim != 1, ExcImpossibleInDim(dim));
-  if (!problem_parameters.valid_in_2d)
-    Assert(dim != 2, ExcImpossibleInDim(dim));
-
-  // domain
-  if (problem_parameters.domain_shape == "hyper_cube")
-  {
-    const double x_start = problem_parameters.x_start;
-    const double x_width = problem_parameters.x_width;
-    this->domain_volume = std::pow(x_width, dim);
-    GridGenerator::hyper_cube(this->triangulation, x_start, x_start + x_width);
-  }
-  else if (problem_parameters.domain_shape == "hyper_rectangle")
-  {
-    Point<dim> point_start;
-    Point<dim> point_end;
-    const double x_start = problem_parameters.x_start;
-    const double x_width = problem_parameters.x_width;
-    point_start[0] = x_start;
-    point_end[0] = x_start + x_width;
-    if (dim == 1)
-    {
-      this->domain_volume = x_width;
-    }
-    else
-    {
-      const double y_start = problem_parameters.y_start;
-      const double y_width = problem_parameters.y_width;
-      point_start[1] = y_start;
-      point_end[1] = y_start + y_width;
-      this->domain_volume = x_width * y_width;
-    }
-    GridGenerator::hyper_rectangle(this->triangulation, point_start, point_end);
-  }
-  else
-  {
-    Assert(false, ExcNotImplemented());
-  }
-
-  // constants
-  gravity = problem_parameters.gravity;
-  const double x_interface = problem_parameters.x_interface;
-  const double h_left = problem_parameters.h_left;
-  const double h_right = problem_parameters.h_right;
-  const double h_unperturbed = problem_parameters.h_unperturbed;
-  const double h_perturbed = problem_parameters.h_perturbed;
-  const double u_left = problem_parameters.u_left;
-  const double u_right = problem_parameters.u_right;
-  const double bump_height = problem_parameters.bump_height;
-  const double bump_x_center = problem_parameters.bump_x_center;
-  const double bump_y_center = problem_parameters.bump_y_center;
-  const double bump_x_width = problem_parameters.bump_x_width;
-  const double bump_y_width = problem_parameters.bump_y_width;
-  const double perturbation_x_center = problem_parameters.perturbation_x_center;
-  const double perturbation_y_center = problem_parameters.perturbation_y_center;
-  const double perturbation_x_width = problem_parameters.perturbation_x_width;
-  const double perturbation_y_width = problem_parameters.perturbation_y_width;
-  this->constants["x_interface"] = x_interface;
-  this->constants["h_left"] = h_left;
-  this->constants["h_right"] = h_right;
-  this->constants["h_unperturbed"] = h_unperturbed;
-  this->constants["h_perturbed"] = h_perturbed;
-  this->constants["u_left"] = u_left;
-  this->constants["u_right"] = u_right;
-  this->constants["bump_height"] = bump_height;
-  this->constants["bump_x_center"] = bump_x_center;
-  this->constants["bump_y_center"] = bump_y_center;
-  this->constants["bump_x_width"] = bump_x_width;
-  this->constants["bump_y_width"] = bump_y_width;
-  this->constants["bump_left"] = bump_x_center - 0.5 * bump_x_width;
-  this->constants["bump_right"] = bump_x_center + 0.5 * bump_x_width;
-  this->constants["perturbation_x_center"] = perturbation_x_center;
-  this->constants["perturbation_y_center"] = perturbation_y_center;
-  this->constants["perturbation_x_width"] = perturbation_x_width;
-  this->constants["perturbation_y_width"] = perturbation_y_width;
-
-  // set boundary indicators
-  this->n_dirichlet_boundaries = 1;
-  typename Triangulation<dim>::cell_iterator cell = this->triangulation.begin();
-  typename Triangulation<dim>::cell_iterator endc = this->triangulation.end();
-  for (; cell != endc; ++cell)
-    for (unsigned int face = 0; face < this->faces_per_cell; ++face)
-      if (cell->face(face)->at_boundary())
-        cell->face(face)->set_boundary_id(0);
-
-  // set boundary conditions type
-  this->boundary_conditions_type = problem_parameters.boundary_conditions_type;
-
-  // create boundary conditions
-  if (this->boundary_conditions_type == "dirichlet")
-  {
-    auto derived_boundary_conditions =
-      std::make_shared<DirichletBoundaryConditions<dim>>(this->fe,
-                                                         this->face_quadrature);
-    this->boundary_conditions = derived_boundary_conditions;
-
-    // option to use exact solution as Dirichlet BC
-    this->use_exact_solution_as_dirichlet_bc = false;
-
-    // get Dirichlet function strings
-    if (!this->use_exact_solution_as_dirichlet_bc)
-    {
-      this->dirichlet_function_strings.resize(this->n_dirichlet_boundaries);
-      this->dirichlet_function_strings[0].resize(this->n_components);
-      this->dirichlet_function_strings[0][0] =
-        problem_parameters.dirichlet_function_height;
-      this->dirichlet_function_strings[0][1] =
-        problem_parameters.dirichlet_function_momentumx;
-      if (dim == 2)
-        this->dirichlet_function_strings[0][2] =
-          problem_parameters.dirichlet_function_momentumy;
-    }
-    else
-    {
-      Assert(false, ExcNotImplemented());
-    }
-  }
-  else if (this->boundary_conditions_type == "none")
-  {
-    std::shared_ptr<ShallowWaterNoBC<dim>> derived_boundary_conditions =
-      std::make_shared<ShallowWaterNoBC<dim>>(
-        this->fe, this->face_quadrature, gravity);
-    this->boundary_conditions = derived_boundary_conditions;
-  }
-  else if (this->boundary_conditions_type == "characteristic_open")
-  {
-    std::shared_ptr<ShallowWaterSubcriticalOpenBC1D<dim>>
-      derived_boundary_conditions =
-        std::make_shared<ShallowWaterSubcriticalOpenBC1D<dim>>(
-          this->fe, this->face_quadrature, gravity, h_unperturbed, h_unperturbed);
-    this->boundary_conditions = derived_boundary_conditions;
-  }
-  else if (this->boundary_conditions_type == "wall")
-  {
-    std::shared_ptr<ShallowWaterWallBC<dim>> derived_boundary_conditions =
-      std::make_shared<ShallowWaterWallBC<dim>>(
-        this->fe, this->face_quadrature, gravity);
-    this->boundary_conditions = derived_boundary_conditions;
-  }
-  else if (this->boundary_conditions_type == "characteristic_wall")
-  {
-    std::shared_ptr<ShallowWaterSubcriticalWallBC1D<dim>>
-      derived_boundary_conditions =
-        std::make_shared<ShallowWaterSubcriticalWallBC1D<dim>>(
-          this->fe, this->face_quadrature, gravity);
-    this->boundary_conditions = derived_boundary_conditions;
-  }
-  else
-  {
-    Assert(false, ExcNotImplemented());
-  }
-
-  // initial conditions
-  this->initial_conditions_strings[0] =
-    problem_parameters.initial_conditions_height;
-  this->initial_conditions_strings[1] =
-    problem_parameters.initial_conditions_momentumx;
-  if (dim == 2)
-    this->initial_conditions_strings[2] =
-      problem_parameters.initial_conditions_momentumy;
-
-  // exact solution
-  if (problem_parameters.has_exact_solution)
-  {
-    this->has_exact_solution = true;
-
-    if (problem_parameters.exact_solution_type == "riemann")
-    {
-      // create and initialize Riemann solver for exact solution
-      std::shared_ptr<ShallowWaterRiemannSolver<dim>>
-        exact_solution_function_derived =
-          std::make_shared<ShallowWaterRiemannSolver<dim>>(
-            h_left, u_left, h_right, u_right, gravity, x_interface);
-      this->exact_solution_function = exact_solution_function_derived;
-    }
-    else if (problem_parameters.exact_solution_type == "function")
-    {
-      this->exact_solution_strings[0] = problem_parameters.exact_solution_height;
-      this->exact_solution_strings[1] =
-        problem_parameters.exact_solution_momentumx;
-      if (dim == 2)
-        this->exact_solution_strings[2] =
-          problem_parameters.exact_solution_momentumy;
-
-      // create and initialize function parser for exact solution
-      std::shared_ptr<FunctionParser<dim>> exact_solution_function_derived =
-        std::make_shared<FunctionParser<dim>>(this->n_components);
-      exact_solution_function_derived->initialize(
-        FunctionParser<dim>::default_variable_names() + ",t",
-        this->exact_solution_strings,
-        this->constants,
-        true);
-      this->exact_solution_function = exact_solution_function_derived;
-    }
-    else
-    {
-      Assert(false, ExcNotImplemented());
-    }
-  }
-  else
-  {
-    this->has_exact_solution = false;
-  }
-
-  // initialize bathymetry function
-  std::shared_ptr<FunctionParser<dim>> bathymetry_function_derived =
-    std::make_shared<FunctionParser<dim>>();
-  std::map<std::string, double> constants;
-  bathymetry_function_derived->initialize(
-    FunctionParser<dim>::default_variable_names(),
-    problem_parameters.bathymetry_function,
-    this->constants,
-    false);
-  bathymetry_function = bathymetry_function_derived;
-
-  // default end time
-  this->has_default_end_time = problem_parameters.has_default_end_time;
-  this->default_end_time = problem_parameters.default_end_time;
+  // get and process the problem parameters
+  problem_parameters.get_and_process_parameters(problem_parameters_file,
+                                                this->triangulation,
+                                                this->fe,
+                                                this->face_quadrature);
 }
 
 /**
@@ -320,9 +96,9 @@ std::shared_ptr<Entropy<dim>> ShallowWater<dim>::create_entropy() const
     std::make_shared<ShallowWaterEntropy<dim>>(sw_parameters,
                                                height_extractor,
                                                momentum_extractor,
-                                               gravity,
+                                               problem_parameters.gravity,
                                                bathymetry_vector,
-                                               this->domain_volume,
+                                               problem_parameters.domain_volume,
                                                this->dof_handler,
                                                this->fe,
                                                this->triangulation,
@@ -340,7 +116,7 @@ template <int dim>
 std::shared_ptr<StarState<dim>> ShallowWater<dim>::create_star_state() const
 {
   auto star_state =
-    std::make_shared<ShallowWaterStarState<dim>>(gravity,
+    std::make_shared<ShallowWaterStarState<dim>>(problem_parameters.gravity,
                                                  this->gradient_matrix,
                                                  this->dof_handler,
                                                  this->triangulation,
@@ -358,8 +134,8 @@ template <int dim>
 std::shared_ptr<MaxWaveSpeed<dim>> ShallowWater<dim>::create_max_wave_speed()
   const
 {
-  auto max_wave_speed =
-    std::make_shared<ShallowWaterMaxWaveSpeed<dim>>(this->star_state, gravity);
+  auto max_wave_speed = std::make_shared<ShallowWaterMaxWaveSpeed<dim>>(
+    this->star_state, problem_parameters.gravity);
 
   return max_wave_speed;
 }
@@ -374,8 +150,9 @@ void ShallowWater<dim>::perform_nonstandard_setup()
   dof_handler_bathymetry.clear();
   dof_handler_bathymetry.distribute_dofs(fe_bathymetry);
   bathymetry_vector.reinit(dof_handler_bathymetry.n_dofs());
-  VectorTools::interpolate(
-    dof_handler_bathymetry, *bathymetry_function, bathymetry_vector);
+  VectorTools::interpolate(dof_handler_bathymetry,
+                           *(problem_parameters.bathymetry_function),
+                           bathymetry_vector);
 }
 
 template <int dim>
@@ -550,20 +327,14 @@ void ShallowWater<dim>::compute_ss_flux(const double & dt,
               momentum_inviscid_flux[q])
             // bathymetry source term
             +
-            fe_values[momentum_extractor].value(i, q) * gravity * height[q] *
-              bathymetry_gradient[q]) *
+            fe_values[momentum_extractor].value(i, q) *
+              problem_parameters.gravity * height[q] * bathymetry_gradient[q]) *
           fe_values.JxW(q);
       }
     }
 
-    // apply artificial diffusion
-    /*
-        this->artificial_diffusion->apply(
-          this->viscosity, solution, cell, fe_values, cell_residual);
-    */
-
     // apply boundary conditions
-    this->boundary_conditions->apply(
+    problem_parameters.boundary_conditions->apply(
       cell, fe_values, solution, dt, cell_residual);
 
     // aggregate local residual into global residual
@@ -627,7 +398,7 @@ void ShallowWater<dim>::compute_inviscid_fluxes(
     Tensor<2, dim> velocity_times_momentum =
       outer_product(velocity[q], momentum[q]);
     momentum_flux[q] = velocity_times_momentum +
-      0.5 * gravity * std::pow(height[q], 2) * identity_tensor;
+      0.5 * problem_parameters.gravity * std::pow(height[q], 2) * identity_tensor;
   }
 }
 
@@ -690,7 +461,7 @@ std::vector<double> ShallowWater<dim>::compute_sound_speed(
 
   std::vector<double> sound_speed(n);
   for (unsigned int q = 0; q < n; ++q)
-    sound_speed[q] = std::sqrt(gravity * height[q]);
+    sound_speed[q] = std::sqrt(problem_parameters.gravity * height[q]);
 
   return sound_speed;
 }
@@ -743,7 +514,8 @@ void ShallowWater<dim>::update_flux_speeds()
     for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
     {
       // compute flux speed
-      double flux_speed = velocity[q].norm() + std::sqrt(gravity * height[q]);
+      double flux_speed =
+        velocity[q].norm() + std::sqrt(problem_parameters.gravity * height[q]);
 
       // compare with current maximum flux speed in cell
       this->max_flux_speed_cell[cell] =
@@ -765,7 +537,8 @@ template <int dim>
 std::shared_ptr<DataPostprocessor<dim>> ShallowWater<
   dim>::create_auxiliary_postprocessor() const
 {
-  return std::make_shared<ShallowWaterPostProcessor<dim>>(bathymetry_function);
+  return std::make_shared<ShallowWaterPostProcessor<dim>>(
+    problem_parameters.bathymetry_function);
 }
 
 /**
@@ -781,8 +554,8 @@ std::shared_ptr<ViscosityMultiplier<dim>> ShallowWater<
   std::shared_ptr<ViscosityMultiplier<dim>> viscosity_multiplier;
   if (sw_parameters.multiply_low_order_viscosity_by_froude)
   {
-    viscosity_multiplier =
-      std::make_shared<ShallowWaterViscosityMultiplier<dim>>(gravity);
+    viscosity_multiplier = std::make_shared<ShallowWaterViscosityMultiplier<dim>>(
+      problem_parameters.gravity);
   }
   else
   {
@@ -818,7 +591,7 @@ std::shared_ptr<FCT<dim>> ShallowWater<dim>::create_fct() const
                                            this->dofs_per_cell,
                                            this->component_names,
                                            use_star_states_in_fct_bounds,
-                                           gravity);
+                                           problem_parameters.gravity);
 
   return fct;
 }

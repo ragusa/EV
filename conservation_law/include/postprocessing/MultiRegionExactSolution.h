@@ -1,20 +1,13 @@
-#ifndef ExactSolutions_cc
-#define ExactSolutions_cc
+#ifndef MultiRegionExactSolution_cc
+#define MultiRegionExactSolution_cc
 
 #include <deal.II/base/function.h>
 
 using namespace dealii;
 
-/** Enumeration for type of exact solution */
-enum ExactSolutionOption
-{
-  none,
-  parser,
-  multi_region
-};
-
-/** Exact solution function class for the multi-region unit hypercube
- *  test problem.
+/**
+ * \brief Exact solution function class for the multi-region unit hypercube
+ *        test problem.
  */
 template <int dim>
 class MultiRegionExactSolution : public Function<dim>
@@ -23,7 +16,7 @@ public:
   MultiRegionExactSolution(const std::vector<double> & interface_positions,
                            const std::vector<double> & source,
                            const std::vector<double> & sigma,
-                           const std::vector<double> & direction,
+                           const Tensor<1, dim> & direction,
                            const double & incoming);
 
   double value(const Point<dim> & p,
@@ -49,11 +42,11 @@ private:
   const double c;
 
   /** transport direction */
-  const std::vector<double> direction;
+  const Tensor<1, dim> direction;
 
   /** incoming flux value */
   const double incoming;
 };
 
-#include "MultiRegionExactSolution.cc"
+#include "src/postprocessing/MultiRegionExactSolution.cc"
 #endif

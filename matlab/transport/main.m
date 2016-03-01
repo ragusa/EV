@@ -1,5 +1,4 @@
-close all; clear; clc;
-
+close all; clear; clc; 
 %% User Options
 %--------------------------------------------------------------------------
 % finite element options
@@ -10,9 +9,9 @@ quadrature.nq = 3;                  % number of quadrature points per cell
 %--------------------------------------------------------------------------
 % spatial method options
 %--------------------------------------------------------------------------
-compute_low_order  = false; % compute and plot low-order solution?
+compute_low_order  = true; % compute and plot low-order solution?
 compute_high_order = false; % compute and plot high-order solution?
-compute_FCT        = true; % compute and plot FCT solution?
+compute_FCT        = false; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
 %                   2 = graph-theoretic low-order scheme
@@ -20,10 +19,10 @@ low_order_scheme  = 2;
 
 % high_order_scheme: 1 = Galerkin
 %                    2 = Entropy viscosity
-high_order_scheme = 1;
+high_order_scheme = 2;
 
 % entropy viscosity options:
-ev.cE = 0.1; % coefficient for entropy residual in entropy viscosity
+ev.cE = 1.0; % coefficient for entropy residual in entropy viscosity
 ev.cJ = ev.cE*1; % coefficient for jumps in entropy viscosity
 ev.entropy       = @(u) 0.5*u.^2; % entropy function
 ev.entropy_deriv = @(u) u;        % derivative of entropy function
@@ -36,16 +35,18 @@ ev.smoothing_weight = 0.0; % weight for center value in smoothing
 %                  1 = SSPRK(1,1) (Explicit Euler)
 %                  2 = SSPRK(3,3) (Shu-Osher)
 %                  3 = theta method
-temporal_scheme = 3; % temporal discretization scheme
+temporal_scheme = 1; % temporal discretization scheme
 
 % theta parameter to use if using a theta method: 0.0 = FE
 %                                                 0.5 = CN
 %                                                 1.0 = BE
 theta = 1.0;     
        
+use_constant_dt = true; % option to use constant dt instead of CFL
+constant_dt = 0.001;    % time step size to use if using constant size
 CFL = 0.5;       % CFL number
 ss_tol = 1.0e-5; % steady-state tolerance
-t_end = 0.001;     % max time to run
+t_end = 0.1;     % max time to run
 %--------------------------------------------------------------------------
 % FCT options
 %--------------------------------------------------------------------------
@@ -79,7 +80,7 @@ dirichlet_limiting_coefficient = 1.0; % limiting coefficient bounds for
 %            4: void
 %            5: MMS: TR: u = t*sin(pi*x)  SS: u = sin(pi*x)
 %            6: MMS: TR: u = x*t          SS: u = x
-problemID = 4;
+problemID = 1;
 
 % IC_option: 0: zero
 %            1: exponential pulse
@@ -134,7 +135,8 @@ switch problemID
         phys.periodic_BC = false;
         phys.inc    = 1.0;
         phys.mu     = 1.0;
-        phys.sigma  = @(x,t) 1.0;
+        sigma_value = 1.0;
+        phys.sigma  = @(x,t) sigma_value;
         phys.source = @(x,t) 0.0;
         phys.speed  = 1;
         
@@ -142,9 +144,9 @@ switch problemID
         source_is_time_dependent = false;
         exact_solution_known = true;
         if temporal_scheme == 0
-          exact = @(x,t) exp(-1*x);
+          exact = @(x,t) exp(-sigma_value*x);
         else
-          exact = @(x,t) (t>=x).*exp(-10*x);
+          exact = @(x,t) (t>=x).*exp(-sigma_value*x);
         end
     case 2 % void without source -> absorber without source
         mesh.x_min = 0.0;
@@ -345,13 +347,18 @@ b = assemble_ss_rhs(t,quadrature,mesh,dof_handler,phys,...
 % check that speed is nonzero; otherwise, infinite dt will be computed
 assert(phys.speed ~= 0,'Speed cannot be zero.');
 
-% compute dt using CFL condition, even for implicit, just so that time
-% steps will be equal between explicit and implicit, for comparison
-max_speed_dx = 0.0;
-for i = 1:dof_handler.n_dof
-    max_speed_dx = max(max_speed_dx, abs(AL(i,i))/ML(i,i));
+% choose nominal time step size (last time step may be shortened)
+if (use_constant_dt) % use constant dt
+    dt_nominal = constant_dt;
+else % compute dt from CFL
+    % compute dt using CFL condition, even for implicit, just so that time
+    % steps will be equal between explicit and implicit, for comparison
+    max_speed_dx = 0.0;
+    for i = 1:dof_handler.n_dof
+        max_speed_dx = max(max_speed_dx, abs(AL(i,i))/ML(i,i));
+    end
+    dt_nominal = CFL / max_speed_dx;
 end
-dtCFL = CFL / max_speed_dx;
 
 % determine sytem matrices
 if (temporal_scheme == 0) % steady-state
@@ -396,11 +403,11 @@ if (compute_low_order)
             time_step = time_step+1;
             
             % shorten time step if necessary
-            if (t+dtCFL >= t_end)
+            if (t+dt_nominal >= t_end)
                 dt = t_end - t;
                 reached_end_of_transient = true;
             else
-                dt = dtCFL;
+                dt = dt_nominal;
                 reached_end_of_transient = false;
             end
             fprintf('Time step %i: t = %f->%f\n',time_step,t,t+dt);
@@ -505,7 +512,7 @@ if (compute_high_order)
         b_new = b_old;
         t = 0;
         time_step = 0;
-        dt_old = dtCFL;
+        dt_old = dt_nominal;
         [DH,viscE] = compute_high_order_diffusion_matrix(u_old,...
             u_old,dt_old,viscL,mesh,phys,quadrature,ev,...
             dof_handler,high_order_scheme);
@@ -518,11 +525,11 @@ if (compute_high_order)
             time_step = time_step+1;
             
             % shorten time step if necessary
-            if (t+dtCFL >= t_end)
+            if (t+dt_nominal >= t_end)
                 dt = t_end - t;
                 reached_end_of_transient = true;
             else
-                dt = dtCFL;
+                dt = dt_nominal;
                 reached_end_of_transient = false;
             end
             fprintf('Time step %i: t = %f->%f\n',time_step,t,t+dt);
@@ -710,7 +717,7 @@ if (compute_FCT)
         b_new = b_old;
         t = 0;
         time_step = 0;
-        dt_old = dtCFL;
+        dt_old = dt_nominal;
         [DH,viscE] = compute_high_order_diffusion_matrix(u_old,...
             u_old,dt_old,viscL,mesh,phys,quadrature,ev,...
             dof_handler,high_order_scheme);
@@ -722,11 +729,11 @@ if (compute_FCT)
             time_step = time_step+1;
             
             % shorten time step if necessary
-            if (t+dtCFL >= t_end)
+            if (t+dt_nominal >= t_end)
                 dt = t_end - t;
                 reached_end_of_transient = true;
             else
-                dt = dtCFL;
+                dt = dt_nominal;
                 reached_end_of_transient = false;
             end
             fprintf('Time step %i: t = %f->%f\n',time_step,t,t+dt);

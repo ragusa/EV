@@ -7,16 +7,16 @@
 /**
  * \brief Constructor.
  *
- * \param[in] problem_name_  name of problem
+ * \param[in] problem_name_     name of problem
+ * \param[in] is_steady_state_  flag that problem is to be run in steady-state
  */
 template <int dim>
 TransportProblemParameters<dim>::TransportProblemParameters(
-  const std::string & problem_name_)
-  : ProblemParameters<dim>(problem_name_),
+  const std::string & problem_name_, const bool & is_steady_state_)
+  : ProblemParameters<dim>(problem_name_, 1, is_steady_state_),
     cross_section_function(1),
     source_function(1)
 {
-  this->n_components = 1;
 }
 
 /**
@@ -75,7 +75,7 @@ void TransportProblemParameters<dim>::declare_derived_parameters()
   // constants
   this->parameter_handler.enter_subsection("constants");
   {
-    this->parameter_handler.declare_entry("incoming value",
+    this->parameter_handler.declare_entry("incoming",
                                           "1.0",
                                           Patterns::Double(),
                                           "incoming value for function parsers");
@@ -83,6 +83,14 @@ void TransportProblemParameters<dim>::declare_derived_parameters()
       "sigma1", "0.0", Patterns::Double(), "cross section value 1");
     this->parameter_handler.declare_entry(
       "sigma2", "0.0", Patterns::Double(), "cross section value 2");
+    this->parameter_handler.declare_entry(
+      "sigma3", "0.0", Patterns::Double(), "cross section value 3");
+    this->parameter_handler.declare_entry(
+      "source1", "0.0", Patterns::Double(), "source value 1");
+    this->parameter_handler.declare_entry(
+      "source2", "0.0", Patterns::Double(), "source value 2");
+    this->parameter_handler.declare_entry(
+      "source3", "0.0", Patterns::Double(), "source value 3");
     this->parameter_handler.declare_entry(
       "x1", "0.0", Patterns::Double(), "x value 1");
     this->parameter_handler.declare_entry(
@@ -97,8 +105,6 @@ void TransportProblemParameters<dim>::declare_derived_parameters()
       "y2", "0.0", Patterns::Double(), "y value 2");
     this->parameter_handler.declare_entry(
       "y3", "0.0", Patterns::Double(), "y value 3");
-    this->parameter_handler.declare_entry(
-      "source value", "0.0", Patterns::Double(), "source for function parsers");
   }
   this->parameter_handler.leave_subsection();
 
@@ -122,7 +128,7 @@ void TransportProblemParameters<dim>::declare_derived_parameters()
   this->parameter_handler.enter_subsection("exact solution");
   {
     this->parameter_handler.declare_entry(
-      "exact solution", "1", Patterns::Anything(), "Exact solution");
+      "exact solution", "0", Patterns::Anything(), "Exact solution");
   }
   this->parameter_handler.leave_subsection();
 }
@@ -159,10 +165,13 @@ void TransportProblemParameters<dim>::get_derived_parameters()
   // constants
   this->parameter_handler.enter_subsection("constants");
   {
-    incoming_value = this->parameter_handler.get_double("incoming value");
-    source_value = this->parameter_handler.get_double("source value");
+    incoming = this->parameter_handler.get_double("incoming");
     sigma1 = this->parameter_handler.get_double("sigma1");
     sigma2 = this->parameter_handler.get_double("sigma2");
+    sigma3 = this->parameter_handler.get_double("sigma3");
+    source1 = this->parameter_handler.get_double("source1");
+    source2 = this->parameter_handler.get_double("source2");
+    source3 = this->parameter_handler.get_double("source3");
     x1 = this->parameter_handler.get_double("x1");
     x2 = this->parameter_handler.get_double("x2");
     x3 = this->parameter_handler.get_double("x3");
@@ -212,10 +221,13 @@ void TransportProblemParameters<dim>::process_derived_parameters(
 {
   // constants for function parsers
   this->constants["speed"] = transport_speed;
-  this->constants["incoming"] = incoming_value;
+  this->constants["incoming"] = incoming;
   this->constants["sigma1"] = sigma1;
   this->constants["sigma2"] = sigma2;
-  this->constants["source"] = source_value;
+  this->constants["sigma3"] = sigma3;
+  this->constants["source1"] = source1;
+  this->constants["source2"] = source2;
+  this->constants["source3"] = source3;
   this->constants["x1"] = x1;
   this->constants["x2"] = x2;
   this->constants["x3"] = x3;
@@ -279,9 +291,40 @@ void TransportProblemParameters<dim>::process_derived_parameters(
   this->initial_conditions_strings.resize(1);
   this->initial_conditions_strings[0] = initial_condition_angularflux;
 
-  // store exact solution strings
-  this->exact_solution_strings.resize(1);
-  this->exact_solution_strings[0] = exact_solution_angularflux;
+  // exact solution
+  if (this->has_exact_solution)
+  {
+    if (this->exact_solution_type == "three_region")
+    {
+      // create necessary vectors
+      std::vector<double> interface_positions = {this->constants["x1"],
+                                                 this->constants["x2"]};
+      std::vector<double> region_sigmas = {this->constants["sigma1"],
+                                           this->constants["sigma2"],
+                                           this->constants["sigma3"]};
+      std::vector<double> region_sources = {this->constants["source1"],
+                                            this->constants["source2"],
+                                            this->constants["source3"]};
+
+      // create multi-region exact solution object
+      std::shared_ptr<MultiRegionExactSolution<dim>>
+        exact_solution_function_derived =
+          std::make_shared<MultiRegionExactSolution<dim>>(
+            interface_positions,
+            region_sources,
+            region_sigmas,
+            transport_direction,
+            this->constants["incoming"]);
+      // point base class shared pointer to derived class function object
+      this->exact_solution_function = exact_solution_function_derived;
+    }
+    else // assumed to be function parser
+    {
+      // store exact solution strings
+      this->exact_solution_strings.resize(1);
+      this->exact_solution_strings[0] = exact_solution_angularflux;
+    }
+  }
 
   // set boundary IDs if using the incoming boundary specification
   if (this->boundary_id_scheme == "incoming")
@@ -337,7 +380,8 @@ void TransportProblemParameters<dim>::set_boundary_ids_incoming(
         //  quadrature point; therefore, quadrature point 0 is arbitrarily
         //  chosen
         const double small = -1.0e-12;
-        const double n_dot_omega = fe_face_values.normal_vector(0) * transport_direction;
+        const double n_dot_omega =
+          fe_face_values.normal_vector(0) * transport_direction;
         if (n_dot_omega < small)
         {
           // mark boundary as incoming flux boundary: indicator 0

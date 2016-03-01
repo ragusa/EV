@@ -20,3 +20,8 @@ The following is a list of things to do:
    used as the else statement - curly brackets need to surround the Assert
    statement.
 8. Move ShallowWaterFCT.cc to src folder and add it with git.
+9. Fix all of the problem parameters input files.
+10. Remove unnecessary header files/add include statements for header files
+    where needed; while executables may compile, classes may in future
+    be used in other executables where dependencies are not resolved by
+    previous includes.

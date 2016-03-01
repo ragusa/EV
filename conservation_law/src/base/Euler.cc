@@ -9,7 +9,7 @@
  * \param[in] params Euler equation parameters
  */
 template <int dim>
-Euler<dim>::Euler(const EulerParameters<dim> & params)
+Euler<dim>::Euler(const EulerRunParameters<dim> & params)
   : ConservationLaw<dim>(params),
     euler_parameters(params),
     density_extractor(0),

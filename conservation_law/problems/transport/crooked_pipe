@@ -1,7 +1,8 @@
-subsection dimension
+subsection validity
   set valid in 1d = false
   set valid in 2d = true
   set valid in 3d = false
+  set valid in steady state = false
 end
 
 subsection physics
@@ -37,8 +38,7 @@ subsection physics
 end
 
 subsection constants
-  set incoming value = 1.0           # called "incoming"
-  set source value = 0.0             # called "source"
+  set incoming = 1.0
   set sigma1 = 2000.0
   set sigma2 = 0.2
   set x1 = 2.5   # called "x1"

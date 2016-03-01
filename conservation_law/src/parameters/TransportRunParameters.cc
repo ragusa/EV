@@ -1,22 +1,22 @@
-/** \file BurgersParameters.cc
- *  \brief Provides the function definitions for the BurgersParameters class.
+/** \file TransportRunParameters.cc
+ *  \brief Provides the function definitions for the TransportRunParameters class.
  */
 using namespace dealii;
 
 /**
- * \brief Constructor for the BurgersParameters class
+ * \brief Constructor for the TransportRunParameters class
  */
 template <int dim>
-BurgersParameters<dim>::BurgersParameters()
+TransportRunParameters<dim>::TransportRunParameters()
 {
 }
 
 /**
  * \brief defines input parameters
- * \param parameter_handler parameter handler for the Burgers class
+ * \param parameter_handler parameter handler for the Transport class
  */
 template <int dim>
-void BurgersParameters<dim>::declare_parameters(
+void TransportRunParameters<dim>::declare_parameters(
   ParameterHandler & parameter_handler)
 {
   // declare conservation law parameters
@@ -33,14 +33,14 @@ void BurgersParameters<dim>::declare_parameters(
 
 /**
  * \brief gets input parameters from parameter handler
- * \param parameter_handler parameter handler for the Burgers class
+ * \param parameter_handler parameter handler for the Transport class
  */
 template <int dim>
-void BurgersParameters<dim>::get_parameters(ParameterHandler & parameter_handler)
+void TransportRunParameters<dim>::get_parameters(
+  ParameterHandler & parameter_handler)
 {
   // get conservation law parameters
   this->get_run_parameters(parameter_handler);
-  this->n_components = 1;
 
   // problem
   parameter_handler.enter_subsection("problem");

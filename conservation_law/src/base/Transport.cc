@@ -9,10 +9,10 @@
  * \param[in] params Transport equation parameters
  */
 template <int dim>
-Transport<dim>::Transport(const TransportParameters<dim> & params)
+Transport<dim>::Transport(const TransportRunParameters<dim> & params)
   : ConservationLaw<dim>(params, 1, false),
     transport_parameters(params),
-    problem_parameters(params.problem_name),
+    problem_parameters(params.problem_name, false),
     extractor(0)
 {
   // point base class problem parameters to derived class problem parameters
@@ -354,12 +354,13 @@ void Transport<dim>::update_flux_speeds()
 template <int dim>
 std::shared_ptr<Entropy<dim>> Transport<dim>::create_entropy() const
 {
-  auto entropy = std::make_shared<ScalarEntropy<dim>>(this->domain_volume,
-                                                      this->dof_handler,
-                                                      this->fe,
-                                                      this->triangulation,
-                                                      this->cell_quadrature,
-                                                      this->face_quadrature);
+  auto entropy =
+    std::make_shared<ScalarEntropy<dim>>(problem_parameters.domain_volume,
+                                         this->dof_handler,
+                                         this->fe,
+                                         this->triangulation,
+                                         this->cell_quadrature,
+                                         this->face_quadrature);
   return entropy;
 }
 

@@ -22,7 +22,7 @@ end
 
 subsection exact solution
   set has exact solution = true
-  set exact solution type = function
+  set exact solution type = parsed
   set exact solution = if(t>0,if(x/t<0,0,if(x/t<1,x/t,1)),if(x<0,0,1))
 end
 

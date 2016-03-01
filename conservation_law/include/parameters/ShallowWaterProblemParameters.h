@@ -9,6 +9,7 @@
 #include <string>
 #include <deal.II/base/parameter_handler.h>
 #include "include/parameters/ProblemParameters.h"
+#include "include/postprocessing/ShallowWaterRiemannSolver.h"
 
 using namespace dealii;
 
@@ -20,13 +21,17 @@ template <int dim>
 class ShallowWaterProblemParameters : public ProblemParameters<dim>
 {
 public:
-  ShallowWaterProblemParameters();
+  ShallowWaterProblemParameters(const std::string & problem_name,
+                                const bool & is_steady_state);
 
-  static void declare_parameters(ParameterHandler & parameter_handler);
+  /** \brief Acceleration due to gravity \f$g\f$ */
+  double gravity;
 
-  void get_parameters(ParameterHandler & parameter_handler);
+  /** \brief Bathymetry (bottom topography) function \f$b\f$ */
+  std::shared_ptr<Function<dim>> bathymetry_function;
 
-  std::string bathymetry_function;
+protected:
+  std::string bathymetry_function_string;
 
   std::string dirichlet_function_height;
   std::string dirichlet_function_momentumx;
@@ -40,7 +45,6 @@ public:
   std::string exact_solution_momentumx;
   std::string exact_solution_momentumy;
 
-  double gravity;
   double x_interface;
   double h_left;
   double h_right;
@@ -57,6 +61,16 @@ public:
   double perturbation_y_center;
   double perturbation_x_width;
   double perturbation_y_width;
+
+private:
+  void declare_derived_parameters() override;
+
+  void get_derived_parameters() override;
+
+  void process_derived_parameters(
+    Triangulation<dim> & triangulation,
+    const FESystem<dim> & fe,
+    const QGauss<dim - 1> & face_quadrature) override;
 };
 
 #include "src/parameters/ShallowWaterProblemParameters.cc"

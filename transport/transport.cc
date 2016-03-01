@@ -22,7 +22,7 @@ const unsigned int dim = 1; // number of spatial dimensions
 /**
  * Reads input file and runs problem.
  */
-int main(int, char **)
+int main(int argc, char * argv[])
 {
   try
   {
@@ -32,7 +32,10 @@ int main(int, char **)
     ParameterHandler parameter_handler;
     TransportParameters<dim> parameters;
     parameters.declare_parameters(parameter_handler);
-    parameter_handler.read_input("input");
+    if (argc > 1)
+      parameter_handler.read_input(argv[1]);
+    else
+      parameter_handler.read_input("input");
     parameters.get_parameters(parameter_handler);
 
     // run problem

@@ -7,6 +7,7 @@
 
 #include <deal.II/base/parameter_handler.h>
 #include "include/parameters/ProblemParameters.h"
+#include "include/postprocessing/MultiRegionExactSolution.h"
 
 using namespace dealii;
 
@@ -18,7 +19,8 @@ template <int dim>
 class TransportProblemParameters : public ProblemParameters<dim>
 {
 public:
-  TransportProblemParameters(const std::string & problem_name);
+  TransportProblemParameters(const std::string & problem_name,
+                             const bool & is_steady_state);
 
   /** \brief Transport speed \f$v\f$ */
   double transport_speed;
@@ -73,15 +75,21 @@ protected:
   std::string exact_solution_angularflux;
 
   /** \brief Incoming flux value constant for function parsers */
-  double incoming_value;
+  double incoming;
 
   /** \brief Cross section value 1 */
   double sigma1;
   /** \brief Cross section value 2 */
   double sigma2;
+  /** \brief Cross section value 3 */
+  double sigma3;
 
-  /** \brief Source value constant for function parsers */
-  double source_value;
+  /** \brief Source value 1 */
+  double source1;
+  /** \brief Source value 2 */
+  double source2;
+  /** \brief Source value 3 */
+  double source3;
 
   /** \brief x value 1 */
   double x1;

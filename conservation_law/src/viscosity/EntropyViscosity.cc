@@ -72,11 +72,13 @@ void EntropyViscosity<dim>::update(const Vector<double> & new_solution,
     const double h2 = std::pow(cell_diameter->at(cell), 2);
     this->values[cell] = 0.0;
     for (unsigned int q = 0; q < n_q_points_cell; ++q)
+    {
       this->values[cell] =
         std::max(this->values[cell],
                  h2 * (residual_coefficient * std::abs(entropy_residual[q]) +
                        jump_coefficient * max_entropy_jump) /
                    entropy_normalization[q]);
+    }
   }
 }
 
@@ -110,8 +112,10 @@ std::vector<double> EntropyViscosity<dim>::compute_entropy_residual(
   // compute entropy residual at each quadrature point on cell
   std::vector<double> entropy_residual(n_q_points_cell);
   for (unsigned int q = 0; q < n_q_points_cell; ++q)
+  {
     entropy_residual[q] =
       (entropy_new[q] - entropy_old[q]) / dt + divergence_entropy_flux[q];
+  }
 
   return entropy_residual;
 }

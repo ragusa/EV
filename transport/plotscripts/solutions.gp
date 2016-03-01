@@ -61,11 +61,11 @@ do for [i=1:words(file_list)] {
       stats outdir.myfile using 1 noout
       n_data = STATS_records
       # print "Number of data points in ",myfile,": ",n_data
-      #if (n_data > 200) {
-      #   existing_sym_list   = existing_sym_list  ." -2"
-      #} else {
+      if (n_data > 200) {
+         existing_sym_list   = existing_sym_list  ." -2"
+      } else {
          existing_sym_list   = existing_sym_list  ." ".mysym
-      #}
+      }
    }
 }
 
@@ -74,7 +74,7 @@ output_file = "../output/".problem_name."/solutions_".timeintegrator.".pdf"
 set output '| ps2pdf - '.output_file
 set ylabel "Solution"
 set xlabel "x"
-set key top right
+set key bottom right
 
 plot for [i=1:words(existing_file_list)] outdir.word(existing_file_list,i)\
    using 1:2 with linesp linetype word(existing_lt_list,i)\

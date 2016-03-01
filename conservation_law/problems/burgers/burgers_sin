@@ -22,7 +22,7 @@ end
 
 subsection exact solution
   set has exact solution = false
-  set exact solution type = function
+  set exact solution type = parsed
 end
 
 subsection default end time

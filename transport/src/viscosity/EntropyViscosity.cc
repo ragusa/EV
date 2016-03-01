@@ -339,10 +339,13 @@ void EntropyViscosity<dim>::compute_entropy_viscosity(
     for (unsigned int q = 0; q < n_q_points_cell; ++q)
       entropy_residual_values[q] = a_old * s_old[q] + a_older * s_older[q] +
         a_oldest * s_oldest[q] +
-        b_old * (dsdu_old[q] * (transport_speed * transport_direction * dudx_old[q] +
-                                sigma[q] * u_old[q] - source[q])) +
-        b_older * (dsdu_older[q] * (transport_speed * transport_direction * dudx_older[q] +
-                                    transport_speed * sigma[q] * u_older[q] - transport_speed * source[q]));
+        b_old *
+          (dsdu_old[q] * (transport_speed * transport_direction * dudx_old[q] +
+                          sigma[q] * u_old[q] - source[q])) +
+        b_older * (dsdu_older[q] *
+                   (transport_speed * transport_direction * dudx_older[q] +
+                    transport_speed * sigma[q] * u_older[q] -
+                    transport_speed * source[q]));
 
     // determine maximum entropy residual in cell
     double max_entropy_residual = 0.0;
@@ -398,8 +401,8 @@ void EntropyViscosity<dim>::compute_entropy_viscosity(
           double jump_dsdn =
             normal[q] * (dsdu_old_face[q] * dudx_old_face[q] -
                          dsdu_old_face_neighbor[q] * dudx_old_face_neighbor[q]);
-          double jump_on_face =
-            std::abs(transport_speed * transport_direction * normal[q] * jump_dsdn);
+          double jump_on_face = std::abs(transport_speed * transport_direction *
+                                         normal[q] * jump_dsdn);
           max_jump_on_face = std::max(max_jump_on_face, jump_on_face);
         }
       }

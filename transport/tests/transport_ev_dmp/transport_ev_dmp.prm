@@ -28,11 +28,11 @@ end
 
 subsection viscosity
    # 0 = Galerkin
-   # 1 = low-order, DMP
+   # 1 = low-order
    # 2 = EV
    # 3 = EV+FCT
    # 4 = Galerkin+FCT
-   set Viscosity option = 1
+   set Viscosity option = 2
 end
 
 subsection entropy viscosity

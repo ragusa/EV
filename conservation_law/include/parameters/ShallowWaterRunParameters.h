@@ -1,9 +1,9 @@
 /**
- * \file ShallowWaterParameters.h
- * \brief Provides the header for the ShallowWaterParameters class.
+ * \file ShallowWaterRunParameters.h
+ * \brief Provides the header for the ShallowWaterRunParameters class.
  */
-#ifndef ShallowWaterParameters_h
-#define ShallowWaterParameters_h
+#ifndef ShallowWaterRunParameters_h
+#define ShallowWaterRunParameters_h
 
 #include <iostream>
 #include <string>
@@ -15,14 +15,14 @@
 using namespace dealii;
 
 /**
- * \class ShallowWaterParameters
+ * \class ShallowWaterRunParameters
  * \brief Class for parameters related to the shallow water equations.
  */
 template <int dim>
-class ShallowWaterParameters : public RunParameters<dim>
+class ShallowWaterRunParameters : public RunParameters<dim>
 {
 public:
-  ShallowWaterParameters();
+  ShallowWaterRunParameters();
 
   static void declare_parameters(ParameterHandler & parameter_handler);
 
@@ -37,6 +37,6 @@ public:
   bool multiply_low_order_viscosity_by_froude;
 };
 
-#include "src/parameters/ShallowWaterParameters.cc"
+#include "src/parameters/ShallowWaterRunParameters.cc"
 
 #endif

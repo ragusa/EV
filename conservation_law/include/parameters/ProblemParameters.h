@@ -21,7 +21,9 @@ template <int dim>
 class ProblemParameters
 {
 public:
-  ProblemParameters(const std::string & problem_name);
+  ProblemParameters(const std::string & problem_name,
+                    const unsigned int & n_components,
+                    const bool & specified_steady_state);
 
   void get_and_process_parameters(const std::string & parameters_file,
                                   Triangulation<dim> & triangulation,
@@ -30,6 +32,12 @@ public:
 
   /** \brief Problem name */
   const std::string problem_name;
+
+  /** \brief Number of solution components */
+  const unsigned int n_components;
+
+  /** \brief Flag that problem is specified to be run in steady-state */
+  const bool specified_steady_state;
 
   /** \brief initial conditions function */
   FunctionParser<dim> initial_conditions_function;
@@ -65,15 +73,14 @@ protected:
   /** \brief constants for function parsers */
   std::map<std::string, double> constants;
 
-  /** \brief Number of solution components */
-  unsigned int n_components;
-
   /** \brief Flag that problem is valid in 1-D */
   bool valid_in_1d;
   /** \brief Flag that problem is valid in 2-D */
   bool valid_in_2d;
   /** \brief Flag that problem is valid in 3-D */
   bool valid_in_3d;
+  /** \brief Flag that problem is steady-state */
+  bool is_steady_state_problem;
 
   /** \brief Shape description of domain */
   std::string domain_shape;

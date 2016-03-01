@@ -1,8 +1,8 @@
-/** \file EulerParameters.h
- *  \brief Provides the header for the EulerParameters class.
+/** \file EulerRunParameters.h
+ *  \brief Provides the header for the EulerRunParameters class.
  */
-#ifndef EulerParameters_h
-#define EulerParameters_h
+#ifndef EulerRunParameters_h
+#define EulerRunParameters_h
 
 #include <iostream>
 
@@ -13,14 +13,14 @@
 
 using namespace dealii;
 
-/** \class EulerParameters
+/** \class EulerRunParameters
  *  \brief Class for parameters related to the Euler equations.
  */
 template <int dim>
-class EulerParameters : public RunParameters<dim>
+class EulerRunParameters : public RunParameters<dim>
 {
 public:
-  EulerParameters();
+  EulerRunParameters();
 
   static void declare_euler_parameters(ParameterHandler & parameter_handler);
 
@@ -33,6 +33,6 @@ public:
   double prandtl; // Prandtl number, used in relation of viscosities nu and kappa
 };
 
-#include "src/parameters/EulerParameters.cc"
+#include "src/parameters/EulerRunParameters.cc"
 
 #endif

@@ -1,11 +1,12 @@
-/** Constructor.
+/**
+ * \brief Constructor.
  */
 template <int dim>
 MultiRegionExactSolution<dim>::MultiRegionExactSolution(
   const std::vector<double> & interface_positions,
   const std::vector<double> & source,
   const std::vector<double> & sigma,
-  const std::vector<double> & direction,
+  const Tensor<1, dim> & direction,
   const double & incoming)
   : Function<dim>(),
     Nr(sigma.size()),
@@ -183,11 +184,37 @@ double MultiRegionExactSolution<dim>::computeDistanceTravelledInRegion(
     }
   }
 
-  // if number of dimensions for this problem is less than 3, compute
-  // distance components for remaining dimensions up to 3
-  for (unsigned int d = dim; d < 3; ++d)
-    s[d] = direction[d] / direction[d_min] * s[d_min];
+  /*
+    // if number of dimensions for this problem is less than 3, compute
+    // distance components for remaining dimensions up to 3
+    for (unsigned int d = dim; d < 3; ++d)
+    {
+      s[d] = direction[d] / direction[d_min] * s[d_min];
+    }
 
+    // compute total distance
+    return std::sqrt(std::pow(s[0], 2) + std::pow(s[1], 2) + std::pow(s[2], 2));
+  */
   // compute total distance
-  return std::sqrt(std::pow(s[0], 2) + std::pow(s[1], 2) + std::pow(s[2], 2));
+  double total_distance;
+  if (dim == 1)
+  {
+    total_distance = s[0] / direction[0];
+  }
+  else if (dim == 2)
+  {
+    // compute direction component in z direction using the fact that direction
+    // vector is normalized to 1: omega_x^2 + omega_y^2 + omega_z^2 = 1
+    const double direction_z2 =
+      1.0 - std::pow(direction[0], 2) - std::pow(direction[1], 2);
+    const double sz2 = direction_z2 * std::pow(s[d_min] / direction[d_min], 2);
+    total_distance = std::sqrt(std::pow(s[0], 2) + std::pow(s[1], 2) + sz2);
+  }
+  else // dim == 3
+  {
+    total_distance =
+      std::sqrt(std::pow(s[0], 2) + std::pow(s[1], 2) + std::pow(s[2], 2));
+  }
+
+  return total_distance;
 }
