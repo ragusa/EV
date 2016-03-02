@@ -28,8 +28,6 @@ public:
 
   void get_parameters(ParameterHandler & parameter_handler);
 
-  std::string problem_name;
-
   std::string entropy_normalization;
 
   double constant_entropy_normalization_coefficient;

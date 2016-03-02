@@ -32,6 +32,14 @@ template <int dim>
 class PostProcessor
 {
 public:
+  /** \brief Alias for classification of temporal discretization */
+  using TemporalDiscretizationClassification =
+    typename RunParameters<dim>::TemporalDiscretizationClassification;
+  /** \brief Alias for SSPRK discretization */
+  using SSPRKDiscretization = typename RunParameters<dim>::SSPRKDiscretization;
+  /** \brief Alias for theta discretization */
+  using ThetaDiscretization = typename RunParameters<dim>::ThetaDiscretization;
+
   /** \brief Typedef for cell iterators */
   typedef typename DoFHandler<dim>::active_cell_iterator Cell;
 

@@ -1,89 +1,48 @@
-subsection finite element
-   set degree = 1
+subsection problem
+   set problem name = absorber
+end
+
+subsection scheme
+   set scheme            = high         # low|high|fct
+   set low order scheme  = lax          # constant|lax|dmp|di_visc|di_diff
+   set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
+end
+
+subsection refinement
+   set refinement cycles        = 1
+   set initial refinement level = 5
+end
+
+subsection time
+   set time step size option  = constant # constant|cfl
+   set time step size         = 0.001
+   set use default end time   = false
+   set end time               = 0.1
+end
+
+subsection temporal discretization
+   set temporal discretization = ssprk # ss|ssprk|theta
+   set ssprk discretization    = FE    # FE|SSP2|SSP3
+end
+
+subsection artificial viscosity
+   set entropy residual coefficient       = 1.0
+   set entropy jump coefficient           = 1.0
+   set entropy viscosity smoothing option = none # none|max|average
+   set lax viscosity coefficient          = 0.5
+   set use low order viscosity for first time step = true
+end
+
+subsection linear solver
+   set linear solver type = direct
 end
 
 subsection quadrature
    set number of quadrature points = 3
 end
 
-subsection scheme
-   set scheme = high # low|high|fct
-   set low order scheme = standard # constant|standard|dmp|di_visc|di_diff
-   set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
-end
-
-# Problem names:
-# absorber
-subsection problem
-   set problem name = absorber
-end
-
-subsection refinement
-   set initial refinement level = 5
-   set refinement cycles = 1
-   set refinement fraction = 0.5
-   set coarsening fraction = 0.01
-end
-
-subsection time
-   # options are <constant_dt|cfl_condition>
-   set time step size method = constant
-   set use default end time = false
-   set final time = 0.1
-   set time step size = 0.001
-   set cfl = 0.50
-   set steady state tolerance = 1.0e-6
-end
-
-subsection artificial viscosity
-   set constant viscosity value = 0.02
-   set first order viscosity coefficient = 0.5
-   set use low order viscosity for first time step = true
-   set entropy residual coefficient = 1.0
-   set entropy jump coefficient = 1.0
-   set entropy viscosity smoothing = none # none | max | average
-   set entropy viscosity smoothing weight = 4
-end
-
-subsection temporal integration
-   # options are <runge_kutta>
-   set temporal integrator = runge_kutta
-   # options are <ERK1|ERK2|ERK3|ERK4|SDIRK22>
-   set runge kutta method = FE
-end
-
-subsection nonlinear solver
-   set nonlinear verbosity = verbose
-   set nonlinear method = newton
-   set nonlinear absolute tolerance = 1e-6
-   set nonlinear relative tolerance = 1e-6
-   set max nonlinear iterations = 15
-   set damping = 0.9
-end
-
-subsection linear solver
-   set linear verbosity = verbose
-   set linear method = direct
-   set mass matrix linear method = direct
-   set linear absolute tolerance = 1e-10
-   set linear relative tolerance = 1e-10
-   set max linear iterations = 150
-end
-
 subsection output
-   set output period = 0
-   set max transient output size = 1e9
-   set output mesh = false
-   set output mass matrix = false
-   set output viscosity = false
-   set output viscosity transient = false
-   set exact solution refinement level = 7
-   set save convergence results = false
+   set verbosity level      = 0
    set print final solution = true
-
-   # verbosity level:
-   # 0: print only required info
-   # 1: print cycle, time step, stage info
-   # 2: print cycle, time step, stage info, timer summary, and extra info
-   set verbosity level = 0
 end
+

@@ -46,21 +46,67 @@ PostProcessor<dim>::PostProcessor(
   // assert that a nonempty problem name was provided
   Assert(!problem_name.empty(), ExcInvalidState());
 
-  // create map of temporal discretization to string identifier
-  std::map<typename RunParameters<dim>::TemporalDiscretization, std::string>
-    temp_discretization_map = {
-      {RunParameters<dim>::TemporalDiscretization::FE, "FE"},
-      {RunParameters<dim>::TemporalDiscretization::SSP3, "SSP3"}};
-
   // determine time discretization string
-  if (temp_discretization_map.find(parameters.time_discretization) ==
-      temp_discretization_map.end())
+  std::string timedisc_string;
+  switch (parameters.temporal_discretization)
   {
-    ExcNotImplemented();
-  }
-  else
-  {
-    timedisc_string = temp_discretization_map[parameters.time_discretization];
+    case TemporalDiscretizationClassification::ss: // steady-state
+    {
+      timedisc_string = "SS";
+      break;
+    }
+    case TemporalDiscretizationClassification::theta: // theta method
+    {
+      switch (parameters.theta_discretization)
+      {
+        case ThetaDiscretization::FE:
+        {
+          timedisc_string = "FE";
+          break;
+        }
+        case ThetaDiscretization::CN:
+        {
+          timedisc_string = "CN";
+          break;
+        }
+        case ThetaDiscretization::BE:
+        {
+          timedisc_string = "BE";
+          break;
+        }
+        default:
+        {
+          AssertThrow(false, ExcNotImplemented());
+        }
+      }
+      break;
+    }
+    case TemporalDiscretizationClassification::ssprk: // SSPRK method
+    {
+      switch (parameters.ssprk_discretization)
+      {
+        case SSPRKDiscretization::FE:
+        {
+          timedisc_string = "FE";
+          break;
+        }
+        case SSPRKDiscretization::SSP2:
+        {
+          timedisc_string = "SSP2";
+          break;
+        }
+        case SSPRKDiscretization::SSP3:
+        {
+          timedisc_string = "SSP3";
+          break;
+        }
+        default:
+        {
+          AssertThrow(false, ExcNotImplemented());
+        }
+      }
+      break;
+    }
   }
 
   // determine viscosity string
@@ -74,8 +120,8 @@ PostProcessor<dim>::PostProcessor(
         case RunParameters<dim>::LowOrderScheme::constant:
           scheme_string = "Constant";
           break;
-        case RunParameters<dim>::LowOrderScheme::standard:
-          scheme_string = "Low";
+        case RunParameters<dim>::LowOrderScheme::lax:
+          scheme_string = "Lax";
           break;
         case RunParameters<dim>::LowOrderScheme::dmp:
           scheme_string = "DMP";
@@ -286,7 +332,7 @@ void PostProcessor<dim>::output_dof_transient(
       Assert(transient_counter < 10000, ExcTooManyTransientOutputFiles());
 
       // make sure that total transient output size has not exceeded limit
-      if (transient_output_size < parameters.max_transient_output_size)
+      if (transient_output_size < parameters.transient_output_size_limit)
       {
         // increment transient output size estimate
         transient_output_size += 30 * solution.size();
@@ -398,7 +444,7 @@ void PostProcessor<dim>::output_viscosity_transient(
       Assert(transient_counter < 10000, ExcTooManyTransientOutputFiles());
 
       // make sure that total transient output size has not exceeded limit
-      if (transient_output_size < parameters.max_transient_output_size)
+      if (transient_output_size < parameters.transient_output_size_limit)
       {
         // increment transient output size estimate
         transient_output_size += 30 * viscosities[0]->size();
@@ -564,31 +610,22 @@ void PostProcessor<dim>::output_convergence_data()
     convergence_table.set_precision("L2 error", 3);
     convergence_table.set_scientific("L2 error", true);
 
-    // evaluate convergence rates
-    switch (parameters.refinement_mode)
+    // evaluate convergence rates, either with dx or dt
+    if (parameters.use_cell_size_for_convergence_rates && !is_steady_state)
     {
-      case RunParameters<dim>::RefinementMode::time:
-      {
-        // evaluate temporal convergence rates
-        convergence_table.evaluate_convergence_rates(
-          "L1 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
-        convergence_table.evaluate_convergence_rates(
-          "L2 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
-        break;
-      }
-      case RunParameters<dim>::RefinementMode::space:
-      {
-        // evaluate spatial convergence rates
-        convergence_table.evaluate_convergence_rates(
-          "L1 error", ConvergenceTable::reduction_rate_log2);
-        convergence_table.evaluate_convergence_rates(
-          "L2 error", ConvergenceTable::reduction_rate_log2);
-        break;
-      }
-      default:
-      {
-        ExcNotImplemented();
-      }
+      // evaluate spatial convergence rates
+      convergence_table.evaluate_convergence_rates(
+        "L1 error", ConvergenceTable::reduction_rate_log2);
+      convergence_table.evaluate_convergence_rates(
+        "L2 error", ConvergenceTable::reduction_rate_log2);
+    }
+    else
+    {
+      // evaluate temporal convergence rates
+      convergence_table.evaluate_convergence_rates(
+        "L1 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
+      convergence_table.evaluate_convergence_rates(
+        "L2 error", "1/dt", ConvergenceTable::reduction_rate_log2, 1);
     }
 
     // print convergence table to console

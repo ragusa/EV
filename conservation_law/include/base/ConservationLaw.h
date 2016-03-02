@@ -129,10 +129,10 @@ protected:
   /** \brief Typedef for cell iterator map to double */
   typedef std::map<Cell, double> CellMap;
 
-  using TimeStepSizeMethod = typename RunParameters<dim>::TimeStepSizeMethod;
-  using TemporalIntegrator = typename RunParameters<dim>::TemporalIntegrator;
-  using TemporalDiscretization =
-    typename RunParameters<dim>::TemporalDiscretization;
+  using TimeStepSizeOption = typename RunParameters<dim>::TimeStepSizeOption;
+  using TemporalDiscretizationClassification =
+    typename RunParameters<dim>::TemporalDiscretizationClassification;
+  using SSPRKDiscretization = typename RunParameters<dim>::SSPRKDiscretization;
   using Scheme = typename RunParameters<dim>::Scheme;
   using LowOrderScheme = typename RunParameters<dim>::LowOrderScheme;
   using HighOrderScheme = typename RunParameters<dim>::HighOrderScheme;

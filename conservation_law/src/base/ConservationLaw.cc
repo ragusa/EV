@@ -125,10 +125,10 @@ void ConservationLaw<dim>::run()
         new_solution, 0.0, dof_handler, "solution", false);
     }
 
-    // solve transient with selected time integrator
-    switch (parameters.temporal_integrator)
+    // solve transient with selected time discretization
+    switch (parameters.temporal_discretization)
     {
-      case TemporalIntegrator::runge_kutta: // Runge-Kutta
+      case TemporalDiscretizationClassification::ssprk: // SSPRK
         solve_runge_kutta(postprocessor);
         break;
       default:
@@ -199,8 +199,8 @@ void ConservationLaw<dim>::initialize_system()
       low_order_viscosity_type = ViscosityType::constant;
       low_order_diffusion_type = DiffusionType::laplacian;
       break;
-    case LowOrderScheme::standard:
-      low_order_viscosity_type = ViscosityType::low;
+    case LowOrderScheme::lax:
+      low_order_viscosity_type = ViscosityType::lax;
       low_order_diffusion_type = DiffusionType::laplacian;
       break;
     case LowOrderScheme::dmp:
@@ -472,8 +472,8 @@ void ConservationLaw<dim>::setup_system()
         parameters.constant_viscosity_value, dof_handler);
       break;
     }
-    // low-order viscosity
-    case ViscosityType::low:
+    // Lax viscosity
+    case ViscosityType::lax:
     {
       // ensure diffusion type is compatible
       Assert(low_order_diffusion_type == DiffusionType::none ||
@@ -484,14 +484,14 @@ void ConservationLaw<dim>::setup_system()
       auto viscosity_multiplier = create_viscosity_multiplier();
 
       // create low-order viscosity
-      low_order_viscosity = std::make_shared<LowOrderViscosity<dim>>(
-        parameters.first_order_viscosity_coef,
-        cell_diameter,
-        max_flux_speed_cell,
-        fe,
-        dof_handler,
-        cell_quadrature,
-        viscosity_multiplier);
+      low_order_viscosity =
+        std::make_shared<LowOrderViscosity<dim>>(parameters.lax_viscosity_coef,
+                                                 cell_diameter,
+                                                 max_flux_speed_cell,
+                                                 fe,
+                                                 dof_handler,
+                                                 cell_quadrature,
+                                                 viscosity_multiplier);
 
       break;
     }
@@ -772,13 +772,13 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
 
   // create linear solver
   linear_solver = std::make_shared<LinearSolver<dim>>(
-    parameters.linear_solver,
+    parameters.linear_solver_type,
     constraints,
     dof_handler,
     problem_base_parameters->dirichlet_function);
 
   // create SSPRK time integrator
-  SSPRKTimeIntegrator<dim> ssprk(parameters.time_discretization,
+  SSPRKTimeIntegrator<dim> ssprk(parameters.ssprk_discretization,
                                  n_dofs,
                                  *linear_solver,
                                  unconstrained_sparsity_pattern);
@@ -810,16 +810,16 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
 
     // compute dt
     double dt;
-    switch (parameters.time_step_size_method)
+    switch (parameters.time_step_size_option)
     {
-      case TimeStepSizeMethod::constant:
+      case TimeStepSizeOption::constant:
         dt = parameters.time_step_size;
         break;
-      case TimeStepSizeMethod::cfl:
+      case TimeStepSizeOption::cfl:
         dt = compute_dt_from_cfl_condition();
         break;
       default:
-        Assert(false, ExcNotImplemented());
+        throw ExcNotImplemented();
         break;
     }
     // check end of transient and shorten last time step if necessary

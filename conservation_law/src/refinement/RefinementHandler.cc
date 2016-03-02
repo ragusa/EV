@@ -2,9 +2,8 @@
  * \brief Constructor.
  */
 template <int dim>
-RefinementHandler<dim>::RefinementHandler(
-  const RunParameters<dim> & parameters_,
-  Triangulation<dim> & triangulation_)
+RefinementHandler<dim>::RefinementHandler(const RunParameters<dim> & parameters_,
+                                          Triangulation<dim> & triangulation_)
   : triangulation(&triangulation_),
     refine_space(parameters_.refine_space),
     refine_time(parameters_.refine_time),

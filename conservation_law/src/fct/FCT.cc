@@ -51,7 +51,7 @@ FCT<dim>::FCT(const RunParameters<dim> & parameters_,
     dofs_per_cell(dofs_per_cell_),
     dofs_per_cell_per_component(dofs_per_cell_ / n_components_),
     fct_bounds_type(parameters_.fct_bounds_type),
-    antidiffusion_type(parameters_.antidiffusion_type),
+    antidiffusion_type(parameters_.antidiffusion_option),
     synchronization_type(parameters_.fct_synchronization_type),
     fct_limitation_type(parameters_.fct_limitation_type),
     use_star_states_in_fct_bounds(use_star_states_in_fct_bounds_),
@@ -174,14 +174,14 @@ void FCT<dim>::solve_fct_system(
 
       break;
     default:
-      Assert(false, ExcNotImplemented());
+      throw ExcNotImplemented();
       break;
   }
 
   // compute limited flux correction sum and add it to rhs
   switch (antidiffusion_type)
   {
-    case AntidiffusionType::limited: // normal, limited antidiffusion flux
+    case AntidiffusionOption::limited: // normal, limited antidiffusion flux
       // compute limiter matrix
       compute_limiting_coefficients_zalesak();
 
@@ -194,10 +194,10 @@ void FCT<dim>::solve_fct_system(
           synchronize_min();
           break;
         case FCTSynchronizationType::compound:
-          Assert(false, ExcNotImplemented());
+          throw ExcNotImplemented();
           break;
         default:
-          Assert(false, ExcNotImplemented());
+          throw ExcNotImplemented();
           break;
       }
 
@@ -205,14 +205,14 @@ void FCT<dim>::solve_fct_system(
       compute_limited_flux_correction_vector();
 
       break;
-    case AntidiffusionType::full: // full antidiffusion flux
+    case AntidiffusionOption::full: // full antidiffusion flux
       compute_full_flux_correction_vector();
       break;
-    case AntidiffusionType::none: // no antidiffusion flux
+    case AntidiffusionOption::none: // no antidiffusion flux
       flux_correction_vector = 0;
       break;
     default:
-      Assert(false, ExcNotImplemented());
+      throw ExcNotImplemented();
       break;
   }
 
@@ -232,7 +232,7 @@ void FCT<dim>::solve_fct_system(
 
   // check that local discrete maximum principle is satisfied at all time steps
   if (fct_limitation_type == FCTLimitationType::conservative &&
-      antidiffusion_type != AntidiffusionType::full)
+      antidiffusion_type != AntidiffusionOption::full)
   {
     bool fct_bounds_satisfied_this_step =
       check_fct_bounds_satisfied(new_solution);

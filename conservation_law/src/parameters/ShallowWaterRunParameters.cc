@@ -6,7 +6,7 @@
 using namespace dealii;
 
 /**
- * \brief Constructor for the ShallowWaterRunParameters class
+ * \brief Constructor.
  */
 template <int dim>
 ShallowWaterRunParameters<dim>::ShallowWaterRunParameters()
@@ -24,14 +24,6 @@ void ShallowWaterRunParameters<dim>::declare_parameters(
 {
   // declare conservation law parameters
   RunParameters<dim>::declare_run_parameters(parameter_handler);
-
-  // problem
-  parameter_handler.enter_subsection("problem");
-  {
-    parameter_handler.declare_entry(
-      "problem name", "default", Patterns::Anything(), "Problem name");
-  }
-  parameter_handler.leave_subsection();
 
   // artificial viscosity
   parameter_handler.enter_subsection("artificial viscosity");
@@ -66,13 +58,6 @@ void ShallowWaterRunParameters<dim>::get_parameters(
 {
   // get conservation law parameters
   this->get_run_parameters(parameter_handler);
-
-  // problem
-  parameter_handler.enter_subsection("problem");
-  {
-    problem_name = parameter_handler.get("problem name");
-  }
-  parameter_handler.leave_subsection();
 
   // artificial viscosity
   parameter_handler.enter_subsection("artificial viscosity");

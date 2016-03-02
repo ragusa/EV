@@ -25,8 +25,6 @@ public:
   static void declare_parameters(ParameterHandler & parameter_handler);
 
   void get_parameters(ParameterHandler & parameter_handler);
-
-  std::string problem_name;
 };
 
 #include "src/parameters/TransportRunParameters.cc"

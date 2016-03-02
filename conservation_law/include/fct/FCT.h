@@ -64,7 +64,7 @@ class FCT
 public:
   using FCTBoundsType = typename RunParameters<dim>::FCTBoundsType;
 
-  using AntidiffusionType = typename RunParameters<dim>::AntidiffusionType;
+  using AntidiffusionOption = typename RunParameters<dim>::AntidiffusionOption;
 
   using FCTSynchronizationType =
     typename RunParameters<dim>::FCTSynchronizationType;
@@ -225,7 +225,7 @@ protected:
 
   const FCTBoundsType fct_bounds_type;
 
-  const AntidiffusionType antidiffusion_type;
+  const AntidiffusionOption antidiffusion_type;
 
   const FCTSynchronizationType synchronization_type;
 

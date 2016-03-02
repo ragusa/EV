@@ -9,65 +9,69 @@ end
 
 subsection scheme
    set scheme            = high         # low|high|fct
-   set low order scheme  = standard     # constant|lax|dmp|di_visc|di_diff
+   set low order scheme  = lax          # constant|lax|dmp|di_visc|di_diff
    set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
 end
 
 subsection refinement
+   set refinement cycles        = 1
    set refine space             = true
    set refine time              = true
-   set time refinement factor   = 0.5
-   set use adaptive refinement  = false
    set initial refinement level = 5
-   set refinement cycles        = 1
+   set use adaptive mesh refinement = false
+   set time refinement factor   = 0.5
    set refinement fraction      = 0.5
    set coarsening fraction      = 0.01
    set use cell size for convergence rates = false
 end
 
-subsection temporal discretization
-   set temporal discretization = ssprk # ss|ssprk|theta
-   set ssprk discretization    = FE    # FE|SSP2|SSP3
-   set theta discretization    = BE    # <FE|CN|BE>
-end
-
 subsection time
-   set time step size method  = constant # constant|cfl
-   set use default end time   = false
-   set final time             = 0.002
-   set time step size         = 0.001
+   set time step size option  = constant # constant|cfl
    set cfl                    = 0.50
+   set time step size         = 0.001
+   set use default end time   = false
+   set end time               = 0.002
    set steady state tolerance = 1.0e-6
 end
 
+subsection temporal discretization
+   set temporal discretization = ssprk # ss|ssprk|theta
+   set ssprk discretization    = FE    # FE|SSP2|SSP3
+   set theta discretization    = BE    # FE|CN|BE
+end
+
 subsection artificial viscosity
-   set constant viscosity value           = 0.02
-   set first order viscosity coefficient  = 0.5
-   set use low order viscosity for first time step = true
    set entropy residual coefficient       = 1.0
    set entropy jump coefficient           = 1.0
-   set entropy viscosity smoothing        = none # none|max|average
+   set entropy viscosity smoothing option = none # none|max|average
    set entropy viscosity smoothing weight = 4
+   set constant viscosity value           = 0.02
+   set lax viscosity coefficient          = 0.5
+   set use low order viscosity for first time step = true
 end
 
 subsection fct
-   set fct limitation option         = limited # limited|full|none
-   set fct synchronization           = none    # none|min|compound
+   set fct bounds type               = dmp     # dmp
+   set antidiffusion option          = limited # limited|full|none
+   set fct synchronization type      = none    # none|min|compound
+   set fct limitation type           = conservative # conservative|characteristic
    set fct initialization option     = zero    # zero|low|high
-   set use star states in fct bounds = true
    set skip fct if bounds satisfied  = false
-   set include analytic bounds       = false
    set use cumulative antidiffusion algorithm = true
-end
-
-subsection nonlinear solver
-   set nonlinear tolerance = 1.0e-10
-   set nonlinear max iteration = 1000
-   set relaxation factor = 1.0
+   set include analytic bounds       = false
+   set use star states in fct bounds = false
+   set output limiter matrix         = false
+   set output fct bounds             = false
 end
 
 subsection linear solver
-   set linear solver = direct
+   set linear solver type = direct
+end
+
+subsection nonlinear solver
+   set nonlinear tolerance      = 1.0e-10
+   set nonlinear max iterations = 1000
+   set relaxation factor        = 1.0
 end
 
 subsection finite element
@@ -81,7 +85,7 @@ end
 subsection output
    set verbosity level    = 1    # 0|1|2 (0 is least verbose)
    set output period      = 0
-   set output size limit  = 1e9
+   set transient output size limit = 1e9
    set output mesh        = false
    set output mass matrix = false
    set output viscosity   = true

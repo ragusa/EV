@@ -4,7 +4,7 @@
 using namespace dealii;
 
 /**
- * \brief Constructor for the TransportRunParameters class
+ * \brief Constructor.
  */
 template <int dim>
 TransportRunParameters<dim>::TransportRunParameters()
@@ -12,28 +12,22 @@ TransportRunParameters<dim>::TransportRunParameters()
 }
 
 /**
- * \brief defines input parameters
- * \param parameter_handler parameter handler for the Transport class
+ * \brief Defines input parameters.
+ *
+ * \param[in] parameter_handler parameter handler for the Transport class
  */
 template <int dim>
 void TransportRunParameters<dim>::declare_parameters(
   ParameterHandler & parameter_handler)
 {
-  // declare conservation law parameters
+  // declare base run parameters
   RunParameters<dim>::declare_run_parameters(parameter_handler);
-
-  // problem
-  parameter_handler.enter_subsection("problem");
-  {
-    parameter_handler.declare_entry(
-      "problem name", "default", Patterns::Anything(), "Problem name");
-  }
-  parameter_handler.leave_subsection();
 }
 
 /**
- * \brief gets input parameters from parameter handler
- * \param parameter_handler parameter handler for the Transport class
+ * \brief Gets input parameters from parameter handler.
+ *
+ * \param[in] parameter_handler parameter handler for the Transport class
  */
 template <int dim>
 void TransportRunParameters<dim>::get_parameters(
@@ -41,11 +35,4 @@ void TransportRunParameters<dim>::get_parameters(
 {
   // get conservation law parameters
   this->get_run_parameters(parameter_handler);
-
-  // problem
-  parameter_handler.enter_subsection("problem");
-  {
-    problem_name = parameter_handler.get("problem name");
-  }
-  parameter_handler.leave_subsection();
 }
