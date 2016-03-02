@@ -1,0 +1,82 @@
+    \documentclass{beamer}
+
+    \usetheme{Warsaw}
+
+    \begin{document}
+
+    \title[Short Title]{Long Title}
+    \author[Lastname]{Author}
+
+    \institute{Address Information}
+
+    \date{Today}
+
+
+    \begin{frame}
+    \titlepage
+    \end{frame}
+
+
+    \begin{frame}
+    \frametitle{Contents}
+    \tableofcontents
+    \end{frame}
+
+
+    \section{Introduction}
+
+    \begin{frame}
+    \frametitle{Introduction}
+    Some introductory text here.\\
+    \hyperlink{mr<1>}{\beamerskipbutton{Skip Introduction}}
+    \end{frame}
+
+
+    \subsection{Introduction sub-1}
+    \begin{frame}
+    A page of intro.
+    \end{frame}
+
+
+    \subsection{Introduction sub-2}
+    \begin{frame}
+    Another page of intro.
+    \end{frame}
+
+
+    \section{Main Results}
+
+    \begin{frame}[label=mr]
+    \frametitle{Main Results}
+    Some main results here.\\
+    \hyperlink{apa<1>}{\beamergotobutton{Go to Appendix~A}}\\
+    \hyperlink{apb<1>}{\beamergotobutton{Go to Appendix~B}}
+    \end{frame}
+
+
+    \section{Conclusions}
+
+    \begin{frame}
+    \frametitle{Conclusions}
+    Some Conclusions\\
+    \end{frame}
+		
+    \section{Appendix~A}
+
+    \begin{frame}[label=apa]
+    \frametitle{Appendix~A}
+    Here is some information.\\
+    \hyperlink{mr<1>}{\beamerreturnbutton{Go Back}}
+
+    \end{frame}
+
+
+    \section{Appendix~B}
+
+    \begin{frame}[label=apb]
+    \frametitle{Appendix~B}
+    Here is some other information.\\
+    \hyperlink{mr<1>}{\beamerreturnbutton{Go Back}}
+    \end{frame}
+
+    \end{document}
