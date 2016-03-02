@@ -6,7 +6,8 @@ PostProcessor<dim>::PostProcessor(
   const TransportParameters<dim> & parameters_,
   const bool has_exact_solution_,
   std::shared_ptr<Function<dim>> & exact_solution_function_)
-  : parameters(parameters_),
+  : 
+    parameters(parameters_),
     has_exact_solution(has_exact_solution_),
     exact_solution_function(exact_solution_function_),
     is_steady_state(parameters.temporal_discretization ==
@@ -124,7 +125,7 @@ PostProcessor<dim>::PostProcessor(
 
   // create name of output subdirectory
   std::stringstream output_dir_ss;
-  output_dir_ss << "output/" << parameters.problem_name << "/";
+  output_dir_ss << SOURCE_PATH << "/output/" << parameters.problem_name << "/";
   output_dir = output_dir_ss.str();
 }
 
@@ -147,9 +148,6 @@ void PostProcessor<dim>::output_results(const Vector<double> & solution,
   if (is_last_cycle)
   {
     // create output directory if it doesn't exist
-    create_directory("output");
-
-    // create output subdirectory if it doesn't exist
     create_directory(output_dir);
 
     // output grid
@@ -230,8 +228,12 @@ void PostProcessor<dim>::output_results(const Vector<double> & solution,
       }
 
       // print convergence table to console
-      std::cout << std::endl;
-      convergence_table.write_text(std::cout);
+      //if (parameters.verbosity_level > 0)
+      if (false)
+      {
+        std::cout << std::endl;
+        convergence_table.write_text(std::cout);
+      }
 
       // save convergence results to file
       if (parameters.save_convergence_results)
@@ -262,9 +264,6 @@ void PostProcessor<dim>::output_solution(const Vector<double> & solution,
   if (is_last_cycle)
   {
     // create output directory if it doesn't exist
-    create_directory("output");
-
-    // create output subdirectory if it doesn't exist
     create_directory(output_dir);
 
     // create DataOut object for solution
@@ -309,9 +308,6 @@ void PostProcessor<dim>::output_viscosity(
   const DoFHandler<dim> & dof_handler) const
 {
   // create output directory if it doesn't exist
-  create_directory("output");
-
-  // create output subdirectory if it doesn't exist
   create_directory(output_dir);
 
   // add viscosities to data out object
@@ -417,9 +413,6 @@ void PostProcessor<dim>::output_grid(
   const Triangulation<dim> & triangulation) const
 {
   // create output directory if it doesn't exist
-  create_directory("output");
-
-  // create output subdirectory if it doesn't exist
   create_directory(output_dir);
 
   // create output filestream

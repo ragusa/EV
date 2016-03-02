@@ -16,7 +16,7 @@
 #include <deal.II/fe/fe_values_extractors.h>
 #include <deal.II/lac/vector.h>
 #include "include/base/ConservationLaw.h"
-#include "include/parameters/EulerParameters.h"
+#include "include/parameters/EulerRunParameters.h"
 #include "include/postprocessing/EulerRiemannSolver.h"
 
 /** \class Euler
@@ -26,13 +26,13 @@ template <int dim>
 class Euler : public ConservationLaw<dim>
 {
 public:
-  Euler(const EulerParameters<dim> & params);
+  Euler(const EulerRunParameters<dim> & params);
 
 private:
   /** \brief Typedef for cell iterator */
   using Cell = typename ConservationLaw<dim>::Cell;
 
-  EulerParameters<dim> euler_parameters;
+  EulerRunParameters<dim> euler_parameters;
 
   // number of components and position of components in solution vector
   static const unsigned int n_euler_components = dim + 2;

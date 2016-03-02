@@ -29,7 +29,7 @@ end
 subsection refinement
    # refinementlevel:n_cells
    # 5:32, 8:256, 9:512, 10:1024, 11:2048
-   set initial refinement level = 8
+   set initial refinement level = 5
    set refinement cycles = 1
    set refinement fraction = 0.3
    set coarsening fraction = 0.03
@@ -100,7 +100,7 @@ subsection output
 end
 
 subsection fct
-   set fct limitation type = conservative # conservative | characteristic
+   set fct limitation type = characteristic # conservative | characteristic
    set fct bounds type = dmp # dmp
    set antidiffusion = limited # limited | full | none
    set fct synchronization = min # none | min | compound

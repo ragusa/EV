@@ -97,5 +97,5 @@ subsection output
    # 0: print only required info
    # 1: print cycle, time step, stage info
    # 2: print cycle, time step, stage info, timer summary, and extra info
-   set verbosity level = 1
+   set verbosity level = 0
 end

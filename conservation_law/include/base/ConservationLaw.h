@@ -421,8 +421,6 @@ protected:
   double minimum_cell_diameter;
   /** \brief Maximum flux speed in domain */
   double max_flux_speed;
-  /** \brief Domain volume */
-  double domain_volume;
 
   // maps
   CellMap cell_diameter;

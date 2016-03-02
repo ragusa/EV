@@ -6,7 +6,7 @@
 #define ShallowWaterEntropy_h
 
 #include <string>
-#include "include/parameters/ShallowWaterParameters.h"
+#include "include/parameters/ShallowWaterRunParameters.h"
 #include "include/fe/ShallowWaterEntropyFluxFEValuesCell.h"
 #include "include/fe/ShallowWaterEntropyFluxFEValuesFace.h"
 
@@ -23,7 +23,7 @@ public:
   /** \brief Alias for cell iterator */
   using Cell = typename Entropy<dim>::Cell;
 
-  ShallowWaterEntropy(const ShallowWaterParameters<dim> & parameters,
+  ShallowWaterEntropy(const ShallowWaterRunParameters<dim> & parameters,
                       const FEValuesExtractors::Scalar & height_extractor,
                       const FEValuesExtractors::Vector & momentum_extractor,
                       const double & gravity,

@@ -23,7 +23,7 @@ end
 
 subsection exact solution
   set has exact solution = true
-  set exact solution type = function
+  set exact solution type = parsed
   set exact solution = \
     if(x<0.5-0.6*t, if(y>0.5+0.15*t, -0.2, 0.5), if(x<0.5-0.25*t, \
     if(y>-8./7.*x+15./14.-15./28.*t, -1.0, 0.5), if(x<0.5+0.5*t, \

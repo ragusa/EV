@@ -22,7 +22,7 @@ end
 
 subsection exact solution
   set has exact solution = true
-  set exact solution type = function
+  set exact solution type = parsed
   set exact solution = if(x-0.5*t<0, u_left, u_right)
 end
 

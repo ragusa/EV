@@ -70,3 +70,8 @@ INCLUDE_DIRECTORIES(../conservation_law)
 # don't know what this does
 DEAL_II_INVOKE_AUTOPILOT()
 
+# testing
+ENABLE_TESTING()
+ADD_SUBDIRECTORY(tests/transport_dmp)
+ADD_SUBDIRECTORY(tests/transport_ev_dmp)
+

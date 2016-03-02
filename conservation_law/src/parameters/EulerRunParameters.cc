@@ -1,24 +1,24 @@
-/** \file EulerParameters.cc
- *  \brief Provides the function definitions for the EulerParameters class.
+/** \file EulerRunParameters.cc
+ *  \brief Provides the function definitions for the EulerRunParameters class.
  */
 using namespace dealii;
 
-/** \fn EulerParameters<dim>::EulerParameters()
- *  \brief Constructor for the EulerParameters class.
+/** \fn EulerRunParameters<dim>::EulerRunParameters()
+ *  \brief Constructor for the EulerRunParameters class.
  */
 template <int dim>
-EulerParameters<dim>::EulerParameters()
+EulerRunParameters<dim>::EulerRunParameters()
 {
 }
 
 /**
- * \fn    EulerParameters<dim>::declare_euler_parameters(ParameterHandler
+ * \fn    EulerRunParameters<dim>::declare_euler_parameters(ParameterHandler
  * &parameter_handler)
  * \brief defines input parameters
  * \param parameter_handler parameter handler for the Euler class
  */
 template <int dim>
-void EulerParameters<dim>::declare_euler_parameters(
+void EulerRunParameters<dim>::declare_euler_parameters(
   ParameterHandler & parameter_handler)
 {
   // declare conservation law parameters
@@ -47,13 +47,13 @@ void EulerParameters<dim>::declare_euler_parameters(
 }
 
 /**
- * \fn    EulerParameters<dim>::get_euler_parameters(ParameterHandler
+ * \fn    EulerRunParameters<dim>::get_euler_parameters(ParameterHandler
  * &parameter_handler)
  * \brief get input parameters from parameter handler
  * \param parameter_handler parameter handler for the Euler class
  */
 template <int dim>
-void EulerParameters<dim>::get_euler_parameters(
+void EulerRunParameters<dim>::get_euler_parameters(
   ParameterHandler & parameter_handler)
 
 {

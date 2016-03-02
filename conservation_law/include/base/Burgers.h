@@ -17,7 +17,7 @@
 #include <deal.II/lac/vector.h>
 #include "include/base/ConservationLaw.h"
 #include "include/entropy/ScalarEntropy.h"
-#include "include/parameters/BurgersParameters.h"
+#include "include/parameters/BurgersRunParameters.h"
 #include "include/parameters/BurgersProblemParameters.h"
 #include "include/viscosity/BurgersMaxWaveSpeed.h"
 
@@ -52,10 +52,10 @@ template <int dim>
 class Burgers : public ConservationLaw<dim>
 {
 public:
-  Burgers(const BurgersParameters<dim> & params);
+  Burgers(const BurgersRunParameters<dim> & params);
 
 private:
-  BurgersParameters<dim> burgers_parameters;
+  BurgersRunParameters<dim> burgers_parameters;
 
   const FEValuesExtractors::Scalar velocity_extractor;
 

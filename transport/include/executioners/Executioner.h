@@ -1,6 +1,7 @@
 #ifndef Executioner_cc
 #define Executioner_cc
 
+#include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/quadrature_lib.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/fe/fe_system.h>
@@ -8,6 +9,7 @@
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/grid/tria.h>
 #include <deal.II/lac/sparse_matrix.h>
+
 #include "EntropyViscosity.h"
 #include "FCT.h"
 #include "NonlinearSolver.h"
@@ -37,6 +39,8 @@ public:
 
   Vector<double> getFinalSolution() const;
 
+  void print_solution() const;
+
 protected:
   void setupSystem();
   void assembleInviscidSteadyStateMatrix();
@@ -47,6 +51,13 @@ protected:
                         Vector<double> & b,
                         Vector<double> & x,
                         const double & t = 0.0);
+
+
+  /** \brief Conditional output stream 1 */
+  ConditionalOStream cout1;
+
+  /** \brief Conditional output stream 2 */
+  ConditionalOStream cout2;
 
   const TransportParameters<dim> parameters;
 

@@ -11,10 +11,10 @@
 //#include "include/base/Euler.h"
 #include "include/base/ShallowWater.h"
 #include "include/base/Transport.h"
-#include "include/parameters/BurgersParameters.h"
-#include "include/parameters/EulerParameters.h"
-#include "include/parameters/ShallowWaterParameters.h"
-#include "include/parameters/TransportParameters.h"
+#include "include/parameters/BurgersRunParameters.h"
+#include "include/parameters/EulerRunParameters.h"
+#include "include/parameters/ShallowWaterRunParameters.h"
+#include "include/parameters/TransportRunParameters.h"
 
 using namespace dealii;
 
@@ -25,29 +25,29 @@ int main(int argc, char * argv[])
     dealii::deallog.depth_console(0);
 
     // spatial dimensions
-    const int dimension = 2;
+    const int dimension = 1;
 
     // declare parameter handler
     ParameterHandler parameter_handler;
 
 #if defined(BURGERS)
     // read input and declare problem
-    BurgersParameters<dimension>::declare_parameters(parameter_handler);
+    BurgersRunParameters<dimension>::declare_parameters(parameter_handler);
     if (argc > 1)
       parameter_handler.read_input(argv[1]);
     else
       parameter_handler.read_input("input/burgers.prm");
-    BurgersParameters<dimension> parameters;
+    BurgersRunParameters<dimension> parameters;
     parameters.get_parameters(parameter_handler);
     Burgers<dimension> problem(parameters);
 #elif defined(EULER)
     // read input and declare problem
-    EulerParameters<dimension>::declare_parameters(parameter_handler);
+    EulerRunParameters<dimension>::declare_parameters(parameter_handler);
     if (argc > 1)
       parameter_handler.read_input(argv[1]);
     else
       parameter_handler.read_input("input/euler.prm");
-    EulerParameters<dimension> parameters;
+    EulerRunParameters<dimension> parameters;
     parameters.get_parameters(parameter_handler);
     Euler<dimension> problem(parameters);
 #elif defined(SHALLOWWATER)
@@ -55,22 +55,22 @@ int main(int argc, char * argv[])
     Assert(dimension <= 2, ExcImpossibleInDim(dimension));
 
     // read input and declare problem
-    ShallowWaterParameters<dimension>::declare_parameters(parameter_handler);
+    ShallowWaterRunParameters<dimension>::declare_parameters(parameter_handler);
     if (argc > 1)
       parameter_handler.read_input(argv[1]);
     else
       parameter_handler.read_input("input/shallowwater.prm");
-    ShallowWaterParameters<dimension> parameters;
+    ShallowWaterRunParameters<dimension> parameters;
     parameters.get_parameters(parameter_handler);
     ShallowWater<dimension> problem(parameters);
 #elif defined(TRANSPORT)
     // read input and declare problem
-    TransportParameters<dimension>::declare_parameters(parameter_handler);
+    TransportRunParameters<dimension>::declare_parameters(parameter_handler);
     if (argc > 1)
       parameter_handler.read_input(argv[1]);
     else
       parameter_handler.read_input("input/transport.prm");
-    TransportParameters<dimension> parameters;
+    TransportRunParameters<dimension> parameters;
     parameters.get_parameters(parameter_handler);
     Transport<dimension> problem(parameters);
 #else

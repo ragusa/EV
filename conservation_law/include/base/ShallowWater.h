@@ -11,9 +11,7 @@
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/grid/tria_accessor.h>
 #include <deal.II/grid/tria_iterator.h>
-#include <deal.II/grid/grid_in.h>
 #include <deal.II/numerics/data_component_interpretation.h>
-#include <deal.II/fe/mapping.h>
 #include <deal.II/fe/fe_values.h>
 #include <deal.II/fe/fe_values_extractors.h>
 #include <deal.II/lac/vector.h>
@@ -26,7 +24,7 @@
 #include "include/entropy/Entropy.h"
 #include "include/entropy/ShallowWaterEntropy.h"
 #include "include/fct/ShallowWaterFCT.h"
-#include "include/parameters/ShallowWaterParameters.h"
+#include "include/parameters/ShallowWaterRunParameters.h"
 #include "include/parameters/ShallowWaterProblemParameters.h"
 #include "include/postprocessing/ShallowWaterPostProcessor.h"
 #include "include/postprocessing/ShallowWaterRiemannSolver.h"
@@ -60,7 +58,7 @@ template <int dim>
 class ShallowWater : public ConservationLaw<dim>
 {
 public:
-  ShallowWater(const ShallowWaterParameters<dim> & params);
+  ShallowWater(const ShallowWaterRunParameters<dim> & params);
 
 private:
   /** \brief Typedef for cell iterator */
@@ -78,9 +76,9 @@ private:
     std::vector<FEValuesExtractors::Scalar> & scalar_extractors,
     std::vector<FEValuesExtractors::Vector> & vector_extractors) const override;
 
-  void assemble_lumped_mass_matrix() override;
-
   void define_problem() override;
+
+  void assemble_lumped_mass_matrix() override;
 
   void perform_nonstandard_setup() override;
 
@@ -123,16 +121,16 @@ private:
     const override;
 
   /** \brief Parameters for shallow water equations */
-  ShallowWaterParameters<dim> sw_parameters;
+  ShallowWaterRunParameters<dim> sw_parameters;
+
+  /** \brief Problem parameters */
+  ShallowWaterProblemParameters<dim> problem_parameters;
 
   /** \brief FE values extractor for height */
   const FEValuesExtractors::Scalar height_extractor;
 
   /** \brief FE values extractor for momentum */
   const FEValuesExtractors::Vector momentum_extractor;
-
-  /** \brief Acceleration due to gravity \f$g\f$ */
-  double gravity;
 
   /** \brief Finite element for bathymetry */
   const FE_Q<dim> fe_bathymetry;
@@ -142,9 +140,6 @@ private:
 
   /** \brief Bathymetry (bottom topography) vector \f$b\f$ */
   Vector<double> bathymetry_vector;
-
-  /** \brief Bathymetry (bottom topography) function \f$b\f$ */
-  std::shared_ptr<Function<dim>> bathymetry_function;
 };
 
 #include "src/base/ShallowWater.cc"

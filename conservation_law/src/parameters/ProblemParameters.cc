@@ -6,11 +6,19 @@
 /**
  * \brief Constructor.
  *
- * \param[in] problem_name_  name of problem
+ * \param[in] problem_name_            name of problem
+ * \param[in] n_components_            number of solution components
+ * \param[in] specified_steady_state_  flag that problem is to be run in
+ *            steady-state
  */
 template <int dim>
-ProblemParameters<dim>::ProblemParameters(const std::string & problem_name_)
-  : problem_name(problem_name_)
+ProblemParameters<dim>::ProblemParameters(const std::string & problem_name_,
+                                          const unsigned int & n_components_,
+                                          const bool & specified_steady_state_)
+  : problem_name(problem_name_),
+    n_components(n_components_),
+    specified_steady_state(specified_steady_state_),
+    initial_conditions_function(n_components_)
 {
 }
 
@@ -20,8 +28,8 @@ ProblemParameters<dim>::ProblemParameters(const std::string & problem_name_)
 template <int dim>
 void ProblemParameters<dim>::declare_base_parameters()
 {
-  // dimension
-  parameter_handler.enter_subsection("dimension");
+  // validity
+  parameter_handler.enter_subsection("validity");
   {
     parameter_handler.declare_entry("valid in 1d",
                                     "false",
@@ -35,6 +43,11 @@ void ProblemParameters<dim>::declare_base_parameters()
                                     "false",
                                     Patterns::Bool(),
                                     "Flag signalling problem is valid in 3-D");
+    parameter_handler.declare_entry(
+      "is steady state problem",
+      "false",
+      Patterns::Bool(),
+      "Flag signalling that problem is a steady-state problem");
   }
   parameter_handler.leave_subsection();
 
@@ -154,12 +167,14 @@ void ProblemParameters<dim>::get_and_process_parameters(
 template <int dim>
 void ProblemParameters<dim>::get_base_parameters()
 {
-  // dimension
-  parameter_handler.enter_subsection("dimension");
+  // validity
+  parameter_handler.enter_subsection("validity");
   {
     valid_in_1d = parameter_handler.get_bool("valid in 1d");
     valid_in_2d = parameter_handler.get_bool("valid in 2d");
     valid_in_3d = parameter_handler.get_bool("valid in 3d");
+    is_steady_state_problem =
+      parameter_handler.get_bool("is steady state problem");
   }
   parameter_handler.leave_subsection();
 
@@ -224,6 +239,9 @@ void ProblemParameters<dim>::process_base_parameters(
   if (!valid_in_3d)
     Assert(dim != 3, ExcImpossibleInDim(dim));
 
+  // assert that problem is steady-state or transient
+  Assert(specified_steady_state == is_steady_state_problem, ExcNotImplemented());
+
   // constants for function parsers
   constants["pi"] = numbers::PI;
   constants["x_min"] = x_start;
@@ -240,11 +258,11 @@ void ProblemParameters<dim>::process_base_parameters(
     // if exact solution was not created in derived class
     if (!(exact_solution_function))
     {
-      if (exact_solution_type == "function")
+      if (exact_solution_type == "parsed")
       {
         // create and initialize function parser for exact solution
-        std::shared_ptr<FunctionParser<dim>> exact_solution_function_derived =
-          std::make_shared<FunctionParser<dim>>(1);
+        auto exact_solution_function_derived =
+          std::make_shared<FunctionParser<dim>>(n_components);
         exact_solution_function_derived->initialize(
           FunctionParser<dim>::default_variable_names() + ",t",
           exact_solution_strings,
@@ -261,35 +279,39 @@ void ProblemParameters<dim>::process_base_parameters(
     }
   }
 
-  // create boundary conditions
-  if (boundary_conditions_type == "dirichlet")
+  // if boundary conditions were not created in derived class
+  if (!(boundary_conditions))
   {
-    auto derived_boundary_conditions =
-      std::make_shared<DirichletBoundaryConditions<dim>>(fe, face_quadrature);
-    boundary_conditions = derived_boundary_conditions;
-
-    // initialize Dirichlet boundary functions if needed
-    if (use_exact_solution_as_dirichlet_bc)
+    // create boundary conditions
+    if (boundary_conditions_type == "dirichlet")
     {
-      dirichlet_function = exact_solution_function;
+      auto derived_boundary_conditions =
+        std::make_shared<DirichletBoundaryConditions<dim>>(fe, face_quadrature);
+      boundary_conditions = derived_boundary_conditions;
+
+      // initialize Dirichlet boundary functions if needed
+      if (use_exact_solution_as_dirichlet_bc)
+      {
+        dirichlet_function = exact_solution_function;
+      }
+      else
+      {
+        auto dirichlet_function_derived =
+          std::make_shared<FunctionParser<dim>>(n_components);
+        dirichlet_function_derived->initialize(
+          FunctionParser<dim>::default_variable_names() + ",t",
+          dirichlet_function_strings,
+          constants,
+          true);
+
+        // point base class pointer to derived class object
+        dirichlet_function = dirichlet_function_derived;
+      }
     }
     else
     {
-      auto dirichlet_function_derived =
-        std::make_shared<FunctionParser<dim>>(n_components);
-      dirichlet_function_derived->initialize(
-        FunctionParser<dim>::default_variable_names() + ",t",
-        dirichlet_function_strings,
-        constants,
-        true);
-
-      // point base class pointer to derived class object
-      dirichlet_function = dirichlet_function_derived;
+      Assert(false, ExcNotImplemented());
     }
-  }
-  else
-  {
-    Assert(false, ExcNotImplemented());
   }
 
   // initialize initial conditions function
@@ -357,6 +379,9 @@ void ProblemParameters<dim>::generate_mesh_and_compute_volume(
   {
     Assert(false, ExcNotImplemented());
   }
+
+  // assert that domain volume be nonzero
+  Assert(std::fabs(domain_volume) > 1.0e-15, ExcInvalidState());
 }
 
 /**
