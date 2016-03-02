@@ -2,8 +2,8 @@
  * \brief Constructor.
  */
 template <int dim>
-TransientExecutioner<dim>::TransientExecutioner(
-  const TransportParameters<dim> & parameters_,
+TransportTransientExecutioner<dim>::TransportTransientExecutioner(
+  const TransportRunParameters<dim> & parameters_,
   Triangulation<dim> & triangulation_,
   const Tensor<1, dim> & transport_direction_,
   const double & transport_speed_,
@@ -15,7 +15,7 @@ TransientExecutioner<dim>::TransientExecutioner(
   PostProcessor<dim> & postprocessor_,
   const bool & source_is_time_dependent_,
   const double & nominal_dt_)
-  : Executioner<dim>(parameters_,
+  : TransportExecutioner<dim>(parameters_,
                      triangulation_,
                      transport_direction_,
                      transport_speed_,
@@ -82,7 +82,7 @@ TransientExecutioner<dim>::TransientExecutioner(
  * \brief Runs transient executioner.
  */
 template <int dim>
-void TransientExecutioner<dim>::run()
+void TransportTransientExecutioner<dim>::run()
 {
   // assemble inviscid steady-state matrix
   this->assembleInviscidSteadyStateMatrix();
@@ -199,7 +199,7 @@ void TransientExecutioner<dim>::run()
     t_new = t_old + dt;
 
     this->cout1 << "   time step " << n << ": t = " << t_old << "->" << t_new
-              << std::endl;
+                << std::endl;
 
     if (temporal_discretization == TemporalDiscretization::ssprk) // SSPRK
     {
@@ -340,7 +340,7 @@ void TransientExecutioner<dim>::run()
  * Assembles the consistent and lumped mass matrices.
  */
 template <int dim>
-void TransientExecutioner<dim>::assembleMassMatrices()
+void TransportTransientExecutioner<dim>::assembleMassMatrices()
 {
   FEValues<dim> fe_values(
     this->fe, this->cell_quadrature, update_values | update_JxW_values);
@@ -388,7 +388,7 @@ void TransientExecutioner<dim>::assembleMassMatrices()
  * @return new time step size
  */
 template <int dim>
-double TransientExecutioner<dim>::enforceCFLCondition(
+double TransportTransientExecutioner<dim>::enforceCFLCondition(
   const double & dt_proposed) const
 {
   // CFL is dt*speed/dx
@@ -428,7 +428,7 @@ double TransientExecutioner<dim>::enforceCFLCondition(
  * \brief Takes time step with the Galerkin method using an SSPRK method.
  */
 template <int dim>
-void TransientExecutioner<dim>::compute_galerkin_solution_ssprk(
+void TransportTransientExecutioner<dim>::compute_galerkin_solution_ssprk(
   SSPRKTimeIntegrator<dim> & ssprk)
 {
   for (unsigned int i = 0; i < ssprk.n_stages; ++i)
@@ -457,7 +457,7 @@ void TransientExecutioner<dim>::compute_galerkin_solution_ssprk(
  * \param[in] t_new new time
  */
 template <int dim>
-void TransientExecutioner<dim>::compute_galerkin_solution_theta(
+void TransportTransientExecutioner<dim>::compute_galerkin_solution_theta(
   const double & dt, const double & t_new)
 {
   // compute new steady-state right-hand-side vector b_new
@@ -486,7 +486,7 @@ void TransientExecutioner<dim>::compute_galerkin_solution_theta(
  * Takes time step with the low-order method using an SSPRK method.
  */
 template <int dim>
-void TransientExecutioner<dim>::compute_low_order_solution_ssprk(
+void TransportTransientExecutioner<dim>::compute_low_order_solution_ssprk(
   SSPRKTimeIntegrator<dim> & ssprk)
 {
   for (unsigned int i = 0; i < ssprk.n_stages; ++i)
@@ -514,7 +514,7 @@ void TransientExecutioner<dim>::compute_low_order_solution_ssprk(
  * \param[in] t_new new time
  */
 template <int dim>
-void TransientExecutioner<dim>::compute_low_order_solution_theta(
+void TransportTransientExecutioner<dim>::compute_low_order_solution_theta(
   const double & dt, const double & t_new)
 {
   // compute new steady-state right-hand-side vector b_new
@@ -543,7 +543,7 @@ void TransientExecutioner<dim>::compute_low_order_solution_theta(
  * \brief Takes time step with the entropy viscosity method using an SSPRK method.
  */
 template <int dim>
-void TransientExecutioner<dim>::compute_entropy_viscosity_solution_ssprk(
+void TransportTransientExecutioner<dim>::compute_entropy_viscosity_solution_ssprk(
   SSPRKTimeIntegrator<dim> & ssprk,
   EntropyViscosity<dim> & EV,
   const double & dt_old,
@@ -581,7 +581,7 @@ void TransientExecutioner<dim>::compute_entropy_viscosity_solution_ssprk(
  * \brief Takes time step with the entropy viscosity method using a theta method.
  */
 template <int dim>
-void TransientExecutioner<dim>::compute_entropy_viscosity_solution_theta(
+void TransportTransientExecutioner<dim>::compute_entropy_viscosity_solution_theta(
   EntropyViscosity<dim> & EV,
   const double & dt,
   const double & dt_old,
@@ -640,13 +640,13 @@ void TransientExecutioner<dim>::compute_entropy_viscosity_solution_theta(
  * Takes time step with the entropy viscosity method with FCT.
  */
 template <int dim>
-void TransientExecutioner<dim>::compute_entropy_viscosity_fct_solution_ssprk(
-  SSPRKTimeIntegrator<dim> & ssprk,
-  FCT<dim> & fct,
-  EntropyViscosity<dim> & EV,
-  const double & dt,
-  const double & dt_old,
-  const double & t_old)
+void TransportTransientExecutioner<dim>::
+  compute_entropy_viscosity_fct_solution_ssprk(SSPRKTimeIntegrator<dim> & ssprk,
+                                               FCT<dim> & fct,
+                                               EntropyViscosity<dim> & EV,
+                                               const double & dt,
+                                               const double & dt_old,
+                                               const double & t_old)
 {
   for (unsigned int i = 0; i < ssprk.n_stages; ++i)
   {
@@ -711,7 +711,7 @@ void TransientExecutioner<dim>::compute_entropy_viscosity_fct_solution_ssprk(
  * Takes time step with the Galerkin method with FCT.
  */
 template <int dim>
-void TransientExecutioner<dim>::compute_galerkin_fct_solution_ssprk(
+void TransportTransientExecutioner<dim>::compute_galerkin_fct_solution_ssprk(
   SSPRKTimeIntegrator<dim> & ssprk,
   FCT<dim> & fct,
   const double & dt,
@@ -763,9 +763,8 @@ void TransientExecutioner<dim>::compute_galerkin_fct_solution_ssprk(
  * \param[in] dt  time step size
  */
 template <int dim>
-void TransientExecutioner<dim>::compute_fct_solution_theta(FCT<dim> & fct,
-                                                           const double & dt,
-                                                           const double & t_old)
+void TransportTransientExecutioner<dim>::compute_fct_solution_theta(
+  FCT<dim> & fct, const double & dt, const double & t_old)
 {
   // references
   const Vector<double> & ss_rhs_old = this->ss_rhs;

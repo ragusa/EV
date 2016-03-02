@@ -10,8 +10,9 @@
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/lac/constraint_matrix.h>
 #include <deal.II/lac/vector.h>
+
 #include "LinearSolver.h"
-#include "TransportParameters.h"
+#include "RunParameters.h"
 
 using namespace dealii;
 
@@ -22,7 +23,7 @@ template <int dim>
 class NonlinearSolver
 {
 public:
-  NonlinearSolver(const TransportParameters<dim> & parameters,
+  NonlinearSolver(const RunParameters<dim> & parameters,
                   const ConstraintMatrix & constraints,
                   const DoFHandler<dim> & dof_handler,
                   Function<dim> & dirichlet_value_function);

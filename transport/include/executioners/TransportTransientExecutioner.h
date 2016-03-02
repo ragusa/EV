@@ -1,38 +1,40 @@
-#ifndef TransientExecutioner_cc
-#define TransientExecutioner_cc
+#ifndef TransportTransientExecutioner_cc
+#define TransportTransientExecutioner_cc
 
-#include "Executioner.h"
+#include "TransportExecutioner.h"
 #include "SSPRKTimeIntegrator.h"
+#include "RunParameters.h"
 
 using namespace dealii;
 
 /**
- * Class for transient executioner.
+ * \brief Class for transient executioner of a transport problem.
  */
 template <int dim>
-class TransientExecutioner : public Executioner<dim>
+class TransportTransientExecutioner : public TransportExecutioner<dim>
 {
 public:
   /** \brief Alias for temporal discretization */
   using TemporalDiscretization =
-    typename TransportParameters<dim>::TemporalDiscretization;
+    typename RunParameters<dim>::TemporalDiscretization;
 
   /** \brief Alias for temporal discretization of entropy */
   using EntropyTemporalDiscretization =
-    typename TransportParameters<dim>::EntropyTemporalDiscretization;
+    typename RunParameters<dim>::EntropyTemporalDiscretization;
 
-  TransientExecutioner(const TransportParameters<dim> & parameters,
-                       Triangulation<dim> & triangulation,
-                       const Tensor<1, dim> & transport_direction,
-                       const double & transport_speed,
-                       const FunctionParser<dim> & cross_section_function,
-                       FunctionParser<dim> & source_function,
-                       Function<dim> & incoming_function,
-                       FunctionParser<dim> & initial_conditions_function,
-                       const double & domain_volume,
-                       PostProcessor<dim> & postprocessor,
-                       const bool & source_is_time_dependent,
-                       const double & nominal_dt);
+  TransportTransientExecutioner(
+    const TransportRunParameters<dim> & parameters,
+    Triangulation<dim> & triangulation,
+    const Tensor<1, dim> & transport_direction,
+    const double & transport_speed,
+    const FunctionParser<dim> & cross_section_function,
+    FunctionParser<dim> & source_function,
+    Function<dim> & incoming_function,
+    FunctionParser<dim> & initial_conditions_function,
+    const double & domain_volume,
+    PostProcessor<dim> & postprocessor,
+    const bool & source_is_time_dependent,
+    const double & nominal_dt);
 
   void run() override;
 
@@ -107,5 +109,5 @@ private:
   Vector<double> tmp_vector;
 };
 
-#include "TransientExecutioner.cc"
+#include "TransportTransientExecutioner.cc"
 #endif

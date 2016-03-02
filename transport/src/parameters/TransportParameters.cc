@@ -9,7 +9,6 @@ TransportParameters<dim>::TransportParameters()
     theta_method(ThetaMethod::FE),
     theta(0.0),
     fct_initialization_option(FCTInitializationOption::zero),
-    // problem_id(1),
     end_time(1.0),
     time_step_size(0.001),
     use_adaptive_time_stepping(true),
@@ -56,7 +55,6 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler & prm)
   // problem parameters
   prm.enter_subsection("problem");
   {
-    // prm.declare_entry("Problem ID", "1", Patterns::Integer(), "Problem ID");
     prm.declare_entry(
       "problem name", "invalidproblem", Patterns::Anything(), "Problem name");
   }
@@ -83,10 +81,6 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler & prm)
                       "ssprk",
                       Patterns::Selection("ss|theta|ssprk"),
                       "Choice of temporal discretization");
-    prm.declare_entry("Entropy time discretization",
-                      "BE",
-                      Patterns::Selection("FE|CN|BE|BDF2"),
-                      "Choice of temporal discretization for entropy");
     prm.declare_entry("SSPRK method",
                       "FE",
                       Patterns::Selection("FE|SSP2|SSP3"),
@@ -110,6 +104,10 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler & prm)
       "Option to automatically adjust time step size to satisfy CFL");
     prm.declare_entry(
       "CFL limit", "0.5", Patterns::Double(), "Upper bound for the CFL number");
+    prm.declare_entry("Entropy time discretization",
+                      "BE",
+                      Patterns::Selection("FE|CN|BE|BDF2"),
+                      "Choice of temporal discretization for entropy");
   }
   prm.leave_subsection();
 
@@ -180,15 +178,6 @@ void TransportParameters<dim>::declare_parameters(ParameterHandler & prm)
   }
   prm.leave_subsection();
 
-  // viscosity parameters
-  prm.enter_subsection("viscosity");
-  {
-    prm.declare_entry("Viscosity option",
-                      "0",
-                      Patterns::Integer(),
-                      "Option for viscosity to be used");
-  }
-  prm.leave_subsection();
   // viscosity parameters
   prm.enter_subsection("viscosity");
   {

@@ -21,8 +21,8 @@ void RunParameters<dim>::declare_run_parameters(ParameterHandler & prm)
       "scheme", "high", Patterns::Selection("low|high|fct"), "scheme");
     prm.declare_entry(
       "low order scheme",
-      "standard",
-      Patterns::Selection("constant|standard|dmp|di_visc|di_diff"),
+      "lax",
+      Patterns::Selection("constant|lax|dmp|di_visc|di_diff"),
       "low-order scheme");
     prm.declare_entry("high order scheme",
                       "galerkin",
@@ -52,21 +52,33 @@ void RunParameters<dim>::declare_run_parameters(ParameterHandler & prm)
   // refinement parameters
   prm.enter_subsection("refinement");
   {
-    prm.declare_entry("Refinement mode",
-                      "space",
-                      Patterns::Selection("space|time"),
-                      "Refinement mode (space or time)");
-
-    prm.declare_entry("initial refinement level",
-                      "3",
-                      Patterns::Integer(),
-                      "initial number of uniform refinements");
     prm.declare_entry(
       "refinement cycles",
       "2",
       Patterns::Integer(),
       "Number of refinement cycles. Must be >= 1. '1' Corresponds to"
       " having only the initial uniform refinement cycles.");
+    prm.declare_entry("refine space",
+                      "true",
+                      Patterns::Bool(),
+                      "Option to refine space in each refinement cycle");
+    prm.declare_entry("refine time",
+                      "false",
+                      Patterns::Bool(),
+                      "Option to refine time in each refinement cycle");
+    prm.declare_entry("initial refinement level",
+                      "3",
+                      Patterns::Integer(),
+                      "initial number of uniform refinements");
+    prm.declare_entry(
+      "use adaptive refinement",
+      "false",
+      Patterns::Bool(),
+      "Option to use adaptive mesh refinement instead of uniform");
+    prm.declare_entry("time refinement factor",
+                      "0.5",
+                      Patterns::Double(),
+                      "Factor by which to reduce dt if refining time step size");
     prm.declare_entry(
       "refinement fraction",
       "0.3",
@@ -77,29 +89,33 @@ void RunParameters<dim>::declare_run_parameters(ParameterHandler & prm)
       "0.03",
       Patterns::Double(),
       "Fraction of cells to coarsen in an adaptive refinement step");
+    prm.declare_entry("use cell size for convergence rates",
+                      "true",
+                      Patterns::Bool(),
+                      "Option to use cell size, not dt, for convergence rates");
   }
   prm.leave_subsection();
 
   // time parameters
   prm.enter_subsection("time");
   {
-    prm.declare_entry("time step size method",
+    prm.declare_entry("time step size option",
                       "constant",
                       Patterns::Selection("constant|cfl"),
                       "method of computing time step size");
-    prm.declare_entry("use default end time",
-                      "true",
-                      Patterns::Bool(),
-                      "Use default end time for the particular test problem");
-    prm.declare_entry(
-      "final time", "1.0", Patterns::Double(), "final time value");
-    prm.declare_entry(
-      "time step size", "1e-3", Patterns::Double(), "time step size");
     prm.declare_entry("cfl",
                       "0.5",
                       Patterns::Double(),
                       "CFL number to be used if CFL condition "
                       "is used to compute time step size.");
+    prm.declare_entry(
+      "time step size", "1e-3", Patterns::Double(), "time step size");
+    prm.declare_entry("use default end time",
+                      "true",
+                      Patterns::Bool(),
+                      "Use default end time for the particular test problem");
+    prm.declare_entry(
+      "end time", "1.0", Patterns::Double(), "end time value");
     prm.declare_entry("steady state tolerance",
                       "1.0e-6",
                       Patterns::Double(),
@@ -107,43 +123,27 @@ void RunParameters<dim>::declare_run_parameters(ParameterHandler & prm)
   }
   prm.leave_subsection();
 
-  // temporal integrator
-  prm.enter_subsection("temporal integration");
+  // temporal discretization
+  prm.enter_subsection("temporal discretization");
   {
-    prm.declare_entry("temporal integrator",
-                      "runge_kutta",
-                      Patterns::Selection("runge_kutta"),
-                      "The method used for advancing time. "
-                      "Choices are <runge_kutta>.");
-    prm.declare_entry("runge kutta method",
+    prm.declare_entry("temporal discretization",
+                      "ssprk",
+                      Patterns::Selection("ss|theta|ssprk"),
+                      "Choice of temporal discretization");
+    prm.declare_entry("ssprk discretization",
                       "FE",
                       Patterns::Selection("FE|SSP2|SSP3"),
-                      "Runge-Kutta method to use.");
+                      "Choice of SSPRK method");
+    prm.declare_entry("Theta discretization",
+                      "FE",
+                      Patterns::Selection("FE|CN|BE"),
+                      "Choice of theta time discretization method");
   }
   prm.leave_subsection();
 
   // nonlinear solver parameters
   prm.enter_subsection("nonlinear solver");
   {
-    prm.declare_entry(
-      "nonlinear verbosity",
-      "quiet",
-      Patterns::Selection("quiet|verbose"),
-      "State whether output from nonlinear solver runs should be printed. "
-      "Choices are <quiet|verbose>.");
-    prm.declare_entry("nonlinear method",
-                      "newton",
-                      Patterns::Selection("newton"),
-                      "The kind of nonlinear solver for the linear system. "
-                      "Choices are <newton>.");
-    prm.declare_entry("nonlinear absolute tolerance",
-                      "1e-10",
-                      Patterns::Double(),
-                      "Nonlinear absolute tolerance");
-    prm.declare_entry("nonlinear relative tolerance",
-                      "1e-10",
-                      Patterns::Double(),
-                      "Nonlinear relative tolerance");
     prm.declare_entry("max nonlinear iterations",
                       "300",
                       Patterns::Integer(),
@@ -155,35 +155,10 @@ void RunParameters<dim>::declare_run_parameters(ParameterHandler & prm)
   // linear solver parameters
   prm.enter_subsection("linear solver");
   {
-    prm.declare_entry(
-      "linear verbosity",
-      "quiet",
-      Patterns::Selection("quiet|verbose"),
-      "State whether output from linear solver runs should be printed. "
-      "Choices are <quiet|verbose>.");
-    prm.declare_entry("linear method",
+    prm.declare_entry("linear solver",
                       "direct",
-                      Patterns::Selection("direct|gmres|cg"),
-                      "The kind of linear solver for the linear system. "
-                      "Choices are <direct|gmres|cg>.");
-    prm.declare_entry(
-      "mass matrix linear method",
-      "cg",
-      Patterns::Selection("direct|gmres|cg"),
-      "The linear solver used to implicitly invert the mass matrix. "
-      "Choices are <direct|gmres|cg>.");
-    prm.declare_entry("linear absolute tolerance",
-                      "1e-10",
-                      Patterns::Double(),
-                      "Linear absolute tolerance");
-    prm.declare_entry("linear relative tolerance",
-                      "1e-10",
-                      Patterns::Double(),
-                      "Linear relative tolerance");
-    prm.declare_entry("max linear iterations",
-                      "300",
-                      Patterns::Integer(),
-                      "Maximum linear solver iterations");
+                      Patterns::Selection("direct"),
+                      "The linear solver to use.");
   }
   prm.leave_subsection();
 
@@ -195,10 +170,10 @@ void RunParameters<dim>::declare_run_parameters(ParameterHandler & prm)
                       Patterns::Double(),
                       "viscosity value if constant viscosity chosen");
     prm.declare_entry(
-      "first order viscosity coefficient",
+      "lax viscosity coefficient",
       "1e-3",
       Patterns::Double(),
-      "tuning constant value to be used with first-order viscosity");
+      "tuning constant value to be used with Lax viscosity");
     prm.declare_entry("use low order viscosity for first time step",
                       "true",
                       Patterns::Bool(),
@@ -221,6 +196,59 @@ void RunParameters<dim>::declare_run_parameters(ParameterHandler & prm)
       "2",
       Patterns::Integer(),
       "Weight for center of Laplacian smoothing for entropy viscosity");
+  }
+  prm.leave_subsection();
+
+  // fct
+  prm.enter_subsection("fct");
+  {
+    prm.declare_entry("fct bounds type",
+                      "dmp",
+                      Patterns::Selection("dmp"),
+                      "Type of bounds to impose on FCT solution");
+    prm.declare_entry("antidiffusion",
+                      "limited",
+                      Patterns::Selection("limited|full|none"),
+                      "Option for antidiffusion in FCT scheme");
+    prm.declare_entry(
+      "fct synchronization",
+      "none",
+      Patterns::Selection("none|min|compound"),
+      "Option for synchronization of limiting coefficients in FCT scheme");
+    prm.declare_entry("fct limitation type",
+                      "conservative",
+                      Patterns::Selection("conservative|characteristic"),
+                      "Option for set of variables to limit in FCT");
+    prm.declare_entry("fct initialization option",
+                      "zero",
+                      Patterns::Anything(),
+                      "Initialization option for implicit and steady-state FCT schemes");
+    prm.declare_entry(
+      "skip fct if bounds satisfied",
+      "false",
+      Patterns::Bool(),
+      "Option to skip FCT if high-order solution satisfies bounds");
+    prm.declare_entry(
+      "use cumulative antidiffusion algorithm",
+      "false",
+      Patterns::Bool(),
+      "Option to use cumulative antidiffusion algorithm for implicit FCT");
+    prm.declare_entry("include analytic bounds",
+                      "false",
+                      Patterns::Bool(),
+                      "Option to extend FCT bounds using analytic DMP");
+    prm.declare_entry("use star states in fct bounds",
+                      "false",
+                      Patterns::Bool(),
+                      "Option to include star states in FCT bounds");
+    prm.declare_entry("output limiter matrix",
+                      "false",
+                      Patterns::Bool(),
+                      "Option to output matrix of limiting coefficients");
+    prm.declare_entry("output fct bounds",
+                      "false",
+                      Patterns::Bool(),
+                      "Option to output FCT bounds");
   }
   prm.leave_subsection();
 
@@ -275,40 +303,6 @@ void RunParameters<dim>::declare_run_parameters(ParameterHandler & prm)
   }
   prm.leave_subsection();
 
-  // fct
-  prm.enter_subsection("fct");
-  {
-    prm.declare_entry("fct bounds type",
-                      "dmp",
-                      Patterns::Selection("dmp"),
-                      "Type of bounds to impose on FCT solution");
-    prm.declare_entry("antidiffusion",
-                      "limited",
-                      Patterns::Selection("limited|full|none"),
-                      "Option for antidiffusion in FCT scheme");
-    prm.declare_entry(
-      "fct synchronization",
-      "none",
-      Patterns::Selection("none|min|compound"),
-      "Option for synchronization of limiting coefficients in FCT scheme");
-    prm.declare_entry("fct limitation type",
-                      "conservative",
-                      Patterns::Selection("conservative|characteristic"),
-                      "Option for set of variables to limit in FCT");
-    prm.declare_entry("use star states in fct bounds",
-                      "false",
-                      Patterns::Bool(),
-                      "Option to include star states in FCT bounds");
-    prm.declare_entry("output limiter matrix",
-                      "false",
-                      Patterns::Bool(),
-                      "Option to output matrix of limiting coefficients");
-    prm.declare_entry("output fct bounds",
-                      "false",
-                      Patterns::Bool(),
-                      "Option to output FCT bounds");
-  }
-  prm.leave_subsection();
 }
 
 /**
@@ -342,8 +336,8 @@ void RunParameters<dim>::get_run_parameters(ParameterHandler & prm)
     std::string low_order_scheme_string = prm.get("low order scheme");
     if (low_order_scheme_string == "constant")
       low_order_scheme = LowOrderScheme::constant;
-    else if (low_order_scheme_string == "standard")
-      low_order_scheme = LowOrderScheme::standard;
+    else if (low_order_scheme_string == "lax")
+      low_order_scheme = LowOrderScheme::lax;
     else if (low_order_scheme_string == "dmp")
       low_order_scheme = LowOrderScheme::dmp;
     else if (low_order_scheme_string == "di_visc")

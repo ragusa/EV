@@ -1,9 +1,9 @@
 /**
- * Constructor.
+ * \brief Constructor.
  */
 template <int dim>
-SteadyStateExecutioner<dim>::SteadyStateExecutioner(
-  const TransportParameters<dim> & parameters,
+TransportSteadyStateExecutioner<dim>::TransportSteadyStateExecutioner(
+  const TransportRunParameters<dim> & parameters,
   Triangulation<dim> & triangulation,
   const Tensor<1, dim> & transport_direction,
   const double & transport_speed,
@@ -12,7 +12,7 @@ SteadyStateExecutioner<dim>::SteadyStateExecutioner(
   Function<dim> & incoming_function,
   const double & domain_volume_,
   PostProcessor<dim> & postprocessor_)
-  : Executioner<dim>(parameters,
+  : TransportExecutioner<dim>(parameters,
                      triangulation,
                      transport_direction,
                      transport_speed,
@@ -28,11 +28,11 @@ SteadyStateExecutioner<dim>::SteadyStateExecutioner(
  * Runs steady-state executioner.
  */
 template <int dim>
-void SteadyStateExecutioner<dim>::run()
+void TransportSteadyStateExecutioner<dim>::run()
 {
   // compute inviscid system matrix and steady-state right hand side (ss_rhs)
-  this->assembleInviscidSteadyStateMatrix();
-  this->assembleSteadyStateRHS(this->ss_rhs, 0.0);
+  this->assembleInviscidTransportSteadyStateMatrix();
+  this->assembleTransportSteadyStateRHS(this->ss_rhs, 0.0);
 
   switch (this->parameters.viscosity_option)
   {
@@ -114,7 +114,7 @@ void SteadyStateExecutioner<dim>::run()
  * \brief Computes the Galerkin solution.
  */
 template <int dim>
-void SteadyStateExecutioner<dim>::compute_galerkin_solution()
+void TransportSteadyStateExecutioner<dim>::compute_galerkin_solution()
 {
   // copy inviscid steady-state matrix to system matrix
   this->system_matrix.copy_from(this->inviscid_ss_matrix);
@@ -131,7 +131,7 @@ void SteadyStateExecutioner<dim>::compute_galerkin_solution()
  * \brief Computes the low-order solution.
  */
 template <int dim>
-void SteadyStateExecutioner<dim>::compute_low_order_solution()
+void TransportSteadyStateExecutioner<dim>::compute_low_order_solution()
 {
   // copy low-order steady-state matrix to system matrix
   this->system_matrix.copy_from(this->low_order_ss_matrix);
@@ -145,7 +145,7 @@ void SteadyStateExecutioner<dim>::compute_low_order_solution()
  * \brief Computes the entropy viscosity solution.
  */
 template <int dim>
-void SteadyStateExecutioner<dim>::compute_entropy_viscosity_solution()
+void TransportSteadyStateExecutioner<dim>::compute_entropy_viscosity_solution()
 {
   // compute low-order viscosity
   LowOrderViscosity<dim> low_order_viscosity(this->n_cells,
@@ -208,7 +208,7 @@ void SteadyStateExecutioner<dim>::compute_entropy_viscosity_solution()
  * \brief Solves the steady-state FCT system.
  */
 template <int dim>
-void SteadyStateExecutioner<dim>::compute_FCT_solution()
+void TransportSteadyStateExecutioner<dim>::compute_FCT_solution()
 {
   // create FCT object
   FCT<dim> fct(this->dof_handler,

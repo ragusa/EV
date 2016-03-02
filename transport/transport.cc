@@ -11,7 +11,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <deal.II/base/parameter_handler.h>
-#include "TransportParameters.h"
+#include "TransportRunParameters.h"
 #include "TransportProblem.h"
 #include "Exceptions.h"
 
@@ -28,14 +28,14 @@ int main(int argc, char * argv[])
   {
     deallog.depth_console(0);
 
-    // get input parameters
+    // read input and declare problem
     ParameterHandler parameter_handler;
-    TransportParameters<dim> parameters;
-    parameters.declare_parameters(parameter_handler);
+    TransportRunParameters<dim>::declare_parameters(parameter_handler);
     if (argc > 1)
       parameter_handler.read_input(argv[1]);
     else
-      parameter_handler.read_input("input");
+      parameter_handler.read_input("input/transport.prm");
+    TransportRunParameters<dim> parameters;
     parameters.get_parameters(parameter_handler);
 
     // run problem

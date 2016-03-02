@@ -8,11 +8,10 @@
  *   imposed on the linear system
  */
 template <int dim>
-NonlinearSolver<dim>::NonlinearSolver(
-  const TransportParameters<dim> & parameters_,
-  const ConstraintMatrix & constraints_,
-  const DoFHandler<dim> & dof_handler_,
-  Function<dim> & dirichlet_value_function_)
+NonlinearSolver<dim>::NonlinearSolver(const RunParameters<dim> & parameters_,
+                                      const ConstraintMatrix & constraints_,
+                                      const DoFHandler<dim> & dof_handler_,
+                                      Function<dim> & dirichlet_value_function_)
   : relaxation_factor(parameters_.relaxation_factor),
     nonlinear_tolerance(parameters_.nonlinear_tolerance),
     iteration_max(parameters_.nonlinear_max_iteration),

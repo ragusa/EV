@@ -20,19 +20,21 @@
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/matrix_tools.h>
+
 #include <fstream>
 #include <iostream>
 #include <sstream>
 #include <cstdlib>
 #include <algorithm>
+
 #include "CMakeVars.h"
 #include "Exceptions.h"
-#include "TransportParameters.h"
+#include "TransportRunParameters.h"
 #include "TransportProblemParameters.h"
 #include "PostProcessor.h"
-#include "RefinementHandler.h"
-#include "SteadyStateExecutioner.h"
-#include "TransientExecutioner.h"
+#include "include/refinement/RefinementHandler.h"
+#include "TransportSteadyStateExecutioner.h"
+#include "TransportTransientExecutioner.h"
 
 using namespace dealii;
 
@@ -45,9 +47,9 @@ class TransportProblem
 public:
   /** \brief Alias for temporal discretization */
   using TemporalDiscretization =
-    typename TransportParameters<dim>::TemporalDiscretization;
+    typename TransportRunParameters<dim>::TemporalDiscretization;
 
-  TransportProblem(const TransportParameters<dim> & parameters);
+  TransportProblem(const TransportRunParameters<dim> & parameters);
 
   void run();
 
@@ -63,7 +65,7 @@ private:
   ConditionalOStream cout2;
 
   /** \brief run parameters */
-  const TransportParameters<dim> parameters;
+  const TransportRunParameters<dim> parameters;
 
   /** \brief flag that problem is time-dependent */
   const bool is_time_dependent;

@@ -1,9 +1,9 @@
 /**
- * Constructor.
+ * \brief Constructor.
  */
 template <int dim>
 RefinementHandler<dim>::RefinementHandler(
-  const TransportParameters<dim> & parameters_,
+  const RunParameters<dim> & parameters_,
   Triangulation<dim> & triangulation_)
   : triangulation(&triangulation_),
     refine_space(parameters_.refine_space),
@@ -15,14 +15,16 @@ RefinementHandler<dim>::RefinementHandler(
 }
 
 /**
- * Refine the grid or time step size.
+ * \brief Refines the grid or time step size.
+ *
+ * \param[in] cycle  cycle index, first is 0
  */
 template <int dim>
 void RefinementHandler<dim>::refine(unsigned int cycle)
 {
   if (cycle != 0)
   {
-    // refine mesh if user selected the option
+    // refine mesh
     if (refine_space)
       refineGrid();
 
@@ -33,7 +35,7 @@ void RefinementHandler<dim>::refine(unsigned int cycle)
 }
 
 /**
- * Refines the grid.
+ * \brief Refines the grid.
  */
 template <int dim>
 void RefinementHandler<dim>::refineGrid() const

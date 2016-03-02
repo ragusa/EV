@@ -3,11 +3,10 @@
  */
 template <int dim>
 PostProcessor<dim>::PostProcessor(
-  const TransportParameters<dim> & parameters_,
+  const RunParameters<dim> & parameters_,
   const bool has_exact_solution_,
   std::shared_ptr<Function<dim>> & exact_solution_function_)
-  : 
-    parameters(parameters_),
+  : parameters(parameters_),
     has_exact_solution(has_exact_solution_),
     exact_solution_function(exact_solution_function_),
     is_steady_state(parameters.temporal_discretization ==
@@ -228,7 +227,7 @@ void PostProcessor<dim>::output_results(const Vector<double> & solution,
       }
 
       // print convergence table to console
-      //if (parameters.verbosity_level > 0)
+      // if (parameters.verbosity_level > 0)
       if (false)
       {
         std::cout << std::endl;

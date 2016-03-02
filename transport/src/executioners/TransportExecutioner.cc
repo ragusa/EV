@@ -1,21 +1,19 @@
 /**
- * Constructor.
+ * \brief Constructor.
  */
 template <int dim>
-Executioner<dim>::Executioner(const TransportParameters<dim> & parameters_,
-                              Triangulation<dim> & triangulation_,
-                              const Tensor<1, dim> & transport_direction_,
-                              const double & transport_speed_,
-                              const FunctionParser<dim> & cross_section_function_,
-                              FunctionParser<dim> & source_function_,
-                              Function<dim> & incoming_function_,
-                              const double & domain_volume_,
-                              PostProcessor<dim> & postprocessor_)
-  : 
-    //cout1(std::cout, parameters_.verbosity_level >= 1),
-    //cout2(std::cout, parameters_.verbosity_level >= 2),
-    cout1(std::cout, false),
-    cout2(std::cout, false),
+TransportExecutioner<dim>::TransportExecutioner(
+  const TransportRunParameters<dim> & parameters_,
+  Triangulation<dim> & triangulation_,
+  const Tensor<1, dim> & transport_direction_,
+  const double & transport_speed_,
+  const FunctionParser<dim> & cross_section_function_,
+  FunctionParser<dim> & source_function_,
+  Function<dim> & incoming_function_,
+  const double & domain_volume_,
+  PostProcessor<dim> & postprocessor_)
+  : cout1(std::cout, parameters_.verbosity_level >= 1),
+    cout2(std::cout, parameters_.verbosity_level >= 2),
     parameters(parameters_),
     triangulation(&triangulation_),
     fe(FE_Q<dim>(parameters.degree), 1),
@@ -86,7 +84,7 @@ Executioner<dim>::Executioner(const TransportParameters<dim> & parameters_,
  * Assembles the inviscid steady-state matrix.
  */
 template <int dim>
-void Executioner<dim>::assembleInviscidSteadyStateMatrix()
+void TransportExecutioner<dim>::assembleInviscidSteadyStateMatrix()
 {
   inviscid_ss_matrix = 0;
 
@@ -165,8 +163,8 @@ void Executioner<dim>::assembleInviscidSteadyStateMatrix()
  * \param[in] t time at which to evaluate rhs
  */
 template <int dim>
-void Executioner<dim>::assembleSteadyStateRHS(Vector<double> & rhs,
-                                              const double & t)
+void TransportExecutioner<dim>::assembleSteadyStateRHS(Vector<double> & rhs,
+                                                       const double & t)
 {
   // reset steady-state rhs
   rhs = 0;
@@ -225,19 +223,19 @@ void Executioner<dim>::assembleSteadyStateRHS(Vector<double> & rhs,
  * Returns the final solution.
  */
 template <int dim>
-Vector<double> Executioner<dim>::getFinalSolution() const
+Vector<double> TransportExecutioner<dim>::getFinalSolution() const
 {
   return new_solution;
 }
 
 template <int dim>
-void Executioner<dim>::print_solution() const
+void TransportExecutioner<dim>::print_solution() const
 {
-    std::cout.precision(10);
-    std::cout.setf(std::ios::scientific);
+  std::cout.precision(10);
+  std::cout.setf(std::ios::scientific);
 
-    for (unsigned int i = 0; i < n_dofs; ++i)
-      std::cout << new_solution[i] << std::endl;
+  for (unsigned int i = 0; i < n_dofs; ++i)
+    std::cout << new_solution[i] << std::endl;
 }
 
 /**
@@ -247,7 +245,7 @@ void Executioner<dim>::print_solution() const
  * direction is compared against the normal vector of the face.
  */
 template <int dim>
-void Executioner<dim>::setBoundaryIndicators()
+void TransportExecutioner<dim>::setBoundaryIndicators()
 {
   // reset boundary indicators to zero
   typename DoFHandler<dim>::active_cell_iterator cell =
@@ -293,7 +291,7 @@ void Executioner<dim>::setBoundaryIndicators()
  * must be excluded from limiting and DMP checks.
  */
 template <int dim>
-void Executioner<dim>::getDirichletNodes()
+void TransportExecutioner<dim>::getDirichletNodes()
 {
   // get map of Dirichlet dof indices to Dirichlet values
   std::map<unsigned int, double> boundary_values;
@@ -317,10 +315,10 @@ void Executioner<dim>::getDirichletNodes()
  * @param [in] t  time at which Dirichlet value function is to be evaluated
  */
 template <int dim>
-void Executioner<dim>::applyDirichletBC(SparseMatrix<double> & A,
-                                        Vector<double> & b,
-                                        Vector<double> & x,
-                                        const double & t)
+void TransportExecutioner<dim>::applyDirichletBC(SparseMatrix<double> & A,
+                                                 Vector<double> & b,
+                                                 Vector<double> & x,
+                                                 const double & t)
 {
   // set time for dirichlet function
   incoming_function->set_time(t);

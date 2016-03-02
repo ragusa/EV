@@ -1,6 +1,8 @@
 #ifndef PostProcessor_cc
 #define PostProcessor_cc
 
+#include <sys/stat.h>
+
 #include <deal.II/base/convergence_table.h>
 #include <deal.II/base/function_parser.h>
 #include <deal.II/base/quadrature_lib.h>
@@ -10,8 +12,8 @@
 #include <deal.II/lac/vector.h>
 #include <deal.II/numerics/vector_tools.h>
 #include <deal.II/numerics/data_out.h>
-#include <sys/stat.h>
-#include "TransportParameters.h"
+
+#include "RunParameters.h"
 
 using namespace dealii;
 
@@ -24,15 +26,15 @@ class PostProcessor
 public:
   /** \brief Alias for temporal discretization */
   using TemporalDiscretization =
-    typename TransportParameters<dim>::TemporalDiscretization;
+    typename RunParameters<dim>::TemporalDiscretization;
 
   /** \brief Alias for theta method */
-  using ThetaMethod = typename TransportParameters<dim>::ThetaMethod;
+  using ThetaMethod = typename RunParameters<dim>::ThetaMethod;
 
   /** \brief Alias for SSPRK method */
-  using SSPRKMethod = typename TransportParameters<dim>::SSPRKMethod;
+  using SSPRKMethod = typename RunParameters<dim>::SSPRKMethod;
 
-  PostProcessor(const TransportParameters<dim> & parameters,
+  PostProcessor(const RunParameters<dim> & parameters,
                 const bool has_exact_solution,
                 std::shared_ptr<Function<dim>> & exact_solution_function);
   ~PostProcessor();
@@ -58,7 +60,7 @@ private:
   void output_grid(const Triangulation<dim> & triangulation) const;
   void create_directory(const std::string & dir) const;
 
-  const TransportParameters<dim> parameters;
+  const RunParameters<dim> parameters;
 
   ConvergenceTable convergence_table;
 

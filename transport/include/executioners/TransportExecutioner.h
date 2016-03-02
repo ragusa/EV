@@ -14,18 +14,18 @@
 #include "FCT.h"
 #include "NonlinearSolver.h"
 #include "PostProcessor.h"
-#include "TransportParameters.h"
+#include "TransportRunParameters.h"
 
 using namespace dealii;
 
 /**
- * Class for executioner.
+ * \brief Abstract base class for executioner of a transport problem.
  */
 template <int dim>
-class Executioner
+class TransportExecutioner
 {
 public:
-  Executioner(const TransportParameters<dim> & parameters,
+  TransportExecutioner(const TransportRunParameters<dim> & parameters,
               Triangulation<dim> & triangulation,
               const Tensor<1, dim> & transport_direction,
               const double & transport_speed,
@@ -52,14 +52,13 @@ protected:
                         Vector<double> & x,
                         const double & t = 0.0);
 
-
   /** \brief Conditional output stream 1 */
   ConditionalOStream cout1;
 
   /** \brief Conditional output stream 2 */
   ConditionalOStream cout2;
 
-  const TransportParameters<dim> parameters;
+  const TransportRunParameters<dim> parameters;
 
   Triangulation<dim> * const triangulation;
 
@@ -103,5 +102,5 @@ protected:
   PostProcessor<dim> * const postprocessor;
 };
 
-#include "Executioner.cc"
+#include "TransportExecutioner.cc"
 #endif

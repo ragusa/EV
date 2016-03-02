@@ -15,24 +15,21 @@ subsection problem
    set problem name = absorber
 end
 
-subsection time
-   set End time = 0.1
-   set Time step size = 0.001 #0.0005 #0.005
-   set Use adaptive time stepping = false
-   set CFL limit = 0.5
-   set Time discretization = ssprk       # <ss|theta|ssprk>
-   set Entropy time discretization = BE  # <CN|BE|BDF2>
-   set SSPRK method = FE                 # <FE|SSP2|SSP3>
-   set Theta method = BE                 # <FE|CN|BE>
+subsection scheme
+   set scheme            = high         # low|high|fct
+   set low order scheme  = standard     # constant|lax|dmp|di_visc|di_diff
+   set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
 end
 
-subsection viscosity
-   # 0 = Galerkin
-   # 1 = low-order, DMP
-   # 2 = EV
-   # 3 = EV+FCT
-   # 4 = Galerkin+FCT
-   set Viscosity option = 1
+subsection time
+   set end time = 0.1
+   set time step size = 0.001
+   set use adaptive time stepping = false
+   set cfl = 0.5
+   set time discretization = ssprk       # <ss|theta|ssprk>
+   set entropy time discretization = BE  # <CN|BE|BDF2>
+   set ssprk method = FE                 # <FE|SSP2|SSP3>
+   set theta method = BE                 # <FE|CN|BE>
 end
 
 subsection entropy viscosity
@@ -40,49 +37,51 @@ subsection entropy viscosity
    set Entropy derivative string    = u
    set Entropy residual coefficient = 1.0
    set Jump coefficient             = 1.0
-   set EV temporal discretization   = BE        # <FE|BE|CN|BDF2>
 end
 
 subsection fct
-   set FCT initialization option = zero # <zero|low|high>
-   set Do not limit = false
-   set Skip fct if bounds satisfied = false
-   set Use cumulative antidiffusion algorithm = true
-   set Include analytic bounds = false
+   set fct initialization option = zero # <zero|low|high>
+   set do not limit = false
+   set skip fct if bounds satisfied = false
+   set use cumulative antidiffusion algorithm = true
+   set include analytic bounds = false
 end
 
 subsection refinement
-   set Refine space = true
-   set Refine time = true
-   set Time refinement factor = 0.5 # (0.5)^(2/3) = 0.6299605
-   set Use adaptive refinement = false
-   set Initial refinement level = 5
-   set Number of refinement cycles = 1
-   set Use cell size for convergence rates = false
+   set refine space = true
+   set refine time = true
+   set time refinement factor = 0.5 # (0.5)^(2/3) = 0.6299605
+   set use adaptive refinement = false
+   set initial refinement level = 5
+   set number of refinement cycles = 1
+   set use cell size for convergence rates = false
 end
 
 subsection finite element
-   set Finite element degree = 1
-   set Number of quadrature points = 3
+   set finite element degree = 1
+end
+
+subsection quadrature
+   set number of quadrature points = 3
 end
 
 subsection linear solver
-   set Linear solver option = 1   # 1 = UMFPACK direct solve
+   set linear solver option = 1   # 1 = UMFPACK direct solve
 end
 
 subsection nonlinear solver
-   set Nonlinear solver option = 1   # 1 = defect correction
-   set Nonlinear tolerance = 1.0e-10
-   set Nonlinear max iteration = 1000
-   set Relaxation factor = 1.0
+   set nonlinear solver option = 1   # 1 = defect correction
+   set nonlinear tolerance = 1.0e-10
+   set nonlinear max iteration = 1000
+   set relaxation factor = 1.0
 end
 
 subsection output
-   set Output mesh              = false
-   set Output exact solution    = true
-   set Exact solution refinement level = 7
-   set Output initial solution  = false 
-   set Output DMP bounds        = false
-   set Save convergence results = false
-   set Print solution           = false
+   set output mesh              = false
+   set output exact solution    = true
+   set exact solution refinement level = 7
+   set output initial solution  = false 
+   set output DMP bounds        = false
+   set save convergence results = false
+   set print solution           = false
 end

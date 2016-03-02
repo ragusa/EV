@@ -5,13 +5,10 @@
  */
 template <int dim>
 TransportProblem<dim>::TransportProblem(
-  const TransportParameters<dim> & parameters_)
-  : 
-    //cout1(std::cout, parameters_.verbosity_level >= 1),
-    //cout2(std::cout, parameters_.verbosity_level >= 2),
-    cout1(std::cout, false),
-    cout2(std::cout, false),
-parameters(parameters_),
+  const TransportRunParameters<dim> & parameters_)
+  : cout1(std::cout, parameters_.verbosity_level >= 1),
+    cout2(std::cout, parameters_.verbosity_level >= 2),
+    parameters(parameters_),
     is_time_dependent(
       !(parameters.temporal_discretization == TemporalDiscretization::ss)),
     problem_parameters(parameters.problem_name, !is_time_dependent),
@@ -97,7 +94,7 @@ void TransportProblem<dim>::run()
       const double nominal_dt = refinement_handler.get_nominal_time_step_size();
 
       // create and run transient executioner
-      TransientExecutioner<dim> executioner(
+      TransportTransientExecutioner<dim> executioner(
         parameters,
         triangulation,
         problem_parameters.transport_direction,
@@ -122,7 +119,7 @@ void TransportProblem<dim>::run()
       TimerOutput::Scope t_solve(timer, "solve");
 
       // create and run steady-state executioner
-      SteadyStateExecutioner<dim> executioner(
+      TransportSteadyStateExecutioner<dim> executioner(
         parameters,
         triangulation,
         problem_parameters.transport_direction,
@@ -136,4 +133,3 @@ void TransportProblem<dim>::run()
     }
   } // end refinement cycle loop
 }
-

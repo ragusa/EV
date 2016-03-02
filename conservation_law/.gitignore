@@ -99,6 +99,8 @@ PostProcessor.cc
 PostProcessor.h
 ProblemParameters.cc
 ProblemParameters.h
+RefinementHandler.cc
+RefinementHandler.h
 RunParameters.cc
 RunParameters.h
 ScalarEntropy.cc

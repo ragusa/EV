@@ -14,7 +14,7 @@
 #include <deal.II/fe/fe_q.h>
 #include "Viscosity.h"
 #include "LowOrderViscosity.h"
-#include "TransportParameters.h"
+#include "RunParameters.h"
 
 using namespace dealii;
 
@@ -27,7 +27,7 @@ class EntropyViscosity : public Viscosity<dim>
 public:
   /** \brief Alias for temporal discretization of entropy */
   using EntropyTemporalDiscretization =
-    typename TransportParameters<dim>::EntropyTemporalDiscretization;
+    typename RunParameters<dim>::EntropyTemporalDiscretization;
 
   EntropyViscosity(const FESystem<dim> & fe,
                    const unsigned int & n_cells,

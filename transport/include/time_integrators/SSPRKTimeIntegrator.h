@@ -3,8 +3,9 @@
 
 #include <deal.II/lac/sparse_matrix.h>
 #include <deal.II/lac/vector.h>
+
 #include "LinearSolver.h"
-#include "TransportParameters.h"
+#include "RunParameters.h"
 
 using namespace dealii;
 
@@ -16,7 +17,7 @@ class SSPRKTimeIntegrator
 {
 public:
   /** \brief Alias for SSPRK method */
-  using SSPRKMethod = typename TransportParameters<dim>::SSPRKMethod;
+  using SSPRKMethod = typename RunParameters<dim>::SSPRKMethod;
 
   SSPRKTimeIntegrator(const SSPRKMethod & ssprk_method,
                       const unsigned int & system_size,
