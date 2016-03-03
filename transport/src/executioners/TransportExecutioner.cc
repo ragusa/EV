@@ -4,13 +4,8 @@
 template <int dim>
 TransportExecutioner<dim>::TransportExecutioner(
   const TransportRunParameters<dim> & parameters_,
+  TransportProblemParameters<dim> & problem_parameters_,
   Triangulation<dim> & triangulation_,
-  const Tensor<1, dim> & transport_direction_,
-  const double & transport_speed_,
-  const FunctionParser<dim> & cross_section_function_,
-  FunctionParser<dim> & source_function_,
-  Function<dim> & incoming_function_,
-  const double & domain_volume_,
   PostProcessor<dim> & postprocessor_)
   : cout1(std::cout, parameters_.verbosity_level >= 1),
     cout2(std::cout, parameters_.verbosity_level >= 2),
@@ -24,17 +19,18 @@ TransportExecutioner<dim>::TransportExecutioner(
     cell_quadrature(parameters.n_quadrature_points),
     face_quadrature(parameters.n_quadrature_points),
     n_q_points_cell(cell_quadrature.size()),
-    transport_direction(transport_direction_),
-    transport_speed(transport_speed_),
-    cross_section_function(&cross_section_function_),
-    source_function(&source_function_),
-    incoming_function(&incoming_function_),
-    domain_volume(domain_volume_),
+    transport_direction(problem_parameters_.transport_direction),
+    transport_speed(problem_parameters_.transport_speed),
+    cross_section_function(&(problem_parameters_.cross_section_function)),
+    source_function(&(problem_parameters_.source_function)),
+    incoming_function(problem_parameters_.dirichlet_function),
+    domain_volume(problem_parameters_.domain_volume),
     linear_solver(parameters.linear_solver_type,
                   constraints,
                   dof_handler,
-                  incoming_function),
-    nonlinear_solver(parameters_, constraints, dof_handler, incoming_function_),
+                  incoming_function,
+                  1),
+    nonlinear_solver(parameters_, linear_solver, constraints),
     postprocessor(&postprocessor_)
 {
   // distribute dofs
@@ -73,33 +69,30 @@ TransportExecutioner<dim>::TransportExecutioner(
   // determine Dirichlet nodes
   getDirichletNodes();
 
-  // reinitialize nonlinear solver since DoFs have been distributed
-  nonlinear_solver.reinit();
-
   // check that low-order scheme is valid
   if (parameters_.low_order_scheme != LowOrderScheme::dmp)
     throw ExcNotImplemented();
 
   // check that high-order scheme is valid
   unsigned int high_order_viscosity_option;
-      switch (parameters_.high_order_scheme)
-      {
-        case HighOrderScheme::galerkin:
-        {
-          high_order_viscosity_option = 0;
-          break;
-        }
-        case HighOrderScheme::entropy_visc:
-        {
-          high_order_viscosity_option = 2;
-          break;
-        }
-        default:
-        {
-          throw ExcNotImplemented();
-          break;
-        }
-      }
+  switch (parameters_.high_order_scheme)
+  {
+    case HighOrderScheme::galerkin:
+    {
+      high_order_viscosity_option = 0;
+      break;
+    }
+    case HighOrderScheme::entropy_visc:
+    {
+      high_order_viscosity_option = 2;
+      break;
+    }
+    default:
+    {
+      throw ExcNotImplemented();
+      break;
+    }
+  }
 
   // determine viscosity option
   switch (parameters_.scheme)

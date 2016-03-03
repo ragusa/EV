@@ -1,42 +1,32 @@
 /**
  * \brief Constructor.
  *
- * \param[in] parameters_  input parameters
- * \param[in] constraints_  constraints for linear system
- * \param[in] dof_handler_  dof handler
- * \param[in] dirichlet_value_function_  function for the Dirichlet BC to be
- *   imposed on the linear system
+ * \param[in] parameters_     input parameters
+ * \param[in] linear_solver_  linear solver
+ * \param[in] constraints_    constraints for linear system
  */
 template <int dim>
 NonlinearSolver<dim>::NonlinearSolver(const RunParameters<dim> & parameters_,
-                                      const ConstraintMatrix & constraints_,
-                                      const DoFHandler<dim> & dof_handler_,
-                                      Function<dim> & dirichlet_value_function_)
+                                      const LinearSolver<dim> & linear_solver_,
+                                      const ConstraintMatrix & constraints_)
   : relaxation_factor(parameters_.relaxation_factor),
     nonlinear_tolerance(parameters_.nonlinear_tolerance),
     iteration_max(parameters_.nonlinear_max_iterations),
+    linear_solver(&linear_solver_),
     constraints(constraints_),
-    dof_handler(&dof_handler_),
-    dirichlet_value_function(&dirichlet_value_function_),
-    linear_solver(parameters_.linear_solver_type,
-                  constraints,
-                  dof_handler_,
-                  dirichlet_value_function),
-    iteration_number(0)
+    iteration_number(0),
+    n_dofs(0)
 {
-  // reinitialize number of degrees of freedom and vectors
-  reinit();
 }
 
 /**
- * \brief Reinitializes number of degrees of freedom and vectors.
+ * \brief Reinitializes vectors with new system size.
+ *
+ * \param[in] n_dofs  number of degrees of freedom
  */
 template <int dim>
-void NonlinearSolver<dim>::reinit()
+void NonlinearSolver<dim>::reinit(const unsigned int & n_dofs)
 {
-  // get number of degrees of freedom
-  n_dofs = dof_handler->n_dofs();
-
   // reinitialize vectors
   solution_change.reinit(n_dofs);
   residual.reinit(n_dofs);
@@ -55,6 +45,16 @@ void NonlinearSolver<dim>::initialize(Vector<double> & solution_guess)
 
   // set the interation number to zero
   iteration_number = 0;
+
+  // update system size if necessary
+  if (solution->size() != n_dofs)
+  {
+    // update current system size
+    n_dofs = solution->size();
+
+    // reinitialize vectors
+    reinit(n_dofs);
+  }
 
   std::cout << "  Nonlinear solve:" << std::endl;
 }
@@ -119,7 +119,7 @@ bool NonlinearSolver<dim>::update(const SparseMatrix<double> & A,
     return converged;
 
   // solve for solution update dU: A^(l)*dU = r^(l)
-  linear_solver.solve(A, solution_change, residual);
+  linear_solver->solve(A, solution_change, residual);
 
   // update solution: U^(l+1) = U^(l) + relax*dU
   solution->add(relaxation_factor, solution_change);

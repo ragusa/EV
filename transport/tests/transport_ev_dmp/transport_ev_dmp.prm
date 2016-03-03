@@ -1,88 +1,107 @@
+# Input file for scalar transport
+
+# Problem names:
+#   void
+#   absorber
+#   void_to_absorber
+#   sourcevoid_to_absorber
+#   crooked_pipe
+#   obstruction
+#   three_region
+#   mms_tsinx    (TR:t*sin(pi*x)        SS:sin(pi*x))
+#   mms_xexpt    (TR:x*exp(-t)          SS:N/A      )
+#   mms_exptsinx (TR:exp(-t)*sin(pi*x)  SS:N/A      )
+#   mms_xt       (TR:x*t                SS:x        )
+#   mms_t        (TR:t                  SS:1        )
 subsection problem
-   # Problem names:
-   #   void
-   #   absorber
-   #   void_to_absorber
-   #   sourcevoid_to_absorber
-   #   crooked_pipe
-   #   obstruction
-   #   three_region
-   #   mms_tsinx    (TR:t*sin(pi*x)        SS:sin(pi*x))
-   #   mms_xexpt    (TR:x*exp(-t)          SS:N/A      )
-   #   mms_exptsinx (TR:exp(-t)*sin(pi*x)  SS:N/A      )
-   #   mms_xt       (TR:x*t                SS:x        )
-   #   mms_t        (TR:t                  SS:1        )
    set problem name = absorber
 end
 
-subsection time
-   set End time = 0.1
-   set Time step size = 0.001 #0.0005 #0.005
-   set Use adaptive time stepping = false
-   set CFL limit = 0.5
-   set Time discretization = ssprk       # <ss|theta|ssprk>
-   set Entropy time discretization = BE  # <CN|BE|BDF2>
-   set SSPRK method = FE                 # <FE|SSP2|SSP3>
-   set Theta method = BE                 # <FE|CN|BE>
-end
-
-subsection viscosity
-   # 0 = Galerkin
-   # 1 = low-order
-   # 2 = EV
-   # 3 = EV+FCT
-   # 4 = Galerkin+FCT
-   set Viscosity option = 2
-end
-
-subsection entropy viscosity
-   set Entropy string               = 0.5*u*u
-   set Entropy derivative string    = u
-   set Entropy residual coefficient = 1.0
-   set Jump coefficient             = 1.0
-   set EV temporal discretization   = BE        # <FE|BE|CN|BDF2>
-end
-
-subsection fct
-   set FCT initialization option = zero # <zero|low|high>
-   set Do not limit = false
-   set Skip fct if bounds satisfied = false
-   set Use cumulative antidiffusion algorithm = true
-   set Include analytic bounds = false
+subsection scheme
+   set scheme            = high         # low|high|fct
+   set low order scheme  = dmp          # dmp
+   set high order scheme = entropy_visc # galerkin|entropy_visc
 end
 
 subsection refinement
-   set Refine space = true
-   set Refine time = true
-   set Time refinement factor = 0.5 # (0.5)^(2/3) = 0.6299605
-   set Use adaptive refinement = false
-   set Initial refinement level = 5
-   set Number of refinement cycles = 1
-   set Use cell size for convergence rates = false
+   set refinement cycles        = 1
+   set refine space             = true
+   set refine time              = true
+   set initial refinement level = 5
+   set use adaptive mesh refinement = false
+   set time refinement factor   = 0.5
+   set refinement fraction      = 0.5
+   set coarsening fraction      = 0.01
+   set use cell size for convergence rates = false
 end
 
-subsection finite element
-   set Finite element degree = 1
-   set Number of quadrature points = 3
+subsection time
+   set time step size option  = constant      # constant|cfl
+   set cfl                    = 0.50
+   set time step size         = 0.001
+   set use default end time   = false
+   set end time               = 0.1
+   set steady state tolerance = 1.0e-6
+end
+
+subsection temporal discretization
+   set temporal discretization = ssprk # ss|ssprk|theta
+   set ssprk discretization    = FE    # FE|SSP2|SSP3
+   set theta discretization    = BE    # FE|CN|BE
+end
+
+subsection artificial viscosity
+   set entropy residual coefficient       = 1.0
+   set entropy jump coefficient           = 1.0
+   set entropy viscosity smoothing option = none # none|max|average
+   set entropy viscosity smoothing weight = 4
+   set constant viscosity value           = 0.02
+   set lax viscosity coefficient          = 0.5
+   set use low order viscosity for first time step = true
+end
+
+subsection fct
+   set fct bounds type               = dmp     # dmp
+   set antidiffusion option          = limited # limited|full|none
+   set fct synchronization type      = none    # none|min|compound
+   set fct limitation type           = conservative # conservative|characteristic
+   set fct initialization option     = zero    # zero|low|high
+   set skip fct if bounds satisfied  = false
+   set use cumulative antidiffusion algorithm = true
+   set include analytic bounds       = false
+   set use star states in fct bounds = false
+   set output limiter matrix         = false
+   set output fct bounds             = false
 end
 
 subsection linear solver
-   set Linear solver option = 1   # 1 = UMFPACK direct solve
+   set linear solver type = direct
 end
 
 subsection nonlinear solver
-   set Nonlinear solver option = 1   # 1 = defect correction
-   set Nonlinear tolerance = 1.0e-10
-   set Nonlinear max iteration = 1000
-   set Relaxation factor = 1.0
+   set nonlinear tolerance      = 1.0e-10
+   set nonlinear max iterations = 1000
+   set relaxation factor        = 1.0
+end
+
+subsection finite element
+   set degree = 1
+end
+
+subsection quadrature
+   set number of quadrature points = 3
 end
 
 subsection output
-   set Output mesh              = false
-   set Output exact solution    = true
-   set Exact solution refinement level = 7
-   set Output initial solution  = false 
-   set Output DMP bounds        = false
-   set Save convergence results = false
-   set Print solution           = false
+   set verbosity level    = 0    # 0|1|2 (0 is least verbose)
+   set output period      = 0
+   set transient output size limit = 1e9
+   set output mesh        = false
+   set output mass matrix = false
+   set output viscosity   = false
+   set output viscosity transient      = false
+   set exact solution refinement level = 7
+   set save convergence results        = false
+   set print final solution            = true
 end
+

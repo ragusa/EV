@@ -19,13 +19,8 @@ public:
 
   TransportSteadyStateExecutioner(
     const TransportRunParameters<dim> & parameters,
+    TransportProblemParameters<dim> & problem_parameters,
     Triangulation<dim> & triangulation,
-    const Tensor<1, dim> & transport_direction,
-    const double & transport_speed,
-    const FunctionParser<dim> & cross_section_function,
-    FunctionParser<dim> & source_function,
-    Function<dim> & incoming_function,
-    const double & domain_volume,
     PostProcessor<dim> & postprocessor);
 
   void run() override;

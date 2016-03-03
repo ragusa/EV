@@ -4,31 +4,18 @@
 template <int dim>
 TransportTransientExecutioner<dim>::TransportTransientExecutioner(
   const TransportRunParameters<dim> & parameters_,
+  TransportProblemParameters<dim> & problem_parameters_,
   Triangulation<dim> & triangulation_,
-  const Tensor<1, dim> & transport_direction_,
-  const double & transport_speed_,
-  const FunctionParser<dim> & cross_section_function_,
-  FunctionParser<dim> & source_function_,
-  Function<dim> & incoming_function_,
-  FunctionParser<dim> & initial_conditions_function_,
-  const double & domain_volume_,
   PostProcessor<dim> & postprocessor_,
-  const bool & source_is_time_dependent_,
   const double & nominal_dt_)
-  : TransportExecutioner<dim>(parameters_,
-                              triangulation_,
-                              transport_direction_,
-                              transport_speed_,
-                              cross_section_function_,
-                              source_function_,
-                              incoming_function_,
-                              domain_volume_,
-                              postprocessor_),
-    temporal_discretization(this->parameters.temporal_discretization),
-    initial_conditions_function(&initial_conditions_function_),
+  : TransportExecutioner<dim>(
+      parameters_, problem_parameters_, triangulation_, postprocessor_),
+    temporal_discretization(parameters_.temporal_discretization),
+    initial_conditions_function(
+      &(problem_parameters_.initial_conditions_function)),
     dt_nominal(nominal_dt_),
-    source_is_time_dependent(source_is_time_dependent_),
-    theta(this->parameters.theta)
+    source_is_time_dependent(problem_parameters_.source_is_time_dependent),
+    theta(parameters_.theta)
 {
   // initialize matrices
   consistent_mass_matrix.reinit(this->constrained_sparsity_pattern);
@@ -401,7 +388,8 @@ double TransportTransientExecutioner<dim>::enforceCFLCondition(
   // if time step violates CFL limit, then respond accordingly
   if (proposed_CFL > this->parameters.cfl)
     // if user specified to adjust dt based on CFL
-    if (this->parameters.time_step_size_option == RunParameters<dim>::TimeStepSizeOption::cfl)
+    if (this->parameters.time_step_size_option ==
+        RunParameters<dim>::TimeStepSizeOption::cfl)
     {
       // adjust dt to satisfy CFL
       dt = this->parameters.cfl / max_speed_dx;
@@ -474,7 +462,7 @@ void TransportTransientExecutioner<dim>::compute_galerkin_solution_theta(
   this->system_rhs.add(theta * dt, ss_rhs_new);
 
   // solve linear system
-  this->linear_solver.solve(
+  this->linear_solver.solve_with_dirichlet(
     this->system_matrix, this->new_solution, this->system_rhs, true, t_new);
 }
 
@@ -531,7 +519,7 @@ void TransportTransientExecutioner<dim>::compute_low_order_solution_theta(
   this->system_rhs.add(theta * dt, ss_rhs_new);
 
   // solve linear system
-  this->linear_solver.solve(
+  this->linear_solver.solve_with_dirichlet(
     this->system_matrix, this->new_solution, this->system_rhs, true, t_new);
 }
 

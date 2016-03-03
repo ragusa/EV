@@ -98,7 +98,7 @@ subsection output
    set transient output size limit = 1e9
    set output mesh        = false
    set output mass matrix = false
-   set output viscosity   = true
+   set output viscosity   = false
    set output viscosity transient      = false
    set exact solution refinement level = 7
    set save convergence results        = false

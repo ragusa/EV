@@ -2,10 +2,6 @@
 #  CMake script:
 ##
 
-# add option to prevent c++11 standard error
-#SET(GNUXX_FLAGS "-std=c++1y")
-#ADD_DEFINITIONS(${GNUXX_FLAGS})
-
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8)
 
 FIND_PACKAGE(deal.II 8.0 QUIET
@@ -23,8 +19,10 @@ IF (NOT ${deal.II_FOUND})
            "\n\n"
 	   " *** Could not locate deal.II. *** "
 	   "\n\n"
-           " *** You may want to either pass the -DDEAL_II_DIR=/path/to/deal.II flag to cmake \n"
-           " *** or set an environment variable \"DEAL_II_DIR\" that contains this path.")
+           " *** You may want to either pass the \n"
+           " ***   -DDEAL_II_DIR=/path/to/deal.II\n"
+           " *** flag to cmake or set an environment variable \"DEAL_II_DIR\"\n"
+           " *** that contains this path.")
 ENDIF ()
 
 DEAL_II_INITIALIZE_CACHED_VARIABLES()
@@ -42,38 +40,38 @@ ADD_EXECUTABLE(transport main.cc)
 TARGET_COMPILE_DEFINITIONS(transport PRIVATE TRANSPORT)
 DEAL_II_SETUP_TARGET(transport)
 
-ADD_EXECUTABLE(burgers main.cc)
-TARGET_COMPILE_DEFINITIONS(burgers PRIVATE BURGERS)
-DEAL_II_SETUP_TARGET(burgers)
-
-ADD_EXECUTABLE(euler main.cc)
-TARGET_COMPILE_DEFINITIONS(euler PRIVATE EULER)
-DEAL_II_SETUP_TARGET(euler)
+#ADD_EXECUTABLE(burgers main.cc)
+#TARGET_COMPILE_DEFINITIONS(burgers PRIVATE BURGERS)
+#DEAL_II_SETUP_TARGET(burgers)
+#
+#ADD_EXECUTABLE(euler main.cc)
+#TARGET_COMPILE_DEFINITIONS(euler PRIVATE EULER)
+#DEAL_II_SETUP_TARGET(euler)
 
 ADD_EXECUTABLE(shallowwater main.cc)
 TARGET_COMPILE_DEFINITIONS(shallowwater PRIVATE SHALLOWWATER)
 DEAL_II_SETUP_TARGET(shallowwater)
 
 # parallel targets
-ADD_EXECUTABLE(transport_parallel main.cc)
-TARGET_COMPILE_DEFINITIONS(transport_parallel PRIVATE TRANSPORT)
-TARGET_COMPILE_DEFINITIONS(transport_parallel PRIVATE IS_PARALLEL)
-DEAL_II_SETUP_TARGET(transport_parallel)
-
-ADD_EXECUTABLE(burgers_parallel main.cc)
-TARGET_COMPILE_DEFINITIONS(burgers_parallel PRIVATE BURGERS)
-TARGET_COMPILE_DEFINITIONS(burgers_parallel PRIVATE IS_PARALLEL)
-DEAL_II_SETUP_TARGET(burgers_parallel)
-
-ADD_EXECUTABLE(euler_parallel main.cc)
-TARGET_COMPILE_DEFINITIONS(euler_parallel PRIVATE EULER)
-TARGET_COMPILE_DEFINITIONS(euler_parallel PRIVATE IS_PARALLEL)
-DEAL_II_SETUP_TARGET(euler_parallel)
-
-ADD_EXECUTABLE(shallowwater_parallel main.cc)
-TARGET_COMPILE_DEFINITIONS(shallowwater_parallel PRIVATE SHALLOWWATER)
-TARGET_COMPILE_DEFINITIONS(shallowwater_parallel PRIVATE IS_PARALLEL)
-DEAL_II_SETUP_TARGET(shallowwater_parallel)
+#ADD_EXECUTABLE(transport_parallel main.cc)
+#TARGET_COMPILE_DEFINITIONS(transport_parallel PRIVATE TRANSPORT)
+#TARGET_COMPILE_DEFINITIONS(transport_parallel PRIVATE IS_PARALLEL)
+#DEAL_II_SETUP_TARGET(transport_parallel)
+#
+#ADD_EXECUTABLE(burgers_parallel main.cc)
+#TARGET_COMPILE_DEFINITIONS(burgers_parallel PRIVATE BURGERS)
+#TARGET_COMPILE_DEFINITIONS(burgers_parallel PRIVATE IS_PARALLEL)
+#DEAL_II_SETUP_TARGET(burgers_parallel)
+#
+#ADD_EXECUTABLE(euler_parallel main.cc)
+#TARGET_COMPILE_DEFINITIONS(euler_parallel PRIVATE EULER)
+#TARGET_COMPILE_DEFINITIONS(euler_parallel PRIVATE IS_PARALLEL)
+#DEAL_II_SETUP_TARGET(euler_parallel)
+#
+#ADD_EXECUTABLE(shallowwater_parallel main.cc)
+#TARGET_COMPILE_DEFINITIONS(shallowwater_parallel PRIVATE SHALLOWWATER)
+#TARGET_COMPILE_DEFINITIONS(shallowwater_parallel PRIVATE IS_PARALLEL)
+#DEAL_II_SETUP_TARGET(shallowwater_parallel)
 
 # add debug target
 ADD_CUSTOM_TARGET(debug

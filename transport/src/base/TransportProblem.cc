@@ -117,16 +117,9 @@ void TransportProblem<dim>::run()
       // create and run transient executioner
       TransportTransientExecutioner<dim> executioner(
         run_parameters,
+        problem_parameters,
         triangulation,
-        problem_parameters.transport_direction,
-        problem_parameters.transport_speed,
-        problem_parameters.cross_section_function,
-        problem_parameters.source_function,
-        *(problem_parameters.dirichlet_function),
-        problem_parameters.initial_conditions_function,
-        problem_parameters.domain_volume,
         postprocessor,
-        problem_parameters.source_is_time_dependent,
         nominal_dt);
       executioner.run();
     }
@@ -138,13 +131,8 @@ void TransportProblem<dim>::run()
       // create and run steady-state executioner
       TransportSteadyStateExecutioner<dim> executioner(
         run_parameters,
+        problem_parameters,
         triangulation,
-        problem_parameters.transport_direction,
-        problem_parameters.transport_speed,
-        problem_parameters.cross_section_function,
-        problem_parameters.source_function,
-        *(problem_parameters.dirichlet_function),
-        problem_parameters.domain_volume,
         postprocessor);
       executioner.run();
     }

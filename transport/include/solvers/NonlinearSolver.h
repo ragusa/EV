@@ -11,6 +11,7 @@
 #include <deal.II/lac/constraint_matrix.h>
 #include <deal.II/lac/vector.h>
 
+#include "include/other/Exceptions.h"
 #include "LinearSolver.h"
 #include "RunParameters.h"
 
@@ -24,21 +25,16 @@ class NonlinearSolver
 {
 public:
   NonlinearSolver(const RunParameters<dim> & parameters,
-                  const ConstraintMatrix & constraints,
-                  const DoFHandler<dim> & dof_handler,
-                  Function<dim> & dirichlet_value_function);
+                  const LinearSolver<dim> & linear_solver,
+                  const ConstraintMatrix & constraints);
 
-  void reinit();
+  void reinit(const unsigned int & n_dofs);
 
   void initialize(Vector<double> & solution_guess);
 
   bool update(const SparseMatrix<double> & A, const Vector<double> & b);
 
 protected:
-  /** \brief exception for reaching the maximum iteration */
-  DeclException1(
-    ExcMaxIterationReached, unsigned int, << "Max iteration reached: " << arg1);
-
   bool check_convergence(const Vector<double> & residual);
 
   /** \brief Relaxation factor for solution update: \f$\alpha\f$ in
@@ -52,17 +48,14 @@ protected:
   /** \brief Maximum number of iterations */
   const double iteration_max;
 
+  /** \brief pointer to linear solver */
+  const LinearSolver<dim> * const linear_solver;
+
   /** \brief Constraint matrix */
   const ConstraintMatrix & constraints;
 
-  /** \brief Pointer to degree of freedom handler, used in linear solver */
-  const DoFHandler<dim> * const dof_handler;
-
-  /** \brief function for Dirichlet BC values, used in linear solver */
-  std::shared_ptr<Function<dim>> dirichlet_value_function;
-
-  /** \brief linear solver */
-  LinearSolver<dim> linear_solver;
+  /** \brief Current iteration number */
+  unsigned int iteration_number;
 
   /** \brief number of degrees of freedom */
   unsigned int n_dofs;
@@ -76,9 +69,6 @@ protected:
   /** \brief The linear residual vector
              \f$\mathbf{r} \equiv \mathbf{b} - \mathbf{A}\mathbf{U}\f$ */
   Vector<double> residual;
-
-  /** \brief Current iteration number */
-  unsigned int iteration_number;
 };
 
 #include "NonlinearSolver.cc"

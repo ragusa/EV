@@ -3,24 +3,12 @@
  */
 template <int dim>
 TransportSteadyStateExecutioner<dim>::TransportSteadyStateExecutioner(
-  const TransportRunParameters<dim> & parameters,
-  Triangulation<dim> & triangulation,
-  const Tensor<1, dim> & transport_direction,
-  const double & transport_speed,
-  const FunctionParser<dim> & cross_section_function,
-  FunctionParser<dim> & source_function,
-  Function<dim> & incoming_function,
-  const double & domain_volume_,
+  const TransportRunParameters<dim> & parameters_,
+  TransportProblemParameters<dim> & problem_parameters_,
+  Triangulation<dim> & triangulation_,
   PostProcessor<dim> & postprocessor_)
-  : TransportExecutioner<dim>(parameters,
-                              triangulation,
-                              transport_direction,
-                              transport_speed,
-                              cross_section_function,
-                              source_function,
-                              incoming_function,
-                              domain_volume_,
-                              postprocessor_)
+  : TransportExecutioner<dim>(
+      parameters_, problem_parameters_, triangulation_, postprocessor_)
 {
 }
 
@@ -123,7 +111,7 @@ void TransportSteadyStateExecutioner<dim>::compute_galerkin_solution()
   this->system_rhs = this->ss_rhs;
 
   // solve the linear system: ss_matrix*new_solution = ss_rhs
-  this->linear_solver.solve(
+  this->linear_solver.solve_with_dirichlet(
     this->system_matrix, this->new_solution, this->system_rhs, true);
 }
 
@@ -137,7 +125,7 @@ void TransportSteadyStateExecutioner<dim>::compute_low_order_solution()
   this->system_matrix.copy_from(this->low_order_ss_matrix);
 
   // solve the linear system: ss_matrix*new_solution = ss_rhs
-  this->linear_solver.solve(
+  this->linear_solver.solve_with_dirichlet(
     this->system_matrix, this->new_solution, this->ss_rhs, true);
 }
 
@@ -157,26 +145,25 @@ void TransportSteadyStateExecutioner<dim>::compute_entropy_viscosity_solution()
                                              this->low_order_ss_matrix);
 
   // create entropy viscosity
-  EntropyViscosity<dim> entropy_viscosity(
-    this->fe,
-    this->n_cells,
-    this->dof_handler,
-    this->constraints,
-    this->cell_quadrature,
-    this->face_quadrature,
-    this->transport_direction,
-    this->transport_speed,
-    *this->cross_section_function,
-    *this->source_function,
-    "0.5*u*u",
-    "u",
-    this->parameters.entropy_residual_coef,
-    this->parameters.entropy_jump_coef,
-    this->domain_volume,
-    low_order_viscosity,
-    this->inviscid_ss_matrix,
-    this->high_order_diffusion_matrix,
-    this->high_order_ss_matrix);
+  EntropyViscosity<dim> entropy_viscosity(this->fe,
+                                          this->n_cells,
+                                          this->dof_handler,
+                                          this->constraints,
+                                          this->cell_quadrature,
+                                          this->face_quadrature,
+                                          this->transport_direction,
+                                          this->transport_speed,
+                                          *this->cross_section_function,
+                                          *this->source_function,
+                                          "0.5*u*u",
+                                          "u",
+                                          this->parameters.entropy_residual_coef,
+                                          this->parameters.entropy_jump_coef,
+                                          this->domain_volume,
+                                          low_order_viscosity,
+                                          this->inviscid_ss_matrix,
+                                          this->high_order_diffusion_matrix,
+                                          this->high_order_ss_matrix);
 
   // initialize guess for nonlinear solver
   this->new_solution = 0.0;

@@ -35,7 +35,7 @@ public:
 
   void solve(const SparseMatrix<double> & A,
              Vector<double> & x,
-             const Vector<double> & b);
+             const Vector<double> & b) const;
 
   void solve_with_dirichlet(SparseMatrix<double> & A,
                             Vector<double> & x,

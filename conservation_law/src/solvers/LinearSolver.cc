@@ -33,7 +33,7 @@ LinearSolver<dim>::LinearSolver(
 template <int dim>
 void LinearSolver<dim>::solve(const SparseMatrix<double> & A,
                               Vector<double> & x,
-                              const Vector<double> & b)
+                              const Vector<double> & b) const
 {
   // solve linear system
   switch (linear_solver_type)
