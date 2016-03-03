@@ -1,17 +1,17 @@
 /**
  * \brief Constructor.
  *
- * \param[in] parameters_  input parameters
+ * \param[in] run_parameters_  run parameters
  */
 template <int dim>
 TransportProblem<dim>::TransportProblem(
-  const TransportRunParameters<dim> & parameters_)
-  : cout1(std::cout, parameters_.verbosity_level >= 1),
-    cout2(std::cout, parameters_.verbosity_level >= 2),
-    parameters(parameters_),
-    is_time_dependent(
-      !(parameters.temporal_discretization == TemporalDiscretization::ss)),
-    problem_parameters(parameters.problem_name, !is_time_dependent),
+  const TransportRunParameters<dim> & run_parameters_)
+  : cout1(std::cout, run_parameters_.verbosity_level >= 1),
+    cout2(std::cout, run_parameters_.verbosity_level >= 2),
+    run_parameters(run_parameters_),
+    is_time_dependent(!(run_parameters_.temporal_discretization ==
+                        TemporalDiscretizationClassification::ss)),
+    problem_parameters(run_parameters_.problem_name, !is_time_dependent),
     timer(cout2, TimerOutput::summary, TimerOutput::wall_times)
 {
 }
@@ -20,7 +20,7 @@ TransportProblem<dim>::TransportProblem(
  * \brief Initializes system.
  */
 template <int dim>
-void TransportProblem<dim>::initializeSystem()
+void TransportProblem<dim>::initialize_system()
 {
   // timer
   TimerOutput::Scope t_initialize(timer, "initialize");
@@ -29,7 +29,7 @@ void TransportProblem<dim>::initializeSystem()
   get_problem_parameters();
 
   // initially refine mesh
-  triangulation.refine_global(parameters.initial_refinement_level);
+  triangulation.refine_global(run_parameters.initial_refinement_level);
 }
 
 /**
@@ -46,11 +46,11 @@ void TransportProblem<dim>::get_problem_parameters()
 
   // create problem parameters file name
   std::string problem_parameters_file =
-    source_path + "/problems/transport/" + parameters.problem_name;
+    source_path + "/problems/transport/" + run_parameters.problem_name;
 
   // get and process the problem parameters
-  const FESystem<dim> fe(FE_Q<dim>(parameters.degree), 1);
-  const QGauss<dim - 1> face_quadrature(parameters.n_quadrature_points);
+  const FESystem<dim> fe(FE_Q<dim>(run_parameters.degree), 1);
+  const QGauss<dim - 1> face_quadrature(run_parameters.n_quadrature_points);
   problem_parameters.get_and_process_parameters(
     problem_parameters_file, triangulation, fe, face_quadrature);
 }
@@ -62,21 +62,42 @@ template <int dim>
 void TransportProblem<dim>::run()
 {
   // initialize problem
-  initializeSystem();
+  initialize_system();
+
+  // determine end time; either use user-specified value or default
+  double end_time;
+  if (run_parameters.use_default_end_time &&
+      problem_parameters.has_default_end_time)
+    end_time = problem_parameters.default_end_time;
+  else
+    end_time = run_parameters.end_time;
+
+  // solution component names and interpretations
+  std::vector<std::string> component_names(1, "angular_flux");
+  std::vector<DataComponentInterpretation::DataComponentInterpretation>
+    component_interpretations(1,
+                              DataComponentInterpretation::component_is_scalar);
 
   // create post-processor object
-  PostProcessor<dim> postprocessor(parameters,
+  PostProcessor<dim> postprocessor(run_parameters,
+                                   1,
+                                   end_time,
                                    problem_parameters.has_exact_solution,
-                                   problem_parameters.exact_solution_function);
+                                   problem_parameters.exact_solution_function,
+                                   run_parameters.problem_name,
+                                   component_names,
+                                   component_interpretations,
+                                   triangulation);
 
   // create refinement handler object
-  RefinementHandler<dim> refinement_handler(parameters, triangulation);
+  RefinementHandler<dim> refinement_handler(run_parameters, triangulation);
 
   // loop over refinement cycles
-  for (unsigned int cycle = 0; cycle < parameters.n_refinement_cycles; ++cycle)
+  for (unsigned int cycle = 0; cycle < run_parameters.n_refinement_cycles;
+       ++cycle)
   {
     // set cycle for post-processor
-    postprocessor.setCycle(cycle);
+    postprocessor.set_cycle(cycle);
 
     // refine
     refinement_handler.refine(cycle);
@@ -95,7 +116,7 @@ void TransportProblem<dim>::run()
 
       // create and run transient executioner
       TransportTransientExecutioner<dim> executioner(
-        parameters,
+        run_parameters,
         triangulation,
         problem_parameters.transport_direction,
         problem_parameters.transport_speed,
@@ -108,10 +129,6 @@ void TransportProblem<dim>::run()
         problem_parameters.source_is_time_dependent,
         nominal_dt);
       executioner.run();
-
-      // print solution
-      if (true)
-        executioner.print_solution();
     }
     else
     { // run steady-state problem
@@ -120,7 +137,7 @@ void TransportProblem<dim>::run()
 
       // create and run steady-state executioner
       TransportSteadyStateExecutioner<dim> executioner(
-        parameters,
+        run_parameters,
         triangulation,
         problem_parameters.transport_direction,
         problem_parameters.transport_speed,

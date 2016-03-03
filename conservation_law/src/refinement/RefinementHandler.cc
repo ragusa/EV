@@ -7,7 +7,7 @@ RefinementHandler<dim>::RefinementHandler(const RunParameters<dim> & parameters_
   : triangulation(&triangulation_),
     refine_space(parameters_.refine_space),
     refine_time(parameters_.refine_time),
-    use_adaptive_refinement(parameters_.use_adaptive_refinement),
+    use_adaptive_refinement(parameters_.use_adaptive_mesh_refinement),
     time_refinement_factor(parameters_.time_refinement_factor),
     nominal_dt(parameters_.time_step_size)
 {

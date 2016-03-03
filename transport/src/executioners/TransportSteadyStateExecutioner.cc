@@ -13,28 +13,28 @@ TransportSteadyStateExecutioner<dim>::TransportSteadyStateExecutioner(
   const double & domain_volume_,
   PostProcessor<dim> & postprocessor_)
   : TransportExecutioner<dim>(parameters,
-                     triangulation,
-                     transport_direction,
-                     transport_speed,
-                     cross_section_function,
-                     source_function,
-                     incoming_function,
-                     domain_volume_,
-                     postprocessor_)
+                              triangulation,
+                              transport_direction,
+                              transport_speed,
+                              cross_section_function,
+                              source_function,
+                              incoming_function,
+                              domain_volume_,
+                              postprocessor_)
 {
 }
 
 /**
- * Runs steady-state executioner.
+ * \brief Runs steady-state executioner.
  */
 template <int dim>
 void TransportSteadyStateExecutioner<dim>::run()
 {
   // compute inviscid system matrix and steady-state right hand side (ss_rhs)
-  this->assembleInviscidTransportSteadyStateMatrix();
-  this->assembleTransportSteadyStateRHS(this->ss_rhs, 0.0);
+  this->assembleInviscidSteadyStateMatrix();
+  this->assembleSteadyStateRHS(this->ss_rhs, 0.0);
 
-  switch (this->parameters.viscosity_option)
+  switch (this->viscosity_option)
   {
     case 0: // Galerkin
     {
@@ -106,7 +106,7 @@ void TransportSteadyStateExecutioner<dim>::run()
     this->new_solution, this->dof_handler, *this->triangulation);
 
   // output grid and solution and print convergence results
-  this->postprocessor->output_results(
+  this->postprocessor->output_results_if_last_cycle(
     this->new_solution, this->dof_handler, *this->triangulation);
 }
 
@@ -168,12 +168,11 @@ void TransportSteadyStateExecutioner<dim>::compute_entropy_viscosity_solution()
     this->transport_speed,
     *this->cross_section_function,
     *this->source_function,
-    this->parameters.entropy_string,
-    this->parameters.entropy_derivative_string,
-    this->parameters.entropy_residual_coefficient,
-    this->parameters.jump_coefficient,
+    "0.5*u*u",
+    "u",
+    this->parameters.entropy_residual_coef,
+    this->parameters.entropy_jump_coef,
     this->domain_volume,
-    this->parameters.entropy_temporal_discretization,
     low_order_viscosity,
     this->inviscid_ss_matrix,
     this->high_order_diffusion_matrix,
@@ -218,7 +217,7 @@ void TransportSteadyStateExecutioner<dim>::compute_FCT_solution()
                this->dirichlet_nodes,
                this->n_dofs,
                this->dofs_per_cell,
-               this->parameters.do_not_limit,
+               false,
                this->parameters.include_analytic_bounds,
                this->fe,
                this->cell_quadrature,
@@ -326,7 +325,7 @@ void TransportSteadyStateExecutioner<dim>::compute_FCT_solution()
   }
 
   // output FCT bounds if requested
-  if (this->parameters.output_DMP_bounds)
+  if (this->parameters.output_fct_bounds)
     fct.output_bounds(*(this->postprocessor));
 
   // check FCT bounds

@@ -16,14 +16,14 @@ TransportTransientExecutioner<dim>::TransportTransientExecutioner(
   const bool & source_is_time_dependent_,
   const double & nominal_dt_)
   : TransportExecutioner<dim>(parameters_,
-                     triangulation_,
-                     transport_direction_,
-                     transport_speed_,
-                     cross_section_function_,
-                     source_function_,
-                     incoming_function_,
-                     domain_volume_,
-                     postprocessor_),
+                              triangulation_,
+                              transport_direction_,
+                              transport_speed_,
+                              cross_section_function_,
+                              source_function_,
+                              incoming_function_,
+                              domain_volume_,
+                              postprocessor_),
     temporal_discretization(this->parameters.temporal_discretization),
     initial_conditions_function(&initial_conditions_function_),
     dt_nominal(nominal_dt_),
@@ -60,14 +60,9 @@ TransportTransientExecutioner<dim>::TransportTransientExecutioner(
   // impose other constraints such as hanging nodes on initial conditions
   this->constraints.distribute(this->new_solution);
 
-  // output initial conditions if user requested
-  if (parameters_.output_initial_solution)
-  {
-    std::stringstream IC_filename_ss;
-    IC_filename_ss << "solution_initial";
-    postprocessor_.output_solution(
-      this->new_solution, this->dof_handler, IC_filename_ss.str());
-  }
+  // output initial conditions
+  postprocessor_.output_solution(
+    this->new_solution, 0.0, this->dof_handler, "solution_initial");
 
   // initialize transient solution vectors
   old_solution.reinit(this->n_dofs);
@@ -108,7 +103,7 @@ void TransportTransientExecutioner<dim>::run()
   dt_nominal = enforceCFLCondition(dt_nominal);
 
   // update nominal dt reported on convergence table
-  this->postprocessor->update_dt(dt_nominal);
+  this->postprocessor->log_time_step_size(dt_nominal);
 
   // create entropy viscosity
   EntropyViscosity<dim> EV(this->fe,
@@ -121,16 +116,16 @@ void TransportTransientExecutioner<dim>::run()
                            this->transport_speed,
                            *this->cross_section_function,
                            *this->source_function,
-                           this->parameters.entropy_string,
-                           this->parameters.entropy_derivative_string,
-                           this->parameters.entropy_residual_coefficient,
-                           this->parameters.jump_coefficient,
+                           "0.5*u*u",
+                           "u",
+                           this->parameters.entropy_residual_coef,
+                           this->parameters.entropy_jump_coef,
                            this->domain_volume,
-                           this->parameters.entropy_temporal_discretization,
                            low_order_viscosity,
                            this->inviscid_ss_matrix,
                            this->high_order_diffusion_matrix,
                            this->high_order_ss_matrix);
+
   // create FCT object
   FCT<dim> fct(this->dof_handler,
                *this->triangulation,
@@ -141,7 +136,7 @@ void TransportTransientExecutioner<dim>::run()
                this->dirichlet_nodes,
                this->n_dofs,
                this->dofs_per_cell,
-               this->parameters.do_not_limit,
+               false,
                this->parameters.include_analytic_bounds,
                this->fe,
                this->cell_quadrature,
@@ -152,10 +147,10 @@ void TransportTransientExecutioner<dim>::run()
 
   // create objects required by temporal integrator
   std::shared_ptr<SSPRKTimeIntegrator<dim>> ssprk;
-  if (temporal_discretization == TemporalDiscretization::ssprk)
+  if (temporal_discretization == TemporalDiscretizationClassification::ssprk)
   {
     ssprk = std::make_shared<SSPRKTimeIntegrator<dim>>(
-      this->parameters.ssprk_method,
+      this->parameters.ssprk_discretization,
       this->n_dofs,
       this->linear_solver,
       this->constrained_sparsity_pattern);
@@ -201,12 +196,12 @@ void TransportTransientExecutioner<dim>::run()
     this->cout1 << "   time step " << n << ": t = " << t_old << "->" << t_new
                 << std::endl;
 
-    if (temporal_discretization == TemporalDiscretization::ssprk) // SSPRK
+    if (temporal_discretization == TemporalDiscretizationClassification::ssprk)
     {
       // initialize SSPRK time step
       ssprk->initialize_time_step(old_solution, dt);
 
-      switch (this->parameters.viscosity_option)
+      switch (this->viscosity_option)
       {
         case 0: // Galerkin scheme
         {
@@ -242,9 +237,10 @@ void TransportTransientExecutioner<dim>::run()
         }
       }
     }
-    else if (temporal_discretization == TemporalDiscretization::theta) // Theta
+    else if (temporal_discretization ==
+             TemporalDiscretizationClassification::theta)
     {
-      switch (this->parameters.viscosity_option)
+      switch (this->viscosity_option)
       {
         case 0: // Galerkin scheme
         {
@@ -296,7 +292,7 @@ void TransportTransientExecutioner<dim>::run()
     }
     else
     {
-      Assert(false, ExcNotImplemented());
+      throw ExcNotImplemented();
     }
 
     // update old solution, time, and time step size
@@ -315,16 +311,16 @@ void TransportTransientExecutioner<dim>::run()
   this->postprocessor->evaluate_error(
     this->new_solution, this->dof_handler, *this->triangulation);
 
-  // output grid and solution and print convergence results
-  this->postprocessor->output_results(
+  // output grid and solution and print convergence results if in last cycle
+  this->postprocessor->output_results_if_last_cycle(
     this->new_solution, this->dof_handler, *this->triangulation);
 
   // output FCT bounds if requested
-  if (this->parameters.output_DMP_bounds)
+  if (this->parameters.output_fct_bounds)
     fct.output_bounds(*(this->postprocessor));
 
   // print final solution if specified
-  if (this->parameters.print_solution)
+  if (this->parameters.print_final_solution)
   {
     // set precision and format
     std::cout.precision(10);
@@ -403,12 +399,12 @@ double TransportTransientExecutioner<dim>::enforceCFLCondition(
 
   double dt;
   // if time step violates CFL limit, then respond accordingly
-  if (proposed_CFL > this->parameters.CFL_limit)
+  if (proposed_CFL > this->parameters.cfl)
     // if user specified to adjust dt based on CFL
-    if (this->parameters.use_adaptive_time_stepping)
+    if (this->parameters.time_step_size_option == RunParameters<dim>::TimeStepSizeOption::cfl)
     {
       // adjust dt to satisfy CFL
-      dt = this->parameters.CFL_limit / max_speed_dx;
+      dt = this->parameters.cfl / max_speed_dx;
     }
     else
     {

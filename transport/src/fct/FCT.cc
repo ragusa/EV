@@ -890,11 +890,11 @@ bool FCT<dim>::check_DMP_satisfied()
 /** \brief Outputs bounds to files.
  */
 template <int dim>
-void FCT<dim>::output_bounds(const PostProcessor<dim> & postprocessor) const
+void FCT<dim>::output_bounds(PostProcessor<dim> & postprocessor) const
 {
   // use a method from the post-processor class to output the bounds
-  postprocessor.output_solution(solution_min, *dof_handler, "DMPmin");
-  postprocessor.output_solution(solution_max, *dof_handler, "DMPmax");
+  postprocessor.output_solution(solution_min, 0.0, *dof_handler, "DMPmin");
+  postprocessor.output_solution(solution_max, 0.0, *dof_handler, "DMPmax");
 }
 
 /**

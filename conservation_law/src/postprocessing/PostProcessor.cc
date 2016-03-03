@@ -196,7 +196,7 @@ PostProcessor<dim>::PostProcessor(
   output_dir = output_dir_ss.str();
 
   // create fine triangulation and dof handler
-  createFineTriangulationAndDoFHandler(triangulation_);
+  create_fine_triangulation_and_dof_handler(triangulation_);
 
   // if outputting transient, remove older transient *.vtu files
   if (parameters.output_period > 0)
@@ -204,11 +204,22 @@ PostProcessor<dim>::PostProcessor(
 }
 
 /**
- * Destructor.
+ * \brief Outputs grid, solution, exact solution, and convergence data if
+ *        in the last convergence cycle.
+ *
+ * \param[in] solution      solution vector
+ * \param[in] dof_handler   degree of freedom handler
+ * \param[in] triangulation triangulation
  */
 template <int dim>
-PostProcessor<dim>::~PostProcessor()
+void PostProcessor<dim>::output_results_if_last_cycle(
+  const Vector<double> & solution,
+  const DoFHandler<dim> & dof_handler,
+  const Triangulation<dim> & triangulation)
 {
+  // call function if in last cycle
+  if (is_last_cycle)
+    output_results(solution, dof_handler, triangulation);
 }
 
 /**
@@ -940,7 +951,7 @@ void PostProcessor<dim>::set_cycle(const unsigned int & cycle)
  * \param[in] triangulation triangulation to copy for refining
  */
 template <int dim>
-void PostProcessor<dim>::createFineTriangulationAndDoFHandler(
+void PostProcessor<dim>::create_fine_triangulation_and_dof_handler(
   const Triangulation<dim> & triangulation)
 {
   // create fine mesh on which to interpolate functions

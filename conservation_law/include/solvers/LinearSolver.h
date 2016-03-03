@@ -30,13 +30,18 @@ public:
   LinearSolver(const LinearSolverType & linear_solver_option,
                const ConstraintMatrix & constraints,
                const DoFHandler<dim> & dof_handler,
-               std::shared_ptr<Function<dim>> dirichlet_function);
+               std::shared_ptr<Function<dim>> dirichlet_function,
+               const unsigned int & n_components);
 
-  void solve(SparseMatrix<double> & A,
+  void solve(const SparseMatrix<double> & A,
              Vector<double> & x,
-             Vector<double> & b,
-             const bool & dirichlet_bc_apply = true,
-             const double & t = 0.0);
+             const Vector<double> & b);
+
+  void solve_with_dirichlet(SparseMatrix<double> & A,
+                            Vector<double> & x,
+                            Vector<double> & b,
+                            const bool & dirichlet_bc_apply = true,
+                            const double & t = 0.0);
 
 private:
   void apply_dirichlet_bc(SparseMatrix<double> & A,

@@ -21,7 +21,6 @@ EntropyViscosity<dim>::EntropyViscosity(
   const double & entropy_residual_coefficient,
   const double & jump_coefficient,
   const double & domain_volume,
-  const EntropyTemporalDiscretization & temporal_discretization,
   const LowOrderViscosity<dim> & low_order_viscosity,
   const SparseMatrix<double> & inviscid_matrix,
   SparseMatrix<double> & high_order_diffusion_matrix,
@@ -45,7 +44,6 @@ EntropyViscosity<dim>::EntropyViscosity(
     jump_coefficient(jump_coefficient),
     domain_volume(domain_volume),
     entropy_viscosity(n_cells),
-    temporal_discretization(temporal_discretization),
     low_order_viscosity(&low_order_viscosity),
     inviscid_matrix(&inviscid_matrix),
     high_order_diffusion_matrix(&high_order_diffusion_matrix),
@@ -432,40 +430,11 @@ void EntropyViscosity<dim>::compute_entropy_viscosity(
  */
 template <int dim>
 void EntropyViscosity<dim>::compute_temporal_discretization_constants(
-  const double old_dt, const double older_dt)
+  const double old_dt, const double)
 {
-  switch (temporal_discretization)
-  {
-    case EntropyTemporalDiscretization::BE:
-    {
-      a_old = 1.0 / old_dt;
-      a_older = -1.0 / old_dt;
-      a_oldest = 0.0;
-      b_old = 1.0;
-      b_older = 0.0;
-      break;
-    }
-    case EntropyTemporalDiscretization::CN:
-    {
-      a_old = 1.0 / old_dt;
-      a_older = -1.0 / old_dt;
-      a_oldest = 0.0;
-      b_old = 0.5;
-      b_older = 0.5;
-      break;
-    }
-    case EntropyTemporalDiscretization::BDF2:
-    {
-      a_old = (older_dt + 2 * old_dt) / (old_dt * (older_dt + old_dt));
-      a_older = -(older_dt + old_dt) / (older_dt * old_dt);
-      a_oldest = old_dt / (older_dt * (older_dt + old_dt));
-      b_old = 1.0;
-      b_older = 0.0;
-      break;
-    }
-    default:
-    {
-      Assert(false, ExcNotImplemented());
-    }
-  }
+  a_old = 1.0 / old_dt;
+  a_older = -1.0 / old_dt;
+  a_oldest = 0.0;
+  b_old = 1.0;
+  b_older = 0.0;
 }

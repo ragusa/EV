@@ -25,10 +25,6 @@ template <int dim>
 class EntropyViscosity : public Viscosity<dim>
 {
 public:
-  /** \brief Alias for temporal discretization of entropy */
-  using EntropyTemporalDiscretization =
-    typename RunParameters<dim>::EntropyTemporalDiscretization;
-
   EntropyViscosity(const FESystem<dim> & fe,
                    const unsigned int & n_cells,
                    const DoFHandler<dim> & dof_handler,
@@ -44,7 +40,6 @@ public:
                    const double & entropy_residual_coefficient,
                    const double & jump_coefficient,
                    const double & domain_volume,
-                   const EntropyTemporalDiscretization & temporal_discretization,
                    const LowOrderViscosity<dim> & low_order_viscosity,
                    const SparseMatrix<double> & inviscid_matrix,
                    SparseMatrix<double> & diffusion_matrix,
@@ -114,9 +109,6 @@ private:
 
   // viscosity vectors
   Vector<double> entropy_viscosity;
-
-  // temporal discretization for entropy residual
-  const EntropyTemporalDiscretization temporal_discretization;
 
   // coefficients for entropy residual
   double a_old;

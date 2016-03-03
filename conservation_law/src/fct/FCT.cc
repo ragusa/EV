@@ -228,7 +228,7 @@ void FCT<dim>::solve_fct_system(
 
   // solve the linear system M*u_new = system_rhs
   system_matrix.copy_from(*lumped_mass_matrix);
-  linear_solver.solve(system_matrix, new_solution, system_rhs);
+  linear_solver.solve_with_dirichlet(system_matrix, new_solution, system_rhs);
 
   // check that local discrete maximum principle is satisfied at all time steps
   if (fct_limitation_type == FCTLimitationType::conservative &&

@@ -22,6 +22,7 @@
 #include <deal.II/numerics/vector_tools.h>
 #include "include/parameters/RunParameters.h"
 #include "include/other/Exceptions.h"
+#include "include/viscosity/Viscosity.h"
 
 using namespace dealii;
 
@@ -59,7 +60,9 @@ public:
     const Triangulation<dim> & triangulation,
     const std::shared_ptr<DataPostprocessor<dim>> aux_postprocessor = nullptr);
 
-  ~PostProcessor();
+  void output_results_if_last_cycle(const Vector<double> & solution,
+                                    const DoFHandler<dim> & dof_handler,
+                                    const Triangulation<dim> & triangulation);
 
   void output_results(const Vector<double> & solution,
                       const DoFHandler<dim> & dof_handler,
@@ -192,7 +195,7 @@ private:
 
   Triangulation<dim> fine_triangulation;
   DoFHandler<dim> fine_dof_handler;
-  void createFineTriangulationAndDoFHandler(
+  void create_fine_triangulation_and_dof_handler(
     const Triangulation<dim> & triangulation);
 
   /** \brief Estimate of size of all transient output files */

@@ -775,7 +775,8 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     parameters.linear_solver_type,
     constraints,
     dof_handler,
-    problem_base_parameters->dirichlet_function);
+    problem_base_parameters->dirichlet_function,
+    n_components);
 
   // create SSPRK time integrator
   SSPRKTimeIntegrator<dim> ssprk(parameters.ssprk_discretization,

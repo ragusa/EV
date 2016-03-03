@@ -27,11 +27,11 @@
 #include <cstdlib>
 #include <algorithm>
 
-#include "CMakeVars.h"
-#include "Exceptions.h"
-#include "TransportRunParameters.h"
-#include "TransportProblemParameters.h"
-#include "PostProcessor.h"
+#include "include/other/CMakeVars.h"
+#include "include/other/Exceptions.h"
+#include "include/parameters/TransportRunParameters.h"
+#include "include/parameters/TransportProblemParameters.h"
+#include "include/postprocessing/PostProcessor.h"
 #include "include/refinement/RefinementHandler.h"
 #include "TransportSteadyStateExecutioner.h"
 #include "TransportTransientExecutioner.h"
@@ -39,22 +39,22 @@
 using namespace dealii;
 
 /**
- * Class for defining and running a transport problem.
+ * \brief Class for defining and running a transport problem.
  */
 template <int dim>
 class TransportProblem
 {
 public:
-  /** \brief Alias for temporal discretization */
-  using TemporalDiscretization =
-    typename TransportRunParameters<dim>::TemporalDiscretization;
+  /** \brief Alias for temporal discretization classification */
+  using TemporalDiscretizationClassification =
+    typename TransportRunParameters<dim>::TemporalDiscretizationClassification;
 
-  TransportProblem(const TransportRunParameters<dim> & parameters);
+  TransportProblem(const TransportRunParameters<dim> & run_parameters);
 
   void run();
 
 private:
-  void initializeSystem();
+  void initialize_system();
 
   void get_problem_parameters();
 
@@ -65,7 +65,7 @@ private:
   ConditionalOStream cout2;
 
   /** \brief run parameters */
-  const TransportRunParameters<dim> parameters;
+  const TransportRunParameters<dim> run_parameters;
 
   /** \brief flag that problem is time-dependent */
   const bool is_time_dependent;

@@ -177,7 +177,7 @@ void SSPRKTimeIntegrator<dim>::step(const SparseMatrix<double> & mass_matrix,
   // solve the linear system M*u_new = system_rhs
   system_matrix.copy_from(mass_matrix);
   double t_stage = get_stage_time();
-  linear_solver.solve(
+  linear_solver.solve_with_dirichlet(
     system_matrix, intermediate_solution, system_rhs, true, t_stage);
 
   // compute new stage solution if there are no additional steps to be taken on

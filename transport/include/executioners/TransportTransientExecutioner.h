@@ -14,13 +14,9 @@ template <int dim>
 class TransportTransientExecutioner : public TransportExecutioner<dim>
 {
 public:
-  /** \brief Alias for temporal discretization */
-  using TemporalDiscretization =
-    typename RunParameters<dim>::TemporalDiscretization;
-
-  /** \brief Alias for temporal discretization of entropy */
-  using EntropyTemporalDiscretization =
-    typename RunParameters<dim>::EntropyTemporalDiscretization;
+  /** \brief Alias for temporal discretization classification */
+  using TemporalDiscretizationClassification =
+    typename RunParameters<dim>::TemporalDiscretizationClassification;
 
   TransportTransientExecutioner(
     const TransportRunParameters<dim> & parameters,
@@ -79,7 +75,7 @@ private:
                                   const double & dt,
                                   const double & t_old);
 
-  const TemporalDiscretization temporal_discretization;
+  const TemporalDiscretizationClassification temporal_discretization;
 
   SparseMatrix<double> consistent_mass_matrix;
 

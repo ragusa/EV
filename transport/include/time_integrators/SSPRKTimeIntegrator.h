@@ -17,7 +17,7 @@ class SSPRKTimeIntegrator
 {
 public:
   /** \brief Alias for SSPRK method */
-  using SSPRKMethod = typename RunParameters<dim>::SSPRKMethod;
+  using SSPRKMethod = typename RunParameters<dim>::SSPRKDiscretization;
 
   SSPRKTimeIntegrator(const SSPRKMethod & ssprk_method,
                       const unsigned int & system_size,

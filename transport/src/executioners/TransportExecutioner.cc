@@ -24,17 +24,17 @@ TransportExecutioner<dim>::TransportExecutioner(
     cell_quadrature(parameters.n_quadrature_points),
     face_quadrature(parameters.n_quadrature_points),
     n_q_points_cell(cell_quadrature.size()),
-    linear_solver(parameters.linear_solver_option,
-                  constraints,
-                  dof_handler,
-                  incoming_function_),
-    nonlinear_solver(parameters_, constraints, dof_handler, incoming_function_),
     transport_direction(transport_direction_),
     transport_speed(transport_speed_),
     cross_section_function(&cross_section_function_),
     source_function(&source_function_),
     incoming_function(&incoming_function_),
     domain_volume(domain_volume_),
+    linear_solver(parameters.linear_solver_type,
+                  constraints,
+                  dof_handler,
+                  incoming_function),
+    nonlinear_solver(parameters_, constraints, dof_handler, incoming_function_),
     postprocessor(&postprocessor_)
 {
   // distribute dofs
@@ -70,14 +70,78 @@ TransportExecutioner<dim>::TransportExecutioner(
   new_solution.reinit(n_dofs);
   cumulative_antidiffusion.reinit(n_dofs);
 
-  // set boundary indicators to distinguish incoming boundary
-  // setBoundaryIndicators();
-
   // determine Dirichlet nodes
   getDirichletNodes();
 
   // reinitialize nonlinear solver since DoFs have been distributed
   nonlinear_solver.reinit();
+
+  // check that low-order scheme is valid
+  if (parameters_.low_order_scheme != LowOrderScheme::dmp)
+    throw ExcNotImplemented();
+
+  // check that high-order scheme is valid
+  unsigned int high_order_viscosity_option;
+      switch (parameters_.high_order_scheme)
+      {
+        case HighOrderScheme::galerkin:
+        {
+          high_order_viscosity_option = 0;
+          break;
+        }
+        case HighOrderScheme::entropy_visc:
+        {
+          high_order_viscosity_option = 2;
+          break;
+        }
+        default:
+        {
+          throw ExcNotImplemented();
+          break;
+        }
+      }
+
+  // determine viscosity option
+  switch (parameters_.scheme)
+  {
+    case Scheme::low:
+    {
+      viscosity_option = 1;
+      break;
+    }
+    case Scheme::high:
+    {
+      viscosity_option = high_order_viscosity_option;
+      break;
+    }
+    case Scheme::fct:
+    {
+      switch (high_order_viscosity_option)
+      {
+        case 0:
+        {
+          viscosity_option = 4;
+          break;
+        }
+        case 2:
+        {
+          viscosity_option = 3;
+          break;
+        }
+        default:
+        {
+          throw ExcNotImplemented();
+          break;
+        }
+      }
+      break;
+    }
+    default:
+    {
+      throw ExcNotImplemented();
+      break;
+    }
+  }
 }
 
 /**

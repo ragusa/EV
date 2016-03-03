@@ -1,8 +1,18 @@
 # Input file for scalar transport
 
 # Problem names:
+#   void
 #   absorber
+#   void_to_absorber
+#   sourcevoid_to_absorber
 #   crooked_pipe
+#   obstruction
+#   three_region
+#   mms_tsinx    (TR:t*sin(pi*x)        SS:sin(pi*x))
+#   mms_xexpt    (TR:x*exp(-t)          SS:N/A      )
+#   mms_exptsinx (TR:exp(-t)*sin(pi*x)  SS:N/A      )
+#   mms_xt       (TR:x*t                SS:x        )
+#   mms_t        (TR:t                  SS:1        )
 subsection problem
    set problem name = absorber
 end

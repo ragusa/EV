@@ -25,15 +25,19 @@ template <int dim>
 class TransportExecutioner
 {
 public:
+  using Scheme = typename RunParameters<dim>::Scheme;
+  using LowOrderScheme = typename RunParameters<dim>::LowOrderScheme;
+  using HighOrderScheme = typename RunParameters<dim>::HighOrderScheme;
+
   TransportExecutioner(const TransportRunParameters<dim> & parameters,
-              Triangulation<dim> & triangulation,
-              const Tensor<1, dim> & transport_direction,
-              const double & transport_speed,
-              const FunctionParser<dim> & cross_section_function,
-              FunctionParser<dim> & source_function,
-              Function<dim> & incoming_function,
-              const double & domain_volume,
-              PostProcessor<dim> & postprocessor);
+                       Triangulation<dim> & triangulation,
+                       const Tensor<1, dim> & transport_direction,
+                       const double & transport_speed,
+                       const FunctionParser<dim> & cross_section_function,
+                       FunctionParser<dim> & source_function,
+                       Function<dim> & incoming_function,
+                       const double & domain_volume,
+                       PostProcessor<dim> & postprocessor);
 
   virtual void run() = 0;
 
@@ -60,6 +64,8 @@ protected:
 
   const TransportRunParameters<dim> parameters;
 
+  unsigned int viscosity_option;
+
   Triangulation<dim> * const triangulation;
 
   const FESystem<dim> fe;
@@ -72,15 +78,11 @@ protected:
   const QGauss<dim - 1> face_quadrature;
   const unsigned int n_q_points_cell;
 
-  LinearSolver<dim> linear_solver;
-
-  NonlinearSolver<dim> nonlinear_solver;
-
   const Tensor<1, dim> transport_direction;
   const double transport_speed;
   const FunctionParser<dim> * const cross_section_function;
   FunctionParser<dim> * const source_function;
-  Function<dim> * const incoming_function;
+  std::shared_ptr<Function<dim>> incoming_function;
   const double domain_volume;
 
   ConstraintMatrix constraints;
@@ -98,6 +100,10 @@ protected:
   Vector<double> cumulative_antidiffusion;
 
   std::vector<unsigned int> dirichlet_nodes;
+
+  LinearSolver<dim> linear_solver;
+
+  NonlinearSolver<dim> nonlinear_solver;
 
   PostProcessor<dim> * const postprocessor;
 };

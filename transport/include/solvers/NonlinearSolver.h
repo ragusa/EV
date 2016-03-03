@@ -59,7 +59,7 @@ protected:
   const DoFHandler<dim> * const dof_handler;
 
   /** \brief function for Dirichlet BC values, used in linear solver */
-  Function<dim> & dirichlet_value_function;
+  std::shared_ptr<Function<dim>> dirichlet_value_function;
 
   /** \brief linear solver */
   LinearSolver<dim> linear_solver;

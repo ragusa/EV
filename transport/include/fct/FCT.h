@@ -129,7 +129,7 @@ public:
 
   bool check_fct_bounds(const Vector<double> & solution) const;
 
-  void output_bounds(const PostProcessor<dim> & postprocessor) const;
+  void output_bounds(PostProcessor<dim> & postprocessor) const;
 
   Vector<double> get_limited_flux_vector() const;
 
