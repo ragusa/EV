@@ -2,8 +2,8 @@
 #define TransportTransientExecutioner_cc
 
 #include "TransportExecutioner.h"
-#include "SSPRKTimeIntegrator.h"
-#include "RunParameters.h"
+#include "include/parameters/RunParameters.h"
+#include "include/time_integrators/SSPRKTimeIntegrator.h"
 
 using namespace dealii;
 

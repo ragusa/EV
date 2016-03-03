@@ -869,12 +869,6 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
       // get stage time
       double t_stage = ssprk.get_stage_time();
 
-      // compute steady-state rhs vector
-      compute_ss_rhs(t_stage, ss_rhs);
-
-      // compute steady-state flux vector
-      compute_ss_flux(dt, old_solution, ss_flux);
-
       // determine old stage solution and dt (needed for entropy viscosity)
       double old_stage_dt;
       if (i == 0)
@@ -890,6 +884,12 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
       // get old stage solution
       ssprk.get_stage_solution(i, old_stage_solution);
 
+      // compute steady-state rhs vector
+      compute_ss_rhs(t_stage, ss_rhs);
+
+      // compute steady-state flux vector
+      compute_ss_flux(dt, old_stage_solution, ss_flux);
+
       // advance by an SSPRK step
       switch (parameters.scheme)
       {
@@ -900,8 +900,8 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
             old_stage_solution, low_order_viscosity, low_order_diffusion_matrix);
           ssprk.step(lumped_mass_matrix,
                      ss_flux,
-                     ss_rhs,
                      low_order_diffusion_matrix,
+                     ss_rhs,
                      true);
           break;
         case Scheme::high:
@@ -913,15 +913,15 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
             high_order_diffusion_matrix);
           ssprk.step(consistent_mass_matrix,
                      ss_flux,
-                     ss_rhs,
                      high_order_diffusion_matrix,
+                     ss_rhs,
                      true);
           break;
         case Scheme::fct:
           perform_fct_ssprk_step(dt, old_stage_dt, n, fct, ssprk);
           break;
         default:
-          Assert(false, ExcNotImplemented());
+          throw ExcNotImplemented();
           break;
       }
 
@@ -1160,7 +1160,7 @@ void ConservationLaw<dim>::perform_fct_ssprk_step(
 
   // compute high-order solution
   ssprk.step(
-    consistent_mass_matrix, ss_flux, ss_rhs, high_order_diffusion_matrix, false);
+    consistent_mass_matrix, ss_flux, high_order_diffusion_matrix, ss_rhs, false);
 
   // get high-order solution
   ssprk.get_intermediate_solution(new_solution);

@@ -35,6 +35,7 @@ TransportTransientExecutioner<dim>::TransportTransientExecutioner(
   initial_conditions_function->set_time(0.0);
   VectorTools::interpolate(
     this->dof_handler, *initial_conditions_function, this->new_solution);
+
   // impose Dirichlet BC on initial conditions
   std::map<unsigned int, double> boundary_values;
   VectorTools::interpolate_boundary_values(
@@ -44,6 +45,7 @@ TransportTransientExecutioner<dim>::TransportTransientExecutioner(
        it != boundary_values.end();
        ++it)
     this->new_solution(it->first) = (it->second);
+
   // impose other constraints such as hanging nodes on initial conditions
   this->constraints.distribute(this->new_solution);
 
@@ -428,7 +430,7 @@ void TransportTransientExecutioner<dim>::compute_galerkin_solution_ssprk(
 
     // advance by an SSPRK step
     ssprk.step(
-      consistent_mass_matrix, this->inviscid_ss_matrix, this->ss_rhs, true);
+      consistent_mass_matrix, this->inviscid_ss_matrix, this->high_order_diffusion_matrix, this->ss_rhs, true);
   }
   // retrieve the final solution
   ssprk.get_new_solution(this->new_solution);
@@ -485,7 +487,7 @@ void TransportTransientExecutioner<dim>::compute_low_order_solution_ssprk(
     }
 
     // advance by an SSPRK step
-    ssprk.step(lumped_mass_matrix, this->low_order_ss_matrix, this->ss_rhs, true);
+    ssprk.step(lumped_mass_matrix, this->inviscid_ss_matrix, this->low_order_diffusion_matrix, this->ss_rhs, true);
   }
   // retrieve the final solution
   ssprk.get_new_solution(this->new_solution);
@@ -535,14 +537,13 @@ void TransportTransientExecutioner<dim>::compute_entropy_viscosity_solution_sspr
   const double & t_old)
 {
   // compute EV only at beginning of time step
-  EV.recompute_high_order_ss_matrix(old_solution,
+  EV.recompute_high_order_diffusion_matrix(old_solution,
                                     older_solution,
                                     oldest_solution,
                                     dt_old,
                                     dt_older,
                                     t_old,
-                                    this->high_order_diffusion_matrix,
-                                    this->high_order_ss_matrix);
+                                    this->high_order_diffusion_matrix);
 
   for (unsigned int i = 0; i < ssprk.n_stages; ++i)
   {
@@ -555,7 +556,8 @@ void TransportTransientExecutioner<dim>::compute_entropy_viscosity_solution_sspr
 
     // advance by an SSPRK step
     ssprk.step(
-      consistent_mass_matrix, this->high_order_ss_matrix, this->ss_rhs, true);
+      consistent_mass_matrix, this->inviscid_ss_matrix,
+      this->high_order_diffusion_matrix, this->ss_rhs, true);
   }
   // retrieve the final solution
   ssprk.get_new_solution(this->new_solution);
@@ -641,9 +643,13 @@ void TransportTransientExecutioner<dim>::
     if (source_is_time_dependent)
       this->assembleSteadyStateRHS(this->ss_rhs, t_stage);
 
+    // set high-order diffusion matrix to zero
+    this->high_order_diffusion_matrix = 0;
+
     // compute Galerkin solution
     ssprk.step(
-      consistent_mass_matrix, this->inviscid_ss_matrix, this->ss_rhs, false);
+      consistent_mass_matrix, this->inviscid_ss_matrix,
+      this->high_order_diffusion_matrix, this->ss_rhs, false);
 
     // get Galerkin solution
     ssprk.get_intermediate_solution(this->new_solution);
@@ -663,7 +669,8 @@ void TransportTransientExecutioner<dim>::
 
     // advance by an SSPRK step
     ssprk.step(
-      consistent_mass_matrix, this->high_order_ss_matrix, this->ss_rhs, false);
+      consistent_mass_matrix, this->inviscid_ss_matrix,
+      this->high_order_diffusion_matrix, this->ss_rhs, false);
 
     // get old stage solution
     ssprk.get_stage_solution(i, old_stage_solution);
@@ -712,7 +719,7 @@ void TransportTransientExecutioner<dim>::compute_galerkin_fct_solution_ssprk(
 
     // compute Galerkin solution
     ssprk.step(
-      consistent_mass_matrix, this->inviscid_ss_matrix, this->ss_rhs, false);
+      consistent_mass_matrix, this->inviscid_ss_matrix, this->high_order_diffusion_matrix, this->ss_rhs, false);
 
     // get Galerkin solution
     ssprk.get_intermediate_solution(this->new_solution);

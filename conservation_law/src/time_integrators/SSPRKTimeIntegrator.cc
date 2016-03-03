@@ -81,6 +81,7 @@ SSPRKTimeIntegrator<dim>::SSPRKTimeIntegrator(
   // allocate memory for temporary vectors
   intermediate_solution.reinit(n);
   system_rhs.reinit(n);
+  inviscid_ss_flux.reinit(n);
 
   // initialize sparse matrix
   system_matrix.reinit(sparsity_pattern);
@@ -152,25 +153,25 @@ void SSPRKTimeIntegrator<dim>::get_new_solution(
  * solution, then the user specifies with a flag that the stage solution
  * can be completed here.
  *
- * \param[in] mass_matrix mass matrix
- * \param[in] ss_flux steady-state flux vector
- * \param[in] ss_rhs steady-state source vector
- * \param[in] diffusion_matrix diffusion matrix
+ * \param[in] mass_matrix       mass matrix
+ * \param[in] inviscid_ss_flux  inviscid steady-state flux vector
+ * \param[in] diffusion_matrix  diffusion matrix
+ * \param[in] ss_rhs            steady-state source vector
  * \param[in] call_complete_stage_solution flag to call function to complete
  *            stage solution
  */
 template <int dim>
 void SSPRKTimeIntegrator<dim>::step(const SparseMatrix<double> & mass_matrix,
-                                    const Vector<double> & ss_flux,
-                                    const Vector<double> & ss_rhs,
+                                    const Vector<double> & inviscid_ss_flux,
                                     const SparseMatrix<double> & diffusion_matrix,
+                                    const Vector<double> & ss_rhs,
                                     const bool & call_complete_stage_solution)
 {
   // form transient rhs: system_rhs = M*u_old + dt*(ss_rhs - ss_flux - D*u_old)
   system_rhs = 0;
   mass_matrix.vmult(system_rhs, u_stage[current_stage]);
   system_rhs.add(dt, ss_rhs);
-  system_rhs.add(-dt, ss_flux);
+  system_rhs.add(-dt, inviscid_ss_flux);
   diffusion_matrix.vmult(intermediate_solution, u_stage[current_stage]);
   system_rhs.add(-dt, intermediate_solution);
 
@@ -184,6 +185,40 @@ void SSPRKTimeIntegrator<dim>::step(const SparseMatrix<double> & mass_matrix,
   // intermediate solution before the final combination
   if (call_complete_stage_solution)
     complete_stage_solution();
+}
+
+/**
+ * \brief Advances one stage of a Runge-Kutta method.
+ *
+ * Here the following linear system is solved for the intermediate solution
+ * \f$\tilde{\mathrm{U}}^i\f$:
+ * \f[
+ *   \mathrm{M}\tilde{\mathrm{U}}^i = \mathrm{M}\hat{\mathrm{U}}^{i-1} +
+ *     \Delta t\left(\mathrm{r}(\hat{t}^i,\hat{\mathrm{U}}^{i-1})\right) \,.
+ * \f]
+ * If there are no additional steps (such as FCT) to take on the intermediate
+ * solution, then the user specifies with a flag that the stage solution
+ * can be completed here.
+ *
+ * \param[in] mass_matrix         mass matrix
+ * \param[in] inviscid_ss_matrix  inviscid steady-state matrix
+ * \param[in] diffusion_matrix    diffusion matrix
+ * \param[in] ss_rhs              steady-state source vector
+ * \param[in] call_complete_stage_solution flag to call function to complete
+ *            stage solution
+ */
+template <int dim>
+void SSPRKTimeIntegrator<dim>::step(const SparseMatrix<double> & mass_matrix,
+                                    const SparseMatrix<double> & inviscid_ss_matrix,
+                                    const SparseMatrix<double> & diffusion_matrix,
+                                    const Vector<double> & ss_rhs,
+                                    const bool & call_complete_stage_solution)
+{
+  // compute inviscid steady-state flux
+  inviscid_ss_matrix.vmult(inviscid_ss_flux, u_stage[current_stage]);
+
+  // call function
+  step(mass_matrix, inviscid_ss_flux, diffusion_matrix, ss_rhs, call_complete_stage_solution);
 }
 
 /**
