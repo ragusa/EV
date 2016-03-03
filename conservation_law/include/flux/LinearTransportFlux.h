@@ -3,7 +3,7 @@
 
 #include <vector>
 #include <deal.II/base/tensor.h>
-#include "ConservationLawFlux.h"
+#include "ScalarConservationLawFlux.h"
 
 using namespace dealii;
 
@@ -11,7 +11,7 @@ using namespace dealii;
  * Linear transport flux class.
  */
 template <int dim>
-class LinearTransportFlux : public ConservationLawFlux<dim>
+class LinearTransportFlux : public ScalarConservationLawFlux<dim>
 {
 public:
   /** Constructor. */

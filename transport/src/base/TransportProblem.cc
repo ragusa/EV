@@ -115,12 +115,11 @@ void TransportProblem<dim>::run()
       const double nominal_dt = refinement_handler.get_nominal_time_step_size();
 
       // create and run transient executioner
-      TransportTransientExecutioner<dim> executioner(
-        run_parameters,
-        problem_parameters,
-        triangulation,
-        postprocessor,
-        nominal_dt);
+      TransportTransientExecutioner<dim> executioner(run_parameters,
+                                                     problem_parameters,
+                                                     triangulation,
+                                                     postprocessor,
+                                                     nominal_dt);
       executioner.run();
     }
     else
@@ -130,10 +129,7 @@ void TransportProblem<dim>::run()
 
       // create and run steady-state executioner
       TransportSteadyStateExecutioner<dim> executioner(
-        run_parameters,
-        problem_parameters,
-        triangulation,
-        postprocessor);
+        run_parameters, problem_parameters, triangulation, postprocessor);
       executioner.run();
     }
   } // end refinement cycle loop

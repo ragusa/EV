@@ -1,6 +1,6 @@
 template <int dim>
 LinearTransportFlux<dim>::LinearTransportFlux(const Tensor<1, dim> & velocity)
-  : ConservationLawFlux<dim>(false), velocity(velocity)
+  : ScalarConservationLawFlux<dim>(false), velocity(velocity)
 {
 }
 
