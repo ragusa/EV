@@ -62,6 +62,9 @@ private:
 
   void perform_nonstandard_setup() override;
 
+  void compute_inviscid_ss_matrix(const Vector<double> & solution,
+                                  SparseMatrix<double> & matrix) override;
+
   void compute_ss_flux(const double & dt,
                        const Vector<double> & solution,
                        Vector<double> & ss_flux) override;

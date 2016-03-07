@@ -56,6 +56,7 @@
 #include "include/time_integrators/SSPRKTimeIntegrator.h"
 #include "include/viscosity/ConstantViscosity.h"
 #include "include/viscosity/DomainInvariantViscosity.h"
+#include "include/viscosity/DMPLowOrderViscosity.h"
 #include "include/viscosity/EntropyViscosity.h"
 #include "include/viscosity/HighOrderViscosity.h"
 #include "include/viscosity/LowOrderViscosity.h"
@@ -96,7 +97,7 @@ class ConservationLaw
 public:
   ConservationLaw(const RunParameters<dim> & params,
                   const unsigned int & n_components,
-                  const bool & are_star_states);
+                  const bool & is_linear);
   void run();
 
 protected:
@@ -141,27 +142,45 @@ protected:
   using LinearSolverType = typename RunParameters<dim>::LinearSolverType;
 
   void initialize_system();
+
   void setup_system();
+
   std::shared_ptr<ArtificialDiffusion<dim>> create_artificial_diffusion(
     const DiffusionType & diffusion_type);
+
   void compute_error_for_refinement();
+
   void refine_mesh();
+
   void update_cell_sizes();
+
   void assemble_mass_matrix();
+
   void solve_runge_kutta(PostProcessor<dim> & postprocessor);
+
   double compute_dt_from_cfl_condition();
+
   double compute_cfl_number(const double & dt) const;
+
   void check_nan();
+
   void output_viscosity(PostProcessor<dim> & postprocessor,
                         const bool & is_transient = false,
                         const double & time = 0.0);
+
   void perform_fct_ssprk_step(const double & dt,
                               const double & old_stage_dt,
                               const unsigned int & n,
                               const std::shared_ptr<FCT<dim>> & fct,
                               SSPRKTimeIntegrator<dim> & ssprk);
+
   void get_dirichlet_dof_indices(
     std::vector<unsigned int> & dirichlet_dof_indices);
+
+  virtual void compute_inviscid_ss_matrix(const Vector<double> & solution,
+                                          SparseMatrix<double> & matrix);
+
+  virtual void compute_ss_reaction(Vector<double> & ss_reaction);
 
   /**
    * \brief Computes the lumped mass matrix.
@@ -191,31 +210,6 @@ protected:
   virtual void compute_ss_flux(const double & dt,
                                const Vector<double> & solution,
                                Vector<double> & ss_flux) = 0;
-
-  /**
-   * \brief Computes the steady-state reaction vector.
-   *
-   * This function computes the steady-state reaction vector, which has the
-   * entries
-   * \f[
-   *   \sigma_i = \int\limits_{S_i}\varphi_i(\mathbf{x})\sigma(\mathbf{x})dV
-   *     = \sum\limits_j\int\limits_{S_{i,j}}
-   *     \varphi_i(\mathbf{x})\varphi_j(\mathbf{x})\sigma(\mathbf{x})dV \,,
-   * \f]
-   * where \f$\sigma(\mathbf{x})\f$ is the reaction coefficient of the
-   * conservation law equation when it is put in the form
-   * \f[
-   *   \frac{\partial\mathbf{u}}{\partial t}
-   *   + \nabla \cdot \mathbf{F}(\mathbf{u}) + \sigma(\mathbf{x})\mathbf{u}
-   *   = \mathbf{0} \,.
-   * \f]
-   *
-   * \param[out] ss_reaction steady-state reaction vector
-   */
-  virtual void compute_ss_reaction(Vector<double> & ss_reaction)
-  {
-    ss_reaction = 0;
-  }
 
   /**
    * \brief Computes the steady-state right hand side vector.
@@ -410,6 +404,8 @@ protected:
   LocalMatrix low_order_diffusion_matrix;
   /** \brief High-order diffusion matrix \f$\mathrm{D}^{H,n}\f$ */
   LocalMatrix high_order_diffusion_matrix;
+  /** \brief Inviscid steady-state matrix \f$\mathbf{A}\f$ */
+  LocalMatrix inviscid_ss_matrix;
 
   /** \brief Vector of component names */
   std::vector<std::string> component_names;
@@ -439,6 +435,14 @@ protected:
   DiffusionType high_order_diffusion_type;
   std::shared_ptr<ArtificialDiffusion<dim>> low_order_diffusion;
   std::shared_ptr<ArtificialDiffusion<dim>> high_order_diffusion;
+
+  /** \brief Flag that conservation law is scalar */
+  const bool is_scalar;
+  /** \brief Flag that conservation law is linear */
+  const bool is_linear;
+
+  /** \brief Flag that the inviscid steady-state matrix needs to be computed */
+  bool need_to_compute_inviscid_ss_matrix;
 
   /** \brief Flag to signal being in last adaptive refinement cycle */
   bool in_final_cycle;

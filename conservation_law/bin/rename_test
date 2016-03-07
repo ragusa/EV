@@ -1,0 +1,91 @@
+#!/bin/bash
+#
+# Usage: rename_test <old test name> <new test name>
+#
+
+# function to check that a directory exists
+check_directory_exists()
+{
+  if [ ! -d $1 ]; then
+    echo "Directory $1 does not exist"
+    exit 1
+  fi
+}
+
+# function to check that a directory does not exist
+check_directory_does_not_exist()
+{
+  if [ -d $1 ]; then
+    echo "Directory $1 already exists"
+    exit 1
+  fi
+}
+
+# function to check that a file exists
+check_file_exists()
+{
+  if [ ! -f $1 ]; then
+    echo "File $1 does not exist"
+    exit 1
+  fi
+}
+
+# check that 2 argument were provided
+if [ $# -ne 2 ]; then
+  echo "Usage: rename_test <old test name> <new test name>"
+else
+  # get class and directory from command-line arguments
+  old_test=$1
+  new_test=$2
+
+  # relevant directories
+  base_dir=.
+  test_dir=$base_dir/tests
+  old_test_dir=$test_dir/$old_test
+  new_test_dir=$test_dir/$new_test
+
+  # check that necessary directories exist
+  check_directory_exists $test_dir
+  check_directory_exists $old_test_dir
+
+  # check that new directory does not already exist
+  check_directory_does_not_exist $new_test_dir
+
+  # relevant files
+  cmake_lists=$base_dir/CMakeLists.txt
+  old_test_prm=$old_test_dir/${old_test}.prm
+  old_test_output=$old_test_dir/${old_test}.output
+
+  # check that relevant files exist
+  check_file_exists $cmake_lists
+  check_file_exists $old_test_prm
+  check_file_exists $old_test_output
+
+  # substitute test name in CMakeLists.txt and capture output
+  old_text="tests\/$old_test\)"
+  new_text="tests/$new_test)"
+  sub_out=$(substitute_text $cmake_lists $old_text $new_text)
+
+  # ensure that exactly one substitution was made
+  n_substitutions=`echo $sub_out | awk '{print $1;}'`
+  if [ $n_substitutions -eq 1 ]; then
+    echo "Test \"$old_test\" successfully renamed to \"$new_test\""
+  else
+    echo "Error: CMakeLists.txt should have contained 1 occurrence of"\
+      "\"$old_text\" but contained $n_substitutions"
+    exit 1
+  fi
+
+  # rename the test directory
+  git mv $old_test_dir $new_test_dir
+
+  # rename the parameters file
+  old_prm_new_dir=$new_test_dir/${old_test}.prm
+  new_prm_new_dir=$new_test_dir/${new_test}.prm
+  git mv $old_prm_new_dir $new_prm_new_dir
+
+  # rename the output file
+  old_out_new_dir=$new_test_dir/${old_test}.output
+  new_out_new_dir=$new_test_dir/${new_test}.output
+  git mv $old_out_new_dir $new_out_new_dir
+fi

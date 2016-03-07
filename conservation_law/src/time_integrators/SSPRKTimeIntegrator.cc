@@ -208,17 +208,22 @@ void SSPRKTimeIntegrator<dim>::step(const SparseMatrix<double> & mass_matrix,
  *            stage solution
  */
 template <int dim>
-void SSPRKTimeIntegrator<dim>::step(const SparseMatrix<double> & mass_matrix,
-                                    const SparseMatrix<double> & inviscid_ss_matrix,
-                                    const SparseMatrix<double> & diffusion_matrix,
-                                    const Vector<double> & ss_rhs,
-                                    const bool & call_complete_stage_solution)
+void SSPRKTimeIntegrator<dim>::step(
+  const SparseMatrix<double> & mass_matrix,
+  const SparseMatrix<double> & inviscid_ss_matrix,
+  const SparseMatrix<double> & diffusion_matrix,
+  const Vector<double> & ss_rhs,
+  const bool & call_complete_stage_solution)
 {
   // compute inviscid steady-state flux
   inviscid_ss_matrix.vmult(inviscid_ss_flux, u_stage[current_stage]);
 
   // call function
-  step(mass_matrix, inviscid_ss_flux, diffusion_matrix, ss_rhs, call_complete_stage_solution);
+  step(mass_matrix,
+       inviscid_ss_flux,
+       diffusion_matrix,
+       ss_rhs,
+       call_complete_stage_solution);
 }
 
 /**

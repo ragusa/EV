@@ -22,14 +22,6 @@ public:
                     const SparseMatrix<double> & inviscid_matrix,
                     SparseMatrix<double> & diffusion_matrix,
                     SparseMatrix<double> & total_matrix);
-  ~LowOrderViscosity();
-  /*
-        void compute_bounds(const Vector<double>       &old_solution,
-                            const SparseMatrix<double> &low_order_ss_matrix,
-                            const Vector<double>       &ss_rhs,
-                            const double               &dt);
-  void output_bounds(const PostProcessor<dim> &postprocessor) const;
-  */
 
 private:
   void compute_viscous_bilinear_forms();
@@ -37,13 +29,6 @@ private:
 
   SparsityPattern sparsity_pattern;
   SparseMatrix<double> viscous_bilinear_forms;
-
-  /*
-        const DoFHandler<dim> *dof_handler;
-
-        Vector<double> solution_min;
-        Vector<double> solution_max;
-  */
 };
 
 #include "LowOrderViscosity.cc"

@@ -8,13 +8,12 @@
  *
  * \param[in] params conservation law parameters
  * \param[in] n_components_  number of components for conservation law
- * \param[in] are_star_states_  flag to signal if a conservation law has
- *            star states
+ * \param[in] is_linear_  flag that conservation law is linear
  */
 template <int dim>
 ConservationLaw<dim>::ConservationLaw(const RunParameters<dim> & params,
                                       const unsigned int & n_components_,
-                                      const bool & are_star_states_)
+                                      const bool & is_linear_)
   :
 #ifdef IS_PARALLEL
     mpi_communicator(MPI_COMM_WORLD),
@@ -35,7 +34,7 @@ ConservationLaw<dim>::ConservationLaw(const RunParameters<dim> & params,
 #endif
     parameters(params),
     n_components(n_components_),
-    are_star_states(are_star_states_),
+    are_star_states(!is_linear_),
     fe(FE_Q<dim>(params.degree), n_components_),
     dofs_per_cell(fe.dofs_per_cell),
     faces_per_cell(GeometryInfo<dim>::faces_per_cell),
@@ -44,7 +43,10 @@ ConservationLaw<dim>::ConservationLaw(const RunParameters<dim> & params,
     cell_quadrature(n_q_points_per_dim),
     face_quadrature(n_q_points_per_dim),
     n_q_points_cell(cell_quadrature.size()),
-    n_q_points_face(face_quadrature.size())
+    n_q_points_face(face_quadrature.size()),
+    is_scalar(n_components_ == 1),
+    is_linear(is_linear_),
+    need_to_compute_inviscid_ss_matrix(false)
 {
 }
 
@@ -204,9 +206,15 @@ void ConservationLaw<dim>::initialize_system()
       low_order_diffusion_type = DiffusionType::laplacian;
       break;
     case LowOrderScheme::dmp:
-      Assert(false, ExcNotImplemented());
+      // assert that system is scalar
+      AssertThrow(is_scalar, ExcInvalidState());
+
       low_order_viscosity_type = ViscosityType::DMP;
       low_order_diffusion_type = DiffusionType::graphtheoretic;
+
+      // DMP low-order viscosity requires computation of inviscid ss matrix
+      need_to_compute_inviscid_ss_matrix = true;
+
       break;
     case LowOrderScheme::di_visc:
       low_order_viscosity_type = ViscosityType::DI;
@@ -217,7 +225,7 @@ void ConservationLaw<dim>::initialize_system()
       low_order_diffusion_type = DiffusionType::DI;
       break;
     default:
-      Assert(false, ExcNotImplemented());
+      throw ExcNotImplemented();
       break;
   }
 
@@ -235,13 +243,13 @@ void ConservationLaw<dim>::initialize_system()
       high_order_diffusion_type = DiffusionType::laplacian;
       break;
     case HighOrderScheme::entropy_diff:
-      Assert(false, ExcNotImplemented());
+      throw ExcNotImplemented();
       entropy_viscosity_type = ViscosityType::none;
       high_order_viscosity_type = ViscosityType::none;
       high_order_diffusion_type = DiffusionType::entropy;
       break;
     default:
-      Assert(false, ExcNotImplemented());
+      throw ExcNotImplemented();
       break;
   }
 
@@ -347,10 +355,12 @@ void ConservationLaw<dim>::setup_system()
 
   // make constraints
   constraints.clear();
+
 #ifdef IS_PARALLEL
   // tell constraint matrix the list of locally relevant DoFs
   constraints.reinit(locally_relevant_dofs);
 #endif
+
   // hanging node constraints
   DoFTools::make_hanging_node_constraints(dof_handler, constraints);
   // Dirichlet contraints (for t = 0)
@@ -410,12 +420,15 @@ void ConservationLaw<dim>::setup_system()
     locally_owned_dofs, locally_owned_dofs, dsp_unconstrained, mpi_communicator);
   high_order_diffusion_matrix.reinit(
     locally_owned_dofs, locally_owned_dofs, dsp_unconstrained, mpi_communicator);
+  inviscid_ss_matrix.reinit(
+    locally_owned_dofs, locally_owned_dofs, dsp_unconstrained, mpi_communicator);
 #else
   // reinitialize matrices with sparsity pattern
   consistent_mass_matrix.reinit(unconstrained_sparsity_pattern);
   lumped_mass_matrix.reinit(unconstrained_sparsity_pattern);
   low_order_diffusion_matrix.reinit(unconstrained_sparsity_pattern);
   high_order_diffusion_matrix.reinit(unconstrained_sparsity_pattern);
+  inviscid_ss_matrix.reinit(unconstrained_sparsity_pattern);
 #endif
 
   // assemble mass matrix
@@ -495,6 +508,20 @@ void ConservationLaw<dim>::setup_system()
 
       break;
     }
+    // DMP viscosity
+    case ViscosityType::DMP:
+    {
+      // ensure diffusion type is compatible
+      Assert(low_order_diffusion_type == DiffusionType::none ||
+               low_order_diffusion_type == DiffusionType::graphtheoretic,
+             ExcInvalidDiffusionType());
+
+      // create low-order viscosity
+      low_order_viscosity = std::make_shared<DMPLowOrderViscosity<dim>>(
+        dof_handler, inviscid_ss_matrix, dofs_per_cell);
+
+      break;
+    }
     // domain-invariant low-order viscosity
     case ViscosityType::DI:
     {
@@ -524,7 +551,7 @@ void ConservationLaw<dim>::setup_system()
     }
     default:
     {
-      Assert(false, ExcNotImplemented());
+      throw ExcNotImplemented();
       break;
     }
   }
@@ -789,6 +816,10 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
   if (parameters.scheme == Scheme::fct)
     fct = create_fct();
 
+  // if using DMP low-order viscosity, compute inviscid steady-state matrix
+  if (need_to_compute_inviscid_ss_matrix)
+    compute_inviscid_ss_matrix(old_solution, inviscid_ss_matrix);
+
   // compute end time
   double end_time;
   if (parameters.use_default_end_time &&
@@ -806,6 +837,11 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
   // start transient
   while (in_transient)
   {
+    // Assert that if the inviscid ss matrix needs to be computed, that it is
+    // not nonlinear; otherwise it would need to be computed not just at each
+    // time step, but at each stage.
+    Assert(!need_to_compute_inviscid_ss_matrix || is_linear, ExcNotImplemented());
+
     // update max speed for use in CFL computation
     update_flux_speeds();
 
@@ -1223,6 +1259,48 @@ void ConservationLaw<dim>::get_dirichlet_dof_indices(
 }
 
 /**
+ * \brief Computes the inviscid steady state matrix \f$\mathbf{A}\f$.
+ *
+ * \param[in] solution  solution vector
+ * \param[out] matrix   inviscid steady-state matrix
+ */
+template <int dim>
+void ConservationLaw<dim>::compute_inviscid_ss_matrix(
+  const Vector<double> &, SparseMatrix<double> &)
+{
+  // throw exception if this base version is called; if a derived class needs
+  // this function (i.e., it is a scalar conservation law), it should override
+  // this function
+  throw ExcInvalidState();
+}
+
+/**
+ * \brief Computes the steady-state reaction vector.
+ *
+ * This function computes the steady-state reaction vector, which has the
+ * entries
+ * \f[
+ *   \sigma_i = \int\limits_{S_i}\varphi_i(\mathbf{x})\sigma(\mathbf{x})dV
+ *     = \sum\limits_j\int\limits_{S_{i,j}}
+ *     \varphi_i(\mathbf{x})\varphi_j(\mathbf{x})\sigma(\mathbf{x})dV \,,
+ * \f]
+ * where \f$\sigma(\mathbf{x})\f$ is the reaction coefficient of the
+ * conservation law equation when it is put in the form
+ * \f[
+ *   \frac{\partial\mathbf{u}}{\partial t}
+ *   + \nabla \cdot \mathbf{F}(\mathbf{u}) + \sigma(\mathbf{x})\mathbf{u}
+ *   = \mathbf{0} \,.
+ * \f]
+ *
+ * \param[out] ss_reaction steady-state reaction vector
+ */
+template <int dim>
+void ConservationLaw<dim>::compute_ss_reaction(Vector<double> & ss_reaction)
+{
+  ss_reaction = 0;
+}
+
+/**
  * \brief Creates a star state object and returns the pointer.
  *
  * This function throws an exception in this base class.
@@ -1233,7 +1311,7 @@ template <int dim>
 std::shared_ptr<StarState<dim>> ConservationLaw<dim>::create_star_state() const
 {
   // throw exception if not overridden by derived class
-  AssertThrow(false, ExcNotImplemented());
+  throw ExcNotImplemented();
 
   // return null pointer to avoid compiler warning about not returning anything
   return nullptr;

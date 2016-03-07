@@ -36,6 +36,12 @@ public:
              const double & dt,
              Vector<double> & cell_residual);
 
+  void apply(const Cell & cell,
+             const FEValues<dim> & fe_values,
+             const Vector<double> & solution,
+             const double & dt,
+             FullMatrix<double> & cell_matrix);
+
   virtual void apply_dirichlet_boundary_conditions() {}
 protected:
   virtual void apply_boundary_condition(const Cell & cell,
@@ -44,6 +50,13 @@ protected:
                                         const Vector<double> & solution,
                                         const double & dt,
                                         Vector<double> & cell_residual) = 0;
+
+  virtual void apply_boundary_condition(const Cell & cell,
+                                        const FEValues<dim> & fe_values_cell,
+                                        const FEFaceValues<dim> & fe_values_face,
+                                        const Vector<double> & solution,
+                                        const double & dt,
+                                        FullMatrix<double> & cell_matrix);
 
   /** \brief Finite element system */
   const FESystem<dim> fe;

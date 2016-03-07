@@ -10,7 +10,7 @@
  */
 template <int dim>
 Transport<dim>::Transport(const TransportRunParameters<dim> & params)
-  : ConservationLaw<dim>(params, 1, false),
+  : ConservationLaw<dim>(params, 1, true),
     transport_parameters(params),
     problem_parameters(params.problem_name, false),
     extractor(0)
@@ -109,6 +109,85 @@ void Transport<dim>::assemble_lumped_mass_matrix()
 template <int dim>
 void Transport<dim>::perform_nonstandard_setup()
 {
+}
+
+/**
+ * \brief Computes the inviscid steady-state matrix \f$\mathbf{A}\f$.
+ *
+ * This function computes the inviscid steady-state matrix \f$\mathbf{A}\f$:
+ * \f[
+ *   A_{i,j} = \int\limits_{S_{i,j}}
+ *     \left(\mathbf{f}'(\tilde{\mathbf{u}}^n)\cdot\nabla\varphi_j(\mathbf{x})
+ *       + \sigma(\mathbf{x})\varphi_j(\mathbf{x})\right)\varphi_i(\mathbf{x})
+ *     dV \,.
+ * \f]
+ *
+ * \param[in] solution  solution vector \f$\mathrm{U}^n\f$
+ * \param[out] matrix   inviscid steady-state matrix \f$\mathrm{A}\f$
+ */
+template <int dim>
+void Transport<dim>::compute_inviscid_ss_matrix(const Vector<double> & solution,
+                                                SparseMatrix<double> & matrix)
+{
+  // reset
+  matrix = 0.0;
+
+  FEValues<dim> fe_values(this->fe,
+                          this->cell_quadrature,
+                          update_values | update_gradients |
+                            update_quadrature_points | update_JxW_values);
+
+  FullMatrix<double> cell_matrix(this->dofs_per_cell, this->dofs_per_cell);
+  std::vector<unsigned int> local_dof_indices(this->dofs_per_cell);
+  std::vector<Tensor<1, dim>> solution_gradients(this->n_q_points_cell);
+
+  // loop over cells
+  Cell cell = this->dof_handler.begin_active(), endc = this->dof_handler.end();
+  for (; cell != endc; ++cell)
+  {
+    // reset cell matrix
+    cell_matrix = 0;
+
+    // reinitialize fe values for cell
+    fe_values.reinit(cell);
+
+    // get quadrature points on cell
+    std::vector<Point<dim>> points(this->n_q_points_cell);
+    points = fe_values.get_quadrature_points();
+
+    // loop over quadrature points
+    for (unsigned int q = 0; q < this->n_q_points_cell; ++q)
+    {
+      // compute cross section value at quadrature point
+      const double cross_section_value =
+        problem_parameters.cross_section_function.value(points[q]);
+
+      // loop over test function i
+      for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+      {
+        // loop over test function j
+        for (unsigned int j = 0; j < this->dofs_per_cell; ++j)
+        {
+          cell_matrix(i, j) +=
+            (problem_parameters.transport_direction *
+               fe_values[extractor].gradient(j, q) +
+             cross_section_value * fe_values[extractor].value(j, q)) *
+            problem_parameters.transport_speed *
+            fe_values[extractor].value(i, q) * fe_values.JxW(q);
+        }
+      }
+    }
+
+    // apply boundary conditions
+    problem_parameters.boundary_conditions->apply(
+      cell, fe_values, solution, 0.0, cell_matrix);
+
+    // aggregate local residual into global residual
+    cell->get_dof_indices(local_dof_indices);
+    for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+      for (unsigned int j = 0; j < this->dofs_per_cell; ++j)
+        matrix.add(local_dof_indices[i], local_dof_indices[j], cell_matrix(i, j));
+  }
 }
 
 /**

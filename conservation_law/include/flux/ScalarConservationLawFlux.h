@@ -18,7 +18,6 @@ public:
    * \param[in] is_linear_  flag that flux is linear
    */
   ScalarConservationLawFlux(const bool & is_linear_) : is_linear(is_linear_) {}
-
   /** \brief Evaluates conservation law flux at a number of points. */
   virtual std::vector<Tensor<1, dim>> evaluate(
     const std::vector<double> & U, const std::vector<double> & x) const = 0;

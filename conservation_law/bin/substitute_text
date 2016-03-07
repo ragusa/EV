@@ -1,0 +1,45 @@
+#!/usr/bin/env perl
+
+use strict;
+
+my $usage = "USAGE: substitute_text <file> <old text> <new text>\n";
+
+# check for correct number of input arguments
+my $n_arguments = @ARGV;
+if ($n_arguments != 3)
+{
+  die $usage;
+}
+
+# get input arguments
+my $file = $ARGV[0];
+my $old_text = $ARGV[1];
+my $new_text = $ARGV[2];
+
+# initialize number of substitutions
+my $n_substitutions = 0;
+
+# make backup file
+system("cp $file $file.bak");
+
+# make substitutions in file
+open(IN, '<', "$file.bak") or die $!;
+open(OUT, '>', "$file") or die $!;
+while (<IN>)
+{
+  # if pattern is found, make substitution and increment count
+  if ($_ =~ $old_text)
+  {
+    s/$old_text/$new_text/;
+    $n_substitutions = $n_substitutions + 1;
+  }
+
+ # print the line to output file
+ print OUT $_;
+}
+close(OUT);
+close(IN);
+
+# print number of substitutions made in file
+print "$n_substitutions of \"$old_text\" with \"$new_text\" in $file\n"
+

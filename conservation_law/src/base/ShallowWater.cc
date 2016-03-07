@@ -10,7 +10,7 @@
  */
 template <int dim>
 ShallowWater<dim>::ShallowWater(const ShallowWaterRunParameters<dim> & params)
-  : ConservationLaw<dim>(params, dim + 1, true),
+  : ConservationLaw<dim>(params, dim + 1, false),
     sw_parameters(params),
     problem_parameters(params.problem_name, false),
     height_extractor(0),

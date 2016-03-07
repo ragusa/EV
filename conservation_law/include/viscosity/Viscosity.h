@@ -67,6 +67,9 @@ protected:
 
   /** \brief Pointer to degree of freedom handler */
   const DoFHandler<dim> * const dof_handler;
+
+  /** \brief Number of degrees of freedom */
+  unsigned int n_dofs;
 };
 
 #include "src/viscosity/Viscosity.cc"

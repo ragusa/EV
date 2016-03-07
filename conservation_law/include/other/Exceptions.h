@@ -44,8 +44,8 @@ DeclException0(ExcInvalidDiffusionType);
 DeclException2(
   ExcNegativity, std::string, double, << arg1 << " is negative: " << arg2);
 
-  /** \brief exception for reaching the maximum iteration */
-  DeclException1(
-    ExcMaxIterationReached, unsigned int, << "Max iteration reached: " << arg1);
+/** \brief exception for reaching the maximum iteration */
+DeclException1(
+  ExcMaxIterationReached, unsigned int, << "Max iteration reached: " << arg1);
 
 #endif
