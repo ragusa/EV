@@ -10,6 +10,7 @@ TransportExecutioner<dim>::TransportExecutioner(
   : cout1(std::cout, parameters_.verbosity_level >= 1),
     cout2(std::cout, parameters_.verbosity_level >= 2),
     parameters(parameters_),
+    problem_parameters(problem_parameters_),
     triangulation(&triangulation_),
     fe(FE_Q<dim>(parameters.degree), 1),
     flux(0),
@@ -68,10 +69,6 @@ TransportExecutioner<dim>::TransportExecutioner(
 
   // determine Dirichlet nodes
   getDirichletNodes();
-
-  // check that low-order scheme is valid
-  if (parameters_.low_order_scheme != LowOrderScheme::dmp)
-    throw ExcNotImplemented();
 
   // check that high-order scheme is valid
   unsigned int high_order_viscosity_option;
@@ -135,6 +132,184 @@ TransportExecutioner<dim>::TransportExecutioner(
       break;
     }
   }
+
+  // determine low-order viscosity and artificial diffusion
+  switch (parameters.low_order_scheme)
+  {
+    case LowOrderScheme::dmp:
+      low_order_viscosity_type = ViscosityType::DMP;
+      low_order_diffusion_type = DiffusionType::graphtheoretic;
+      break;
+    default:
+      throw ExcNotImplemented();
+      break;
+  }
+
+  // determine high-order viscosity and artificial diffusion
+  switch (parameters.high_order_scheme)
+  {
+    case HighOrderScheme::galerkin:
+      entropy_viscosity_type = ViscosityType::none;
+      high_order_viscosity_type = ViscosityType::none;
+      high_order_diffusion_type = DiffusionType::none;
+      break;
+    case HighOrderScheme::entropy_visc:
+      entropy_viscosity_type = ViscosityType::entropy;
+      high_order_viscosity_type = ViscosityType::high;
+      high_order_diffusion_type = low_order_diffusion_type;
+      break;
+    default:
+      throw ExcNotImplemented();
+      break;
+  }
+
+  // set unneeded viscosities and diffusion to none
+  if (parameters.scheme == Scheme::low)
+  {
+    entropy_viscosity_type = ViscosityType::none;
+    high_order_viscosity_type = ViscosityType::none;
+    high_order_diffusion_type = DiffusionType::none;
+  }
+  if (parameters.scheme == Scheme::high)
+  {
+    if (parameters.high_order_scheme == HighOrderScheme::galerkin)
+    {
+      low_order_viscosity_type = ViscosityType::none;
+      low_order_diffusion_type = DiffusionType::none;
+    }
+  }
+
+  // create low-order viscosity
+  switch (low_order_viscosity_type)
+  {
+    // no viscosity
+    case ViscosityType::none:
+    {
+      low_order_viscosity =
+        std::make_shared<ConstantViscosity<dim>>(0.0, dof_handler);
+      break;
+    }
+    // DMP viscosity
+    case ViscosityType::DMP:
+    {
+      // create low-order viscosity
+      low_order_viscosity = std::make_shared<DMPLowOrderViscosity<dim>>(
+        dof_handler, inviscid_ss_matrix, dofs_per_cell);
+      break;
+    }
+    default:
+    {
+      throw ExcNotImplemented();
+      break;
+    }
+  }
+
+  // create entropy viscosity
+  switch (entropy_viscosity_type)
+  {
+    // no viscosity
+    case ViscosityType::none:
+    {
+      entropy_viscosity =
+        std::make_shared<ConstantViscosity<dim>>(0.0, dof_handler);
+      break;
+    }
+    // entropy viscosity
+    case ViscosityType::entropy:
+    {
+      // create entropy
+      std::shared_ptr<Entropy<dim>> entropy =
+        std::make_shared<TransportEntropy<dim>>(domain_volume,
+         dof_handler, fe, cell_quadrature, face_quadrature, problem_parameters);
+
+      // create entropy viscosity
+      entropy_viscosity =
+        std::make_shared<EntropyViscosity<dim>>(parameters,
+                                                entropy,
+                                                cell_diameter,
+                                                fe,
+                                                dof_handler,
+                                                cell_quadrature,
+                                                face_quadrature,
+                                                false);
+      break;
+    }
+    default:
+    {
+      throw ExcNotImplemented();
+      break;
+    }
+  }
+
+  // create high-order viscosity
+  switch (high_order_viscosity_type)
+  {
+    // no viscosity
+    case ViscosityType::none:
+    {
+      high_order_viscosity =
+        std::make_shared<ConstantViscosity<dim>>(0.0, dof_handler);
+      break;
+    }
+    // high-order viscosity
+    case ViscosityType::high:
+    {
+      // create high-order viscosity
+      high_order_viscosity = std::make_shared<HighOrderViscosity<dim>>(
+        low_order_viscosity,
+        entropy_viscosity,
+        parameters.use_low_order_viscosity_for_first_time_step,
+        dof_handler);
+      break;
+    }
+    default:
+    {
+      throw ExcNotImplemented();
+      break;
+    }
+  }
+
+  // create low-order and high-order artificial diffusion
+  low_order_diffusion = create_artificial_diffusion(low_order_diffusion_type);
+  high_order_diffusion = create_artificial_diffusion(high_order_diffusion_type);
+}
+
+/**
+ * \brief Creates artificial diffusion object
+ *
+ * \param[in] diffusion_type type of artificial diffusion
+ */
+template <int dim>
+std::shared_ptr<ArtificialDiffusion<dim>> TransportExecutioner<
+  dim>::create_artificial_diffusion(const DiffusionType & diffusion_type)
+{
+  std::shared_ptr<ArtificialDiffusion<dim>> artificial_diffusion;
+
+  // create artificial diffusion
+  switch (diffusion_type)
+  {
+    // no diffusion
+    case DiffusionType::none:
+    {
+      artificial_diffusion = std::make_shared<NoDiffusion<dim>>();
+      break;
+    }
+    // graph-theoretic diffusion
+    case DiffusionType::graphtheoretic:
+    {
+      artificial_diffusion = std::make_shared<GraphTheoreticDiffusion<dim>>(
+        dof_handler, dofs_per_cell, 1);
+      break;
+    }
+    // else
+    default:
+    {
+      throw ExcNotImplemented();
+      break;
+    }
+  }
+
+  return artificial_diffusion;
 }
 
 /**

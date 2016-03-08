@@ -631,7 +631,7 @@ void ConservationLaw<dim>::setup_system()
     }
     default:
     {
-      Assert(false, ExcNotImplemented());
+      throw ExcNotImplemented();
       break;
     }
   }
@@ -701,7 +701,7 @@ std::shared_ptr<ArtificialDiffusion<dim>> ConservationLaw<
     // else
     default:
     {
-      Assert(false, ExcNotImplemented());
+      throw ExcNotImplemented();
       break;
     }
   }

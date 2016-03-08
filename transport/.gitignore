@@ -24,19 +24,14 @@ doxygen
 *.bak
 
 # additional files added below
-ConservationLawFlux.h
 EntropyViscosity.cc
 EntropyViscosity.h
 FCT.cc
 FCT.h
-LinearTransportFlux.cc
-LinearTransportFlux.h
 LowOrderViscosity.cc
 LowOrderViscosity.h
 NonlinearSolver.cc
 NonlinearSolver.h
-OldPostProcessor.cc
-OldPostProcessor.h
 TransportExecutioner.cc
 TransportExecutioner.h
 TransportProblem.cc

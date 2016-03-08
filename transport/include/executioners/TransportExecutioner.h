@@ -17,6 +17,15 @@
 #include "TransportProblemParameters.h"
 #include "TransportRunParameters.h"
 
+#include "include/diffusion/ArtificialDiffusion.h"
+#include "include/diffusion/NoDiffusion.h"
+#include "include/diffusion/GraphTheoreticDiffusion.h"
+#include "include/entropy/TransportEntropy.h"
+#include "include/viscosity/ConstantViscosity.h"
+#include "include/viscosity/DMPLowOrderViscosity.h"
+#include "include/viscosity/EntropyViscosity.h"
+#include "include/viscosity/HighOrderViscosity.h"
+
 using namespace dealii;
 
 /**
@@ -29,6 +38,8 @@ public:
   using Scheme = typename RunParameters<dim>::Scheme;
   using LowOrderScheme = typename RunParameters<dim>::LowOrderScheme;
   using HighOrderScheme = typename RunParameters<dim>::HighOrderScheme;
+  using ViscosityType = typename RunParameters<dim>::ViscosityType;
+  using DiffusionType = typename RunParameters<dim>::DiffusionType;
 
   TransportExecutioner(const TransportRunParameters<dim> & parameters,
                        TransportProblemParameters<dim> & problem_parameters,
@@ -59,6 +70,8 @@ protected:
   ConditionalOStream cout2;
 
   const TransportRunParameters<dim> parameters;
+
+  const TransportProblemParameters<dim> problem_parameters;
 
   unsigned int viscosity_option;
 
@@ -102,6 +115,32 @@ protected:
   NonlinearSolver<dim> nonlinear_solver;
 
   PostProcessor<dim> * const postprocessor;
+
+  /** \brief low-order viscosity type */
+  ViscosityType low_order_viscosity_type;
+  /** \brief entropy viscosity type */
+  ViscosityType entropy_viscosity_type;
+  /** \brief high-order viscosity type */
+  ViscosityType high_order_viscosity_type;
+  /** \brief low-order viscosity \f$\nu^L\f$ */
+  std::shared_ptr<Viscosity<dim>> low_order_viscosity;
+  /** \brief entropy viscosity \f$\nu^\eta\f$ */
+  std::shared_ptr<Viscosity<dim>> entropy_viscosity;
+  /** \brief high-order viscosity \f$\nu^H\f$ */
+  std::shared_ptr<Viscosity<dim>> high_order_viscosity;
+
+  /** \brief low-order diffusion type */
+  DiffusionType low_order_diffusion_type;
+  /** \brief high-order diffusion type */
+  DiffusionType high_order_diffusion_type;
+  /** \brief low-order diffusion */
+  std::shared_ptr<ArtificialDiffusion<dim>> low_order_diffusion;
+  /** \brief high-order diffusion */
+  std::shared_ptr<ArtificialDiffusion<dim>> high_order_diffusion;
+
+private:
+  std::shared_ptr<ArtificialDiffusion<dim>> create_artificial_diffusion(
+    const DiffusionType & diffusion_type);
 };
 
 #include "TransportExecutioner.cc"
