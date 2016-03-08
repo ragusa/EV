@@ -34,7 +34,7 @@ int main(int argc, char * argv[])
     if (argc > 1)
       parameter_handler.read_input(argv[1]);
     else
-      parameter_handler.read_input("input");
+      parameter_handler.read_input("../conservation_law/input/transport.prm");
     TransportRunParameters<dim> parameters;
     parameters.get_parameters(parameter_handler);
 

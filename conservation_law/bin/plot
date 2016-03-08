@@ -71,21 +71,38 @@ if (not $found_type)
 # read appropriate input file to find the necessary input parameters
 #================================================================================
 
-# search variables
-my @search_strings = ("set runge kutta method");
-my @search_values;
-my @search_flags;
-for (my $i = 0; $i <= $#search_strings; $i++) {
-  push(@search_values,"");
-  push(@search_flags,0);
-}
-
-# read input file to determine the test problem ID and time integrator
+# declare values and flags
 my $problem_name;
 my $problem_name_found = 0;
-my $time_discretization;
-my $time_discretization_found = 0;
+my $temporal_discretization_class;
+my $temporal_discretization_class_found = 0;
+my $ssprk;
+my $ssprk_found = 0;
+my $theta;
+my $theta_found = 0;
 
+# function that checks for key and takes value if found
+sub check_for_key
+{
+  my $line      = shift; # input line
+  my $key       = shift; # key
+  my $value     = shift; # value
+  my $key_found = shift; # flag that key has been found
+
+  # search for key
+  if ($line =~ /set $key/)
+  {
+    my @fields1 = split /\s+=\s+/, $line;
+    my @fields2 = split /\s+/, $fields1[1];
+    $value = $fields2[0];
+    $key_found = 1;
+  }
+  
+  # return value and flag telling whether key has been found
+  return ($value,$key_found)
+}
+
+# read input file to determine the test problem name and time integrator
 open(IN, '<', "input/$conservation_law.prm") or die $!;
 while (<IN>)
 {
@@ -95,31 +112,82 @@ while (<IN>)
   # remove newline character from line
   chomp($line);
 
-  # check for problem ID field
-  if ($line =~ /set problem name/)
-  {
-    my @fields = split /\s+=\s+/, $line;
-    $problem_name = $fields[1];
-    $problem_name_found = 1;
-  }
+  # check for problem name field
+  ($problem_name, $problem_name_found)
+    = check_for_key($line,"problem name",$problem_name,$problem_name_found);
 
-  # check for time discretization field
-  if ($line =~ /set runge kutta method/)
-  {
-    my @fields = split /\s+=\s+/, $line;
-    my @fields2 = split /\s+/, $fields[1];
-    $time_discretization = $fields2[0];
-    $time_discretization_found = 1;
-  }
+  # check for temporal discretization field
+  ($temporal_discretization_class, $temporal_discretization_class_found)
+    = check_for_key($line, "temporal discretization",
+    $temporal_discretization_class, $temporal_discretization_class_found);
+
+  # check for ssprk field
+  ($ssprk, $ssprk_found)
+    = check_for_key($line,"ssprk discretization",$ssprk,$ssprk_found);
+
+  # check for theta field
+  ($theta, $theta_found)
+    = check_for_key($line,"theta discretization",$theta,$theta_found);
+
+#  if ($line =~ /set problem name/)
+#  {
+#    my @fields = split /\s+=\s+/, $line;
+#    my @fields2 = split /\s+/, $fields[1];
+#    $problem_name = $fields2[0];
+#    $problem_name_found = 1;
+#  }
+#
+#  # check for time discretization field
+#  if ($line =~ /set temporal discretization/)
+#  {
+#    my @fields = split /\s+=\s+/, $line;
+#    my @fields2 = split /\s+/, $fields[1];
+#    $time_discretization = $fields2[0];
+#    $time_discretization_found = 1;
+#  }
 }
 
-# check that all fields were found
-if (not($problem_name_found and $time_discretization_found))
+# check that problem name and temporal discretization class were found
+if (not($problem_name_found and $temporal_discretization_class_found))
 {
-  die "Did not find all required input fields\n";
+  die "Did not find both problem name and temporal discretization\n";
+}
+
+# determine temporal discretization
+my $temporal_discretization;
+if ($temporal_discretization_class eq "ss")
+{
+  $temporal_discretization = "SS";
+}
+elsif ($temporal_discretization_class eq "ssprk")
+{
+  if ($ssprk_found)
+  {
+    $temporal_discretization = $ssprk;
+  }
+  else
+  {
+    die "ssprk discretization not found\n";
+  }
+}
+elsif ($temporal_discretization_class eq "theta")
+{
+  if ($theta_found)
+  {
+    $temporal_discretization = $theta;
+  }
+  else
+  {
+    die "theta discretization not found\n";
+  }
+}
+else
+{
+  die "Invalid temporal discretization found\n";
 }
 
 # call plot script
 my $function_call = "plot_explicit $conservation_law $problem_name ".
-  "$time_discretization $type";
+  "$temporal_discretization $type";
 system($function_call);
+

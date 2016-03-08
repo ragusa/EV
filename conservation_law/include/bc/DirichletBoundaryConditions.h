@@ -43,12 +43,12 @@ private:
   {
   }
 
-  void apply_boundary_condition(const Cell &,
-                                const FEValues<dim> &,
-                                const FEFaceValues<dim> &,
-                                const Vector<double> &,
-                                const double &,
-                                FullMatrix<double> &) override
+  void apply_boundary_condition_matrix(const Cell &,
+                                       const FEValues<dim> &,
+                                       const FEFaceValues<dim> &,
+                                       const Vector<double> &,
+                                       const double &,
+                                       FullMatrix<double> &) override
   {
   }
 };

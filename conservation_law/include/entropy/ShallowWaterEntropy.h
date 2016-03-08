@@ -6,18 +6,18 @@
 #define ShallowWaterEntropy_h
 
 #include <string>
-#include "include/parameters/ShallowWaterRunParameters.h"
+#include "include/entropy/InterpolatedFluxEntropy.h"
 #include "include/fe/ShallowWaterEntropyFluxFEValuesCell.h"
 #include "include/fe/ShallowWaterEntropyFluxFEValuesFace.h"
+#include "include/parameters/ShallowWaterRunParameters.h"
 
 using namespace dealii;
 
 /**
- * \class ShallowWaterEntropy
  * \brief Class for entropy for the shallow water equations.
  */
 template <int dim>
-class ShallowWaterEntropy : public Entropy<dim>
+class ShallowWaterEntropy : public InterpolatedFluxEntropy<dim>
 {
 public:
   /** \brief Alias for cell iterator */
@@ -35,6 +35,10 @@ public:
                       const QGauss<dim> & cell_quadrature,
                       const QGauss<dim - 1> & face_quadrature);
 
+  std::vector<double> compute_entropy_normalization(
+    const Vector<double> & solution, const Cell & cell) const override;
+
+private:
   std::vector<double> compute_entropy(
     const Vector<double> & solution,
     const FEValuesBase<dim> & fe_values) const override;
@@ -47,12 +51,8 @@ public:
   std::vector<Tensor<1, dim>> get_normal_vectors(
     const Cell & cell, const unsigned int & i_face) override;
 
-  std::vector<double> compute_entropy_normalization(
-    const Vector<double> & solution, const Cell & cell) const override;
-
   void reinitialize_group_fe_values(const Vector<double> & solution) override;
 
-private:
   std::vector<double> compute_local_entropy_normalization(
     const Vector<double> & solution, const Cell & cell) const;
 

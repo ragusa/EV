@@ -94,7 +94,7 @@ void BoundaryConditions<dim>::apply(const Cell & cell,
       fe_values_face.reinit(cell, iface);
 
       // apply boundary conditions for this boundary face
-      apply_boundary_condition(
+      apply_boundary_condition_matrix(
         cell, fe_values_cell, fe_values_face, solution, dt, cell_matrix);
     }
   }
@@ -102,8 +102,6 @@ void BoundaryConditions<dim>::apply(const Cell & cell,
 
 /**
  * \brief Applies boundary condition for a face.
- *
- * This version is for building a system \e matrix.
  *
  * \param[in] cell cell iterator
  * \param[in] fe_values_cell FE values for cell
@@ -113,12 +111,13 @@ void BoundaryConditions<dim>::apply(const Cell & cell,
  * \param[inout] cell_matrix steady-state matrix for cell
  */
 template <int dim>
-void BoundaryConditions<dim>::apply_boundary_condition(const Cell &,
-                                                       const FEValues<dim> &,
-                                                       const FEFaceValues<dim> &,
-                                                       const Vector<double> &,
-                                                       const double &,
-                                                       FullMatrix<double> &)
+void BoundaryConditions<dim>::apply_boundary_condition_matrix(
+  const Cell &,
+  const FEValues<dim> &,
+  const FEFaceValues<dim> &,
+  const Vector<double> &,
+  const double &,
+  FullMatrix<double> &)
 {
   // throw exception if derived class tries to call this method but did
   // not implement it

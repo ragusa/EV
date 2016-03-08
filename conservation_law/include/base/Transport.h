@@ -15,7 +15,7 @@
 #include <deal.II/lac/vector.h>
 
 #include "include/base/ConservationLaw.h"
-#include "include/entropy/ScalarEntropy.h"
+#include "include/entropy/TransportEntropy.h"
 #include "include/parameters/TransportRunParameters.h"
 #include "include/parameters/TransportProblemParameters.h"
 #include "include/viscosity/ConstantMaxWaveSpeed.h"

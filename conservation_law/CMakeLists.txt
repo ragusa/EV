@@ -89,12 +89,11 @@ ADD_CUSTOM_TARGET(release
 
 # testing
 ENABLE_TESTING()
-ADD_SUBDIRECTORY(tests/group_fe_values)
-ADD_SUBDIRECTORY(tests/quadrature)
 ADD_SUBDIRECTORY(tests/transport_galerkin_solution)
 ADD_SUBDIRECTORY(tests/transport_lax)
 ADD_SUBDIRECTORY(tests/transport_dmp)
 ADD_SUBDIRECTORY(tests/transport_ev_lax)
+ADD_SUBDIRECTORY(tests/transport_ev_dmp)
 ADD_SUBDIRECTORY(tests/transport_fct_none)
 ADD_SUBDIRECTORY(tests/transport_fct_full)
 ADD_SUBDIRECTORY(tests/shallowwater_galerkin_solution)
@@ -102,4 +101,6 @@ ADD_SUBDIRECTORY(tests/shallowwater_constant_solution)
 ADD_SUBDIRECTORY(tests/shallowwater_low_solution)
 ADD_SUBDIRECTORY(tests/shallowwater_ev_solution)
 ADD_SUBDIRECTORY(tests/shallowwater_low_lakeatrest)
+ADD_SUBDIRECTORY(tests/group_fe_values)
+ADD_SUBDIRECTORY(tests/quadrature)
 

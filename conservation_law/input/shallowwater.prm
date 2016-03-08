@@ -92,6 +92,7 @@ end
 
 subsection output
    set verbosity level    = 1    # 0|1|2 (0 is least verbose)
+   set output exact solution = true
    set output period      = 0
    set transient output size limit = 1e9
    set output mesh        = false

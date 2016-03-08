@@ -209,12 +209,11 @@ void ConservationLaw<dim>::initialize_system()
       // assert that system is scalar
       AssertThrow(is_scalar, ExcInvalidState());
 
-      low_order_viscosity_type = ViscosityType::DMP;
-      low_order_diffusion_type = DiffusionType::graphtheoretic;
-
       // DMP low-order viscosity requires computation of inviscid ss matrix
       need_to_compute_inviscid_ss_matrix = true;
 
+      low_order_viscosity_type = ViscosityType::DMP;
+      low_order_diffusion_type = DiffusionType::graphtheoretic;
       break;
     case LowOrderScheme::di_visc:
       low_order_viscosity_type = ViscosityType::DI;
@@ -240,7 +239,7 @@ void ConservationLaw<dim>::initialize_system()
     case HighOrderScheme::entropy_visc:
       entropy_viscosity_type = ViscosityType::entropy;
       high_order_viscosity_type = ViscosityType::high;
-      high_order_diffusion_type = DiffusionType::laplacian;
+      high_order_diffusion_type = low_order_diffusion_type;
       break;
     case HighOrderScheme::entropy_diff:
       throw ExcNotImplemented();
@@ -569,15 +568,13 @@ void ConservationLaw<dim>::setup_system()
     // entropy viscosity
     case ViscosityType::entropy:
     {
-      // only implemented for Laplacian diffusion for now
-      Assert(high_order_diffusion_type == DiffusionType::laplacian,
-             ExcInvalidDiffusionType());
-
-      // create viscosity multiplier
-      auto viscosity_multiplier = create_viscosity_multiplier();
-
       // create entropy
       auto entropy = create_entropy();
+
+      // set flag for if viscosity is to be used in a Laplacian
+      // (vs. graph-theoretic) diffusion term
+      const bool use_in_laplacian_term =
+        high_order_diffusion_type == DiffusionType::laplacian;
 
       // create entropy viscosity
       entropy_viscosity =
@@ -587,12 +584,13 @@ void ConservationLaw<dim>::setup_system()
                                                 fe,
                                                 dof_handler,
                                                 cell_quadrature,
-                                                face_quadrature);
+                                                face_quadrature,
+                                                use_in_laplacian_term);
       break;
     }
     default:
     {
-      Assert(false, ExcNotImplemented());
+      throw ExcNotImplemented();
       break;
     }
   }
@@ -1265,8 +1263,8 @@ void ConservationLaw<dim>::get_dirichlet_dof_indices(
  * \param[out] matrix   inviscid steady-state matrix
  */
 template <int dim>
-void ConservationLaw<dim>::compute_inviscid_ss_matrix(
-  const Vector<double> &, SparseMatrix<double> &)
+void ConservationLaw<dim>::compute_inviscid_ss_matrix(const Vector<double> &,
+                                                      SparseMatrix<double> &)
 {
   // throw exception if this base version is called; if a derived class needs
   // this function (i.e., it is a scalar conservation law), it should override

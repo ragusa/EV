@@ -36,11 +36,11 @@ subsection refinement
 end
 
 subsection time
-   set time step size option  = cfl      # constant|cfl
+   set time step size option  = constant      # constant|cfl
    set cfl                    = 0.50
    set time step size         = 0.001
    set use default end time   = false
-   set end time               = 0.002
+   set end time               = 0.1
    set steady state tolerance = 1.0e-6
 end
 
@@ -57,7 +57,7 @@ subsection artificial viscosity
    set entropy viscosity smoothing weight = 4
    set constant viscosity value           = 0.02
    set lax viscosity coefficient          = 0.5
-   set use low order viscosity for first time step = true
+   set use low order viscosity for first time step = false
 end
 
 subsection fct
@@ -93,7 +93,7 @@ subsection quadrature
 end
 
 subsection output
-   set verbosity level    = 1    # 0|1|2 (0 is least verbose)
+   set verbosity level    = 0    # 0|1|2 (0 is least verbose)
    set output period      = 0
    set transient output size limit = 1e9
    set output mesh        = false

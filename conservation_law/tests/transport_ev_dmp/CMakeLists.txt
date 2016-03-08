@@ -1,0 +1,2 @@
+SET(TEST_TARGET transport)
+DEAL_II_PICKUP_TESTS()

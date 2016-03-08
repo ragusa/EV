@@ -27,6 +27,7 @@ Entropy<dim>::Entropy(const bool & use_max_entropy_deviation_normalization_,
     face_quadrature(&face_quadrature_),
     n_q_points_cell(cell_quadrature_.size()),
     n_q_points_face(face_quadrature_.size()),
+    faces_per_cell(GeometryInfo<dim>::faces_per_cell),
     use_max_entropy_deviation_normalization(
       use_max_entropy_deviation_normalization_),
     domain_volume(domain_volume_)
@@ -56,7 +57,26 @@ void Entropy<dim>::reinitialize(const Vector<double> & solution)
 }
 
 /**
+ * \brief Computes the entropy viscosity normalization coefficient
+ *        for each quadrature point in a cell using a function pointer.
+ *
+ * \param[in] solution solution vector
+ * \param[in] cell cell iterator
+ *
+ * \return vector of entropy viscosity normalization coefficient for each
+ *         quadrature point in cell
+ */
+template <int dim>
+std::vector<double> Entropy<dim>::compute_entropy_normalization(
+  const Vector<double> & solution, const Cell & cell) const
+{
+  return compute_max_entropy_deviation_normalization(solution, cell);
+}
+
+/**
  * \brief Reinitializes group FE values, if any.
+ *
+ * If not overridden by derived classes, does nothing.
  *
  * \param[in] solution solution vector
  */
@@ -87,7 +107,7 @@ void Entropy<dim>::compute_average_entropy(const Vector<double> & solution)
     fe_values.reinit(cell);
 
     // compute entropy
-    auto entropy = compute_entropy(solution, fe_values);
+    std::vector<double> entropy = compute_entropy(solution, fe_values);
 
     // add contribution of quadrature point to entropy integral
     for (unsigned int q = 0; q < n_q_points_cell; ++q)
@@ -104,9 +124,9 @@ void Entropy<dim>::compute_average_entropy(const Vector<double> & solution)
  *
  * This computes the maximum deviation of the
  * entropy from the average \f$\bar{\eta}\f$ in the domain \f$D\f$,
- * which is used as a normalization constant \f$c^{norm}_q\f$:
+ * which is used as a normalization constant \f$\hat{eta}_q\f$:
  * \f[
- *   c^{norm}_q = \|\eta_q - \bar{\eta}\|_{L^\infty(D)} \,.
+ *   \hat{\eta}_q = \|\eta_q - \bar{\eta}\|_{L^\infty(D)} \,.
  * \f]
  *
  * \param[in] solution solution with which to calculate entropy for the
@@ -144,7 +164,7 @@ void Entropy<dim>::compute_max_entropy_deviation(const Vector<double> & solution
  * This normalization constant is computed as the maximum deviation of the
  * entropy from the average \f$\bar{\eta}\f$ in the domain \f$D\f$:
  * \f[
- *   c^{norm}_q = \|\eta_q - \bar{\eta}\|_{L^\infty(D)} \,.
+ *   \hat{\eta}_q = \|\eta_q - \bar{\eta}\|_{L^\infty(D)} \,.
  * \f]
  *
  * \param[in] solution solution with which to calculate entropy for the

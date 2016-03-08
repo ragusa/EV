@@ -15,28 +15,22 @@
 using namespace dealii;
 
 /**
- * \class EntropyViscosity
  * \brief Class for entropy viscosity.
  *
- * The entropy viscosity for cell \f$K\f$ at time \f$n\f$ is computed as
+ * When using Laplacian diffusion, the entropy viscosity for cell \f$K\f$
+ * at time \f$n\f$ is computed as
  * \f[
- *   \nu^{\eta,n}_K \equiv h_K^2 \max\limits_{q\in Q}\left(
+ *   \nu^{\eta,n}_K \equiv h_K^2 \max\limits_{q\in Q(K)}\left(
  *     \frac{c_R |R_q^n| + c_J J_K^n}{\hat{\eta}_q}
  *     \right)\,.
  * \f]
- * where \f$h_K\f$ is the diameter of cell \f$K\f$, and \f$c^{norm}_q\f$ is
- * a normalization constant. Note that in this form, the viscosity is valid
- * for the Laplacian form of artificial diffusion:
+ * When using graph-theoretic diffusion, the leading \f$h_K^2\f$ coefficient
+ * is dropped:
  * \f[
- *   u_t + \nabla\cdot \mathbf{f}(u) - \nabla(\nu^\eta\nabla u) = 0 \,,
+ *   \nu^{\eta,n}_K \equiv \max\limits_{q\in Q(K)}\left(
+ *     \frac{c_R |R_q^n| + c_J J_K^n}{\hat{\eta}_q}
+ *     \right)\,.
  * \f]
- * which makes the following contribution to the steady-state residual for
- * degree of freedom \f$i\f$, \f$r_i\f$:
- * \f[
- *   r_i = r_i + \int\limits_{S_i}\varphi_i\nabla(\nu^\eta\nabla u)dV \,,
- * \f]
- * To use this viscosity with the graph-theoretic form of diffusion,
- * the leading \f$h_K^2\f$ needs to be removed by using a viscosity multiplier.
  */
 template <int dim>
 class EntropyViscosity : public Viscosity<dim>
@@ -54,7 +48,8 @@ public:
                    const FESystem<dim> & fe,
                    const DoFHandler<dim> & dof_handler,
                    const QGauss<dim> & cell_quadrature,
-                   const QGauss<dim - 1> & face_quadrature);
+                   const QGauss<dim - 1> & face_quadrature,
+                   const bool & use_in_laplacian_term);
 
   void update(const Vector<double> & new_solution,
               const Vector<double> & old_solution,
@@ -62,13 +57,9 @@ public:
               const unsigned int & n) override;
 
 private:
-  std::vector<double> compute_entropy_residual(
-    const Vector<double> & new_solution,
-    const Vector<double> & old_solution,
-    const double & dt,
-    const Cell & cell) const;
+  double compute_viscosity_multiplier_laplacian(const Cell & cell) const;
 
-  double compute_max_entropy_jump(const Cell & cell) const;
+  double compute_viscosity_multiplier_graphtheoretic(const Cell & cell) const;
 
   void smooth_entropy_viscosity_max();
 
@@ -106,6 +97,10 @@ private:
 
   /** \brief Number of faces per cell */
   const unsigned int faces_per_cell;
+
+  /** \brief Function pointer for computing viscosity multiplier */
+  double (EntropyViscosity<dim>::*compute_viscosity_multiplier_ptr)(
+    const Cell & cell) const;
 };
 
 #include "src/viscosity/EntropyViscosity.cc"

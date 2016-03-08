@@ -16,7 +16,6 @@ using namespace dealii;
 #include <deal.II/fe/fe_system.h>
 
 /**
- * \class Entropy
  * \brief Class for entropy.
  */
 template <int dim>
@@ -35,21 +34,17 @@ public:
 
   void reinitialize(const Vector<double> & solution);
 
-  virtual std::vector<double> compute_entropy(
-    const Vector<double> & solution,
-    const FEValuesBase<dim> & fe_values) const = 0;
-
-  virtual std::vector<double> compute_divergence_entropy_flux(
+  virtual std::vector<double> compute_entropy_residual(
+    const Vector<double> & new_solution,
+    const Vector<double> & old_solution,
+    const double & dt,
     const Cell & cell) = 0;
 
-  virtual std::vector<Tensor<2, dim>> compute_entropy_flux_gradients_face(
-    const Cell & cell, const unsigned int & i_face) = 0;
-
-  virtual std::vector<Tensor<1, dim>> get_normal_vectors(
-    const Cell & cell, const unsigned int & i_face) = 0;
+  virtual double compute_max_entropy_jump(const Vector<double> & solution,
+                                          const Cell & cell) = 0;
 
   virtual std::vector<double> compute_entropy_normalization(
-    const Vector<double> & solution, const Cell & cell) const = 0;
+    const Vector<double> & solution, const Cell & cell) const;
 
 protected:
   std::vector<double> compute_max_entropy_deviation_normalization(
@@ -73,10 +68,17 @@ protected:
   /** \brief Number of quadrature points per face */
   const unsigned int n_q_points_face;
 
+  /** \brief Number of faces per cell */
+  const unsigned int faces_per_cell;
+
 private:
   virtual void reinitialize_group_fe_values(const Vector<double> & solution);
 
   void compute_average_entropy(const Vector<double> & solution);
+
+  virtual std::vector<double> compute_entropy(
+    const Vector<double> & solution,
+    const FEValuesBase<dim> & fe_values) const = 0;
 
   void compute_max_entropy_deviation(const Vector<double> & solution);
 

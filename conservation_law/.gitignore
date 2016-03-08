@@ -83,10 +83,14 @@ GroupFEValuesFace.cc
 GroupFEValuesFace.h
 HighOrderViscosity.cc
 HighOrderViscosity.h
+InterpolatedFluxEntropy.cc
+InterpolatedFluxEntropy.h
 LaplacianDiffusion.cc
 LaplacianDiffusion.h
 LinearSolver.cc
 LinearSolver.h
+LinearTransportFlux.cc
+LinearTransportFlux.h
 LowOrderViscosity.cc
 LowOrderViscosity.h
 MaxWaveSpeed.cc
@@ -103,10 +107,9 @@ RefinementHandler.cc
 RefinementHandler.h
 RunParameters.cc
 RunParameters.h
-ScalarEntropy.cc
+ScalarConservationLawFlux.h
 ScalarEntropyFluxFEValuesCell.h
 ScalarEntropyFluxFEValuesFace.h
-ScalarEntropy.h
 ShallowWaterBoundaryConditions.cc
 ShallowWaterBoundaryConditions.h
 ShallowWater.cc
@@ -146,6 +149,8 @@ SSPRKTimeIntegrator.h
 StarState.cc
 StarState.h
 Transport.cc
+TransportEntropy.cc
+TransportEntropy.h
 Transport.h
 TransportProblemParameters.cc
 TransportProblemParameters.h

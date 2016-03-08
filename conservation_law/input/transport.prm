@@ -14,12 +14,12 @@
 #   mms_xt       (TR:x*t                SS:x        )
 #   mms_t        (TR:t                  SS:1        )
 subsection problem
-   set problem name = absorber
+   set problem name = void
 end
 
 subsection scheme
    set scheme            = high         # low|high|fct
-   set low order scheme  = lax          # constant|lax|dmp|di_visc|di_diff
+   set low order scheme  = dmp          # constant|lax|dmp|di_visc|di_diff
    set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
 end
 
@@ -37,7 +37,7 @@ end
 
 subsection time
    set time step size option  = constant # constant|cfl
-   set cfl                    = 0.50
+   set cfl                    = 0.10
    set time step size         = 0.001
    set use default end time   = false
    set end time               = 0.002
@@ -51,8 +51,8 @@ subsection temporal discretization
 end
 
 subsection artificial viscosity
-   set entropy residual coefficient       = 1.0
-   set entropy jump coefficient           = 1.0
+   set entropy residual coefficient       = 0.1
+   set entropy jump coefficient           = 0.1
    set entropy viscosity smoothing option = none # none|max|average
    set entropy viscosity smoothing weight = 4
    set constant viscosity value           = 0.02
@@ -94,11 +94,12 @@ end
 
 subsection output
    set verbosity level    = 1    # 0|1|2 (0 is least verbose)
+   set output exact solution = true
    set output period      = 0
    set transient output size limit = 1e9
    set output mesh        = false
    set output mass matrix = false
-   set output viscosity   = true
+   set output viscosity   = false
    set output viscosity transient      = false
    set exact solution refinement level = 7
    set save convergence results        = false

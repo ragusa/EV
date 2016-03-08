@@ -11,7 +11,6 @@
 using namespace dealii;
 
 /**
- * \class LowOrderViscosity
  * \brief Class for low-order viscosity.
  *
  * The low-order viscosity is computed as

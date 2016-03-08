@@ -10,37 +10,40 @@ filebase = "solution"
 file_initial  = filebase."_initial"
 file_exact    = filebase."_exact"
 file_Gal      = filebase."_Gal_"   .timeintegrator
-file_Low      = filebase."_Low_"   .timeintegrator
+file_Lax      = filebase."_Lax_"   .timeintegrator
+file_DMP      = filebase."_DMP_"   .timeintegrator
 file_DIV      = filebase."_DIV_"   .timeintegrator
 file_DID      = filebase."_DID_"   .timeintegrator
 file_EV       = filebase."_EV_"    .timeintegrator
 file_EVFCT    = filebase."_EVFCT_" .timeintegrator
 file_GalFCT   = filebase."_GalFCT_".timeintegrator
-file_LowDMPmin = "DMPmin_Low"
-file_LowDMPmax = "DMPmax_Low"
-file_GalFCTDMPmin = "DMPmin_GalFCT"
-file_GalFCTDMPmax = "DMPmax_GalFCT"
-file_EVFCTDMPmin  = "DMPmin_EVFCT"
-file_EVFCTDMPmax  = "DMPmax_EVFCT"
+file_DMPmin = "DMPmin"
+file_DMPmax = "DMPmax"
+file_GalFCTmin = "GalFCTmin"
+file_GalFCTmax = "GalFCTmax"
+file_EVFCTmin  = "EVFCTmin"
+file_EVFCTmax  = "EVFCTmax"
 file_list = file_initial." ".\
             file_exact." ".\
             file_Gal." ".\
-            file_Low." ".\
+            file_Lax." ".\
+            file_DMP." ".\
             file_DIV." ".\
             file_DID." ".\
             file_EV." ".\
             file_EVFCT." ".\
             file_GalFCT." ".\
-            file_LowDMPmin." ".\
-            file_LowDMPmax." ".\
-            file_GalFCTDMPmin." ".\
-            file_GalFCTDMPmax." ".\
-            file_EVFCTDMPmin." ".\
-            file_EVFCTDMPmax
+            file_DMPmin." ".\
+            file_DMPmax." ".\
+            file_GalFCTmin." ".\
+            file_GalFCTmax." ".\
+            file_EVFCTmin." ".\
+            file_EVFCTmax
 title_list = "Initial\
               Exact\
               Galerkin\
-              Low-Order\
+              Lax\
+              DMP\
               DI-Viscosity\
               DI-Diffusion\
               EV\
@@ -52,9 +55,9 @@ title_list = "Initial\
               DMP-max-Gal-FCT\
               DMP-min-EV-FCT\
               DMP-max-EV-FCT"
-linetypes = "2 1 1 2 1 3 1 1 1 2 2 2 2 4 4"
-linecolors = "-1 -1 1 2 2 2 3 4 5 -1 -1 -1 -1 -1 -1"
-symboltypes = "-2 -2 1 4 2 1 3 4 6 -2 -2 -2 -2 -2 -2"
+linetypes = "2 1 1 2 4 1 3 1 1 1 2 2 2 2 4 4"
+linecolors = "-1 -1 1 2 2 2 2 3 4 5 -1 -1 -1 -1 -1 -1"
+symboltypes = "-2 -2 1 4 3 2 1 3 4 6 -2 -2 -2 -2 -2 -2"
 
 # define is_missing(x) function for determining if an input file exists
 outdir = "../output/".problem_name."/"

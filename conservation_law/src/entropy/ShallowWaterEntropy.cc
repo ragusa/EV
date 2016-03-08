@@ -32,12 +32,12 @@ ShallowWaterEntropy<dim>::ShallowWaterEntropy(
   const Triangulation<dim> & triangulation_,
   const QGauss<dim> & cell_quadrature_,
   const QGauss<dim - 1> & face_quadrature_)
-  : Entropy<dim>(parameters_.entropy_normalization == "average",
-                 domain_volume_,
-                 dof_handler_,
-                 fe_,
-                 cell_quadrature_,
-                 face_quadrature_),
+  : InterpolatedFluxEntropy<dim>(parameters_.entropy_normalization == "average",
+                                 domain_volume_,
+                                 dof_handler_,
+                                 fe_,
+                                 cell_quadrature_,
+                                 face_quadrature_),
     compute_entropy_normalization_ptr(nullptr),
     height_extractor(height_extractor_),
     momentum_extractor(momentum_extractor_),
@@ -62,7 +62,25 @@ ShallowWaterEntropy<dim>::ShallowWaterEntropy(
     compute_entropy_normalization_ptr =
       &ShallowWaterEntropy<dim>::compute_local_entropy_normalization;
   else
-    ExcNotImplemented();
+    throw ExcNotImplemented();
+}
+
+/**
+ * \brief Computes the entropy viscosity normalization coefficient
+ *        for each quadrature point in a cell using a function pointer.
+ *
+ * \param[in] solution solution vector
+ * \param[in] cell cell iterator
+ *
+ * \return vector of entropy viscosity normalization coefficient for each
+ *         quadrature point in cell
+ */
+template <int dim>
+std::vector<double> ShallowWaterEntropy<dim>::compute_entropy_normalization(
+  const Vector<double> & solution, const Cell & cell) const
+{
+  // call function pointer
+  return (this->*compute_entropy_normalization_ptr)(solution, cell);
 }
 
 /**
@@ -163,31 +181,13 @@ std::vector<Tensor<1, dim>> ShallowWaterEntropy<dim>::get_normal_vectors(
 }
 
 /**
- * \brief Computes the entropy viscosity normalization coefficient
- *        for each quadrature point in a cell using a function pointer.
- *
- * \param[in] solution solution vector
- * \param[in] cell cell iterator
- *
- * \return vector of entropy viscosity normalization coefficient for each
- *         quadrature point in cell
- */
-template <int dim>
-std::vector<double> ShallowWaterEntropy<dim>::compute_entropy_normalization(
-  const Vector<double> & solution, const Cell & cell) const
-{
-  // call function pointer
-  return (this->*compute_entropy_normalization_ptr)(solution, cell);
-}
-
-/**
  * \brief Computes the local entropy viscosity normalization coefficient
  *        \f$gh^2\f$ for each quadrature point in a cell.
  *
  * The local entropy viscosity normalization coefficient is computed as
  *
  * \f[
- *   c^{norm}_q = g h_q^2
+ *   \hat{\eta}_q = g h_q^2
  * \f]
  *
  * \param[in] solution solution vector
