@@ -116,6 +116,44 @@ void FCT<dim>::reinitialize(const SparsityPattern & sparsity_pattern)
 }
 
 /**
+ * \brief Applies a composition of limiting coefficients to the antidiffusive
+ *        fluxes.
+ */
+template <int dim>
+void FCT<dim>::filter_antidiffusive_fluxes()
+{
+  // separate filter sequence string into vector of filter strings
+  std::string filter_sequence = filter_sequence_string;
+  std::vector<std::string> filter_strings;
+  const std::string delimiter = ",";
+  unsigned int pos = 0;
+  std::string token;
+  while ((pos = filter_sequence.find(delimiter)) != std::string::npos) {
+    token = filter_sequence.substr(0, pos);
+    filter_strings.push_back(token);
+    filter_sequence.erase(0, pos + delimiter.length());
+  }
+  filter_strings.push_back(filter_sequence);
+
+  // get number of filters
+  const unsigned int n_filters = filter_strings.size();
+
+  // create vector of filters
+  std::vector<std::shared_ptr<FCTFilter<dim>>> filters;
+  for (unsigned int k = 0; k < n_filters; ++k)
+  {
+    auto filter = create_filter();
+    filters.push_back(filter);
+  }
+
+  // pass antidiffusive fluxes through filters
+  for (unsigned int k = 0; k < n_filters; ++k)
+  {
+    filters[k]->filter();
+  }
+}
+
+/**
  * \brief Solves the FCT system.
  *
  * The FCT system is

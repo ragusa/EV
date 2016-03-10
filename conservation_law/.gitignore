@@ -69,6 +69,8 @@ EulerRiemannSolver.h
 EulerRunParameters.cc
 EulerRunParameters.h
 Exceptions.h
+ExplicitEulerFCT.cc
+ExplicitEulerFCT.h
 FCT.cc
 FCT.h
 GradientMatrix.cc

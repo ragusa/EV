@@ -8,7 +8,6 @@
 using namespace dealii;
 
 /**
- * \class NewClass
  * \brief Class for ...
  */
 template <int dim>

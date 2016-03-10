@@ -90,6 +90,8 @@ public:
 
   void reinitialize(const SparsityPattern & sparsity_pattern);
 
+  void compute_antidiffusion_vector();
+
   void solve_fct_system(Vector<double> & new_solution,
                         const Vector<double> & old_solution,
                         const Vector<double> & ss_flux,
@@ -237,8 +239,10 @@ protected:
 
   unsigned int bounds_transient_file_index;
 
+  /** \brief names of lower bounds of each component */
   std::vector<std::string> lower_bound_component_names;
 
+  /** \brief names of upper bounds of each component */
   std::vector<std::string> upper_bound_component_names;
 
   /** \brief vector of times and corresponding lower bound file names */
