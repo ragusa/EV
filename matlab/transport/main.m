@@ -9,8 +9,8 @@ quadrature.nq = 3;                  % number of quadrature points per cell
 %--------------------------------------------------------------------------
 % spatial method options
 %--------------------------------------------------------------------------
-compute_low_order  = true; % compute and plot low-order solution?
-compute_high_order = false; % compute and plot high-order solution?
+compute_low_order  = false; % compute and plot low-order solution?
+compute_high_order = true; % compute and plot high-order solution?
 compute_FCT        = false; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
@@ -35,17 +35,17 @@ ev.smoothing_weight = 0.0; % weight for center value in smoothing
 %                  1 = SSPRK(1,1) (Explicit Euler)
 %                  2 = SSPRK(3,3) (Shu-Osher)
 %                  3 = theta method
-temporal_scheme = 1; % temporal discretization scheme
+temporal_scheme = 0; % temporal discretization scheme
 
 % theta parameter to use if using a theta method: 0.0 = FE
 %                                                 0.5 = CN
 %                                                 1.0 = BE
-theta = 1.0;     
+theta = 0.5;     
        
 use_constant_dt = true; % option to use constant dt instead of CFL
 constant_dt = 0.001;    % time step size to use if using constant size
 CFL = 0.5;       % CFL number
-ss_tol = 1.0e-5; % steady-state tolerance
+ss_tol = 1.0e-6; % steady-state tolerance
 t_end = 0.1;     % max time to run
 %--------------------------------------------------------------------------
 % FCT options

@@ -72,6 +72,14 @@ DEAL_II_INVOKE_AUTOPILOT()
 
 # testing
 ENABLE_TESTING()
-ADD_SUBDIRECTORY(tests/transport_dmp)
-ADD_SUBDIRECTORY(tests/transport_ev_dmp)
+
+ADD_SUBDIRECTORY(tests/transport_dmp_ss)
+ADD_SUBDIRECTORY(tests/transport_dmp_ssprk_fe)
+ADD_SUBDIRECTORY(tests/transport_dmp_theta_fe)
+ADD_SUBDIRECTORY(tests/transport_dmp_cn)
+
+ADD_SUBDIRECTORY(tests/transport_evdmp_ss)
+ADD_SUBDIRECTORY(tests/transport_evdmp_ssprk_fe)
+ADD_SUBDIRECTORY(tests/transport_evdmp_theta_fe)
+ADD_SUBDIRECTORY(tests/transport_evdmp_cn)
 

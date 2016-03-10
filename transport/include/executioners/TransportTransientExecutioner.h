@@ -16,7 +16,8 @@ class TransportTransientExecutioner : public TransportExecutioner<dim>
 public:
   /** \brief Alias for scheme */
   using Scheme = typename TransportExecutioner<dim>::Scheme;
-
+  /** \brief Alias for high-order scheme */
+  using HighOrderScheme = typename TransportExecutioner<dim>::HighOrderScheme;
   /** \brief Alias for temporal discretization classification */
   using TemporalDiscretizationClassification =
     typename RunParameters<dim>::TemporalDiscretizationClassification;
@@ -39,12 +40,13 @@ private:
 
   void compute_low_order_solution_theta(const double & dt, const double & t_new);
 
-  void compute_high_order_solution_theta(const double & dt, const double & dt_old, const double & t_new);
+  void compute_high_order_solution_theta(const double & dt,
+                                         const double & t_new,
+                                         const unsigned int & n);
 
-  void compute_entropy_viscosity_solution_theta(
-                                                const double & dt,
-                                                const double & dt_old,
-                                                const double & t_new);
+  void compute_entropy_viscosity_solution_theta(const double & dt,
+                                                const double & t_new,
+                                                const unsigned int & n);
 
   void compute_fct_solution_theta(FCT<dim> & fct,
                                   const double & dt,

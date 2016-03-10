@@ -13,6 +13,10 @@ template <int dim>
 class TransportSteadyStateExecutioner : public TransportExecutioner<dim>
 {
 public:
+  /** \brief Alias for scheme */
+  using Scheme = typename TransportExecutioner<dim>::Scheme;
+  /** \brief Alias for high-order scheme */
+  using HighOrderScheme = typename TransportExecutioner<dim>::HighOrderScheme;
   /** \brief Alias for FCT initialization option */
   using FCTInitializationOption =
     typename RunParameters<dim>::FCTInitializationOption;
@@ -30,9 +34,11 @@ protected:
 
   void compute_low_order_solution();
 
+  void compute_high_order_solution();
+
   void compute_entropy_viscosity_solution();
 
-  void compute_FCT_solution();
+  void compute_fct_solution();
 };
 
 #include "TransportSteadyStateExecutioner.cc"

@@ -18,7 +18,7 @@ subsection problem
 end
 
 subsection scheme
-   set scheme            = high         # low|high|fct
+   set scheme            = low          # low|high|fct
    set low order scheme  = dmp          # dmp
    set high order scheme = entropy_visc # galerkin|entropy_visc
 end
@@ -45,9 +45,9 @@ subsection time
 end
 
 subsection temporal discretization
-   set temporal discretization = ssprk # ss|ssprk|theta
+   set temporal discretization = theta # ss|ssprk|theta
    set ssprk discretization    = FE    # FE|SSP2|SSP3
-   set theta discretization    = BE    # FE|CN|BE
+   set theta discretization    = FE    # FE|CN|BE
 end
 
 subsection artificial viscosity
@@ -57,7 +57,7 @@ subsection artificial viscosity
    set entropy viscosity smoothing weight = 4
    set constant viscosity value           = 0.02
    set lax viscosity coefficient          = 0.5
-   set use low order viscosity for first time step = false
+   set use low order viscosity for first time step = true
 end
 
 subsection fct

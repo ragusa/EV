@@ -260,7 +260,7 @@ public:
    *                              nonlinear solver
    * ----------------------------------------------------------------------- */
   /** \brief nonlinear tolerance */
-  unsigned int nonlinear_tolerance;
+  double nonlinear_tolerance;
   /** \brief maximum number of nonlinear iterations */
   unsigned int nonlinear_max_iterations;
   /** \brief relaxation factor for damping solution updates */

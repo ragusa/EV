@@ -28,12 +28,6 @@ FCT.cc
 FCT.h
 NonlinearSolver.cc
 NonlinearSolver.h
-OldEntropyViscosity.cc
-OldEntropyViscosity.h
-OldLowOrderViscosity.cc
-OldLowOrderViscosity.h
-OldViscosity.cc
-OldViscosity.h
 TransportExecutioner.cc
 TransportExecutioner.h
 TransportProblem.cc

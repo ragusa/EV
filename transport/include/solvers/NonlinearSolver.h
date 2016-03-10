@@ -6,6 +6,7 @@
 #ifndef NonlinearSolver_cc
 #define NonlinearSolver_cc
 
+#include <deal.II/base/conditional_ostream.h>
 #include <deal.II/base/function.h>
 #include <deal.II/dofs/dof_handler.h>
 #include <deal.II/lac/constraint_matrix.h>
@@ -69,6 +70,9 @@ protected:
   /** \brief The linear residual vector
              \f$\mathbf{r} \equiv \mathbf{b} - \mathbf{A}\mathbf{U}\f$ */
   Vector<double> residual;
+
+  /** \brief Conditional output stream 1 */
+  ConditionalOStream cout1;
 };
 
 #include "NonlinearSolver.cc"

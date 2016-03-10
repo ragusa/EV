@@ -70,6 +70,29 @@ void TransportTransientExecutioner<dim>::run()
   // assemble inviscid steady-state matrix
   this->assembleInviscidSteadyStateMatrix();
 
+  // compute low-order steady-state matrix since it is not time-dependent
+  // NOTE: arbitrary values are passed because the viscosity should not depend on
+  // these parameters
+  this->low_order_viscosity->update(
+    this->new_solution, this->new_solution, 1.0, 1);
+  this->low_order_diffusion->compute_diffusion_matrix(
+    this->new_solution,
+    this->low_order_viscosity,
+    this->low_order_diffusion_matrix);
+  this->low_order_ss_matrix.copy_from(this->inviscid_ss_matrix);
+  this->low_order_ss_matrix.add(1.0, this->low_order_diffusion_matrix);
+
+  // compute initial old high-order steady-state matrix
+  // NOTE: this is only needed when entropy viscosity theta scheme is used
+  this->high_order_viscosity->update(
+    this->new_solution, this->new_solution, 1.0, 1);
+  this->high_order_diffusion->compute_diffusion_matrix(
+    this->new_solution,
+    this->high_order_viscosity,
+    this->high_order_diffusion_matrix);
+  this->high_order_ss_matrix.copy_from(this->inviscid_ss_matrix);
+  this->high_order_ss_matrix.add(1.0, this->high_order_diffusion_matrix);
+
   // assemble steady-state rhs
   this->assembleSteadyStateRHS(this->ss_rhs, 0.0);
   if (!source_is_time_dependent)
@@ -82,23 +105,23 @@ void TransportTransientExecutioner<dim>::run()
   std::shared_ptr<FCT<dim>> fct;
   if (this->parameters.scheme == Scheme::fct)
   {
-  fct = std::make_shared<FCT<dim>>(this->dof_handler,
-               *this->triangulation,
-               lumped_mass_matrix,
-               consistent_mass_matrix,
-               this->linear_solver,
-               this->constrained_sparsity_pattern,
-               this->dirichlet_nodes,
-               this->n_dofs,
-               this->dofs_per_cell,
-               false,
-               this->parameters.include_analytic_bounds,
-               this->fe,
-               this->cell_quadrature,
-               *this->cross_section_function,
-               *this->source_function,
-               source_is_time_dependent,
-               this->parameters.theta);
+    fct = std::make_shared<FCT<dim>>(this->dof_handler,
+                                     *this->triangulation,
+                                     lumped_mass_matrix,
+                                     consistent_mass_matrix,
+                                     this->linear_solver,
+                                     this->constrained_sparsity_pattern,
+                                     this->dirichlet_nodes,
+                                     this->n_dofs,
+                                     this->dofs_per_cell,
+                                     false,
+                                     this->parameters.include_analytic_bounds,
+                                     this->fe,
+                                     this->cell_quadrature,
+                                     *this->cross_section_function,
+                                     *this->source_function,
+                                     source_is_time_dependent,
+                                     this->parameters.theta);
   }
 
   // create objects required by temporal integrator
@@ -152,70 +175,71 @@ void TransportTransientExecutioner<dim>::run()
       // initialize SSPRK time step
       ssprk->initialize_time_step(old_solution, dt);
 
-    // loop over SSPRK stages to compute new solution
-    for (unsigned int i = 0; i < ssprk->n_stages; ++i)
-    {
-      // get stage time
-      const double t_stage = ssprk->get_stage_time();
-
-      // determine old stage solution and dt (needed for entropy viscosity)
-      double old_stage_dt;
-      if (i == 0)
+      // loop over SSPRK stages to compute new solution
+      for (unsigned int i = 0; i < ssprk->n_stages; ++i)
       {
-        old_stage_dt = dt_old;
+        // get stage time
+        const double t_stage = ssprk->get_stage_time();
+
+        // determine old stage solution and dt (needed for entropy viscosity)
+        double old_stage_dt;
+        if (i == 0)
+        {
+          old_stage_dt = dt_old;
+        }
+        else
+        {
+          ssprk->get_stage_solution(i - 1, older_solution);
+          old_stage_dt = dt;
+        }
+
+        // get old stage solution
+        ssprk->get_stage_solution(i, old_stage_solution);
+
+        // compute steady-state rhs vector
+        if (source_is_time_dependent)
+          this->assembleSteadyStateRHS(this->ss_rhs, t_stage);
+
+        // advance by an SSPRK step
+        switch (this->parameters.scheme)
+        {
+          case Scheme::low:
+            this->low_order_viscosity->update(
+              old_stage_solution, older_solution, old_stage_dt, n);
+            this->low_order_diffusion->compute_diffusion_matrix(
+              old_stage_solution,
+              this->low_order_viscosity,
+              this->low_order_diffusion_matrix);
+            ssprk->step(lumped_mass_matrix,
+                        this->inviscid_ss_matrix,
+                        this->low_order_diffusion_matrix,
+                        this->ss_rhs,
+                        true);
+            break;
+          case Scheme::high:
+            this->high_order_viscosity->update(
+              old_stage_solution, older_solution, old_stage_dt, n);
+            this->high_order_diffusion->compute_diffusion_matrix(
+              old_stage_solution,
+              this->high_order_viscosity,
+              this->high_order_diffusion_matrix);
+            ssprk->step(consistent_mass_matrix,
+                        this->inviscid_ss_matrix,
+                        this->high_order_diffusion_matrix,
+                        this->ss_rhs,
+                        true);
+            break;
+          case Scheme::fct:
+            perform_fct_ssprk_step(t_stage, dt, old_stage_dt, n, fct, *ssprk);
+            break;
+          default:
+            throw ExcNotImplemented();
+            break;
+        }
       }
-      else
-      {
-        ssprk->get_stage_solution(i - 1, older_solution);
-        old_stage_dt = dt;
-      }
 
-      // get old stage solution
-      ssprk->get_stage_solution(i, old_stage_solution);
-
-      // compute steady-state rhs vector
-      if (source_is_time_dependent)
-        this->assembleSteadyStateRHS(this->ss_rhs, t_stage);
-
-      // advance by an SSPRK step
-      switch (this->parameters.scheme)
-      {
-        case Scheme::low:
-          this->low_order_viscosity->update(
-            old_stage_solution, older_solution, old_stage_dt, n);
-          this->low_order_diffusion->compute_diffusion_matrix(
-            old_stage_solution, this->low_order_viscosity, this->low_order_diffusion_matrix);
-          ssprk->step(lumped_mass_matrix,
-                     this->inviscid_ss_matrix,
-                     this->low_order_diffusion_matrix,
-                     this->ss_rhs,
-                     true);
-          break;
-        case Scheme::high:
-          this->high_order_viscosity->update(
-            old_stage_solution, older_solution, old_stage_dt, n);
-          this->high_order_diffusion->compute_diffusion_matrix(
-            old_stage_solution,
-            this->high_order_viscosity,
-            this->high_order_diffusion_matrix);
-          ssprk->step(consistent_mass_matrix,
-                     this->inviscid_ss_matrix,
-                     this->high_order_diffusion_matrix,
-                     this->ss_rhs,
-                     true);
-          break;
-        case Scheme::fct:
-          perform_fct_ssprk_step(t_stage, dt, old_stage_dt, n, fct, *ssprk);
-          break;
-        default:
-          throw ExcNotImplemented();
-          break;
-      }
-    }
-
-    // retrieve the final solution
-    ssprk->get_new_solution(this->new_solution);
-
+      // retrieve the final solution
+      ssprk->get_new_solution(this->new_solution);
     }
     else if (temporal_discretization ==
              TemporalDiscretizationClassification::theta)
@@ -226,11 +250,11 @@ void TransportTransientExecutioner<dim>::run()
           compute_low_order_solution_theta(dt, t_new);
           break;
         case Scheme::high:
-          compute_high_order_solution_theta(dt, dt_old, t_new);
+          compute_high_order_solution_theta(dt, t_new, n);
           break;
         case Scheme::fct:
-          compute_high_order_solution_theta(dt, dt_old, t_new);
-          compute_fct_solution_theta(fct, dt, t_old);
+          compute_high_order_solution_theta(dt, t_new, n);
+          compute_fct_solution_theta(*fct, dt, t_old);
           break;
         default:
           throw ExcNotImplemented();
@@ -334,8 +358,9 @@ void TransportTransientExecutioner<dim>::assembleMassMatrices()
 /**
  * Checks CFL condition and adjusts time step size as necessary.
  *
- * @param[in] dt_proposed proposed time step size for current time step
- * @return new time step size
+ * \param[in] dt_proposed proposed time step size for current time step
+ *
+ * \return new time step size
  */
 template <int dim>
 double TransportTransientExecutioner<dim>::enforceCFLCondition(
@@ -410,8 +435,8 @@ void TransportTransientExecutioner<dim>::compute_galerkin_solution_theta(
 /**
  * \brief Takes time step with the low-order method using a theta method.
  *
- * \param[in] dt time step size
- * \param[in] t_new new time
+ * \param[in] dt     new time step size \f$\Delta t^n\equiv t^{n+1}-t^n\f$
+ * \param[in] t_new  new time \f$t^{n+1}\f$
  */
 template <int dim>
 void TransportTransientExecutioner<dim>::compute_low_order_solution_theta(
@@ -442,36 +467,38 @@ void TransportTransientExecutioner<dim>::compute_low_order_solution_theta(
 /**
  * \brief Takes time step with a high-order method using a theta method.
  *
- * \param[in] dt time step size
- * \param[in] dt_old old time step size
- * \param[in] t_new new time
+ * \param[in] dt     new time step size \f$\Delta t^n\equiv t^{n+1}-t^n\f$
+ * \param[in] t_new  new time \f$t^{n+1}\f$
+ * \param[in] n      time step index
  */
 template <int dim>
 void TransportTransientExecutioner<dim>::compute_high_order_solution_theta(
-  const double & dt, const double & dt_old, const double & t_new)
+  const double & dt, const double & t_new, const unsigned int & n)
 {
-          switch (this->parameters.high_order_scheme)
-          {
-            case HighOrderScheme::galerkin: // galerkin
-              compute_galerkin_solution_theta(dt, t_new);
-              break;
-            case HighOrderScheme::entropy_visc: // entropy viscosity
-              compute_entropy_viscosity_solution_theta(dt, dt_old, t_new);
-              break;
-            default:
-              throw ExcNotImplemented();
-              break;
-          }
+  switch (this->parameters.high_order_scheme)
+  {
+    case HighOrderScheme::galerkin: // galerkin
+      compute_galerkin_solution_theta(dt, t_new);
+      break;
+    case HighOrderScheme::entropy_visc: // entropy viscosity
+      compute_entropy_viscosity_solution_theta(dt, t_new, n);
+      break;
+    default:
+      throw ExcNotImplemented();
+      break;
+  }
 }
 
 /**
  * \brief Takes time step with the entropy viscosity method using a theta method.
+ *
+ * \param[in] dt     new time step size \f$\Delta t^n    \equiv t^{n+1}-t^n\f$
+ * \param[in] t_new  new time \f$t^{n+1}\f$
+ * \param[in] n      time step index
  */
 template <int dim>
 void TransportTransientExecutioner<dim>::compute_entropy_viscosity_solution_theta(
-  const double & dt,
-  const double & dt_old,
-  const double & t_new)
+  const double & dt, const double & t_new, const unsigned int & n)
 {
   // references
   Vector<double> & ss_rhs_old = this->ss_rhs;
@@ -489,15 +516,17 @@ void TransportTransientExecutioner<dim>::compute_entropy_viscosity_solution_thet
   bool converged = false;
   while (!converged)
   {
-    // recompute new high-order steady-state matrix AH^(l+1)
-    EV.recompute_high_order_ss_matrix(this->new_solution,
-                                      old_solution,
-                                      older_solution,
-                                      dt,
-                                      dt_old,
-                                      t_new,
-                                      high_order_diffusion_matrix_new,
-                                      high_order_ss_matrix_new);
+    // compute new entropy viscosity and high order diffusion matrix
+    this->high_order_viscosity->update(
+      this->new_solution, old_solution, dt, n + 1);
+    this->high_order_diffusion->compute_diffusion_matrix(
+      this->new_solution,
+      this->high_order_viscosity,
+      high_order_diffusion_matrix_new);
+
+    // compute new high-order steady-state matrix
+    high_order_ss_matrix_new.copy_from(this->inviscid_ss_matrix);
+    high_order_ss_matrix_new.add(1.0, high_order_diffusion_matrix_new);
 
     // compute system matrix
     // matrix = M^C + theta*dt*A^H
@@ -545,30 +574,37 @@ void TransportTransientExecutioner<dim>::perform_fct_ssprk_step(
   this->low_order_viscosity->update(
     old_stage_solution, older_solution, old_stage_dt, n);
   this->low_order_diffusion->compute_diffusion_matrix(
-    old_stage_solution, this->low_order_viscosity, this->low_order_diffusion_matrix);
+    old_stage_solution,
+    this->low_order_viscosity,
+    this->low_order_diffusion_matrix);
 
   // update high-order diffusion
   this->high_order_viscosity->update(
     old_stage_solution, older_solution, old_stage_dt, n);
   this->high_order_diffusion->compute_diffusion_matrix(
-    old_stage_solution, this->high_order_viscosity, this->high_order_diffusion_matrix);
+    old_stage_solution,
+    this->high_order_viscosity,
+    this->high_order_diffusion_matrix);
 
   // compute high-order solution
-  ssprk.step(
-    consistent_mass_matrix, this->inviscid_ss_matrix, this->high_order_diffusion_matrix, this->ss_rhs, false);
+  ssprk.step(consistent_mass_matrix,
+             this->inviscid_ss_matrix,
+             this->high_order_diffusion_matrix,
+             this->ss_rhs,
+             false);
 
   // get high-order solution
   ssprk.get_intermediate_solution(this->new_solution);
 
   // perform FCT
-    fct->solve_FCT_system_fe(this->new_solution,
-                            old_stage_solution,
-                            this->low_order_ss_matrix,
-                            this->ss_rhs,
-                            dt,
-                            this->low_order_diffusion_matrix,
-                            this->high_order_diffusion_matrix,
-                            t_old);
+  fct->solve_FCT_system_fe(this->new_solution,
+                           old_stage_solution,
+                           this->low_order_ss_matrix,
+                           this->ss_rhs,
+                           dt,
+                           this->low_order_diffusion_matrix,
+                           this->high_order_diffusion_matrix,
+                           t_old);
 
   // set stage solution to be FCT solution for this stage
   ssprk.set_intermediate_solution(this->new_solution);
@@ -576,7 +612,6 @@ void TransportTransientExecutioner<dim>::perform_fct_ssprk_step(
   // finish computing stage solution
   ssprk.complete_stage_solution();
 }
-
 
 /**
  * \brief Computes the FCT solution using a theta method.

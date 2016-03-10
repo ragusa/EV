@@ -157,17 +157,20 @@ TransportExecutioner<dim>::TransportExecutioner(
       // create entropy
       std::shared_ptr<Entropy<dim>> entropy =
         std::make_shared<TransportEntropy<dim>>(domain_volume,
-         dof_handler, fe, cell_quadrature, face_quadrature, *problem_parameters);
-
-      // create entropy viscosity
-      entropy_viscosity =
-        std::make_shared<EntropyViscosity<dim>>(parameters,
-                                                entropy,
-                                                fe,
                                                 dof_handler,
+                                                fe,
                                                 cell_quadrature,
                                                 face_quadrature,
-                                                false);
+                                                *problem_parameters);
+
+      // create entropy viscosity
+      entropy_viscosity = std::make_shared<EntropyViscosity<dim>>(parameters,
+                                                                  entropy,
+                                                                  fe,
+                                                                  dof_handler,
+                                                                  cell_quadrature,
+                                                                  face_quadrature,
+                                                                  false);
       break;
     }
     default:

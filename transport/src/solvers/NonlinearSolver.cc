@@ -15,7 +15,8 @@ NonlinearSolver<dim>::NonlinearSolver(const RunParameters<dim> & parameters_,
     linear_solver(&linear_solver_),
     constraints(constraints_),
     iteration_number(0),
-    n_dofs(0)
+    n_dofs(0),
+    cout1(std::cout, parameters_.verbosity_level >= 1)
 {
 }
 
@@ -56,7 +57,7 @@ void NonlinearSolver<dim>::initialize(Vector<double> & solution_guess)
     reinit(n_dofs);
   }
 
-  std::cout << "  Nonlinear solve:" << std::endl;
+  cout1 << "  Nonlinear solve:" << std::endl;
 }
 
 /**
@@ -77,8 +78,7 @@ bool NonlinearSolver<dim>::check_convergence(const Vector<double> & residual)
   double nonlinear_err = residual.l2_norm();
 
   // print error
-  std::cout << "  (" << iteration_number << ") err = " << nonlinear_err
-            << std::endl;
+  cout1 << "  (" << iteration_number << ") err = " << nonlinear_err << std::endl;
 
   // determine if error is within the nonlinear tolerance
   if (nonlinear_err < nonlinear_tolerance)

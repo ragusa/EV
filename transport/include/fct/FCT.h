@@ -5,6 +5,7 @@
 #include <deal.II/lac/vector.h>
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/grid/tria.h>
+
 #include "LinearSolver.h"
 #include "NonlinearSolver.h"
 #include "PostProcessor.h"
@@ -12,7 +13,7 @@
 using namespace dealii;
 
 /**
- * Class for performing FCT.
+ * \brief Class for performing FCT.
  */
 template <int dim>
 class FCT

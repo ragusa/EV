@@ -45,9 +45,9 @@ subsection time
 end
 
 subsection temporal discretization
-   set temporal discretization = ssprk # ss|ssprk|theta
+   set temporal discretization = theta # ss|ssprk|theta
    set ssprk discretization    = FE    # FE|SSP2|SSP3
-   set theta discretization    = BE    # FE|CN|BE
+   set theta discretization    = CN    # FE|CN|BE
 end
 
 subsection artificial viscosity
