@@ -10,7 +10,7 @@ TransportExecutioner<dim>::TransportExecutioner(
   : cout1(std::cout, parameters_.verbosity_level >= 1),
     cout2(std::cout, parameters_.verbosity_level >= 2),
     parameters(parameters_),
-    problem_parameters(problem_parameters_),
+    problem_parameters(&problem_parameters_),
     triangulation(&triangulation_),
     fe(FE_Q<dim>(parameters.degree), 1),
     flux(0),
@@ -69,69 +69,6 @@ TransportExecutioner<dim>::TransportExecutioner(
 
   // determine Dirichlet nodes
   getDirichletNodes();
-
-  // check that high-order scheme is valid
-  unsigned int high_order_viscosity_option;
-  switch (parameters_.high_order_scheme)
-  {
-    case HighOrderScheme::galerkin:
-    {
-      high_order_viscosity_option = 0;
-      break;
-    }
-    case HighOrderScheme::entropy_visc:
-    {
-      high_order_viscosity_option = 2;
-      break;
-    }
-    default:
-    {
-      throw ExcNotImplemented();
-      break;
-    }
-  }
-
-  // determine viscosity option
-  switch (parameters_.scheme)
-  {
-    case Scheme::low:
-    {
-      viscosity_option = 1;
-      break;
-    }
-    case Scheme::high:
-    {
-      viscosity_option = high_order_viscosity_option;
-      break;
-    }
-    case Scheme::fct:
-    {
-      switch (high_order_viscosity_option)
-      {
-        case 0:
-        {
-          viscosity_option = 4;
-          break;
-        }
-        case 2:
-        {
-          viscosity_option = 3;
-          break;
-        }
-        default:
-        {
-          throw ExcNotImplemented();
-          break;
-        }
-      }
-      break;
-    }
-    default:
-    {
-      throw ExcNotImplemented();
-      break;
-    }
-  }
 
   // determine low-order viscosity and artificial diffusion
   switch (parameters.low_order_scheme)
@@ -220,13 +157,12 @@ TransportExecutioner<dim>::TransportExecutioner(
       // create entropy
       std::shared_ptr<Entropy<dim>> entropy =
         std::make_shared<TransportEntropy<dim>>(domain_volume,
-         dof_handler, fe, cell_quadrature, face_quadrature, problem_parameters);
+         dof_handler, fe, cell_quadrature, face_quadrature, *problem_parameters);
 
       // create entropy viscosity
       entropy_viscosity =
         std::make_shared<EntropyViscosity<dim>>(parameters,
                                                 entropy,
-                                                cell_diameter,
                                                 fe,
                                                 dof_handler,
                                                 cell_quadrature,

@@ -11,7 +11,7 @@
 #include <sstream>
 #include <cstdlib>
 #include <deal.II/base/parameter_handler.h>
-#include "TransportRunParameters.h"
+#include "include/parameters/TransportRunParameters.h"
 #include "TransportProblem.h"
 #include "Exceptions.h"
 

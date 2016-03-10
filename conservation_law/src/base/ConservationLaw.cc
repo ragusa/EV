@@ -330,7 +330,6 @@ void ConservationLaw<dim>::setup_system()
   TimerOutput::Scope timer_section(timer, "Setup");
 
   // clear maps
-  cell_diameter.clear();
   max_flux_speed_cell.clear();
 
   // clear and distribute dofs
@@ -498,7 +497,6 @@ void ConservationLaw<dim>::setup_system()
       // create low-order viscosity
       low_order_viscosity =
         std::make_shared<LowOrderViscosity<dim>>(parameters.lax_viscosity_coef,
-                                                 cell_diameter,
                                                  max_flux_speed_cell,
                                                  fe,
                                                  dof_handler,
@@ -580,7 +578,6 @@ void ConservationLaw<dim>::setup_system()
       entropy_viscosity =
         std::make_shared<EntropyViscosity<dim>>(parameters,
                                                 entropy,
-                                                cell_diameter,
                                                 fe,
                                                 dof_handler,
                                                 cell_quadrature,
@@ -722,10 +719,7 @@ void ConservationLaw<dim>::update_cell_sizes()
 
   // update the cell diameters and minimum cell diameter
   for (; cell != endc; ++cell)
-  {
-    cell_diameter[cell] = cell->diameter();
-    minimum_cell_diameter = std::min(minimum_cell_diameter, cell_diameter[cell]);
-  }
+    minimum_cell_diameter = std::min(minimum_cell_diameter, cell->diameter());
 }
 
 /**

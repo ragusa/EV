@@ -8,7 +8,6 @@
  *
  * \param[in] parameters_ parameters
  * \param[in] entropy_ pointer to entropy
- * \param[in] cell_diameter_ map of cell iterators to cell diameters
  * \param[in] dof_handler_ degree of freedom handler
  * \param[in] use_in_laplacian_term_  flag that viscosity is to be used
  *            in a Laplacian diffusion term
@@ -17,7 +16,6 @@ template <int dim>
 EntropyViscosity<dim>::EntropyViscosity(
   const RunParameters<dim> & parameters_,
   const std::shared_ptr<Entropy<dim>> & entropy_,
-  const CellMap & cell_diameter_,
   const FESystem<dim> & fe_,
   const DoFHandler<dim> & dof_handler_,
   const QGauss<dim> & cell_quadrature_,
@@ -28,7 +26,6 @@ EntropyViscosity<dim>::EntropyViscosity(
     residual_coefficient(parameters_.entropy_residual_coef),
     jump_coefficient(parameters_.entropy_jump_coef),
     smoothing_weight(parameters_.entropy_viscosity_smoothing_weight),
-    cell_diameter(&cell_diameter_),
     fe(&fe_),
     cell_quadrature(&cell_quadrature_),
     face_quadrature(&face_quadrature_),
@@ -132,7 +129,7 @@ template <int dim>
 double EntropyViscosity<dim>::compute_viscosity_multiplier_laplacian(
   const Cell & cell) const
 {
-  return std::pow(cell_diameter->at(cell), 2);
+  return std::pow(cell->diameter(), 2);
 }
 
 /**

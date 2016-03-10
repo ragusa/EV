@@ -419,7 +419,6 @@ protected:
   double max_flux_speed;
 
   // maps
-  CellMap cell_diameter;
   CellMap max_flux_speed_cell;
 
   // viscosity

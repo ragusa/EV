@@ -44,7 +44,6 @@ public:
 
   EntropyViscosity(const RunParameters<dim> & parameters,
                    const std::shared_ptr<Entropy<dim>> & entropy,
-                   const CellMap & cell_diameter,
                    const FESystem<dim> & fe,
                    const DoFHandler<dim> & dof_handler,
                    const QGauss<dim> & cell_quadrature,
@@ -76,9 +75,6 @@ private:
 
   /** \brief Weighting to be used if an average weighting is to be applied */
   const double smoothing_weight;
-
-  /** \brief Pointer to map of cell iterator to cell diameter */
-  const CellMap * const cell_diameter;
 
   /** \brief Pointer to finite element system */
   const FESystem<dim> * fe;

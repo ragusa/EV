@@ -14,6 +14,9 @@ template <int dim>
 class TransportTransientExecutioner : public TransportExecutioner<dim>
 {
 public:
+  /** \brief Alias for scheme */
+  using Scheme = typename TransportExecutioner<dim>::Scheme;
+
   /** \brief Alias for temporal discretization classification */
   using TemporalDiscretizationClassification =
     typename RunParameters<dim>::TemporalDiscretizationClassification;
@@ -32,41 +35,27 @@ private:
 
   double enforceCFLCondition(const double & dt_proposed) const;
 
-  void compute_galerkin_solution_ssprk(SSPRKTimeIntegrator<dim> & ssprk);
-
   void compute_galerkin_solution_theta(const double & dt, const double & t_new);
-
-  void compute_low_order_solution_ssprk(SSPRKTimeIntegrator<dim> & ssprk);
 
   void compute_low_order_solution_theta(const double & dt, const double & t_new);
 
-  void compute_entropy_viscosity_solution_ssprk(SSPRKTimeIntegrator<dim> & ssprk,
-                                                EntropyViscosity<dim> & EV,
-                                                const double & dt_old,
-                                                const double & dt_older,
-                                                const double & t_old);
+  void compute_high_order_solution_theta(const double & dt, const double & dt_old, const double & t_new);
 
-  void compute_entropy_viscosity_solution_theta(EntropyViscosity<dim> & EV,
+  void compute_entropy_viscosity_solution_theta(
                                                 const double & dt,
                                                 const double & dt_old,
                                                 const double & t_new);
 
-  void compute_entropy_viscosity_fct_solution_ssprk(
-    SSPRKTimeIntegrator<dim> & ssprk,
-    FCT<dim> & fct,
-    EntropyViscosity<dim> & EV,
-    const double & dt,
-    const double & dt_old,
-    const double & t_old);
-
-  void compute_galerkin_fct_solution_ssprk(SSPRKTimeIntegrator<dim> & ssprk,
-                                           FCT<dim> & fct,
-                                           const double & dt,
-                                           const double & t_old);
-
   void compute_fct_solution_theta(FCT<dim> & fct,
                                   const double & dt,
                                   const double & t_old);
+
+  void perform_fct_ssprk_step(const double & t_old,
+                              const double & dt,
+                              const double & old_stage_dt,
+                              const unsigned int & n,
+                              const std::shared_ptr<FCT<dim>> & fct,
+                              SSPRKTimeIntegrator<dim> & ssprk);
 
   const TemporalDiscretizationClassification temporal_discretization;
 

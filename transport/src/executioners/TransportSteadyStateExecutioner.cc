@@ -22,6 +22,7 @@ void TransportSteadyStateExecutioner<dim>::run()
   this->assembleInviscidSteadyStateMatrix();
   this->assembleSteadyStateRHS(this->ss_rhs, 0.0);
 
+/*
   switch (this->viscosity_option)
   {
     case 0: // Galerkin
@@ -88,6 +89,7 @@ void TransportSteadyStateExecutioner<dim>::run()
       Assert(false, ExcNotImplemented());
     }
   }
+*/
 
   // evaluate errors for convergence study
   this->postprocessor->evaluate_error(
@@ -101,6 +103,7 @@ void TransportSteadyStateExecutioner<dim>::run()
 /**
  * \brief Computes the Galerkin solution.
  */
+/*
 template <int dim>
 void TransportSteadyStateExecutioner<dim>::compute_galerkin_solution()
 {
@@ -114,24 +117,30 @@ void TransportSteadyStateExecutioner<dim>::compute_galerkin_solution()
   this->linear_solver.solve_with_dirichlet(
     this->system_matrix, this->new_solution, this->system_rhs, true);
 }
+*/
 
 /**
  * \brief Computes the low-order solution.
  */
+/*
 template <int dim>
 void TransportSteadyStateExecutioner<dim>::compute_low_order_solution()
 {
   // copy low-order steady-state matrix to system matrix
   this->system_matrix.copy_from(this->low_order_ss_matrix);
 
+  // TODO: should copy ss_rhs to system_rhs here and pass system_rhs
+
   // solve the linear system: ss_matrix*new_solution = ss_rhs
   this->linear_solver.solve_with_dirichlet(
     this->system_matrix, this->new_solution, this->ss_rhs, true);
 }
+*/
 
 /**
  * \brief Computes the entropy viscosity solution.
  */
+/*
 template <int dim>
 void TransportSteadyStateExecutioner<dim>::compute_entropy_viscosity_solution()
 {
@@ -189,10 +198,12 @@ void TransportSteadyStateExecutioner<dim>::compute_entropy_viscosity_solution()
       this->nonlinear_solver.update(this->system_matrix, this->system_rhs);
   }
 }
+*/
 
 /**
  * \brief Solves the steady-state FCT system.
  */
+/*
 template <int dim>
 void TransportSteadyStateExecutioner<dim>::compute_FCT_solution()
 {
@@ -318,3 +329,4 @@ void TransportSteadyStateExecutioner<dim>::compute_FCT_solution()
   // check FCT bounds
   fct.check_fct_bounds(this->new_solution);
 }
+*/

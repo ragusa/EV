@@ -24,14 +24,16 @@ doxygen
 *.bak
 
 # additional files added below
-EntropyViscosity.cc
-EntropyViscosity.h
 FCT.cc
 FCT.h
-LowOrderViscosity.cc
-LowOrderViscosity.h
 NonlinearSolver.cc
 NonlinearSolver.h
+OldEntropyViscosity.cc
+OldEntropyViscosity.h
+OldLowOrderViscosity.cc
+OldLowOrderViscosity.h
+OldViscosity.cc
+OldViscosity.h
 TransportExecutioner.cc
 TransportExecutioner.h
 TransportProblem.cc
@@ -40,5 +42,3 @@ TransportSteadyStateExecutioner.cc
 TransportSteadyStateExecutioner.h
 TransportTransientExecutioner.cc
 TransportTransientExecutioner.h
-Viscosity.cc
-Viscosity.h

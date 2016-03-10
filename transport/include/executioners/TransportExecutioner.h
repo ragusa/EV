@@ -10,7 +10,7 @@
 #include <deal.II/grid/tria.h>
 #include <deal.II/lac/sparse_matrix.h>
 
-#include "EntropyViscosity.h"
+//#include "EntropyViscosity.h"
 #include "FCT.h"
 #include "NonlinearSolver.h"
 #include "PostProcessor.h"
@@ -71,9 +71,7 @@ protected:
 
   const TransportRunParameters<dim> parameters;
 
-  const TransportProblemParameters<dim> problem_parameters;
-
-  unsigned int viscosity_option;
+  const TransportProblemParameters<dim> * const problem_parameters;
 
   Triangulation<dim> * const triangulation;
 

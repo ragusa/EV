@@ -71,7 +71,7 @@ void ShallowWater<dim>::update_old_low_order_viscosity(
         froude = std::max(froude, speed[q] / sound_speed[q]);
 
       this->first_order_viscosity_map[cell] =
-        std::abs(c_max * froude * this->cell_diameter[cell] *
+        std::abs(c_max * froude * cell->diameter() *
                  this->max_flux_speed_cell[cell]);
     }
   }
@@ -81,7 +81,7 @@ void ShallowWater<dim>::update_old_low_order_viscosity(
     for (; cell != endc; ++cell)
     {
       this->first_order_viscosity_map[cell] = std::abs(
-        c_max * this->cell_diameter[cell] * this->max_flux_speed_cell[cell]);
+        c_max * cell->diameter() * this->max_flux_speed_cell[cell]);
     }
   }
 }

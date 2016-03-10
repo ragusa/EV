@@ -40,7 +40,6 @@ public:
 
   LowOrderViscosity(
     const double & c_max,
-    CellMap & cell_diameter,
     CellMap & max_flux_speed,
     const FESystem<dim> & fe,
     const DoFHandler<dim> & dof_handler,
@@ -54,8 +53,6 @@ public:
 
 private:
   const double c_max;
-
-  CellMap * const cell_diameter;
 
   CellMap * const max_flux_speed;
 
