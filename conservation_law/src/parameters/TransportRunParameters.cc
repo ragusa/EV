@@ -1,13 +1,15 @@
-/** \file TransportRunParameters.cc
- *  \brief Provides the function definitions for the TransportRunParameters class.
+/**
+ * \file TransportRunParameters.cc
+ * \brief Provides the function definitions for the TransportRunParameters class.
  */
 using namespace dealii;
 
 /**
  * \brief Constructor.
  */
-template <int dim>
-TransportRunParameters<dim>::TransportRunParameters()
+//template <int dim>
+//TransportRunParameters<dim>::TransportRunParameters()
+TransportRunParameters::TransportRunParameters()
 {
 }
 
@@ -16,12 +18,14 @@ TransportRunParameters<dim>::TransportRunParameters()
  *
  * \param[in] parameter_handler parameter handler for the Transport class
  */
-template <int dim>
-void TransportRunParameters<dim>::declare_parameters(
+//template <int dim>
+//void TransportRunParameters<dim>::declare_parameters(
+void TransportRunParameters::declare_parameters(
   ParameterHandler & parameter_handler)
 {
   // declare base run parameters
-  RunParameters<dim>::declare_run_parameters(parameter_handler);
+  //RunParameters<dim>::declare_run_parameters(parameter_handler);
+  RunParameters::declare_run_parameters(parameter_handler);
 }
 
 /**
@@ -29,8 +33,9 @@ void TransportRunParameters<dim>::declare_parameters(
  *
  * \param[in] parameter_handler parameter handler for the Transport class
  */
-template <int dim>
-void TransportRunParameters<dim>::get_parameters(
+//template <int dim>
+//void TransportRunParameters<dim>::get_parameters(
+void TransportRunParameters::get_parameters(
   ParameterHandler & parameter_handler)
 {
   // get conservation law parameters

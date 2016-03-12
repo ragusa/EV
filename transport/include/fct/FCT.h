@@ -6,9 +6,9 @@
 #include <deal.II/dofs/dof_accessor.h>
 #include <deal.II/grid/tria.h>
 
-#include "LinearSolver.h"
+#include "include/solvers/LinearSolver.h"
 #include "NonlinearSolver.h"
-#include "PostProcessor.h"
+#include "include/postprocessing/PostProcessor.h"
 
 using namespace dealii;
 

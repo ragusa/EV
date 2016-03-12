@@ -16,8 +16,9 @@ using namespace dealii;
 /** \class TransportRunParameters
  *  \brief Class for parameters related to a transport equation.
  */
-template <int dim>
-class TransportRunParameters : public RunParameters<dim>
+//template <int dim>
+//class TransportRunParameters : public RunParameters<dim>
+class TransportRunParameters : public RunParameters
 {
 public:
   TransportRunParameters();

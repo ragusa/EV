@@ -18,8 +18,7 @@ using namespace dealii;
  * \class ShallowWaterRunParameters
  * \brief Class for parameters related to the shallow water equations.
  */
-template <int dim>
-class ShallowWaterRunParameters : public RunParameters<dim>
+class ShallowWaterRunParameters : public RunParameters
 {
 public:
   ShallowWaterRunParameters();

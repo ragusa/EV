@@ -20,10 +20,12 @@ public:
   using HighOrderScheme = typename TransportExecutioner<dim>::HighOrderScheme;
   /** \brief Alias for temporal discretization classification */
   using TemporalDiscretizationClassification =
-    typename RunParameters<dim>::TemporalDiscretizationClassification;
+    typename RunParameters::TemporalDiscretizationClassification;
+  /** \brief Alias for time step size option */
+  using TimeStepSizeOption = typename RunParameters::TimeStepSizeOption;
 
   TransportTransientExecutioner(
-    const TransportRunParameters<dim> & parameters,
+    const TransportRunParameters & parameters,
     TransportProblemParameters<dim> & problem_parameters,
     Triangulation<dim> & triangulation,
     PostProcessor<dim> & postprocessor,

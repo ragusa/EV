@@ -35,11 +35,17 @@ class PostProcessor
 public:
   /** \brief Alias for classification of temporal discretization */
   using TemporalDiscretizationClassification =
-    typename RunParameters<dim>::TemporalDiscretizationClassification;
+    typename RunParameters::TemporalDiscretizationClassification;
+//    typename RunParameters<dim>::TemporalDiscretizationClassification;
   /** \brief Alias for SSPRK discretization */
-  using SSPRKDiscretization = typename RunParameters<dim>::SSPRKDiscretization;
+  //using SSPRKDiscretization = typename RunParameters<dim>::SSPRKDiscretization;
+  using SSPRKDiscretization = typename RunParameters::SSPRKDiscretization;
   /** \brief Alias for theta discretization */
-  using ThetaDiscretization = typename RunParameters<dim>::ThetaDiscretization;
+  //using ThetaDiscretization = typename RunParameters<dim>::ThetaDiscretization;
+  using ThetaDiscretization = typename RunParameters::ThetaDiscretization;
+  using Scheme = typename RunParameters::Scheme;
+  using LowOrderScheme = typename RunParameters::LowOrderScheme;
+  using HighOrderScheme = typename RunParameters::HighOrderScheme;
 
   /** \brief Typedef for cell iterators */
   typedef typename DoFHandler<dim>::active_cell_iterator Cell;
@@ -48,7 +54,8 @@ public:
   typedef std::map<Cell, double> CellMap;
 
   PostProcessor(
-    const RunParameters<dim> & parameters,
+    //const RunParameters<dim> & parameters,
+    const RunParameters & parameters,
     const unsigned int & n_components,
     const double & end_time,
     const bool has_exact_solution,
@@ -158,7 +165,8 @@ private:
   void remove_vtu_files(const std::string & directory,
                         const std::string & filename_base) const;
 
-  const RunParameters<dim> parameters;
+  //const RunParameters<dim> parameters;
+  const RunParameters parameters;
 
   const double end_time;
 

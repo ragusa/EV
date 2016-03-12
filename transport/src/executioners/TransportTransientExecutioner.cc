@@ -3,7 +3,7 @@
  */
 template <int dim>
 TransportTransientExecutioner<dim>::TransportTransientExecutioner(
-  const TransportRunParameters<dim> & parameters_,
+  const TransportRunParameters & parameters_,
   TransportProblemParameters<dim> & problem_parameters_,
   Triangulation<dim> & triangulation_,
   PostProcessor<dim> & postprocessor_,
@@ -381,7 +381,7 @@ double TransportTransientExecutioner<dim>::enforceCFLCondition(
   if (proposed_CFL > this->parameters.cfl)
     // if user specified to adjust dt based on CFL
     if (this->parameters.time_step_size_option ==
-        RunParameters<dim>::TimeStepSizeOption::cfl)
+        TimeStepSizeOption::cfl)
     {
       // adjust dt to satisfy CFL
       dt = this->parameters.cfl / max_speed_dx;

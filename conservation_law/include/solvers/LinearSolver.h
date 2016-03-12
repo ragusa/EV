@@ -25,7 +25,8 @@ template <int dim>
 class LinearSolver
 {
 public:
-  using LinearSolverType = typename RunParameters<dim>::LinearSolverType;
+//  using LinearSolverType = typename RunParameters<dim>::LinearSolverType;
+  using LinearSolverType = typename RunParameters::LinearSolverType;
 
   LinearSolver(const LinearSolverType & linear_solver_option,
                const ConstraintMatrix & constraints,

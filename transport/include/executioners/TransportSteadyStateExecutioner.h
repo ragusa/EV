@@ -2,7 +2,7 @@
 #define TransportSteadyStateExecutioner_cc
 
 #include "TransportExecutioner.h"
-#include "RunParameters.h"
+#include "include/parameters/RunParameters.h"
 
 using namespace dealii;
 
@@ -19,10 +19,10 @@ public:
   using HighOrderScheme = typename TransportExecutioner<dim>::HighOrderScheme;
   /** \brief Alias for FCT initialization option */
   using FCTInitializationOption =
-    typename RunParameters<dim>::FCTInitializationOption;
+    typename RunParameters::FCTInitializationOption;
 
   TransportSteadyStateExecutioner(
-    const TransportRunParameters<dim> & parameters,
+    const TransportRunParameters & parameters,
     TransportProblemParameters<dim> & problem_parameters,
     Triangulation<dim> & triangulation,
     PostProcessor<dim> & postprocessor);

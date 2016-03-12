@@ -95,7 +95,7 @@ template <int dim>
 class ConservationLaw
 {
 public:
-  ConservationLaw(const RunParameters<dim> & params,
+  ConservationLaw(const RunParameters & params,
                   const unsigned int & n_components,
                   const bool & is_linear);
   void run();
@@ -130,16 +130,16 @@ protected:
   /** \brief Typedef for cell iterator map to double */
   typedef std::map<Cell, double> CellMap;
 
-  using TimeStepSizeOption = typename RunParameters<dim>::TimeStepSizeOption;
+  using TimeStepSizeOption = typename RunParameters::TimeStepSizeOption;
   using TemporalDiscretizationClassification =
-    typename RunParameters<dim>::TemporalDiscretizationClassification;
-  using SSPRKDiscretization = typename RunParameters<dim>::SSPRKDiscretization;
-  using Scheme = typename RunParameters<dim>::Scheme;
-  using LowOrderScheme = typename RunParameters<dim>::LowOrderScheme;
-  using HighOrderScheme = typename RunParameters<dim>::HighOrderScheme;
-  using ViscosityType = typename RunParameters<dim>::ViscosityType;
-  using DiffusionType = typename RunParameters<dim>::DiffusionType;
-  using LinearSolverType = typename RunParameters<dim>::LinearSolverType;
+    typename RunParameters::TemporalDiscretizationClassification;
+  using SSPRKDiscretization = typename RunParameters::SSPRKDiscretization;
+  using Scheme = typename RunParameters::Scheme;
+  using LowOrderScheme = typename RunParameters::LowOrderScheme;
+  using HighOrderScheme = typename RunParameters::HighOrderScheme;
+  using ViscosityType = typename RunParameters::ViscosityType;
+  using DiffusionType = typename RunParameters::DiffusionType;
+  using LinearSolverType = typename RunParameters::LinearSolverType;
 
   void initialize_system();
 
@@ -323,7 +323,7 @@ protected:
   LocalTriangulation triangulation;
 
   /** \brief input parameters for conservation law */
-  const RunParameters<dim> parameters;
+  const RunParameters parameters;
 
   /** \brief Pointer to problem parameters */
   ProblemParameters<dim> * problem_base_parameters;

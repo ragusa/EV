@@ -13,7 +13,8 @@ template <int dim>
 class RefinementHandler
 {
 public:
-  RefinementHandler(const RunParameters<dim> & parameters,
+//  RefinementHandler(const RunParameters<dim> & parameters,
+  RefinementHandler(const RunParameters & parameters,
                     Triangulation<dim> & triangulation);
 
   void refine(unsigned int cycle);

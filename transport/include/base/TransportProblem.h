@@ -47,9 +47,9 @@ class TransportProblem
 public:
   /** \brief Alias for temporal discretization classification */
   using TemporalDiscretizationClassification =
-    typename TransportRunParameters<dim>::TemporalDiscretizationClassification;
+    typename TransportRunParameters::TemporalDiscretizationClassification;
 
-  TransportProblem(const TransportRunParameters<dim> & run_parameters);
+  TransportProblem(const TransportRunParameters & run_parameters);
 
   void run();
 
@@ -65,7 +65,7 @@ private:
   ConditionalOStream cout2;
 
   /** \brief run parameters */
-  const TransportRunParameters<dim> run_parameters;
+  const TransportRunParameters run_parameters;
 
   /** \brief flag that problem is time-dependent */
   const bool is_time_dependent;

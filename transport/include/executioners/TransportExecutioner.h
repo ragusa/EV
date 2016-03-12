@@ -13,14 +13,14 @@
 //#include "EntropyViscosity.h"
 #include "FCT.h"
 #include "NonlinearSolver.h"
-#include "PostProcessor.h"
-#include "TransportProblemParameters.h"
-#include "TransportRunParameters.h"
 
 #include "include/diffusion/ArtificialDiffusion.h"
 #include "include/diffusion/NoDiffusion.h"
 #include "include/diffusion/GraphTheoreticDiffusion.h"
 #include "include/entropy/TransportEntropy.h"
+#include "include/parameters/TransportProblemParameters.h"
+#include "include/parameters/TransportRunParameters.h"
+#include "include/postprocessing/PostProcessor.h"
 #include "include/viscosity/ConstantViscosity.h"
 #include "include/viscosity/DMPLowOrderViscosity.h"
 #include "include/viscosity/EntropyViscosity.h"
@@ -35,13 +35,13 @@ template <int dim>
 class TransportExecutioner
 {
 public:
-  using Scheme = typename RunParameters<dim>::Scheme;
-  using LowOrderScheme = typename RunParameters<dim>::LowOrderScheme;
-  using HighOrderScheme = typename RunParameters<dim>::HighOrderScheme;
-  using ViscosityType = typename RunParameters<dim>::ViscosityType;
-  using DiffusionType = typename RunParameters<dim>::DiffusionType;
+  using Scheme = typename RunParameters::Scheme;
+  using LowOrderScheme = typename RunParameters::LowOrderScheme;
+  using HighOrderScheme = typename RunParameters::HighOrderScheme;
+  using ViscosityType = typename RunParameters::ViscosityType;
+  using DiffusionType = typename RunParameters::DiffusionType;
 
-  TransportExecutioner(const TransportRunParameters<dim> & parameters,
+  TransportExecutioner(const TransportRunParameters & parameters,
                        TransportProblemParameters<dim> & problem_parameters,
                        Triangulation<dim> & triangulation,
                        PostProcessor<dim> & postprocessor);
@@ -69,7 +69,7 @@ protected:
   /** \brief Conditional output stream 2 */
   ConditionalOStream cout2;
 
-  const TransportRunParameters<dim> parameters;
+  const TransportRunParameters parameters;
 
   const TransportProblemParameters<dim> * const problem_parameters;
 

@@ -11,7 +11,8 @@
  */
 template <int dim>
 PostProcessor<dim>::PostProcessor(
-  const RunParameters<dim> & parameters_,
+  //const RunParameters<dim> & parameters_,
+  const RunParameters & parameters_,
   const unsigned int & n_components_,
   const double & end_time_,
   const bool has_exact_solution_,
@@ -113,23 +114,23 @@ PostProcessor<dim>::PostProcessor(
   std::string scheme_string;
   switch (parameters.scheme)
   {
-    case RunParameters<dim>::Scheme::low:
+    case Scheme::low:
     {
       switch (parameters.low_order_scheme)
       {
-        case RunParameters<dim>::LowOrderScheme::constant:
+        case LowOrderScheme::constant:
           scheme_string = "Constant";
           break;
-        case RunParameters<dim>::LowOrderScheme::lax:
+        case LowOrderScheme::lax:
           scheme_string = "Lax";
           break;
-        case RunParameters<dim>::LowOrderScheme::dmp:
+        case LowOrderScheme::dmp:
           scheme_string = "DMP";
           break;
-        case RunParameters<dim>::LowOrderScheme::di_visc:
+        case LowOrderScheme::di_visc:
           scheme_string = "DIV";
           break;
-        case RunParameters<dim>::LowOrderScheme::di_diff:
+        case LowOrderScheme::di_diff:
           scheme_string = "DID";
           break;
         default:
@@ -138,17 +139,17 @@ PostProcessor<dim>::PostProcessor(
       }
       break;
     }
-    case RunParameters<dim>::Scheme::high:
+    case Scheme::high:
     {
       switch (parameters.high_order_scheme)
       {
-        case RunParameters<dim>::HighOrderScheme::galerkin:
+        case HighOrderScheme::galerkin:
           scheme_string = "Gal";
           break;
-        case RunParameters<dim>::HighOrderScheme::entropy_visc:
+        case HighOrderScheme::entropy_visc:
           scheme_string = "EV";
           break;
-        case RunParameters<dim>::HighOrderScheme::entropy_diff:
+        case HighOrderScheme::entropy_diff:
           scheme_string = "ED";
           break;
         default:
@@ -157,17 +158,17 @@ PostProcessor<dim>::PostProcessor(
       }
       break;
     }
-    case RunParameters<dim>::Scheme::fct:
+    case Scheme::fct:
     {
       switch (parameters.high_order_scheme)
       {
-        case RunParameters<dim>::HighOrderScheme::galerkin:
+        case HighOrderScheme::galerkin:
           scheme_string = "GalFCT";
           break;
-        case RunParameters<dim>::HighOrderScheme::entropy_visc:
+        case HighOrderScheme::entropy_visc:
           scheme_string = "EVFCT";
           break;
-        case RunParameters<dim>::HighOrderScheme::entropy_diff:
+        case HighOrderScheme::entropy_diff:
           scheme_string = "EDFCT";
           break;
         default:

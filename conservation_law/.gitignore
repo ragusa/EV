@@ -52,8 +52,12 @@ ConstantMaxWaveSpeed.h
 ConstantViscosity.cc
 ConstantViscosity.h
 DirichletBoundaryConditions.h
+DMPExplicitEulerFCTFilter.cc
+DMPExplicitEulerFCTFilter.h
 DMPLowOrderViscosity.cc
 DMPLowOrderViscosity.h
+DoFBounds.cc
+DoFBounds.h
 DomainInvariantDiffusion.cc
 DomainInvariantDiffusion.h
 DomainInvariantViscosity.cc
@@ -72,6 +76,8 @@ Exceptions.h
 ExplicitEulerFCT.cc
 ExplicitEulerFCT.h
 FCT.cc
+FCTFilter.cc
+FCTFilter.h
 FCT.h
 GradientMatrix.cc
 GradientMatrix.h
@@ -89,6 +95,8 @@ InterpolatedFluxEntropy.cc
 InterpolatedFluxEntropy.h
 LaplacianDiffusion.cc
 LaplacianDiffusion.h
+Limiter.cc
+Limiter.h
 LinearSolver.cc
 LinearSolver.h
 LinearTransportFlux.cc
@@ -101,6 +109,8 @@ MultiRegionExactSolution.cc
 MultiRegionExactSolution.h
 NoDiffusion.cc
 NoDiffusion.h
+OldFCT.cc
+OldFCT.h
 PostProcessor.cc
 PostProcessor.h
 ProblemParameters.cc
@@ -153,6 +163,8 @@ StarState.h
 Transport.cc
 TransportEntropy.cc
 TransportEntropy.h
+TransportExplicitEulerFCT.cc
+TransportExplicitEulerFCT.h
 Transport.h
 TransportProblemParameters.cc
 TransportProblemParameters.h
@@ -162,3 +174,5 @@ Viscosity.cc
 Viscosity.h
 ViscosityMultiplier.cc
 ViscosityMultiplier.h
+ZalesakLimiter.cc
+ZalesakLimiter.h

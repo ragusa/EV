@@ -3,7 +3,7 @@
  */
 template <int dim>
 TransportExecutioner<dim>::TransportExecutioner(
-  const TransportRunParameters<dim> & parameters_,
+  const TransportRunParameters & parameters_,
   TransportProblemParameters<dim> & problem_parameters_,
   Triangulation<dim> & triangulation_,
   PostProcessor<dim> & postprocessor_)

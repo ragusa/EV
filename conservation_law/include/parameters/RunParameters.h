@@ -11,7 +11,7 @@ using namespace dealii;
 /**
  * \brief Class for run parameters.
  */
-template <int dim>
+//template <int dim>
 class RunParameters
 {
 public:

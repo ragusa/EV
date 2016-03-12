@@ -8,8 +8,7 @@ using namespace dealii;
 /**
  * \brief Constructor.
  */
-template <int dim>
-ShallowWaterRunParameters<dim>::ShallowWaterRunParameters()
+ShallowWaterRunParameters::ShallowWaterRunParameters()
 {
 }
 
@@ -18,12 +17,11 @@ ShallowWaterRunParameters<dim>::ShallowWaterRunParameters()
  *
  * \param[out] parameter_handler parameter handler for the ShallowWater class
  */
-template <int dim>
-void ShallowWaterRunParameters<dim>::declare_parameters(
+void ShallowWaterRunParameters::declare_parameters(
   ParameterHandler & parameter_handler)
 {
   // declare conservation law parameters
-  RunParameters<dim>::declare_run_parameters(parameter_handler);
+  RunParameters::declare_run_parameters(parameter_handler);
 
   // artificial viscosity
   parameter_handler.enter_subsection("artificial viscosity");
@@ -52,8 +50,7 @@ void ShallowWaterRunParameters<dim>::declare_parameters(
  *
  * \param[in] parameter_handler parameter handler for the ShallowWater class
  */
-template <int dim>
-void ShallowWaterRunParameters<dim>::get_parameters(
+void ShallowWaterRunParameters::get_parameters(
   ParameterHandler & parameter_handler)
 {
   // get conservation law parameters

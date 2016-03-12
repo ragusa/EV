@@ -11,8 +11,9 @@
  *  for the ConservationLaw class.
  *  \param prm parameter handler for conservation law parameters
  */
-template <int dim>
-void RunParameters<dim>::declare_run_parameters(ParameterHandler & prm)
+//template <int dim>
+//void RunParameters<dim>::declare_run_parameters(ParameterHandler & prm)
+void RunParameters::declare_run_parameters(ParameterHandler & prm)
 {
   // problem
   prm.enter_subsection("problem");
@@ -325,8 +326,9 @@ void RunParameters<dim>::declare_run_parameters(ParameterHandler & prm)
  *
  * \param[in] prm parameter handler for conservation law parameters
  */
-template <int dim>
-void RunParameters<dim>::get_run_parameters(ParameterHandler & prm)
+//template <int dim>
+//void RunParameters<dim>::get_run_parameters(ParameterHandler & prm)
+void RunParameters::get_run_parameters(ParameterHandler & prm)
 {
   // problem
   prm.enter_subsection("problem");

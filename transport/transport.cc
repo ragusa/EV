@@ -11,9 +11,9 @@
 #include <sstream>
 #include <cstdlib>
 #include <deal.II/base/parameter_handler.h>
-#include "include/parameters/TransportRunParameters.h"
 #include "TransportProblem.h"
-#include "Exceptions.h"
+#include "include/other/Exceptions.h"
+#include "include/parameters/TransportRunParameters.h"
 
 using namespace dealii;
 
@@ -30,12 +30,12 @@ int main(int argc, char * argv[])
 
     // read input and declare problem
     ParameterHandler parameter_handler;
-    TransportRunParameters<dim>::declare_parameters(parameter_handler);
+    TransportRunParameters::declare_parameters(parameter_handler);
     if (argc > 1)
       parameter_handler.read_input(argv[1]);
     else
       parameter_handler.read_input("../conservation_law/input/transport.prm");
-    TransportRunParameters<dim> parameters;
+    TransportRunParameters parameters;
     parameters.get_parameters(parameter_handler);
 
     // run problem

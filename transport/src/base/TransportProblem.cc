@@ -5,7 +5,7 @@
  */
 template <int dim>
 TransportProblem<dim>::TransportProblem(
-  const TransportRunParameters<dim> & run_parameters_)
+  const TransportRunParameters & run_parameters_)
   : cout1(std::cout, run_parameters_.verbosity_level >= 1),
     cout2(std::cout, run_parameters_.verbosity_level >= 2),
     run_parameters(run_parameters_),

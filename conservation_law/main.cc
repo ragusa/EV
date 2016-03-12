@@ -32,22 +32,22 @@ int main(int argc, char * argv[])
 
 #if defined(BURGERS)
     // read input and declare problem
-    BurgersRunParameters<dimension>::declare_parameters(parameter_handler);
+    BurgersRunParameters::declare_parameters(parameter_handler);
     if (argc > 1)
       parameter_handler.read_input(argv[1]);
     else
       parameter_handler.read_input("input/burgers.prm");
-    BurgersRunParameters<dimension> parameters;
+    BurgersRunParameters parameters;
     parameters.get_parameters(parameter_handler);
     Burgers<dimension> problem(parameters);
 #elif defined(EULER)
     // read input and declare problem
-    EulerRunParameters<dimension>::declare_parameters(parameter_handler);
+    EulerRunParameters::declare_parameters(parameter_handler);
     if (argc > 1)
       parameter_handler.read_input(argv[1]);
     else
       parameter_handler.read_input("input/euler.prm");
-    EulerRunParameters<dimension> parameters;
+    EulerRunParameters parameters;
     parameters.get_parameters(parameter_handler);
     Euler<dimension> problem(parameters);
 #elif defined(SHALLOWWATER)
@@ -55,22 +55,22 @@ int main(int argc, char * argv[])
     Assert(dimension <= 2, ExcImpossibleInDim(dimension));
 
     // read input and declare problem
-    ShallowWaterRunParameters<dimension>::declare_parameters(parameter_handler);
+    ShallowWaterRunParameters::declare_parameters(parameter_handler);
     if (argc > 1)
       parameter_handler.read_input(argv[1]);
     else
       parameter_handler.read_input("input/shallowwater.prm");
-    ShallowWaterRunParameters<dimension> parameters;
+    ShallowWaterRunParameters parameters;
     parameters.get_parameters(parameter_handler);
     ShallowWater<dimension> problem(parameters);
 #elif defined(TRANSPORT)
     // read input and declare problem
-    TransportRunParameters<dimension>::declare_parameters(parameter_handler);
+    TransportRunParameters::declare_parameters(parameter_handler);
     if (argc > 1)
       parameter_handler.read_input(argv[1]);
     else
       parameter_handler.read_input("input/transport.prm");
-    TransportRunParameters<dimension> parameters;
+    TransportRunParameters parameters;
     parameters.get_parameters(parameter_handler);
     Transport<dimension> problem(parameters);
 #else

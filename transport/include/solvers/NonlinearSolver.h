@@ -13,8 +13,8 @@
 #include <deal.II/lac/vector.h>
 
 #include "include/other/Exceptions.h"
-#include "LinearSolver.h"
-#include "RunParameters.h"
+#include "include/solvers/LinearSolver.h"
+#include "include/parameters/RunParameters.h"
 
 using namespace dealii;
 
@@ -25,7 +25,7 @@ template <int dim>
 class NonlinearSolver
 {
 public:
-  NonlinearSolver(const RunParameters<dim> & parameters,
+  NonlinearSolver(const RunParameters & parameters,
                   const LinearSolver<dim> & linear_solver,
                   const ConstraintMatrix & constraints);
 

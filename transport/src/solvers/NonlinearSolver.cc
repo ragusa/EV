@@ -6,7 +6,7 @@
  * \param[in] constraints_    constraints for linear system
  */
 template <int dim>
-NonlinearSolver<dim>::NonlinearSolver(const RunParameters<dim> & parameters_,
+NonlinearSolver<dim>::NonlinearSolver(const RunParameters & parameters_,
                                       const LinearSolver<dim> & linear_solver_,
                                       const ConstraintMatrix & constraints_)
   : relaxation_factor(parameters_.relaxation_factor),
