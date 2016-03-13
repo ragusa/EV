@@ -16,23 +16,19 @@ class DoFBounds
 public:
   DoFBounds(const unsigned int & n_dofs);
 
-  double get_min(const unsigned int & i) const;
+  void widen(const DoFBounds & other_dof_bounds);
 
-  double get_max(const unsigned int & i) const;
-
-  void widen(const DoFBounds & dof_bounds);
-
-  void shrink(const DoFBounds & dof_bounds);
+  void shrink(const DoFBounds & other_dof_bounds);
 
   void remove_bounds(const std::vector<double> & dof_indices);
 
-protected:
   /** \brief lower bound vector */
-  Vector<double> lower_bound;
+  Vector<double> lower;
 
   /** \brief upper bound vector */
-  Vector<double> upper_bound;
+  Vector<double> upper;
 
+protected:
   /** \brief number of degrees of freedom */
   const unsigned int n_dofs;
 };

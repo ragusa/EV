@@ -46,7 +46,7 @@
 #include "include/diffusion/GraphTheoreticDiffusion.h"
 #include "include/diffusion/LaplacianDiffusion.h"
 #include "include/entropy/Entropy.h"
-#include "include/fct/FCT.h"
+#include "include/fct/ExplicitEulerFCT.h"
 #include "include/fe/GradientMatrix.h"
 #include "include/other/Exceptions.h"
 #include "include/parameters/RunParameters.h"
@@ -171,7 +171,7 @@ protected:
   void perform_fct_ssprk_step(const double & dt,
                               const double & old_stage_dt,
                               const unsigned int & n,
-                              const std::shared_ptr<FCT<dim>> & fct,
+                              const std::shared_ptr<ExplicitEulerFCT<dim>> & fct,
                               SSPRKTimeIntegrator<dim> & ssprk);
 
   void get_dirichlet_dof_indices(
@@ -259,7 +259,7 @@ protected:
 
   virtual std::shared_ptr<StarState<dim>> create_star_state() const;
 
-  virtual std::shared_ptr<FCT<dim>> create_fct() const;
+  virtual std::shared_ptr<ExplicitEulerFCT<dim>> create_fct() const = 0;
 
   /**
    * \brief Returns the names of each component.
@@ -383,6 +383,7 @@ protected:
   double new_time;
   /** \brief old time */
   double old_time;
+
   /** \brief system right-hand side */
   LocalVector system_rhs;
   /** \brief steady-state flux vector */
@@ -391,11 +392,16 @@ protected:
   LocalVector ss_reaction;
   /** \brief steady-state right-hand side vector */
   LocalVector ss_rhs;
+  /** \brief temporary vector */
+  LocalVector tmp_vector;
 
   /** \brief constrained sparsity pattern */
   SparsityPattern constrained_sparsity_pattern;
   /** \brief unconstrained sparsity pattern */
   SparsityPattern unconstrained_sparsity_pattern;
+
+  /** \brief system matrix */
+  LocalMatrix system_matrix;
   /** \brief consistent mass matrix */
   LocalMatrix consistent_mass_matrix;
   /** \brief lumped mass matrix */

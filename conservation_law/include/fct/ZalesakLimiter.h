@@ -12,14 +12,14 @@ using namespace dealii;
 /**
  * \brief Class for the Zalesak FCT limiter.
  */
-class ZalesakLimiter : public Limiter<dim>
+class ZalesakLimiter : public Limiter
 {
 public:
   ZalesakLimiter(const unsigned int & n_dofs);
 
-  void compute_limiter(const SparseMatrix<double> & antidiffusion_matrix,
-    const DoFBounds & antidiffusion_bounds,
-    SparseMatrix<double> & limiter_matrix) const override;
+  void compute_limiter_matrix(const SparseMatrix<double> & antidiffusion_matrix,
+                              const DoFBounds & antidiffusion_bounds,
+                              SparseMatrix<double> & limiter_matrix) override;
 
 protected:
   /** \brief limiting coefficient for negative antidiffusive fluxes for a

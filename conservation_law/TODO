@@ -25,3 +25,4 @@ The following is a list of things to do:
     where needed; while executables may compile, classes may in future
     be used in other executables where dependencies are not resolved by
     previous includes.
+11. Untemplate classes that do need the <dim> parameter.

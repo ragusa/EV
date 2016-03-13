@@ -8,10 +8,7 @@
  *
  * \param[in] n_dofs_  number of degrees of freedom
  */
-Limiter::Limiter(const unsigned int & n_dofs_) : n_dofs(n_dofs_)
-{
-}
-
+Limiter::Limiter(const unsigned int & n_dofs_) : n_dofs(n_dofs_) {}
 /**
  * \brief Applies limiting coefficients to an antidiffusion matrix.
  *
@@ -24,12 +21,13 @@ Limiter::Limiter(const unsigned int & n_dofs_) : n_dofs(n_dofs_)
  * \pre This function assumes that \f$\mathbf{L}\f$ and \f$\mathbf{P}\f$ have
  *      the same sparsity pattern.
  *
- * \param[in] limiter_matrix  matrix of limiting coeffients \f$\mathbf{L}\f$ 
+ * \param[in] limiter_matrix  matrix of limiting coeffients \f$\mathbf{L}\f$
  * \param[inout] antidiffusion_matrix  matrix of antidiffusion fluxes
- *               \f$\mathbf{P}\f$ 
+ *               \f$\mathbf{P}\f$
  */
-void Limiter::limit_antidiffusion(const SparseMatrix<double> & limiter_matrix,
-    SparseMatrix<double> & antidiffusion_matrix) const
+void Limiter::apply_limiter_matrix(
+  const SparseMatrix<double> & limiter_matrix,
+  SparseMatrix<double> & antidiffusion_matrix) const
 {
   // loop over rows
   for (unsigned int i = 0; i < n_dofs; ++i)

@@ -8,10 +8,7 @@ using namespace dealii;
 /**
  * \brief Constructor.
  */
-ShallowWaterRunParameters::ShallowWaterRunParameters()
-{
-}
-
+ShallowWaterRunParameters::ShallowWaterRunParameters() {}
 /**
  * \brief Defines input parameters.
  *

@@ -3,26 +3,26 @@
  */
 using namespace dealii;
 
-/** \fn EulerRunParameters<dim>::EulerRunParameters()
+/** \fn EulerRunParameters::EulerRunParameters()
  *  \brief Constructor for the EulerRunParameters class.
  */
 template <int dim>
-EulerRunParameters<dim>::EulerRunParameters()
+EulerRunParameters::EulerRunParameters()
 {
 }
 
 /**
- * \fn    EulerRunParameters<dim>::declare_euler_parameters(ParameterHandler
+ * \fn    EulerRunParameters::declare_euler_parameters(ParameterHandler
  * &parameter_handler)
  * \brief defines input parameters
  * \param parameter_handler parameter handler for the Euler class
  */
 template <int dim>
-void EulerRunParameters<dim>::declare_euler_parameters(
+void EulerRunParameters::declare_euler_parameters(
   ParameterHandler & parameter_handler)
 {
   // declare conservation law parameters
-  RunParameters<dim>::declare_run_parameters(parameter_handler);
+  RunParameters::declare_run_parameters(parameter_handler);
 
   // problem
   parameter_handler.enter_subsection("problem");
@@ -47,13 +47,13 @@ void EulerRunParameters<dim>::declare_euler_parameters(
 }
 
 /**
- * \fn    EulerRunParameters<dim>::get_euler_parameters(ParameterHandler
+ * \fn    EulerRunParameters::get_euler_parameters(ParameterHandler
  * &parameter_handler)
  * \brief get input parameters from parameter handler
  * \param parameter_handler parameter handler for the Euler class
  */
 template <int dim>
-void EulerRunParameters<dim>::get_euler_parameters(
+void EulerRunParameters::get_euler_parameters(
   ParameterHandler & parameter_handler)
 
 {

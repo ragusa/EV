@@ -11,8 +11,8 @@
 //#include "include/base/Euler.h"
 #include "include/base/ShallowWater.h"
 #include "include/base/Transport.h"
-#include "include/parameters/BurgersRunParameters.h"
-#include "include/parameters/EulerRunParameters.h"
+//#include "include/parameters/BurgersRunParameters.h"
+//#include "include/parameters/EulerRunParameters.h"
 #include "include/parameters/ShallowWaterRunParameters.h"
 #include "include/parameters/TransportRunParameters.h"
 

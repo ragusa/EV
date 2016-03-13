@@ -42,7 +42,7 @@ public:
   /** \brief Alias for cell iterator map to double */
   using CellMap = typename Viscosity<dim>::CellMap;
 
-  //EntropyViscosity(const RunParameters<dim> & parameters,
+  // EntropyViscosity(const RunParameters & parameters,
   EntropyViscosity(const RunParameters & parameters,
                    const std::shared_ptr<Entropy<dim>> & entropy,
                    const FESystem<dim> & fe,

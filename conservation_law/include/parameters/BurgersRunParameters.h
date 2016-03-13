@@ -17,7 +17,7 @@ using namespace dealii;
  *  \brief Class for parameters related to the Burgers equation.
  */
 template <int dim>
-class BurgersRunParameters : public RunParameters<dim>
+class BurgersRunParameters : public RunParameters
 {
 public:
   BurgersRunParameters();

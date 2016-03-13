@@ -52,7 +52,6 @@ void LowOrderViscosity<dim>::update(const Vector<double> & new_solution,
 
     // compute viscosity value
     this->values[cell] =
-      std::abs(c_max * cell->diameter() * (*max_flux_speed)[cell]) *
-      multiplier;
+      std::abs(c_max * cell->diameter() * (*max_flux_speed)[cell]) * multiplier;
   }
 }

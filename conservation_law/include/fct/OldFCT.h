@@ -1,10 +1,10 @@
 /**
- * \file FCT.h
- * \brief Provides the header for the FCT class.
+ * \file OldFCT.h
+ * \brief Provides the header for the OldFCT class.
  */
 
-#ifndef FCT_h
-#define FCT_h
+#ifndef OldFCT_h
+#define OldFCT_h
 
 #include <deal.II/fe/fe_q.h>
 #include <deal.II/grid/tria.h>
@@ -59,34 +59,33 @@ using namespace dealii;
  * \f]
  */
 template <int dim>
-class FCT
+class OldFCT
 {
 public:
-  using FCTBoundsType = typename RunParameters<dim>::FCTBoundsType;
+  using FCTBoundsType = typename RunParameters::FCTBoundsType;
 
-  using AntidiffusionOption = typename RunParameters<dim>::AntidiffusionOption;
+  using AntidiffusionOption = typename RunParameters::AntidiffusionOption;
 
-  using FCTSynchronizationType =
-    typename RunParameters<dim>::FCTSynchronizationType;
+  using FCTSynchronizationType = typename RunParameters::FCTSynchronizationType;
 
-  using FCTLimitationType = typename RunParameters<dim>::FCTLimitationType;
+  using FCTLimitationType = typename RunParameters::FCTLimitationType;
 
   /** \brief Alias for cell iterator */
   using Cell = typename DoFHandler<dim>::active_cell_iterator;
 
-  FCT(const RunParameters<dim> & parameters,
-      const DoFHandler<dim> & dof_handler,
-      const Triangulation<dim> & triangulation,
-      const SparseMatrix<double> & lumped_mass_matrix,
-      const SparseMatrix<double> & consistent_mass_matrix,
-      const std::shared_ptr<StarState<dim>> & star_state,
-      const LinearSolver<dim> & linear_solver,
-      const SparsityPattern & sparsity_pattern,
-      const std::vector<unsigned int> & dirichlet_nodes,
-      const unsigned int & n_components,
-      const unsigned int & dofs_per_cell,
-      const std::vector<std::string> & component_names,
-      const bool & use_star_states_in_fct_bounds);
+  OldFCT(const RunParameters & parameters,
+         const DoFHandler<dim> & dof_handler,
+         const Triangulation<dim> & triangulation,
+         const SparseMatrix<double> & lumped_mass_matrix,
+         const SparseMatrix<double> & consistent_mass_matrix,
+         const std::shared_ptr<StarState<dim>> & star_state,
+         const LinearSolver<dim> & linear_solver,
+         const SparsityPattern & sparsity_pattern,
+         const std::vector<unsigned int> & dirichlet_nodes,
+         const unsigned int & n_components,
+         const unsigned int & dofs_per_cell,
+         const std::vector<std::string> & component_names,
+         const bool & use_star_states_in_fct_bounds);
 
   void reinitialize(const SparsityPattern & sparsity_pattern);
 
@@ -264,5 +263,5 @@ protected:
   unsigned int n_nodes;
 };
 
-#include "src/fct/FCT.cc"
+#include "src/fct/OldFCT.cc"
 #endif

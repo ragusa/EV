@@ -11,7 +11,7 @@
  * \param[in] is_linear_  flag that conservation law is linear
  */
 template <int dim>
-ConservationLaw<dim>::ConservationLaw(const RunParameters<dim> & params,
+ConservationLaw<dim>::ConservationLaw(const RunParameters & params,
                                       const unsigned int & n_components_,
                                       const bool & is_linear_)
   :
@@ -410,6 +410,8 @@ void ConservationLaw<dim>::setup_system()
     locally_relevant_dofs);
 
   // reinitialize matrices with sparsity pattern
+  system_matrix.reinit(
+    locally_owned_dofs, locally_owned_dofs, dsp_unconstrained, mpi_communicator);
   consistent_mass_matrix.reinit(
     locally_owned_dofs, locally_owned_dofs, dsp_unconstrained, mpi_communicator);
   lumped_mass_matrix.reinit(
@@ -422,6 +424,7 @@ void ConservationLaw<dim>::setup_system()
     locally_owned_dofs, locally_owned_dofs, dsp_unconstrained, mpi_communicator);
 #else
   // reinitialize matrices with sparsity pattern
+  system_matrix.reinit(unconstrained_sparsity_pattern);
   consistent_mass_matrix.reinit(unconstrained_sparsity_pattern);
   lumped_mass_matrix.reinit(unconstrained_sparsity_pattern);
   low_order_diffusion_matrix.reinit(unconstrained_sparsity_pattern);
@@ -448,6 +451,7 @@ void ConservationLaw<dim>::setup_system()
   ss_flux.reinit(locally_owned_dofs, mpi_communicator);
   ss_reaction.reinit(locally_owned_dofs, mpi_communicator);
   ss_rhs.reinit(locally_owned_dofs, mpi_communicator);
+  tmp_vector.reinit(locally_owned_dofs, mpi_communicator);
   estimated_error_per_cell.reinit(triangulation.n_active_cells());
 #else
   old_solution.reinit(n_dofs);
@@ -459,6 +463,7 @@ void ConservationLaw<dim>::setup_system()
   ss_flux.reinit(n_dofs);
   ss_reaction.reinit(n_dofs);
   ss_rhs.reinit(n_dofs);
+  tmp_vector.reinit(n_dofs);
   estimated_error_per_cell.reinit(triangulation.n_active_cells());
 #endif
 
@@ -804,7 +809,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
                                  unconstrained_sparsity_pattern);
 
   // create FCT if applicable
-  std::shared_ptr<FCT<dim>> fct;
+  std::shared_ptr<ExplicitEulerFCT<dim>> fct;
   if (parameters.scheme == Scheme::fct)
     fct = create_fct();
 
@@ -972,7 +977,10 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
 
       // output FCT bounds if specified
       if (fct && parameters.output_fct_bounds)
-        fct->output_bounds_transient(postprocessor, new_time);
+      {
+        throw ExcNotImplemented();
+        // fct->output_bounds_transient(postprocessor, new_time);
+      }
     }
 
     // check that there are no NaNs in solution
@@ -1018,7 +1026,8 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
   // output limiter matrix if specified
   if (parameters.scheme == Scheme::fct)
     if (parameters.output_limiter_matrix)
-      fct->output_limiter_matrix();
+      throw ExcNotImplemented();
+  // fct->output_limiter_matrix();
 }
 
 /** \brief Computes time step size using the CFL condition
@@ -1167,7 +1176,7 @@ void ConservationLaw<dim>::perform_fct_ssprk_step(
   const double & dt,
   const double & old_stage_dt,
   const unsigned int & n,
-  const std::shared_ptr<FCT<dim>> & fct,
+  const std::shared_ptr<ExplicitEulerFCT<dim>> & fct,
   SSPRKTimeIntegrator<dim> & ssprk)
 {
   // update star states
@@ -1194,14 +1203,33 @@ void ConservationLaw<dim>::perform_fct_ssprk_step(
   ssprk.get_intermediate_solution(new_solution);
 
   // perform FCT
-  fct->solve_fct_system(new_solution,
-                        old_stage_solution,
-                        ss_flux,
-                        ss_reaction,
-                        ss_rhs,
-                        dt,
-                        low_order_diffusion_matrix,
-                        high_order_diffusion_matrix);
+  // form rhs: system_rhs = M*u_old + dt*(ss_rhs - ss_flux - D*u_old + f)
+  system_rhs = 0;
+  lumped_mass_matrix.vmult(tmp_vector, old_solution);
+  system_rhs.add(1.0, tmp_vector);
+  system_rhs.add(dt, ss_rhs);
+  system_rhs.add(-dt, ss_flux);
+  low_order_diffusion_matrix.vmult(tmp_vector, old_solution);
+  system_rhs.add(-dt, tmp_vector);
+
+  // compute antidiffusion vector
+  Vector<double> & antidiffusion_vector = tmp_vector;
+  fct->compute_antidiffusion_vector(new_solution,
+                                    old_solution,
+                                    dt,
+                                    ss_flux,
+                                    ss_reaction,
+                                    low_order_diffusion_matrix,
+                                    high_order_diffusion_matrix,
+                                    ss_rhs,
+                                    antidiffusion_vector);
+
+  // add antidiffusion vector
+  system_rhs.add(dt, antidiffusion_vector);
+
+  // solve the linear system M*u_new = system_rhs
+  system_matrix.copy_from(lumped_mass_matrix);
+  linear_solver->solve_with_dirichlet(system_matrix, new_solution, system_rhs);
 
   // set stage solution to be FCT solution for this stage
   ssprk.set_intermediate_solution(new_solution);
@@ -1307,33 +1335,4 @@ std::shared_ptr<StarState<dim>> ConservationLaw<dim>::create_star_state() const
 
   // return null pointer to avoid compiler warning about not returning anything
   return nullptr;
-}
-
-/**
- * \brief Creates an FCT object and returns the pointer.
- *
- * \return FCT object pointer
- */
-template <int dim>
-std::shared_ptr<FCT<dim>> ConservationLaw<dim>::create_fct() const
-{
-  // determine if star states are to be used in FCT bounds
-  const bool use_star_states_in_fct_bounds =
-    are_star_states && parameters.use_star_states_in_fct_bounds;
-
-  auto fct = std::make_shared<FCT<dim>>(parameters,
-                                        dof_handler,
-                                        triangulation,
-                                        lumped_mass_matrix,
-                                        consistent_mass_matrix,
-                                        star_state,
-                                        *linear_solver,
-                                        unconstrained_sparsity_pattern,
-                                        dirichlet_dof_indices,
-                                        n_components,
-                                        dofs_per_cell,
-                                        component_names,
-                                        use_star_states_in_fct_bounds);
-
-  return fct;
 }

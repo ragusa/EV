@@ -9,7 +9,7 @@
  * \param[in] params Transport equation parameters
  */
 template <int dim>
-Transport<dim>::Transport(const TransportRunParameters<dim> & params)
+Transport<dim>::Transport(const TransportRunParameters & params)
   : ConservationLaw<dim>(params, 1, true),
     transport_parameters(params),
     problem_parameters(params.problem_name, false),
@@ -454,4 +454,28 @@ std::shared_ptr<MaxWaveSpeed<dim>> Transport<dim>::create_max_wave_speed() const
   auto max_wave_speed = std::make_shared<ConstantMaxWaveSpeed<dim>>(
     problem_parameters.transport_speed);
   return max_wave_speed;
+}
+
+/**
+ * \brief Creates an FCT object and returns the pointer.
+ *
+ * \return pointer to new FCT object
+ */
+template <int dim>
+std::shared_ptr<ExplicitEulerFCT<dim>> Transport<dim>::create_fct() const
+{
+  // determine if star states are to be used in FCT bounds
+  const bool use_star_states_in_fct_bounds =
+    this->are_star_states && this->parameters.use_star_states_in_fct_bounds;
+  Assert(!use_star_states_in_fct_bounds, ExcNotImplemented());
+
+  // create FCT object
+  auto fct =
+    std::make_shared<TransportExplicitEulerFCT<dim>>(transport_parameters,
+                                                     problem_parameters,
+                                                     this->dof_handler,
+                                                     this->consistent_mass_matrix,
+                                                     this->lumped_mass_matrix);
+
+  return fct;
 }

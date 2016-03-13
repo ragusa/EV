@@ -25,7 +25,7 @@
  */
 template <int dim>
 ShallowWaterFCT<dim>::ShallowWaterFCT(
-  const RunParameters<dim> & parameters_,
+  const RunParameters & parameters_,
   const DoFHandler<dim> & dof_handler_,
   const Triangulation<dim> & triangulation_,
   const SparseMatrix<double> & lumped_mass_matrix_,
@@ -39,19 +39,19 @@ ShallowWaterFCT<dim>::ShallowWaterFCT(
   const std::vector<std::string> & component_names_,
   const bool & use_star_states_in_fct_bounds_,
   const double & gravity_)
-  : FCT<dim>(parameters_,
-             dof_handler_,
-             triangulation_,
-             lumped_mass_matrix_,
-             consistent_mass_matrix_,
-             star_state_,
-             linear_solver_,
-             sparsity_pattern_,
-             dirichlet_nodes_,
-             n_components_,
-             dofs_per_cell_,
-             component_names_,
-             use_star_states_in_fct_bounds_),
+  : OldFCT<dim>(parameters_,
+                dof_handler_,
+                triangulation_,
+                lumped_mass_matrix_,
+                consistent_mass_matrix_,
+                star_state_,
+                linear_solver_,
+                sparsity_pattern_,
+                dirichlet_nodes_,
+                n_components_,
+                dofs_per_cell_,
+                component_names_,
+                use_star_states_in_fct_bounds_),
     gravity(gravity_)
 {
 }

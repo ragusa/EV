@@ -21,7 +21,7 @@
  */
 template <int dim>
 ShallowWaterEntropy<dim>::ShallowWaterEntropy(
-  const ShallowWaterRunParameters<dim> & parameters_,
+  const ShallowWaterRunParameters & parameters_,
   const FEValuesExtractors::Scalar & height_extractor_,
   const FEValuesExtractors::Vector & momentum_extractor_,
   const double & gravity_,

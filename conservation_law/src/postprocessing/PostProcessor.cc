@@ -11,7 +11,7 @@
  */
 template <int dim>
 PostProcessor<dim>::PostProcessor(
-  //const RunParameters<dim> & parameters_,
+  // const RunParameters & parameters_,
   const RunParameters & parameters_,
   const unsigned int & n_components_,
   const double & end_time_,

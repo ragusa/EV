@@ -1,0 +1,22 @@
+#!/bin/bash
+#
+# Globally makes text substitution for all *.cc and *.h files in directory
+# and its subdirectories
+#
+# Usage: global_substitution <OldText> <NewText>
+#
+
+if [ $# -ne 2 ]; then
+  echo "Usage: global_substitution <OldText> <NewText>"
+else
+  # create a list of *.cc and *.h files
+  cc_file_list=`find . -name '*.cc' -print`
+  h_file_list=`find . -name '*.h' -print`
+  file_list="$cc_file_list $h_file_list"
+
+  # loop over *.cc and *.h files
+  for file in $file_list; do
+    # call substitution script
+    substitute_text $file $1 $2
+  done
+fi

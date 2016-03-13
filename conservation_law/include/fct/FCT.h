@@ -5,8 +5,18 @@
 #ifndef FCT_h
 #define FCT_h
 
-#include "include/fct/FCTFilter.h"
-#include "include/fct/Limiter.h"
+#include <sstream>
+#include <string>
+
+#include <deal.II/dofs/dof_handler.h>
+#include <deal.II/dofs/dof_tools.h>
+#include <deal.II/lac/dynamic_sparsity_pattern.h>
+#include <deal.II/lac/sparsity_pattern.h>
+
+#include "include/fct/OnesLimiter.h"
+#include "include/fct/ZalesakLimiter.h"
+#include "include/fct/ZeroesLimiter.h"
+#include "include/parameters/RunParameters.h"
 
 using namespace dealii;
 
@@ -50,29 +60,48 @@ using namespace dealii;
  * \f]
  *
  * \note This class and its children must be instantiated in each refinement
- *       cycle because there is currenly no ability to reinitialize to a
+ *       cycle because there is currently no ability to reinitialize to a
  *       new system size.
  */
 template <int dim>
 class FCT
 {
 public:
-  FCT();
+  /** \brief alias for limiter option */
+  using LimiterOption = typename RunParameters::LimiterOption;
+
+  FCT(const RunParameters & run_parameters, const DoFHandler<dim> & dof_handler);
 
 protected:
-  virtual create_filters(const std::string & filter_sequence_string) = 0;
+  void compute_row_sum_vector(const SparseMatrix<double> & matrix,
+                              Vector<double> & row_sum_vector) const;
 
-  /** \brief vector of FCT filters */
-  std::vector<FCTFilter<dim>> filters;
+  std::vector<std::string> create_filter_string_list(
+    std::string filter_sequence_string);
+
+  /** \brief limiter */
+  std::shared_ptr<Limiter> limiter;
+
+  /** \brief sparsity pattern */
+  SparsityPattern sparsity_pattern;
+
+  /** \brief limiter matrix \f$\mathbf{L}\f$ */
+  SparseMatrix<double> limiter_matrix;
+
+  /** \brief antidiffusion matrix \f$\mathbf{P}\f$ */
+  SparseMatrix<double> antidiffusion_matrix;
+
+  /** \brief degree of freedom handler */
+  const DoFHandler<dim> * const dof_handler;
+
+  /** \brief number of degrees of freedom */
+  const unsigned int n_dofs;
+
+  /** \brief comma-delimited string of filter identifier strings */
+  std::string filter_sequence_string;
 
   /** \brief number of FCT filters */
   unsigned int n_filters;
-
-  /** \brief limiter */
-  std::shared_ptr<Limiter<dim>> limiter;
-
-  /** \brief limiter matrix */
-  SparseMatrix<double> limiter_matrix;
 };
 
 #include "src/fct/FCT.cc"

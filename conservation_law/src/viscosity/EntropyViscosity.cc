@@ -14,7 +14,7 @@
  */
 template <int dim>
 EntropyViscosity<dim>::EntropyViscosity(
-  //const RunParameters<dim> & parameters_,
+  // const RunParameters & parameters_,
   const RunParameters & parameters_,
   const std::shared_ptr<Entropy<dim>> & entropy_,
   const FESystem<dim> & fe_,

@@ -9,7 +9,7 @@
  * \param[in] params shallow water equation parameters
  */
 template <int dim>
-ShallowWater<dim>::ShallowWater(const ShallowWaterRunParameters<dim> & params)
+ShallowWater<dim>::ShallowWater(const ShallowWaterRunParameters & params)
   : ConservationLaw<dim>(params, dim + 1, false),
     sw_parameters(params),
     problem_parameters(params.problem_name, false),
@@ -577,21 +577,24 @@ std::shared_ptr<FCT<dim>> ShallowWater<dim>::create_fct() const
   const bool use_star_states_in_fct_bounds =
     this->are_star_states && this->parameters.use_star_states_in_fct_bounds;
 
-  auto fct =
-    std::make_shared<ShallowWaterFCT<dim>>(this->parameters,
-                                           this->dof_handler,
-                                           this->triangulation,
-                                           this->lumped_mass_matrix,
-                                           this->consistent_mass_matrix,
-                                           this->star_state,
-                                           *(this->linear_solver),
-                                           this->unconstrained_sparsity_pattern,
-                                           this->dirichlet_dof_indices,
-                                           this->n_components,
-                                           this->dofs_per_cell,
-                                           this->component_names,
-                                           use_star_states_in_fct_bounds,
-                                           problem_parameters.gravity);
+  /*
+    auto fct =
+      std::make_shared<ShallowWaterFCT<dim>>(this->parameters,
+                                             this->dof_handler,
+                                             this->triangulation,
+                                             this->lumped_mass_matrix,
+                                             this->consistent_mass_matrix,
+                                             this->star_state,
+                                             *(this->linear_solver),
+                                             this->unconstrained_sparsity_pattern,
+                                             this->dirichlet_dof_indices,
+                                             this->n_components,
+                                             this->dofs_per_cell,
+                                             this->component_names,
+                                             use_star_states_in_fct_bounds,
+                                             problem_parameters.gravity);
+  */
+  std::shared_ptr<FCT<dim>> fct = nullptr;
 
   return fct;
 }

@@ -20,7 +20,7 @@ class SSPRKTimeIntegrator
 {
 public:
   /** \brief Alias for SSPRK time discretization */
-  //using SSPRKDiscretization = typename RunParameters<dim>::SSPRKDiscretization;
+  // using SSPRKDiscretization = typename RunParameters::SSPRKDiscretization;
   using SSPRKDiscretization = typename RunParameters::SSPRKDiscretization;
 
   SSPRKTimeIntegrator(const SSPRKDiscretization & time_discretization,

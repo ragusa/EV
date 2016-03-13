@@ -23,19 +23,19 @@
  *            to be used in FCT bounds
  */
 template <int dim>
-FCT<dim>::FCT(const RunParameters<dim> & parameters_,
-              const DoFHandler<dim> & dof_handler_,
-              const Triangulation<dim> & triangulation_,
-              const SparseMatrix<double> & lumped_mass_matrix_,
-              const SparseMatrix<double> & consistent_mass_matrix_,
-              const std::shared_ptr<StarState<dim>> & star_state_,
-              const LinearSolver<dim> & linear_solver_,
-              const SparsityPattern & sparsity_pattern_,
-              const std::vector<unsigned int> & dirichlet_nodes_,
-              const unsigned int & n_components_,
-              const unsigned int & dofs_per_cell_,
-              const std::vector<std::string> & component_names_,
-              const bool & use_star_states_in_fct_bounds_)
+OldFCT<dim>::FCT(const RunParameters & parameters_,
+                 const DoFHandler<dim> & dof_handler_,
+                 const Triangulation<dim> & triangulation_,
+                 const SparseMatrix<double> & lumped_mass_matrix_,
+                 const SparseMatrix<double> & consistent_mass_matrix_,
+                 const std::shared_ptr<StarState<dim>> & star_state_,
+                 const LinearSolver<dim> & linear_solver_,
+                 const SparsityPattern & sparsity_pattern_,
+                 const std::vector<unsigned int> & dirichlet_nodes_,
+                 const unsigned int & n_components_,
+                 const unsigned int & dofs_per_cell_,
+                 const std::vector<std::string> & component_names_,
+                 const bool & use_star_states_in_fct_bounds_)
   : fe_scalar(1),
     dof_handler(&dof_handler_),
     dof_handler_scalar(triangulation_),
@@ -81,7 +81,7 @@ FCT<dim>::FCT(const RunParameters<dim> & parameters_,
  * \param[in] sparsity_pattern  sparsity pattern
  */
 template <int dim>
-void FCT<dim>::reinitialize(const SparsityPattern & sparsity_pattern)
+void OldFCT<dim>::reinitialize(const SparsityPattern & sparsity_pattern)
 {
   // distribute degrees of freedom in scalar degree of freedom handler
   dof_handler_scalar.clear();
@@ -120,7 +120,7 @@ void FCT<dim>::reinitialize(const SparsityPattern & sparsity_pattern)
  *        fluxes.
  */
 template <int dim>
-void FCT<dim>::filter_antidiffusive_fluxes()
+void OldFCT<dim>::filter_antidiffusive_fluxes()
 {
   // separate filter sequence string into vector of filter strings
   std::string filter_sequence = filter_sequence_string;
@@ -128,7 +128,8 @@ void FCT<dim>::filter_antidiffusive_fluxes()
   const std::string delimiter = ",";
   unsigned int pos = 0;
   std::string token;
-  while ((pos = filter_sequence.find(delimiter)) != std::string::npos) {
+  while ((pos = filter_sequence.find(delimiter)) != std::string::npos)
+  {
     token = filter_sequence.substr(0, pos);
     filter_strings.push_back(token);
     filter_sequence.erase(0, pos + delimiter.length());
@@ -168,7 +169,7 @@ void FCT<dim>::filter_antidiffusive_fluxes()
  * \param[in] old_solution old solution
  */
 template <int dim>
-void FCT<dim>::solve_fct_system(
+void OldFCT<dim>::solve_fct_system(
   Vector<double> & new_solution,
   const Vector<double> & old_solution,
   const Vector<double> & ss_flux,
@@ -291,9 +292,10 @@ void FCT<dim>::solve_fct_system(
  *             \f$U_{max,i}\equiv\max\limits_{j\in \mathcal{I}(S_i)} U_j\f$
  */
 template <int dim>
-void FCT<dim>::compute_min_and_max_of_solution(const Vector<double> & solution,
-                                               Vector<double> & min_values,
-                                               Vector<double> & max_values) const
+void OldFCT<dim>::compute_min_and_max_of_solution(
+  const Vector<double> & solution,
+  Vector<double> & min_values,
+  Vector<double> & max_values) const
 {
   // initialize solution min and max
   for (unsigned int i = 0; i < n_dofs; ++i)
@@ -363,10 +365,10 @@ void FCT<dim>::compute_min_and_max_of_solution(const Vector<double> & solution,
  * \param[in] dt  time step size \f$\Delta t\f$
  */
 template <int dim>
-void FCT<dim>::compute_solution_bounds(const Vector<double> & old_solution,
-                                       const Vector<double> & ss_reaction,
-                                       const Vector<double> & ss_rhs,
-                                       const double & dt)
+void OldFCT<dim>::compute_solution_bounds(const Vector<double> & old_solution,
+                                          const Vector<double> & ss_reaction,
+                                          const Vector<double> & ss_rhs,
+                                          const double & dt)
 {
   // compute minimum and maximum values of solution
   compute_min_and_max_of_solution(old_solution, solution_min, solution_max);
@@ -458,7 +460,7 @@ void FCT<dim>::compute_solution_bounds(const Vector<double> & old_solution,
  * \param[in] dt  time step size \f$\Delta t\f$
  */
 template <int dim>
-void FCT<dim>::compute_solution_bounds_characteristic(
+void OldFCT<dim>::compute_solution_bounds_characteristic(
   const Vector<double> & old_solution,
   const Vector<double> &,
   const Vector<double> &,
@@ -478,7 +480,7 @@ void FCT<dim>::compute_solution_bounds_characteristic(
  * \param [in] dt current time step size
  */
 template <int dim>
-void FCT<dim>::compute_flux_corrections(
+void OldFCT<dim>::compute_flux_corrections(
   const Vector<double> & high_order_solution,
   const Vector<double> & old_solution,
   const double & dt,
@@ -535,7 +537,7 @@ void FCT<dim>::compute_flux_corrections(
  * \param[in] dt  time step size \f$\Delta t\f$
  */
 template <int dim>
-void FCT<dim>::compute_antidiffusion_bounds(
+void OldFCT<dim>::compute_antidiffusion_bounds(
   const Vector<double> & old_solution,
   const Vector<double> & ss_flux,
   const Vector<double> & ss_rhs,
@@ -569,7 +571,7 @@ void FCT<dim>::compute_antidiffusion_bounds(
  * \param[in] dt  time step size \f$\Delta t\f$
  */
 template <int dim>
-void FCT<dim>::compute_antidiffusion_bounds_characteristic(
+void OldFCT<dim>::compute_antidiffusion_bounds_characteristic(
   const Vector<double> & old_solution, const double & dt)
 {
   // compute Q-
@@ -601,7 +603,7 @@ void FCT<dim>::compute_antidiffusion_bounds_characteristic(
  *   and stored in \link flux_correction_matrix \endlink.
  */
 template <int dim>
-void FCT<dim>::compute_limiting_coefficients_zalesak()
+void OldFCT<dim>::compute_limiting_coefficients_zalesak()
 {
   // reset limiter matrix
   limiter_matrix = 0;
@@ -699,7 +701,7 @@ void FCT<dim>::compute_limiting_coefficients_zalesak()
  *   and stored in \link limiter_matrix \endlink
  */
 template <int dim>
-void FCT<dim>::compute_limited_flux_correction_vector()
+void OldFCT<dim>::compute_limited_flux_correction_vector()
 {
   // reset vector
   flux_correction_vector = 0;
@@ -735,7 +737,7 @@ void FCT<dim>::compute_limited_flux_correction_vector()
  * \endlink.
  */
 template <int dim>
-void FCT<dim>::compute_full_flux_correction_vector()
+void OldFCT<dim>::compute_full_flux_correction_vector()
 {
   // reset vector
   flux_correction_vector = 0;
@@ -764,11 +766,11 @@ void FCT<dim>::compute_full_flux_correction_vector()
  *  \param [out] n_col number of nonzero entries of row i
  */
 template <int dim>
-void FCT<dim>::get_matrix_row(const SparseMatrix<double> & matrix,
-                              const unsigned int & i,
-                              std::vector<double> & row_values,
-                              std::vector<unsigned int> & row_indices,
-                              unsigned int & n_col)
+void OldFCT<dim>::get_matrix_row(const SparseMatrix<double> & matrix,
+                                 const unsigned int & i,
+                                 std::vector<double> & row_values,
+                                 std::vector<unsigned int> & row_indices,
+                                 unsigned int & n_col)
 {
   // get first and one-past-last iterator for row
   SparseMatrix<double>::const_iterator matrix_iterator = matrix.begin(i);
@@ -799,7 +801,7 @@ void FCT<dim>::get_matrix_row(const SparseMatrix<double> & matrix,
  *       used, since the imposed bounds are for the characteristic variables.
  */
 template <int dim>
-bool FCT<dim>::check_fct_bounds_satisfied(
+bool OldFCT<dim>::check_fct_bounds_satisfied(
   const Vector<double> & new_solution) const
 {
   // machine precision for floating point comparisons
@@ -849,7 +851,7 @@ bool FCT<dim>::check_fct_bounds_satisfied(
  *        the minimum limiting coefficient of all solution components.
  */
 template <int dim>
-void FCT<dim>::synchronize_min()
+void OldFCT<dim>::synchronize_min()
 {
   // loop over support points
   for (unsigned int k_i = 0; k_i < n_dofs_scalar; ++k_i)
@@ -892,7 +894,7 @@ void FCT<dim>::synchronize_min()
  * \return transformation matrix \f$\mathbf{T}(\mathbf{u})\f$
  */
 template <int dim>
-FullMatrix<double> FCT<dim>::compute_transformation_matrix(
+FullMatrix<double> OldFCT<dim>::compute_transformation_matrix(
   const Vector<double> &) const
 {
   // throw exception if not overridden by derived class
@@ -914,7 +916,7 @@ FullMatrix<double> FCT<dim>::compute_transformation_matrix(
  * \return transformation matrix inverse \f$\mathbf{T}^{-1}(\mathbf{u})\f$
  */
 template <int dim>
-FullMatrix<double> FCT<dim>::compute_transformation_matrix_inverse(
+FullMatrix<double> OldFCT<dim>::compute_transformation_matrix_inverse(
   const Vector<double> &) const
 {
   // throw exception if not overridden by derived class
@@ -943,9 +945,9 @@ FullMatrix<double> FCT<dim>::compute_transformation_matrix_inverse(
  * \param[in] vector_transformed  transformed vector \f$\hat{\mathbf{y}}\f$
  */
 template <int dim>
-void FCT<dim>::transform_vector(const Vector<double> & solution,
-                                const Vector<double> & vector_original,
-                                Vector<double> & vector_transformed) const
+void OldFCT<dim>::transform_vector(const Vector<double> & solution,
+                                   const Vector<double> & vector_original,
+                                   Vector<double> & vector_transformed) const
 {
   // loop over nodes
   for (unsigned int n = 0; n < n_nodes; ++n)
@@ -996,9 +998,10 @@ void FCT<dim>::transform_vector(const Vector<double> & solution,
  * \param[in] matrix_transformed  transformed matrix \f$\hat{\mathbf{A}}\f$
  */
 template <int dim>
-void FCT<dim>::transform_matrix(const Vector<double> & solution,
-                                const SparseMatrix<double> & matrix_original,
-                                SparseMatrix<double> & matrix_transformed) const
+void OldFCT<dim>::transform_matrix(
+  const Vector<double> & solution,
+  const SparseMatrix<double> & matrix_original,
+  SparseMatrix<double> & matrix_transformed) const
 {
   // loop over nodes
   for (unsigned int n_i = 0; n_i < n_nodes; ++n_i)
@@ -1067,7 +1070,7 @@ void FCT<dim>::transform_matrix(const Vector<double> & solution,
  * it is assumed here that local ordering is by component index.
  */
 template <int dim>
-void FCT<dim>::create_dof_indices_lists()
+void OldFCT<dim>::create_dof_indices_lists()
 {
   // initialize
   node_indices.resize(n_dofs);
@@ -1141,7 +1144,7 @@ void FCT<dim>::create_dof_indices_lists()
  * \param[in] flux_vector limited correction flux sum vector
  */
 template <int dim>
-void FCT<dim>::check_conservation(const Vector<double> & flux_vector)
+void OldFCT<dim>::check_conservation(const Vector<double> & flux_vector)
 {
   // compute limited flux sum
   double sum = 0.0;
@@ -1156,7 +1159,7 @@ void FCT<dim>::check_conservation(const Vector<double> & flux_vector)
  * \brief Outputs the matrix of limiting coefficients.
  */
 template <int dim>
-void FCT<dim>::output_limiter_matrix() const
+void OldFCT<dim>::output_limiter_matrix() const
 {
   // save limiting coefficients
   std::ofstream limiter_out("output/limiter.txt");
@@ -1172,8 +1175,8 @@ void FCT<dim>::output_limiter_matrix() const
  * \param[in] time current time
  */
 template <int dim>
-void FCT<dim>::output_bounds_transient(PostProcessor<dim> & postprocessor,
-                                       const double & time)
+void OldFCT<dim>::output_bounds_transient(PostProcessor<dim> & postprocessor,
+                                          const double & time)
 {
   // output lower bound
   postprocessor.output_dof_transient(solution_min,

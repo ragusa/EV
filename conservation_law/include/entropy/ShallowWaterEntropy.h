@@ -23,7 +23,7 @@ public:
   /** \brief Alias for cell iterator */
   using Cell = typename Entropy<dim>::Cell;
 
-  ShallowWaterEntropy(const ShallowWaterRunParameters<dim> & parameters,
+  ShallowWaterEntropy(const ShallowWaterRunParameters & parameters,
                       const FEValuesExtractors::Scalar & height_extractor,
                       const FEValuesExtractors::Vector & momentum_extractor,
                       const double & gravity,

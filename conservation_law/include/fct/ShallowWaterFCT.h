@@ -20,10 +20,10 @@ using namespace dealii;
  * \brief Class for performing FCT for the shallow water equations.
  */
 template <int dim>
-class ShallowWaterFCT : public FCT<dim>
+class ShallowWaterFCT : public OldFCT<dim>
 {
 public:
-  ShallowWaterFCT(const RunParameters<dim> & parameters,
+  ShallowWaterFCT(const RunParameters & parameters,
                   const DoFHandler<dim> & dof_handler,
                   const Triangulation<dim> & triangulation,
                   const SparseMatrix<double> & lumped_mass_matrix,

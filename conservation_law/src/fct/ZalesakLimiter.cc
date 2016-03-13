@@ -11,8 +11,8 @@
 ZalesakLimiter::ZalesakLimiter(const unsigned int & n_dofs_) : Limiter(n_dofs_)
 {
   // resize limiter vectors
-  negative_limiter_vector.reinit(n_dofs)
-  positive_limiter_vector.reinit(n_dofs)
+  negative_limiter_vector.reinit(n_dofs);
+  positive_limiter_vector.reinit(n_dofs);
 }
 
 /**
@@ -36,14 +36,15 @@ ZalesakLimiter::ZalesakLimiter(const unsigned int & n_dofs_) : Limiter(n_dofs_)
  *       \f$c_{large}\f$ is a positive number with a large magnitude.
  *
  * \param[in] antidiffusion_matrix  matrix of antidiffusion fluxes
- *            \f$\mathbf{P}\f$ 
+ *            \f$\mathbf{P}\f$
  * \param[in] antidiffusion_bounds  lower and upper bounds of antidiffusive
  *            fluxes into each node \f$\mathbf{Q}^-\f$ and \f$\mathbf{Q}^+\f$
- * \param[out] limiter_matrix  matrix of limiting coeffients \f$\mathbf{L}\f$ 
+ * \param[out] limiter_matrix  matrix of limiting coeffients \f$\mathbf{L}\f$
  */
-void ZalesakLimiter::compute_limiter(const SparseMatrix<double> & antidiffusion_matrix,
+void ZalesakLimiter::compute_limiter_matrix(
+  const SparseMatrix<double> & antidiffusion_matrix,
   const DoFBounds & antidiffusion_bounds,
-  SparseMatrix<double> & limiter_matrix) const
+  SparseMatrix<double> & limiter_matrix)
 {
   // reset limiter matrix
   limiter_matrix = 0;
@@ -68,13 +69,15 @@ void ZalesakLimiter::compute_limiter(const SparseMatrix<double> & antidiffusion_
 
     // compute L-[i]
     if (P_negative != 0.0)
-      negative_limiter_vector[i] = std::min(1.0, antidiffusion_bounds.get_min(i) / P_negative);
+      negative_limiter_vector[i] =
+        std::min(1.0, antidiffusion_bounds.lower[i] / P_negative);
     else
       negative_limiter_vector[i] = 1.0;
 
     // compute L+[i]
     if (P_positive != 0.0)
-      positive_limiter_vector[i] = std::min(1.0, antidiffusion_bounds.get_max(i) / P_positive);
+      positive_limiter_vector[i] =
+        std::min(1.0, antidiffusion_bounds.upper[i] / P_positive);
     else
       positive_limiter_vector[i] = 1.0;
   }

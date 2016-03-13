@@ -59,10 +59,9 @@ subsection artificial viscosity
 end
 
 subsection fct
-   set fct bounds type               = dmp     # dmp
-   set antidiffusion option          = limited # limited|full|none
+   set filter sequence string        = dmp
+   set limiter option                = zalesak # ones|zeroes|zalesak
    set fct synchronization type      = none    # none|min|compound
-   set fct limitation type           = conservative # conservative|characteristic
    set fct initialization option     = zero    # zero|low|high
    set skip fct if bounds satisfied  = false
    set use cumulative antidiffusion algorithm = true

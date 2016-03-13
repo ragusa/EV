@@ -11,7 +11,7 @@ using namespace dealii;
 /**
  * \brief Class for run parameters.
  */
-//template <int dim>
+// template <int dim>
 class RunParameters
 {
 public:
@@ -187,17 +187,12 @@ public:
   /* -----------------------------------------------------------------------
    *                              fct
    * ----------------------------------------------------------------------- */
-  /** \brief Enumeration for type of bounds to impose on FCT solution */
-  enum class FCTBoundsType
+  /** \brief Enumeration for limiter options */
+  enum class LimiterOption
   {
-    dmp
-  };
-  /** \brief Enumeration for options of antidiffusion in FCT scheme */
-  enum class AntidiffusionOption
-  {
-    limited,
-    full,
-    none
+    ones,
+    zeroes,
+    zalesak
   };
   /** \brief Enumeration for type of synchronization to apply for FCT */
   enum class FCTSynchronizationType
@@ -205,13 +200,6 @@ public:
     none,
     min,
     compound
-  };
-  /** \brief Enumeration for set of variables to limit in FCT */
-  enum class FCTLimitationType
-  {
-    conservative,
-    characteristic,
-    sw_heightonly
   };
   /** \brief Enumeration for initialization option for implicit/SS FCT */
   enum class FCTInitializationOption
@@ -221,14 +209,12 @@ public:
     high
   };
 
-  /** \brief Type of bounds to impose on FCT solution */
-  FCTBoundsType fct_bounds_type;
-  /** \brief Option of antidiffusion in FCT scheme */
-  AntidiffusionOption antidiffusion_option;
+  /** \brief string of sequence of FCT filters */
+  std::string filter_sequence_string;
+  /** \brief limiter option */
+  LimiterOption limiter_option;
   /** \brief type of synchronization to apply for FCT */
   FCTSynchronizationType fct_synchronization_type;
-  /** \brief Set of variables to limit in FCT */
-  FCTLimitationType fct_limitation_type;
   /** \brief Initialization option for implicit and steady-state FCT */
   FCTInitializationOption fct_initialization_option;
   /** \brief option to skip FCT if high-order solution satisfies bounds */

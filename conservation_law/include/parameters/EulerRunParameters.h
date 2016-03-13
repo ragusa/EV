@@ -17,7 +17,7 @@ using namespace dealii;
  *  \brief Class for parameters related to the Euler equations.
  */
 template <int dim>
-class EulerRunParameters : public RunParameters<dim>
+class EulerRunParameters : public RunParameters
 {
 public:
   EulerRunParameters();

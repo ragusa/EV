@@ -52,10 +52,10 @@ template <int dim>
 class Burgers : public ConservationLaw<dim>
 {
 public:
-  Burgers(const BurgersRunParameters<dim> & params);
+  Burgers(const BurgersRunParameters & params);
 
 private:
-  BurgersRunParameters<dim> burgers_parameters;
+  BurgersRunParameters burgers_parameters;
 
   const FEValuesExtractors::Scalar velocity_extractor;
 

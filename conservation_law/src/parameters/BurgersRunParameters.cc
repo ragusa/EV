@@ -7,7 +7,7 @@ using namespace dealii;
  * \brief Constructor for the BurgersRunParameters class
  */
 template <int dim>
-BurgersRunParameters<dim>::BurgersRunParameters()
+BurgersRunParameters::BurgersRunParameters()
 {
 }
 
@@ -16,11 +16,11 @@ BurgersRunParameters<dim>::BurgersRunParameters()
  * \param parameter_handler parameter handler for the Burgers class
  */
 template <int dim>
-void BurgersRunParameters<dim>::declare_parameters(
+void BurgersRunParameters::declare_parameters(
   ParameterHandler & parameter_handler)
 {
   // declare conservation law parameters
-  RunParameters<dim>::declare_run_parameters(parameter_handler);
+  RunParameters::declare_run_parameters(parameter_handler);
 
   // problem
   parameter_handler.enter_subsection("problem");
@@ -36,8 +36,7 @@ void BurgersRunParameters<dim>::declare_parameters(
  * \param parameter_handler parameter handler for the Burgers class
  */
 template <int dim>
-void BurgersRunParameters<dim>::get_parameters(
-  ParameterHandler & parameter_handler)
+void BurgersRunParameters::get_parameters(ParameterHandler & parameter_handler)
 {
   // get conservation law parameters
   this->get_run_parameters(parameter_handler);

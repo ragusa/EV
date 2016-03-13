@@ -1,0 +1,8 @@
+#!/bin/bash
+#
+# Recursively removes all *.bak files in directory and its subdirectories
+#
+# Usage: rm_bak
+#
+
+find . -name "*.bak" -type f -delete

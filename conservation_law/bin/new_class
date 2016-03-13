@@ -39,6 +39,16 @@ else
   h_file=$include_dir$new_class.h
   cc_file=$src_dir$new_class.cc
 
+  # check that files do not already exist
+  if [ -f $h_file ]; then
+    echo "File $h_file already exists."
+    exit 1
+  fi
+  if [ -f $cc_file ]; then
+    echo "File $cc_file already exists."
+    exit 1
+  fi
+
   # copy templates
   cp $template_dir/NewClass.h  $h_file
   cp $template_dir/NewClass.cc $cc_file

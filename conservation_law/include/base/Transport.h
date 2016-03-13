@@ -16,6 +16,7 @@
 
 #include "include/base/ConservationLaw.h"
 #include "include/entropy/TransportEntropy.h"
+#include "include/fct/TransportExplicitEulerFCT.h"
 #include "include/parameters/TransportRunParameters.h"
 #include "include/parameters/TransportProblemParameters.h"
 #include "include/viscosity/ConstantMaxWaveSpeed.h"
@@ -38,7 +39,7 @@ template <int dim>
 class Transport : public ConservationLaw<dim>
 {
 public:
-  Transport(const TransportRunParameters<dim> & params);
+  Transport(const TransportRunParameters & params);
 
 private:
   /** \brief Typedef for cell iterator */
@@ -79,8 +80,10 @@ private:
 
   std::shared_ptr<MaxWaveSpeed<dim>> create_max_wave_speed() const override;
 
+  std::shared_ptr<ExplicitEulerFCT<dim>> create_fct() const override;
+
   /** \brief Run parameters */
-  TransportRunParameters<dim> transport_parameters;
+  TransportRunParameters transport_parameters;
 
   /** \brief Problem parameters */
   TransportProblemParameters<dim> problem_parameters;

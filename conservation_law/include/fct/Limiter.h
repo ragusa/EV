@@ -19,12 +19,13 @@ class Limiter
 public:
   Limiter(const unsigned int & n_dofs);
 
-  virtual void compute_limiter(const SparseMatrix<double> & antidiffusion_matrix,
+  virtual void compute_limiter_matrix(
+    const SparseMatrix<double> & antidiffusion_matrix,
     const DoFBounds & antidiffusion_bounds,
-    SparseMatrix<double> & limiter_matrix) const = 0;
+    SparseMatrix<double> & limiter_matrix) = 0;
 
-  void limit_antidiffusion(const SparseMatrix<double> & limiter_matrix,
-    SparseMatrix<double> & antidiffusion_matrix) const;
+  void apply_limiter_matrix(const SparseMatrix<double> & limiter_matrix,
+                            SparseMatrix<double> & antidiffusion_matrix) const;
 
 protected:
   /** \brief number of degrees of freedom */

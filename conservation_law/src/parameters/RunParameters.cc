@@ -11,8 +11,6 @@
  *  for the ConservationLaw class.
  *  \param prm parameter handler for conservation law parameters
  */
-//template <int dim>
-//void RunParameters<dim>::declare_run_parameters(ParameterHandler & prm)
 void RunParameters::declare_run_parameters(ParameterHandler & prm)
 {
   // problem
@@ -169,23 +167,20 @@ void RunParameters::declare_run_parameters(ParameterHandler & prm)
   // fct
   prm.enter_subsection("fct");
   {
-    prm.declare_entry("fct bounds type",
-                      "dmp",
-                      Patterns::Selection("dmp"),
-                      "Type of bounds to impose on FCT solution");
-    prm.declare_entry("antidiffusion option",
-                      "limited",
-                      Patterns::Selection("limited|full|none"),
-                      "Option for antidiffusion in FCT scheme");
+    prm.declare_entry(
+      "filter sequence string",
+      "dmp",
+      Patterns::Anything(),
+      "Sequence of comma-delimited FCT filter identifier strings");
+    prm.declare_entry("limiter option",
+                      "zalesak",
+                      Patterns::Selection("ones|zeroes|zalesak"),
+                      "limiter option");
     prm.declare_entry(
       "fct synchronization type",
       "none",
       Patterns::Selection("none|min|compound"),
       "Option for synchronization of limiting coefficients in FCT scheme");
-    prm.declare_entry("fct limitation type",
-                      "conservative",
-                      Patterns::Selection("conservative|characteristic"),
-                      "Option for set of variables to limit in FCT");
     prm.declare_entry(
       "fct initialization option",
       "zero",
@@ -326,8 +321,6 @@ void RunParameters::declare_run_parameters(ParameterHandler & prm)
  *
  * \param[in] prm parameter handler for conservation law parameters
  */
-//template <int dim>
-//void RunParameters<dim>::get_run_parameters(ParameterHandler & prm)
 void RunParameters::get_run_parameters(ParameterHandler & prm)
 {
   // problem
@@ -505,27 +498,19 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
   // FCT
   prm.enter_subsection("fct");
   {
-    // FCT bounds type
-    std::string fct_bounds_string = prm.get("fct bounds type");
-    if (fct_bounds_string == "dmp")
-      fct_bounds_type = FCTBoundsType::dmp;
-    else
-    {
-      throw ExcNotImplemented();
-    }
+    // filter sequence string
+    filter_sequence_string = prm.get("filter sequence string");
 
-    // antidiffusion
-    std::string antidiffusion_string = prm.get("antidiffusion option");
-    if (antidiffusion_string == "limited")
-      antidiffusion_option = AntidiffusionOption::limited;
-    else if (antidiffusion_string == "full")
-      antidiffusion_option = AntidiffusionOption::full;
-    else if (antidiffusion_string == "none")
-      antidiffusion_option = AntidiffusionOption::none;
+    // limiter
+    std::string limiter_string = prm.get("limiter option");
+    if (limiter_string == "ones")
+      limiter_option = LimiterOption::ones;
+    else if (limiter_string == "zeroes")
+      limiter_option = LimiterOption::zeroes;
+    else if (limiter_string == "zalesak")
+      limiter_option = LimiterOption::zalesak;
     else
-    {
       throw ExcNotImplemented();
-    }
 
     // synchronization
     std::string synchronization_string = prm.get("fct synchronization type");
@@ -536,39 +521,18 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
     else if (synchronization_string == "compound")
       fct_synchronization_type = FCTSynchronizationType::compound;
     else
-    {
       throw ExcNotImplemented();
-    }
-
-    // limitation type
-    std::string limitation_type_string = prm.get("fct limitation type");
-    if (limitation_type_string == "conservative")
-      fct_limitation_type = FCTLimitationType::conservative;
-    else if (limitation_type_string == "characteristic")
-      fct_limitation_type = FCTLimitationType::characteristic;
-    else
-    {
-      throw ExcNotImplemented();
-    }
 
     // FCT initialization
     std::string fct_initialization_string = prm.get("fct initialization option");
     if (fct_initialization_string == "zero")
-    {
       fct_initialization_option = FCTInitializationOption::zero;
-    }
     else if (fct_initialization_string == "low")
-    {
       fct_initialization_option = FCTInitializationOption::low;
-    }
     else if (fct_initialization_string == "high")
-    {
       fct_initialization_option = FCTInitializationOption::high;
-    }
     else
-    {
       throw ExcNotImplemented();
-    }
 
     skip_fct_if_bounds_satisfied = prm.get_bool("skip fct if bounds satisfied");
     use_cumulative_antidiffusion_algorithm =
