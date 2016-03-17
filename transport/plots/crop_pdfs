@@ -1,7 +1,0 @@
-#!/bin/bash
-
-echo "Cropping all pdfs in current directory..."
-
-for filename in ./*.pdf; do
-   pdfcrop $filename $filename
-done

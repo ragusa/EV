@@ -112,7 +112,7 @@ private:
 
   std::shared_ptr<StarState<dim>> create_star_state() const override;
 
-  std::shared_ptr<FCT<dim>> create_fct() const override;
+  std::shared_ptr<ExplicitEulerFCT<dim>> create_fct() const override;
 
   std::shared_ptr<ViscosityMultiplier<dim>> create_viscosity_multiplier()
     const override;

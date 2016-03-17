@@ -571,7 +571,7 @@ std::shared_ptr<ViscosityMultiplier<dim>> ShallowWater<
  * \return FCT object pointer
  */
 template <int dim>
-std::shared_ptr<FCT<dim>> ShallowWater<dim>::create_fct() const
+std::shared_ptr<ExplicitEulerFCT<dim>> ShallowWater<dim>::create_fct() const
 {
   // determine if star states are to be used in FCT bounds
   const bool use_star_states_in_fct_bounds =
@@ -594,7 +594,7 @@ std::shared_ptr<FCT<dim>> ShallowWater<dim>::create_fct() const
                                              use_star_states_in_fct_bounds,
                                              problem_parameters.gravity);
   */
-  std::shared_ptr<FCT<dim>> fct = nullptr;
+  std::shared_ptr<ExplicitEulerFCT<dim>> fct = nullptr;
 
   return fct;
 }

@@ -1,5 +1,6 @@
-\begin{theorem}{Steady-State Scheme Discrete Maximum Principle} The low-order
-solution $\lowordersolution$ satisfies the following maximum principle:
+\begin{theorem}{Steady-State Scheme Discrete Maximum Principle}
+The low-order solution $\lowordersolution$ satisfies the following maximum
+principle:
 \begin{equation}\label{eq:DMP_ss}
    \DMPbound_i^{L,-} \leq \solutionletter_i^L
      \leq \DMPbound_i^{L,+}\quad\forall i \eqc
@@ -8,15 +9,15 @@ where
 \begin{equation}
    \DMPbound_i^{L,\pm} \equiv -\frac{1}{\ssmatrixletter^L_{i,i}}
       \sumjnoti\ssmatrixletter^L_{i,j}
-      \solutionletter_{\substack{\max\\\min},i}^L
+      \solutionletter_{\substack{\max\\\min},j\ne i}^L
       + \frac{\ssrhsletter_i}{\ssmatrixletter^L_{i,i}} \eqc
 \end{equation}
 where
 \[
-  \solutionletter_{\min,i}^L = \min\limits_{j\in\indicescell[\support_i]}
+  \solutionletter_{\min,j\ne i}^L \equiv \min\limits_{j\ne i\in\indicescell[\support_i]}
     \solutionletter_j^L
   \eqc\quad
-  \solutionletter_{\max,i}^L = \max\limits_{j\in\indicescell[\support_i]}
+  \solutionletter_{\max,j\ne i}^L \equiv \max\limits_{j\ne i\in\indicescell[\support_i]}
     \solutionletter_j^L
   \eqc
 \]
@@ -30,10 +31,10 @@ the support of degree of freedom $i$.
   \ssmatrixletter^L_{i,i}\solutionletter_i^L      & = & \sum\limits_{j\ne i}
     - \ssmatrixletter^L_{i,j}\solutionletter_j^L + \ssrhsletter_i\eqc\\
   \ssmatrixletter^L_{i,i}\solutionletter_i^L      & \le &
-    \pr{\sumjnoti -\ssmatrixletter^L_{i,j}}\solutionletter_{\max,i}^L
+    \pr{\sumjnoti -\ssmatrixletter^L_{i,j}}\solutionletter_{\max,j\ne i}^L
     + \ssrhsletter_i\eqc\\
   \solutionletter_i^L & \le & -\frac{1}{\ssmatrixletter^L_{i,i}}
-    \sumjnoti\ssmatrixletter^L_{i,j}\solutionletter_{\max,i}^L
+    \sumjnoti\ssmatrixletter^L_{i,j}\solutionletter_{\max,j\ne i}^L
     + \frac{\ssrhsletter_i}{\ssmatrixletter^L_{i,i}} \eqp
 \end{eqnarray*}
 A similar analysis is performed to prove the lower bound for

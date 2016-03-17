@@ -7,13 +7,9 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8.8)
 FIND_PACKAGE(deal.II 8.0 QUIET
   HINTS
     ${deal.II_DIR} ${DEAL_II_DIR} ../ ../../ $ENV{DEAL_II_DIR}
-  #
-  # If the deal.II library cannot be found (because it is not installed at a
-  # default location or your project resides at an uncommon place), you
-  # can specify additional hints for search paths here, e.g.
-  # "$ENV{HOME}/workspace/deal.II"
   )
 
+# report if deal.II was not bound
 IF (NOT ${deal.II_FOUND})
    MESSAGE(FATAL_ERROR
            "\n\n"
@@ -39,6 +35,9 @@ INCLUDE_DIRECTORIES("${PROJECT_BINARY_DIR}")
 ADD_EXECUTABLE(transport main.cc)
 TARGET_COMPILE_DEFINITIONS(transport PRIVATE TRANSPORT)
 DEAL_II_SETUP_TARGET(transport)
+
+ADD_EXECUTABLE(implicit_transport implicit_transport.cc)
+DEAL_II_SETUP_TARGET(implicit_transport)
 
 #ADD_EXECUTABLE(burgers main.cc)
 #TARGET_COMPILE_DEFINITIONS(burgers PRIVATE BURGERS)
@@ -89,18 +88,29 @@ ADD_CUSTOM_TARGET(release
 
 # testing
 ENABLE_TESTING()
-ADD_SUBDIRECTORY(tests/transport_galerkin_solution)
-ADD_SUBDIRECTORY(tests/transport_lax)
-ADD_SUBDIRECTORY(tests/transport_dmp)
-ADD_SUBDIRECTORY(tests/transport_ev_lax)
-ADD_SUBDIRECTORY(tests/transport_ev_dmp)
-ADD_SUBDIRECTORY(tests/transport_fct_none)
-ADD_SUBDIRECTORY(tests/transport_fct_full)
+
+ADD_SUBDIRECTORY(tests/transport_gal_ssprk_fe)
+ADD_SUBDIRECTORY(tests/transport_lax_ssprk_fe)
+ADD_SUBDIRECTORY(tests/transport_evlax_ssprk_fe)
+
+ADD_SUBDIRECTORY(tests/transport_dmp_ss)
+ADD_SUBDIRECTORY(tests/transport_dmp_ssprk_fe)
+ADD_SUBDIRECTORY(tests/transport_dmp_theta_fe)
+ADD_SUBDIRECTORY(tests/transport_dmp_cn)
+
+ADD_SUBDIRECTORY(tests/transport_evdmp_ss)
+ADD_SUBDIRECTORY(tests/transport_evdmp_ssprk_fe)
+ADD_SUBDIRECTORY(tests/transport_evdmp_theta_fe)
+ADD_SUBDIRECTORY(tests/transport_evdmp_cn)
+
+ADD_SUBDIRECTORY(tests/transport_evdmpfctones_ssprk_fe)
+
 ADD_SUBDIRECTORY(tests/shallowwater_galerkin_solution)
 ADD_SUBDIRECTORY(tests/shallowwater_constant_solution)
 ADD_SUBDIRECTORY(tests/shallowwater_low_solution)
 ADD_SUBDIRECTORY(tests/shallowwater_ev_solution)
 ADD_SUBDIRECTORY(tests/shallowwater_low_lakeatrest)
+
 ADD_SUBDIRECTORY(tests/group_fe_values)
 ADD_SUBDIRECTORY(tests/quadrature)
 

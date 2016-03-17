@@ -1,0 +1,2 @@
+SET(TEST_TARGET implicit_transport)
+DEAL_II_PICKUP_TESTS()

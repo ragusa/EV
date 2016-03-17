@@ -116,68 +116,87 @@ recomputed in each iteration.
   Different Schemes}
 \label{tab:nonlinear_systems}
 \centering
-\begin{tabular}{l c}\toprule
+\begin{tabular}{l p{4in}}\toprule
 \multicolumn{2}{l}{\emph{Steady-State Entropy Viscosity Scheme}}\\\midrule
 Equation &
-  \(\displaystyle
-    \highorderssmatrix(\solutionvector)\solutionvector = \ssrhs\)\\
+  \parbox{4in}{\begin{equation*}
+    \highorderssmatrix(\solutionvector)\solutionvector = \ssrhs
+  \end{equation*}}\\
 Matrix &
-  \(\displaystyle
+  \parbox{4in}{\begin{equation*}
     \nonlinearmatrix(\solutionvector)
-      \equiv \highorderssmatrix(\solutionvector)\)\\
+      \equiv \highorderssmatrix(\solutionvector)
+  \end{equation*}}\\
 Right-hand-side &
-  \(\displaystyle \nonlinearrhs \equiv \ssrhs\)\\
+  \parbox{4in}{\begin{equation*}
+    \nonlinearrhs \equiv \ssrhs
+  \end{equation*}}\\
 \midrule
 \multicolumn{2}{l}{\emph{Steady-State FCT Scheme}}\\\midrule
 Equation &
-  \(\displaystyle
+  \parbox{4in}{\begin{equation*}
     \loworderssmatrix\solutionvector = \ssrhs
-    + \limitermatrix(\solutionvector)\cdot\correctionfluxmatrix\)\\
+    + \limitermatrix(\solutionvector)\cdot\correctionfluxmatrix
+  \end{equation*}}\\
 Matrix &
-  \(\displaystyle
-    \nonlinearmatrix \equiv \loworderssmatrix\)\\
+  \parbox{4in}{\begin{equation*}
+    \nonlinearmatrix \equiv \loworderssmatrix
+  \end{equation*}}\\
 Right-hand-side &
-  \(\displaystyle
+  \parbox{4in}{\begin{equation*}
     \nonlinearrhs(\solutionvector) \equiv \ssrhs
-    + \limitermatrix(\solutionvector)\cdot\correctionfluxmatrix\)\\
+    + \limitermatrix(\solutionvector)\cdot\correctionfluxmatrix
+  \end{equation*}}\\
 \midrule
 \multicolumn{2}{l}{\emph{Theta Entropy Viscosity Scheme}}\\\midrule
+&\\[-5ex]
 Equation &
-  \(\displaystyle
+  \parbox{4in}{\begin{multline*}
     \consistentmassmatrix\frac{\solutionvector-\solutionvector^n}{\dt}
     + (1-\theta)\ssmatrix^{H,n}\solutionvector^n
     + \theta\ssmatrix^{H}(\solutionvector)\solutionvector
-    = (1-\theta)\ssrhs^n + \theta\ssrhs^{n+1}\)\\
+    = \\[-1ex]
+    (1-\theta)\ssrhs^n + \theta\ssrhs^{n+1}
+  \end{multline*}}\\[-2ex]
 Matrix &
-  \(\displaystyle
+  \parbox{4in}{\begin{equation*}
     \nonlinearmatrix(\solutionvector) \equiv \consistentmassmatrix
-    + \theta\dt\ssmatrix^H(\solutionvector)\)\\
+    + \theta\dt\ssmatrix^H(\solutionvector)
+  \end{equation*}}\\[-2ex]
 Right-hand-side &
-  \(\displaystyle
+  \parbox{4in}{\begin{multline*}
     \nonlinearrhs \equiv
       \consistentmassmatrix\solutionvector^n
       - (1-\theta)\dt\ssmatrix^{H,n}\solutionvector^n
-      + (1-\theta)\dt\ssrhs^n + \theta\dt\ssrhs^{n+1}\)\\
+      \\
+      + (1-\theta)\dt\ssrhs^n + \theta\dt\ssrhs^{n+1}
+  \end{multline*}}\\[-2ex]
 \midrule
 \multicolumn{2}{l}{\emph{Theta FCT Scheme}}\\\midrule
+&\\[-5ex]
 Equation &
-  \(\displaystyle
+  \parbox{4in}{\begin{multline*}
     \lumpedmassmatrix\frac{\solutionvector-\solutionvector^n}{\dt}
     + (1-\theta)\loworderssmatrix\solutionvector^{n}
     + \theta\loworderssmatrix\solutionvector
-    = (1-\theta)\ssrhs^n + \theta\ssrhs^{n+1}
-    + \limitermatrix(\solutionvector)\cdot\correctionfluxmatrix\)\\
+    = \\
+    (1-\theta)\ssrhs^n + \theta\ssrhs^{n+1}
+    + \limitermatrix(\solutionvector)\cdot\correctionfluxmatrix
+  \end{multline*}}\\[-2ex]
 Matrix &
-  \(\displaystyle
+  \parbox{4in}{\begin{equation*}
     \nonlinearmatrix \equiv \lumpedmassmatrix
-    + \theta\dt\loworderssmatrix\)\\
+    + \theta\dt\loworderssmatrix
+  \end{equation*}}\\[-3ex]
 Right-hand-side &
-  \(\displaystyle
+  \parbox{4in}{\begin{multline*}
     \nonlinearrhs(\solutionvector) \equiv
       \lumpedmassmatrix\solutionvector^n
       - (1-\theta)\dt\loworderssmatrix\solutionvector^n
+      \\
       + (1-\theta)\dt\ssrhs^n + \theta\dt\ssrhs^{n+1}
-      + \dt\limitermatrix(\solutionvector)\cdot\correctionfluxmatrix\)\\
+      + \dt\limitermatrix(\solutionvector)\cdot\correctionfluxmatrix
+  \end{multline*}}\\[-2ex]
 \bottomrule\end{tabular}
 \end{table}
 %-------------------------------------------------------------------------------

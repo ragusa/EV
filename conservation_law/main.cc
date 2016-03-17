@@ -7,14 +7,22 @@
 #include <deal.II/base/logstream.h>
 
 #include "include/other/CMakeVars.h"
+
+#if defined(BURGERS)
 //#include "include/base/Burgers.h"
-//#include "include/base/Euler.h"
-#include "include/base/ShallowWater.h"
-#include "include/base/Transport.h"
 //#include "include/parameters/BurgersRunParameters.h"
+#elif defined(EULER)
+//#include "include/base/Euler.h"
 //#include "include/parameters/EulerRunParameters.h"
+#elif defined(SHALLOWWATER)
+#include "include/base/ShallowWater.h"
 #include "include/parameters/ShallowWaterRunParameters.h"
+#elif defined(TRANSPORT)
+#include "include/base/Transport.h"
 #include "include/parameters/TransportRunParameters.h"
+#else
+#error No valid conservation law defined in preprocessor
+#endif
 
 using namespace dealii;
 

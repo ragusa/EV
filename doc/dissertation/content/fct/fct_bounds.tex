@@ -32,7 +32,7 @@ Steady-State   &
       \(\displaystyle
       \DMPbound_i^{L,\pm} \equiv -\frac{1}{\ssmatrixletter^L_{i,i}}
       \sumjnoti\ssmatrixletter^L_{i,j}
-      \solutionletter_{\substack{\max\\\min},i}^L
+      \solutionletter_{\substack{\max\\\min},j\ne i}^L
       + \frac{\ssrhsletter_i}{\ssmatrixletter^L_{i,i}}\)\\
 Explicit Euler &
      \(\displaystyle
@@ -51,7 +51,7 @@ Theta Method   &
    & $\displaystyle
      - \frac{\theta\timestepsize}{\massmatrixletter^L_{i,i}}
        \sumjnoti\ssmatrixletter_{i,j}^{L,\timeindex+1}
-       \solutionletter_{\substack{\max\\\min},i}^{L,\timeindex+1}
+       \solutionletter_{\substack{\max\\\min},j\ne i}^{L,\timeindex+1}
      + \frac{\timestepsize}{\massmatrixletter^L_{i,i}}\pr{(1-\theta)
        \ssrhsletter_i^\timeindex + \theta\ssrhsletter_i^{\timeindex+1}}\Bigg]
    $\\

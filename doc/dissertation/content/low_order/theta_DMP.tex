@@ -20,11 +20,12 @@ where
    \equiv \frac{1}{1+\frac{\theta\timestepsize}{\massmatrixletter^L_{i,i}}
      \ssmatrixletter_{i,i}^{L,\timeindex+1}}\Bigg[\pr{1
      - \frac{(1-\theta)\timestepsize}{\massmatrixletter^L_{i,i}}
-       \sumj\ssmatrixletter_{i,j}^{L,\timeindex}}\solutionletter_{\substack{\max\\\min},i}^\timeindex
+       \sumj\ssmatrixletter_{i,j}^{L,\timeindex}}
+       \solutionletter_{\substack{\max\\\min},i}^\timeindex
+     \\
      - \frac{\theta\timestepsize}{\massmatrixletter^L_{i,i}}
        \sumjnoti\ssmatrixletter_{i,j}^{L,\timeindex+1}
-       \solutionletter_{\substack{\max\\\min},i}^{L,\timeindex+1}
-     \\
+       \solutionletter_{\substack{\max\\\min},j\ne i}^{L,\timeindex+1}
      + \frac{\timestepsize}{\massmatrixletter^L_{i,i}}\pr{(1-\theta)
        \ssrhsletter_i^\timeindex + \theta\ssrhsletter_i^{\timeindex+1}}\Bigg] \eqc
 \end{multline}
@@ -33,8 +34,8 @@ where
   = \substack{\max\\\min\limits_{j\in\indicescell[\support_i]}}
     \solutionletter_j^\timeindex
   \eqc \quad
-  \solutionletter_{\substack{\max\\\min},i}^{L,\timeindex+1}
-  = \substack{\max\\\min\limits_{j\in\indicescell[\support_i]}}
+  \solutionletter_{\substack{\max\\\min},j\ne i}^{L,\timeindex+1}
+  = \substack{\max\\\min\limits_{j\ne i\in\indicescell[\support_i]}}
   \solutionletter_j^{L,\timeindex+1}
   \eqc
 \]
@@ -78,9 +79,11 @@ is non-negative. Thus, the following inequality is able to be applied:
        \sumj\ssmatrixletter_{i,j}^{L,\timeindex}}\solutionletter_{\max,i}^\timeindex
      \\
        - \frac{\theta\timestepsize}{\massmatrixletter^L_{i,i}}
-         \sumjnoti\ssmatrixletter_{i,j}^{L,\timeindex+1}\solutionletter_{\max,i}^{L,\timeindex+1}
+         \sumjnoti\ssmatrixletter_{i,j}^{L,\timeindex+1}
+         \solutionletter_{\max,j\ne i}^{L,\timeindex+1}
        + \frac{\timestepsize}{\massmatrixletter^L_{i,i}}
-         \pr{(1-\theta)\ssrhsletter_i^\timeindex + \theta\ssrhsletter_i^{\timeindex+1}}\Bigg] \eqc
+         \pr{(1-\theta)\ssrhsletter_i^\timeindex
+         + \theta\ssrhsletter_i^{\timeindex+1}}\Bigg] \eqc
 \end{multline*}
 and similarly for the lower bound.\qed
 \end{proof}
