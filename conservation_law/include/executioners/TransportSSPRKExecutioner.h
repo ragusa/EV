@@ -29,11 +29,11 @@ public:
 protected:
   void compute_new_solution(const double & dt,
                             const double & dt_old,
+                            const double & t_old,
                             const unsigned int & n) override;
 
 private:
-  void perform_fct_ssprk_step(
-                              const double & dt,
+  void perform_fct_ssprk_step(const double & dt,
                               const double & old_stage_dt,
                               const unsigned int & n);
 

@@ -67,7 +67,7 @@ TransportExecutioner<dim>::TransportExecutioner(
   reaction_vector.reinit(n_dofs);
   ss_rhs.reinit(n_dofs);
   new_solution.reinit(n_dofs);
-  cumulative_antidiffusion.reinit(n_dofs);
+  antidiffusion_vector.reinit(n_dofs);
 
   // determine Dirichlet nodes
   getDirichletNodes();

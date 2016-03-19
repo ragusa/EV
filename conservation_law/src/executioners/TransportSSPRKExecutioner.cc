@@ -35,10 +35,16 @@ TransportSSPRKExecutioner<dim>::TransportSSPRKExecutioner(
 
 /**
  * \brief Computes new solution for a time step.
+ *
+ * \param[in] dt  current time step size \f$\Delta t^n\f$
+ * \param[in] dt_old  old time step size \f$\Delta t^{n-1}\f$
+ * \param[in] t_old  old time \f$t^n\f$
+ * \param[in] n  time index
  */
 template <int dim>
 void TransportSSPRKExecutioner<dim>::compute_new_solution(const double & dt,
                                                           const double & dt_old,
+                                                          const double &,
                                                           const unsigned int & n)
 {
   // initialize SSPRK time step
@@ -120,9 +126,7 @@ void TransportSSPRKExecutioner<dim>::compute_new_solution(const double & dt,
  */
 template <int dim>
 void TransportSSPRKExecutioner<dim>::perform_fct_ssprk_step(
-  const double & dt,
-  const double & old_stage_dt,
-  const unsigned int & n)
+  const double & dt, const double & old_stage_dt, const unsigned int & n)
 {
   // update low-order diffusion
   this->low_order_viscosity->update(

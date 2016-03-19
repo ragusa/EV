@@ -37,6 +37,7 @@ public:
 protected:
   virtual void compute_new_solution(const double & dt,
                                     const double & dt_old,
+                                    const double & t_old,
                                     const unsigned int & n) = 0;
 
   SparseMatrix<double> consistent_mass_matrix;

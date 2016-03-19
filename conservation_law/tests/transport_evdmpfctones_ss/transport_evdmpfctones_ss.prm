@@ -14,7 +14,7 @@
 #   mms_xt       (TR:x*t                SS:x        )
 #   mms_t        (TR:t                  SS:1        )
 subsection problem
-   set problem name = absorber
+   set problem name = absorber_ss
 end
 
 subsection scheme
@@ -45,9 +45,9 @@ subsection time
 end
 
 subsection temporal discretization
-   set temporal discretization = ssprk # ss|ssprk|theta
+   set temporal discretization = ss    # ss|ssprk|theta
    set ssprk discretization    = FE    # FE|SSP2|SSP3
-   set theta discretization    = FE    # FE|CN|BE
+   set theta discretization    = CN    # FE|CN|BE
 end
 
 subsection artificial viscosity
@@ -57,7 +57,7 @@ subsection artificial viscosity
    set entropy viscosity smoothing weight = 4
    set constant viscosity value           = 0.02
    set lax viscosity coefficient          = 0.5
-   set use low order viscosity for first time step = false
+   set use low order viscosity for first time step = true
 end
 
 subsection fct

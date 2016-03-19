@@ -12,13 +12,14 @@ using namespace dealii;
 /**
  * \brief Class for limiter that produces no limitation.
  */
-class OnesLimiter : public Limiter
+template <int dim>
+class OnesLimiter : public Limiter<dim>
 {
 public:
   OnesLimiter(const unsigned int & n_dofs);
 
   void compute_limiter_matrix(const SparseMatrix<double> & antidiffusion_matrix,
-                              const DoFBounds & antidiffusion_bounds,
+                              const DoFBounds<dim> & antidiffusion_bounds,
                               SparseMatrix<double> & limiter_matrix) override;
 };
 

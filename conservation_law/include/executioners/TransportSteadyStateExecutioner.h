@@ -2,6 +2,7 @@
 #define TransportSteadyStateExecutioner_cc
 
 #include "include/executioners/TransportExecutioner.h"
+#include "include/fct/TransportSteadyStateFCT.h"
 #include "include/parameters/RunParameters.h"
 
 using namespace dealii;

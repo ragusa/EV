@@ -91,6 +91,12 @@ protected:
   /** \brief antidiffusion matrix \f$\mathbf{P}\f$ */
   SparseMatrix<double> antidiffusion_matrix;
 
+  /** \brief limited antidiffusion matrix \f$\bar{\mathbf{P}}\f$ */
+  SparseMatrix<double> limited_antidiffusion_matrix;
+
+  /** \brief cumulative antidiffusion vector \f$\bar{\mathbf{p}}\f$ */
+  Vector<double> cumulative_antidiffusion;
+
   /** \brief degree of freedom handler */
   const DoFHandler<dim> * const dof_handler;
 

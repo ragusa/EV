@@ -8,7 +8,8 @@
  *
  * \param[in] n_dofs_  number of degrees of freedom
  */
-Limiter::Limiter(const unsigned int & n_dofs_) : n_dofs(n_dofs_) {}
+template <int dim>
+Limiter<dim>::Limiter(const unsigned int & n_dofs_) : n_dofs(n_dofs_) {}
 /**
  * \brief Applies limiting coefficients to an antidiffusion matrix.
  *
@@ -25,7 +26,8 @@ Limiter::Limiter(const unsigned int & n_dofs_) : n_dofs(n_dofs_) {}
  * \param[inout] antidiffusion_matrix  matrix of antidiffusion fluxes
  *               \f$\mathbf{P}\f$
  */
-void Limiter::apply_limiter_matrix(
+template <int dim>
+void Limiter<dim>::apply_limiter_matrix(
   const SparseMatrix<double> & limiter_matrix,
   SparseMatrix<double> & antidiffusion_matrix) const
 {

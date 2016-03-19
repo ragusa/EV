@@ -122,9 +122,11 @@ private:
 
   void get_base_parameters();
 
-  void process_base_parameters(Triangulation<dim> & triangulation,
-                               const FESystem<dim> & fe,
-                               const QGauss<dim - 1> & face_quadrature);
+  void process_base_parameters();
+
+  void process_shared_base_parameters(Triangulation<dim> & triangulation,
+                                      const FESystem<dim> & fe,
+                                      const QGauss<dim - 1> & face_quadrature);
 
   void generate_mesh_and_compute_volume(Triangulation<dim> & triangulation);
 

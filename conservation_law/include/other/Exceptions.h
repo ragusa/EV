@@ -10,6 +10,9 @@ using namespace dealii;
 /** \brief Exception for a NaN being encountered */
 DeclException0(ExcNaNEncountered);
 
+/** \brief Exception for trying to run a non-steady-state problem */
+DeclException0(ExcNotASteadyStateProblem);
+
 /** \brief Exception for a modulus not returning zero */
 DeclException2(ExcModulusNotZero, int, int, << arg1 << " % " << arg2 << " != 0");
 

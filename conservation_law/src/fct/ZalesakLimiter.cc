@@ -8,7 +8,8 @@
  *
  * \param[in] n_dofs_  number of degrees of freedom
  */
-ZalesakLimiter::ZalesakLimiter(const unsigned int & n_dofs_) : Limiter(n_dofs_)
+template <int dim>
+ZalesakLimiter<dim>::ZalesakLimiter(const unsigned int & n_dofs_) : Limiter<dim>(n_dofs_)
 {
   // resize limiter vectors
   negative_limiter_vector.reinit(n_dofs);
@@ -41,9 +42,10 @@ ZalesakLimiter::ZalesakLimiter(const unsigned int & n_dofs_) : Limiter(n_dofs_)
  *            fluxes into each node \f$\mathbf{Q}^-\f$ and \f$\mathbf{Q}^+\f$
  * \param[out] limiter_matrix  matrix of limiting coeffients \f$\mathbf{L}\f$
  */
-void ZalesakLimiter::compute_limiter_matrix(
+template <int dim>
+void ZalesakLimiter<dim>::compute_limiter_matrix(
   const SparseMatrix<double> & antidiffusion_matrix,
-  const DoFBounds & antidiffusion_bounds,
+  const DoFBounds<dim> & antidiffusion_bounds,
   SparseMatrix<double> & limiter_matrix)
 {
   // reset limiter matrix

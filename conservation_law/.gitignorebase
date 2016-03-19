@@ -23,6 +23,7 @@ shallowwater
 shallowwater_parallel
 transport
 transport_parallel
+implicit_transport
 
 # doxygen directory
 doxygen

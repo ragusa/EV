@@ -18,8 +18,9 @@ TransportSteadyStateExecutioner<dim>::TransportSteadyStateExecutioner(
 template <int dim>
 void TransportSteadyStateExecutioner<dim>::run()
 {
-  // compute inviscid system matrix and steady-state right hand side (ss_rhs)
+  // compute inviscid system matrix, reaction vector, and right hand side vector
   this->assembleInviscidSteadyStateMatrix();
+  this->compute_reaction_vector();
   this->assembleSteadyStateRHS(this->ss_rhs, 0.0);
 
   // compute low-order steady-state matrix since it is not solution-dependent
@@ -171,127 +172,130 @@ void TransportSteadyStateExecutioner<dim>::compute_entropy_viscosity_solution()
 template <int dim>
 void TransportSteadyStateExecutioner<dim>::compute_fct_solution()
 {
+  // create FCT object
+  TransportSteadyStateFCT<dim> fct(
+    this->parameters, *this->problem_parameters, this->dof_handler);
+
+  // check if high-order solution satisfies bounds - if so, do not use FCT
+  bool skip_fct = false;
   /*
-    // create FCT object
-    FCT<dim> fct(this->dof_handler,
-                 *this->triangulation,
-                 this->linear_solver,
-                 this->constrained_sparsity_pattern,
-                 this->dirichlet_nodes,
-                 this->n_dofs,
-                 this->dofs_per_cell,
-                 false,
-                 this->parameters.include_analytic_bounds,
-                 this->fe,
-                 this->cell_quadrature,
-                 *this->cross_section_function,
-                 *this->source_function);
-
-    // check if high-order solution satisfies bounds - if so, do not use FCT
-    bool skip_fct = false;
-    if (this->parameters.skip_fct_if_bounds_satisfied)
-    {
-      // compute max principle min and max values
-      fct.compute_bounds_ss(
-        this->new_solution, this->low_order_ss_matrix, this->ss_rhs);
-
-      // check bounds
-      skip_fct = fct.check_fct_bounds(this->new_solution);
-    }
-
-    if (!skip_fct)
-    {
-      // compute flux corrections
-      fct.compute_flux_corrections_ss(this->new_solution,
-                                      this->low_order_diffusion_matrix,
-                                      this->high_order_diffusion_matrix);
-
-      // initialize guess for nonlinear solver
-      switch (this->parameters.fct_initialization_option)
+      if (this->parameters.skip_fct_if_bounds_satisfied)
       {
-        case FCTInitializationOption::zero:
-        {
-          // set to zero
-          this->new_solution = 0.0;
-
-          break;
-        }
-        case FCTInitializationOption::low:
-        {
-          // compute low-order solution
-          compute_low_order_solution();
-          break;
-        }
-        case FCTInitializationOption::high:
-        {
-          // do nothing, solution vector already contains high-order solution
-          break;
-        }
-        default:
-        {
-          Assert(false, ExcNotImplemented());
-        }
-      }
-      this->nonlinear_solver.initialize(this->new_solution);
-
-      // initialize cumulative antidiffusion vector
-      this->cumulative_antidiffusion = 0.0;
-
-      // begin iteration
-      bool converged = false;
-      while (!converged)
-      {
-        // compute max principle min and max values: W^(l)
+        // compute max principle min and max values
         fct.compute_bounds_ss(
           this->new_solution, this->low_order_ss_matrix, this->ss_rhs);
 
-        // compute limited flux bounds: Q^(l)
-        fct.compute_limited_flux_bounds_ss(
-          this->new_solution, this->low_order_ss_matrix, this->ss_rhs);
+        // check bounds
+        skip_fct = fct.check_fct_bounds(this->new_solution);
+      }
+  */
 
-        // compute limited flux correction matrix and sum: dp^(l) and dP^(l)
-        fct.compute_limited_fluxes();
+  if (!skip_fct)
+  {
+    // compute flux corrections
+    fct.compute_antidiffusion_matrix(this->new_solution,
+                                     this->low_order_diffusion_matrix,
+                                     this->high_order_diffusion_matrix);
 
-        // if using cumulative antidiffusion algorithm, then update cumulative
-        // antidiffusion and remainder antidiffusive fluxes
-        if (this->parameters.use_cumulative_antidiffusion_algorithm)
-        {
-          // add to cumulative antidiffusion vector: p^(l+1) = p^(l) + dp^(l)
-          this->cumulative_antidiffusion.add(1.0, fct.get_limited_flux_vector());
+    // initialize guess for nonlinear solver
+    switch (this->parameters.fct_initialization_option)
+    {
+      case FCTInitializationOption::zero:
+      {
+        // set to zero
+        this->new_solution = 0.0;
 
-          // subtract used antidiffusive flux: DP^(l+1) = DP^(l) - dP^(l)
-          fct.subtract_limited_flux_correction_matrix();
-        }
-        else
-        {
-          // throw away accumulated antidiffusive flux
-          this->cumulative_antidiffusion = fct.get_limited_flux_vector();
-        }
-
-        // create system rhs: s^(l) = b + p^(l+1)
-        this->system_rhs = this->ss_rhs;
-        this->system_rhs.add(1.0, this->cumulative_antidiffusion);
-
-        // create system matrix. Note that although the underlying system matrix
-        // does not change in each iteration, the Dirichlet-modified system matrix
-        // does change
-        this->system_matrix.copy_from(this->low_order_ss_matrix);
-
-        // apply Dirichlet BC here
-        this->applyDirichletBC(
-          this->system_matrix, this->system_rhs, this->new_solution);
-
-        // check convergence and perform update if necessary
-        converged =
-          this->nonlinear_solver.update(this->system_matrix, this->system_rhs);
+        break;
+      }
+      case FCTInitializationOption::low:
+      {
+        // compute low-order solution
+        compute_low_order_solution();
+        break;
+      }
+      case FCTInitializationOption::high:
+      {
+        // do nothing, solution vector already contains high-order solution
+        break;
+      }
+      default:
+      {
+        Assert(false, ExcNotImplemented());
       }
     }
+    this->nonlinear_solver.initialize(this->new_solution);
 
-    // output FCT bounds if requested
-    if (this->parameters.output_fct_bounds)
-      fct.output_bounds(*(this->postprocessor));
+    /*
+          // initialize cumulative antidiffusion vector
+          this->cumulative_antidiffusion = 0.0;
+    */
 
-    // check FCT bounds
-    fct.check_fct_bounds(this->new_solution);
+    // begin iteration
+    bool converged = false;
+    while (!converged)
+    {
+      /*
+              // compute max principle min and max values: W^(l)
+              fct.compute_bounds_ss(
+                this->new_solution, this->low_order_ss_matrix, this->ss_rhs);
+
+              // compute limited flux bounds: Q^(l)
+              fct.compute_limited_flux_bounds_ss(
+                this->new_solution, this->low_order_ss_matrix, this->ss_rhs);
+
+              // compute limited flux correction matrix and sum: dp^(l) and dP^(l)
+              fct.compute_limited_fluxes();
+
+              // if using cumulative antidiffusion algorithm, then update
+         cumulative
+              // antidiffusion and remainder antidiffusive fluxes
+              if (this->parameters.use_cumulative_antidiffusion_algorithm)
+              {
+                // add to cumulative antidiffusion vector: p^(l+1) = p^(l) +
+         dp^(l)
+                this->cumulative_antidiffusion.add(1.0,
+         fct.get_limited_flux_vector());
+
+                // subtract used antidiffusive flux: DP^(l+1) = DP^(l) - dP^(l)
+                fct.subtract_limited_flux_correction_matrix();
+              }
+              else
+              {
+                // throw away accumulated antidiffusive flux
+                this->cumulative_antidiffusion = fct.get_limited_flux_vector();
+              }
+      */
+      // compute antidiffusion vector
+      fct.compute_antidiffusion_vector(this->new_solution,
+                                       this->low_order_ss_matrix,
+                                       this->ss_rhs,
+                                       this->antidiffusion_vector);
+
+      // create system rhs: s^(l) = b + p^(l+1)
+      this->system_rhs = this->ss_rhs;
+      this->system_rhs.add(1.0, this->antidiffusion_vector);
+
+      // create system matrix. Note that although the underlying system matrix
+      // does not change in each iteration, the Dirichlet-modified system matrix
+      // does change
+      this->system_matrix.copy_from(this->low_order_ss_matrix);
+
+      // apply Dirichlet BC here
+      this->applyDirichletBC(
+        this->system_matrix, this->system_rhs, this->new_solution);
+
+      // check convergence and perform update if necessary
+      converged =
+        this->nonlinear_solver.update(this->system_matrix, this->system_rhs);
+    }
+  }
+
+  /*
+      // output FCT bounds if requested
+      if (this->parameters.output_fct_bounds)
+        fct.output_bounds(*(this->postprocessor));
+
+      // check FCT bounds
+      fct.check_fct_bounds(this->new_solution);
   */
 }

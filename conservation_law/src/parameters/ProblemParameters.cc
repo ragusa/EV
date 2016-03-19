@@ -157,8 +157,9 @@ void ProblemParameters<dim>::get_and_process_parameters(
   set_boundary_ids(triangulation, fe, face_quadrature);
 
   // process derived and base parameters
+  process_base_parameters();
   process_derived_parameters(triangulation, fe, face_quadrature);
-  process_base_parameters(triangulation, fe, face_quadrature);
+  process_shared_base_parameters(triangulation, fe, face_quadrature);
 }
 
 /**
@@ -220,27 +221,27 @@ void ProblemParameters<dim>::get_base_parameters()
 
 /**
  * \brief Processes the base parameters to provide necessary public data.
- *
- * \param[in] triangulation    triangulation
- * \param[in] fe               finite element system
- * \param[in] face_quadrature  face quadrature
  */
 template <int dim>
-void ProblemParameters<dim>::process_base_parameters(
-  Triangulation<dim> &,
-  const FESystem<dim> & fe,
-  const QGauss<dim - 1> & face_quadrature)
+void ProblemParameters<dim>::process_base_parameters()
 {
   // assert number of dimensions is valid
   if (!valid_in_1d)
+  {
     Assert(dim != 1, ExcImpossibleInDim(dim));
+  }
   if (!valid_in_2d)
+  {
     Assert(dim != 2, ExcImpossibleInDim(dim));
+  }
   if (!valid_in_3d)
+  {
     Assert(dim != 3, ExcImpossibleInDim(dim));
+  }
 
   // assert that problem is steady-state or transient
-  Assert(specified_steady_state == is_steady_state_problem, ExcNotImplemented());
+  Assert(specified_steady_state == is_steady_state_problem,
+         ExcNotASteadyStateProblem());
 
   // constants for function parsers
   constants["pi"] = numbers::PI;
@@ -251,7 +252,21 @@ void ProblemParameters<dim>::process_base_parameters(
   constants["y_max"] = y_start + y_width;
   constants["z_min"] = z_start;
   constants["z_max"] = z_start + z_width;
+}
 
+/**
+ * \brief Processes the shared base parameters to provide necessary public data.
+ *
+ * \param[in] triangulation    triangulation
+ * \param[in] fe               finite element system
+ * \param[in] face_quadrature  face quadrature
+ */
+template <int dim>
+void ProblemParameters<dim>::process_shared_base_parameters(
+  Triangulation<dim> &,
+  const FESystem<dim> & fe,
+  const QGauss<dim - 1> & face_quadrature)
+{
   // exact solution
   if (has_exact_solution)
   {
@@ -274,7 +289,7 @@ void ProblemParameters<dim>::process_base_parameters(
       }
       else
       {
-        Assert(false, ExcNotImplemented());
+        throw ExcNotImplemented();
       }
     }
   }
@@ -310,7 +325,7 @@ void ProblemParameters<dim>::process_base_parameters(
     }
     else
     {
-      Assert(false, ExcNotImplemented());
+      throw ExcNotImplemented();
     }
   }
 

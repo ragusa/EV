@@ -8,7 +8,9 @@
  *
  * \param[in] n_dofs_  number of degrees of freedom
  */
-ZeroesLimiter::ZeroesLimiter(const unsigned int & n_dofs_) : Limiter(n_dofs_) {}
+template <int dim>
+ZeroesLimiter<dim>::ZeroesLimiter(const unsigned int & n_dofs_) : Limiter<dim>(n_dofs_) {}
+
 /**
  * \brief Computes the limiting coefficient matrix.
  *
@@ -18,8 +20,9 @@ ZeroesLimiter::ZeroesLimiter(const unsigned int & n_dofs_) : Limiter(n_dofs_) {}
  *            fluxes into each node \f$\mathbf{Q}^-\f$ and \f$\mathbf{Q}^+\f$
  * \param[out] limiter_matrix  matrix of limiting coeffients \f$\mathbf{L}\f$
  */
-void ZeroesLimiter::compute_limiter_matrix(const SparseMatrix<double> &,
-                                           const DoFBounds &,
+template <int dim>
+void ZeroesLimiter<dim>::compute_limiter_matrix(const SparseMatrix<double> &,
+                                           const DoFBounds<dim> &,
                                            SparseMatrix<double> & limiter_matrix)
 {
   // set all entries to zero

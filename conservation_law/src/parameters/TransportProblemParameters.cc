@@ -260,7 +260,7 @@ void TransportProblemParameters<dim>::process_derived_parameters(
   }
   else
   {
-    Assert(false, ExcNotImplemented());
+    throw ExcNotImplemented();
   }
 
   // normalize transport direction

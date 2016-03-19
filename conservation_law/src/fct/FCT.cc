@@ -41,6 +41,10 @@ FCT<dim>::FCT(const RunParameters & run_parameters_,
   // initialize matrices with sparsity pattern
   limiter_matrix.reinit(sparsity_pattern);
   antidiffusion_matrix.reinit(sparsity_pattern);
+  limited_antidiffusion_matrix.reinit(sparsity_pattern);
+
+  // resize vectors
+  cumulative_antidiffusion.reinit(this->n_dofs);
 }
 
 /**

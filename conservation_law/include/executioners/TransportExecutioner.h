@@ -105,7 +105,7 @@ protected:
   Vector<double> reaction_vector;
   Vector<double> ss_rhs;
   Vector<double> new_solution;
-  Vector<double> cumulative_antidiffusion;
+  Vector<double> antidiffusion_vector;
 
   std::vector<unsigned int> dirichlet_nodes;
 

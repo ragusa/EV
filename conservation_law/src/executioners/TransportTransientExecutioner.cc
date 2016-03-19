@@ -136,7 +136,7 @@ void TransportTransientExecutioner<dim>::run()
                 << std::endl;
 
     // compute new solution in derived class
-    compute_new_solution(dt, dt_old, n);
+    compute_new_solution(dt, dt_old, t_old, n);
 
     // increment transient counter for post-processor
     this->postprocessor->increment_transient_counter();

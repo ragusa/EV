@@ -33,10 +33,10 @@ protected:
                                          Vector<double> & max_values) const;
 
   /** \brief solution bounds \f$\mathbf{W}^\pm\f$ */
-  DoFBounds solution_bounds;
+  DoFBounds<dim> solution_bounds;
 
   /** \brief antidiffusion bounds \f$\mathbf{Q}^\pm\f$ */
-  DoFBounds antidiffusion_bounds;
+  DoFBounds<dim> antidiffusion_bounds;
 
   /** \brief limiter */
   const std::shared_ptr<Limiter> limiter;

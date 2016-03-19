@@ -14,6 +14,7 @@ using namespace dealii;
 /**
  * \brief Abstract base class for FCT limiters.
  */
+template <int dim>
 class Limiter
 {
 public:
@@ -21,7 +22,7 @@ public:
 
   virtual void compute_limiter_matrix(
     const SparseMatrix<double> & antidiffusion_matrix,
-    const DoFBounds & antidiffusion_bounds,
+    const DoFBounds<dim> & antidiffusion_bounds,
     SparseMatrix<double> & limiter_matrix) = 0;
 
   void apply_limiter_matrix(const SparseMatrix<double> & limiter_matrix,
