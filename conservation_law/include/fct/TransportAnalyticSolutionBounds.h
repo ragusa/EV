@@ -18,19 +18,19 @@ using namespace dealii;
  * \brief Abstract base class for implementing upper and lower bounds for
  *        the transport solution vector.
  */
-class TransportAnalyticSolutionBounds
+template <int dim>
+class TransportAnalyticSolutionBounds : public DoFBounds<dim>
 {
 public:
   TransportAnalyticSolutionBounds(
     const TransportProblemParameters<dim> & problem_parameters,
     const DoFHandler<dim> & dof_handler,
     const FESystem<dim> & fe,
-    const QGauss<dim> & cell_quadrature,
-    const unsigned int & n_dofs);
+    const QGauss<dim> & cell_quadrature);
 
-  void compute_and_apply_analytic_bounds(const Vector<double> & solution,
-                                         const double & dt,
-                                         const double & t_old);
+  void update(const Vector<double> & solution,
+              const double & dt,
+              const double & t_old);
 
 protected:
   /** \brief cross section bounds */

@@ -10,7 +10,7 @@
  * \param[in] dof_handler_  degree of freedom handler
  */
 template <int dim>
-FCTFilter<dim>::FCTFilter(const std::shared_ptr<Limiter> limiter_,
+FCTFilter<dim>::FCTFilter(const std::shared_ptr<Limiter<dim>> limiter_,
                           const DoFHandler<dim> & dof_handler_)
   : solution_bounds(dof_handler_.n_dofs()),
     antidiffusion_bounds(dof_handler_.n_dofs()),

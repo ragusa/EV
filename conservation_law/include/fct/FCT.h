@@ -80,7 +80,7 @@ protected:
     std::string filter_sequence_string);
 
   /** \brief limiter */
-  std::shared_ptr<Limiter> limiter;
+  std::shared_ptr<Limiter<dim>> limiter;
 
   /** \brief sparsity pattern */
   SparsityPattern sparsity_pattern;

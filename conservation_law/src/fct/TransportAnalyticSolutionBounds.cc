@@ -13,26 +13,24 @@
  * \param[in] cell_quadrature_  cell quadrature
  * \param[in] n_dofs_  number of degrees of freedom
  */
-TransportAnalyticSolutionBounds::TransportAnalyticSolutionBounds(
+template <int dim>
+TransportAnalyticSolutionBounds<dim>::TransportAnalyticSolutionBounds(
   const TransportProblemParameters<dim> & problem_parameters_,
   const DoFHandler<dim> & dof_handler_,
   const FESystem<dim> & fe_,
-  const QGauss<dim> & cell_quadrature_,
-  const unsigned int & n_dofs_)
-  : DoFBounds(n_dofs_),
+  const QGauss<dim> & cell_quadrature_)
+  : DoFBounds<dim>(n_dofs_),
     cross_section_bounds(problem_parameters_.cross_section_function,
                          false,
                          dof_handler_,
                          fe_,
-                         cell_quadrature_,
-                         n_dofs_),
+                         cell_quadrature_),
     source_bounds(problem_parameters_.source_function,
                   problem_parameters_.source_is_time_dependent,
                   dof_handler_,
                   fe_,
-                  cell_quadrature_,
-                  n_dofs_),
-    transport_speed(problem_parameters_.transport_speed)
+                  cell_quadrature_),
+    speed(problem_parameters_.transport_speed)
 {
 }
 

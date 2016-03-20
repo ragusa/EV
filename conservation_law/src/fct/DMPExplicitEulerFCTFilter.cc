@@ -13,7 +13,7 @@
  */
 template <int dim>
 DMPExplicitEulerFCTFilter<dim>::DMPExplicitEulerFCTFilter(
-  const std::shared_ptr<Limiter> limiter_,
+  const std::shared_ptr<Limiter<dim>> limiter_,
   const DoFHandler<dim> & dof_handler_,
   const SparseMatrix<double> & lumped_mass_matrix_)
   : ExplicitEulerFCTFilter<dim>(limiter_, dof_handler_, lumped_mass_matrix_)

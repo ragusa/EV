@@ -10,13 +10,20 @@
  * \param[in] run_parameters_  run parameters
  * \param[in] problem_parameters_  problem parameters
  * \param[in] dof_handler_  degree of freedom handler
+ * \param[in] fe_  finite element system
+ * \param[in] cell_quadrature_  cell quadrature
  */
 template <int dim>
 TransportSteadyStateFCT<dim>::TransportSteadyStateFCT(
   const TransportRunParameters & run_parameters_,
-  const TransportProblemParameters<dim> &,
-  const DoFHandler<dim> & dof_handler_)
-  : SteadyStateFCT<dim>(run_parameters_, dof_handler_)
+  const TransportProblemParameters<dim> & problem_parameters_,
+  const DoFHandler<dim> & dof_handler_,
+  const FESystem<dim> & fe_,
+  const QGauss<dim> & cell_quadrature_)
+  : SteadyStateFCT<dim>(run_parameters_, dof_handler_),
+    problem_parameters(&problem_parameters_),
+    fe(&fe_),
+    cell_quadrature(&cell_quadrature_)
 {
   // create FCT filters
   this->create_filters();
@@ -38,6 +45,13 @@ std::shared_ptr<SteadyStateFCTFilter<dim>> TransportSteadyStateFCT<
   if (filter_string == "dmp")
     filter = std::make_shared<DMPSteadyStateFCTFilter<dim>>(this->limiter,
                                                             *this->dof_handler);
+  else if (filter_string == "dmp_analytic")
+    filter =
+      std::make_shared<TransportDMPAnalyticSSFCTFilter<dim>>(*problem_parameters,
+                                                             *this->dof_handler,
+                                                             *fe,
+                                                             *cell_quadrature,
+                                                             this->limiter);
   else
     throw ExcNotImplemented();
 

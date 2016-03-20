@@ -9,11 +9,12 @@
  * \param[in] n_dofs_  number of degrees of freedom
  */
 template <int dim>
-ZalesakLimiter<dim>::ZalesakLimiter(const unsigned int & n_dofs_) : Limiter<dim>(n_dofs_)
+ZalesakLimiter<dim>::ZalesakLimiter(const unsigned int & n_dofs_)
+  : Limiter<dim>(n_dofs_)
 {
   // resize limiter vectors
-  negative_limiter_vector.reinit(n_dofs);
-  positive_limiter_vector.reinit(n_dofs);
+  negative_limiter_vector.reinit(this->n_dofs);
+  positive_limiter_vector.reinit(this->n_dofs);
 }
 
 /**

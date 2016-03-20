@@ -18,7 +18,7 @@ template <int dim>
 class SteadyStateFCTFilter : public FCTFilter<dim>
 {
 public:
-  SteadyStateFCTFilter(const std::shared_ptr<Limiter> limiter,
+  SteadyStateFCTFilter(const std::shared_ptr<Limiter<dim>> limiter,
                        const DoFHandler<dim> & dof_handler);
 
   virtual void filter_antidiffusive_fluxes(

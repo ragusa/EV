@@ -44,7 +44,6 @@ BurgersProblemParameters.cc
 BurgersProblemParameters.h
 BurgersRunParameters.cc
 BurgersRunParameters.h
-CMakeVars.h
 CMakeVars.h.h
 ConservationLaw.cc
 ConservationLaw.h

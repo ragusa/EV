@@ -16,7 +16,7 @@ template <int dim>
 class DMPSteadyStateFCTFilter : public SteadyStateFCTFilter<dim>
 {
 public:
-  DMPSteadyStateFCTFilter(const std::shared_ptr<Limiter> limiter,
+  DMPSteadyStateFCTFilter(const std::shared_ptr<Limiter<dim>> limiter,
                           const DoFHandler<dim> & dof_handler);
 
 protected:

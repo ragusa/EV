@@ -24,7 +24,7 @@ public:
   /** \brief Alias for cell iterator */
   using Cell = typename DoFHandler<dim>::active_cell_iterator;
 
-  FCTFilter(const std::shared_ptr<Limiter> limiter,
+  FCTFilter(const std::shared_ptr<Limiter<dim>> limiter,
             const DoFHandler<dim> & dof_handler);
 
 protected:
@@ -39,7 +39,7 @@ protected:
   DoFBounds<dim> antidiffusion_bounds;
 
   /** \brief limiter */
-  const std::shared_ptr<Limiter> limiter;
+  const std::shared_ptr<Limiter<dim>> limiter;
 
   /** \brief degree of freedom handler */
   const DoFHandler<dim> * const dof_handler;

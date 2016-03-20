@@ -7,14 +7,21 @@
 /**
  * \brief Constructor.
  *
- * \param[in] limiter_  limiter
+ * \param[in] problem_parameters_  problem parameters
  * \param[in] dof_handler_  degree of freedom handler
+ * \param[in] fe_  finite element system
+ * \param[in] cell_quadrature_  cell quadrature
+ * \param[in] limiter_  limiter
  */
 template <int dim>
 TransportDMPAnalyticSSFCTFilter<dim>::TransportDMPAnalyticSSFCTFilter(
-  const std::shared_ptr<Limiter> limiter_, const DoFHandler<dim> & dof_handler_)
+  const TransportProblemParameters<dim> & problem_parameters_,
+  const DoFHandler<dim> & dof_handler_,
+  const FESystem<dim> & fe_,
+  const QGauss<dim> & cell_quadrature_,
+  const std::shared_ptr<Limiter<dim>> limiter_)
   : DMPSteadyStateFCTFilter<dim>(limiter_, dof_handler_),
-  analytic_bounds(problem_parameters_, dof_handler_, fe_, cell_quadrature_)
+    analytic_bounds(problem_parameters_, dof_handler_, fe_, cell_quadrature_)
 {
 }
 

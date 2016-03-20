@@ -18,8 +18,12 @@ template <int dim>
 class TransportDMPAnalyticSSFCTFilter : public DMPSteadyStateFCTFilter<dim>
 {
 public:
-  TransportDMPAnalyticSSFCTFilter(const std::shared_ptr<Limiter> limiter,
-                          const DoFHandler<dim> & dof_handler);
+  TransportDMPAnalyticSSFCTFilter(
+    const TransportProblemParameters<dim> & problem_parameters,
+    const DoFHandler<dim> & dof_handler,
+    const FESystem<dim> & fe,
+    const QGauss<dim> & cell_quadrature,
+    const std::shared_ptr<Limiter<dim>> limiter);
 
   virtual void filter_antidiffusive_fluxes(
     const Vector<double> & solution,

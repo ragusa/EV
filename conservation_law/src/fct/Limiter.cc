@@ -9,7 +9,10 @@
  * \param[in] n_dofs_  number of degrees of freedom
  */
 template <int dim>
-Limiter<dim>::Limiter(const unsigned int & n_dofs_) : n_dofs(n_dofs_) {}
+Limiter<dim>::Limiter(const unsigned int & n_dofs_)
+  : n_dofs(n_dofs_)
+{
+}
 /**
  * \brief Applies limiting coefficients to an antidiffusion matrix.
  *

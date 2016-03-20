@@ -11,7 +11,8 @@
  */
 template <int dim>
 SteadyStateFCTFilter<dim>::SteadyStateFCTFilter(
-  const std::shared_ptr<Limiter> limiter_, const DoFHandler<dim> & dof_handler_)
+  const std::shared_ptr<Limiter<dim>> limiter_,
+  const DoFHandler<dim> & dof_handler_)
   : FCTFilter<dim>(limiter_, dof_handler_)
 {
 }

@@ -18,7 +18,7 @@ template <int dim>
 class ExplicitEulerFCTFilter : public FCTFilter<dim>
 {
 public:
-  ExplicitEulerFCTFilter(const std::shared_ptr<Limiter> limiter,
+  ExplicitEulerFCTFilter(const std::shared_ptr<Limiter<dim>> limiter,
                          const DoFHandler<dim> & dof_handler,
                          const SparseMatrix<double> & lumped_mass_matrix);
 
