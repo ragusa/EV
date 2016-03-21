@@ -8,11 +8,13 @@
  *
  * \param[in] run_parameters_  run parameters
  * \param[in] dof_handler_  degree of freedom handler
+ * \param[in] fe_  finite element system
  */
 template <int dim>
 SteadyStateFCT<dim>::SteadyStateFCT(const RunParameters & run_parameters_,
-                                    const DoFHandler<dim> & dof_handler_)
-  : FCT<dim>(run_parameters_, dof_handler_),
+                                    const DoFHandler<dim> & dof_handler_,
+                                    const FESystem<dim> & fe_)
+  : FCT<dim>(run_parameters_, dof_handler_, fe_),
     use_cumulative_antidiffusion_algorithm(
       run_parameters_.use_cumulative_antidiffusion_algorithm)
 {
@@ -140,8 +142,8 @@ std::shared_ptr<SteadyStateFCTFilter<dim>> SteadyStateFCT<dim>::create_filter(
   // create filter
   std::shared_ptr<SteadyStateFCTFilter<dim>> filter;
   if (filter_string == "dmp")
-    filter = std::make_shared<DMPSteadyStateFCTFilter<dim>>(this->limiter,
-                                                            *this->dof_handler);
+    filter = std::make_shared<DMPSteadyStateFCTFilter<dim>>(
+      this->limiter, *this->dof_handler, *this->fe);
   else
     throw ExcNotImplemented();
 

@@ -16,13 +16,12 @@
 template <int dim>
 TransportSteadyStateFCT<dim>::TransportSteadyStateFCT(
   const TransportRunParameters & run_parameters_,
-  const TransportProblemParameters<dim> & problem_parameters_,
+  TransportProblemParameters<dim> & problem_parameters_,
   const DoFHandler<dim> & dof_handler_,
   const FESystem<dim> & fe_,
   const QGauss<dim> & cell_quadrature_)
-  : SteadyStateFCT<dim>(run_parameters_, dof_handler_),
+  : SteadyStateFCT<dim>(run_parameters_, dof_handler_, fe_),
     problem_parameters(&problem_parameters_),
-    fe(&fe_),
     cell_quadrature(&cell_quadrature_)
 {
   // create FCT filters
@@ -43,13 +42,13 @@ std::shared_ptr<SteadyStateFCTFilter<dim>> TransportSteadyStateFCT<
   // create filter
   std::shared_ptr<SteadyStateFCTFilter<dim>> filter;
   if (filter_string == "dmp")
-    filter = std::make_shared<DMPSteadyStateFCTFilter<dim>>(this->limiter,
-                                                            *this->dof_handler);
+    filter = std::make_shared<DMPSteadyStateFCTFilter<dim>>(
+      this->limiter, *this->dof_handler, *this->fe);
   else if (filter_string == "dmp_analytic")
     filter =
       std::make_shared<TransportDMPAnalyticSSFCTFilter<dim>>(*problem_parameters,
                                                              *this->dof_handler,
-                                                             *fe,
+                                                             *this->fe,
                                                              *cell_quadrature,
                                                              this->limiter);
   else

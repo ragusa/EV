@@ -1,21 +1,26 @@
-# Input file for shallow water
+# Input file for scalar transport
 
 # Problem names:
-#   dam_break_flat
-#   dam_break_bump
-#   lake_at_rest
-#   lake_at_rest_perturbed
-#   lake_at_rest_flat_perturbed
-#   lake_at_rest_2d
-#   lake_at_rest_flat_perturbed_2d
+#   void
+#   absorber
+#   void_to_absorber
+#   sourcevoid_to_absorber
+#   crooked_pipe
+#   obstruction
+#   three_region
+#   mms_tsinx    (TR:t*sin(pi*x)        SS:sin(pi*x))
+#   mms_xexpt    (TR:x*exp(-t)          SS:N/A      )
+#   mms_exptsinx (TR:exp(-t)*sin(pi*x)  SS:N/A      )
+#   mms_xt       (TR:x*t                SS:x        )
+#   mms_t        (TR:t                  SS:1        )
 subsection problem
-   set problem name = dam_break_flat
+   set problem name = void_to_absorber_1d_ss
 end
 
 subsection scheme
-   set scheme            = high         # low|high|fct
-   set low order scheme  = lax          # constant|lax|dmp|di_visc|di_diff
-   set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
+   set scheme            = fct          # low|high|fct
+   set low order scheme  = dmp          # dmp
+   set high order scheme = galerkin     # galerkin|entropy_visc
 end
 
 subsection refinement
@@ -31,18 +36,18 @@ subsection refinement
 end
 
 subsection time
-   set time step size option  = constant # constant|cfl
+   set time step size option  = constant      # constant|cfl
    set cfl                    = 0.50
    set time step size         = 0.001
    set use default end time   = false
-   set end time               = 0.002
+   set end time               = 0.1
    set steady state tolerance = 1.0e-6
 end
 
 subsection temporal discretization
-   set temporal discretization = ssprk # ss|ssprk|theta
+   set temporal discretization = ss    # ss|ssprk|theta
    set ssprk discretization    = FE    # FE|SSP2|SSP3
-   set theta discretization    = BE    # FE|CN|BE
+   set theta discretization    = CN    # FE|CN|BE
 end
 
 subsection artificial viscosity
@@ -53,18 +58,15 @@ subsection artificial viscosity
    set constant viscosity value           = 0.02
    set lax viscosity coefficient          = 0.5
    set use low order viscosity for first time step = true
-   set multiply low order viscosity by froude = false
-   set entropy normalization              = local # constant|average|local
-   set constant entropy normalization coefficient = 0.1
 end
 
 subsection fct
-   set filter sequence string        = dmp
+   set filter sequence string        = dmp_analytic
    set limiter option                = zalesak # ones|zeroes|zalesak
    set fct synchronization type      = none    # none|min|compound
    set fct initialization option     = zero    # zero|low|high
    set skip fct if bounds satisfied  = false
-   set use cumulative antidiffusion algorithm = true
+   set use cumulative antidiffusion algorithm = false
    set use star states in fct bounds = false
    set output limiter matrix         = false
    set output fct bounds             = false
@@ -89,13 +91,12 @@ subsection quadrature
 end
 
 subsection output
-   set verbosity level    = 1    # 0|1|2 (0 is least verbose)
-   set output exact solution = true
+   set verbosity level    = 0    # 0|1|2 (0 is least verbose)
    set output period      = 0
    set transient output size limit = 1e9
    set output mesh        = false
    set output mass matrix = false
-   set output viscosity   = true
+   set output viscosity   = false
    set output viscosity transient      = false
    set exact solution refinement level = 7
    set save convergence results        = false

@@ -78,7 +78,7 @@ void FunctionDoFBounds<dim>::compute_function_bounds()
     for (unsigned int q = 0; q < n_q_points_cell; ++q)
     {
       // update min and max values on cell
-      const double value_q = function.value(points[q]);
+      const double value_q = function->value(points[q]);
       min_cell = std::min(min_cell, value_q);
       max_cell = std::max(max_cell, value_q);
     }

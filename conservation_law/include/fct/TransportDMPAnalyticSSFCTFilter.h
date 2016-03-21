@@ -19,7 +19,7 @@ class TransportDMPAnalyticSSFCTFilter : public DMPSteadyStateFCTFilter<dim>
 {
 public:
   TransportDMPAnalyticSSFCTFilter(
-    const TransportProblemParameters<dim> & problem_parameters,
+    TransportProblemParameters<dim> & problem_parameters,
     const DoFHandler<dim> & dof_handler,
     const FESystem<dim> & fe,
     const QGauss<dim> & cell_quadrature,

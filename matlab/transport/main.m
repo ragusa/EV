@@ -10,8 +10,8 @@ quadrature.nq = 3;                  % number of quadrature points per cell
 % spatial method options
 %--------------------------------------------------------------------------
 compute_low_order  = false; % compute and plot low-order solution?
-compute_high_order = true; % compute and plot high-order solution?
-compute_FCT        = false; % compute and plot FCT solution?
+compute_high_order = false; % compute and plot high-order solution?
+compute_FCT        = true; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
 %                   2 = graph-theoretic low-order scheme
@@ -19,7 +19,7 @@ low_order_scheme  = 2;
 
 % high_order_scheme: 1 = Galerkin
 %                    2 = Entropy viscosity
-high_order_scheme = 2;
+high_order_scheme = 1;
 
 % entropy viscosity options:
 ev.cE = 1.0; % coefficient for entropy residual in entropy viscosity
@@ -52,7 +52,7 @@ t_end = 0.1;     % max time to run
 %--------------------------------------------------------------------------
 % DMP option: 1 = low-order DMP
 %             2 = max/min(low-order DMP, analytic DMP)
-DMP_option = 1;
+DMP_option = 2;
 
 % limiter option: 0 = All 0 (no correction; low-order)
 %                 1 = All 1 (full correction; high-order)
@@ -80,7 +80,7 @@ dirichlet_limiting_coefficient = 1.0; % limiting coefficient bounds for
 %            4: void
 %            5: MMS: TR: u = t*sin(pi*x)  SS: u = sin(pi*x)
 %            6: MMS: TR: u = x*t          SS: u = x
-problemID = 1;
+problemID = 2;
 
 % IC_option: 0: zero
 %            1: exponential pulse
@@ -154,7 +154,8 @@ switch problemID
         phys.periodic_BC = false;
         phys.inc    = 1.0;
         phys.mu     = 1.0;
-        phys.sigma  = @(x,t) 10.0*(x >= 0.5);
+        sigma_value = 100.0;
+        phys.sigma  = @(x,t) sigma_value*(x >= 0.5);
         phys.source = @(x,t) 0.0;
         phys.speed  = 1;
         
@@ -162,9 +163,9 @@ switch problemID
         source_is_time_dependent = false;
         exact_solution_known = true;
         if temporal_scheme == 0
-          exact = @(x,t) (x<0.5) + (x>=0.5).*(exp(-10*(x-0.5)));
+          exact = @(x,t) (x<0.5) + (x>=0.5).*(exp(-sigma_value*(x-0.5)));
         else
-          exact = @(x,t) (t>=x).*((x<0.5) + (x>=0.5).*(exp(-10*(x-0.5))));
+          exact = @(x,t) (t>=x).*((x<0.5) + (x>=0.5).*(exp(-sigma_value*(x-0.5))));
         end
     case 3 % void with source -> absorber without source
         mesh.x_min = 0.0;

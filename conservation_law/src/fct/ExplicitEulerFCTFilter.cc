@@ -8,14 +8,16 @@
  *
  * \param[in] limiter_  limiter
  * \param[in] dof_handler_  degree of freedom handler
+ * \param[in] fe_  finite element system
  * \param[in] lumped_mass_matrix_  lumped mass matrix \f$\mathbf{M}^L\f$
  */
 template <int dim>
 ExplicitEulerFCTFilter<dim>::ExplicitEulerFCTFilter(
   const std::shared_ptr<Limiter<dim>> limiter_,
   const DoFHandler<dim> & dof_handler_,
+  const FESystem<dim> & fe_,
   const SparseMatrix<double> & lumped_mass_matrix_)
-  : FCTFilter<dim>(limiter_, dof_handler_),
+  : FCTFilter<dim>(limiter_, dof_handler_, fe_),
     lumped_mass_matrix(&lumped_mass_matrix_)
 {
 }

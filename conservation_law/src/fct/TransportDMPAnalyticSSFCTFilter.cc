@@ -15,12 +15,12 @@
  */
 template <int dim>
 TransportDMPAnalyticSSFCTFilter<dim>::TransportDMPAnalyticSSFCTFilter(
-  const TransportProblemParameters<dim> & problem_parameters_,
+  TransportProblemParameters<dim> & problem_parameters_,
   const DoFHandler<dim> & dof_handler_,
   const FESystem<dim> & fe_,
   const QGauss<dim> & cell_quadrature_,
   const std::shared_ptr<Limiter<dim>> limiter_)
-  : DMPSteadyStateFCTFilter<dim>(limiter_, dof_handler_),
+  : DMPSteadyStateFCTFilter<dim>(limiter_, dof_handler_, fe_),
     analytic_bounds(problem_parameters_, dof_handler_, fe_, cell_quadrature_)
 {
 }
@@ -47,7 +47,7 @@ void TransportDMPAnalyticSSFCTFilter<dim>::filter_antidiffusive_fluxes(
   SparseMatrix<double> & antidiffusion_matrix)
 {
   // compute DMP solution bounds
-  compute_solution_bounds(solution, low_order_ss_matrix, ss_rhs);
+  this->compute_solution_bounds(solution, low_order_ss_matrix, ss_rhs);
 
   // compute analytic solution bounds
   analytic_bounds.update(solution, 0.0, 0.0);
@@ -56,7 +56,7 @@ void TransportDMPAnalyticSSFCTFilter<dim>::filter_antidiffusive_fluxes(
   this->solution_bounds.widen(analytic_bounds);
 
   // compute antidiffusion bounds Q- and Q+
-  compute_antidiffusion_bounds(
+  this->compute_antidiffusion_bounds(
     solution, low_order_ss_matrix, ss_rhs, cumulative_antidiffusion);
 
   // limit antidiffusion fluxes

@@ -19,7 +19,8 @@ class SteadyStateFCTFilter : public FCTFilter<dim>
 {
 public:
   SteadyStateFCTFilter(const std::shared_ptr<Limiter<dim>> limiter,
-                       const DoFHandler<dim> & dof_handler);
+                       const DoFHandler<dim> & dof_handler,
+                       const FESystem<dim> & fe);
 
   virtual void filter_antidiffusive_fluxes(
     const Vector<double> & solution,

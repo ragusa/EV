@@ -19,6 +19,7 @@ class ExplicitEulerFCT : public FCT<dim>
 public:
   ExplicitEulerFCT(const RunParameters & run_parameters,
                    const DoFHandler<dim> & dof_handler,
+                   const FESystem<dim> & fe,
                    const SparseMatrix<double> & consistent_mass_matrix,
                    const SparseMatrix<double> & lumped_mass_matrix);
 

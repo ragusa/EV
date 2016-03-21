@@ -8,6 +8,7 @@
  *
  * \param[in] run_parameters_  run parameters
  * \param[in] dof_handler_  degree of freedom handler
+ * \param[in] fe_  finite element system
  * \param[in] consistent_mass_matrix_  consistent mass matrix
  *   \f$\mathbf{M}^C\f$
  * \param[in] lumped_mass_matrix_  lumped mass matrix
@@ -17,9 +18,10 @@ template <int dim>
 ExplicitEulerFCT<dim>::ExplicitEulerFCT(
   const RunParameters & run_parameters_,
   const DoFHandler<dim> & dof_handler_,
+  const FESystem<dim> & fe_,
   const SparseMatrix<double> & consistent_mass_matrix_,
   const SparseMatrix<double> & lumped_mass_matrix_)
-  : FCT<dim>(run_parameters_, dof_handler_),
+  : FCT<dim>(run_parameters_, dof_handler_, fe_),
     consistent_mass_matrix(&consistent_mass_matrix_),
     lumped_mass_matrix(&lumped_mass_matrix_)
 {
@@ -119,7 +121,7 @@ std::shared_ptr<ExplicitEulerFCTFilter<dim>> ExplicitEulerFCT<dim>::create_filte
   std::shared_ptr<ExplicitEulerFCTFilter<dim>> filter;
   if (filter_string == "dmp")
     filter = std::make_shared<DMPExplicitEulerFCTFilter<dim>>(
-      this->limiter, *this->dof_handler, *lumped_mass_matrix);
+      this->limiter, *this->dof_handler, *this->fe, *lumped_mass_matrix);
   else
     throw ExcNotImplemented();
 

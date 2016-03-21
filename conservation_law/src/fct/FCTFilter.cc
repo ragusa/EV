@@ -8,12 +8,14 @@
  *
  * \param[in] limiter_  limiter
  * \param[in] dof_handler_  degree of freedom handler
+ * \param[in] fe_  finite element system
  */
 template <int dim>
 FCTFilter<dim>::FCTFilter(const std::shared_ptr<Limiter<dim>> limiter_,
-                          const DoFHandler<dim> & dof_handler_)
-  : solution_bounds(dof_handler_.n_dofs()),
-    antidiffusion_bounds(dof_handler_.n_dofs()),
+                          const DoFHandler<dim> & dof_handler_,
+                          const FESystem<dim> & fe_)
+  : solution_bounds(dof_handler_, fe_),
+    antidiffusion_bounds(dof_handler_, fe_),
     limiter(limiter_),
     dof_handler(&dof_handler_),
     n_dofs(dof_handler_.n_dofs()),

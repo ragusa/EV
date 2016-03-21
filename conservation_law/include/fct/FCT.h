@@ -70,7 +70,9 @@ public:
   /** \brief alias for limiter option */
   using LimiterOption = typename RunParameters::LimiterOption;
 
-  FCT(const RunParameters & run_parameters, const DoFHandler<dim> & dof_handler);
+  FCT(const RunParameters & run_parameters,
+      const DoFHandler<dim> & dof_handler,
+      const FESystem<dim> & fe);
 
 protected:
   void compute_row_sum_vector(const SparseMatrix<double> & matrix,
@@ -99,6 +101,9 @@ protected:
 
   /** \brief degree of freedom handler */
   const DoFHandler<dim> * const dof_handler;
+
+  /** \brief finite element system */
+  const FESystem<dim> * const fe;
 
   /** \brief number of degrees of freedom */
   const unsigned int n_dofs;

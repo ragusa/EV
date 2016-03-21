@@ -1,6 +1,6 @@
 /**
- * \file TransportExplicitEulerFCT.cc
- * \brief Provides the function definitions for the TransportExplicitEulerFCT
+ * \file TransportThetaFCT.cc
+ * \brief Provides the function definitions for the TransportThetaFCT
  * class.
  */
 
@@ -17,18 +17,18 @@
  *   \f$\mathbf{M}^L\f$
  */
 template <int dim>
-TransportExplicitEulerFCT<dim>::TransportExplicitEulerFCT(
+TransportThetaFCT<dim>::TransportThetaFCT(
   const TransportRunParameters & run_parameters_,
   const TransportProblemParameters<dim> &,
   const DoFHandler<dim> & dof_handler_,
   const FESystem<dim> & fe_,
   const SparseMatrix<double> & consistent_mass_matrix_,
   const SparseMatrix<double> & lumped_mass_matrix_)
-  : ExplicitEulerFCT<dim>(run_parameters_,
-                          dof_handler_,
-                          fe_,
-                          consistent_mass_matrix_,
-                          lumped_mass_matrix_)
+  : ThetaFCT<dim>(run_parameters_,
+                  dof_handler_,
+                  fe_,
+                  consistent_mass_matrix_,
+                  lumped_mass_matrix_)
 {
   // create FCT filters
   this->create_filters();
@@ -42,14 +42,17 @@ TransportExplicitEulerFCT<dim>::TransportExplicitEulerFCT(
  * \return pointer to created FCT filter
  */
 template <int dim>
-std::shared_ptr<ExplicitEulerFCTFilter<dim>> TransportExplicitEulerFCT<
-  dim>::create_filter(const std::string & filter_string)
+std::shared_ptr<ThetaFCTFilter<dim>> TransportThetaFCT<dim>::create_filter(
+  const std::string & filter_string)
 {
   // create filter
-  std::shared_ptr<ExplicitEulerFCTFilter<dim>> filter;
+  std::shared_ptr<ThetaFCTFilter<dim>> filter;
   if (filter_string == "dmp")
-    filter = std::make_shared<DMPExplicitEulerFCTFilter<dim>>(
-      this->limiter, *this->dof_handler, *this->fe, *this->lumped_mass_matrix);
+    filter = std::make_shared<DMPThetaFCTFilter<dim>>(this->limiter,
+                                                      *this->dof_handler,
+                                                      *this->fe,
+                                                      *this->lumped_mass_matrix,
+                                                      this->theta);
   else
     throw ExcNotImplemented();
 

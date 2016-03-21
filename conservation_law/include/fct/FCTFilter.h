@@ -25,7 +25,8 @@ public:
   using Cell = typename DoFHandler<dim>::active_cell_iterator;
 
   FCTFilter(const std::shared_ptr<Limiter<dim>> limiter,
-            const DoFHandler<dim> & dof_handler);
+            const DoFHandler<dim> & dof_handler,
+            const FESystem<dim> & fe);
 
 protected:
   void compute_min_and_max_of_dof_vector(const Vector<double> & dof_vector,

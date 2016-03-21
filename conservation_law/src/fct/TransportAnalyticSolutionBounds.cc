@@ -15,11 +15,11 @@
  */
 template <int dim>
 TransportAnalyticSolutionBounds<dim>::TransportAnalyticSolutionBounds(
-  const TransportProblemParameters<dim> & problem_parameters_,
+  TransportProblemParameters<dim> & problem_parameters_,
   const DoFHandler<dim> & dof_handler_,
   const FESystem<dim> & fe_,
   const QGauss<dim> & cell_quadrature_)
-  : DoFBounds<dim>(n_dofs_),
+  : DoFBounds<dim>(dof_handler_, fe_),
     cross_section_bounds(problem_parameters_.cross_section_function,
                          false,
                          dof_handler_,
@@ -75,7 +75,7 @@ void TransportAnalyticSolutionBounds<dim>::update(const Vector<double> & solutio
         1.0e-15) // equal to zero within precision
       max_source_term = vdt * source_bounds.upper[i];
     else
-      max_source_term = source.upper[i] / cross_section_bounds.lower[i] *
+      max_source_term = source_bounds.upper[i] / cross_section_bounds.lower[i] *
         (1.0 - std::exp(-vdt * cross_section_bounds.lower[i]));
 
     // compute bounds

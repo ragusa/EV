@@ -70,7 +70,7 @@ protected:
 
   const TransportRunParameters parameters;
 
-  const TransportProblemParameters<dim> * const problem_parameters;
+  TransportProblemParameters<dim> * const problem_parameters;
 
   Triangulation<dim> * const triangulation;
 

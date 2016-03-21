@@ -17,7 +17,8 @@ class DMPSteadyStateFCTFilter : public SteadyStateFCTFilter<dim>
 {
 public:
   DMPSteadyStateFCTFilter(const std::shared_ptr<Limiter<dim>> limiter,
-                          const DoFHandler<dim> & dof_handler);
+                          const DoFHandler<dim> & dof_handler,
+                          const FESystem<dim> & fe);
 
 protected:
   virtual void compute_solution_bounds(

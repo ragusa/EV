@@ -44,6 +44,7 @@ BurgersProblemParameters.cc
 BurgersProblemParameters.h
 BurgersRunParameters.cc
 BurgersRunParameters.h
+CMakeVars.h
 CMakeVars.h.h
 ConservationLaw.cc
 ConservationLaw.h
@@ -58,6 +59,8 @@ DMPLowOrderViscosity.cc
 DMPLowOrderViscosity.h
 DMPSteadyStateFCTFilter.cc
 DMPSteadyStateFCTFilter.h
+DMPThetaFCTFilter.cc
+DMPThetaFCTFilter.h
 DoFBounds.cc
 DoFBounds.h
 DomainInvariantDiffusion.cc
@@ -176,6 +179,10 @@ SteadyStateFCT.cc
 SteadyStateFCTFilter.cc
 SteadyStateFCTFilter.h
 SteadyStateFCT.h
+ThetaFCT.cc
+ThetaFCTFilter.cc
+ThetaFCTFilter.h
+ThetaFCT.h
 TransportAnalyticSolutionBounds.cc
 TransportAnalyticSolutionBounds.h
 Transport.cc
@@ -201,6 +208,9 @@ TransportSteadyStateExecutioner.h
 TransportSteadyStateFCT.cc
 TransportSteadyStateFCT.h
 TransportThetaExecutioner.cc
+TransportThetaExecutioner.h
+TransportThetaFCT.cc
+TransportThetaFCT.h
 TransportTransientExecutioner.cc
 TransportTransientExecutioner.h
 Viscosity.cc

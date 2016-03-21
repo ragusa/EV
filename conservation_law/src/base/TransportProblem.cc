@@ -129,7 +129,12 @@ void TransportProblem<dim>::run()
         }
         case TemporalDiscretizationClassification::theta:
         {
-          throw ExcNotImplemented();
+          TransportThetaExecutioner<dim> executioner(run_parameters,
+                                                     problem_parameters,
+                                                     triangulation,
+                                                     postprocessor,
+                                                     nominal_dt);
+          executioner.run();
           break;
         }
         default:

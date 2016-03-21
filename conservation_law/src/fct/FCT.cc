@@ -8,11 +8,14 @@
  *
  * \param[in] run_parameters_  run parameters
  * \param[in] dof_handler_  degree of freedom handler
+ * \param[in] fe_  finite element system
  */
 template <int dim>
 FCT<dim>::FCT(const RunParameters & run_parameters_,
-              const DoFHandler<dim> & dof_handler_)
+              const DoFHandler<dim> & dof_handler_,
+              const FESystem<dim> & fe_)
   : dof_handler(&dof_handler_),
+    fe(&fe_),
     n_dofs(dof_handler_.n_dofs()),
     filter_sequence_string(run_parameters_.filter_sequence_string)
 {

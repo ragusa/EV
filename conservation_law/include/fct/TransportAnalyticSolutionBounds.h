@@ -23,7 +23,7 @@ class TransportAnalyticSolutionBounds : public DoFBounds<dim>
 {
 public:
   TransportAnalyticSolutionBounds(
-    const TransportProblemParameters<dim> & problem_parameters,
+    TransportProblemParameters<dim> & problem_parameters,
     const DoFHandler<dim> & dof_handler,
     const FESystem<dim> & fe,
     const QGauss<dim> & cell_quadrature);

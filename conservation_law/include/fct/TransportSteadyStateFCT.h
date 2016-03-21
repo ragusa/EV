@@ -22,17 +22,18 @@ template <int dim>
 class TransportSteadyStateFCT : public SteadyStateFCT<dim>
 {
 public:
-  TransportSteadyStateFCT(
-    const TransportRunParameters & run_parameters,
-    const TransportProblemParameters<dim> & problem_parameters,
-    const DoFHandler<dim> & dof_handler_);
+  TransportSteadyStateFCT(const TransportRunParameters & run_parameters,
+                          TransportProblemParameters<dim> & problem_parameters,
+                          const DoFHandler<dim> & dof_handler,
+                          const FESystem<dim> & fe,
+                          const QGauss<dim> & cell_quadrature);
 
 protected:
   virtual std::shared_ptr<SteadyStateFCTFilter<dim>> create_filter(
     const std::string & filter_string) override;
 
-  /** \brief finite element system */
-  const FESystem<dim> * const fe;
+  /** \brief problem parameters */
+  TransportProblemParameters<dim> * const problem_parameters;
 
   /** \brief cell quadrature */
   const QGauss<dim> * const cell_quadrature;

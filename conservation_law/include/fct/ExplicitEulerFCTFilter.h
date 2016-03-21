@@ -20,6 +20,7 @@ class ExplicitEulerFCTFilter : public FCTFilter<dim>
 public:
   ExplicitEulerFCTFilter(const std::shared_ptr<Limiter<dim>> limiter,
                          const DoFHandler<dim> & dof_handler,
+                         const FESystem<dim> & fe,
                          const SparseMatrix<double> & lumped_mass_matrix);
 
   virtual void filter_antidiffusive_fluxes(

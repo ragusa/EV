@@ -221,8 +221,6 @@ public:
   bool skip_fct_if_bounds_satisfied;
   /** \brief option to use the cumulative antidiffusion FCT algorithm */
   bool use_cumulative_antidiffusion_algorithm;
-  /** \brief option to include analytic bounds when available */
-  bool include_analytic_bounds;
   /** \brief Flag to include star states in FCT bounds */
   bool use_star_states_in_fct_bounds;
   /** \brief Flag to output the limiter matrix */

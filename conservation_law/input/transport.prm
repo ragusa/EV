@@ -16,13 +16,13 @@
 #   mms_xt       (TR:x*t                SS:x        )
 #   mms_t        (TR:t                  SS:1        )
 subsection problem
-   set problem name = void_to_absorber_1d_ss
+   set problem name = void_to_absorber_1d
 end
 
 subsection scheme
-   set scheme            = fct         # low|high|fct
+   set scheme            = fct          # low|high|fct
    set low order scheme  = dmp          # constant|lax|dmp|di_visc|di_diff
-   set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
+   set high order scheme = galerkin     # galerkin|entropy_visc|entropy_diff
 end
 
 subsection refinement
@@ -38,16 +38,16 @@ subsection refinement
 end
 
 subsection time
-   set time step size option  = cfl # constant|cfl
+   set time step size option  = constant # constant|cfl
    set cfl                    = 0.10
    set time step size         = 0.001
    set use default end time   = false
-   set end time               = 0.3
+   set end time               = 0.1
    set steady state tolerance = 1.0e-6
 end
 
 subsection temporal discretization
-   set temporal discretization = ss    # ss|ssprk|theta
+   set temporal discretization = theta # ss|ssprk|theta
    set ssprk discretization    = FE    # FE|SSP2|SSP3
    set theta discretization    = BE    # FE|CN|BE
 end
@@ -63,13 +63,12 @@ subsection artificial viscosity
 end
 
 subsection fct
-   set filter sequence string        = dmp_analytic  # dmp|dmp_analytic
+   set filter sequence string        = dmp     # dmp|dmp_analytic
    set limiter option                = zalesak # ones|zeroes|zalesak
    set fct synchronization type      = none    # none|min|compound
    set fct initialization option     = zero    # zero|low|high
    set skip fct if bounds satisfied  = false
    set use cumulative antidiffusion algorithm = false
-   set include analytic bounds       = false
    set use star states in fct bounds = false
    set output limiter matrix         = false
    set output fct bounds             = false

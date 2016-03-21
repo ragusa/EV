@@ -35,6 +35,7 @@
 #include "include/refinement/RefinementHandler.h"
 #include "include/executioners/TransportSteadyStateExecutioner.h"
 #include "include/executioners/TransportSSPRKExecutioner.h"
+#include "include/executioners/TransportThetaExecutioner.h"
 
 using namespace dealii;
 

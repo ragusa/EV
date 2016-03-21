@@ -173,8 +173,11 @@ template <int dim>
 void TransportSteadyStateExecutioner<dim>::compute_fct_solution()
 {
   // create FCT object
-  TransportSteadyStateFCT<dim> fct(
-    this->parameters, *this->problem_parameters, this->dof_handler);
+  TransportSteadyStateFCT<dim> fct(this->parameters,
+                                   *this->problem_parameters,
+                                   this->dof_handler,
+                                   this->fe,
+                                   this->cell_quadrature);
 
   // check if high-order solution satisfies bounds - if so, do not use FCT
   bool skip_fct = false;
@@ -225,46 +228,10 @@ void TransportSteadyStateExecutioner<dim>::compute_fct_solution()
     }
     this->nonlinear_solver.initialize(this->new_solution);
 
-    /*
-          // initialize cumulative antidiffusion vector
-          this->cumulative_antidiffusion = 0.0;
-    */
-
     // begin iteration
     bool converged = false;
     while (!converged)
     {
-      /*
-              // compute max principle min and max values: W^(l)
-              fct.compute_bounds_ss(
-                this->new_solution, this->low_order_ss_matrix, this->ss_rhs);
-
-              // compute limited flux bounds: Q^(l)
-              fct.compute_limited_flux_bounds_ss(
-                this->new_solution, this->low_order_ss_matrix, this->ss_rhs);
-
-              // compute limited flux correction matrix and sum: dp^(l) and dP^(l)
-              fct.compute_limited_fluxes();
-
-              // if using cumulative antidiffusion algorithm, then update
-         cumulative
-              // antidiffusion and remainder antidiffusive fluxes
-              if (this->parameters.use_cumulative_antidiffusion_algorithm)
-              {
-                // add to cumulative antidiffusion vector: p^(l+1) = p^(l) +
-         dp^(l)
-                this->cumulative_antidiffusion.add(1.0,
-         fct.get_limited_flux_vector());
-
-                // subtract used antidiffusive flux: DP^(l+1) = DP^(l) - dP^(l)
-                fct.subtract_limited_flux_correction_matrix();
-              }
-              else
-              {
-                // throw away accumulated antidiffusive flux
-                this->cumulative_antidiffusion = fct.get_limited_flux_vector();
-              }
-      */
       // compute antidiffusion vector
       fct.compute_antidiffusion_vector(this->new_solution,
                                        this->low_order_ss_matrix,

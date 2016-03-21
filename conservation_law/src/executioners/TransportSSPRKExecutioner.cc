@@ -25,6 +25,7 @@ TransportSSPRKExecutioner<dim>::TransportSSPRKExecutioner(
       this->parameters,
       *this->problem_parameters,
       this->dof_handler,
+      this->fe,
       this->consistent_mass_matrix,
       this->lumped_mass_matrix);
   }

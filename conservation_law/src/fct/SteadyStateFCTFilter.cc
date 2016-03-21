@@ -8,12 +8,14 @@
  *
  * \param[in] limiter_  limiter
  * \param[in] dof_handler_  degree of freedom handler
+ * \param[in] fe_  finite element system
  */
 template <int dim>
 SteadyStateFCTFilter<dim>::SteadyStateFCTFilter(
   const std::shared_ptr<Limiter<dim>> limiter_,
-  const DoFHandler<dim> & dof_handler_)
-  : FCTFilter<dim>(limiter_, dof_handler_)
+  const DoFHandler<dim> & dof_handler_,
+  const FESystem<dim> & fe_)
+  : FCTFilter<dim>(limiter_, dof_handler_, fe_)
 {
 }
 

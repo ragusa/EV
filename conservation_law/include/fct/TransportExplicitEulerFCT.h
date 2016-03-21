@@ -22,6 +22,7 @@ public:
     const TransportRunParameters & run_parameters,
     const TransportProblemParameters<dim> & problem_parameters,
     const DoFHandler<dim> & dof_handler_,
+    const FESystem<dim> & fe,
     const SparseMatrix<double> & consistent_mass_matrix,
     const SparseMatrix<double> & lumped_mass_matrix);
 

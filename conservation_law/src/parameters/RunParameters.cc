@@ -196,10 +196,6 @@ void RunParameters::declare_run_parameters(ParameterHandler & prm)
       "false",
       Patterns::Bool(),
       "Option to use cumulative antidiffusion algorithm for implicit FCT");
-    prm.declare_entry("include analytic bounds",
-                      "false",
-                      Patterns::Bool(),
-                      "Option to extend FCT bounds using analytic DMP");
     prm.declare_entry("use star states in fct bounds",
                       "false",
                       Patterns::Bool(),
@@ -537,7 +533,6 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
     skip_fct_if_bounds_satisfied = prm.get_bool("skip fct if bounds satisfied");
     use_cumulative_antidiffusion_algorithm =
       prm.get_bool("use cumulative antidiffusion algorithm");
-    include_analytic_bounds = prm.get_bool("include analytic bounds");
     use_star_states_in_fct_bounds = prm.get_bool("use star states in fct bounds");
     output_limiter_matrix = prm.get_bool("output limiter matrix");
     output_fct_bounds = prm.get_bool("output fct bounds");

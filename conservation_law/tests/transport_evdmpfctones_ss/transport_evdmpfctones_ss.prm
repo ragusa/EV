@@ -18,7 +18,7 @@ subsection problem
 end
 
 subsection scheme
-   set scheme            = high         # low|high|fct
+   set scheme            = fct          # low|high|fct
    set low order scheme  = dmp          # dmp
    set high order scheme = entropy_visc # galerkin|entropy_visc
 end
@@ -67,7 +67,6 @@ subsection fct
    set fct initialization option     = zero    # zero|low|high
    set skip fct if bounds satisfied  = false
    set use cumulative antidiffusion algorithm = false
-   set include analytic bounds       = false
    set use star states in fct bounds = false
    set output limiter matrix         = false
    set output fct bounds             = false
