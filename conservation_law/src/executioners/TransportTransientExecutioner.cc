@@ -100,8 +100,26 @@ void TransportTransientExecutioner<dim>::run()
   // assemble mass matrices
   assembleMassMatrices();
 
-  // enforce CFL condition on nominal time step size
-  dt_nominal = enforceCFLCondition(dt_nominal);
+  // determine nominal time step size
+  switch (this->parameters.time_step_size_option)
+  {
+    case TimeStepSizeOption::constant:
+    {
+      // leave time step as is
+      break;
+    }
+    case TimeStepSizeOption::cfl:
+    {
+      // compute time step size from DMP CFL condition
+      dt_nominal = compute_dt_from_dmp_cfl_condition();
+      break;
+    }
+    default:
+    {
+      AssertThrow(false, ExcNotImplemented());
+      break;
+    }
+  }
 
   // update nominal dt reported on convergence table
   this->postprocessor->log_time_step_size(dt_nominal);
@@ -159,11 +177,18 @@ void TransportTransientExecutioner<dim>::run()
   this->postprocessor->output_results_if_last_cycle(
     this->new_solution, this->dof_handler, *this->triangulation);
 
-  // output FCT bounds if requested
-  /*
-    if (this->parameters.output_fct_bounds)
-      fct->output_bounds(*(this->postprocessor));
-  */
+  // FCT output
+  auto base_fct = get_derived_fct();
+  if (base_fct)
+  {
+    // output final FCT bounds if specified
+    if (this->parameters.output_final_fct_bounds)
+      base_fct->output_bounds(*(this->postprocessor));
+
+    // output limiter matrix if specified
+    if (this->parameters.output_limiter_matrix)
+      base_fct->output_limiter_matrix();
+  }
 
   // print final solution if specified
   if (this->parameters.print_final_solution)
@@ -224,45 +249,25 @@ void TransportTransientExecutioner<dim>::assembleMassMatrices()
 }
 
 /**
- * Checks CFL condition and adjusts time step size as necessary.
+ * \brief Computes time step size from the DMP CFL condition.
  *
- * \param[in] dt_proposed proposed time step size for current time step
- *
- * \return new time step size
+ * \return time step size
  */
 template <int dim>
-double TransportTransientExecutioner<dim>::enforceCFLCondition(
-  const double & dt_proposed) const
+double TransportTransientExecutioner<dim>::compute_dt_from_dmp_cfl_condition()
+  const
 {
   // CFL is dt*speed/dx
   double max_speed_dx = 0.0; // max(speed/dx); max over all i of A(i,i)/mL(i,i)
   for (unsigned int i = 0; i < this->n_dofs; ++i)
+  {
     max_speed_dx = std::max(max_speed_dx,
                             std::abs(this->low_order_ss_matrix(i, i)) /
                               lumped_mass_matrix(i, i));
+  }
 
-  // compute proposed CFL number
-  double proposed_CFL = dt_proposed * max_speed_dx;
+  // compute dt from DMP CFL condition
+  const double dt = this->parameters.cfl / max_speed_dx;
 
-  double dt;
-  // if time step violates CFL limit, then respond accordingly
-  if (proposed_CFL > this->parameters.cfl)
-    // if user specified to adjust dt based on CFL
-    if (this->parameters.time_step_size_option == TimeStepSizeOption::cfl)
-    {
-      // adjust dt to satisfy CFL
-      dt = this->parameters.cfl / max_speed_dx;
-    }
-    else
-    {
-      // report CFL violation but do not change dt
-      std::cout << "CFL violated for cycle: ";
-      std::cout << "\x1b[1;31m CFL = " << proposed_CFL << "\x1b[0m" << std::endl;
-      dt = dt_proposed;
-    }
-  else
-    dt = dt_proposed;
-
-  // return adjusted time step size
   return dt;
 }

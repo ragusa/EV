@@ -162,6 +162,29 @@ void ThetaFCT<dim>::compute_antidiffusion_vector(
 }
 
 /**
+ * \brief Checks to see if the FCT bounds were satisfied.
+ *
+ * \param[in] new_solution  new solution vector \f$\mathbf{U}^{n+1}\f$
+ *
+ * \return flag that FCT bounds were satisfied for all filters
+ */
+template <int dim>
+bool ThetaFCT<dim>::check_bounds(const Vector<double> & new_solution) const
+{
+  // loop over filters
+  bool bounds_satisfied_all_filters = true;
+  for (unsigned int k = 0; k < this->n_filters; ++k)
+  {
+    const bool bounds_satisfied = filters[k]->check_bounds(new_solution);
+    bounds_satisfied_all_filters =
+      bounds_satisfied_all_filters && bounds_satisfied;
+  }
+
+  // return boolean for satisfaction of FCT bounds
+  return bounds_satisfied_all_filters;
+}
+
+/**
  * \brief Returns lower solution bound vector.
  *
  * \return lower solution bound vector

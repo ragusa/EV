@@ -56,3 +56,17 @@ typename Viscosity<dim>::CellMap Viscosity<dim>::get_values() const
 {
   return values;
 }
+
+/**
+ * \brief Prints viscosity values
+ */
+template <int dim>
+void Viscosity<dim>::print() const
+{
+  // iterate over values map
+  typename CellMap::const_iterator it = values.begin();
+  typename CellMap::const_iterator it_end = values.end();
+  unsigned int icell = 0;
+  for (; it != it_end; ++it, ++icell)
+    std::cout << icell << ": " << it->second << std::endl;
+}

@@ -61,6 +61,8 @@ public:
 
   CellMap get_values() const;
 
+  void print() const;
+
 protected:
   /** \brief Map of cell iterator to viscosity value */
   CellMap values;

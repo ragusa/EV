@@ -257,12 +257,15 @@ void TransportSteadyStateExecutioner<dim>::compute_fct_solution()
     }
   }
 
+  // check FCT bounds
+  if (this->parameters.check_fct_bounds)
+    fct.check_bounds(this->new_solution);
+
   // output FCT bounds if requested
   if (this->parameters.output_final_fct_bounds)
     fct.output_bounds(*(this->postprocessor));
 
-  /*
-        // check FCT bounds
-        fct.check_fct_bounds(this->new_solution);
-    */
+  // output limiter matrix if specified
+  if (this->parameters.output_limiter_matrix)
+    fct.output_limiter_matrix();
 }

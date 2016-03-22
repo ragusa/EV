@@ -6,12 +6,18 @@ function [flim,Wminus,Wplus] = compute_limited_flux_sums(...
 
 % compute solution bounds
 [Wplus,Wminus] = compute_DMP(u_old,uFCT,dt,ML,AL,b,theta,inc,periodic_BC);
-if (DMP_option == 2) % max/min(DMP,CMP)
+if (DMP_option == 2) % widen DMP by analytic
     [WplusCMP,WminusCMP] = compute_CMP(...
         u_old,sigma_min,sigma_max,source_min,source_max,speed*dt,...
         inc,periodic_BC);
     Wplus = max(Wplus,WplusCMP);
     Wminus = min(Wminus,WminusCMP);
+elseif (DMP_option == 3) % shrinken DMP by analytic
+    [WplusCMP,WminusCMP] = compute_CMP(...
+        u_old,sigma_min,sigma_max,source_min,source_max,speed*dt,...
+        inc,periodic_BC);
+    Wplus = min(Wplus,WplusCMP);
+    Wminus = max(Wminus,WminusCMP);
 end
 
 % comput limited flux bounds

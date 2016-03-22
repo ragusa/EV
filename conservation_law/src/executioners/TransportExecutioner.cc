@@ -109,14 +109,6 @@ TransportExecutioner<dim>::TransportExecutioner(
     high_order_viscosity_type = ViscosityType::none;
     high_order_diffusion_type = DiffusionType::none;
   }
-  if (parameters.scheme == Scheme::high)
-  {
-    if (parameters.high_order_scheme == HighOrderScheme::galerkin)
-    {
-      low_order_viscosity_type = ViscosityType::none;
-      low_order_diffusion_type = DiffusionType::none;
-    }
-  }
 
   // create low-order viscosity
   switch (low_order_viscosity_type)

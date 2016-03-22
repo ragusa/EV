@@ -38,16 +38,16 @@ subsection refinement
 end
 
 subsection time
-   set time step size option  = constant # constant|cfl
-   set cfl                    = 0.10
+   set time step size option  = cfl # constant|cfl
+   set cfl                    = 50.00
    set time step size         = 0.001
    set use default end time   = false
-   set end time               = 0.1
+   set end time               = 0.25
    set steady state tolerance = 1.0e-6
 end
 
 subsection temporal discretization
-   set temporal discretization = ssprk # ss|ssprk|theta
+   set temporal discretization = theta # ss|ssprk|theta
    set ssprk discretization    = FE    # FE|SSP2|SSP3
    set theta discretization    = BE    # FE|CN|BE
 end
@@ -68,7 +68,7 @@ subsection fct
    set fct synchronization type      = none    # none|min|compound
    set fct initialization option     = zero    # zero|low|high
    set skip fct if bounds satisfied  = false
-   set use cumulative antidiffusion algorithm = false
+   set use cumulative antidiffusion algorithm = true
    set use star states in fct bounds = false
    set check fct bounds              = true
    set output limiter matrix         = false

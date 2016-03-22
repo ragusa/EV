@@ -119,6 +119,17 @@ void TransportSSPRKExecutioner<dim>::compute_new_solution(const double & dt,
 }
 
 /**
+ * \brief Returns a pointer to FCT object.
+ *
+ * \return pointer to FCT object
+ */
+template <int dim>
+std::shared_ptr<FCT<dim>> TransportSSPRKExecutioner<dim>::get_derived_fct() const
+{
+  return fct;
+}
+
+/**
  * \brief Performs an SSPRK step using FCT.
  *
  * \param[in] dt current time step size

@@ -9,8 +9,8 @@ quadrature.nq = 3;                  % number of quadrature points per cell
 %--------------------------------------------------------------------------
 % spatial method options
 %--------------------------------------------------------------------------
-compute_low_order  = false; % compute and plot low-order solution?
-compute_high_order = false; % compute and plot high-order solution?
+compute_low_order  = true; % compute and plot low-order solution?
+compute_high_order = true; % compute and plot high-order solution?
 compute_FCT        = true; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
@@ -35,24 +35,25 @@ ev.smoothing_weight = 0.0; % weight for center value in smoothing
 %                  1 = SSPRK(1,1) (Explicit Euler)
 %                  2 = SSPRK(3,3) (Shu-Osher)
 %                  3 = theta method
-temporal_scheme = 0; % temporal discretization scheme
+temporal_scheme = 3; % temporal discretization scheme
 
 % theta parameter to use if using a theta method: 0.0 = FE
 %                                                 0.5 = CN
 %                                                 1.0 = BE
-theta = 0.5;     
+theta = 1.0;     
        
-use_constant_dt = true; % option to use constant dt instead of CFL
+use_constant_dt = false; % option to use constant dt instead of CFL
 constant_dt = 0.001;    % time step size to use if using constant size
-CFL = 0.5;       % CFL number
+CFL = 50.0;       % CFL number
 ss_tol = 1.0e-6; % steady-state tolerance
-t_end = 0.1;     % max time to run
+t_end = 0.25;     % max time to run
 %--------------------------------------------------------------------------
 % FCT options
 %--------------------------------------------------------------------------
 % DMP option: 1 = low-order DMP
-%             2 = max/min(low-order DMP, analytic DMP)
-DMP_option = 2;
+%             2 = widen low-order DMP to analytic
+%             3 = shrinken low-order DMP to analytic
+DMP_option = 3;
 
 % limiter option: 0 = All 0 (no correction; low-order)
 %                 1 = All 1 (full correction; high-order)
@@ -111,7 +112,7 @@ plot_viscosity            = false; % plot viscosities?
 plot_low_order_transient  = false; % plot low-order transient?
 plot_high_order_transient = false; % plot high-order transient?
 plot_FCT_transient        = false; % plot FCT transient?
-plot_FCT_iteration        = false; % plot FCT iteration?
+plot_FCT_iteration        = true; % plot FCT iteration?
 pausetime = 0.01;                   % time to pause for transient plots
 legend_location           = 'NorthEast'; % location of plot legend
 %--------------------------------------------------------------------------

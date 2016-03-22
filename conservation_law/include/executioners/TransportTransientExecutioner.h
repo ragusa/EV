@@ -40,6 +40,8 @@ protected:
                                     const double & t_old,
                                     const unsigned int & n) = 0;
 
+  virtual std::shared_ptr<FCT<dim>> get_derived_fct() const = 0;
+
   SparseMatrix<double> consistent_mass_matrix;
 
   SparseMatrix<double> lumped_mass_matrix;
@@ -56,7 +58,7 @@ protected:
 private:
   void assembleMassMatrices();
 
-  double enforceCFLCondition(const double & dt_proposed) const;
+  double compute_dt_from_dmp_cfl_condition() const;
 
   const TemporalDiscretizationClassification temporal_discretization;
 

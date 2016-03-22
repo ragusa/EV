@@ -31,6 +31,8 @@ protected:
                             const double & t_old,
                             const unsigned int & n) override;
 
+  std::shared_ptr<FCT<dim>> get_derived_fct() const override;
+
   void compute_galerkin_solution(const double & dt, const double & t_new);
 
   void compute_low_order_solution(const double & dt, const double & t_new);

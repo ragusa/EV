@@ -93,7 +93,8 @@ void CharacteristicFCTFilter<dim>::filter_antidiffusive_fluxes(
  * \return flag that FCT bounds were satisfied for all filters
  */
 template <int dim>
-bool CharacteristicFCTFilter<dim>::check_bounds(const Vector<double> & new_solution) const
+bool CharacteristicFCTFilter<dim>::check_bounds(
+  const Vector<double> & new_solution) const
 {
   // create reference
   Vector<double> & solution_characteristic = old_solution_characteristic;

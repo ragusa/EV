@@ -32,6 +32,8 @@ protected:
                             const double & t_old,
                             const unsigned int & n) override;
 
+  std::shared_ptr<FCT<dim>> get_derived_fct() const override;
+
 private:
   void perform_fct_ssprk_step(const double & dt,
                               const double & old_stage_dt,

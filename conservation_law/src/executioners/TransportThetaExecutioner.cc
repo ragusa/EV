@@ -73,6 +73,17 @@ void TransportThetaExecutioner<dim>::compute_new_solution(const double & dt,
 }
 
 /**
+ * \brief Returns a pointer to FCT object.
+ *
+ * \return pointer to FCT object
+ */
+template <int dim>
+std::shared_ptr<FCT<dim>> TransportThetaExecutioner<dim>::get_derived_fct() const
+{
+  return fct;
+}
+
+/**
  * \brief Takes time step with the Galerkin method using a theta method.
  *
  * \param[in] dt time step size
@@ -292,8 +303,7 @@ void TransportThetaExecutioner<dim>::compute_fct_solution(const double & dt,
       this->nonlinear_solver.update(this->system_matrix, this->system_rhs);
   }
 
-  /*
-    // check FCT solution
-    fct.check_fct_bounds(this->new_solution);
-  */
+  // check FCT solution
+  if (this->parameters.check_fct_bounds)
+    fct->check_bounds(this->new_solution);
 }
