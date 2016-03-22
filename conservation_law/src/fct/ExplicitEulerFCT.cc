@@ -88,6 +88,60 @@ void ExplicitEulerFCT<dim>::compute_antidiffusion_vector(
 }
 
 /**
+ * \brief Checks to see if the FCT bounds were satisfied.
+ *
+ * \param[in] new_solution  new solution vector \f$\mathbf{U}^{n+1}\f$
+ *
+ * \return flag that FCT bounds were satisfied for all filters
+ */
+template <int dim>
+bool ExplicitEulerFCT<dim>::check_bounds(
+  const Vector<double> & new_solution) const
+{
+  // loop over filters
+  bool bounds_satisfied_all_filters = true;
+  for (unsigned int k = 0; k < this->n_filters; ++k)
+  {
+    const bool bounds_satisfied = filters[k]->check_bounds(new_solution);
+    bounds_satisfied_all_filters =
+      bounds_satisfied_all_filters && bounds_satisfied;
+  }
+
+  // return boolean for satisfaction of FCT bounds
+  return bounds_satisfied_all_filters;
+}
+
+/**
+ * \brief Returns lower solution bound vector.
+ *
+ * \return lower solution bound vector
+ */
+template <int dim>
+Vector<double> ExplicitEulerFCT<dim>::get_lower_solution_bound() const
+{
+  // make sure there is only one filter so there is no amibuity of which
+  // bounds to output
+  Assert(this->n_filters == 1, ExcNotImplemented());
+
+  return filters[0]->get_lower_solution_bound();
+}
+
+/**
+ * \brief Returns upper solution bound vector.
+ *
+ * \return upper solution bound vector
+ */
+template <int dim>
+Vector<double> ExplicitEulerFCT<dim>::get_upper_solution_bound() const
+{
+  // make sure there is only one filter so there is no amibuity of which
+  // bounds to output
+  Assert(this->n_filters == 1, ExcNotImplemented());
+
+  return filters[0]->get_upper_solution_bound();
+}
+
+/**
  * \brief Creates a vector of FCT filters.
  */
 template <int dim>

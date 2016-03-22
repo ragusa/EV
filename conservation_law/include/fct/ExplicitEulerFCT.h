@@ -34,6 +34,12 @@ public:
     const Vector<double> & ss_rhs,
     Vector<double> & antidiffusion_vector);
 
+  bool check_bounds(const Vector<double> & new_solution) const override;
+
+  Vector<double> get_lower_solution_bound() const override;
+
+  Vector<double> get_upper_solution_bound() const override;
+
 protected:
   void create_filters();
 

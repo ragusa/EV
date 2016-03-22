@@ -17,7 +17,9 @@ FCT<dim>::FCT(const RunParameters & run_parameters_,
   : dof_handler(&dof_handler_),
     fe(&fe_),
     n_dofs(dof_handler_.n_dofs()),
-    filter_sequence_string(run_parameters_.filter_sequence_string)
+    filter_sequence_string(run_parameters_.filter_sequence_string),
+    n_filters(0),
+    bounds_transient_file_index(1)
 {
   // create limiter
   switch (run_parameters_.limiter_option)
@@ -80,6 +82,70 @@ void FCT<dim>::compute_row_sum_vector(const SparseMatrix<double> & matrix,
     for (; it != it_end; ++it)
       row_sum_vector[i] += it->value();
   }
+}
+
+/**
+ * \brief Outputs bounds to files.
+ *
+ * \param[in] postprocessor  post-processor
+ */
+template <int dim>
+void FCT<dim>::output_bounds(PostProcessor<dim> & postprocessor) const
+{
+  // use a method from the post-processor class to output the bounds
+  postprocessor.output_solution(
+    get_lower_solution_bound(), 0.0, *this->dof_handler, "DMPmin");
+  postprocessor.output_solution(
+    get_upper_solution_bound(), 0.0, *this->dof_handler, "DMPmax");
+}
+
+/**
+ * \brief Outputs FCT bounds during a transient if time step counter is at
+ *        a value given by the desired transient output frequency.
+ *
+ * \param[in] postprocessor post-processor
+ * \param[in] time current time
+ */
+template <int dim>
+void FCT<dim>::output_bounds_transient(PostProcessor<dim> & postprocessor,
+                                       const double & time)
+{
+  // output lower bound
+  postprocessor.output_dof_transient(get_lower_solution_bound(),
+                                     time,
+                                     *dof_handler,
+                                     "lower_fct_bound",
+                                     lower_bound_component_names,
+                                     bounds_transient_file_index,
+                                     times_and_lower_bound_filenames,
+                                     false,
+                                     false);
+
+  // output upper bound
+  postprocessor.output_dof_transient(get_upper_solution_bound(),
+                                     time,
+                                     *dof_handler,
+                                     "upper_fct_bound",
+                                     upper_bound_component_names,
+                                     bounds_transient_file_index,
+                                     times_and_upper_bound_filenames,
+                                     false,
+                                     false);
+
+  // increment transient file index for bounds
+  bounds_transient_file_index++;
+}
+
+/**
+ * \brief Outputs the matrix of limiting coefficients.
+ */
+template <int dim>
+void FCT<dim>::output_limiter_matrix() const
+{
+  // save limiting coefficients
+  std::ofstream limiter_out("output/limiter.txt");
+  limiter_matrix.print_formatted(limiter_out, 10, true, 0, "0", 1);
+  limiter_out.close();
 }
 
 /**

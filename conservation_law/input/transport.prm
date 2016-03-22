@@ -47,7 +47,7 @@ subsection time
 end
 
 subsection temporal discretization
-   set temporal discretization = theta # ss|ssprk|theta
+   set temporal discretization = ssprk # ss|ssprk|theta
    set ssprk discretization    = FE    # FE|SSP2|SSP3
    set theta discretization    = BE    # FE|CN|BE
 end
@@ -70,8 +70,10 @@ subsection fct
    set skip fct if bounds satisfied  = false
    set use cumulative antidiffusion algorithm = false
    set use star states in fct bounds = false
+   set check fct bounds              = true
    set output limiter matrix         = false
-   set output fct bounds             = false
+   set output final fct bounds       = true
+   set output transient fct bounds   = false
 end
 
 subsection linear solver

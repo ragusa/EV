@@ -17,6 +17,7 @@
 #include "include/fct/ZalesakLimiter.h"
 #include "include/fct/ZeroesLimiter.h"
 #include "include/parameters/RunParameters.h"
+#include "include/postprocessing/PostProcessor.h"
 
 using namespace dealii;
 
@@ -74,6 +75,19 @@ public:
       const DoFHandler<dim> & dof_handler,
       const FESystem<dim> & fe);
 
+  virtual bool check_bounds(const Vector<double> & new_solution) const = 0;
+
+  void output_bounds(PostProcessor<dim> & postprocessor) const;
+
+  void output_bounds_transient(PostProcessor<dim> & postprocessor,
+                               const double & time);
+
+  virtual Vector<double> get_lower_solution_bound() const = 0;
+
+  virtual Vector<double> get_upper_solution_bound() const = 0;
+
+  void output_limiter_matrix() const;
+
 protected:
   void compute_row_sum_vector(const SparseMatrix<double> & matrix,
                               Vector<double> & row_sum_vector) const;
@@ -113,6 +127,21 @@ protected:
 
   /** \brief number of FCT filters */
   unsigned int n_filters;
+
+  /** \brief index for bounds transient file */
+  unsigned int bounds_transient_file_index;
+
+  /** \brief names of lower bounds of each component */
+  std::vector<std::string> lower_bound_component_names;
+
+  /** \brief names of upper bounds of each component */
+  std::vector<std::string> upper_bound_component_names;
+
+  /** \brief vector of times and corresponding lower bound file names */
+  std::vector<std::pair<double, std::string>> times_and_lower_bound_filenames;
+
+  /** \brief vector of times and corresponding upper bound file names */
+  std::vector<std::pair<double, std::string>> times_and_upper_bound_filenames;
 };
 
 #include "src/fct/FCT.cc"

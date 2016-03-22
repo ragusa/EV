@@ -26,6 +26,83 @@ FCTFilter<dim>::FCTFilter(const std::shared_ptr<Limiter<dim>> limiter_,
 }
 
 /**
+ * \brief Checks to see if the FCT bounds were satisfied.
+ *
+ * \param[in] new_solution  new solution vector \f$\mathbf{U}^{n+1}\f$
+ *
+ * \return flag that FCT bounds were satisfied for all filters
+ */
+template <int dim>
+bool FCTFilter<dim>::check_bounds(const Vector<double> & new_solution) const
+{
+  // machine precision for floating point comparisons
+  const double machine_tolerance = 1.0e-15;
+
+  // now set new precision
+  std::cout.precision(15);
+
+  // check that each dof value is bounded by its neighbors
+  bool bounds_satisfied = true;
+
+  for (unsigned int i = 0; i < this->n_dofs; ++i)
+  {
+    // TODO: need to check if node is a Dirichlet node
+    /*
+        // check bounds if dof does not correspond to a Dirichlet node
+        if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) ==
+            dirichlet_nodes.end())
+        {
+    */
+    double value_i = new_solution(i);
+
+    // check lower bound
+    if (value_i < solution_bounds.lower(i) - machine_tolerance)
+    {
+      bounds_satisfied = false;
+
+      std::cout << "FCT bounds violated by dof " << i << ": " << value_i << " < "
+                << solution_bounds.lower(i) << std::endl;
+    }
+    // check upper bound
+    if (value_i > solution_bounds.upper(i) + machine_tolerance)
+    {
+      bounds_satisfied = false;
+
+      std::cout << "FCT bounds violated by dof " << i << ": " << value_i << " > "
+                << solution_bounds.upper(i) << std::endl;
+    }
+    /*
+        }
+    */
+  }
+
+  // restore default precision and format
+  std::cout.unsetf(std::ios_base::floatfield);
+}
+
+/**
+ * \brief Gets the lower solution bound.
+ *
+ * \return lower solution bound vector
+ */
+template <int dim>
+Vector<double> FCTFilter<dim>::get_lower_solution_bound() const
+{
+  return solution_bounds.lower;
+}
+
+/**
+ * \brief Gets the upper solution bound.
+ *
+ * \return upper solution bound vector
+ */
+template <int dim>
+Vector<double> FCTFilter<dim>::get_upper_solution_bound() const
+{
+  return solution_bounds.upper;
+}
+
+/**
  * \brief Computes the minimum and maximum degree of freedom values in the
  *        support of each degree of freedom.
  *

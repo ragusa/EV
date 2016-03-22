@@ -162,6 +162,36 @@ void ThetaFCT<dim>::compute_antidiffusion_vector(
 }
 
 /**
+ * \brief Returns lower solution bound vector.
+ *
+ * \return lower solution bound vector
+ */
+template <int dim>
+Vector<double> ThetaFCT<dim>::get_lower_solution_bound() const
+{
+  // make sure there is only one filter so there is no amibuity of which
+  // bounds to output
+  Assert(this->n_filters == 1, ExcNotImplemented());
+
+  return filters[0]->get_lower_solution_bound();
+}
+
+/**
+ * \brief Returns upper solution bound vector.
+ *
+ * \return upper solution bound vector
+ */
+template <int dim>
+Vector<double> ThetaFCT<dim>::get_upper_solution_bound() const
+{
+  // make sure there is only one filter so there is no amibuity of which
+  // bounds to output
+  Assert(this->n_filters == 1, ExcNotImplemented());
+
+  return filters[0]->get_upper_solution_bound();
+}
+
+/**
  * \brief Creates a vector of FCT filters.
  */
 template <int dim>

@@ -223,10 +223,14 @@ public:
   bool use_cumulative_antidiffusion_algorithm;
   /** \brief Flag to include star states in FCT bounds */
   bool use_star_states_in_fct_bounds;
+  /** \brief Flag to check FCT bounds */
+  bool check_fct_bounds;
   /** \brief Flag to output the limiter matrix */
   bool output_limiter_matrix;
-  /** \brief Flag to output the imposed FCT bounds */
-  bool output_fct_bounds;
+  /** \brief Flag to output the final FCT bounds */
+  bool output_final_fct_bounds;
+  /** \brief Flag to output the transient FCT bounds */
+  bool output_transient_fct_bounds;
 
   /* -----------------------------------------------------------------------
    *                              linear solver

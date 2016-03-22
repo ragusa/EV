@@ -69,7 +69,6 @@ subsection fct
    set use cumulative antidiffusion algorithm = false
    set use star states in fct bounds = false
    set output limiter matrix         = false
-   set output fct bounds             = false
 end
 
 subsection linear solver

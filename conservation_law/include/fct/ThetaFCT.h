@@ -41,6 +41,10 @@ public:
     const Vector<double> & ss_rhs_old,
     Vector<double> & antidiffusion_vector);
 
+  Vector<double> get_lower_solution_bound() const override;
+
+  Vector<double> get_upper_solution_bound() const override;
+
 protected:
   void create_filters();
 

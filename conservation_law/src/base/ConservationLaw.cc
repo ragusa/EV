@@ -976,11 +976,8 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
         new_solution, new_time, dof_handler, "solution", false);
 
       // output FCT bounds if specified
-      if (fct && parameters.output_fct_bounds)
-      {
-        throw ExcNotImplemented();
-        // fct->output_bounds_transient(postprocessor, new_time);
-      }
+      if (fct && parameters.output_transient_fct_bounds)
+        fct->output_bounds_transient(postprocessor, new_time);
     }
 
     // check that there are no NaNs in solution
@@ -1023,11 +1020,17 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     n++;
   } // end of time loop
 
-  // output limiter matrix if specified
-  if (parameters.scheme == Scheme::fct)
+  // FCT output
+  if (fct)
+  {
+    // output final FCT bounds if specified
+    if (parameters.output_final_fct_bounds)
+      fct->output_bounds(postprocessor);
+
+    // output limiter matrix if specified
     if (parameters.output_limiter_matrix)
-      throw ExcNotImplemented();
-  // fct->output_limiter_matrix();
+      fct->output_limiter_matrix();
+  }
 }
 
 /** \brief Computes time step size using the CFL condition

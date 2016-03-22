@@ -200,14 +200,22 @@ void RunParameters::declare_run_parameters(ParameterHandler & prm)
                       "false",
                       Patterns::Bool(),
                       "Option to include star states in FCT bounds");
+    prm.declare_entry("check fct bounds",
+                      "false",
+                      Patterns::Bool(),
+                      "Option to check that FCT bounds are satisfied");
     prm.declare_entry("output limiter matrix",
                       "false",
                       Patterns::Bool(),
                       "Option to output matrix of limiting coefficients");
-    prm.declare_entry("output fct bounds",
+    prm.declare_entry("output final fct bounds",
                       "false",
                       Patterns::Bool(),
-                      "Option to output FCT bounds");
+                      "Option to output final FCT bounds");
+    prm.declare_entry("output transient fct bounds",
+                      "false",
+                      Patterns::Bool(),
+                      "Option to output transient FCT bounds");
   }
   prm.leave_subsection();
 
@@ -534,8 +542,10 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
     use_cumulative_antidiffusion_algorithm =
       prm.get_bool("use cumulative antidiffusion algorithm");
     use_star_states_in_fct_bounds = prm.get_bool("use star states in fct bounds");
+    check_fct_bounds = prm.get_bool("check fct bounds");
     output_limiter_matrix = prm.get_bool("output limiter matrix");
-    output_fct_bounds = prm.get_bool("output fct bounds");
+    output_final_fct_bounds = prm.get_bool("output final fct bounds");
+    output_transient_fct_bounds = prm.get_bool("output transient fct bounds");
   }
   prm.leave_subsection();
 
