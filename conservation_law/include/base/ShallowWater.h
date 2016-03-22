@@ -23,7 +23,7 @@
 #include "include/bc/ShallowWaterWallBC.h"
 #include "include/entropy/Entropy.h"
 #include "include/entropy/ShallowWaterEntropy.h"
-//#include "include/fct/ShallowWaterFCT.h"
+#include "include/fct/ShallowWaterExplicitEulerFCT.h"
 #include "include/parameters/ShallowWaterRunParameters.h"
 #include "include/parameters/ShallowWaterProblemParameters.h"
 #include "include/postprocessing/ShallowWaterPostProcessor.h"

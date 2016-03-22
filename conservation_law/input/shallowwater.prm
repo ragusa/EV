@@ -13,7 +13,7 @@ subsection problem
 end
 
 subsection scheme
-   set scheme            = high         # low|high|fct
+   set scheme            = low          # low|high|fct
    set low order scheme  = lax          # constant|lax|dmp|di_visc|di_diff
    set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
 end
@@ -31,10 +31,10 @@ subsection refinement
 end
 
 subsection time
-   set time step size option  = constant # constant|cfl
-   set cfl                    = 0.50
+   set time step size option  = cfl # constant|cfl
+   set cfl                    = 0.10
    set time step size         = 0.001
-   set use default end time   = false
+   set use default end time   = true
    set end time               = 0.002
    set steady state tolerance = 1.0e-6
 end
@@ -59,13 +59,14 @@ subsection artificial viscosity
 end
 
 subsection fct
-   set filter sequence string        = dmp
+   set filter sequence string        = characteristic # characteristic
    set limiter option                = zalesak # ones|zeroes|zalesak
    set fct synchronization type      = none    # none|min|compound
    set fct initialization option     = zero    # zero|low|high
    set skip fct if bounds satisfied  = false
    set use cumulative antidiffusion algorithm = true
    set use star states in fct bounds = false
+   set check fct bounds              = true
    set output limiter matrix         = false
    set output final fct bounds       = false
    set output transient fct bounds   = false
@@ -100,6 +101,6 @@ subsection output
    set output viscosity transient      = false
    set exact solution refinement level = 7
    set save convergence results        = false
-   set print final solution            = true
+   set print final solution            = false
 end
 

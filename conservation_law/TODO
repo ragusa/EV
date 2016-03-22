@@ -15,7 +15,7 @@ The following is a list of things to do:
 4. Remove the assumption of the DoF ordering.
 5. More documentation.
 6. Implement parallelization.
-7. Make sure there are no Assert statements in a one-line "else" statement - for
+7. Make sure there are no Assert statements in a one-line "if" statement - for
    release mode, the statement following the conditional branch would then be
    used as the else statement - curly brackets need to surround the Assert
    statement.
@@ -26,3 +26,4 @@ The following is a list of things to do:
     be used in other executables where dependencies are not resolved by
     previous includes.
 11. Untemplate classes that do need the <dim> parameter.
+12. Replace "throw SomeException()" with "AssertThrow(false, SomeException())"

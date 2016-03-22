@@ -1237,6 +1237,10 @@ void ConservationLaw<dim>::perform_fct_ssprk_step(
   // set stage solution to be FCT solution for this stage
   ssprk.set_intermediate_solution(new_solution);
 
+  // check FCT bounds if specified
+  if (parameters.check_fct_bounds)
+    fct->check_bounds(new_solution);
+
   // finish computing stage solution
   ssprk.complete_stage_solution();
 }

@@ -189,6 +189,10 @@ void TransportSSPRKExecutioner<dim>::perform_fct_ssprk_step(
   // set stage solution to be FCT solution for this stage
   ssprk.set_intermediate_solution(this->new_solution);
 
+  // check FCT bounds
+  if (this->parameters.check_fct_bounds)
+    fct->check_bounds(this->new_solution);
+
   // finish computing stage solution
   ssprk.complete_stage_solution();
 }

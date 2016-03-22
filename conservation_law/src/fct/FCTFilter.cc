@@ -60,16 +60,18 @@ bool FCTFilter<dim>::check_bounds(const Vector<double> & new_solution) const
     {
       bounds_satisfied = false;
 
-      std::cout << "FCT bounds violated by dof " << i << ": " << value_i << " < "
-                << solution_bounds.lower(i) << std::endl;
+      std::cout << "\x1b[33m"
+                << "FCT bounds violated by dof " << i << ": " << value_i << " < "
+                << solution_bounds.lower(i) << "\x1b[0m" << std::endl;
     }
     // check upper bound
     if (value_i > solution_bounds.upper(i) + machine_tolerance)
     {
       bounds_satisfied = false;
 
-      std::cout << "FCT bounds violated by dof " << i << ": " << value_i << " > "
-                << solution_bounds.upper(i) << std::endl;
+      std::cout << "\x1b[33m"
+                << "FCT bounds violated by dof " << i << ": " << value_i << " > "
+                << solution_bounds.upper(i) << "\x1b[0m" << std::endl;
     }
     /*
         }
@@ -78,6 +80,8 @@ bool FCTFilter<dim>::check_bounds(const Vector<double> & new_solution) const
 
   // restore default precision and format
   std::cout.unsetf(std::ios_base::floatfield);
+
+  return bounds_satisfied;
 }
 
 /**

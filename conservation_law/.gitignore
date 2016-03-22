@@ -44,6 +44,8 @@ BurgersProblemParameters.cc
 BurgersProblemParameters.h
 BurgersRunParameters.cc
 BurgersRunParameters.h
+CharacteristicFCTFilter.cc
+CharacteristicFCTFilter.h
 CMakeVars.h
 CMakeVars.h.h
 ConservationLaw.cc
@@ -122,8 +124,6 @@ NonlinearSolver.cc
 NonlinearSolver.h
 OldFCT.cc
 OldFCT.h
-OldImplicitFCT.cc
-OldImplicitFCT.h
 OnesLimiter.cc
 OnesLimiter.h
 PostProcessor.cc
@@ -144,6 +144,8 @@ ShallowWaterEntropy.cc
 ShallowWaterEntropyFluxFEValuesCell.h
 ShallowWaterEntropyFluxFEValuesFace.h
 ShallowWaterEntropy.h
+ShallowWaterExplicitEulerFCT.cc
+ShallowWaterExplicitEulerFCT.h
 ShallowWaterFCT.cc
 ShallowWaterFCT.h
 ShallowWater.h
@@ -179,6 +181,8 @@ SteadyStateFCT.cc
 SteadyStateFCTFilter.cc
 SteadyStateFCTFilter.h
 SteadyStateFCT.h
+SWCharacteristicFCTFilter.cc
+SWCharacteristicFCTFilter.h
 ThetaFCT.cc
 ThetaFCTFilter.cc
 ThetaFCTFilter.h
