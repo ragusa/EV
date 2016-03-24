@@ -213,6 +213,8 @@ public:
   std::string filter_sequence_string;
   /** \brief limiter option */
   LimiterOption limiter_option;
+  /** \brief option to force correct signs of antidiffusion bounds */
+  bool enforce_antidiffusion_bounds_signs;
   /** \brief type of synchronization to apply for FCT */
   FCTSynchronizationType fct_synchronization_type;
   /** \brief Initialization option for implicit and steady-state FCT */

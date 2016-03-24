@@ -10,6 +10,7 @@
 
 #include "include/fct/DoFBounds.h"
 #include "include/fct/Limiter.h"
+#include "include/parameters/RunParameters.h"
 
 using namespace dealii;
 
@@ -24,7 +25,8 @@ public:
   /** \brief Alias for cell iterator */
   using Cell = typename DoFHandler<dim>::active_cell_iterator;
 
-  FCTFilter(const std::shared_ptr<Limiter<dim>> limiter,
+  FCTFilter(const RunParameters & run_parameters,
+            const std::shared_ptr<Limiter<dim>> limiter,
             const DoFHandler<dim> & dof_handler,
             const FESystem<dim> & fe);
 
@@ -38,6 +40,8 @@ protected:
   void compute_min_and_max_of_dof_vector(const Vector<double> & dof_vector,
                                          Vector<double> & min_values,
                                          Vector<double> & max_values) const;
+
+  void enforce_antidiffusion_bounds_signs();
 
   /** \brief solution bounds \f$\mathbf{W}^\pm\f$ */
   DoFBounds<dim> solution_bounds;
@@ -62,6 +66,9 @@ protected:
 
   /** \brief number of degrees of freedom per cell per component */
   const unsigned int dofs_per_cell_per_component;
+
+  /** \brief option to force correct signs of antidiffusion bounds */
+  bool do_enforce_antidiffusion_bounds_signs;
 };
 
 #include "src/fct/FCTFilter.cc"

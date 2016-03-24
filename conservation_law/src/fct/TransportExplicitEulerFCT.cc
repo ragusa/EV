@@ -48,8 +48,12 @@ std::shared_ptr<ExplicitEulerFCTFilter<dim>> TransportExplicitEulerFCT<
   // create filter
   std::shared_ptr<ExplicitEulerFCTFilter<dim>> filter;
   if (filter_string == "dmp")
-    filter = std::make_shared<DMPExplicitEulerFCTFilter<dim>>(
-      this->limiter, *this->dof_handler, *this->fe, *this->lumped_mass_matrix);
+    filter =
+      std::make_shared<DMPExplicitEulerFCTFilter<dim>>(*this->run_parameters,
+                                                       this->limiter,
+                                                       *this->dof_handler,
+                                                       *this->fe,
+                                                       *this->lumped_mass_matrix);
   else
     throw ExcNotImplemented();
 

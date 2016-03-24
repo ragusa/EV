@@ -247,8 +247,12 @@ std::shared_ptr<ThetaFCTFilter<dim>> ThetaFCT<dim>::create_filter(
   // create filter
   std::shared_ptr<ThetaFCTFilter<dim>> filter;
   if (filter_string == "dmp")
-    filter = std::make_shared<DMPThetaFCTFilter<dim>>(
-      this->limiter, *this->dof_handler, *this->fe, *lumped_mass_matrix, theta);
+    filter = std::make_shared<DMPThetaFCTFilter<dim>>(*this->run_parameters,
+                                                      this->limiter,
+                                                      *this->dof_handler,
+                                                      *this->fe,
+                                                      *lumped_mass_matrix,
+                                                      theta);
   else
     throw ExcNotImplemented();
 

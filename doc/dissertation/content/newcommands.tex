@@ -80,7 +80,7 @@
 \newcommand{\celldiameter}{\Delta x}
 \newcommand{\maxcelldiameter}{\Delta x_{\text{max}}}
 \newcommand{\volume}{V}
-\newcommand{\dvolume}{\,d\volume}
+\newcommand{\dvolume}{\,d\x}
 \newcommand{\area}{A}
 \newcommand{\darea}{\,d\area}
 \newcommand{\testfunction}{\varphi}
@@ -97,9 +97,10 @@
 \newcommand{\cardinality}[1][]{\ifthenelse{\equal{#1}{}}{n_\cell}{n_#1}}
 \newcommand{\cardsystem}{\bar{n}}
 \newcommand{\indices}{\mathcal{I}}
+\newcommand{\cellindices}{\mathcal{K}}
 \newcommand{\indicesnode}{\indices^{\text{node}}_\cell}
-\newcommand{\indicescell}[1][]{\ifthenelse{\equal{#1}{}}{\indices_{\cell}}
-  {\indices_{#1}}}
+\newcommand{\indicescell}[1][]{\ifthenelse{\equal{#1}{}}{\indices(\cell)}
+  {\indices(#1)}}
 
 % entropy viscosity
 \newcommand{\entropy}{\eta}
@@ -208,12 +209,30 @@
 \newcommand{\RKnstages}{s}
 
 % FCT
-\newcommand{\DMPbound}{W}
-\newcommand{\analyticDMPbounds}{\DMPbound^{\text{analytic},\pm}}
-\newcommand{\analyticDMPupperbound}{\DMPbound^{\text{analytic},+}}
-\newcommand{\analyticDMPlowerbound}{\DMPbound^{\text{analytic},-}}
-\newcommand{\DMPboundsi}{\DMPbound^\pm_i}
+\newcommand{\solutionbound}{W}
+\newcommand{\DMPlowerbound}{\solutionbound^{\textup{DMP},-}}
+\newcommand{\DMPupperbound}{\solutionbound^{\textup{DMP},+}}
+\newcommand{\DMPlowerboundss}{\solutionbound^{\textup{DMP},\textup{ss},-}}
+\newcommand{\DMPupperboundss}{\solutionbound^{\textup{DMP},\textup{ss},+}}
+\newcommand{\DMPboundsss}{\solutionbound^{\textup{DMP},\textup{ss},\pm}}
+\newcommand{\DMPlowerboundee}{\solutionbound^{\textup{DMP},\textup{ee},-}}
+\newcommand{\DMPupperboundee}{\solutionbound^{\textup{DMP},\textup{ee},+}}
+\newcommand{\DMPboundsee}{\solutionbound^{\textup{DMP},\textup{ee},\pm}}
+\newcommand{\DMPlowerboundtheta}{\solutionbound^{\textup{DMP},\textup{theta},-}}
+\newcommand{\DMPupperboundtheta}{\solutionbound^{\textup{DMP},\textup{theta},+}}
+\newcommand{\DMPboundstheta}{\solutionbound^{\textup{DMP},\textup{theta},\pm}}
+\newcommand{\DMPbounds}{\solutionbound^{\textup{DMP},\pm}}
+\newcommand{\analyticDMPbounds}{\solutionbound^{\text{analytic},\pm}}
+\newcommand{\analyticDMPupperbound}{\solutionbound^{\text{analytic},+}}
+\newcommand{\analyticDMPlowerbound}{\solutionbound^{\text{analytic},-}}
 \newcommand{\limitedfluxbound}{Q}
+\newcommand{\antidiffusionbound}{\limitedfluxbound}
+\newcommand{\antidiffusionlowerboundss}{\antidiffusionbound^{\textup{ss},-}}
+\newcommand{\antidiffusionupperboundss}{\antidiffusionbound^{\textup{ss},+}}
+\newcommand{\antidiffusionlowerboundee}{\antidiffusionbound^{\textup{ee},-}}
+\newcommand{\antidiffusionupperboundee}{\antidiffusionbound^{\textup{ee},+}}
+\newcommand{\antidiffusionlowerboundtheta}{\antidiffusionbound^{\textup{theta},-}}
+\newcommand{\antidiffusionupperboundtheta}{\antidiffusionbound^{\textup{theta},+}}
 \newcommand{\limitedfluxboundsi}{\limitedfluxbound^\pm_i}
 \newcommand{\limiterletter}{L}
 \newcommand{\limitermatrix}{\mathbf{\limiterletter}}
@@ -304,8 +323,10 @@
 \newcommand{\sumj}{\sum\limits_j}
 \newcommand{\sumjnoti}{\sum\limits_{j\ne i}}
 \newcommand{\sumKSi}{\sum\limits_{\cell:\celldomain\subset\support_i}}
+%\newcommand{\sumKSij}[1][\cell]
+%  {\sum\limits_{#1:\celldomain[#1]\subset\support_{i,j}}}
 \newcommand{\sumKSij}[1][\cell]
-  {\sum\limits_{#1:\celldomain[#1]\subset\support_{i,j}}}
+  {\sum\limits_{#1\in\cellindices_{i,j}}}
 \newcommand{\sumallcells}{\sum\limits_{\cell}}
 \newcommand{\intdomain}[1]{\int\limits_\domain #1 \,\dvolume}
 \newcommand{\intboundary}[1]{\int\limits_{\domainboundary} #1 \,d\area}
@@ -440,3 +461,9 @@
 \newcommand{\err}{e}
 \newcommand{\dx}{\Delta x}
 
+% tolerance adjustment for line-breaking, to prevent \overfull warnings
+\newenvironment{tolerant}[1]{
+  \par\tolerance=#1\relax
+}{
+  \par
+}

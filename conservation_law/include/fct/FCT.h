@@ -95,6 +95,9 @@ protected:
   std::vector<std::string> create_filter_string_list(
     std::string filter_sequence_string);
 
+  /** \brief run parameters */
+  const RunParameters * const run_parameters;
+
   /** \brief limiter */
   std::shared_ptr<Limiter<dim>> limiter;
 

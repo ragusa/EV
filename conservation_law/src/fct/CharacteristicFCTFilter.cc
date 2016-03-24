@@ -7,6 +7,7 @@
 /**
  * \brief Constructor.
  *
+ * \param[in] run_parameters_  run parameters
  * \param[in] limiter_  limiter
  * \param[in] dof_handler_  degree of freedom handler
  * \param[in] fe_  finite element system
@@ -14,11 +15,13 @@
  */
 template <int dim>
 CharacteristicFCTFilter<dim>::CharacteristicFCTFilter(
+  const RunParameters & run_parameters_,
   const std::shared_ptr<Limiter<dim>> limiter_,
   const DoFHandler<dim> & dof_handler_,
   const FESystem<dim> & fe_,
   const SparseMatrix<double> & lumped_mass_matrix_)
-  : ExplicitEulerFCTFilter<dim>(limiter_, dof_handler_, fe_, lumped_mass_matrix_)
+  : ExplicitEulerFCTFilter<dim>(
+      run_parameters_, limiter_, dof_handler_, fe_, lumped_mass_matrix_)
 {
   // create sparsity pattern for limiter and antidiffusion matrices
   DynamicSparsityPattern dsp(this->n_dofs);
@@ -73,6 +76,10 @@ void CharacteristicFCTFilter<dim>::filter_antidiffusive_fluxes(
   // compute characteristic antidiffusion bounds \hat{Q}- and \hat{Q}+
   compute_antidiffusion_bounds(
     old_solution, dt, inviscid_ss_flux, low_order_diffusion_matrix, ss_rhs);
+
+  // enforce antidiffusion bounds signs if requested
+  if (this->do_enforce_antidiffusion_bounds_signs)
+    this->enforce_antidiffusion_bounds_signs();
 
   // transform antidiffusion matrix: P -> \hat{P}
   transform_matrix(

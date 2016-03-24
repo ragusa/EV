@@ -16,7 +16,8 @@ template <int dim>
 class DMPThetaFCTFilter : public ThetaFCTFilter<dim>
 {
 public:
-  DMPThetaFCTFilter(const std::shared_ptr<Limiter<dim>> limiter,
+  DMPThetaFCTFilter(const RunParameters & run_parameters,
+                    const std::shared_ptr<Limiter<dim>> limiter,
                     const DoFHandler<dim> & dof_handler,
                     const FESystem<dim> & fe,
                     const SparseMatrix<double> & lumped_mass_matrix,

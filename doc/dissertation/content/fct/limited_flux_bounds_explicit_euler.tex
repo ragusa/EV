@@ -1,17 +1,12 @@
-\begin{theorem}{Limited Flux Bounds for Explicit Euler Scheme}
-   Using the Explicit Euler FCT scheme
-   \begin{equation}
-     \lumpedmassmatrix\frac{\solutionvector^{\timeindex+1}
-       - \solutionvector^\timeindex}{\timestepsize}
-       + \loworderssmatrix\solutionvector^\timeindex
-       = \ssrhs^\timeindex + \limitedfluxsum \eqc
-   \end{equation}
-   the following limited flux bounds $\limitedfluxbound_i^\pm$ correspond to the
-   discrete maximum principle
-   $\DMPbound_i^-\le \solutionletter_i^{\timeindex+1}\le \DMPbound_i^+$:
+\begin{theorem}{Antidiffusion Bounds for Explicit Euler Scheme}
+   Using the Explicit Euler FCT scheme given by Equation
+   \eqref{eq:fct_explicit_euler},
+   the following antidiffusion bounds $\limitedfluxbound_i^\pm$ correspond to the
+   solution bounds
+   $\solutionbound_i^-\le \solutionletter_i^{\timeindex+1}\le \solutionbound_i^+$:
    \begin{equation}\label{eq:limited_flux_bounds_explicit_euler}
      \limitedfluxbound_i^\pm \equiv \lumpedmassentry
-       \frac{\DMPbound_i^\pm-\solutionletter_i^\timeindex}{\timestepsize}
+       \frac{\solutionbound_i^\pm-\solutionletter_i^\timeindex}{\timestepsize}
      + \sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
      - \ssrhsletter_i^\timeindex.
    \end{equation}
@@ -34,14 +29,14 @@
      + \sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
      - \ssrhsletter_i^\timeindex \eqp
    \]
-   The discrete maximum principle is
+   The solution bounds for degree of freedom $i$ are
    \[
-     \DMPbound_i^-\le \solutionletter_i^{\timeindex+1}\le \DMPbound_i^+ \eqp
+     \solutionbound_i^-\le \solutionletter_i^{\timeindex+1}\le \solutionbound_i^+ \eqp
    \]
    Through addition/subtraction and multiplication/division operations, this
    principle can be made to look like the following:
    \begin{multline*}
-     \lumpedmassentry\frac{\DMPbound_i^- -\solutionletter_i^\timeindex}
+     \lumpedmassentry\frac{\solutionbound_i^- -\solutionletter_i^\timeindex}
        {\timestepsize}
      + \sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
      - \ssrhsletter_i^\timeindex
@@ -49,7 +44,7 @@
        - \solutionletter_i^\timeindex}{\timestepsize}
      + \sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
      - \ssrhsletter_i^\timeindex
-     \\\le \lumpedmassentry\frac{\DMPbound_i^+
+     \\\le \lumpedmassentry\frac{\solutionbound_i^+
        - \solutionletter_i^\timeindex}{\timestepsize}
      + \sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
      - \ssrhsletter_i^\timeindex \eqc

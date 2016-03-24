@@ -65,10 +65,11 @@ end
 subsection fct
    set filter sequence string        = dmp     # dmp|dmp_analytic
    set limiter option                = zalesak # ones|zeroes|zalesak
+   set enforce antidiffusion bounds signs = true
    set fct synchronization type      = none    # none|min|compound
    set fct initialization option     = zero    # zero|low|high
    set skip fct if bounds satisfied  = false
-   set use cumulative antidiffusion algorithm = true
+   set use cumulative antidiffusion algorithm = false
    set use star states in fct bounds = false
    set check fct bounds              = true
    set output limiter matrix         = false

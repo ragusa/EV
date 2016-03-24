@@ -7,16 +7,18 @@
 /**
  * \brief Constructor.
  *
+ * \param[in] run_parameters_  run parameters
  * \param[in] limiter_  limiter
  * \param[in] dof_handler_  degree of freedom handler
  * \param[in] fe_  finite element system
  */
 template <int dim>
 DMPSteadyStateFCTFilter<dim>::DMPSteadyStateFCTFilter(
+  const RunParameters & run_parameters_,
   const std::shared_ptr<Limiter<dim>> limiter_,
   const DoFHandler<dim> & dof_handler_,
   const FESystem<dim> & fe_)
-  : SteadyStateFCTFilter<dim>(limiter_, dof_handler_, fe_)
+  : SteadyStateFCTFilter<dim>(run_parameters_, limiter_, dof_handler_, fe_)
 {
 }
 

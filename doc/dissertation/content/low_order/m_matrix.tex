@@ -59,8 +59,8 @@ The diagonal elements of the low-order system matrix are
 \[
   \ssmatrixletter^{L,\timeindex}_{i,i} =
     \intSi\mathbf{\consfluxletter}'(\approximatescalarsolution^\timeindex)\cdot
-    \nabla\testfunction_i(\x)\testfunction_i(\x)d\volume
-  + \intSi\sigma(\x)\testfunction_i^2(\x)d\volume
+    \nabla\testfunction_i(\x)\testfunction_i(\x)\dvolume
+  + \intSi\sigma(\x)\testfunction_i^2(\x)\dvolume
   + \sumKSi\mkern-15mu\lowordercellviscosity[\timeindex]
     \localviscbilinearform{\cell}{i}{i}
   \eqp
@@ -105,16 +105,17 @@ $\sumj \localviscbilinearform{\cell}{j}{i}=0$,
 \begin{eqnarray*}
    \sumj \ssmatrixletter^{L,\timeindex}\ij & = & \sumj \intSij
       \left(\mathbf{\consfluxletter}'(\approximatescalarsolution^\timeindex)
-        \cdot\nabla\testfunction_j(\x) +
-      \reactioncoef(\x)\testfunction_j(\x)\right)\testfunction_i(\x) d\volume +
-      \sumj\sumKSij\mkern-20mu\lowordercellviscosity[\timeindex]\localviscbilinearform{\cell}{j}{i}
+        \cdot\nabla\testfunction_j +
+      \reactioncoef\testfunction_j\right)\testfunction_i \dvolume +
+      \sumj\sumKSij\lowordercellviscosity[\timeindex]
+        \localviscbilinearform{\cell}{j}{i}
       \eqc\\
    & = & \intSi\left(
       \mathbf{\consfluxletter}'(\approximatescalarsolution^\timeindex)\cdot
       \nabla\sumj\testfunction_j(\x) +
       \reactioncoef(\x)\sumj\testfunction_j(\x)\right)
-      \testfunction_i(\x) d\volume \eqc\\
-   \label{eq:rowsum} & = & \intSi\reactioncoef(\x)\testfunction_i(\x) d\volume
+      \testfunction_i(\x) \dvolume \eqc\\
+   \label{eq:rowsum} & = & \intSi\reactioncoef(\x)\testfunction_i(\x) \dvolume
      \eqc\\
    &\ge& 0 \eqp \qed
 \end{eqnarray*}

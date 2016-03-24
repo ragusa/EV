@@ -50,7 +50,8 @@ std::shared_ptr<ExplicitEulerFCTFilter<dim>> ShallowWaterExplicitEulerFCT<
   std::shared_ptr<ExplicitEulerFCTFilter<dim>> filter;
   if (filter_string == "characteristic")
     filter =
-      std::make_shared<SWCharacteristicFCTFilter<dim>>(this->limiter,
+      std::make_shared<SWCharacteristicFCTFilter<dim>>(*this->run_parameters,
+                                                       this->limiter,
                                                        *this->dof_handler,
                                                        *this->fe,
                                                        *this->lumped_mass_matrix,

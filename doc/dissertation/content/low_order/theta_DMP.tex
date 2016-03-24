@@ -10,36 +10,41 @@ If the CFL-like condition
 \end{equation}
 is satisfied, then the low-order solution obtained using the Theta scheme
 satisfies the following discrete maximum principle:
-\begin{equation}\label{eq:theta_dmp}
-  \DMPbound_i^{L,-}\leq \solutionletter_i^{L,\timeindex+1}\leq \DMPbound_i^{L,+}
+\begin{subequations}\label{eq:theta_dmp}
+\begin{equation}
+  \DMPlowerbound_i(\solutionvector^{L,n+1})
+    \leq \solutionletter_i^{L,\timeindex+1}
+    \leq \DMPupperbound_i(\solutionvector^{L,n+1})
   \quad\forall i \eqc
 \end{equation}
-where
-\begin{multline}\label{eq:theta_bounds}
-   \DMPbound_i^{L,\pm}
-   \equiv \frac{1}{1+\frac{\theta\timestepsize}{\massmatrixletter^L_{i,i}}
-     \ssmatrixletter_{i,i}^{L,\timeindex+1}}\Bigg[\pr{1
-     - \frac{(1-\theta)\timestepsize}{\massmatrixletter^L_{i,i}}
-       \sumj\ssmatrixletter_{i,j}^{L,\timeindex}}
-       \solutionletter_{\substack{\max\\\min},i}^\timeindex
+\begin{multline}
+   \DMPbounds_i(\solutionvector^{L,n+1})
+   \equiv
+   \frac{1}{1+\frac{\theta\timestepsize}{\massmatrixletter^L_{i,i}}
+       \ssmatrixletter_{i,i}^{L,\timeindex+1}}
+     \Bigg[\pr{1 - \frac{(1-\theta)\timestepsize}{\massmatrixletter^L_{i,i}}
+     \ssmatrixletter_{i,i}^{L,\timeindex}}\solutionletter_i^\timeindex
      \\
-     - \frac{\theta\timestepsize}{\massmatrixletter^L_{i,i}}
-       \sumjnoti\ssmatrixletter_{i,j}^{L,\timeindex+1}
-       \solutionletter_{\substack{\max\\\min},j\ne i}^{L,\timeindex+1}
-     + \frac{\timestepsize}{\massmatrixletter^L_{i,i}}\pr{(1-\theta)
-       \ssrhsletter_i^\timeindex + \theta\ssrhsletter_i^{\timeindex+1}}\Bigg] \eqc
+     - \frac{\timestepsize}{\massmatrixletter^L_{i,i}}\pr{
+       (1-\theta)\sumjnoti\ssmatrixletter_{i,j}^{L,\timeindex}
+         \solutionletter_{\max,j\ne i}^\timeindex
+       + \theta\sumjnoti\ssmatrixletter_{i,j}^{L,\timeindex+1}
+         \solutionletter_{\max,j\ne i}^{\timeindex+1}}
+     \\
+     + \frac{\timestepsize}{\massmatrixletter^L_{i,i}}
+       \pr{(1-\theta)\ssrhsletter_i^\timeindex
+       + \theta\ssrhsletter_i^{\timeindex+1}}\Bigg] \eqp
 \end{multline}
+\end{subequations}
+where
 \[
-  \solutionletter_{\substack{\max\\\min},i}^\timeindex
-  = \substack{\max\\\min\limits_{j\in\indicescell[\support_i]}}
+  \solutionletter_{\substack{\max\\\min},j\ne i}^\timeindex
+  \equiv \substack{\max\\\min\limits_{j\ne i\in\indicescell[\support_i]}}
     \solutionletter_j^\timeindex
-  \eqc \quad
-  \solutionletter_{\substack{\max\\\min},j\ne i}^{L,\timeindex+1}
-  = \substack{\max\\\min\limits_{j\ne i\in\indicescell[\support_i]}}
-  \solutionletter_j^{L,\timeindex+1}
   \eqc
 \]
-and $\indicescell[\support_i]$ is the set of indices of degrees of freedom in the
+and $\indicescell[\support_i]$
+is the set of indices of degrees of freedom in the
 support of degree of freedom $i$.
 \end{theorem}
 \begin{proof}
@@ -74,16 +79,19 @@ is non-negative. Thus, the following inequality is able to be applied:
 \begin{multline*}
    \solutionletter_i^{L,\timeindex+1}
    \le \frac{1}{1+\frac{\theta\timestepsize}{\massmatrixletter^L_{i,i}}
-     \ssmatrixletter_{i,i}^{L,\timeindex+1}}
+       \ssmatrixletter_{i,i}^{L,\timeindex+1}}
      \Bigg[\pr{1 - \frac{(1-\theta)\timestepsize}{\massmatrixletter^L_{i,i}}
-       \sumj\ssmatrixletter_{i,j}^{L,\timeindex}}\solutionletter_{\max,i}^\timeindex
+     \ssmatrixletter_{i,i}^{L,\timeindex}}\solutionletter_i^\timeindex
      \\
-       - \frac{\theta\timestepsize}{\massmatrixletter^L_{i,i}}
-         \sumjnoti\ssmatrixletter_{i,j}^{L,\timeindex+1}
-         \solutionletter_{\max,j\ne i}^{L,\timeindex+1}
-       + \frac{\timestepsize}{\massmatrixletter^L_{i,i}}
-         \pr{(1-\theta)\ssrhsletter_i^\timeindex
-         + \theta\ssrhsletter_i^{\timeindex+1}}\Bigg] \eqc
+     - \frac{\timestepsize}{\massmatrixletter^L_{i,i}}\pr{
+       (1-\theta)\sumjnoti\ssmatrixletter_{i,j}^{L,\timeindex}
+         \solutionletter_{\max,j\ne i}^\timeindex
+       + \theta\sumjnoti\ssmatrixletter_{i,j}^{L,\timeindex+1}
+         \solutionletter_{\max,j\ne i}^{\timeindex+1}}
+     \\
+     + \frac{\timestepsize}{\massmatrixletter^L_{i,i}}
+       \pr{(1-\theta)\ssrhsletter_i^\timeindex
+       + \theta\ssrhsletter_i^{\timeindex+1}}\Bigg] \eqp
 \end{multline*}
 and similarly for the lower bound.\qed
 \end{proof}

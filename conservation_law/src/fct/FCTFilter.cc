@@ -6,12 +6,14 @@
 /**
  * \brief Constructor.
  *
+ * \param[in] run_parameters_  run parameters
  * \param[in] limiter_  limiter
  * \param[in] dof_handler_  degree of freedom handler
  * \param[in] fe_  finite element system
  */
 template <int dim>
-FCTFilter<dim>::FCTFilter(const std::shared_ptr<Limiter<dim>> limiter_,
+FCTFilter<dim>::FCTFilter(const RunParameters & run_parameters_,
+                          const std::shared_ptr<Limiter<dim>> limiter_,
                           const DoFHandler<dim> & dof_handler_,
                           const FESystem<dim> & fe_)
   : solution_bounds(dof_handler_, fe_),
@@ -21,7 +23,9 @@ FCTFilter<dim>::FCTFilter(const std::shared_ptr<Limiter<dim>> limiter_,
     n_dofs(dof_handler_.n_dofs()),
     n_components(dof_handler_.get_fe().n_components()),
     dofs_per_cell(dof_handler_.get_fe().dofs_per_cell),
-    dofs_per_cell_per_component(dofs_per_cell / n_components)
+    dofs_per_cell_per_component(dofs_per_cell / n_components),
+    do_enforce_antidiffusion_bounds_signs(
+      run_parameters_.enforce_antidiffusion_bounds_signs)
 {
 }
 
@@ -160,5 +164,35 @@ void FCTFilter<dim>::compute_min_and_max_of_dof_vector(
         min_values(i) = std::min(min_values(i), min_cell);
       }
     }
+  }
+}
+
+/**
+ * \brief Enforces the necessary signs of the antidiffusion bounds.
+ *
+ * The antidiffusion bounds should have the following properties for use
+ * in the FCT algorithm:
+ * \f[
+ *   Q_i^- \leq 0 \,,
+ * \f]
+ * \f[
+ *   Q_i^+ \geq 0 \,.
+ * \f]
+ * This function enforces these properties by performing the following
+ * operations:
+ * \f[
+ *   Q_i^- \gets \min(0, Q_i^-) \,,
+ * \f]
+ * \f[
+ *   Q_i^+ \gets \max(0, Q_i^+) \,.
+ * \f]
+ */
+template <int dim>
+void FCTFilter<dim>::enforce_antidiffusion_bounds_signs()
+{
+  for (unsigned int i = 0; i < n_dofs; ++i)
+  {
+    antidiffusion_bounds.lower[i] = std::min(0.0, antidiffusion_bounds.lower[i]);
+    antidiffusion_bounds.upper[i] = std::max(0.0, antidiffusion_bounds.upper[i]);
   }
 }

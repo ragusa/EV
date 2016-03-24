@@ -1,17 +1,21 @@
 \begin{theorem}{Steady-State Scheme Discrete Maximum Principle}
 The low-order solution $\lowordersolution$ satisfies the following maximum
 principle:
-\begin{equation}\label{eq:DMP_ss}
-   \DMPbound_i^{L,-} \leq \solutionletter_i^L
-     \leq \DMPbound_i^{L,+}\quad\forall i \eqc
-\end{equation}
-where
+\begin{subequations}\label{eq:DMP_ss}
 \begin{equation}
-   \DMPbound_i^{L,\pm} \equiv -\frac{1}{\ssmatrixletter^L_{i,i}}
+   \DMPlowerbound_i(\solutionvector^L)
+     \leq \solutionletter_i^L
+     \leq \DMPupperbound_i(\solutionvector^L)
+     \quad\forall i \eqc
+\end{equation}
+\begin{equation}
+   \DMPbounds_i(\solutionvector^L)
+     \equiv -\frac{1}{\ssmatrixletter^L_{i,i}}
       \sumjnoti\ssmatrixletter^L_{i,j}
       \solutionletter_{\substack{\max\\\min},j\ne i}^L
       + \frac{\ssrhsletter_i}{\ssmatrixletter^L_{i,i}} \eqc
 \end{equation}
+\end{subequations}
 where
 \[
   \solutionletter_{\min,j\ne i}^L \equiv \min\limits_{j\ne i\in\indicescell[\support_i]}

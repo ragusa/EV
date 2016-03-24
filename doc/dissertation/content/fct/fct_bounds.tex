@@ -1,69 +1,32 @@
 The main idea of the FCT algorithm is to enforce some physically-motivated
-bounds on the solution values:
+bounds on the each solution degree of freedom:
 \begin{equation}
-  \DMPbound^{-}_i \leq \solutionletter_i^{n+1} \leq \DMPbound^{+}_i \eqc
+  \solutionbound^{-}_i
+    \leq \solutionletter_i^{n+1}
+    \leq \solutionbound^{+}_i \eqc
   \qquad \forall i \eqp
 \end{equation}
-These bounds should be satisfied by the low-order scheme; this allows the
-low-order scheme to act as a fail-safe for the FCT algorithm. Therefore,
-the FCT algorithm requires that the chosen bounds above satisfy
-$\DMPbound^{+}_i \geq \DMPbound^{L,+}_i$ and
-$\DMPbound^{-}_i \leq \DMPbound^{L,-}_i$, where $\DMPbound^{L,\pm}$
-are the low-order scheme discrete maximum principle (DMP) bounds given in
-Section \ref{sec:DMP}. Therefore, one could choose to use the
-low-order scheme DMP bounds as the bounds to impose to impose on the
-FCT solution. However, it is sometimes the case that the low-order scheme
-bounds do not envelop the most desirable FCT solution; for example, sometimes
-the exact solution to a problem lies outside of the bounds. Therefore, it
-becomes advantageous to widen the FCT bounds to allow such a solution:
-one could derive some alternative physical
-solution bounds, such as those derived in Appendix \ref{sec:analytic_dmp},
-calling these $\analyticDMPbounds_i$, and then taking the minimum/maximum of
-each: $\DMPbound^{+}_i = \max(\DMPbound^{L,+}_i,\analyticDMPupperbound_i)$ and
-$\DMPbound^{-}_i = \min(\DMPbound^{L,-}_i,\analyticDMPlowerbound_i)$.
-For convenience, the local discrete maximum principle bounds for the
+For example, one may use the discrete maximum principle (DMP) bounds
+derived for the low-order schemes in Section \ref{sec:DMP} as FCT solution
+bounds. Alternatively, if the
+physics are relatively simple, one could use the method of characteristics
+to derive solution bounds. This approach is performed for the scalar transport
+equation in Appendix \ref{sec:analytic_dmp}. For solution variables that
+are physically non-negative, an obvious lower bound is zero:
+$\solutionbound^-_i=0$; if one only wants to prevent negativities, then
+one can simply set the upper bound to be an arbitrary large number
+$\solutionbound^+_i=c_{\text{large}}$. However, often one wants other
+properties such as monotonicity, in which case it is necessary to use
+more restrictive bounds.
+
+Equation numbers for the local discrete maximum principle bounds for the
 different considered time discretizations, as well as the analytic local
-discrete maximum principle bounds, are summarized in Table \ref{tab:dmp}.
+discrete maximum principle bounds, are given in Table \ref{tab:dmp}.
 
 \begin{mytable}{Discrete Maximum Principles}{dmp}{l c}
-{\emph{Case} & \emph{Discrete Maximum Principle}}
-\\
-Steady-State   &
-      \(\displaystyle
-      \DMPbound_i^{L,\pm} \equiv -\frac{1}{\ssmatrixletter^L_{i,i}}
-      \sumjnoti\ssmatrixletter^L_{i,j}
-      \solutionletter_{\substack{\max\\\min},j\ne i}^L
-      + \frac{\ssrhsletter_i}{\ssmatrixletter^L_{i,i}}\)\\
-Explicit Euler &
-     \(\displaystyle
-     \DMPbound_i^{L,\pm}\equiv \solutionletter_{\substack{\max\\\min},i}^\timeindex
-     \pr{1-\frac{\timestepsize}{\massmatrixletter_{i,i}^L}
-       \sumj\ssmatrixletter^{L,\timeindex}_{i,j}}
-     + \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssrhsletter_i^\timeindex\) \\
-Theta Method   &
-   \(\displaystyle
-   \DMPbound_i^{L,\pm}
-   \equiv \frac{1}{1+\frac{\theta\timestepsize}{\massmatrixletter^L_{i,i}}
-     \ssmatrixletter_{i,i}^{L,\timeindex+1}}\Bigg[\pr{1
-     - \frac{(1-\theta)\timestepsize}{\massmatrixletter^L_{i,i}}
-       \sumj\ssmatrixletter_{i,j}^{L,\timeindex}}
-       \solutionletter_{\substack{\max\\\min},i}^\timeindex\)\\
-   & $\displaystyle
-     - \frac{\theta\timestepsize}{\massmatrixletter^L_{i,i}}
-       \sumjnoti\ssmatrixletter_{i,j}^{L,\timeindex+1}
-       \solutionletter_{\substack{\max\\\min},j\ne i}^{L,\timeindex+1}
-     + \frac{\timestepsize}{\massmatrixletter^L_{i,i}}\pr{(1-\theta)
-       \ssrhsletter_i^\timeindex + \theta\ssrhsletter_i^{\timeindex+1}}\Bigg]
-   $\\
-Analytic       &
-      \(\displaystyle
-        \analyticDMPlowerbound_i
-        \equiv \solutionletter_{\text{min},i}^n e^{-\dt\reactioncoef_{\max,i}}
-        + \frac{\scalarsource_{\min,i}}{\reactioncoef_{\max,i}}
-        (1 - e^{-\reactioncoef_{\max,i}\dt}) \)\\
-      & \(\displaystyle
-        \analyticDMPupperbound_i
-        \equiv \solutionletter_{\text{max},i}^n e^{-\dt\reactioncoef_{\min,i}}
-        + \frac{\scalarsource_{\max,i}}{\reactioncoef_{\min,i}}
-        (1 - e^{-\reactioncoef_{\min,i}\dt})\) \\
+{\emph{Case} & \emph{Equation}}
+Steady-State   & Equation \eqref{eq:DMP_ss} \\
+Explicit Euler & Equation \eqref{eq:explicit_dmp} \\
+Theta Method   & Equation \eqref{eq:theta_dmp} \\
+Analytic       & Equation \eqref{eq:analyticDMP} \\
 \end{mytable}

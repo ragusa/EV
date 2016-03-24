@@ -6,6 +6,7 @@
 /**
  * \brief Constructor.
  *
+ * \param[in] run_parameters_  run parameters
  * \param[in] limiter_  limiter
  * \param[in] dof_handler_  degree of freedom handler
  * \param[in] fe_  finite element system
@@ -14,12 +15,13 @@
  */
 template <int dim>
 ThetaFCTFilter<dim>::ThetaFCTFilter(
+  const RunParameters & run_parameters_,
   const std::shared_ptr<Limiter<dim>> limiter_,
   const DoFHandler<dim> & dof_handler_,
   const FESystem<dim> & fe_,
   const SparseMatrix<double> & lumped_mass_matrix_,
   const double & theta_)
-  : FCTFilter<dim>(limiter_, dof_handler_, fe_),
+  : FCTFilter<dim>(run_parameters_, limiter_, dof_handler_, fe_),
     lumped_mass_matrix(&lumped_mass_matrix_),
     theta(theta_)
 {
@@ -66,6 +68,10 @@ void ThetaFCTFilter<dim>::filter_antidiffusive_fluxes(
                                ss_rhs_new,
                                ss_rhs_old,
                                cumulative_antidiffusion);
+
+  // enforce antidiffusion bounds signs if requested
+  if (this->do_enforce_antidiffusion_bounds_signs)
+    this->enforce_antidiffusion_bounds_signs();
 
   // limit antidiffusion fluxes
   this->limiter->compute_limiter_matrix(

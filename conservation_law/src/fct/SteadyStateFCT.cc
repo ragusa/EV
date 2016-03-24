@@ -196,7 +196,7 @@ std::shared_ptr<SteadyStateFCTFilter<dim>> SteadyStateFCT<dim>::create_filter(
   std::shared_ptr<SteadyStateFCTFilter<dim>> filter;
   if (filter_string == "dmp")
     filter = std::make_shared<DMPSteadyStateFCTFilter<dim>>(
-      this->limiter, *this->dof_handler, *this->fe);
+      *this->run_parameters, this->limiter, *this->dof_handler, *this->fe);
   else
     throw ExcNotImplemented();
 

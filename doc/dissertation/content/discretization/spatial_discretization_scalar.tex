@@ -10,11 +10,11 @@ expansion coefficients at time $\timevalue$. Substituting the approximate
 solution into Equation \eqref{eq:scalar_transport} and testing with basis
 function $\testfunction_i(\x)$ gives
 \begin{equation}
-   \intSi\ppt{\approximatescalarsolution}\testfunction_i(\x) d\volume
+   \intSi\ppt{\approximatescalarsolution}\testfunction_i(\x) \dvolume
       + \intSi\left(\divergence\consfluxscalar[\approximatescalarsolution]
       + \reactioncoef(\x)\approximatescalarsolution\xt\right)
-      \testfunction_i(\x) d\volume
-      = \intSi \scalarsource\xt \testfunction_i(\x) d\volume \eqc
+      \testfunction_i(\x) \dvolume
+      = \intSi \scalarsource\xt \testfunction_i(\x) \dvolume \eqc
 \end{equation}
 where $\support_i$ is the support of $\testfunction_i(\x)$. If the flux
 function $\consfluxscalar$ is linear with respect to $\scalarsolution$, i.e.,
@@ -28,7 +28,7 @@ with the elements of $\ssmatrix$ being the following:
 \begin{equation}\label{eq:Aij}
   \ssmatrixletter\ij \equiv \intSij\left(
   \velocity\cdot\nabla\testfunction_j(\x) +
-  \reactioncoef(\x)\testfunction_j(\x)\right)\testfunction_i(\x) d\volume \eqc
+  \reactioncoef(\x)\testfunction_j(\x)\right)\testfunction_i(\x) \dvolume \eqc
 \end{equation}
 where $\support\ij$ is the dual support of $\testfunction_i(\x)$ and
 $\testfunction_j(\x)$.
@@ -46,17 +46,17 @@ quasilinear matrix (i.e., the Jacobian matrix) entries are
   \mathbf{\consfluxletter}'(\approximatescalarsolution)\cdot\nabla
   \testfunction_j(\x) +
   \reactioncoef(\x)\testfunction_j(\x)\right)
-  \testfunction_i(\x) d\volume \eqp
+  \testfunction_i(\x) \dvolume \eqp
 \end{equation}
 The elements of $\ssrhs(\timevalue)$ are
 \begin{equation}
   \ssrhsletter_i(\timevalue) \equiv \intSi \scalarsource\xt\testfunction_i(\x)
-  d\volume \eqp
+  \dvolume \eqp
 \end{equation}
 $\consistentmassmatrix$ is the consistent mass matrix, which has the entries
 \begin{equation}\label{eq:massmatrix}
   \massmatrixletter^C\ij \equiv \intSij
-  \testfunction_j(\x)\testfunction_i(\x) d\volume \eqp
+  \testfunction_j(\x)\testfunction_i(\x) \dvolume \eqp
 \end{equation}
 Similarly, for the linear steady-state case, the linear system is
 \begin{equation}

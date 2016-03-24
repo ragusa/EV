@@ -2,28 +2,32 @@
   Maximum Principle}
 If the CFL-like condition
 \begin{equation}\label{eq:explicit_cfl}
-  \timestepsize \leq \frac{\massmatrixletter_{i,i}^{L,\timeindex}}
+  \timestepsize \leq \frac{\massmatrixletter_{i,i}^{L}}
     {\ssmatrixletter_{i,i}^{L,\timeindex}}
   \quad\forall i
   \qquad\Longleftrightarrow\qquad
-  1 - \frac{\timestepsize}{\massmatrixletter_{i,i}^{L,\timeindex}}
+  1 - \frac{\timestepsize}{\massmatrixletter_{i,i}^{L}}
     \ssmatrixletter_{i,i}^{L,\timeindex}
     \geq 0\quad\forall i \eqc
 \end{equation}
 is satisfied, then the low-order solution obtained using the Explicit Euler
 method satisfies the following discrete maximum principle:
-\begin{equation}\label{eq:explicit_dmp}
-   \DMPbound_i^{L,-}\leq \solutionletter_i^{L,\timeindex+1}
-     \leq \DMPbound_i^{L,+}\quad\forall i
+\begin{subequations}\label{eq:explicit_dmp}
+\begin{equation}
+   \DMPlowerbound_i
+     \leq \solutionletter_i^{L,\timeindex+1}
+     \leq \DMPupperbound_i
+     \quad\forall i
    \eqc
 \end{equation}
-where
-\begin{equation}\label{eq:explicit_bounds}
-   \DMPbound_i^{L,\pm}\equiv \solutionletter_{\substack{\max\\\min},i}^\timeindex
+\begin{equation}
+   \DMPbounds_i \equiv
      \pr{1-\frac{\timestepsize}{\massmatrixletter_{i,i}^L}
        \sumj\ssmatrixletter^{L,\timeindex}_{i,j}}
+     \solutionletter_{\substack{\max\\\min},i}^\timeindex
      + \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssrhsletter_i^\timeindex \eqc
 \end{equation}
+\end{subequations}
 where $\solutionletter_{\substack{\max\\\min},i}^\timeindex =
 \substack{\max\\\min\limits_{j\in\indicescell[\support_i]}}\solutionletter_j^\timeindex$,
 and $\indicescell[\support_i]$ is the set of indices of degrees of freedom in the
@@ -37,7 +41,7 @@ Evaluating row $i$ of the low-order Explicit Euler system, given by Equation
    \solutionletter_i^{L,\timeindex+1}
    = \solutionletter_i^\timeindex
    - \frac{\timestepsize}{\massmatrixletter_{i,i}^L}
-       \sumj\solutionletter_j^\timeindex \ssmatrixletter^{L,\timeindex}_{i,j}
+       \sumj\ssmatrixletter^{L,\timeindex}_{i,j}\solutionletter_j^\timeindex 
    + \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssrhsletter_i^\timeindex \eqc
 \]
 where $\massmatrixletter_{i,i}^L$ is the $i$th element of the lumped mass matrix.
@@ -47,7 +51,7 @@ Rearranging this equation,
    = \left(1-\frac{\timestepsize}{\massmatrixletter_{i,i}^L}
        \ssmatrixletter^{L,\timeindex}_{i,i}\right)\solutionletter_i^\timeindex
    - \frac{\timestepsize}{\massmatrixletter_{i,i}^L}
-       \sumjnoti\solutionletter_j^\timeindex \ssmatrixletter^{L,\timeindex}_{i,j}
+       \sumjnoti \ssmatrixletter^{L,\timeindex}_{i,j}\solutionletter_j^\timeindex
    + \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssrhsletter_i^\timeindex \eqc
 \]
 The CFL-like condition in Equation \eqref{eq:explicit_cfl} gives that
@@ -57,9 +61,9 @@ off-diagonal elements $\ssmatrixletter^{L,\timeindex}_{i,j}, j\ne i$, are non-po
 Thus, the following inequality is able to be applied:
 \[
    \solutionletter_i^{L,\timeindex+1}
-   \le \solutionletter_{\max,i}^\timeindex
-         \pr{1-\frac{\timestepsize}{\massmatrixletter_{i,i}^L}
-         \sumj\ssmatrixletter^{L,\timeindex}_{i,j}}
+   \le 
+   \pr{1-\frac{\timestepsize}{\massmatrixletter_{i,i}^L}
+     \sumj\ssmatrixletter^{L,\timeindex}_{i,j}}\solutionletter_{\max,i}^\timeindex
    + \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssrhsletter_i^\timeindex \eqc
 \]
 and similarly for the lower bound.\qed

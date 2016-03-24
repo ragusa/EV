@@ -71,22 +71,22 @@ Substituting the approximate
 solution into Equation \eqref{eq:conservation_law_system_homo} and testing with basis
 function $\vectortestfunction_i(\x)$ gives
 \begin{equation}\label{eq:vector_weak_form_long}
-   \sumj\intSij\vectortestfunction_i\transpose(\x)\vectortestfunction_j(\x) d\volume
+   \sumj\intSij\vectortestfunction_i\transpose(\x)\vectortestfunction_j(\x) \dvolume
      \ddt{\solutionletter_j}
      + \sumj\intSij\vectortestfunction_i\transpose(\x)\nabla\vectortestfunction_j(\x)
-     d\volume\cdot\consfluxinterpolant_j(\timevalue) = \mathbf{0} \eqp
+     \dvolume\cdot\consfluxinterpolant_j(\timevalue) = \mathbf{0} \eqp
 \end{equation}
 Again, a mass matrix $\consistentmassmatrix$ is defined:
 \begin{equation}
   \consistentmassentry \equiv
-    \intSij\vectortestfunction_i\transpose(\x)\vectortestfunction_j(\x) d\volume
+    \intSij\vectortestfunction_i\transpose(\x)\vectortestfunction_j(\x) \dvolume
 \end{equation}
 as well a 3rd-order tensor $\gradientmatrix$, which will here be viewed as a
 matrix with vector entries:
 \begin{equation}
   \gradiententry \equiv
     \intSij\vectortestfunction_i\transpose(\x)
-      \nabla\vectortestfunction_j(\x) d\volume
+      \nabla\vectortestfunction_j(\x) \dvolume
   \eqp
 \end{equation}
 Making these substitutions into Equation \eqref{eq:vector_weak_form_long} gives

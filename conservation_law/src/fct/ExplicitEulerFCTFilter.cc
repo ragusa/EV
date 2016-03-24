@@ -6,6 +6,7 @@
 /**
  * \brief Constructor.
  *
+ * \param[in] run_parameters_  run parameters
  * \param[in] limiter_  limiter
  * \param[in] dof_handler_  degree of freedom handler
  * \param[in] fe_  finite element system
@@ -13,11 +14,12 @@
  */
 template <int dim>
 ExplicitEulerFCTFilter<dim>::ExplicitEulerFCTFilter(
+  const RunParameters & run_parameters_,
   const std::shared_ptr<Limiter<dim>> limiter_,
   const DoFHandler<dim> & dof_handler_,
   const FESystem<dim> & fe_,
   const SparseMatrix<double> & lumped_mass_matrix_)
-  : FCTFilter<dim>(limiter_, dof_handler_, fe_),
+  : FCTFilter<dim>(run_parameters_, limiter_, dof_handler_, fe_),
     lumped_mass_matrix(&lumped_mass_matrix_)
 {
 }
@@ -59,6 +61,10 @@ void ExplicitEulerFCTFilter<dim>::filter_antidiffusive_fluxes(
   // compute antidiffusion bounds Q- and Q+
   compute_antidiffusion_bounds(
     old_solution, dt, inviscid_ss_flux, low_order_diffusion_matrix, ss_rhs);
+
+  // enforce antidiffusion bounds signs if requested
+  if (this->do_enforce_antidiffusion_bounds_signs)
+    this->enforce_antidiffusion_bounds_signs();
 
   // limit antidiffusion fluxes
   this->limiter->compute_limiter_matrix(

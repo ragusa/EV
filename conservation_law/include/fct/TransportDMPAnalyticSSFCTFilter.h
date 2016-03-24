@@ -19,6 +19,7 @@ class TransportDMPAnalyticSSFCTFilter : public DMPSteadyStateFCTFilter<dim>
 {
 public:
   TransportDMPAnalyticSSFCTFilter(
+    const RunParameters & run_parameters,
     TransportProblemParameters<dim> & problem_parameters,
     const DoFHandler<dim> & dof_handler,
     const FESystem<dim> & fe,

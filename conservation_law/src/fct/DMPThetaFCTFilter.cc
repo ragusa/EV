@@ -7,6 +7,7 @@
 /**
  * \brief Constructor.
  *
+ * \param[in] run_parameters_  run parameters
  * \param[in] limiter_  limiter
  * \param[in] dof_handler_  degree of freedom handler
  * \param[in] fe_  finite element system
@@ -15,12 +16,14 @@
  */
 template <int dim>
 DMPThetaFCTFilter<dim>::DMPThetaFCTFilter(
+  const RunParameters & run_parameters_,
   const std::shared_ptr<Limiter<dim>> limiter_,
   const DoFHandler<dim> & dof_handler_,
   const FESystem<dim> & fe_,
   const SparseMatrix<double> & lumped_mass_matrix_,
   const double & theta_)
-  : ThetaFCTFilter<dim>(limiter_, dof_handler_, fe_, lumped_mass_matrix_, theta_)
+  : ThetaFCTFilter<dim>(
+      run_parameters_, limiter_, dof_handler_, fe_, lumped_mass_matrix_, theta_)
 {
   // resize temporary vectors
   solution_min_new.reinit(this->n_dofs);

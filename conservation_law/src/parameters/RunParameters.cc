@@ -177,6 +177,11 @@ void RunParameters::declare_run_parameters(ParameterHandler & prm)
                       Patterns::Selection("ones|zeroes|zalesak"),
                       "limiter option");
     prm.declare_entry(
+      "enforce antidiffusion bounds signs",
+      "false",
+      Patterns::Bool(),
+      "option to skip FCT if high-order solution satisfies bounds");
+    prm.declare_entry(
       "fct synchronization type",
       "none",
       Patterns::Selection("none|min|compound"),
@@ -515,6 +520,9 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
       limiter_option = LimiterOption::zalesak;
     else
       throw ExcNotImplemented();
+
+    enforce_antidiffusion_bounds_signs =
+      prm.get_bool("enforce antidiffusion bounds signs");
 
     // synchronization
     std::string synchronization_string = prm.get("fct synchronization type");

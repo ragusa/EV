@@ -43,14 +43,15 @@ std::shared_ptr<SteadyStateFCTFilter<dim>> TransportSteadyStateFCT<
   std::shared_ptr<SteadyStateFCTFilter<dim>> filter;
   if (filter_string == "dmp")
     filter = std::make_shared<DMPSteadyStateFCTFilter<dim>>(
-      this->limiter, *this->dof_handler, *this->fe);
+      *this->run_parameters, this->limiter, *this->dof_handler, *this->fe);
   else if (filter_string == "dmp_analytic")
-    filter =
-      std::make_shared<TransportDMPAnalyticSSFCTFilter<dim>>(*problem_parameters,
-                                                             *this->dof_handler,
-                                                             *this->fe,
-                                                             *cell_quadrature,
-                                                             this->limiter);
+    filter = std::make_shared<TransportDMPAnalyticSSFCTFilter<dim>>(
+      *this->run_parameters,
+      *problem_parameters,
+      *this->dof_handler,
+      *this->fe,
+      *cell_quadrature,
+      this->limiter);
   else
     throw ExcNotImplemented();
 

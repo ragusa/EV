@@ -36,4 +36,5 @@ TO DO:
   at the end of each. For conditional expressions, make sure this is consistent
 * re-order symbols in nomenclature if their symbol has been changed
 * search for "TODO" in all files and address those issues
+* be consistent about "\forall i"
 

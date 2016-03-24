@@ -48,7 +48,8 @@ std::shared_ptr<ThetaFCTFilter<dim>> TransportThetaFCT<dim>::create_filter(
   // create filter
   std::shared_ptr<ThetaFCTFilter<dim>> filter;
   if (filter_string == "dmp")
-    filter = std::make_shared<DMPThetaFCTFilter<dim>>(this->limiter,
+    filter = std::make_shared<DMPThetaFCTFilter<dim>>(*this->run_parameters,
+                                                      this->limiter,
                                                       *this->dof_handler,
                                                       *this->fe,
                                                       *this->lumped_mass_matrix,
