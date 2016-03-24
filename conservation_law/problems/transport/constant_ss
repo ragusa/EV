@@ -1,0 +1,47 @@
+subsection validity
+  set valid in 1d = true
+  set valid in 2d = true
+  set valid in 3d = true
+  set is steady state problem = true
+end
+
+subsection physics
+  set transport speed = 1.0
+  set transport direction specification = components
+  set transport direction x = 1.0
+  set transport direction y = 0.0
+  set transport direction z = 0.0
+  set normalize transport direction = false
+  set cross section = sigma1
+  set source = sigma1
+  set source is time dependent = false
+end
+
+subsection constants
+  set incoming = 1.0
+  set sigma1   = 50.0
+  set source1  = 0.0
+end
+
+subsection domain
+  set domain shape = hyper_cube
+  set x start = 0.0
+  set x width = 1.0
+  set y start = 0.0
+  set y width = 1.0
+  set z start = 0.0
+  set z width = 1.0
+end
+
+subsection boundary conditions
+  set boundary conditions type = dirichlet
+  set use exact solution as dirichlet bc = false
+  set dirichlet function = incoming
+  set boundary id scheme = incoming
+end
+
+subsection exact solution
+  set has exact solution = true
+  set exact solution type = parsed
+  set exact solution = 1
+end

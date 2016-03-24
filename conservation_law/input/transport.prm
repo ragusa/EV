@@ -4,6 +4,7 @@
 #   void
 #   absorber
 #   absorber_ss
+#   constant_ss
 #   void_to_absorber_1d
 #   void_to_absorber_1d_ss
 #   sourcevoid_to_absorber
@@ -16,13 +17,13 @@
 #   mms_xt       (TR:x*t                SS:x        )
 #   mms_t        (TR:t                  SS:1        )
 subsection problem
-   set problem name = void_to_absorber_1d
+   set problem name = constant_ss
 end
 
 subsection scheme
-   set scheme            = fct          # low|high|fct
+   set scheme            = high         # low|high|fct
    set low order scheme  = dmp          # constant|lax|dmp|di_visc|di_diff
-   set high order scheme = galerkin     # galerkin|entropy_visc|entropy_diff
+   set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
 end
 
 subsection refinement
@@ -47,7 +48,7 @@ subsection time
 end
 
 subsection temporal discretization
-   set temporal discretization = theta # ss|ssprk|theta
+   set temporal discretization = ss    # ss|ssprk|theta
    set ssprk discretization    = FE    # FE|SSP2|SSP3
    set theta discretization    = BE    # FE|CN|BE
 end
