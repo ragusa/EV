@@ -3,7 +3,7 @@ close all; clear; clc;
 %--------------------------------------------------------------------------
 % finite element options
 %--------------------------------------------------------------------------
-mesh.n_cell = 2^5;                   % number of elements
+mesh.n_cell = 64;                    % number of elements
 impose_DirichletBC_strongly = true; % impose Dirichlet BC strongly?
 quadrature.nq = 3;                  % number of quadrature points per cell
 %--------------------------------------------------------------------------
@@ -11,7 +11,7 @@ quadrature.nq = 3;                  % number of quadrature points per cell
 %--------------------------------------------------------------------------
 compute_low_order  = true; % compute and plot low-order solution?
 compute_high_order = true; % compute and plot high-order solution?
-compute_FCT        = true; % compute and plot FCT solution?
+compute_FCT        = false; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
 %                   2 = graph-theoretic low-order scheme
@@ -19,10 +19,11 @@ low_order_scheme  = 2;
 
 % high_order_scheme: 1 = Galerkin
 %                    2 = Entropy viscosity
-high_order_scheme = 1;
+%                    3 = Alternate Entropy viscosity
+high_order_scheme = 2;
 
 % entropy viscosity options:
-ev.cE = 1.0; % coefficient for entropy residual in entropy viscosity
+ev.cE = 0.05; % coefficient for entropy residual in entropy viscosity
 ev.cJ = ev.cE*1; % coefficient for jumps in entropy viscosity
 ev.entropy       = @(u) 0.5*u.^2; % entropy function
 ev.entropy_deriv = @(u) u;        % derivative of entropy function
@@ -35,7 +36,7 @@ ev.smoothing_weight = 0.0; % weight for center value in smoothing
 %                  1 = SSPRK(1,1) (Explicit Euler)
 %                  2 = SSPRK(3,3) (Shu-Osher)
 %                  3 = theta method
-temporal_scheme = 3; % temporal discretization scheme
+temporal_scheme = 0; % temporal discretization scheme
 
 % theta parameter to use if using a theta method: 0.0 = FE
 %                                                 0.5 = CN
@@ -81,7 +82,7 @@ dirichlet_limiting_coefficient = 1.0; % limiting coefficient bounds for
 %            4: void
 %            5: MMS: TR: u = t*sin(pi*x)  SS: u = sin(pi*x)
 %            6: MMS: TR: u = x*t          SS: u = x
-problemID = 2;
+problemID = 1;
 
 % IC_option: 0: zero
 %            1: exponential pulse
@@ -136,7 +137,7 @@ switch problemID
         phys.periodic_BC = false;
         phys.inc    = 1.0;
         phys.mu     = 1.0;
-        sigma_value = 1.0;
+        sigma_value = 50.0;
         phys.sigma  = @(x,t) sigma_value;
         phys.source = @(x,t) 0.0;
         phys.speed  = 1;
@@ -979,7 +980,7 @@ if (plot_viscosity)
     figure; clf;
     
     % plot low-order viscosity if available
-    if low_order_scheme == 2 || high_order_scheme == 2
+    if low_order_scheme == 2 || high_order_scheme != 1
         semilogy(x_center,viscL);
         legend_entries = char('Low-order viscosity');
     end
@@ -987,7 +988,7 @@ if (plot_viscosity)
     hold on;
     
     % plot high-order viscosity if available
-    if (high_order_scheme == 2)
+    if (high_order_scheme != 1)
         semilogy(x_center,viscE,'x');
         legend_entries = char(legend_entries,'Entropy viscosity');
     end
@@ -1040,6 +1041,8 @@ switch high_order_scheme
         high_order_string = 'Gal';
     case 2
         high_order_string = 'EV';
+    case 3
+        high_order_string = 'AltEV';
     otherwise
         error('Invalid high-order scheme chosen');
 end
