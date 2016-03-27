@@ -31,6 +31,9 @@ doxygen
 # backup files
 *.bak
 
+# python run files
+*pyc
+
 # additional files added below
 ArtificialDiffusion.cc
 ArtificialDiffusion.h

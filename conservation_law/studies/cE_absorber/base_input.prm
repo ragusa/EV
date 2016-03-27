@@ -1,0 +1,116 @@
+# Input file for scalar transport
+
+# Problem names:
+#   void
+#   absorber
+#   absorber_ss
+#   constant_ss
+#   void_to_absorber_1d
+#   void_to_absorber_1d_ss
+#   sourcevoid_to_absorber
+#   crooked_pipe
+#   obstruction
+#   three_region
+#   mms_tsinx    (TR:t*sin(pi*x)        SS:sin(pi*x))
+#   mms_xexpt    (TR:x*exp(-t)          SS:N/A      )
+#   mms_exptsinx (TR:exp(-t)*sin(pi*x)  SS:N/A      )
+#   mms_xt       (TR:x*t                SS:x        )
+#   mms_t        (TR:t                  SS:1        )
+subsection problem
+   set problem name = absorber_ss
+end
+
+subsection scheme
+   set scheme            = high         # low|high|fct
+   set low order scheme  = dmp          # constant|lax|dmp|di_visc|di_diff
+   set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
+end
+
+subsection refinement
+   set refinement cycles        = 1
+   set refine space             = true
+   set refine time              = true
+   set initial refinement level = 5
+   set use adaptive mesh refinement = false
+   set time refinement factor   = 0.5
+   set refinement fraction      = 0.5
+   set coarsening fraction      = 0.01
+   set use cell size for convergence rates = false
+end
+
+subsection time
+   set time step size option  = cfl # constant|cfl
+   set cfl                    = 50.00
+   set time step size         = 0.001
+   set use default end time   = false
+   set end time               = 0.25
+   set steady state tolerance = 1.0e-6
+end
+
+subsection temporal discretization
+   set temporal discretization = ss    # ss|ssprk|theta
+   set ssprk discretization    = FE    # FE|SSP2|SSP3
+   set theta discretization    = BE    # FE|CN|BE
+end
+
+subsection artificial viscosity
+   set entropy residual coefficient       = 0.1
+   set entropy jump coefficient           = 0.1
+   set entropy viscosity smoothing option = none # none|max|average
+   set entropy viscosity smoothing weight = 4
+   set constant viscosity value           = 0.02
+   set lax viscosity coefficient          = 0.5
+   set use low order viscosity for first time step = true
+end
+
+subsection fct
+   set filter sequence string        = dmp     # dmp|dmp_analytic
+   set limiter option                = zalesak # ones|zeroes|zalesak
+   set enforce antidiffusion bounds signs = true
+   set fct synchronization type      = none    # none|min|compound
+   set fct initialization option     = zero    # zero|low|high
+   set skip fct if bounds satisfied  = false
+   set use cumulative antidiffusion algorithm = false
+   set use star states in fct bounds = false
+   set check fct bounds              = true
+   set output limiter matrix         = false
+   set output final fct bounds       = true
+   set output transient fct bounds   = false
+end
+
+subsection linear solver
+   set linear solver type = direct
+end
+
+subsection nonlinear solver
+   set nonlinear tolerance      = 1.0e-10
+   set nonlinear max iterations = 1000
+   set relaxation factor        = 1.0
+end
+
+subsection finite element
+   set degree = 1
+end
+
+subsection quadrature
+   set number of quadrature points = 3
+end
+
+subsection output
+   set verbosity level    = 1    # 0|1|2 (0 is least verbose)
+   set output exact solution = true
+   set output period      = 0
+   set transient output size limit = 1e9
+   set output mesh        = false
+   set output mass matrix = false
+   set output viscosity   = false
+   set output viscosity transient      = false
+   set exact solution refinement level = 7
+   set print final solution            = false
+   set save convergence results        = true
+   set output directory = studies/cE_absorber/output
+   set use problem name output subdirectory = false
+   set append scheme to output filename = false
+   set append time discretization to output filename = false
+end
+

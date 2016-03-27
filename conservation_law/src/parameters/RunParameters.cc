@@ -318,6 +318,22 @@ void RunParameters::declare_run_parameters(ParameterHandler & prm)
                       "false",
                       Patterns::Bool(),
                       "option to print final solution");
+    prm.declare_entry("output directory",
+                      "output",
+                      Patterns::Anything(),
+                      "Output directory (relative to executable directory)");
+    prm.declare_entry("use problem name output subdirectory",
+                      "true",
+                      Patterns::Bool(),
+                      "Flag to use a subdirectory named by problem name");
+    prm.declare_entry("append scheme to output filename",
+                      "true",
+                      Patterns::Bool(),
+                      "Flag to append the scheme to the output filename");
+    prm.declare_entry("append time discretization to output filename",
+                      "true",
+                      Patterns::Bool(),
+                      "Flag to append the time discretization to the output filename");
   }
   prm.leave_subsection();
 }
@@ -606,6 +622,10 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
       prm.get_integer("exact solution refinement level");
     save_convergence_results = prm.get_bool("save convergence results");
     print_final_solution = prm.get_bool("print final solution");
+    output_directory = prm.get("output directory");
+    use_problem_name_output_subdirectory = prm.get_bool("use problem name output subdirectory");
+    append_scheme_to_output_filename = prm.get_bool("append scheme to output filename");
+    append_time_discretization_to_output_filename = prm.get_bool("append time discretization to output filename");
   }
   prm.leave_subsection();
 }

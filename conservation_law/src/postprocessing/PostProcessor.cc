@@ -185,7 +185,10 @@ PostProcessor<dim>::PostProcessor(
 
   // create filename appendage
   std::stringstream appendage_ss;
-  appendage_ss << "_" << scheme_string << "_" << timedisc_string;
+  if (parameters.append_scheme_to_output_filename)
+    appendage_ss << "_" << scheme_string;
+  if (parameters.append_time_discretization_to_output_filename)
+    appendage_ss << "_" << timedisc_string;
   appendage_string = appendage_ss.str();
 
   // create filename for exact solution
@@ -193,7 +196,9 @@ PostProcessor<dim>::PostProcessor(
 
   // create name of output subdirectory
   std::stringstream output_dir_ss;
-  output_dir_ss << SOURCE_PATH << "/output/" << problem_name << "/";
+  output_dir_ss << SOURCE_PATH << "/" << parameters.output_directory << "/";
+  if (parameters.use_problem_name_output_subdirectory)
+    output_dir_ss << problem_name << "/";
   output_dir = output_dir_ss.str();
 
   // create fine triangulation and dof handler

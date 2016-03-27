@@ -1,0 +1,216 @@
+#!/usr/bin/env perl
+#
+# USAGE: run_study
+# NOTES: You must call this script from the particular study directory
+
+use strict;
+
+#==============================================================================
+# Read study input file
+#==============================================================================
+
+# study input file
+my $study_input_file = "study_input";
+
+# study input file fields
+my $executable;
+my $base_input_file;
+my $plot_set_string;
+my @run_parameters;
+my @run_parameter_values;
+
+# read study input file
+my $parameter_no = 0;
+my $n_values;
+my $line_no = 0;
+open(STUDY, '<', "$study_input_file") or die $!;
+while (<STUDY>)
+{
+  # get line and increment line number
+  my $line = $_;
+  chomp($line);
+  $line_no++;
+
+  if ($line_no == 1) # first line
+  {
+    $executable = $line;
+  }
+  elsif ($line_no == 2) # second line
+  {
+    $base_input_file = $line;
+  }
+  elsif ($line_no == 3) # third line
+  {
+    $plot_set_string = $line;
+  }
+  else # fourth or greater line
+  {
+    my @equalsfields = split /=/, $line;
+    my $parameter_segment = $equalsfields[0];
+    my $values_segment = $equalsfields[1];
+
+    # trim leading and trailing white space
+    $parameter_segment =~ s/^\s+|\s+$//g;
+    $values_segment =~ s/^\s+|\s+$//g;
+
+    # add run parameter to array
+    push(@run_parameters, $parameter_segment);
+
+    # delimit values
+    my @colonfields = split /:/, $values_segment;
+
+    # loop over values
+    my $value_no = 0;
+    foreach my $value (@colonfields)
+    {
+      # trim leading and trailing white space
+      $value =~ s/^\s+|\s+$//g;
+
+      # store value
+      $run_parameter_values[$parameter_no][$value_no] = $value;
+
+      # increment value number
+      $value_no++;
+    }
+
+    # keep number of values if this is the first parameter, else compare
+    if ($parameter_no == 0)
+    {
+      $n_values = $value_no;
+
+      # ensure that number of values is <= 10
+      if ($n_values > 10)
+      {
+        die("Number of values must be less than 10\n");
+      }
+    }
+    elsif ($value_no != $n_values)
+    {
+      die("Parameter $parameter_no has $value_no values; ",
+        "it should have $n_values values\n");
+    }
+
+    # increment parameter number
+    $parameter_no++;
+  }
+}
+# close study input file
+close(STUDY);
+
+# keep number of parameters
+my $n_parameters = $parameter_no;
+
+#==============================================================================
+# Create run input files
+#==============================================================================
+
+# create input directory if it does not exist
+if (! -e "input")
+{
+  mkdir "input";
+}
+
+# remove existing input/*.prm files
+system("rm input/*.prm 2>/dev/null");
+
+# create input files
+for (my $i = 0; $i < $n_values; $i++)
+{
+  # create name of input file to be created
+  my $input_file = "input/input$i.prm";
+
+  # initialize array for each parameter being found to false
+  my @parameter_found;
+  for (my $i_param = 0; $i_param < $n_parameters; ++$i_param)
+  {
+    $parameter_found[$i_param] = 0;
+  }
+
+  # read through base input file and make substitutions
+  open(BASEIN, '<', "$base_input_file") or die $!;
+  open(OUT, '>', "$input_file") or die $!;
+  while (<BASEIN>)
+  {
+    # get line
+    my $line = $_;
+
+    # loop over parameters
+    my $parameter_no = 0;
+    foreach my $parameter (@run_parameters)
+    {
+      # if parameter key found, then make value substitution
+      if ($line =~ "set $parameter")
+      {
+        # create new line
+        my @equalsfields = split /=/, $line;
+        $line = "$equalsfields[0] = $run_parameter_values[$parameter_no][$i]\n";
+
+        # mark parameter as being found
+        $parameter_found[$parameter_no] = 1;
+      }
+
+      # increment parameter number
+      $parameter_no++;
+    }
+
+    # print the line
+    print OUT $line;
+  }
+  close(BASEIN);
+  close(OUT);
+
+  # ensure that all parameters were replaced
+  for (my $i_param = 0; $i_param < $n_parameters; ++$i_param)
+  {
+    if (! $parameter_found[$i_param])
+    {
+      die "The key 'set $run_parameters[$i_param]' was not found in the base ",
+        "input file $base_input_file\n";
+    }
+  }
+}
+
+#==============================================================================
+# Run executable
+#==============================================================================
+
+# remove output files
+system("rm output/*.gpl 2>/dev/null");
+
+# execute all runs
+for (my $i = 0; $i < $n_values; ++$i)
+{
+  # run executable with input file
+  my $input_file = "input/input$i.prm";
+  system("$executable $input_file");
+
+  # rename output files
+  system("mv output/solution.gpl output/solution$i.gpl");
+  if (-e "output/convergence.gpl")
+  {
+    system("mv output/convergence.gpl output/convergence$i.gpl");
+  }
+}
+
+#==============================================================================
+# Create plots
+#==============================================================================
+
+# create values string
+my $values = $run_parameter_values[0][0];
+for (my $i = 1; $i < $n_values; ++$i)
+{
+  $values = "$values $run_parameter_values[0][$i]";
+}
+
+# create commands
+my $command1 = "python ../../plotscripts/plot_study.py ".
+  "'$plot_set_string' '$values'";
+my $command2 = "python ../../plotscripts/plot_study_error.py ".
+  "'$plot_set_string' '$values'";
+
+# execute commands
+system("$command1");
+system("$command2");
+
+

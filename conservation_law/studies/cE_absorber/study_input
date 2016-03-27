@@ -1,0 +1,5 @@
+../../implicit_transport
+./base_input.prm
+c_E
+entropy residual coefficient = 0.1:0.2:0.5:1.0:1.5
+entropy jump coefficient = 0.1:0.2:0.5:1.0:1.5

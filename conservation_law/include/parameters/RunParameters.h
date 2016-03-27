@@ -293,6 +293,14 @@ public:
   bool save_convergence_results;
   /** \brief Flag to print final solution to screen */
   bool print_final_solution;
+  /** \brief Output directory (relative to executable directory) */
+  std::string output_directory;
+  /** \brief Flag to use a subdirectory named by problem name */
+  bool use_problem_name_output_subdirectory;
+  /** \brief Flag to append the scheme to the output filename */
+  bool append_scheme_to_output_filename;
+  /** \brief Flag to append the time discretization to the output filename */
+  bool append_time_discretization_to_output_filename;
 };
 
 #include "src/parameters/RunParameters.cc"
