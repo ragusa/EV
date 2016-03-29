@@ -12,6 +12,7 @@ echo "\\usepackage{tikz}" >> $diagramfile
 echo "\\usetikzlibrary{backgrounds}" >> $diagramfile
 echo "\\usetikzlibrary{calc}" >> $diagramfile
 echo "\\usetikzlibrary{shapes.multipart}" >> $diagramfile
+echo "\\usetikzlibrary{shapes.geometric}" >> $diagramfile
 #echo "\\usetikzlibrary{arrows.meta}" >> $diagramfile
 echo "\\input{../dissertation/content/newcommands.tex}" >> $diagramfile
 echo "\\input{lengths.tex}" >> $diagramfile

@@ -1,4 +1,4 @@
-function viscE = compute_entropy_viscosity(...
+function viscE = compute_entropy_viscosity_alternate(...
     u_old,u_new,dt,mesh,phys,quadrature,ev,dof_handler)
 
 % unpack quadrature
@@ -62,6 +62,8 @@ for iel = 1:nel
     Eq = entropy(y_new_local);
     E_dev_max = max(E_dev_max, max(abs(Eq-E_avg)));
 end
+
+printf('normalization = %e\n',E_dev_max);
 
 % compute entropy jumps
 n_face = n_dof;
@@ -145,7 +147,8 @@ for iel = 1:nel
     
     % compute maximum entropy residual at quadrature points
     R = (E_new-E_old)/(speed*dt) + mu*dEdx_new - dEdy_new.*source_q;
-    R_max = max(max(0,R));
+    %R_max = max(max(0,R));
+    R_max = max(abs(R));
     
     % compute max jump
     faceL = g(iel,1);

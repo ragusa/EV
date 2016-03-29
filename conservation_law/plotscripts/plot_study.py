@@ -1,5 +1,7 @@
 import sys # for command-line arguments
 import os.path # for checking the existence of files
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib import rc # for rendering TeX in plots
 from plot_utilities import extractPlotData

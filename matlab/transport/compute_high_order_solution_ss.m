@@ -1,6 +1,7 @@
 function [uH,DH,viscE] = compute_high_order_solution_ss(A,b,viscL,mesh,...
     phys,quadrature,ev,dof_handler,high_order_scheme,max_iter,...
-    nonlin_tol,relaxation_parameter,modify_for_strong_DirichletBC)
+    nonlin_tol,relaxation_parameter,modify_for_strong_DirichletBC,...
+    plot_iterations,plot_viscosity)
 
 % initialize solution iterate
 uH = zeros(dof_handler.n_dof,1);
@@ -36,6 +37,26 @@ for iter = 1:max_iter
     % enforce Dirichlet BC; this is not necessary - it should already be done
     if (modify_for_strong_DirichletBC)
       uH(1) = phys.inc;
+    end
+
+    % plot iteration if requested
+    if (plot_iterations)
+        figure(1);
+
+        % plot solution
+        subplot(2,1,1);
+        plot(mesh.x, uH);
+        leg_string = sprintf('High-order, iteration %i',iter);
+        legend(leg_string);
+
+        % plot viscosity
+        subplot(2,1,2);
+        semilogy(mesh.x_center,viscE);
+        ylim([1e-10 1e2])
+        leg_string = sprintf('Entropy viscosity, iteration %i',iter);
+        legend(leg_string);
+        pause(0.1);
+        %waitforbuttonpress;
     end
 end
 

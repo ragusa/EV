@@ -3,7 +3,7 @@ close all; clear; clc;
 %--------------------------------------------------------------------------
 % finite element options
 %--------------------------------------------------------------------------
-mesh.n_cell = 64;                    % number of elements
+mesh.n_cell = 3;                    % number of elements
 impose_DirichletBC_strongly = true; % impose Dirichlet BC strongly?
 quadrature.nq = 3;                  % number of quadrature points per cell
 %--------------------------------------------------------------------------
@@ -20,15 +20,16 @@ low_order_scheme  = 2;
 % high_order_scheme: 1 = Galerkin
 %                    2 = Entropy viscosity
 %                    3 = Alternate Entropy viscosity
+%                    4 = Alternate Entropy viscosity 2
 high_order_scheme = 2;
 
 % entropy viscosity options:
-ev.cE = 0.05; % coefficient for entropy residual in entropy viscosity
-ev.cJ = ev.cE*1; % coefficient for jumps in entropy viscosity
+ev.cE = 0.1; % coefficient for entropy residual in entropy viscosity
+ev.cJ = ev.cE*0; % coefficient for jumps in entropy viscosity
 ev.entropy       = @(u) 0.5*u.^2; % entropy function
 ev.entropy_deriv = @(u) u;        % derivative of entropy function
 ev.smooth_entropy_viscosity = false; % option to smooth entropy viscosity
-ev.smoothing_weight = 0.0; % weight for center value in smoothing
+ev.smoothing_weight = 1.0; % weight for center value in smoothing
 %--------------------------------------------------------------------------
 % time options
 %--------------------------------------------------------------------------
@@ -103,13 +104,14 @@ source_is_time_dependent = false; % is source time-dependent?
 %--------------------------------------------------------------------------
 % nonlinear solver options
 %--------------------------------------------------------------------------
-max_iter = 1000;           % maximum number of nonlinear solver iterations
+max_iter = 10;           % maximum number of nonlinear solver iterations
 nonlin_tol = 1e-10;       % nonlinear solver tolerance for discrete L2 norm
-relaxation_parameter = 1.0; % relaxation parameter for iteration
+relaxation_parameter = 0.2; % relaxation parameter for iteration
 %--------------------------------------------------------------------------
 % plot options
 %--------------------------------------------------------------------------
-plot_viscosity            = false; % plot viscosities?
+plot_iterations           = true; % plot iterations?
+plot_viscosity            = true; % plot viscosities?
 plot_low_order_transient  = false; % plot low-order transient?
 plot_high_order_transient = false; % plot high-order transient?
 plot_FCT_transient        = false; % plot FCT transient?
@@ -137,7 +139,7 @@ switch problemID
         phys.periodic_BC = false;
         phys.inc    = 1.0;
         phys.mu     = 1.0;
-        sigma_value = 50.0;
+        sigma_value = 100.0;
         phys.sigma  = @(x,t) sigma_value;
         phys.source = @(x,t) 0.0;
         phys.speed  = 1;
@@ -301,7 +303,7 @@ mesh.dx = diff(mesh.x);                     % element sizes
 if phys.periodic_BC
     mesh.x(end)=[];
 end
-x_center = 0.5*(mesh.x(1:end-1) + mesh.x(2:end));
+mesh.x_center = 0.5*(mesh.x(1:end-1) + mesh.x(2:end));
 
 % get quadrature points and weights and evaluate basis functions
 [quadrature.zq,quadrature.wq]  = get_GL_quadrature(quadrature.nq);
@@ -503,7 +505,8 @@ if (compute_high_order)
     if (temporal_scheme == 0) % steady-state
         [uH,DH,viscE] = compute_high_order_solution_ss(A,b,viscL,mesh,...
             phys,quadrature,ev,dof_handler,high_order_scheme,max_iter,...
-            nonlin_tol,relaxation_parameter,modify_for_strong_DirichletBC);
+            nonlin_tol,relaxation_parameter,modify_for_strong_DirichletBC,...
+            plot_iterations,plot_viscosity);
     else % transient
         % compute initial conditions
         u_old = phys.IC(mesh.x);
@@ -981,7 +984,7 @@ if (plot_viscosity)
     
     % plot low-order viscosity if available
     if low_order_scheme == 2 || high_order_scheme != 1
-        semilogy(x_center,viscL);
+        semilogy(mesh.x_center,viscL);
         legend_entries = char('Low-order viscosity');
     end
     
@@ -989,7 +992,7 @@ if (plot_viscosity)
     
     % plot high-order viscosity if available
     if (high_order_scheme != 1)
-        semilogy(x_center,viscE,'x');
+        semilogy(mesh.x_center,viscE,'x');
         legend_entries = char(legend_entries,'Entropy viscosity');
     end
     

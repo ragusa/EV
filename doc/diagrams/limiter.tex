@@ -16,39 +16,3 @@
   \node at (1.5*\arrowlength+\boxwidth,0.5*\boxheight+\textpad)
     {$\{\limiterletter\ij\}$};
 \end{tikzpicture}
-
-\def\mynewboxwidth{5}
-\def\yone{4}
-\def\nodedistance{3}
-
-% Multi-pass limiter diagram
-\begin{tikzpicture}[
-  scale=1,
-  transform shape,
-  show background rectangle,
-  every text node part/.style={align=center}]
-
-  \coordinate (start) at (0,\yone);
-  \node at ($(start.center)+(0.5*\nodedistance,\textpad)$)
-    {$\{\correctionfluxij\}, \{\antidiffusionbound_i^\pm\}$};
-  \node[draw] (dP) at ($(start.center)+(1.5*\nodedistance,0)$)
-    {$\ell \gets 0$\\
-    $\correctionfluxmatrixremainder^{(\ell)} \gets \correctionfluxmatrix$};
-  \node[draw] (lim)  at ($(dP.center)+(\nodedistance,0)$) {Limiter};
-  \node[draw] (ptot) at ($(lim.center)+(\nodedistance,0)$)
-    {$\limitedcorrectionfluxletter^{\text{tot}} \gets \sum\limits_{i,j}
-      \left|\limiterletter\ij^{(\ell)}\correctionfluxremainder\ij^{(\ell)}\right|$};
-  \node[draw] (if)   at ($(ptot.center)+(\nodedistance,0)$) {If};
-  \coordinate (endedge) at ($(if.center)+(\nodedistance,0)$);
-  \coordinate (end)     at ($(endedge.center)+(\arrowlength,0)$);
-  \node[draw] (dPupdate) at ($(if.center)+(0,-\nodedistance)$)
-    {$\correctionfluxremainder\ij^{(\ell+1)} \gets
-      \correctionfluxremainder\ij^{(\ell)}
-      - \limiterletter\ij^{(\ell)}\correctionfluxremainder\ij^{(\ell)}$};
-  \draw[->] (start)     -- (dP);
-  \draw[->] (dP)        -- (lim);
-  \draw[->] (lim)       -- (ptot);
-  \draw[->] (ptot)      -- (if);
-  \draw[->] (if)        -- (end);
-  \draw[->] (if)        -- (dPupdate);
-\end{tikzpicture}

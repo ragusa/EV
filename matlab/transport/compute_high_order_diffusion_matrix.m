@@ -8,6 +8,9 @@ if (high_order_scheme == 2) % original entropy viscosity
 elseif (high_order_scheme == 3) % alternate entropy viscosity
     viscE = compute_entropy_viscosity_alternate(...
         u_older,u_old,dt_old,mesh,phys,quadrature,ev,dof_handler);
+elseif (high_order_scheme == 4) % alternate entropy viscosity 2
+    viscE = compute_entropy_viscosity_alternate2(...
+        u_older,u_old,dt_old,mesh,phys,quadrature,ev,dof_handler);
 else % No viscosity
     viscE = zeros(mesh.n_cell,1);
 end

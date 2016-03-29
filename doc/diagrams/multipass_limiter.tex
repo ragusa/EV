@@ -1,0 +1,65 @@
+\def\mynewboxwidth{5}
+\def\yone{4}
+\def\textdistance{0.6}
+\def\nodedistance{3}
+
+% Multi-pass limiter diagram
+\begin{tikzpicture}[
+  scale=1,
+  transform shape,
+  %show background rectangle,
+  every text node part/.style={align=center},
+  mybox/.style={
+    draw,
+    fill=white,
+    rectangle,
+    minimum width={10}}]
+
+  \coordinate (start) at (0,\yone);
+  \node[draw] (dP) at ($(start.center)+(\nodedistance,0)$)
+    {$\ell \gets 0$\\
+    $\correctionfluxmatrixremainder^{(\ell)} \gets \correctionfluxmatrix$};
+  \node[mybox] (lim)  at ($(dP.center)+(1.3*\nodedistance,0)$) {Limiter};
+  \node[draw, diamond] (if)  at ($(lim.center)+(1.1*\nodedistance,0)$)
+    {$\limitedcorrectionfluxletter^{\text{tot},(\ell)} = 0$};
+  \coordinate (end)     at ($(if.center)+(1.3*\nodedistance,0)$);
+
+  \node (Ptext) at ($(start.center)+(0.25*\nodedistance,\textpad)$)
+    {$\{\antidiffusionbound_i^\pm\}$};
+  \node at ($(Ptext.center)+(0,\textdistance)$)
+    {$\{\correctionfluxij\}$};
+
+  \node (dPtext) at ($(dP.center)+(0.75*\nodedistance,\textpad)$)
+    {$\{\antidiffusionbound_i^\pm\}$};
+  \node at ($(dPtext.center)+(0,\textdistance)$)
+    {$\{\correctionfluxremainder^{(\ell)}\ij\}$};
+
+  \node at ($(lim.center)+(0.45*\nodedistance,\textpad)$)
+    {$\{\limiterletter\ij^{(\ell)}\}$};
+  \node at ($(if.center)+(\nodedistance,\textpad)$) {$\{\limiterletter\ij\}$};
+  \node at ($(if.center)+(0.55*\nodedistance,\textpad)$) {true};
+  \node at ($(if.center)+(2*\textpad,-0.5*\nodedistance)$) {false};
+  %\node at ($(if.center)+(0.75*\nodedistance,\textpad)$)
+  %  {$\{\limiterletter\ij\}$};
+  \coordinate (reentry) at ($(dP.center)+(0.5*\nodedistance,0)$);
+  \coordinate (belowif) at ($(if.center)+(0,-0.75*\nodedistance)$);
+  \node[draw] (dPupdate) at ($(reentry.center)+(0,-0.75*\nodedistance)$)
+    {$\correctionfluxremainder\ij^{(\ell+1)} \gets
+      \correctionfluxremainder\ij^{(\ell)}
+      - \limiterletter\ij^{(\ell)}\correctionfluxremainder\ij^{(\ell)}$\\
+    $\ell \gets \ell+1$};
+  \draw[->] (start)     -- (dP);
+  \draw[->] (dP)        -- (lim);
+  \draw[->] (lim)       -- (if);
+  \draw[->] (if)        -- (end);
+  \draw[->] (if)        -- (belowif) -- (dPupdate);
+  \draw[->] (dPupdate)  -- (reentry);
+
+  \draw[style=dashed] ($(start.center)+(0.5*\nodedistance,-1*\nodedistance)$)
+    rectangle ($(if.center)+(0.75*\nodedistance,0.5*\nodedistance)$);
+\end{tikzpicture}
+
+\[
+  \limitedcorrectionfluxletter^{\text{tot},(\ell)} \gets \sum\limits_{i,j}
+    \left|\limiterletter\ij^{(\ell)}\correctionfluxremainder\ij^{(\ell)}\right|
+\]
