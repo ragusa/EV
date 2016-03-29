@@ -1,0 +1,79 @@
+For implicit time discretizations, such as the Theta discretizations
+and steady-state, the FCT algorithm is nonlinear in general because the
+solution bounds are implicit in general.
+However, if one chooses solution bounds that do not depend on the FCT solution,
+then the resulting system of equations is only nonlinear if both the conservation law
+is nonlinear and an implicit time discretization is used.
+
+This section considers nonlinear FCT systems in which the solution
+bounds depend on the FCT solution. With the presence of
+conditional statements in the computation of the limiting coefficients,
+the computation of the Jacobian of the nonlinear system is complicated,
+and thus instead of a Newton iteration, a defect correction scheme
+such as that described in Section \ref{sec:nonlinear_iteration} is
+considered here.
+
+Suppose that in a particular iteration of a nonlinear FCT scheme, one
+aims to find the FCT solution iterate $\solutionvector^{(\ell+1)}$.
+In the nonlinear FCT case, the solution bounds depend on the solution:
+$\solutionbound_i^\pm(\solutionvector)$, so one needs to consider which
+bounds are actually being imposed in that iteration. Ideally, one would
+like to impose the solution bounds
+$\solutionbound_i^\pm(\solutionvector^{(\ell+1)})$; however,
+$\solutionvector^{(\ell+1)}$ is not available. Therefore one must employ
+previous solution iterates such as $\solutionvector^{(\ell)}$.
+Thus the imposed solution bounds are the following:
+\begin{equation}\label{eq:iterative_solution_bounds} 
+  \solutionbound_i^-(\solutionvector^{(\ell)})
+  \leq \solutionletter_i^{(\ell+1)}
+  \leq \solutionbound_i^+(\solutionvector^{(\ell)})
+  \eqp
+\end{equation}
+As shown in Section \ref{sec:antidiffusion_bounds}, the antidiffusion bounds
+$\antidiffusionbound_i^\pm$ are defined by the time discretization and are
+functions of the solution bounds. As an example, the steady-state
+antidiffusion bounds from Equation \eqref{eq:antidiffusion_bounds_steady_state}
+for an iteration would be
+\begin{equation}\label{eq:antidiffusion_bounds_ideal}
+  \limitedfluxbound_i^\pm =
+    \ssmatrixletter_{i,i}^L \solutionbound_i^\pm(\solutionvector^{(\ell)})
+    + \sumjnoti\ssmatrixletter\ij^L\solutionletter_j^{(\ell+1)} - \ssrhsletter_i
+  \eqp
+\end{equation}
+However, this reveals an issue: the antidiffusion bounds definition depends on
+$\solutionvector^{(\ell+1)}$, which again is not available in a fixed-point-type
+iteration scheme.
+Thus one must use another definition for the antidiffusion bounds, such as the
+following for steady-state:
+\begin{equation}\label{eq:antidiffusion_bounds_actual}
+  \limitedfluxbound_i^{\pm,(\ell)} \equiv
+    \ssmatrixletter_{i,i}^L \solutionbound_i^\pm(\solutionvector^{(\ell)})
+    + \sumjnoti\ssmatrixletter\ij^L\solutionletter_j^{(\ell)} - \ssrhsletter_i
+  \eqp
+\end{equation}
+Unfortunately, the transition from Equation
+\eqref{eq:antidiffusion_bounds_ideal} to \eqref{eq:antidiffusion_bounds_actual}
+implies that there is no longer a guarantee that the FCT bounds at each
+iteration, given by Equation \eqref{eq:iterative_solution_bounds}, are satisfied.
+Effectively, the modified antidiffusion bounds given by Equation
+\eqref{eq:antidiffusion_bounds_actual} correspond to different solution
+bounds:
+\begin{subequations}
+\begin{equation}
+  \tilde{\solutionbound}_i^{-,(\ell)}
+    \leq \solutionletter_i^{(\ell+1)}
+    \leq \tilde{\solutionbound}_i^{+,(\ell)}
+  \eqc
+\end{equation}
+\begin{equation}
+  \tilde{\solutionbound}_i^{\pm,(\ell)} \equiv
+  \solutionbound_i^\pm(\solutionvector^{(\ell)})
+    + \sumjnoti\ssmatrixletter\ij^L(\solutionletter_j^{(\ell)}
+      - \solutionletter_j^{(\ell+1)})
+  \eqp
+\end{equation}
+\end{subequations}
+However, upon convergence the original solution bounds are satisfied because
+upon convergence, Equations \eqref{eq:antidiffusion_bounds_ideal} and
+\eqref{eq:antidiffusion_bounds_actual} are equal.
+

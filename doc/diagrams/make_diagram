@@ -1,0 +1,23 @@
+#!/bin/bash
+#
+# USAGE: make_diagram <diagram .tex file>
+
+# name of LaTeX file
+diagramfile='diagram.tex'
+
+# create LaTeX file
+echo "\\documentclass{article}" > $diagramfile
+echo "\\usepackage{amsmath}" >> $diagramfile
+echo "\\usepackage{tikz}" >> $diagramfile
+echo "\\usetikzlibrary{backgrounds}" >> $diagramfile
+echo "\\usetikzlibrary{calc}" >> $diagramfile
+echo "\\usetikzlibrary{shapes.multipart}" >> $diagramfile
+#echo "\\usetikzlibrary{arrows.meta}" >> $diagramfile
+echo "\\input{../dissertation/content/newcommands.tex}" >> $diagramfile
+echo "\\input{lengths.tex}" >> $diagramfile
+echo "\\begin{document}" >> $diagramfile
+echo "\\input{$1}" >> $diagramfile
+echo "\\end{document}" >> $diagramfile
+
+# generate pdf
+pdflatex $diagramfile

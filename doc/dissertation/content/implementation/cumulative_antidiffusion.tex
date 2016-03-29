@@ -11,7 +11,17 @@ Thus the steady-state FCT iterative scheme becomes
   \loworderssmatrix\solutionvector^{(\ell+1)} = \ssrhs
   + \cumulativecorrectionfluxvector^{(\ell)}
   + \limitermatrix(\solutionvector^{(\ell)})
-  \cdot\correctionfluxmatrixremainder^{(\ell)} \eqp
+  \cdot\correctionfluxmatrixremainder^{(\ell)}
+  \eqc
+\end{equation}
+and the antidiffusion bounds given by Equation
+\eqref{eq:antidiffusion_bounds_actual} must be modified:
+\begin{equation}
+  \limitedfluxbound_i^{\pm,(\ell)} \equiv
+    \ssmatrixletter_{i,i}^L \solutionbound_i^\pm(\solutionvector^{(\ell)})
+    + \sumjnoti\ssmatrixletter\ij^L\solutionletter_j^{(\ell)} - \ssrhsletter_i
+    - \cumulativecorrectionfluxletter_i
+  \eqp
 \end{equation}
 Noting that $\cumulativecorrectionfluxvector^{(\ell+1)} =
   \cumulativecorrectionfluxvector^{(\ell)}
@@ -30,7 +40,19 @@ Similarly the theta discretization FCT iteration scheme becomes
       + (1-\theta)\dt\ssrhs^n + \theta\dt\ssrhs^{n+1}
       + \dt\cumulativecorrectionfluxvector^{(\ell+1)} \eqc
 \end{equation}
-which has the right hand side vector
+with the antidiffusive flux bounds becoming
+\begin{equation}
+  \limitedfluxbound_i^{\pm,(\ell)} \equiv
+    \lumpedmassentry\frac{\solutionbound_i^\pm(\solutionvector^{(\ell)})
+    - \solutionletter_i^\timeindex}{\timestepsize}
+  +(1-\theta)\sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
+  +\theta\sumj \ssmatrixletter\ij^L \solutionletter_j^{(\ell)}
+  -(1-\theta)\ssrhsletter_i^\timeindex
+  -\theta \ssrhsletter_i^{\timeindex+1}
+  - \cumulativecorrectionfluxletter_i
+  \eqp
+\end{equation}
+The right hand side vector becomes
 \begin{equation}
   \nonlinearrhs^{(\ell)} \equiv
     \lumpedmassmatrix\solutionvector^n

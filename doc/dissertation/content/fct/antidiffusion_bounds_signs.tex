@@ -110,5 +110,26 @@ is to directly impose the properties:
   \eqp
 \end{equation}
 \end{subequations}
+Thus when either of the conditions of Equation
+\eqref{eq:antidiffusion_bounds_properties}
+are violated, then by this operation, the respective solution bound is forced
+to be the low order solution:
+\begin{subequations}
+\begin{equation}
+  \antidiffusionbound_i^- = 0 \quad \Rightarrow \quad
+  \solutionbound_i^-
+    \gets \solutionletter_i^{L}
+  \eqc
+\end{equation}
+\begin{equation}
+  \antidiffusionbound_i^+ = 0 \quad \Rightarrow \quad
+  \solutionbound_i^+
+    \gets \solutionletter_i^{L}
+  \eqc
+\end{equation}
+\end{subequations}
+where in the transient case $\solutionletter_i^{L}$ represents
+$\solutionletter_i^{L,n+1}$.
+
 
 
