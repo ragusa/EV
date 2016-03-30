@@ -41,6 +41,7 @@ for iter = 1:max_iter
 
     % plot iteration if requested
     if (plot_iterations)
+        % new figure
         figure(1);
 
         % plot solution
@@ -52,9 +53,10 @@ for iter = 1:max_iter
         % plot viscosity
         subplot(2,1,2);
         semilogy(mesh.x_center,viscE);
-        ylim([1e-10 1e2])
         leg_string = sprintf('Entropy viscosity, iteration %i',iter);
-        legend(leg_string);
+        legend(leg_string,'Location','NorthWest');
+
+        % pause
         pause(0.1);
         %waitforbuttonpress;
     end
@@ -62,7 +64,7 @@ end
 
 % report if the solution did not converge
 if (~converged)
-    error('\t\tHigh-order Solution did not converge\n');
+    error('High-order Solution did not converge');
 end
 
 end

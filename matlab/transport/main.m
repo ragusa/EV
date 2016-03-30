@@ -21,7 +21,7 @@ low_order_scheme  = 2;
 %                    2 = Entropy viscosity
 %                    3 = Alternate Entropy viscosity
 %                    4 = Alternate Entropy viscosity 2
-high_order_scheme = 2;
+high_order_scheme = 3;
 
 % entropy viscosity options:
 ev.cE = 0.1; % coefficient for entropy residual in entropy viscosity

@@ -2,6 +2,7 @@ function viscE = compute_entropy_viscosity_alternate(...
     u_old,u_new,dt,mesh,phys,quadrature,ev,dof_handler)
 
 % unpack quadrature
+nq   = quadrature.nq;
 zq   = quadrature.zq;
 wq   = quadrature.wq;
 v    = quadrature.v;
@@ -28,6 +29,9 @@ cE            = ev.cE;
 cJ            = ev.cJ;
 entropy       = ev.entropy;
 entropy_deriv = ev.entropy_deriv;
+
+% option to use local entropy normalization
+use_local_entropy_normalization = true;
 
 % compute domain average of entropy
 E_integral = 0;
@@ -146,9 +150,7 @@ for iel = 1:nel
     dEdx_new = dEdy_new.*dydx_new_local;
     
     % compute maximum entropy residual at quadrature points
-    R = (E_new-E_old)/(speed*dt) + mu*dEdx_new - dEdy_new.*source_q;
-    %R_max = max(max(0,R));
-    R_max = max(abs(R));
+    R = dEdx_new;
     
     % compute max jump
     faceL = g(iel,1);
@@ -156,10 +158,29 @@ for iel = 1:nel
     jump_max = max(jump(faceL),jump(faceR));
     
     % compute entropy viscosity
-    if abs(E_dev_max) < 1.0e-100
-       viscE(iel) = 0.0;
+    if (use_local_entropy_normalization)
+        % compute normalization at each quadrature point
+        normalization = 0.5 * u_new_local .* u_new_local ...
+            - exp(-2*sigma_q.*xq)*E_avg;
+
+        % compute max entropy viscosity at quadrature points on cell
+        viscE(iel) = 0.0;
+        for q = 1:nq
+            if abs(normalization(q)) < 1.0e-100
+               viscEq = 0.0;
+            else
+               %viscEq = (cE*abs(R(q)) + cJ*jump_max) / abs(normalization(q));
+               viscEq = abs((cE*R(q) + cJ*jump_max) / normalization(q));
+            end
+            viscE(iel) = max(viscE(iel), viscEq);
+        end
     else
-       viscE(iel) = (cE*R_max + cJ*jump_max) / E_dev_max;
+        R_max = max(abs(R));
+        if abs(E_dev_max) < 1.0e-100
+           viscE(iel) = 0.0;
+        else
+           viscE(iel) = (cE*R_max + cJ*jump_max) / E_dev_max;
+        end
     end
 end
 

@@ -2,6 +2,7 @@ function viscE = compute_entropy_viscosity_alternate2(...
     u_old,u_new,dt,mesh,phys,quadrature,ev,dof_handler)
 
 % unpack quadrature
+nq   = quadrature.nq;
 zq   = quadrature.zq;
 wq   = quadrature.wq;
 v    = quadrature.v;
@@ -28,6 +29,9 @@ cE            = ev.cE;
 cJ            = ev.cJ;
 entropy       = ev.entropy;
 entropy_deriv = ev.entropy_deriv;
+
+% option to use local entropy normalization
+use_local_entropy_normalization = true;
 
 % compute int{0.5*u^2*exp(2*sigma(x)*(y-x)*dy} from 0 to L
 E_integral = 0;
@@ -130,14 +134,12 @@ for iel = 1:nel
     dudx_new_local  = dvdz' * u_new(g(iel,:)) / Jac(iel);
 
     % evaluate entropy and derivative
-    E_new = 0.5 * u_new_local .* u_new_local;
-    E_old = 0.5 * u_old_local .* u_old_local;
-    dEdx_new = u_new_local.*exp(sigma_q.*xq).*dudx_new_local;
+    E_new = u_new_local .* u_new_local;
+    E_old = u_old_local .* u_old_local;
+    dEdx_new = u_new_local .* dudx_new_local;
     
     % compute maximum entropy residual at quadrature points
-    R = (E_new-E_old)/(speed*dt) + mu*dEdx_new ...
-        + sigma_q.*u_new_local.*u_new_local.*exp(-sigma_q.*xq);
-    R_max = max(abs(R));
+    R = dEdx_new + sigma_q.*u_new_local.*u_new_local;
     
     % compute max jump
     faceL = g(iel,1);
@@ -145,13 +147,29 @@ for iel = 1:nel
     jump_max = max(jump(faceL),jump(faceR));
 
     % compute entropy viscosity
-    if abs(E_dev_max) < 1.0e-100
+    if (use_local_entropy_normalization)
+        % compute normalization at each quadrature point
+        normalization = 0.5 * u_new_local .* u_new_local .* exp(2*sigma_q.*xq) ...
+           - E_avg;
+
+        % compute max entropy viscosity at quadrature points on cell
         viscE(iel) = 0.0;
-    else
-        if (cJ > 0.0)
-            error('a factor of exp(2*sigma) should be taken out of jumps');
+        for q = 1:nq
+            if abs(normalization(q)) < 1.0e-100
+               viscEq = 0.0;
+            else
+               %viscEq = (cE*abs(R(q)) + cJ*jump_max) / abs(normalization(q));
+               viscEq = abs((cE*R(q) + cJ*jump_max) / normalization(q));
+            end
+            viscE(iel) = max(viscE(iel), viscEq);
         end
-        viscE(iel) = (cE*R_max + cJ*jump_max) / E_dev_max;
+    else
+        R_max = max(abs(R));
+        if abs(E_dev_max) < 1.0e-100
+           viscE(iel) = 0.0;
+        else
+           viscE(iel) = (cE*R_max + cJ*jump_max) / E_dev_max;
+        end
     end
 end
 
