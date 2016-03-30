@@ -3,7 +3,7 @@ close all; clear; clc;
 %--------------------------------------------------------------------------
 % finite element options
 %--------------------------------------------------------------------------
-mesh.n_cell = 3;                    % number of elements
+mesh.n_cell = 32;                    % number of elements
 impose_DirichletBC_strongly = true; % impose Dirichlet BC strongly?
 quadrature.nq = 3;                  % number of quadrature points per cell
 %--------------------------------------------------------------------------
@@ -24,7 +24,7 @@ low_order_scheme  = 2;
 high_order_scheme = 3;
 
 % entropy viscosity options:
-ev.cE = 0.1; % coefficient for entropy residual in entropy viscosity
+ev.cE = 0.01; % coefficient for entropy residual in entropy viscosity
 ev.cJ = ev.cE*0; % coefficient for jumps in entropy viscosity
 ev.entropy       = @(u) 0.5*u.^2; % entropy function
 ev.entropy_deriv = @(u) u;        % derivative of entropy function
@@ -104,13 +104,13 @@ source_is_time_dependent = false; % is source time-dependent?
 %--------------------------------------------------------------------------
 % nonlinear solver options
 %--------------------------------------------------------------------------
-max_iter = 10;           % maximum number of nonlinear solver iterations
+max_iter = 1000;           % maximum number of nonlinear solver iterations
 nonlin_tol = 1e-10;       % nonlinear solver tolerance for discrete L2 norm
-relaxation_parameter = 0.2; % relaxation parameter for iteration
+relaxation_parameter = 1.0; % relaxation parameter for iteration
 %--------------------------------------------------------------------------
 % plot options
 %--------------------------------------------------------------------------
-plot_iterations           = true; % plot iterations?
+plot_iterations           = false; % plot iterations?
 plot_viscosity            = true; % plot viscosities?
 plot_low_order_transient  = false; % plot low-order transient?
 plot_high_order_transient = false; % plot high-order transient?
@@ -983,7 +983,7 @@ if (plot_viscosity)
     figure; clf;
     
     % plot low-order viscosity if available
-    if low_order_scheme == 2 || high_order_scheme != 1
+    if low_order_scheme == 2 || high_order_scheme ~= 1
         semilogy(mesh.x_center,viscL);
         legend_entries = char('Low-order viscosity');
     end
@@ -991,7 +991,7 @@ if (plot_viscosity)
     hold on;
     
     % plot high-order viscosity if available
-    if (high_order_scheme != 1)
+    if (high_order_scheme ~= 1)
         semilogy(mesh.x_center,viscE,'x');
         legend_entries = char(legend_entries,'Entropy viscosity');
     end

@@ -57,7 +57,7 @@ for iter = 1:max_iter
         legend(leg_string,'Location','NorthWest');
 
         % pause
-        pause(0.1);
+        %pause(0.1);
         %waitforbuttonpress;
     end
 end
