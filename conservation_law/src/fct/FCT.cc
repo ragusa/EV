@@ -35,9 +35,21 @@ FCT<dim>::FCT(const RunParameters & run_parameters_,
       limiter = std::make_shared<ZalesakLimiter<dim>>(n_dofs);
       break;
     default:
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
   }
+
+  /*
+    // if using multi-pass limiter, then create it and switch pointer
+    if (run_parameters_.use_multipass_limiting)
+    {
+      // switch current limiter to another pointer
+      std::shared_ptr<Limiter<dim>> unit_limiter = limiter;
+
+      // create multi-pass limiter
+      limiter = std::make_shared<MultipassLimiter<dim>>(n_dofs, unit_limiter);
+    }
+  */
 
   // create sparsity pattern for limiter and antidiffusion matrices
   DynamicSparsityPattern dsp(n_dofs);

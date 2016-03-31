@@ -48,6 +48,10 @@ ConservationLaw<dim>::ConservationLaw(const RunParameters & params,
     is_linear(is_linear_),
     need_to_compute_inviscid_ss_matrix(false)
 {
+  // assert that an explicit time integrator is specified
+  Assert(params.temporal_discretization ==
+           TemporalDiscretizationClassification::ssprk,
+         ExcNotImplemented());
 }
 
 /**

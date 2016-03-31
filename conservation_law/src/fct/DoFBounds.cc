@@ -23,6 +23,55 @@ DoFBounds<dim>::DoFBounds(const DoFHandler<dim> & dof_handler_,
 }
 
 /**
+ * \brief Checks to see if the bounds were satisfied for each degree of freedom.
+ *
+ * \param[in] dof_vector  degree of freedom vector
+ *
+ * \return flag that bounds were satisfied for all degrees of freedom
+ */
+template <int dim>
+bool DoFBounds<dim>::check_bounds(const Vector<double> & dof_vector) const
+{
+  // machine precision for floating point comparisons
+  const double machine_tolerance = 1.0e-15;
+
+  // now set new precision
+  std::cout.precision(15);
+
+  // check that each dof value is bounded by its neighbors
+  bool bounds_satisfied = true;
+
+  for (unsigned int i = 0; i < n_dofs; ++i)
+  {
+    double value_i = dof_vector(i);
+
+    // check lower bound
+    if (value_i < lower(i) - machine_tolerance)
+    {
+      bounds_satisfied = false;
+
+      std::cout << "\x1b[33m"
+                << "FCT bounds violated by dof " << i << ": " << value_i << " < "
+                << lower(i) << "\x1b[0m" << std::endl;
+    }
+    // check upper bound
+    if (value_i > upper(i) + machine_tolerance)
+    {
+      bounds_satisfied = false;
+
+      std::cout << "\x1b[33m"
+                << "FCT bounds violated by dof " << i << ": " << value_i << " > "
+                << upper(i) << "\x1b[0m" << std::endl;
+    }
+  }
+
+  // restore default precision and format
+  std::cout.unsetf(std::ios_base::floatfield);
+
+  return bounds_satisfied;
+}
+
+/**
  * \brief Computes the minimum and maximum of a DoF vector
  *        in the neighborhood of each degree of freedom.
  *

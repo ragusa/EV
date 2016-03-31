@@ -23,11 +23,20 @@ ZalesakLimiter<dim>::ZalesakLimiter(const unsigned int & n_dofs_)
  * The Zalesak limiter limits antidiffusive fluxes \f$P_{i,j}\f$ to satisfy the
  * following conditions:
  * \f[
- *   Q_i^- \le L_{i,j}P_{i,j} \le Q_i^+ \quad \forall i \,,
+ *   Q_i^- \le \sum\limits_j L_{i,j}P_{i,j} \le Q_i^+ \quad \forall i \,,
  * \f]
  * where \f$Q_i^-\f$ and \f$Q_i^+\f$ are antidiffusion bounds for degree of
  * freedom \f$i\f$, and \f$L_{i,j}\f$ is the limiting coefficient corresponding
  * to the antidiffusive flux \f$P_{i,j}\f$.
+ * In some cases, multiple passes are made through limiters, and the
+ * antidiffusion accepted in previous iterations $\bar{\mathbf{p}}^{(\ell-1)}$
+ * is considered in the bounds:
+ * \f[
+ *   Q_i^- \le \bar{p}_i^{(\ell-1)} + \sum\limits_j L_{i,j}P_{i,j} \le Q_i^+
+ *     \quad \forall i \,.
+ * \f]
+ * If not passing in previously accepted antidiffusion, the user should just
+ * pass a vector of zeroes for this parameter.
  *
  * \note This function assumes that if a degree of freedom has Dirichlet
  *       constraints, then the antidiffusion input vectors \f$\mathbf{Q}^-\f$
@@ -41,12 +50,15 @@ ZalesakLimiter<dim>::ZalesakLimiter(const unsigned int & n_dofs_)
  *            \f$\mathbf{P}\f$
  * \param[in] antidiffusion_bounds  lower and upper bounds of antidiffusive
  *            fluxes into each node \f$\mathbf{Q}^-\f$ and \f$\mathbf{Q}^+\f$
+ * \param[in] cumulative_antidiffusion_vector  antidiffusion accepted in previous
+ *            iterations $\bar{\mathbf{p}}^{(\ell-1)}$
  * \param[out] limiter_matrix  matrix of limiting coeffients \f$\mathbf{L}\f$
  */
 template <int dim>
 void ZalesakLimiter<dim>::compute_limiter_matrix(
   const SparseMatrix<double> & antidiffusion_matrix,
   const DoFBounds<dim> & antidiffusion_bounds,
+  const Vector<double> & cumulative_antidiffusion_vector,
   SparseMatrix<double> & limiter_matrix)
 {
   // reset limiter matrix
@@ -72,15 +84,19 @@ void ZalesakLimiter<dim>::compute_limiter_matrix(
 
     // compute L-[i]
     if (P_negative != 0.0)
-      negative_limiter_vector[i] =
-        std::min(1.0, antidiffusion_bounds.lower[i] / P_negative);
+      negative_limiter_vector[i] = std::min(
+        1.0,
+        (antidiffusion_bounds.lower[i] - cumulative_antidiffusion_vector[i]) /
+          P_negative);
     else
       negative_limiter_vector[i] = 1.0;
 
     // compute L+[i]
     if (P_positive != 0.0)
-      positive_limiter_vector[i] =
-        std::min(1.0, antidiffusion_bounds.upper[i] / P_positive);
+      positive_limiter_vector[i] = std::min(
+        1.0,
+        (antidiffusion_bounds.upper[i] - cumulative_antidiffusion_vector[i]) /
+          P_positive);
     else
       positive_limiter_vector[i] = 1.0;
   }

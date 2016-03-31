@@ -30,7 +30,7 @@ public:
             const DoFHandler<dim> & dof_handler,
             const FESystem<dim> & fe);
 
-  virtual bool check_bounds(const Vector<double> & new_solution) const;
+  virtual bool check_bounds(const Vector<double> & new_solution);
 
   Vector<double> get_lower_solution_bound() const;
 

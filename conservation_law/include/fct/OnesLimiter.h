@@ -18,9 +18,11 @@ class OnesLimiter : public Limiter<dim>
 public:
   OnesLimiter(const unsigned int & n_dofs);
 
-  void compute_limiter_matrix(const SparseMatrix<double> & antidiffusion_matrix,
-                              const DoFBounds<dim> & antidiffusion_bounds,
-                              SparseMatrix<double> & limiter_matrix) override;
+  void compute_limiter_matrix(
+    const SparseMatrix<double> & antidiffusion_matrix,
+    const DoFBounds<dim> & antidiffusion_bounds,
+    const Vector<double> & cumulative_antidiffusion_vector,
+    SparseMatrix<double> & limiter_matrix) override;
 };
 
 #include "src/fct/OnesLimiter.cc"

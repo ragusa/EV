@@ -20,9 +20,14 @@ class Limiter
 public:
   Limiter(const unsigned int & n_dofs);
 
+  void compute_limiter_matrix(const SparseMatrix<double> & antidiffusion_matrix,
+                              const DoFBounds<dim> & antidiffusion_bounds,
+                              SparseMatrix<double> & limiter_matrix);
+
   virtual void compute_limiter_matrix(
     const SparseMatrix<double> & antidiffusion_matrix,
     const DoFBounds<dim> & antidiffusion_bounds,
+    const Vector<double> & cumulative_antidiffusion_vector,
     SparseMatrix<double> & limiter_matrix) = 0;
 
   void apply_limiter_matrix(const SparseMatrix<double> & limiter_matrix,
@@ -31,6 +36,9 @@ public:
 protected:
   /** \brief number of degrees of freedom */
   const unsigned int n_dofs;
+
+  /** \brief zero vector, to be used as a default for cumulative antidiffusion */
+  const Vector<double> zero_vector;
 };
 
 #include "src/fct/Limiter.cc"
