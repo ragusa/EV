@@ -213,6 +213,10 @@ public:
   std::string filter_sequence_string;
   /** \brief limiter option */
   LimiterOption limiter_option;
+  /** \brief flag to use multi-pass limiting */
+  bool use_multipass_limiting;
+  /** \brief percent tolerance for multi-pass limiting */
+  double multipass_limiting_percent_tolerance;
   /** \brief option to force correct signs of antidiffusion bounds */
   bool enforce_antidiffusion_bounds_signs;
   /** \brief type of synchronization to apply for FCT */

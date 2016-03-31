@@ -176,6 +176,14 @@ void RunParameters::declare_run_parameters(ParameterHandler & prm)
                       "zalesak",
                       Patterns::Selection("ones|zeroes|zalesak"),
                       "limiter option");
+    prm.declare_entry("use multipass limiting",
+                      "false",
+                      Patterns::Bool(),
+                      "flag to use multi-pass limiting");
+    prm.declare_entry("multipass limiting percent tolerance",
+                      "0.01",
+                      Patterns::Double(),
+                      "percent tolerance for multi-pass limiting");
     prm.declare_entry(
       "enforce antidiffusion bounds signs",
       "false",
@@ -537,6 +545,11 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
       limiter_option = LimiterOption::zalesak;
     else
       throw ExcNotImplemented();
+
+    use_multipass_limiting = prm.get_bool("use multipass limiting");
+
+    multipass_limiting_percent_tolerance =
+      prm.get_double("multipass limiting percent tolerance");
 
     enforce_antidiffusion_bounds_signs =
       prm.get_bool("enforce antidiffusion bounds signs");

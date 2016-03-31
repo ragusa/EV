@@ -127,8 +127,6 @@ NoDiffusion.cc
 NoDiffusion.h
 NonlinearSolver.cc
 NonlinearSolver.h
-OldFCT.cc
-OldFCT.h
 OnesLimiter.cc
 OnesLimiter.h
 PostProcessor.cc
@@ -151,8 +149,6 @@ ShallowWaterEntropyFluxFEValuesFace.h
 ShallowWaterEntropy.h
 ShallowWaterExplicitEulerFCT.cc
 ShallowWaterExplicitEulerFCT.h
-ShallowWaterFCT.cc
-ShallowWaterFCT.h
 ShallowWater.h
 ShallowWaterLowOrderViscosity.cc
 ShallowWaterLowOrderViscosity.h
@@ -194,6 +190,8 @@ ThetaFCTFilter.h
 ThetaFCT.h
 TransportAnalyticSolutionBounds.cc
 TransportAnalyticSolutionBounds.h
+TransportAnalyticSSFCTFilter.cc
+TransportAnalyticSSFCTFilter.h
 Transport.cc
 TransportDMPAnalyticSSFCTFilter.cc
 TransportDMPAnalyticSSFCTFilter.h

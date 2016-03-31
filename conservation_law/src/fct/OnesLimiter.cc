@@ -7,12 +7,16 @@
  * \brief Constructor.
  *
  * \param[in] n_dofs_  number of degrees of freedom
+ * \param[in] report_antidiffusion_  flag to report amount of accepted
+ *            antidiffusion
  */
 template <int dim>
-OnesLimiter<dim>::OnesLimiter(const unsigned int & n_dofs_)
-  : Limiter<dim>(n_dofs_)
+OnesLimiter<dim>::OnesLimiter(const unsigned int & n_dofs_,
+                              const bool & report_antidiffusion_)
+  : Limiter<dim>(n_dofs_, report_antidiffusion_)
 {
 }
+
 /**
  * \brief Computes the limiting coefficient matrix.
  *

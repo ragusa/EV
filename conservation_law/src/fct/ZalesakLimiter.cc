@@ -7,10 +7,13 @@
  * \brief Constructor.
  *
  * \param[in] n_dofs_  number of degrees of freedom
+ * \param[in] report_antidiffusion_  flag to report amount of accepted
+ *            antidiffusion
  */
 template <int dim>
-ZalesakLimiter<dim>::ZalesakLimiter(const unsigned int & n_dofs_)
-  : Limiter<dim>(n_dofs_)
+ZalesakLimiter<dim>::ZalesakLimiter(const unsigned int & n_dofs_,
+                                    const bool & report_antidiffusion_)
+  : Limiter<dim>(n_dofs_, report_antidiffusion_)
 {
   // resize limiter vectors
   negative_limiter_vector.reinit(this->n_dofs);

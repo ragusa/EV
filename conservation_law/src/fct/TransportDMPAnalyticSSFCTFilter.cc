@@ -59,11 +59,7 @@ void TransportDMPAnalyticSSFCTFilter<dim>::filter_antidiffusive_fluxes(
 
   // compute antidiffusion bounds Q- and Q+
   this->compute_antidiffusion_bounds(
-    solution, low_order_ss_matrix, ss_rhs, cumulative_antidiffusion);
-
-  // enforce antidiffusion bounds signs if requested
-  if (this->do_enforce_antidiffusion_bounds_signs)
-    this->enforce_antidiffusion_bounds_signs();
+    this->solution_bounds, solution, low_order_ss_matrix, ss_rhs, cumulative_antidiffusion);
 
   // limit antidiffusion fluxes
   this->limiter->compute_limiter_matrix(

@@ -13,7 +13,7 @@
 #include <deal.II/lac/dynamic_sparsity_pattern.h>
 #include <deal.II/lac/sparsity_pattern.h>
 
-//#include "include/fct/MultipassLimiter.h"
+#include "include/fct/MultipassLimiter.h"
 #include "include/fct/OnesLimiter.h"
 #include "include/fct/ZalesakLimiter.h"
 #include "include/fct/ZeroesLimiter.h"
@@ -103,7 +103,7 @@ protected:
   std::shared_ptr<Limiter<dim>> limiter;
 
   /** \brief sparsity pattern */
-  SparsityPattern sparsity_pattern;
+  std::shared_ptr<SparsityPattern> sparsity_pattern;
 
   /** \brief limiter matrix \f$\mathbf{L}\f$ */
   SparseMatrix<double> limiter_matrix;

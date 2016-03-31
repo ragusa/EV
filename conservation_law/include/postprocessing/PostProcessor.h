@@ -36,12 +36,9 @@ public:
   /** \brief Alias for classification of temporal discretization */
   using TemporalDiscretizationClassification =
     typename RunParameters::TemporalDiscretizationClassification;
-  //    typename RunParameters::TemporalDiscretizationClassification;
   /** \brief Alias for SSPRK discretization */
-  // using SSPRKDiscretization = typename RunParameters::SSPRKDiscretization;
   using SSPRKDiscretization = typename RunParameters::SSPRKDiscretization;
   /** \brief Alias for theta discretization */
-  // using ThetaDiscretization = typename RunParameters::ThetaDiscretization;
   using ThetaDiscretization = typename RunParameters::ThetaDiscretization;
   using Scheme = typename RunParameters::Scheme;
   using LowOrderScheme = typename RunParameters::LowOrderScheme;

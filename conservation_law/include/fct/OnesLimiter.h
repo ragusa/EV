@@ -16,7 +16,8 @@ template <int dim>
 class OnesLimiter : public Limiter<dim>
 {
 public:
-  OnesLimiter(const unsigned int & n_dofs);
+  OnesLimiter(const unsigned int & n_dofs,
+              const bool & report_antidiffusion = false);
 
   void compute_limiter_matrix(
     const SparseMatrix<double> & antidiffusion_matrix,

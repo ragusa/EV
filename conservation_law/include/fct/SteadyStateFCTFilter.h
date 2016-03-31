@@ -37,11 +37,12 @@ protected:
     const SparseMatrix<double> & low_order_ss_matrix,
     const Vector<double> & ss_rhs) = 0;
 
-  virtual void compute_antidiffusion_bounds(
+  void compute_antidiffusion_bounds(
+    const DoFBounds<dim> & solution_bounds,
     const Vector<double> & solution,
     const SparseMatrix<double> & low_order_ss_matrix,
     const Vector<double> & ss_rhs,
-    const Vector<double> & cumulative_antidiffusion) = 0;
+    const Vector<double> & cumulative_antidiffusion);
 };
 
 #include "src/fct/SteadyStateFCTFilter.cc"

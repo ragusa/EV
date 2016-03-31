@@ -56,8 +56,8 @@ title_list = "Initial\
               DMP-min-EV-FCT\
               DMP-max-EV-FCT"
 linetypes = "2 1 1 2 4 1 3 1 1 1 2 2 2 2 4 4"
-linecolors = "-1 -1 1 2 2 2 2 3 4 5 -1 -1 -1 -1 -1 -1"
-symboltypes = "-2 -2 1 4 3 2 1 3 4 6 -2 -2 -2 -2 -2 -2"
+linecolors = "-1 -1 1 2 2 2 2 3 4 5 3 1 3 1 3 1"
+symboltypes = "-2 -2 1 4 3 2 1 3 4 6 10 8 10 8 10 8"
 
 # define is_missing(x) function for determining if an input file exists
 outdir = "../output/".problem_name."/"

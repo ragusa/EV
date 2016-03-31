@@ -18,7 +18,8 @@ template <int dim>
 class ZalesakLimiter : public Limiter<dim>
 {
 public:
-  ZalesakLimiter(const unsigned int & n_dofs);
+  ZalesakLimiter(const unsigned int & n_dofs,
+                 const bool & report_antidiffusion = false);
 
   void compute_limiter_matrix(
     const SparseMatrix<double> & antidiffusion_matrix,

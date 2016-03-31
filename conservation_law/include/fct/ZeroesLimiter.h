@@ -16,7 +16,8 @@ template <int dim>
 class ZeroesLimiter : public Limiter<dim>
 {
 public:
-  ZeroesLimiter(const unsigned int & n_dofs);
+  ZeroesLimiter(const unsigned int & n_dofs,
+                const bool & report_antidiffusion = false);
 
   void compute_limiter_matrix(
     const SparseMatrix<double> & antidiffusion_matrix,
