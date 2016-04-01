@@ -20,15 +20,15 @@ the characteristics are constant.
    An implicit solution to the initial value problem
    \begin{equation}\label{PDE}
       \ppt{\scalarsolution} + \velocity\cdot\nabla\scalarsolution(\x,t)
-      + \reactioncoef(\x)\scalarsolution(\x,t) = \scalarsource(\x,t),
+      + \speed\reactioncoef(\x)\scalarsolution(\x,t) = \speed\scalarsource(\x,t),
       \qquad \scalarsolution(\x,0) = \scalarsolution_0(\x)
    \end{equation}
    is the following:
    \begin{equation}\label{eq:integral_form}
       \scalarsolution(\x,t) = \scalarsolution_0(\x - \velocity t)
-         e^{-\int\limits_0^t \reactioncoef(\x - \velocity(t -t'))dt'} +
-         \int\limits_0^t \scalarsource(\x - \velocity(t -t'),t')
-         e^{-\int\limits_{t'}^t\reactioncoef(\x
+         e^{-\int\limits_0^t \speed\reactioncoef(\x - \velocity(t -t'))dt'} +
+         \int\limits_0^t \speed\scalarsource(\x - \velocity(t -t'),t')
+         e^{-\int\limits_{t'}^t\speed\reactioncoef(\x
          - \velocity(t -\bar{t}))d\bar{t}} dt' \eqp
    \end{equation}
 \end{theorem}
@@ -53,44 +53,44 @@ the characteristics are constant.
    \end{eqnarray*}
    which when combined with the PDE in Equation \eqref{PDE}, gives
    \[
-      \ddt{\scalarsolution} + \reactioncoef(\x(t))\scalarsolution(\x(t),t)
-        = \scalarsource(\x,t).
+      \ddt{\scalarsolution} + \speed\reactioncoef(\x(t))\scalarsolution(\x(t),t)
+        = \speed\scalarsource(\x,t).
    \]
    This is a 1st-order linear ODE, which may be solved using an integrating factor
    \[
-      \mu(t)=e^{\int\limits_0^t\reactioncoef(\x(t'))dt'}.
+      \mu(t)=e^{\int\limits_0^t\speed\reactioncoef(\x(t'))dt'}.
    \]
    Multiplying both sides by this integrating factor and using the product rule,
    \[
       \frac{d}{dt}\left[\scalarsolution(\x(t),t)\mu(t)\right]
-        = \scalarsource(\x(t),t) \mu(t),
+        = \speed\scalarsource(\x(t),t) \mu(t),
    \]
    and integrating from $0$ to $t$ gives
    \[
       \scalarsolution(\x(t),t)\mu(t)-\scalarsolution(\x(0),0)\mu(0) =
-         \int\limits_0^t \scalarsource(\x(t'),t') \mu(t') dt'.
+         \int\limits_0^t \speed\scalarsource(\x(t'),t') \mu(t') dt'.
    \]
    Simplifying,
    \[
       \scalarsolution(\x(t),t) = \scalarsolution(\x(0),0)
-         e^{-\int\limits_0^t \reactioncoef(\x(t'))dt'} +
-         \left(\int\limits_0^t \scalarsource(\x(t'),t')
-         e^{\int\limits_0^{t'}\reactioncoef(\x(\bar{t}))d\bar{t}} dt'\right)
-         e^{-\int\limits_0^t\reactioncoef(\x(t'))dt'},
+         e^{-\int\limits_0^t \speed\reactioncoef(\x(t'))dt'} +
+         \left(\int\limits_0^t \speed\scalarsource(\x(t'),t')
+         e^{\int\limits_0^{t'}\speed\reactioncoef(\x(\bar{t}))d\bar{t}} dt'\right)
+         e^{-\int\limits_0^t\speed\reactioncoef(\x(t'))dt'},
    \]
    \[
       \scalarsolution(\x(t),t) = \scalarsolution(\x(0),0)
-         e^{-\int\limits_0^t \reactioncoef(\x(t'))dt'} +
-         \int\limits_0^t \scalarsource(\x(t'),t')
-         e^{-\int\limits_{t'}^t\reactioncoef(\x(\bar{t}))d\bar{t}} dt'.
+         e^{-\int\limits_0^t \speed\reactioncoef(\x(t'))dt'} +
+         \int\limits_0^t \speed\scalarsource(\x(t'),t')
+         e^{-\int\limits_{t'}^t\speed\reactioncoef(\x(\bar{t}))d\bar{t}} dt'.
    \]
    Finally, expressing $\x(t)$ in terms of $\x$, $\velocity$,
    and $t$ gives
    \[
       \scalarsolution(\x,t) = \scalarsolution_0(\x - \velocity t)
-         e^{-\int\limits_0^t \reactioncoef(\x - \velocity(t -t'))dt'} +
-         \int\limits_0^t \scalarsource(\x - \velocity(t -t'),t')
-         e^{-\int\limits_{t'}^t\reactioncoef(\x
+         e^{-\int\limits_0^t \speed\reactioncoef(\x - \velocity(t -t'))dt'} +
+         \int\limits_0^t \speed\scalarsource(\x - \velocity(t -t'),t')
+         e^{-\int\limits_{t'}^t\speed\reactioncoef(\x
          - \velocity(t -\bar{t}))d\bar{t}} dt'.\qed
    \]
 \end{proof}
@@ -110,15 +110,27 @@ principle applying to a general region is given by the following theorem.
    \end{equation}
    \begin{equation}
       \scalarsolution_{\text{min}}
-        \equiv \scalarsolution_{\min,N}^0 e^{-\tau\reactioncoef_{\max,N}}
-        + \frac{\scalarsource_{\min,N}}{\reactioncoef_{\max,N}}
-        (1 - e^{-\reactioncoef_{\max,N}\tau}) \eqc
+        \equiv \left\{\begin{array}{l l}
+          \scalarsolution_{\min,N}^0 e^{-\tau\speed\reactioncoef_{\max,N}}
+            + \frac{\scalarsource_{\min,N}}{\reactioncoef_{\max,N}}
+             (1 - e^{-\speed\reactioncoef_{\max,N}\tau}) \eqc
+          & \reactioncoef_{\max,N} \ne 0 \\
+          \scalarsolution_{\min,N}^0
+            + \tau\speed\scalarsource_{\min,N} \eqc
+          & \reactioncoef_{\max,N} = 0
+        \end{array}\right.\eqc
    \end{equation}
    \begin{equation}
       \scalarsolution_{\text{max}}
-        \equiv \scalarsolution_{\max,N}^0 e^{-\tau\reactioncoef_{\min,N}}
-        + \frac{\scalarsource_{\max,N}}{\reactioncoef_{\min,N}}
-        (1 - e^{-\reactioncoef_{\min,N}\tau}) \eqc
+        \equiv \left\{\begin{array}{l l}
+          \scalarsolution_{\max,N}^0 e^{-\tau\speed\reactioncoef_{\min,N}}
+            + \frac{\scalarsource_{\max,N}}{\reactioncoef_{\min,N}}
+            (1 - e^{-\speed\reactioncoef_{\min,N}\tau}) \eqc
+          & \reactioncoef_{\min,N} \ne 0 \\
+          \scalarsolution_{\max,N}^0
+            + \tau\speed\scalarsource_{\max,N} \eqc
+          & \reactioncoef_{\min,N} = 0
+        \end{array}\right.\eqc
    \end{equation}
    \end{subequations}
    where $\scalarsolution_{\max,N}^0\equiv\max\limits_{\mathbf{y}\in N(\x)}
@@ -140,9 +152,9 @@ principle applying to a general region is given by the following theorem.
    Rewriting Equation \eqref{eq:integral_form} with $t=\tau$ gives
    \[
       \scalarsolution(\x,\tau) = \scalarsolution_0(\x - \velocity\tau)
-         e^{-\int\limits_0^\tau \reactioncoef(\x - \velocity(\tau -t'))dt'} +
-         \int\limits_0^\tau \scalarsource(\x - \velocity(\tau -t'),t')
-         e^{-\int\limits_{t'}^\tau\reactioncoef(\x
+         e^{-\int\limits_0^\tau \speed\reactioncoef(\x - \velocity(\tau -t'))dt'} +
+         \int\limits_0^\tau \speed\scalarsource(\x - \velocity(\tau -t'),t')
+         e^{-\int\limits_{t'}^\tau\speed\reactioncoef(\x
          - \velocity(\tau -\bar{t}))d\bar{t}} dt'.
    \]
    Let $L(\x)$ be the line segment that spans between 
@@ -154,10 +166,10 @@ principle applying to a general region is given by the following theorem.
    One can bound the first term in the right hand side of Equation
    \eqref{eq:integral_form} as follows:
    \[
-      \scalarsolution_{\min,L}^0 e^{-\tau\reactioncoef_{\max,L}} \le
+      \scalarsolution_{\min,L}^0 e^{-\tau\speed\reactioncoef_{\max,L}} \le
       \scalarsolution_0(\x - \velocity\tau)
-         e^{-\int\limits_0^\tau \reactioncoef(\x - \velocity(\tau -t'))dt'} \le
-      \scalarsolution_{\max,L}^0 e^{-\tau\reactioncoef_{\min,L}},
+         e^{-\int\limits_0^\tau \speed\reactioncoef(\x - \velocity(\tau -t'))dt'} \le
+      \scalarsolution_{\max,L}^0 e^{-\tau\speed\reactioncoef_{\min,L}},
    \]
    where $\scalarsolution_{\max,L}^0 \equiv\max\limits_{\mathbf{y}\in L(\x)}
    \scalarsolution_0(\mathbf{y})$,
@@ -169,23 +181,23 @@ principle applying to a general region is given by the following theorem.
    and $\scalarsource_{\min,L}$ defined similarly.
    The source term can be bounded as follows:
    \begin{eqnarray*}
-      \int\limits_0^\tau \scalarsource(\x - \velocity(\tau -t'),t')
-         e^{-\int\limits_{t'}^\tau\reactioncoef(\x
+      \int\limits_0^\tau \speed\scalarsource(\x - \velocity(\tau -t'),t')
+         e^{-\int\limits_{t'}^\tau\speed\reactioncoef(\x
          - \velocity(\tau -\bar{t}))d\bar{t}} dt' & \le &
-         \scalarsource_{\max,L}\int\limits_0^\tau 
-         e^{-\int\limits_{t'}^\tau\reactioncoef(\x
+         \speed\scalarsource_{\max,L}\int\limits_0^\tau 
+         e^{-\int\limits_{t'}^\tau\speed\reactioncoef(\x
          - \velocity(\tau -\bar{t}))d\bar{t}} dt'\\
-      & \le & \scalarsource_{\max,L}\int\limits_0^\tau 
-         e^{-\reactioncoef_{\min,L}\int\limits_{t'}^\tau d\bar{t}} dt'\\
-      & = & \scalarsource_{\max,L} \int\limits_0^\tau
-         e^{-\reactioncoef_{\min,L}(\tau-t')} dt'\\
-      & = & \scalarsource_{\max,L}e^{-\reactioncoef_{\min,L}\tau}
-         \int\limits_0^\tau e^{\reactioncoef_{\min,L}t'} dt'\\
+      & \le & \speed\scalarsource_{\max,L}\int\limits_0^\tau 
+         e^{-\speed\reactioncoef_{\min,L}\int\limits_{t'}^\tau d\bar{t}} dt'\\
+      & = & \speed\scalarsource_{\max,L} \int\limits_0^\tau
+         e^{-\speed\reactioncoef_{\min,L}(\tau-t')} dt'\\
+      & = & \speed\scalarsource_{\max,L}e^{-\speed\reactioncoef_{\min,L}\tau}
+         \int\limits_0^\tau e^{\speed\reactioncoef_{\min,L}t'} dt'\\
       & = & \left\{\begin{array}{l l}
             \frac{\scalarsource_{\max,L}}{\reactioncoef_{\min,L}}
-              (1 - e^{-\reactioncoef_{\min,L}\tau})
+              (1 - e^{-\speed\reactioncoef_{\min,L}\tau})
                & \reactioncoef_{\min,L} \ne 0\\
-            \tau \scalarsource_{\max,L} & \reactioncoef_{\min,L} = 0
+            \tau \speed\scalarsource_{\max,L} & \reactioncoef_{\min,L} = 0
             \end{array}\right.
    \end{eqnarray*}
    A similar analysis is performed for the lower bound. Putting everything together,
@@ -196,15 +208,27 @@ principle applying to a general region is given by the following theorem.
    \]
    \[
       \scalarsolution_{\text{min}}
-        \equiv \scalarsolution_{\min,L}^0 e^{-\tau\reactioncoef_{\max,L}}
-        + \frac{\scalarsource_{\min,L}}{\reactioncoef_{\max,L}}
-        (1 - e^{-\reactioncoef_{\max,L}\tau}) \eqc
+        \equiv \left\{\begin{array}{l l}
+          \scalarsolution_{\min,L}^0 e^{-\tau\speed\reactioncoef_{\max,L}}
+            + \frac{\scalarsource_{\min,L}}{\reactioncoef_{\max,L}}
+             (1 - e^{-\speed\reactioncoef_{\max,L}\tau}) \eqc
+          & \reactioncoef_{\max,L} \ne 0 \\
+          \scalarsolution_{\min,L}^0
+            + \tau\speed\scalarsource_{\min,L} \eqc
+          & \reactioncoef_{\max,L} = 0
+        \end{array}\right.\eqc
    \]
    \[
       \scalarsolution_{\text{max}}
-        \equiv \scalarsolution_{\max,L}^0 e^{-\tau\reactioncoef_{\min,L}}
-        + \frac{\scalarsource_{\max,L}}{\reactioncoef_{\min,L}}
-        (1 - e^{-\reactioncoef_{\min,L}\tau}) \eqp
+        \equiv \left\{\begin{array}{l l}
+          \scalarsolution_{\max,L}^0 e^{-\tau\speed\reactioncoef_{\min,L}}
+            + \frac{\scalarsource_{\max,L}}{\reactioncoef_{\min,L}}
+            (1 - e^{-\speed\reactioncoef_{\min,L}\tau}) \eqc
+          & \reactioncoef_{\min,L} \ne 0 \\
+          \scalarsolution_{\max,L}^0
+            + \tau\speed\scalarsource_{\max,L} \eqc
+          & \reactioncoef_{\min,L} = 0
+        \end{array}\right.\eqp
    \]
    Since $L(\x)\subset N(\x)$, the following is true:
    \[
@@ -213,15 +237,27 @@ principle applying to a general region is given by the following theorem.
    \]
    \[
       \scalarsolution_{\text{min}}
-        \equiv \scalarsolution_{\min,N}^0 e^{-\tau\reactioncoef_{\max,N}}
-        + \frac{\scalarsource_{\min,N}}{\reactioncoef_{\max,N}}
-        (1 - e^{-\reactioncoef_{\max,N}\tau}) \eqc
+        \equiv \left\{\begin{array}{l l}
+          \scalarsolution_{\min,N}^0 e^{-\tau\speed\reactioncoef_{\max,N}}
+            + \frac{\scalarsource_{\min,N}}{\reactioncoef_{\max,N}}
+             (1 - e^{-\speed\reactioncoef_{\max,N}\tau}) \eqc
+          & \reactioncoef_{\max,N} \ne 0 \\
+          \scalarsolution_{\min,N}^0
+            + \tau\speed\scalarsource_{\min,N} \eqc
+          & \reactioncoef_{\max,N} = 0
+        \end{array}\right.\eqc
    \]
    \[
       \scalarsolution_{\text{max}}
-        \equiv \scalarsolution_{\max,N}^0 e^{-\tau\reactioncoef_{\min,N}}
-        + \frac{\scalarsource_{\max,N}}{\reactioncoef_{\min,N}}
-        (1 - e^{-\reactioncoef_{\min,N}\tau}) \eqp \qed
+        \equiv \left\{\begin{array}{l l}
+          \scalarsolution_{\max,N}^0 e^{-\tau\speed\reactioncoef_{\min,N}}
+            + \frac{\scalarsource_{\max,N}}{\reactioncoef_{\min,N}}
+            (1 - e^{-\speed\reactioncoef_{\min,N}\tau}) \eqc
+          & \reactioncoef_{\min,N} \ne 0 \\
+          \scalarsolution_{\max,N}^0
+            + \tau\speed\scalarsource_{\max,N} \eqc
+          & \reactioncoef_{\min,N} = 0
+        \end{array}\right.\eqp \qed
    \]
 \end{proof}
 If one takes the parameter $\tau$ in Equation \eqref{eq:local_max_principle}
@@ -236,15 +272,27 @@ local discrete maximum principle results:
   \end{equation}
   \begin{equation}
       \analyticDMPlowerbound_i
-        \equiv \solutionletter_{\text{min},i}^n e^{-\dt\reactioncoef_{\max,i}}
-        + \frac{\scalarsource_{\min,i}}{\reactioncoef_{\max,i}}
-        (1 - e^{-\reactioncoef_{\max,i}\dt}) \eqc
+        \equiv \left\{\begin{array}{l l}
+          \solutionletter_{\text{min},i}^n e^{-\dt\speed\reactioncoef_{\max,i}}
+            + \frac{\scalarsource_{\min,i}}{\reactioncoef_{\max,i}}
+            (1 - e^{-\speed\reactioncoef_{\max,i}\dt}) \eqc
+          & \reactioncoef_{\max,i} \ne 0 \\
+          \solutionletter_{\text{min},i}^n
+            + \dt\speed\scalarsource_{\min,i} \eqc
+          & \reactioncoef_{\max,i} = 0
+        \end{array}\right.\eqc
   \end{equation}
   \begin{equation}
       \analyticDMPupperbound_i
-        \equiv \solutionletter_{\text{max},i}^n e^{-\dt\reactioncoef_{\min,i}}
-        + \frac{\scalarsource_{\max,i}}{\reactioncoef_{\min,i}}
-        (1 - e^{-\reactioncoef_{\min,i}\dt}) \eqc
+        \equiv \left\{\begin{array}{l l}
+          \solutionletter_{\text{max},i}^n e^{-\dt\speed\reactioncoef_{\min,i}}
+            + \frac{\scalarsource_{\max,i}}{\reactioncoef_{\min,i}}
+            (1 - e^{-\speed\reactioncoef_{\min,i}\dt}) \eqc
+          & \reactioncoef_{\min,i} \ne 0 \\
+          \solutionletter_{\text{max},i}^n
+            + \dt\speed\scalarsource_{\max,i} \eqc
+          & \reactioncoef_{\min,i} = 0
+        \end{array}\right.\eqc
   \end{equation}
 \end{subequations}
 where $\solutionletter_{\text{max},i}^n
