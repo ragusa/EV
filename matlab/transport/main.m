@@ -73,7 +73,7 @@ fct_opts.enforce_antidiffusion_bounds_signs = true;
 % FCT initialization option: 1 = zeros
 %                            2 = low-order solution
 %                            3 = high-order solution
-fct_opts.FCT_initialization = 2;
+fct_opts.FCT_initialization = 3;
 
 % prelimit correction fluxes: 0 = do not prelimit, 1 = prelimit
 fct_opts.prelimit = 0;
@@ -122,7 +122,7 @@ out_opts.plot_high_order_transient = false; % plot high-order transient?
 out_opts.plot_FCT_transient        = false; % plot FCT transient?
 
 out_opts.plot_EV_iteration         = false; % plot EV iteration?
-out_opts.plot_FCT_iteration        = false; % plot FCT iteration?
+out_opts.plot_FCT_iteration        = true; % plot FCT iteration?
 
 out_opts.plot_viscosity            = false; % plot viscosities?
 
@@ -311,7 +311,9 @@ end
 % cell center positions
 mesh.x_center = 0.5*(mesh.x(1:end-1) + mesh.x(2:end));
 % element sizes
-mesh.dx = diff(mesh.x);                     
+mesh.dx = diff(mesh.x);
+% minimum distance
+mesh.dx_min = min(mesh.dx);
 
 % get quadrature points and weights and evaluate basis functions
 [quadrature.zq,quadrature.wq]  = get_GL_quadrature(quadrature.nq);
@@ -676,7 +678,7 @@ if (compute_FCT)
             % compute limited flux correction sum
             [flim,Wminus,Wplus] = compute_limited_flux_sums_ss(uFCT,F,...
                 AL_mod,b_mod,...
-                sigma_min,sigma_max,source_min,source_max,phys,...
+                sigma_min,sigma_max,source_min,source_max,mesh,phys,...
                 dof_handler.n_dof,fct_opts);
             
             % plot
