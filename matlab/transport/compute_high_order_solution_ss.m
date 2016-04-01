@@ -5,15 +5,15 @@ function [uH,DH,viscE] = compute_high_order_solution_ss(A,b,viscL,mesh,...
 high_order_scheme = opts.high_order_scheme;
 modify_for_strong_DirichletBC = opts.modify_for_strong_DirichletBC;
 max_iter = nonlin_opts.max_iter;
-max_iter = nonlin_opts.nonlin_tol;
+nonlin_tol = nonlin_opts.nonlin_tol;
 relaxation_parameter = nonlin_opts.relax;
-plot_iterations = out_opts.plot_iterations;
-plot_viscosity  = out_opts.plot_viscosity;
+plot_iterations = out_opts.plot_EV_iteration;
 
 % initialize solution iterate
 uH = zeros(dof_handler.n_dof,1);
 
 % begin nonlinear iteration
+converged = false;
 for iter = 1:max_iter
     % compute high-order diffusion matrix
     [DH,viscE] = compute_high_order_diffusion_matrix(uH,...
@@ -49,7 +49,7 @@ for iter = 1:max_iter
     % plot iteration if requested
     if (plot_iterations)
         % new figure
-        figure(1);
+        figure;
 
         % plot solution
         subplot(2,1,1);

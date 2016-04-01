@@ -1,6 +1,6 @@
 function vec = convert_matrix_to_edge_vector(A)
 
-n = size(A)(1) - 1;
+n = length(A(:,1)) - 1;
 
 vec = zeros(n,1);
 

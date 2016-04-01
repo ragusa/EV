@@ -4,7 +4,7 @@ function [f_min,f_max] = compute_min_max_per_dof(f,t,n_dof,mesh,zq)
 x      = mesh.x;
 n_cell = mesh.n_cell;
 
-% compute min and max sigma and source in the support of i
+% compute min and max of function in the support of i
 f_min  = 1e15*ones(n_dof,1);
 f_max  = zeros(n_dof,1);
 for iel = 1:n_cell
