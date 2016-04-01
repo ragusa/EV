@@ -22,35 +22,56 @@ FCT<dim>::FCT(const RunParameters & run_parameters_,
     n_filters(0),
     bounds_transient_file_index(1)
 {
+  // create sparsity pattern for limiter and antidiffusion matrices
+  DynamicSparsityPattern dsp(n_dofs);
+  DoFTools::make_sparsity_pattern(*dof_handler, dsp);
+  sparsity_pattern = std::make_shared<SparsityPattern>();
+  sparsity_pattern->copy_from(dsp);
+
+  // initialize matrices with sparsity pattern
+  limiter_matrix.reinit(*sparsity_pattern);
+  antidiffusion_matrix.reinit(*sparsity_pattern);
+  limited_antidiffusion_matrix.reinit(*sparsity_pattern);
+
+  // resize vectors
+  cumulative_antidiffusion.reinit(this->n_dofs);
+
+  // determine whether antidiffusion should be reported
+  const bool report_antidiffusion = run_parameters_.verbosity_level > 1;
+
   // create limiter
   switch (run_parameters_.limiter_option)
   {
     case LimiterOption::ones: // no limiter; all L_{i,j} are one
-      limiter = std::make_shared<OnesLimiter<dim>>(n_dofs);
+      limiter = std::make_shared<OnesLimiter<dim>>(n_dofs, report_antidiffusion);
       break;
     case LimiterOption::zeroes: // full limiter; all L_{i,j} are zero
-      limiter = std::make_shared<ZeroesLimiter<dim>>(n_dofs);
+      limiter =
+        std::make_shared<ZeroesLimiter<dim>>(n_dofs, report_antidiffusion);
       break;
     case LimiterOption::zalesak: // Zalesak limiter
-      limiter = std::make_shared<ZalesakLimiter<dim>>(n_dofs);
+      limiter =
+        std::make_shared<ZalesakLimiter<dim>>(n_dofs, report_antidiffusion);
       break;
     default:
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
   }
 
-  // create sparsity pattern for limiter and antidiffusion matrices
-  DynamicSparsityPattern dsp(n_dofs);
-  DoFTools::make_sparsity_pattern(*dof_handler, dsp);
-  sparsity_pattern.copy_from(dsp);
+  // if using multi-pass limiter, then create it and switch pointer
+  if (run_parameters_.use_multipass_limiting)
+  {
+    // switch current limiter to another pointer
+    std::shared_ptr<Limiter<dim>> unit_limiter = limiter;
 
-  // initialize matrices with sparsity pattern
-  limiter_matrix.reinit(sparsity_pattern);
-  antidiffusion_matrix.reinit(sparsity_pattern);
-  limited_antidiffusion_matrix.reinit(sparsity_pattern);
-
-  // resize vectors
-  cumulative_antidiffusion.reinit(this->n_dofs);
+    // create multi-pass limiter
+    limiter = std::make_shared<MultipassLimiter<dim>>(
+      n_dofs,
+      unit_limiter,
+      sparsity_pattern,
+      run_parameters_.multipass_limiting_percent_tolerance,
+      report_antidiffusion);
+  }
 }
 
 /**

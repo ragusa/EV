@@ -22,16 +22,10 @@ public:
                           const FESystem<dim> & fe);
 
 protected:
-  virtual void compute_solution_bounds(
+  void compute_solution_bounds(
     const Vector<double> & solution,
     const SparseMatrix<double> & low_order_ss_matrix,
     const Vector<double> & ss_rhs) override;
-
-  virtual void compute_antidiffusion_bounds(
-    const Vector<double> & solution,
-    const SparseMatrix<double> & low_order_ss_matrix,
-    const Vector<double> & ss_rhs,
-    const Vector<double> & cumulative_antidiffusion) override;
 };
 
 #include "src/fct/DMPSteadyStateFCTFilter.cc"

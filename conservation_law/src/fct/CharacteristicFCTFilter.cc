@@ -101,59 +101,17 @@ void CharacteristicFCTFilter<dim>::filter_antidiffusive_fluxes(
  */
 template <int dim>
 bool CharacteristicFCTFilter<dim>::check_bounds(
-  const Vector<double> & new_solution) const
+  const Vector<double> & new_solution)
 {
   // create reference
   Vector<double> & solution_characteristic = old_solution_characteristic;
 
-  // machine precision for floating point comparisons
-  const double machine_tolerance = 1.0e-15;
-
-  // now set new precision
-  std::cout.precision(15);
-
-  // check that each dof value is bounded by its neighbors
-  bool bounds_satisfied = true;
-
   // transform solution to characteristic variables
   transform_vector(new_solution, new_solution, solution_characteristic);
 
-  for (unsigned int i = 0; i < this->n_dofs; ++i)
-  {
-    // TODO: need to check if node is a Dirichlet node
-    /*
-        // check bounds if dof does not correspond to a Dirichlet node
-        if (std::find(dirichlet_nodes.begin(), dirichlet_nodes.end(), i) ==
-            dirichlet_nodes.end())
-        {
-    */
-    double value_i = solution_characteristic(i);
-
-    // check lower bound
-    if (value_i < solution_bounds.lower(i) - machine_tolerance)
-    {
-      bounds_satisfied = false;
-
-      std::cout << "\x1b[33m"
-                << "FCT bounds violated by dof " << i << ": " << value_i << " < "
-                << solution_bounds.lower(i) << "\x1b[0m" << std::endl;
-    }
-    // check upper bound
-    if (value_i > solution_bounds.upper(i) + machine_tolerance)
-    {
-      bounds_satisfied = false;
-
-      std::cout << "\x1b[33m"
-                << "FCT bounds violated by dof " << i << ": " << value_i << " > "
-                << solution_bounds.upper(i) << "\x1b[0m" << std::endl;
-    }
-    /*
-        }
-    */
-  }
-
-  // restore default precision and format
-  std::cout.unsetf(std::ios_base::floatfield);
+  // check bounds
+  const bool bounds_satisfied =
+    this->solution_bounds.check_bounds(solution_characteristic);
 
   return bounds_satisfied;
 }

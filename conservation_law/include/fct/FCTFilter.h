@@ -30,11 +30,11 @@ public:
             const DoFHandler<dim> & dof_handler,
             const FESystem<dim> & fe);
 
-  virtual bool check_bounds(const Vector<double> & new_solution) const;
+  virtual bool check_bounds(const Vector<double> & new_solution);
 
-  Vector<double> get_lower_solution_bound() const;
+  virtual Vector<double> get_lower_solution_bound() const;
 
-  Vector<double> get_upper_solution_bound() const;
+  virtual Vector<double> get_upper_solution_bound() const;
 
 protected:
   void compute_min_and_max_of_dof_vector(const Vector<double> & dof_vector,

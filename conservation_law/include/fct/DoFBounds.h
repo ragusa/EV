@@ -25,6 +25,8 @@ public:
 
   DoFBounds(const DoFHandler<dim> & dof_handler, const FESystem<dim> & fe);
 
+  bool check_bounds(const Vector<double> & dof_vector) const;
+
   void compute_min_max_dof_vector(const Vector<double> & dof_vector,
                                   Vector<double> & min_dof_vector,
                                   Vector<double> & max_dof_vector) const;

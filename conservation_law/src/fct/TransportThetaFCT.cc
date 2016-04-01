@@ -55,7 +55,7 @@ std::shared_ptr<ThetaFCTFilter<dim>> TransportThetaFCT<dim>::create_filter(
                                                       *this->lumped_mass_matrix,
                                                       this->theta);
   else
-    throw ExcNotImplemented();
+    AssertThrow(false, ExcNotImplemented());
 
   // return pointer to new filter
   return filter;

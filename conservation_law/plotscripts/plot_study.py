@@ -16,7 +16,7 @@ output_dir = "./output/"
 
 # set up plot figure
 plt.figure() # create new figure
-plt.rc('text', usetex=True)          # use TeX to generate text
+#plt.rc('text', usetex=True)          # use TeX to generate text
 plt.rc('font', family='sans-serif')  # use sans-serif font family
 plt.xlabel('$x$')
 plt.ylabel('$u(x)$')

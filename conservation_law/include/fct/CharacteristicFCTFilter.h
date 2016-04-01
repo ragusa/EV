@@ -35,7 +35,7 @@ public:
     SparseMatrix<double> & limiter_matrix,
     SparseMatrix<double> & antidiffusion_matrix) override;
 
-  virtual bool check_bounds(const Vector<double> & new_solution) const override;
+  virtual bool check_bounds(const Vector<double> & new_solution) override;
 
 protected:
   virtual void compute_solution_bounds(const Vector<double> & old_solution,

@@ -8,7 +8,6 @@
 #   void_to_absorber_1d
 #   void_to_absorber_1d_ss
 #   sourcevoid_to_absorber
-#   sourcevoid_to_absorber_ss
 #   crooked_pipe
 #   obstruction
 #   three_region
@@ -18,7 +17,7 @@
 #   mms_xt       (TR:x*t                SS:x        )
 #   mms_t        (TR:t                  SS:1        )
 subsection problem
-   set problem name = sourcevoid_to_absorber_ss
+   set problem name = void
 end
 
 subsection scheme
@@ -49,7 +48,7 @@ subsection time
 end
 
 subsection temporal discretization
-   set temporal discretization = ss    # ss|ssprk|theta
+   set temporal discretization = ssprk # ss|ssprk|theta
    set ssprk discretization    = FE    # FE|SSP2|SSP3
    set theta discretization    = BE    # FE|CN|BE
 end
@@ -65,9 +64,9 @@ subsection artificial viscosity
 end
 
 subsection fct
-   set filter sequence string        = dmp_analytic # dmp|dmp_analytic|analytic
+   set filter sequence string        = dmp     # dmp|dmp_analytic
    set limiter option                = zalesak # ones|zeroes|zalesak
-   set use multipass limiting        = false
+   set use multipass limiting        = true
    set multipass limiting percent tolerance = 0.01
    set enforce antidiffusion bounds signs = true
    set fct synchronization type      = none    # none|min|compound
@@ -109,7 +108,11 @@ subsection output
    set output viscosity   = false
    set output viscosity transient      = false
    set exact solution refinement level = 7
-   set save convergence results        = false
+   set save convergence results        = true
    set print final solution            = false
+   set output directory = studies/multipass_limiting/output
+   set use problem name output subdirectory = false
+   set append scheme to output filename = false
+   set append time discretization to output filename = false
 end
 

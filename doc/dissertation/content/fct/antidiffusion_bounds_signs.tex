@@ -81,7 +81,7 @@ For example, for steady-state, this corresponds to the following conditions:
 \end{equation}
 \end{subequations}
 These conditions simply may be enforced by the following operation:
-\begin{subequations}
+\begin{subequations}\label{eq:solution_bounds_operation}
 \begin{equation}
   \solutionbound_i^-
     \gets \min(\solutionbound_i^-,
@@ -98,7 +98,7 @@ These conditions simply may be enforced by the following operation:
 Similarly, an even simpler approach to enforcing the property given by Equation
 \eqref{eq:antidiffusion_bounds_properties}
 is to directly impose the properties:
-\begin{subequations}
+\begin{subequations}\label{eq:antidiffusion_bounds_operation}
 \begin{equation}
   \antidiffusionbound_i^-
     \gets \min(\antidiffusionbound_i^-, 0)
@@ -110,21 +110,19 @@ is to directly impose the properties:
   \eqp
 \end{equation}
 \end{subequations}
-Thus when either of the conditions of Equation
-\eqref{eq:antidiffusion_bounds_properties}
-are violated, then by this operation, the respective solution bound is forced
-to be the low order solution:
+This operation gives tighter bounds than the operation of Equation
+\eqref{eq:solution_bounds_operation}; specifically, Equation
+\eqref{eq:antidiffusion_bounds_operation} is equivalent to performing
+the following operation on the solution bounds:
 \begin{subequations}
 \begin{equation}
-  \antidiffusionbound_i^- = 0 \quad \Rightarrow \quad
   \solutionbound_i^-
-    \gets \solutionletter_i^{L}
+    \gets \min(\solutionbound_i^-, \solutionletter_i^{L})
   \eqc
 \end{equation}
 \begin{equation}
-  \antidiffusionbound_i^+ = 0 \quad \Rightarrow \quad
   \solutionbound_i^+
-    \gets \solutionletter_i^{L}
+    \gets \max(\solutionbound_i^+, \solutionletter_i^{L})
   \eqc
 \end{equation}
 \end{subequations}
