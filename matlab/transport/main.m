@@ -12,7 +12,7 @@ opts.impose_DirichletBC_strongly = true; % impose Dirichlet BC strongly?
 %--------------------------------------------------------------------------
 compute_low_order  = true; % compute and plot low-order solution?
 compute_high_order = true; % compute and plot high-order solution?
-compute_FCT        = false; % compute and plot FCT solution?
+compute_FCT        = true; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
 %                   2 = graph-theoretic low-order scheme
@@ -22,7 +22,7 @@ opts.low_order_scheme  = 2;
 %                    2 = Entropy viscosity
 %                    3 = Alternate Entropy viscosity 1
 %                    4 = Alternate Entropy viscosity 2 (should be same as 1)
-opts.high_order_scheme = 3;
+opts.high_order_scheme = 2;
 
 %--------------------------------------------------------------------------
 % entropy viscosity options
@@ -59,7 +59,7 @@ opts.ss_tol = 1.0e-6;  % steady-state tolerance
 %             2 = widen low-order DMP to analytic
 %             3 = analytic
 %             4 = analytic upwind
-fct_opts.DMP_option = 3;
+fct_opts.DMP_option = 4;
 
 % limiter option: 0 = All 0 (no correction; low-order)
 %                 1 = All 1 (full correction; high-order)
@@ -67,10 +67,13 @@ fct_opts.DMP_option = 3;
 %                 3 = Josh limiter
 fct_opts.limiting_option = 2;
 
+% option to enforce Q+ >= 0, Q- <= 0
+fct_opts.enforce_antidiffusion_bounds_signs = true;
+
 % FCT initialization option: 1 = zeros
 %                            2 = low-order solution
 %                            3 = high-order solution
-fct_opts.FCT_initialization = 1;
+fct_opts.FCT_initialization = 2;
 
 % prelimit correction fluxes: 0 = do not prelimit, 1 = prelimit
 fct_opts.prelimit = 0;
@@ -87,7 +90,7 @@ fct_opts.dirichlet_limiting_coefficient = 1.0;
 %            4: void
 %            5: MMS: TR: u = t*sin(pi*x)  SS: u = sin(pi*x)
 %            6: MMS: TR: u = x*t          SS: u = x
-problemID = 1;
+problemID = 3;
 
 % IC_option: 0: zero
 %            1: exponential pulse
@@ -114,12 +117,16 @@ nonlin_opts.relax = 1.0; % relaxation parameter for iteration
 %--------------------------------------------------------------------------
 % plot options
 %--------------------------------------------------------------------------
-out_opts.plot_iterations  = false; % plot iterations?
-out_opts.plot_viscosity   = true; % plot viscosities?
 out_opts.plot_low_order_transient  = false; % plot low-order transient?
 out_opts.plot_high_order_transient = false; % plot high-order transient?
 out_opts.plot_FCT_transient        = false; % plot FCT transient?
-out_opts.plot_FCT_iteration        = true; % plot FCT iteration?
+
+out_opts.plot_EV_iteration         = false; % plot EV iteration?
+out_opts.plot_FCT_iteration        = false; % plot FCT iteration?
+
+out_opts.plot_viscosity            = false; % plot viscosities?
+
+out_opts.pause_type                = 'wait'; % pause type: 'wait' or 'time'
 out_opts.pausetime                 = 0.01; % time to pause for transient plots
 out_opts.legend_location           = 'NorthEast'; % location of plot legend
 %--------------------------------------------------------------------------
@@ -320,10 +327,17 @@ assert(~phys.source_is_time_dependent,...
 
 % compute min and max sigma and source in the support of i for time 0
 t = 0;
-[sigma_min, sigma_max]  = compute_min_max_per_dof(...
-    phys.sigma, t,dof_handler.n_dof,mesh,quadrature.zq);
-[source_min,source_max] = compute_min_max_per_dof(...
-    phys.source,t,dof_handler.n_dof,mesh,quadrature.zq);
+if (fct_opts.DMP_option == 4) % upwind maximum principle
+    [sigma_min, sigma_max]  = compute_min_max_per_dof_upwind(...
+        phys.sigma, t,dof_handler.n_dof,mesh,quadrature.zq);
+    [source_min,source_max] = compute_min_max_per_dof_upwind(...
+        phys.source,t,dof_handler.n_dof,mesh,quadrature.zq);
+else
+    [sigma_min, sigma_max]  = compute_min_max_per_dof(...
+        phys.sigma, t,dof_handler.n_dof,mesh,quadrature.zq);
+    [source_min,source_max] = compute_min_max_per_dof(...
+        phys.source,t,dof_handler.n_dof,mesh,quadrature.zq);
+end
 
 %% Assembly
 
@@ -665,6 +679,11 @@ if (compute_FCT)
                 sigma_min,sigma_max,source_min,source_max,phys,...
                 dof_handler.n_dof,fct_opts);
             
+            % plot
+            if (out_opts.plot_FCT_iteration)
+                plot_FCT(mesh.x,uH,uFCT,Wminus,Wplus,out_opts,true,true)
+            end
+            
             % compute correction rhs and modify for Dirichlet BC
             system_rhs = b + flim;
             if (opts.modify_for_strong_DirichletBC)
@@ -684,21 +703,6 @@ if (compute_FCT)
             % solve modified system
             du = AL_mod \ ss_res;
             uFCT = uFCT + du;
-
-            % plot
-            if (out_opts.plot_FCT_iteration)
-                figure(1);
-                clf;
-                hold on;
-                plot(mesh.x,uH,'rx');
-                plot(mesh.x,uL,'b+');
-                plot(mesh.x,uFCT,'g');
-                plot(mesh.x,Wminus,'k.');
-                plot(mesh.x,Wplus,'ko');
-                legend('High','Low','FCT(l+1)','W-(l)','W+(l)',...
-                    'Location',out_opts.legend_location);
-                w = waitforbuttonpress;
-            end
         end
         
         if (~converged)
@@ -792,8 +796,9 @@ if (compute_FCT)
                         quadrature,dof_handler,ev,opts);
                     uFCT_stage = FCT_step_explicit(u_old_stage,uH_stage,dt,...
                         ML,MC,AL,DH,DL,b,phys.inc,phys.speed,...
-                        sigma_min,sigma_max,source_min,source_max,fct_opts,
-                        phys.periodic_BC,opts.modify_for_strong_DirichletBC);
+                        sigma_min,sigma_max,source_min,source_max,...
+                        fct_opts,phys.periodic_BC,...
+                        opts.modify_for_strong_DirichletBC);
                     
                     % final combination
                     uFCT = 1/3*u_old + 2/3*uFCT_stage;
@@ -865,7 +870,7 @@ if (compute_FCT)
 
                         % plot
                         if (out_opts.plot_FCT_iteration)
-                            figure(1);
+                            figure;
                             clf;
                             hold on;
                             plot(mesh.x,uH,'rx');
@@ -875,7 +880,7 @@ if (compute_FCT)
                             plot(mesh.x,Wplus,'ko');
                             legend('High','Low','FCT(l+1)','W-(l)','W+(l)',...
                                 'Location',out_opts.legend_location);
-                            w = waitforbuttonpress;
+                            pause(out_opts.pausetime);
                         end
                     end
                     
@@ -943,20 +948,9 @@ end
 % plot FCT solution
 if (compute_FCT)
     plot(mesh.x,uFCT,'g-x');
-    switch fct_opts.limiting_option
-        case 0 % no correction
-            limiter_string = 'no correction';
-        case 1 % full correction (no limiting)
-            limiter_string = 'not limited';
-        case 2 % Zalesak limiter
-            limiter_string = 'Zalesak limiter';
-        case 3 % Josh limiter
-            limiter_string = 'Josh limiter';
-        otherwise
-            error('Invalid limiting option');
-    end
-    FCT_legend_string = ['FCT, ',limiter_string];
-    legend_entries = char(legend_entries,FCT_legend_string);
+    plot(mesh.x,Wminus,'b--');
+    plot(mesh.x,Wplus,'r--');
+    legend_entries = char(legend_entries,'FCT','W-','W+');
 end
 
 % legend

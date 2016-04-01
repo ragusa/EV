@@ -1,14 +1,14 @@
 function [uH,AH,DH] = compute_high_order_solution_theta(u_old,dt,MC,...
     A,AH,b_old,b_new,viscL,quadrature,mesh,dof_handler,phys,ev,numerics_opts,...
-    nonlin_solver_opts)
+    nonlin_opts)
 
 % extract options
 modify_for_strong_DirichletBC = numerics_opts.modify_for_strong_DirichletBC;
 high_order_scheme             = numerics_opts.high_order_scheme;
 theta                         = numerics_opts.theta;
-tol                  = nonlin_solver_opts.tol;
-max_iter             = nonlin_solver_opts.max_iter;
-relaxation_parameter = nonlin_solver_opts.relaxation_parameter;
+tol                  = nonlin_opts.nonlin_tol;
+max_iter             = nonlin_opts.max_iter;
+relaxation_parameter = nonlin_opts.relax;
 
 % initialize solution iterate
 uH = u_old;

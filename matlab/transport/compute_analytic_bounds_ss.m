@@ -1,5 +1,5 @@
 function [Wplus,Wminus] = compute_analytic_bounds_ss(u,sigma_min,sigma_max,...
-   q_min,q_max,s,inc)
+   q_min,q_max,s,inc,upwind_only)
 
 % size of system
 n = length(u);
@@ -12,8 +12,14 @@ Wplus(1)  = inc;
 Wminus(1) = inc;
 for i = 2:n
     % get set of neighbor indices
-    i1 = max(i-1,1);
-    i2 = min(i+1,n);
+    if (upwind_only)
+        % upwind range, assuming flow is in +x direction
+        i1 = max(i-1,1);
+        i2 = min(i,n);
+    else
+        i1 = max(i-1,1);
+        i2 = min(i+1,n);
+    end
     % find min and max in support of i
     u_max = max(u(i1:i2));
     u_min = min(u(i1:i2));

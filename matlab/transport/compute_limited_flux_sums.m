@@ -9,18 +9,24 @@ inc = phys.inc;
 periodic_BC = phys.periodic_BC;
 limiting_option = fct_opts.limiting_option;
 DMP_option = fct_opts.DMP_option;
+enforce_antidiffusion_bounds_signs = ...
+    fct_opts.enforce_antidiffusion_bounds_signs;
 dirichlet_limiting_coefficient = fct_opts.dirichlet_limiting_coefficient;
 
 % compute solution bounds
 if (DMP_option == 1)
     [Wplus,Wminus] = compute_DMP(u_old,uFCT,dt,ML,AL,b,theta,inc,periodic_BC);
-elseif (DMP_option == 2) % widen DMP by analytic
+elseif (DMP_option == 2)
     [Wplus,Wminus] = compute_DMP(u_old,uFCT,dt,ML,AL,b,theta,inc,periodic_BC);
     [WplusCMP,WminusCMP] = compute_CMP(...
         u_old,sigma_min,sigma_max,source_min,source_max,speed*dt,...
         inc,periodic_BC);
     Wplus = max(Wplus,WplusCMP);
     Wminus = min(Wminus,WminusCMP);
+elseif (DMP_option == 3)
+    [Wplus,Wminus] = compute_CMP(...
+        u_old,sigma_min,sigma_max,source_min,source_max,speed*dt,...
+        inc,periodic_BC);
 else
     error('Invalid FCT solution bounds option');
 end
@@ -28,6 +34,12 @@ end
 % comput limited flux bounds
 [Qplus,Qminus] = compute_Q(...
     u_old,uFCT,ML,Wplus,Wminus,AL,b,dt,theta);
+
+% enforce signs of antidiffusion bounds if requested
+if (enforce_antidiffusion_bounds_signs)
+    Qplus  = max(Qplus, 0);
+    Qminus = min(Qminus, 0);
+end
 
 % compute limited fluxes
 switch limiting_option
