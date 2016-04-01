@@ -53,13 +53,13 @@ std::shared_ptr<SteadyStateFCTFilter<dim>> TransportSteadyStateFCT<
       *cell_quadrature,
       this->limiter);
   else if (filter_string == "analytic")
-    filter = std::make_shared<TransportAnalyticSSFCTFilter<dim>>(
-      *this->run_parameters,
-      *problem_parameters,
-      *this->dof_handler,
-      *this->fe,
-      *cell_quadrature,
-      this->limiter);
+    filter =
+      std::make_shared<TransportAnalyticSSFCTFilter<dim>>(*this->run_parameters,
+                                                          *problem_parameters,
+                                                          *this->dof_handler,
+                                                          *this->fe,
+                                                          *cell_quadrature,
+                                                          this->limiter);
   else
     AssertThrow(false, ExcNotImplemented());
 

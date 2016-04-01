@@ -52,8 +52,11 @@ void TransportAnalyticSSFCTFilter<dim>::filter_antidiffusive_fluxes(
   compute_solution_bounds(solution, low_order_ss_matrix, ss_rhs);
 
   // compute antidiffusion bounds Q- and Q+
-  this->compute_antidiffusion_bounds(
-    analytic_bounds, solution, low_order_ss_matrix, ss_rhs, cumulative_antidiffusion);
+  this->compute_antidiffusion_bounds(analytic_bounds,
+                                     solution,
+                                     low_order_ss_matrix,
+                                     ss_rhs,
+                                     cumulative_antidiffusion);
 
   // limit antidiffusion fluxes
   this->limiter->compute_limiter_matrix(
@@ -69,7 +72,8 @@ void TransportAnalyticSSFCTFilter<dim>::filter_antidiffusive_fluxes(
  * \return flag that FCT bounds were satisfied for all filters
  */
 template <int dim>
-bool TransportAnalyticSSFCTFilter<dim>::check_bounds(const Vector<double> & new_solution)
+bool TransportAnalyticSSFCTFilter<dim>::check_bounds(
+  const Vector<double> & new_solution)
 {
   return analytic_bounds.check_bounds(new_solution);
 }

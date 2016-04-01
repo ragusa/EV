@@ -294,6 +294,27 @@ void TransportProblemParameters<dim>::process_derived_parameters(
   // exact solution
   if (this->has_exact_solution)
   {
+    if (this->exact_solution_type == "two_region")
+    {
+      // create necessary vectors
+      std::vector<double> interface_positions = {this->constants["x1"]};
+      std::vector<double> region_sigmas = {this->constants["sigma1"],
+                                           this->constants["sigma2"]};
+      std::vector<double> region_sources = {this->constants["source1"],
+                                            this->constants["source2"]};
+
+      // create multi-region exact solution object
+      std::shared_ptr<MultiRegionExactSolution<dim>>
+        exact_solution_function_derived =
+          std::make_shared<MultiRegionExactSolution<dim>>(
+            interface_positions,
+            region_sources,
+            region_sigmas,
+            transport_direction,
+            this->constants["incoming"]);
+      // point base class shared pointer to derived class function object
+      this->exact_solution_function = exact_solution_function_derived;
+    }
     if (this->exact_solution_type == "three_region")
     {
       // create necessary vectors

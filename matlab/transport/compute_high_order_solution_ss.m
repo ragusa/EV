@@ -1,7 +1,14 @@
 function [uH,DH,viscE] = compute_high_order_solution_ss(A,b,viscL,mesh,...
-    phys,quadrature,ev,dof_handler,high_order_scheme,max_iter,...
-    nonlin_tol,relaxation_parameter,modify_for_strong_DirichletBC,...
-    plot_iterations,plot_viscosity)
+    phys,quadrature,ev,dof_handler,opts,nonlin_opts,out_opts)
+
+% unpack options
+high_order_scheme = opts.high_order_scheme;
+modify_for_strong_DirichletBC = opts.modify_for_strong_DirichletBC;
+max_iter = nonlin_opts.max_iter;
+max_iter = nonlin_opts.nonlin_tol;
+relaxation_parameter = nonlin_opts.relax;
+plot_iterations = out_opts.plot_iterations;
+plot_viscosity  = out_opts.plot_viscosity;
 
 % initialize solution iterate
 uH = zeros(dof_handler.n_dof,1);

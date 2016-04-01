@@ -1,11 +1,12 @@
 close all; clear; clc; 
+
 %% User Options
 %--------------------------------------------------------------------------
 % finite element options
 %--------------------------------------------------------------------------
 mesh.n_cell = 32;                    % number of elements
-impose_DirichletBC_strongly = true; % impose Dirichlet BC strongly?
 quadrature.nq = 3;                  % number of quadrature points per cell
+opts.impose_DirichletBC_strongly = true; % impose Dirichlet BC strongly?
 %--------------------------------------------------------------------------
 % spatial method options
 %--------------------------------------------------------------------------
@@ -15,15 +16,17 @@ compute_FCT        = false; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
 %                   2 = graph-theoretic low-order scheme
-low_order_scheme  = 2;
+opts.low_order_scheme  = 2;
 
 % high_order_scheme: 1 = Galerkin
 %                    2 = Entropy viscosity
-%                    3 = Alternate Entropy viscosity
-%                    4 = Alternate Entropy viscosity 2
-high_order_scheme = 3;
+%                    3 = Alternate Entropy viscosity 1
+%                    4 = Alternate Entropy viscosity 2 (should be same as 1)
+opts.high_order_scheme = 3;
 
-% entropy viscosity options:
+%--------------------------------------------------------------------------
+% entropy viscosity options
+%--------------------------------------------------------------------------
 ev.cE = 0.01; % coefficient for entropy residual in entropy viscosity
 ev.cJ = ev.cE*0; % coefficient for jumps in entropy viscosity
 ev.entropy       = @(u) 0.5*u.^2; % entropy function
@@ -37,42 +40,43 @@ ev.smoothing_weight = 1.0; % weight for center value in smoothing
 %                  1 = SSPRK(1,1) (Explicit Euler)
 %                  2 = SSPRK(3,3) (Shu-Osher)
 %                  3 = theta method
-temporal_scheme = 0; % temporal discretization scheme
+opts.temporal_scheme = 0; % temporal discretization scheme
 
 % theta parameter to use if using a theta method: 0.0 = FE
 %                                                 0.5 = CN
 %                                                 1.0 = BE
-theta = 1.0;     
+opts.theta = 1.0;     
        
-use_constant_dt = false; % option to use constant dt instead of CFL
-constant_dt = 0.001;    % time step size to use if using constant size
-CFL = 50.0;       % CFL number
-ss_tol = 1.0e-6; % steady-state tolerance
-t_end = 0.25;     % max time to run
+opts.use_constant_dt = false; % option to use constant dt instead of CFL
+opts.constant_dt = 0.001;    % time step size to use if using constant size
+opts.CFL = 50.0;       % CFL number
+opts.t_end = 0.25;     % max time to run
+opts.ss_tol = 1.0e-6;  % steady-state tolerance
 %--------------------------------------------------------------------------
 % FCT options
 %--------------------------------------------------------------------------
 % DMP option: 1 = low-order DMP
 %             2 = widen low-order DMP to analytic
-%             3 = shrinken low-order DMP to analytic
-DMP_option = 3;
+%             3 = analytic
+%             4 = analytic upwind
+fct_opts.DMP_option = 3;
 
 % limiter option: 0 = All 0 (no correction; low-order)
 %                 1 = All 1 (full correction; high-order)
 %                 2 = Zalesak limiter
 %                 3 = Josh limiter
-limiting_option = 2;
+fct_opts.limiting_option = 2;
 
 % FCT initialization option: 1 = zeros
 %                            2 = low-order solution
 %                            3 = high-order solution
-FCT_initialization = 1;
+fct_opts.FCT_initialization = 1;
 
 % prelimit correction fluxes: 0 = do not prelimit, 1 = prelimit
-prelimit = 0;
+fct_opts.prelimit = 0;
 
-dirichlet_limiting_coefficient = 1.0; % limiting coefficient bounds for
-                                      % Dirichlet nodes
+% limiting coefficient bounds for Dirichlet nodes
+fct_opts.dirichlet_limiting_coefficient = 1.0; 
 %--------------------------------------------------------------------------
 % physics options
 %--------------------------------------------------------------------------
@@ -90,34 +94,34 @@ problemID = 1;
 %            2: exponential and square pulse
 IC_option = 0;
 
-impose_BC_on_IC = 1; % option to impose Dirichlet BC on IC
-
 mesh.x_min = 0.0;         % left end of domain
 mesh.x_max = 1.0;         % right end of domain
+
 phys.periodic_BC = false; % option for periodic BC; otherwise Dirichlet
 phys.mu     = 1;          % cos(angle)
 phys.sigma  = @(x,t) 0;   % cross section function
 phys.source = @(x,t) 0;   % source function
 phys.inc    = 1;          % incoming flux
 phys.speed  = 1;          % advection speed
-source_is_time_dependent = false; % is source time-dependent?
+phys.source_is_time_dependent = false; % is source time-dependent?
+phys.impose_BC_on_IC = true; % option to impose Dirichlet BC on IC
 %--------------------------------------------------------------------------
 % nonlinear solver options
 %--------------------------------------------------------------------------
-max_iter = 1000;           % maximum number of nonlinear solver iterations
-nonlin_tol = 1e-10;       % nonlinear solver tolerance for discrete L2 norm
-relaxation_parameter = 1.0; % relaxation parameter for iteration
+nonlin_opts.max_iter = 1000;    % maximum number of nonlinear solver iterations
+nonlin_opts.nonlin_tol = 1e-10; % nonlinear solver tolerance for discrete L2 norm
+nonlin_opts.relax = 1.0; % relaxation parameter for iteration
 %--------------------------------------------------------------------------
 % plot options
 %--------------------------------------------------------------------------
-plot_iterations           = false; % plot iterations?
-plot_viscosity            = true; % plot viscosities?
-plot_low_order_transient  = false; % plot low-order transient?
-plot_high_order_transient = false; % plot high-order transient?
-plot_FCT_transient        = false; % plot FCT transient?
-plot_FCT_iteration        = true; % plot FCT iteration?
-pausetime = 0.01;                   % time to pause for transient plots
-legend_location           = 'NorthEast'; % location of plot legend
+out_opts.plot_iterations  = false; % plot iterations?
+out_opts.plot_viscosity   = true; % plot viscosities?
+out_opts.plot_low_order_transient  = false; % plot low-order transient?
+out_opts.plot_high_order_transient = false; % plot high-order transient?
+out_opts.plot_FCT_transient        = false; % plot FCT transient?
+out_opts.plot_FCT_iteration        = true; % plot FCT iteration?
+out_opts.pausetime                 = 0.01; % time to pause for transient plots
+out_opts.legend_location           = 'NorthEast'; % location of plot legend
 %--------------------------------------------------------------------------
 % output options
 %--------------------------------------------------------------------------
@@ -128,6 +132,9 @@ save_FCT_solution        = false; % option to save FCT solution
 %-------------------------------------------------------------------------
 
 %% Define Problem
+
+% set flag for steady state
+opts.is_steady_state = opts.temporal_scheme == 0;
 
 % set parameters if a problem ID was chosen
 switch problemID
@@ -145,9 +152,9 @@ switch problemID
         phys.speed  = 1;
         
         IC_option = 0;
-        source_is_time_dependent = false;
+        phys.source_is_time_dependent = false;
         exact_solution_known = true;
-        if temporal_scheme == 0
+        if opts.is_steady_state
           exact = @(x,t) exp(-sigma_value*x);
         else
           exact = @(x,t) (t>=x).*exp(-sigma_value*x);
@@ -164,9 +171,9 @@ switch problemID
         phys.speed  = 1;
         
         IC_option = 0;
-        source_is_time_dependent = false;
+        phys.source_is_time_dependent = false;
         exact_solution_known = true;
-        if temporal_scheme == 0
+        if opts.is_steady_state
           exact = @(x,t) (x<0.5) + (x>=0.5).*(exp(-sigma_value*(x-0.5)));
         else
           exact = @(x,t) (t>=x).*((x<0.5) + (x>=0.5).*(exp(-sigma_value*(x-0.5))));
@@ -184,9 +191,9 @@ switch problemID
         phys.speed  = 1;
         
         IC_option = 0;
-        source_is_time_dependent = false;
+        phys.source_is_time_dependent = false;
         exact_solution_known = true;
-        if temporal_scheme == 0
+        if opts.is_steady_state
             exact = @(x,t) x.*(x<0.5) + 0.5*exp(-10*(x-0.5)).*(x>=0.5);
         else
             s0 = @(x,t) max(min(x,0.5) - max(x-t,0),0);
@@ -204,7 +211,7 @@ switch problemID
         phys.speed  = 1;
         
         IC_option = 0;
-        source_is_time_dependent = false;
+        phys.source_is_time_dependent = false;
         exact_solution_known = true;
         exact = @(x,t) t >= x;
     case 5 % MMS: TR: u = t*sin(pi*x), SS: u = sin(pi*x)
@@ -217,12 +224,12 @@ switch problemID
         phys.speed  = 1;
         IC_option = 0;
         exact_solution_known = true;
-        if temporal_scheme == 0 % steady-state
-          source_is_time_dependent = false;
+        if opts.is_steady_state % steady-state
+          phys.source_is_time_dependent = false;
           phys.source = @(x,t) pi*cos(pi*x)+sin(pi*x);
           exact = @(x,t) sin(pi*x);
         else
-          source_is_time_dependent = true;
+          phys.source_is_time_dependent = true;
           phys.source = @(x,t) sin(pi*x)+pi*t*cos(pi*x)+t*sin(pi*x);
           exact = @(x,t) t*sin(pi*x);
         end
@@ -236,12 +243,12 @@ switch problemID
         phys.speed  = 1;
         IC_option = 0;
         exact_solution_known = true;
-        if temporal_scheme == 0 % steady-state
-          source_is_time_dependent = false;
+        if opts.is_steady_state % steady-state
+          phys.source_is_time_dependent = false;
           phys.source = @(x,t) 1 + x;
           exact = @(x,t) x;
         else
-          source_is_time_dependent = true;
+          phys.source_is_time_dependent = true;
           phys.source = @(x,t) x + t + x*t;
           exact = @(x,t) x*t;
         end
@@ -250,7 +257,7 @@ switch problemID
 end
 
 % set initial conditions function and compute initial solution
-if ~(temporal_scheme == 0)
+if ~(opts.is_steady_state)
     switch IC_option
         case 0 % zero
             phys.IC = @(x) zeros(length(x),1);
@@ -266,29 +273,20 @@ if ~(temporal_scheme == 0)
 end
 
 % assert that periodic BC are not specified for a steady-state problem
-assert(~(temporal_scheme == 0 & phys.periodic_BC),...
+assert(~(opts.is_steady_state & phys.periodic_BC),...
     'Cannot specify periodic BC for a steady-state problem.');
 
 % assert that time-dependent source is not used for a steady-state problem
-assert(~(temporal_scheme == 0 & source_is_time_dependent),...
+assert(~(opts.is_steady_state & phys.source_is_time_dependent),...
     'Cannot have a time-dependent source in a steady-state problem.');
 
 %% Setup
 
 % determine if linear system needs to be modified for Dirichlet BC
-modify_for_weak_DirichletBC   = ...
-    ~phys.periodic_BC && ~impose_DirichletBC_strongly;
-modify_for_strong_DirichletBC = ...
-    ~phys.periodic_BC &&  impose_DirichletBC_strongly;
-
-% group options
-numerics_opts.modify_for_weak_DirichletBC   = modify_for_weak_DirichletBC;
-numerics_opts.modify_for_strong_DirichletBC = modify_for_strong_DirichletBC;
-numerics_opts.high_order_scheme             = high_order_scheme;
-numerics_opts.theta                     = theta;
-nonlin_solver_opts.tol                  = nonlin_tol;
-nonlin_solver_opts.max_iter             = max_iter;
-nonlin_solver_opts.relaxation_parameter = relaxation_parameter;
+opts.modify_for_weak_DirichletBC   = ...
+    ~phys.periodic_BC && ~opts.impose_DirichletBC_strongly;
+opts.modify_for_strong_DirichletBC = ...
+    ~phys.periodic_BC &&  opts.impose_DirichletBC_strongly;
 
 % number of dofs
 if phys.periodic_BC
@@ -298,12 +296,15 @@ else
 end
 
 % mesh
-mesh.x = linspace(mesh.x_min,mesh.x_max,mesh.n_cell+1)'; % positions of dofs/cell vertices
-mesh.dx = diff(mesh.x);                     % element sizes
+% positions of dofs/cell vertices
+mesh.x = linspace(mesh.x_min,mesh.x_max,mesh.n_cell+1)'; 
 if phys.periodic_BC
     mesh.x(end)=[];
 end
+% cell center positions
 mesh.x_center = 0.5*(mesh.x(1:end-1) + mesh.x(2:end));
+% element sizes
+mesh.dx = diff(mesh.x);                     
 
 % get quadrature points and weights and evaluate basis functions
 [quadrature.zq,quadrature.wq]  = get_GL_quadrature(quadrature.nq);
@@ -314,7 +315,7 @@ quadrature.Jac = 0.5*mesh.dx; % Jacobians of reference cell transformations
 
 % assert that a time-dependent source is not used; hasn't yet been
 % implemented
-assert(~source_is_time_dependent,...
+assert(~phys.source_is_time_dependent,...
     'Time-dependent source not yet implemented for DMP.');
 
 % compute min and max sigma and source in the support of i for time 0
@@ -341,20 +342,19 @@ dof_handler.n_cell = mesh.n_cell;
 % assemble mass matrices, inviscid and low-order steady-state matrices,
 % low-order viscosity and corresponding artificial diffusion matrix
 [MC,ML,A,AL,DL,viscL] = build_matrices(...
-    quadrature,mesh,dof_handler,phys,...
-    low_order_scheme,modify_for_weak_DirichletBC);
+    quadrature,mesh,dof_handler,phys,opts);
 
 % assemble steady-state rhs at time 0
 t = 0;
 b = assemble_ss_rhs(t,quadrature,mesh,dof_handler,phys,...
-    modify_for_weak_DirichletBC);
+    opts.modify_for_weak_DirichletBC);
 
 % check that speed is nonzero; otherwise, infinite dt will be computed
 assert(phys.speed ~= 0,'Speed cannot be zero.');
 
 % choose nominal time step size (last time step may be shortened)
-if (use_constant_dt) % use constant dt
-    dt_nominal = constant_dt;
+if (opts.use_constant_dt) % use constant dt
+    dt_nominal = opts.constant_dt;
 else % compute dt from CFL
     % compute dt using CFL condition, even for implicit, just so that time
     % steps will be equal between explicit and implicit, for comparison
@@ -362,24 +362,24 @@ else % compute dt from CFL
     for i = 1:dof_handler.n_dof
         max_speed_dx = max(max_speed_dx, abs(AL(i,i))/ML(i,i));
     end
-    dt_nominal = CFL / max_speed_dx;
+    dt_nominal = opts.CFL / max_speed_dx;
 end
 
 % determine sytem matrices
-if (temporal_scheme == 0) % steady-state
+if (opts.is_steady_state) % steady-state
     system_matrix = AL;
 else                      % transient
     system_matrix = ML;
 end
 % modify for Dirichlet BC
-if modify_for_strong_DirichletBC
+if opts.modify_for_strong_DirichletBC
     system_matrix(1,:)=0; system_matrix(1,1)=1;
 end
 
 % create modified low-order ss matrix and ss rhs
 AL_mod = AL;
 b_mod = b;
-if modify_for_strong_DirichletBC
+if opts.modify_for_strong_DirichletBC
     AL_mod(1,:)=0; AL_mod(1,1)=1;
     b_mod(1) = phys.inc;
 end
@@ -389,13 +389,13 @@ end
 if (compute_low_order)
     fprintf('\nComputing low-order solution...\n\n');
     
-    if (temporal_scheme == 0) % steady-state
+    if (opts.is_steady_state) % steady-state
         % solve steady-state problem
         uL = AL_mod \ b_mod;
     else % transient
         % compute initial conditions
         u_old = phys.IC(mesh.x);
-        if impose_BC_on_IC
+        if phys.impose_BC_on_IC
           u_old(1) = phys.inc;
         end
         b_old = b;
@@ -408,8 +408,8 @@ if (compute_low_order)
             time_step = time_step+1;
             
             % shorten time step if necessary
-            if (t+dt_nominal >= t_end)
-                dt = t_end - t;
+            if (t+dt_nominal >= opts.t_end)
+                dt = opts.t_end - t;
                 reached_end_of_transient = true;
             else
                 dt = dt_nominal;
@@ -418,72 +418,72 @@ if (compute_low_order)
             fprintf('Time step %i: t = %f->%f\n',time_step,t,t+dt);
             
             % perform step
-            switch temporal_scheme
+            switch opts.temporal_scheme
                 case 0 % steady-state
                     error('This should not be reachable');
                 case 1 % explicit Euler
                     % compute ss rhs
                     b_old = assemble_ss_rhs(t,quadrature,mesh,...
-                        dof_handler,phys,modify_for_weak_DirichletBC);
+                        dof_handler,phys,opts.modify_for_weak_DirichletBC);
                     
                     % compute solution
                     uL = compute_low_order_solution_theta(u_old,AL,...
-                        ML,b_old,dt,0,phys.inc,modify_for_strong_DirichletBC);
+                        ML,b_old,dt,0,phys.inc,opts.modify_for_strong_DirichletBC);
                 case 2 % SSP3
                     % stage 1
                     u_old_stage = u_old;
                     t_stage = t;
                     b_stage = assemble_ss_rhs(t_stage,quadrature,mesh,...
-                        dof_handler,phys,modify_for_weak_DirichletBC);
+                        dof_handler,phys,opts.modify_for_weak_DirichletBC);
                     uL_stage = compute_low_order_solution_theta(u_old_stage,AL,...
                         ML,b_stage,dt,0,phys.inc,...
-                        modify_for_strong_DirichletBC);
+                        opts.modify_for_strong_DirichletBC);
                     % stage 2
                     u_old_stage = uL_stage;
                     t_stage = t + dt;
                     b_stage = assemble_ss_rhs(t_stage,quadrature,mesh,...
-                        dof_handler,phys,modify_for_weak_DirichletBC);
+                        dof_handler,phys,opts.modify_for_weak_DirichletBC);
                     uL_stage = compute_low_order_solution_theta(u_old_stage,AL,...
                         ML,b_stage,dt,0,phys.inc,...
-                        modify_for_strong_DirichletBC);
+                        opts.modify_for_strong_DirichletBC);
                     % stage 3
                     u_old_stage = 0.75*u_old + 0.25*uL_stage;
                     t_stage = t + 0.5*dt;
                     b_stage = assemble_ss_rhs(t_stage,quadrature,mesh,...
-                        dof_handler,phys,modify_for_weak_DirichletBC);
+                        dof_handler,phys,opts.modify_for_weak_DirichletBC);
                     uL_stage = compute_low_order_solution_theta(u_old_stage,AL,...
                         ML,b_stage,dt,0,phys.inc,...
-                        modify_for_strong_DirichletBC);
+                        opts.modify_for_strong_DirichletBC);
                     % final combination
                     uL = 1/3*u_old + 2/3*uL_stage;
                 case 3 % theta
                     % compute ss rhs
                     b_new = assemble_ss_rhs(t+dt,quadrature,mesh,...
-                        dof_handler,phys,modify_for_weak_DirichletBC);
-                    b_theta = (1-theta)*b_old + theta*b_new;
+                        dof_handler,phys,opts.modify_for_weak_DirichletBC);
+                    b_theta = (1-opts.theta)*b_old + opts.theta*b_new;
                     
                     % compute solution
                     uL = compute_low_order_solution_theta(u_old,AL,...
-                        ML,b_theta,dt,theta,phys.inc,...
-                        modify_for_strong_DirichletBC);
+                        ML,b_theta,dt,opts.theta,phys.inc,...
+                        opts.modify_for_strong_DirichletBC);
                 otherwise
                     error('Invalid temporal discretization scheme');
             end
             
             % test steady-state convergence
             ss_err = norm(uL-u_old,2);
-            reached_steady_state = ss_err < ss_tol;
+            reached_steady_state = ss_err < opts.ss_tol;
             if (reached_steady_state)
                 fprintf('Transient terminated due to steady-state\n');
                 break;
             end
             
             % plot
-            if (plot_low_order_transient)
+            if (out_opts.plot_low_order_transient)
                 plot(mesh.x,uL);
-                legend('Low-order','Location',legend_location);
+                legend('Low-order','Location',out_opts.legend_location);
                 axis([mesh.x_min mesh.x_max 0 1]);
-                pause(pausetime);
+                pause(out_opts.pausetime);
             end
             
             % reset old quantities
@@ -502,15 +502,13 @@ end
 if (compute_high_order)
     fprintf('\nComputing high-order solution...\n\n');
     
-    if (temporal_scheme == 0) % steady-state
+    if (opts.is_steady_state) % steady-state
         [uH,DH,viscE] = compute_high_order_solution_ss(A,b,viscL,mesh,...
-            phys,quadrature,ev,dof_handler,high_order_scheme,max_iter,...
-            nonlin_tol,relaxation_parameter,modify_for_strong_DirichletBC,...
-            plot_iterations,plot_viscosity);
+            phys,quadrature,ev,dof_handler,opts,nonlin_opts,out_opts);
     else % transient
         % compute initial conditions
         u_old = phys.IC(mesh.x);
-        if impose_BC_on_IC
+        if phys.impose_BC_on_IC
           u_old(1) = phys.inc;
         end
         u_older = u_old;
@@ -521,7 +519,7 @@ if (compute_high_order)
         dt_old = dt_nominal;
         [DH,viscE] = compute_high_order_diffusion_matrix(u_old,...
             u_old,dt_old,viscL,mesh,phys,quadrature,ev,...
-            dof_handler,high_order_scheme);
+            dof_handler,opts.high_order_scheme);
         AH = A + DH;
         
         % start transient loop
@@ -531,8 +529,8 @@ if (compute_high_order)
             time_step = time_step+1;
             
             % shorten time step if necessary
-            if (t+dt_nominal >= t_end)
-                dt = t_end - t;
+            if (t+dt_nominal >= opts.t_end)
+                dt = opts.t_end - t;
                 reached_end_of_transient = true;
             else
                 dt = dt_nominal;
@@ -540,59 +538,55 @@ if (compute_high_order)
             end
             fprintf('Time step %i: t = %f->%f\n',time_step,t,t+dt);
             
-            switch temporal_scheme
+            switch opts.temporal_scheme
                 case 0 % steady-state
                     error('This should not be reachable');
                 case 1 % explicit Euler
                     b = assemble_ss_rhs(t,quadrature,mesh,...
-                        dof_handler,phys,modify_for_weak_DirichletBC);
+                        dof_handler,phys,opts.modify_for_weak_DirichletBC);
                     [uH,DH] = high_order_step(u_older,u_old,dt_old,dt,...
                         A,b,MC,0,viscL,mesh,phys,quadrature,dof_handler,...
-                        ev,high_order_scheme,...
-                        modify_for_strong_DirichletBC);
+                        ev,opts);
                 case 2 % SSP3
                     % stage 1
                     u_old_stage = u_old;
                     u_older_stage = u_older;
                     t_stage = t;
                     b = assemble_ss_rhs(t_stage,quadrature,mesh,...
-                        dof_handler,phys,modify_for_weak_DirichletBC);
+                        dof_handler,phys,opts.modify_for_weak_DirichletBC);
                     [uH_stage,DH] = high_order_step(u_older_stage,...
                         u_old_stage,dt_old,dt,A,b,MC,0,viscL,mesh,phys,...
-                        quadrature,dof_handler,ev,...
-                        high_order_scheme,modify_for_strong_DirichletBC);
+                        quadrature,dof_handler,ev,opts);
                     % stage 2
                     u_old_stage = uH_stage;
                     u_older_stage = u_older;
                     t_stage = t + dt;
                     b = assemble_ss_rhs(t_stage,quadrature,mesh,...
-                        dof_handler,phys,modify_for_weak_DirichletBC);
+                        dof_handler,phys,opts.modify_for_weak_DirichletBC);
                     [uH_stage,DH] = high_order_step(u_older_stage,...
                         u_old_stage,dt_old,dt,A,b,MC,0,viscL,mesh,phys,...
-                        quadrature,dof_handler,ev,...
-                        high_order_scheme,modify_for_strong_DirichletBC);
+                        quadrature,dof_handler,ev,opts);
                     % stage 3
                     u_old_stage = 0.75*u_old + 0.25*uH_stage;
                     u_older_stage = u_older;
                     t_stage = t + 0.5*dt;
                     b = assemble_ss_rhs(t_stage,quadrature,mesh,...
-                        dof_handler,phys,modify_for_weak_DirichletBC);
+                        dof_handler,phys,opts.modify_for_weak_DirichletBC);
                     [uH_stage,DH] = high_order_step(u_older_stage,...
                         u_old_stage,dt_old,dt,A,b,MC,0,viscL,mesh,phys,...
-                        quadrature,dof_handler,ev,...
-                        high_order_scheme,modify_for_strong_DirichletBC);
+                        quadrature,dof_handler,ev,opts);
                     % final combination
                     uH = 1/3*u_old + 2/3*uH_stage;
                 case 3 % theta
                     % compute new ss rhs
                     b_new = assemble_ss_rhs(t+dt,quadrature,mesh,...
-                        dof_handler,phys,modify_for_weak_DirichletBC);
+                        dof_handler,phys,opts.modify_for_weak_DirichletBC);
 
                     % compute solution
                     [uH,AH,DH] = compute_high_order_solution_theta(...
                         u_old,dt,MC,A,AH,b_old,b_new,viscL,quadrature,...
-                        mesh,dof_handler,phys,ev,numerics_opts,...
-                        nonlin_solver_opts);
+                        mesh,dof_handler,phys,ev,opts,...
+                        nonlin_opts);
                 otherwise
                     error('Invalid temporal discretization scheme');
             end
@@ -602,18 +596,18 @@ if (compute_high_order)
             
             % test steady-state convergence
             ss_err = norm(uH-u_old,2);
-            reached_steady_state = ss_err < ss_tol;
+            reached_steady_state = ss_err < opts.ss_tol;
             if (reached_steady_state)
                 fprintf('Transient terminated due to steady-state\n');
                 break;
             end
             
             % plot
-            if (plot_high_order_transient)
+            if (out_opts.plot_high_order_transient)
                 plot(mesh.x,uH);
                 axis([-inf inf -inf 0.5]);
                 legend('High-order');
-                pause(pausetime);
+                pause(out_opts.pausetime);
             end
             
             % reset u_old and u_older and advance time
@@ -634,11 +628,10 @@ end
 if (compute_FCT)
     fprintf('\nComputing FCT solution...\n\n');
     
-    if (temporal_scheme == 0) % steady-state
+    if (opts.is_steady_state) % steady-state
         % compute high-order ss solution
         [uH,DH,viscE] = compute_high_order_solution_ss(A,b,viscL,mesh,...
-            phys,quadrature,ev,dof_handler,high_order_scheme,max_iter,...
-            nonlin_tol,relaxation_parameter,modify_for_strong_DirichletBC);
+            phys,quadrature,ev,dof_handler,opts,nonlin_opts,out_opts);
         
         % compute flux correction matrix
         F = flux_correction_matrix_ss(uH,DL-DH);
@@ -648,12 +641,12 @@ if (compute_FCT)
         uL = AL_mod \ b_mod;
 
         % prelimit flux corrections if user specified
-        if (prelimit)
+        if (fct_opts.prelimit)
             F = prelimit_fluxes(F,uL);
         end
         
         % initialize solution iterate
-        switch FCT_initialization
+        switch fct_opts.FCT_initialization
             case 1 % zero
                 uFCT = zeros(dof_handler.n_dof,1);
             case 2 % low-order
@@ -665,17 +658,16 @@ if (compute_FCT)
         end
         
         % iteration loop
-        for iter = 1:max_iter
+        for iter = 1:nonlin_opts.max_iter
             % compute limited flux correction sum
             [flim,Wminus,Wplus] = compute_limited_flux_sums_ss(uFCT,F,...
                 AL_mod,b_mod,...
                 sigma_min,sigma_max,source_min,source_max,phys,...
-                dof_handler.n_dof,DMP_option,limiting_option,...
-                dirichlet_limiting_coefficient);
+                dof_handler.n_dof,fct_opts);
             
             % compute correction rhs and modify for Dirichlet BC
             system_rhs = b + flim;
-            if (impose_DirichletBC_strongly)
+            if (opts.modify_for_strong_DirichletBC)
                 system_rhs(1) = phys.inc;
             end
             
@@ -683,7 +675,7 @@ if (compute_FCT)
             ss_res = system_rhs - AL_mod*uFCT;
             
             % test convergence of previous iteration
-            converged = test_convergence(ss_res,nonlin_tol,iter);
+            converged = test_convergence(ss_res,nonlin_opts.nonlin_tol,iter);
             if (converged)
                 fprintf('\tConverged at iteration %i\n',iter);
                 break;
@@ -694,7 +686,7 @@ if (compute_FCT)
             uFCT = uFCT + du;
 
             % plot
-            if (plot_FCT_iteration)
+            if (out_opts.plot_FCT_iteration)
                 figure(1);
                 clf;
                 hold on;
@@ -704,7 +696,7 @@ if (compute_FCT)
                 plot(mesh.x,Wminus,'k.');
                 plot(mesh.x,Wplus,'ko');
                 legend('High','Low','FCT(l+1)','W-(l)','W+(l)',...
-                    'Location',legend_location);
+                    'Location',out_opts.legend_location);
                 w = waitforbuttonpress;
             end
         end
@@ -715,7 +707,7 @@ if (compute_FCT)
     else
         % compute initial conditions
         u_old = phys.IC(mesh.x);
-        if impose_BC_on_IC
+        if phys.impose_BC_on_IC
           u_old(1) = phys.inc;
         end
         u_older = u_old;
@@ -726,7 +718,7 @@ if (compute_FCT)
         dt_old = dt_nominal;
         [DH,viscE] = compute_high_order_diffusion_matrix(u_old,...
             u_old,dt_old,viscL,mesh,phys,quadrature,ev,...
-            dof_handler,high_order_scheme);
+            dof_handler,opts.high_order_scheme);
         AH = A + DH;
         
         reached_end_of_transient = false;
@@ -735,8 +727,8 @@ if (compute_FCT)
             time_step = time_step+1;
             
             % shorten time step if necessary
-            if (t+dt_nominal >= t_end)
-                dt = t_end - t;
+            if (t+dt_nominal >= opts.t_end)
+                dt = opts.t_end - t;
                 reached_end_of_transient = true;
             else
                 dt = dt_nominal;
@@ -744,68 +736,64 @@ if (compute_FCT)
             end
             fprintf('Time step %i: t = %f->%f\n',time_step,t,t+dt);
             
-            switch temporal_scheme
+            switch opts.temporal_scheme
                 case 0 % steady-state
                     error('This should not be reachable');
                 case 1 % explicit Euler
                     % perform high-order step
                     b = assemble_ss_rhs(t,quadrature,mesh,...
-                        dof_handler,phys,modify_for_weak_DirichletBC);
+                        dof_handler,phys,opts.modify_for_weak_DirichletBC);
                     [uH,DH] = high_order_step(u_older,u_old,dt_old,dt,...
                         A,b,MC,0,viscL,mesh,phys,quadrature,dof_handler,...
-                        ev,high_order_scheme,...
-                        modify_for_strong_DirichletBC);
+                        ev,opts);
                     
                     % perform FCT step
                     uFCT = FCT_step_explicit(u_old,uH,dt,...
-                        ML,MC,AL,DH,DL,b,phys.inc,phys.speed,sigma_min,sigma_max,...
-                        source_min,source_max,DMP_option,limiting_option,...
-                        phys.periodic_BC,modify_for_strong_DirichletBC,prelimit);
+                        ML,MC,AL,DH,DL,b,phys.inc,phys.speed,...
+                        sigma_min,sigma_max,source_min,source_max,fct_opts,...
+                        phys.periodic_BC,opts.modify_for_strong_DirichletBC);
                 case 2 % SSP3
                     % stage 1
                     u_old_stage = u_old;
                     u_older_stage = u_older;
                     t_stage = t;
                     b = assemble_ss_rhs(t_stage,quadrature,mesh,...
-                        dof_handler,phys,modify_for_weak_DirichletBC);
+                        dof_handler,phys,opts.modify_for_weak_DirichletBC);
                     [uH_stage,DH] = high_order_step(u_older_stage,...
                         u_old_stage,dt_old,dt,A,b,MC,0,viscL,mesh,phys,...
-                        quadrature,dof_handler,ev,...
-                        high_order_scheme,modify_for_strong_DirichletBC);
+                        quadrature,dof_handler,ev,opts);
                     uFCT_stage = FCT_step_explicit(u_old_stage,uH_stage,dt,...
-                        ML,MC,AL,DH,DL,b,phys.inc,phys.speed,sigma_min,sigma_max,...
-                        source_min,source_max,DMP_option,limiting_option,...
-                        phys.periodic_BC,modify_for_strong_DirichletBC,prelimit);
+                        ML,MC,AL,DH,DL,b,phys.inc,phys.speed,...
+                        sigma_min,sigma_max,source_min,source_max,fct_opts,...
+                        phys.periodic_BC,opts.modify_for_strong_DirichletBC);
                     
                    % stage 2
                     u_old_stage = uFCT_stage;
                     u_older_stage = u_older;
                     t_stage = t + dt;
                     b = assemble_ss_rhs(t_stage,quadrature,mesh,...
-                        dof_handler,phys,modify_for_weak_DirichletBC);
+                        dof_handler,phys,opts.modify_for_weak_DirichletBC);
                     [uH_stage,DH] = high_order_step(u_older_stage,...
                         u_old_stage,dt_old,dt,A,b,MC,0,viscL,mesh,phys,...
-                        quadrature,dof_handler,ev,...
-                        high_order_scheme,modify_for_strong_DirichletBC);
+                        quadrature,dof_handler,ev,opts);
                     uFCT_stage = FCT_step_explicit(u_old_stage,uH_stage,dt,...
-                        ML,MC,AL,DH,DL,b,phys.inc,phys.speed,sigma_min,sigma_max,...
-                        source_min,source_max,DMP_option,limiting_option,...
-                        phys.periodic_BC,modify_for_strong_DirichletBC,prelimit);
+                        ML,MC,AL,DH,DL,b,phys.inc,phys.speed,...
+                        sigma_min,sigma_max,source_min,source_max,fct_opts,...
+                        phys.periodic_BC,opts.modify_for_strong_DirichletBC);
                     
                     % stage 3
                     u_old_stage = 0.75*u_old + 0.25*uFCT_stage;
                     u_older_stage = u_older;
                     t_stage = t + 0.5*dt;
                     b = assemble_ss_rhs(t_stage,quadrature,mesh,...
-                        dof_handler,phys,modify_for_weak_DirichletBC);
+                        dof_handler,phys,opts.modify_for_weak_DirichletBC);
                     [uH_stage,DH] = high_order_step(u_older_stage,...
                         u_old_stage,dt_old,dt,A,b,MC,0,viscL,mesh,phys,...
-                        quadrature,dof_handler,ev,...
-                        high_order_scheme,modify_for_strong_DirichletBC);
+                        quadrature,dof_handler,ev,opts);
                     uFCT_stage = FCT_step_explicit(u_old_stage,uH_stage,dt,...
-                        ML,MC,AL,DH,DL,b,phys.inc,phys.speed,sigma_min,sigma_max,...
-                        source_min,source_max,DMP_option,limiting_option,...
-                        phys.periodic_BC,modify_for_strong_DirichletBC,prelimit);
+                        ML,MC,AL,DH,DL,b,phys.inc,phys.speed,...
+                        sigma_min,sigma_max,source_min,source_max,fct_opts,
+                        phys.periodic_BC,opts.modify_for_strong_DirichletBC);
                     
                     % final combination
                     uFCT = 1/3*u_old + 2/3*uFCT_stage;
@@ -814,50 +802,48 @@ if (compute_FCT)
                     ss_res = b_old - AL*u_old;
                     
                     % compute system matrix
-                    system_matrix = ML + theta*dt*AL;
-                    if (modify_for_strong_DirichletBC)
+                    system_matrix = ML + opts.theta*dt*AL;
+                    if (opts.modify_for_strong_DirichletBC)
                         system_matrix(1,:)=0; system_matrix(1,1)=1;
                     end
                     
                     % compute new ss rhs
                     b_new = assemble_ss_rhs(t+dt,quadrature,mesh,...
-                        dof_handler,phys,modify_for_weak_DirichletBC);
+                        dof_handler,phys,opts.modify_for_weak_DirichletBC);
                     
                     % compute high-order solution
                     [uH,AH,DH] = compute_high_order_solution_theta(...
                         u_old,dt,MC,A,AH,b_old,b_new,viscL,quadrature,...
-                        mesh,dof_handler,phys,ev,numerics_opts,...
-                        nonlin_solver_opts);
+                        mesh,dof_handler,phys,ev,opts,...
+                        nonlin_opts);
 
                     % compute flux correction matrix
-                    F = flux_correction_matrix(u_old,uH,dt,DH,DL,MC,theta);
+                    F = flux_correction_matrix(u_old,uH,dt,DH,DL,MC,opts.theta);
                     
                     % compute theta ss rhs
-                    b_theta = (1-theta)*b_old + theta*b_new;
+                    b_theta = (1-opts.theta)*b_old + opts.theta*b_new;
                     
                     % compute solution
                     uL = compute_low_order_solution_theta(u_old,AL,...
-                        ML,b_theta,dt,theta,phys.inc,...
-                        modify_for_strong_DirichletBC);
+                        ML,b_theta,dt,opts.theta,phys.inc,...
+                        opts.modify_for_strong_DirichletBC);
                     
                     % initialize solution iterate
                     uFCT = zeros(dof_handler.n_dof,1);
                     
                     % iteration loop
-                    for iter = 1:max_iter
+                    for iter = 1:nonlin_opts.max_iter
                         % compute limited flux correction sum
                         [flim,Wminus,Wplus] = compute_limited_flux_sums(...
                             u_old,uFCT,dt,...
                             ML,AL,b,F,sigma_min,sigma_max,source_min,...
-                            source_max,theta,dof_handler.n_dof,...
-                            phys.speed,phys.inc,phys.periodic_BC,...
-                            limiting_option,DMP_option,...
-                            dirichlet_limiting_coefficient);
+                            source_max,opts.theta,dof_handler.n_dof,...
+                            phys,fct_opts);
                         
                         % compute system rhs
-                        system_rhs = ML*u_old + (1-theta)*dt*ss_res ...
-                            + theta*dt*b_new + dt*flim;
-                        if (modify_for_strong_DirichletBC)
+                        system_rhs = ML*u_old + (1-opts.theta)*dt*ss_res ...
+                            + opts.theta*dt*b_new + dt*flim;
+                        if (opts.modify_for_strong_DirichletBC)
                             system_rhs(1) = phys.inc;
                         end
                         
@@ -865,7 +851,7 @@ if (compute_FCT)
                         res = system_rhs - system_matrix*uFCT;
                         
                         % test convergence of previous iteration
-                        converged = test_convergence(res,nonlin_tol,iter);
+                        converged = test_convergence(res,nonlin_opts.nonlin_tol,iter);
                         if (converged)
                             fprintf('\tConverged at iteration %i\n',iter);
                             break;
@@ -875,10 +861,10 @@ if (compute_FCT)
                         du = system_matrix \ system_rhs - uFCT;
     
                         % solve modified system
-                        uFCT = uFCT + relaxation_parameter * du;
+                        uFCT = uFCT + nonlin_opts.relax * du;
 
                         % plot
-                        if (plot_FCT_iteration)
+                        if (out_opts.plot_FCT_iteration)
                             figure(1);
                             clf;
                             hold on;
@@ -888,7 +874,7 @@ if (compute_FCT)
                             plot(mesh.x,Wminus,'k.');
                             plot(mesh.x,Wplus,'ko');
                             legend('High','Low','FCT(l+1)','W-(l)','W+(l)',...
-                                'Location',legend_location);
+                                'Location',out_opts.legend_location);
                             w = waitforbuttonpress;
                         end
                     end
@@ -903,17 +889,17 @@ if (compute_FCT)
             
             % test steady-state convergence
             ss_err = norm(uFCT-u_old,2);
-            reached_steady_state = ss_err < ss_tol;
+            reached_steady_state = ss_err < opts.ss_tol;
             if (reached_steady_state)
                 fprintf('Transient terminated due to steady-state\n');
                 break;
             end
             
             % plot
-            if (plot_FCT_transient)
+            if (out_opts.plot_FCT_transient)
                 plot(mesh.x,uFCT,'g');
-                legend('FCT','Location',legend_location);
-                pause(pausetime);
+                legend('FCT','Location',out_opts.legend_location);
+                pause(out_opts.pausetime);
             end
             
             % reset u_old and u_older and advance time
@@ -933,7 +919,7 @@ figure; clf; hold on;
 % plot exact solution
 if (exact_solution_known)
     xx = linspace(mesh.x_min,mesh.x_max,1000)';
-    u_exact = exact(xx,t_end);
+    u_exact = exact(xx,opts.t_end);
     plot(xx,u_exact,'k-');
     legend_entries = char('Exact');
 end
@@ -957,7 +943,7 @@ end
 % plot FCT solution
 if (compute_FCT)
     plot(mesh.x,uFCT,'g-x');
-    switch limiting_option
+    switch fct_opts.limiting_option
         case 0 % no correction
             limiter_string = 'no correction';
         case 1 % full correction (no limiting)
@@ -974,16 +960,16 @@ if (compute_FCT)
 end
 
 % legend
-legend(legend_entries,'Location',legend_location);
+legend(legend_entries,'Location',out_opts.legend_location);
 
 %% Plot viscosity
 
 % plot viscosity if requested
-if (plot_viscosity)
+if (out_opts.plot_viscosity)
     figure; clf;
     
     % plot low-order viscosity if available
-    if low_order_scheme == 2 || high_order_scheme ~= 1
+    if opts.low_order_scheme == 2 || opts.high_order_scheme ~= 1
         semilogy(mesh.x_center,viscL);
         legend_entries = char('Low-order viscosity');
     end
@@ -991,13 +977,13 @@ if (plot_viscosity)
     hold on;
     
     % plot high-order viscosity if available
-    if (high_order_scheme ~= 1)
+    if (opts.high_order_scheme ~= 1)
         semilogy(mesh.x_center,viscE,'x');
         legend_entries = char(legend_entries,'Entropy viscosity');
     end
     
     % legend
-    legend(legend_entries,'Location',legend_location);
+    legend(legend_entries,'Location',out_opts.legend_location);
 end
 
 %% Output
@@ -1009,7 +995,7 @@ if (save_exact_solution)
 end
 
 % determine string to be appended to results for time discretization
-switch temporal_scheme
+switch opts.temporal_scheme
     case 0
         time_string = 'ss';
     case 1
@@ -1017,7 +1003,7 @@ switch temporal_scheme
     case 2
         time_string = 'SSPRK33';
     case 3
-        time_string = sprintf('theta%0.1f',theta);
+        time_string = sprintf('theta%0.1f',opts.theta);
         % rename common theta schemes
         if (strcmp(time_string,'theta0.0'))
             time_string = 'FE';
@@ -1039,7 +1025,7 @@ if (save_low_order_solution)
 end
 
 % determine string to be appended for high-order scheme
-switch high_order_scheme
+switch opts.high_order_scheme
     case 1
         high_order_string = 'Gal';
     case 2
