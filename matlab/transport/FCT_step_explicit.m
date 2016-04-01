@@ -1,17 +1,26 @@
 function uFCT = FCT_step_explicit(u_old,uH,dt,ML,MC,AL,DH,DL,b,inc,speed,...
-    sigma_min,sigma_max,q_min,q_max,DMP_option,limiting_option,...
-    periodic_BC,modify_for_strong_DirichletBC,prelimit)
+    sigma_min,sigma_max,q_min,q_max,fct_opts,periodic_BC,...
+    modify_for_strong_DirichletBC)
+
+% unpack options
+DMP_option = fct_opts.DMP_option;
+limiting_option = fct_opts.limiting_option;
+prelimit = fct_opts.prelimit;
 
 % size of system
 n_dof = length(u_old);
 
 % compute solution bounds
-[Wplus,Wminus] = compute_DMP(u_old,u_old,dt,ML,AL,b,0,inc,periodic_BC);
-if (DMP_option == 2) % max/min(DMP,CMP)
+if (DMP_option == 1)
+    [Wplus,Wminus] = compute_DMP(u_old,u_old,dt,ML,AL,b,0,inc,periodic_BC);
+elseif (DMP_option == 2)
+    [Wplus,Wminus] = compute_DMP(u_old,u_old,dt,ML,AL,b,0,inc,periodic_BC);
     [WplusCMP,WminusCMP] = compute_CMP(...
         u_old,sigma_min,sigma_max,q_min,q_max,speed*dt,inc,periodic_BC);
     Wplus = max(Wplus,WplusCMP);
     Wminus = min(Wminus,WminusCMP);
+else
+    error('Invalid FCT solution bounds option');
 end
 
 % theta = 0 for explicit

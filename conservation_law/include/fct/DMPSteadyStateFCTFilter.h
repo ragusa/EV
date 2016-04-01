@@ -22,10 +22,9 @@ public:
                           const FESystem<dim> & fe);
 
 protected:
-  void compute_solution_bounds(
-    const Vector<double> & solution,
-    const SparseMatrix<double> & low_order_ss_matrix,
-    const Vector<double> & ss_rhs) override;
+  void compute_solution_bounds(const Vector<double> & solution,
+                               const SparseMatrix<double> & low_order_ss_matrix,
+                               const Vector<double> & ss_rhs) override;
 };
 
 #include "src/fct/DMPSteadyStateFCTFilter.cc"

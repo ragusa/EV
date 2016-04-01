@@ -65,7 +65,7 @@ subsection artificial viscosity
 end
 
 subsection fct
-   set filter sequence string        = dmp_analytic # dmp|dmp_analytic|analytic
+   set filter sequence string        = analytic # dmp|dmp_analytic|analytic
    set limiter option                = zalesak # ones|zeroes|zalesak
    set use multipass limiting        = false
    set multipass limiting percent tolerance = 0.01

@@ -30,7 +30,8 @@ PostProcessor<dim>::PostProcessor(
     exact_solution_function(exact_solution_function_),
     solution_component_names(solution_component_names_),
     solution_component_interpretations(solution_component_interpretations_),
-    is_steady_state(false),
+    is_steady_state(parameters_.temporal_discretization ==
+                    TemporalDiscretizationClassification::ss),
     fe(FE_Q<dim>(parameters.degree), n_components_),
     cell_quadrature(parameters.n_quadrature_points),
     n_cells(triangulation_.n_active_cells()),
@@ -262,7 +263,10 @@ void PostProcessor<dim>::output_results(const Vector<double> & solution,
     output_solution_transient(solution, end_time, dof_handler, "solution", true);
 
   // output exact solution
-  output_exact_solution(end_time);
+  if (is_steady_state)
+    output_exact_solution(1.0e15); // arbitrary large time
+  else
+    output_exact_solution(end_time);
 
   // output convergence data
   output_convergence_data();
@@ -616,7 +620,7 @@ void PostProcessor<dim>::output_convergence_data()
     // format columns
     convergence_table.set_precision("dx", 3);
     convergence_table.set_scientific("dx", true);
-    if (not is_steady_state)
+    if (!is_steady_state)
     {
       convergence_table.set_precision("dt", 3);
       convergence_table.set_scientific("dt", true);
@@ -628,7 +632,7 @@ void PostProcessor<dim>::output_convergence_data()
     convergence_table.set_scientific("L2 error", true);
 
     // evaluate convergence rates, either with dx or dt
-    if (parameters.use_cell_size_for_convergence_rates && !is_steady_state)
+    if (parameters.use_cell_size_for_convergence_rates || is_steady_state)
     {
       // evaluate spatial convergence rates
       convergence_table.evaluate_convergence_rates(
@@ -819,7 +823,10 @@ void PostProcessor<dim>::evaluate_error(const Vector<double> & solution,
     Assert(has_exact_solution, ExcInvalidState());
 
     // set time for exact solution function
-    exact_solution_function->set_time(end_time);
+    if (is_steady_state)
+      exact_solution_function->set_time(1.0e15); // arbitrary large time
+    else
+      exact_solution_function->set_time(end_time);
 
     // number of cells
     unsigned int n_cells = triangulation.n_active_cells();
@@ -861,7 +868,7 @@ void PostProcessor<dim>::evaluate_error(const Vector<double> & solution,
     convergence_table.add_value("cells", n_cells);
     convergence_table.add_value("dofs", dof_handler.n_dofs());
     convergence_table.add_value("dx", avg_cell_volume);
-    if (not is_steady_state)
+    if (!is_steady_state)
     {
       // finish computing average time step size for this cycle
       dt_nominal /= n_time_steps;

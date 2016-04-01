@@ -12,8 +12,7 @@
 
 %%
 function [MC,ML,A,AL,D,viscL] = build_matrices(...
-    quadrature,mesh,dof_handler,phys,...
-    low_order_scheme,modify_for_weak_DirichletBC)
+    quadrature,mesh,dof_handler,phys,opts)
 
 % unpack quadrature
 nq   = quadrature.nq;
@@ -22,11 +21,6 @@ wq   = quadrature.wq;
 v    = quadrature.v;
 dvdz = quadrature.dvdz;
 Jac  = quadrature.Jac;
-
-% unpack physics
-mu    = phys.mu;
-sigma = phys.sigma;
-speed = phys.speed;
 
 % unpack mesh
 x   = mesh.x;
@@ -37,6 +31,15 @@ nel = mesh.n_cell;
 n = dof_handler.n_dof;
 g = dof_handler.connectivity;
 dofs_per_cell = dof_handler.dofs_per_cell;
+
+% unpack physics
+mu    = phys.mu;
+sigma = phys.sigma;
+speed = phys.speed;
+
+% unpack run options
+low_order_scheme = opts.low_order_scheme;
+modify_for_weak_DirichletBC = opts.modify_for_weak_DirichletBC; 
 
 %--------------------------------------------------------------------------
 % Compute mass matrices and inviscid steady-state matrix

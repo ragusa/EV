@@ -1,14 +1,22 @@
 function [flim,Wminus,Wplus] = compute_limited_flux_sums_ss(u,F,AL_mod,b_mod,...
-    sigma_min,sigma_max,source_min,source_max,phys,n_dof,DMP_option,...
-    limiting_option, dirichlet_limiting_coefficient)
+    sigma_min,sigma_max,source_min,source_max,phys,n_dof,fct_opts)
+
+% unpack options
+DMP_option = fct_opts.DMP_option;
+limiting_option = fct_opts.limiting_option;
+dirichlet_limiting_coefficient = fct_opts.dirichlet_limiting_coefficient;
 
 % compute max principle bounds
-[Wplus,Wminus] = compute_DMP_ss(u,AL_mod,b_mod,phys.inc);
-if DMP_option == 2
-    [WplusCMP,WminusCMP] = compute_CMP_ss(u,sigma_min,...
-        sigma_max,source_min,source_max,0,phys.inc);
-    Wplus = max(Wplus,WplusCMP);
-    Wminus = min(Wminus,WminusCMP);
+if DMP_option == 1
+    [Wplus,Wminus] = compute_DMP_ss(u,AL_mod,b_mod,phys.inc);
+elseif DMP_option == 2
+    [Wplus,Wminus] = compute_DMP_ss(u,AL_mod,b_mod,phys.inc);
+    [Wplus_analytic,Wminus_analytic] = compute_analytic_bounds_ss(...
+        u,sigma_min,sigma_max,source_min,source_max,0,phys.inc);
+    Wplus  = max(Wplus, Wplus_analytic);
+    Wminus = min(Wminus,Wminus_analytic);
+else
+    error('Invalid FCT solution bounds option');
 end
 
 [Qplus,Qminus] = compute_Q_ss(u,Wplus,Wminus,AL_mod,b_mod);
