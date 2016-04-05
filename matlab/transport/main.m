@@ -22,7 +22,7 @@ opts.low_order_scheme  = 2;
 %                    2 = Entropy viscosity
 %                    3 = Alternate Entropy viscosity 1
 %                    4 = Alternate Entropy viscosity 2 (should be same as 1)
-opts.high_order_scheme = 2;
+opts.high_order_scheme = 1;
 
 %--------------------------------------------------------------------------
 % entropy viscosity options
@@ -65,7 +65,7 @@ fct_opts.DMP_option = 4;
 %                 1 = All 1 (full correction; high-order)
 %                 2 = Zalesak limiter
 %                 3 = Josh limiter
-fct_opts.limiting_option = 2;
+fct_opts.limiting_option = 3;
 
 % option to enforce Q+ >= 0, Q- <= 0
 fct_opts.enforce_antidiffusion_bounds_signs = true;
@@ -73,13 +73,13 @@ fct_opts.enforce_antidiffusion_bounds_signs = true;
 % FCT initialization option: 1 = zeros
 %                            2 = low-order solution
 %                            3 = high-order solution
-fct_opts.FCT_initialization = 3;
+fct_opts.FCT_initialization = 1;
 
 % prelimit correction fluxes: 0 = do not prelimit, 1 = prelimit
 fct_opts.prelimit = 0;
 
 % limiting coefficient bounds for Dirichlet nodes
-fct_opts.dirichlet_limiting_coefficient = 1.0; 
+fct_opts.dirichlet_limiting_coefficient = 0.0; 
 %--------------------------------------------------------------------------
 % physics options
 %--------------------------------------------------------------------------
@@ -136,6 +136,7 @@ save_exact_solution      = false; % option to save exact solution
 save_low_order_solution  = false; % option to save low-order solution
 save_high_order_solution = false; % option to save high-order solution
 save_FCT_solution        = false; % option to save FCT solution
+save_antidiffusion_matrix = false; % option to save antidiffusion matrix
 %-------------------------------------------------------------------------
 
 %% Define Problem
@@ -651,7 +652,6 @@ if (compute_FCT)
         
         % compute flux correction matrix
         F = flux_correction_matrix_ss(uH,DL-DH);
-        fluxvector = convert_matrix_to_edge_vector(F);
         
         % compute low-order solution
         uL = AL_mod \ b_mod;
@@ -676,7 +676,7 @@ if (compute_FCT)
         % iteration loop
         for iter = 1:nonlin_opts.max_iter
             % compute limited flux correction sum
-            [flim,Wminus,Wplus] = compute_limited_flux_sums_ss(uFCT,F,...
+            [flim,Wminus,Wplus] = compute_limited_flux_sums_ss(uFCT,uL,F,...
                 AL_mod,b_mod,...
                 sigma_min,sigma_max,source_min,source_max,mesh,phys,...
                 dof_handler.n_dof,fct_opts);
@@ -986,8 +986,8 @@ end
 
 % save exact solution
 if (save_exact_solution)
-    exact_file = 'output/uexact.txt';
-    dlmwrite(exact_file,[xx,u_exact],' ');
+    exact_file = 'output/uexact.csv';
+    dlmwrite(exact_file,[xx,u_exact],',');
 end
 
 % determine string to be appended to results for time discretization
@@ -1015,8 +1015,8 @@ end
 % save low-order solution
 if (save_low_order_solution)
     if (compute_low_order)
-        low_order_file = ['output/uL_',time_string,'.txt'];
-        dlmwrite(low_order_file,[mesh.x,uL_final],' ');
+        low_order_file = ['output/uL_',time_string,'.csv'];
+        dlmwrite(low_order_file,[mesh.x,uL_final],',');
     end
 end
 
@@ -1035,15 +1035,23 @@ end
 % save high-order solution
 if (save_high_order_solution)
     if (compute_high_order)
-        high_order_file = ['output/uH_',high_order_string,'_',time_string,'.txt'];
-        dlmwrite(high_order_file,[mesh.x,uH_final],' ');
+        high_order_file = ['output/uH_',high_order_string,'_',time_string,'.csv'];
+        dlmwrite(high_order_file,[mesh.x,uH_final],',');
     end
 end
 
 % save FCT solution
 if (save_FCT_solution)
     if (compute_FCT)
-        FCT_file = ['output/uFCT_',high_order_string,'_',time_string,'.txt'];
-        dlmwrite(FCT_file,[mesh.x,uFCT],' ');
+        FCT_file = ['output/uFCT_',high_order_string,'_',time_string,'.csv'];
+        dlmwrite(FCT_file,[mesh.x,uFCT],',');
+    end
+end
+
+% save antidiffusion matrix
+if (save_antidiffusion_matrix)
+    if (compute_FCT)
+        out_file = ['output/P.csv'];
+        dlmwrite(out_file,F,',');
     end
 end

@@ -20,7 +20,7 @@ for iel = 1:n_cell
     
     % update max/min for each dof on cell
     f_min(iel+1) = min(f_min(iel+1),f_cell_min);
-    f_max(iel+1) = min(f_max(iel+1),f_cell_max);
+    f_max(iel+1) = max(f_max(iel+1),f_cell_max);
 end
 
 % set arbitrary values for first node, assumed to be Dirichlet

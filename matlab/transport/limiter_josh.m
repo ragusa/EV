@@ -16,6 +16,7 @@ for edge = 1:n-1
         end
         Rminus_j = min((Qminus(j) - Flim(j))/F(j,i),1);
         lim = min(Rplus_i,Rminus_j);
+        %fprintf('%i: lim = %f\n',i,lim);
         Flim(i) = Flim(i) + lim*F(i,j);
         Flim(j) = Flim(j) + lim*F(j,i);
     elseif (F(i,j) < 0)
@@ -26,6 +27,7 @@ for edge = 1:n-1
         end
         Rplus_j = min((Qplus(j) - Flim(j))/F(j,i),1);
         lim = min(Rminus_i,Rplus_j);
+        %fprintf('%i: lim = %f\n',i,lim);
         Flim(i) = Flim(i) + lim*F(i,j);
         Flim(j) = Flim(j) + lim*F(j,i);
     end
