@@ -132,11 +132,11 @@ out_opts.legend_location           = 'NorthEast'; % location of plot legend
 %--------------------------------------------------------------------------
 % output options
 %--------------------------------------------------------------------------
-save_exact_solution      = false; % option to save exact solution 
-save_low_order_solution  = false; % option to save low-order solution
+save_exact_solution      = true; % option to save exact solution 
+save_low_order_solution  = true; % option to save low-order solution
 save_high_order_solution = false; % option to save high-order solution
 save_FCT_solution        = false; % option to save FCT solution
-save_antidiffusion_matrix = false; % option to save antidiffusion matrix
+save_antidiffusion_matrix = true; % option to save antidiffusion matrix
 %-------------------------------------------------------------------------
 
 %% Define Problem

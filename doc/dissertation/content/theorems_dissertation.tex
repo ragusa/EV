@@ -9,6 +9,11 @@
 \newtheorem{mydefinition}{Definition}[section]
 \newtheorem{myproposition}{Proposition}[section]
 
+% The following environments are to be used in one of the following ways:
+% \begin{theorem}{}
+% \begin{theorem}{My title}
+% \begin{theorem}[mylabel]{My title}
+
 \newenvironment{theorem}[2][]
    {\ifthenelse{\equal{#2}{}}{\begin{mytheorem}}
    {\begin{mytheorem}\textbf{\textup{(#2)}}}
