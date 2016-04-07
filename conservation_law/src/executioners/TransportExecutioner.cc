@@ -80,7 +80,7 @@ TransportExecutioner<dim>::TransportExecutioner(
       low_order_diffusion_type = DiffusionType::graphtheoretic;
       break;
     default:
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
   }
 
@@ -98,7 +98,7 @@ TransportExecutioner<dim>::TransportExecutioner(
       high_order_diffusion_type = low_order_diffusion_type;
       break;
     default:
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
   }
 
@@ -130,7 +130,7 @@ TransportExecutioner<dim>::TransportExecutioner(
     }
     default:
     {
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
     }
   }
@@ -169,7 +169,7 @@ TransportExecutioner<dim>::TransportExecutioner(
     }
     default:
     {
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
     }
   }
@@ -197,7 +197,7 @@ TransportExecutioner<dim>::TransportExecutioner(
     }
     default:
     {
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
     }
   }
@@ -237,7 +237,7 @@ std::shared_ptr<ArtificialDiffusion<dim>> TransportExecutioner<
     // else
     default:
     {
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
     }
   }

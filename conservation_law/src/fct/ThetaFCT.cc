@@ -254,7 +254,7 @@ std::shared_ptr<ThetaFCTFilter<dim>> ThetaFCT<dim>::create_filter(
                                                       *lumped_mass_matrix,
                                                       theta);
   else
-    throw ExcNotImplemented();
+    AssertThrow(false, ExcNotImplemented());
 
   // return pointer to new filter
   return filter;

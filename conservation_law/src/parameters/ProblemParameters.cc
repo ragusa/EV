@@ -289,7 +289,7 @@ void ProblemParameters<dim>::process_shared_base_parameters(
       }
       else
       {
-        throw ExcNotImplemented();
+        AssertThrow(false, ExcNotImplemented());
       }
     }
   }
@@ -325,7 +325,7 @@ void ProblemParameters<dim>::process_shared_base_parameters(
     }
     else
     {
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
     }
   }
 

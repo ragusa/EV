@@ -62,7 +62,7 @@ ShallowWaterEntropy<dim>::ShallowWaterEntropy(
     compute_entropy_normalization_ptr =
       &ShallowWaterEntropy<dim>::compute_local_entropy_normalization;
   else
-    throw ExcNotImplemented();
+    AssertThrow(false, ExcNotImplemented());
 }
 
 /**

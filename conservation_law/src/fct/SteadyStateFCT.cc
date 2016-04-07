@@ -198,7 +198,7 @@ std::shared_ptr<SteadyStateFCTFilter<dim>> SteadyStateFCT<dim>::create_filter(
     filter = std::make_shared<DMPSteadyStateFCTFilter<dim>>(
       *this->run_parameters, this->limiter, *this->dof_handler, *this->fe);
   else
-    throw ExcNotImplemented();
+    AssertThrow(false, ExcNotImplemented());
 
   // return pointer to new filter
   return filter;

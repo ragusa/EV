@@ -48,7 +48,7 @@ void TransportSteadyStateExecutioner<dim>::run()
       compute_fct_solution();
       break;
     default:
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
   }
 
@@ -122,7 +122,7 @@ void TransportSteadyStateExecutioner<dim>::compute_high_order_solution()
       compute_entropy_viscosity_solution();
       break;
     default:
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
   }
 }

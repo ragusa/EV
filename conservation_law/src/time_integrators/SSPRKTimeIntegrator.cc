@@ -27,7 +27,7 @@ SSPRKTimeIntegrator<dim>::SSPRKTimeIntegrator(
       n_stages = 3;
       break;
     default:
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
   }
 
@@ -67,7 +67,7 @@ SSPRKTimeIntegrator<dim>::SSPRKTimeIntegrator(
       c[2] = 0.5;
       break;
     default:
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
   }
 

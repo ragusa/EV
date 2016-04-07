@@ -47,7 +47,7 @@ void LinearSolver<dim>::solve(const SparseMatrix<double> & A,
     }
     default:
     {
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
     }
   }

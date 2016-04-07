@@ -62,7 +62,7 @@ void TransportThetaExecutioner<dim>::compute_new_solution(const double & dt,
       compute_fct_solution(dt, t_old);
       break;
     default:
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
   }
 
@@ -167,7 +167,7 @@ void TransportThetaExecutioner<dim>::compute_high_order_solution(
       compute_entropy_viscosity_solution(dt, t_new, n);
       break;
     default:
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
   }
 }

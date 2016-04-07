@@ -2,7 +2,7 @@
 
 use strict;
 
-my $usage = "USAGE: substitute_text <file> <old text> <new text>\n";
+my $usage = "USAGE: $0 <file> <old text> <new text>\n";
 
 # check for correct number of input arguments
 my $n_arguments = @ARGV;

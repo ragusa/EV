@@ -121,5 +121,5 @@ void BoundaryConditions<dim>::apply_boundary_condition_matrix(
 {
   // throw exception if derived class tries to call this method but did
   // not implement it
-  throw ExcNotImplemented();
+  AssertThrow(false, ExcNotImplemented());
 }

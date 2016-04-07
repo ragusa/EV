@@ -88,7 +88,9 @@ public:
   enum class TimeStepSizeOption
   {
     constant,
-    cfl
+    cfl,
+    cfl_dmp,
+    cfl_di
   };
 
   /** \brief option for how to determine time step size */

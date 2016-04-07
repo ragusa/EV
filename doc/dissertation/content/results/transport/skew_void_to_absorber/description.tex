@@ -1,7 +1,11 @@
 This problem is a more general case of the test problem described in
 Section \ref{sec:void_to_absorber} in which the transport direction is
-not necessarily the $+x$ direction but instead is any direction for which
-$\Omega_i\ge 0,\forall i$.
+not normal to the left boundary; it is a skew direction, for which
+$\Omega_i\ge 0,\forall i$, so in 2-D, particles enter through not just the left
+boundary, but the bottom boundary as well.
+The simulation is again run to $t=1$, but since it is a skew direction,
+the wave front is located not along the right boundary but in an ``L''
+shape in the strong absorber region.
 Table \ref{tab:void_to_absorber_skew} summarizes the test parameters,
 where the definition of $s$ is given below.
 
@@ -22,7 +26,7 @@ Cross Section & $\sigma(\x)=\left\{\begin{array}{c l}
    10, & \x\in(\frac{1}{2},1)^d\\
    0,  & \mbox{otherwise}\end{array}\right.$\\
 Source & $q(\x,t)=0$\\
-Speed & $c=1$\\
+Speed & $\speed=1$\\
 Exact Solution & $u(\x,t)=\left\{\begin{array}{l l}
    \scalarsolution_{\text{ss}}(\x), & \x-\mathbf{\Omega}t\notin\mathcal{D}\\
    0, & \mbox{otherwise}
@@ -66,7 +70,7 @@ shows 2-D and results for this problem.
 
 This test problem reveals some multidimensional effects of spurious
 oscillations, as one can see in the Galerkin and EV solutions. Comparing
-Figures \ref{fig:skew_void_to_absorber_2D} and \ref{fig:void_to_absorber_2D},
+Figures \ref{fig:skew_void_to_absorber_2D_fe} and \ref{fig:void_to_absorber_2D_fe},
 one can see that in the skew case, oscillations are now not just perpindicular
 to the $x$ axis but also to the $y$ axis, due to the gradients on each
 edge of the absorber region. One can also see some faint oscillations
@@ -86,7 +90,7 @@ less evident in these results simply because the wave front is
 in the absorber region, where the solution is already very small;
 thus the gradient is more difficult to see. Also, note that the same
 color scheme was used in
-Figures \ref{fig:skew_void_to_absorber_2D} and \ref{fig:void_to_absorber_2D};
+Figures \ref{fig:skew_void_to_absorber_2D_fe} and \ref{fig:void_to_absorber_2D_fe};
 the range of values is just larger for the non-skew problem due to the
 severe oscillations along the lower edge of the absorber region.
 %-------------------------------------------------------------------------------
@@ -95,14 +99,12 @@ severe oscillations along the lower edge of the absorber region.
 \centering
 \begin{tabular}{l l}\toprule
 \emph{Parameter} & \emph{Value}\\\midrule
-Number of Cells & $N_{cell} = 2^5 \times 2^5 = 1024$\\
+Number of Cells & $N_{cell} = 16384$\\
 End Time & $t = 1$\\
-CFL Number & $\nu = 0.5$\\
-Time Integrator & SSPRK33\\\midrule
-Entropy Function & $E(u) = \frac{1}{2}u^2$\\
-Entropy Residual Coefficient & $c_E = 0.1$\\
-Entropy Jump Coefficient & $c_J = 0.1$\\
-Entropy Time Integrator & BE\\
+CFL Number & $\nu = 0.5$\\\midrule
+Entropy Function & $\entropy(\scalarsolution) = \frac{1}{2}\scalarsolution^2$\\
+Entropy Residual Coefficient & $\entropyresidualcoef = 0.1$\\
+Entropy Jump Coefficient & $\entropyjumpcoef = 0.1$\\
 \bottomrule\end{tabular}
 \end{table}
 %-------------------------------------------------------------------------------
@@ -110,35 +112,68 @@ Entropy Time Integrator & BE\\
    \centering
    \begin{subfigure}{0.3\textwidth}
       \includegraphics[width=\textwidth]
-        {\contentdir/results/transport/skew_void_to_absorber/exact.png}
+        {\contentdir/results/transport/skew_void_to_absorber/images/Exact.png}
       \caption{Exact}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
       \includegraphics[width=\textwidth]
-        {\contentdir/results/transport/skew_void_to_absorber/Gal.png}
-      \caption{Galerkin}
+        {\contentdir/results/transport/skew_void_to_absorber/images/GalFCT_FE.png}
+      \caption{Galerkin FCT}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
       \includegraphics[width=\textwidth]
-        {\contentdir/results/transport/skew_void_to_absorber/GalFCT.png}
-      \caption{Galerkin with FCT}
-   \end{subfigure}
-   \begin{subfigure}{0.3\textwidth}
-      \includegraphics[width=\textwidth]
-        {\contentdir/results/transport/skew_void_to_absorber/low.png}
+        {\contentdir/results/transport/skew_void_to_absorber/images/Low_FE.png}
       \caption{Low-order}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
       \includegraphics[width=\textwidth]
-        {\contentdir/results/transport/skew_void_to_absorber/EV.png}
+        {\contentdir/results/transport/skew_void_to_absorber/images/EV_FE.png}
       \caption{Entropy Viscosity}
    \end{subfigure}
    \begin{subfigure}{0.3\textwidth}
       \includegraphics[width=\textwidth]
-        {\contentdir/results/transport/skew_void_to_absorber/EVFCT.png}
-      \caption{Entropy Viscosity with FCT}
+        {\contentdir/results/transport/skew_void_to_absorber/images/EVFCT_FE.png}
+      \caption{Entropy Viscosity FCT}
    \end{subfigure}
-   \caption{Comparison of Solutions for Skew Void-to-Absorber Test Problem}
-   \label{fig:skew_void_to_absorber_2D}
+   \caption{Comparison of Solutions for Skew Void-to-Absorber Test Problem
+     Using Explicit Euler Time Discretization}
+   \label{fig:skew_void_to_absorber_2D_fe}
+\end{figure}
+%-------------------------------------------------------------------------------
+\begin{figure}[ht]
+   \centering
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/skew_void_to_absorber/images/Exact.png}
+      \caption{Exact}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/skew_void_to_absorber/images/Gal_SSPRK33.png}
+      \caption{Galerkin}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/skew_void_to_absorber/images/GalFCT_SSPRK33.png}
+      \caption{Galerkin FCT}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/skew_void_to_absorber/images/Low_SSPRK33.png}
+      \caption{Low-order}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/skew_void_to_absorber/images/EV_SSPRK33.png}
+      \caption{Entropy Viscosity}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/skew_void_to_absorber/images/EVFCT_SSPRK33.png}
+      \caption{Entropy Viscosity FCT}
+   \end{subfigure}
+   \caption{Comparison of Solutions for Skew Void-to-Absorber Test Problem
+     Using SSPRK33 Time Discretization}
+   \label{fig:skew_void_to_absorber_2D_ssprk33}
 \end{figure}
 %-------------------------------------------------------------------------------

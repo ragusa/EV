@@ -49,9 +49,9 @@ ConservationLaw<dim>::ConservationLaw(const RunParameters & params,
     need_to_compute_inviscid_ss_matrix(false)
 {
   // assert that an explicit time integrator is specified
-  Assert(params.temporal_discretization ==
-           TemporalDiscretizationClassification::ssprk,
-         ExcNotImplemented());
+  AssertThrow(params.temporal_discretization ==
+                TemporalDiscretizationClassification::ssprk,
+              ExcNotImplemented());
 }
 
 /**
@@ -216,19 +216,43 @@ void ConservationLaw<dim>::initialize_system()
       // DMP low-order viscosity requires computation of inviscid ss matrix
       need_to_compute_inviscid_ss_matrix = true;
 
+      // issue warning if an inappropriate time step size was chosen
+      if (parameters.time_step_size_option != TimeStepSizeOption::constant &&
+          parameters.time_step_size_option != TimeStepSizeOption::cfl_dmp)
+        utilities::issue_warning(
+          "The DMP low-order method was chosen for the low-order scheme, \n"
+          "but the DMP CFL time step size method was not used. \n"
+          "The time step sizes used may violate the CFL condition.");
+
       low_order_viscosity_type = ViscosityType::DMP;
       low_order_diffusion_type = DiffusionType::graphtheoretic;
       break;
     case LowOrderScheme::di_visc:
+      // issue warning if an inappropriate time step size was chosen
+      if (parameters.time_step_size_option != TimeStepSizeOption::constant &&
+          parameters.time_step_size_option != TimeStepSizeOption::cfl_di)
+        utilities::issue_warning(
+          "The DI low-order method was chosen for the low-order scheme, \n"
+          "but the DI CFL time step size method was not used. \n"
+          "The time step sizes used may violate the CFL condition");
+
       low_order_viscosity_type = ViscosityType::DI;
       low_order_diffusion_type = DiffusionType::graphtheoretic;
       break;
     case LowOrderScheme::di_diff:
+      // issue warning if an inappropriate time step size was chosen
+      if (parameters.time_step_size_option != TimeStepSizeOption::constant &&
+          parameters.time_step_size_option != TimeStepSizeOption::cfl_di)
+        utilities::issue_warning(
+          "The DI low-order method was chosen for the low-order scheme, \n"
+          "but the DI CFL time step size method was not used. \n"
+          "The time step sizes used may violate the CFL condition");
+
       low_order_viscosity_type = ViscosityType::none;
       low_order_diffusion_type = DiffusionType::DI;
       break;
     default:
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
   }
 
@@ -246,13 +270,13 @@ void ConservationLaw<dim>::initialize_system()
       high_order_diffusion_type = low_order_diffusion_type;
       break;
     case HighOrderScheme::entropy_diff:
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       entropy_viscosity_type = ViscosityType::none;
       high_order_viscosity_type = ViscosityType::none;
       high_order_diffusion_type = DiffusionType::entropy;
       break;
     default:
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
   }
 
@@ -426,6 +450,8 @@ void ConservationLaw<dim>::setup_system()
     locally_owned_dofs, locally_owned_dofs, dsp_unconstrained, mpi_communicator);
   inviscid_ss_matrix.reinit(
     locally_owned_dofs, locally_owned_dofs, dsp_unconstrained, mpi_communicator);
+  low_order_ss_matrix.reinit(
+    locally_owned_dofs, locally_owned_dofs, dsp_unconstrained, mpi_communicator);
 #else
   // reinitialize matrices with sparsity pattern
   system_matrix.reinit(unconstrained_sparsity_pattern);
@@ -434,6 +460,7 @@ void ConservationLaw<dim>::setup_system()
   low_order_diffusion_matrix.reinit(unconstrained_sparsity_pattern);
   high_order_diffusion_matrix.reinit(unconstrained_sparsity_pattern);
   inviscid_ss_matrix.reinit(unconstrained_sparsity_pattern);
+  low_order_ss_matrix.reinit(unconstrained_sparsity_pattern);
 #endif
 
   // assemble mass matrix
@@ -557,7 +584,7 @@ void ConservationLaw<dim>::setup_system()
     }
     default:
     {
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
     }
   }
@@ -596,7 +623,7 @@ void ConservationLaw<dim>::setup_system()
     }
     default:
     {
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
     }
   }
@@ -637,7 +664,7 @@ void ConservationLaw<dim>::setup_system()
     }
     default:
     {
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
     }
   }
@@ -707,7 +734,7 @@ std::shared_ptr<ArtificialDiffusion<dim>> ConservationLaw<
     // else
     default:
     {
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
       break;
     }
   }
@@ -818,8 +845,37 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
     fct = create_fct();
 
   // if using DMP low-order viscosity, compute inviscid steady-state matrix
+  bool inviscid_ss_matrix_computed = false;
   if (need_to_compute_inviscid_ss_matrix)
+  {
     compute_inviscid_ss_matrix(old_solution, inviscid_ss_matrix);
+    inviscid_ss_matrix_computed = true;
+  }
+
+  // if using DMP CFL condition, compute DMP CFL time step size
+  double dt_dmp_cfl = 0.0;
+  if (parameters.time_step_size_option == TimeStepSizeOption::cfl_dmp)
+  {
+    // assert that conservation law is linear; otherwise, the low-order
+    // steady-state matrix would need to be computed before each time step
+    AssertThrow(is_linear, ExcNotImplemented());
+
+    // compute the inviscid steady-state matrix if it is not yet computed
+    if (~inviscid_ss_matrix_computed)
+      compute_inviscid_ss_matrix(old_solution, inviscid_ss_matrix);
+
+    // compute the low-order diffusion matrix
+    low_order_viscosity->update(old_solution, old_solution, 0.0, 0);
+    low_order_diffusion->compute_diffusion_matrix(
+      old_solution, low_order_viscosity, low_order_diffusion_matrix);
+
+    // compute the low-order steady-state matrix
+    low_order_ss_matrix.copy_from(inviscid_ss_matrix);
+    low_order_ss_matrix.add(1.0, low_order_diffusion_matrix);
+
+    // compute DMP CFL time step size
+    dt_dmp_cfl = compute_dt_from_dmp_cfl_condition();
+  }
 
   // compute end time
   double end_time;
@@ -856,8 +912,14 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
       case TimeStepSizeOption::cfl:
         dt = compute_dt_from_cfl_condition();
         break;
+      case TimeStepSizeOption::cfl_dmp:
+        dt = dt_dmp_cfl;
+        break;
+      case TimeStepSizeOption::cfl_di:
+        dt = compute_dt_from_di_cfl_condition();
+        break;
       default:
-        throw ExcNotImplemented();
+        AssertThrow(false, ExcNotImplemented());
         break;
     }
     // check end of transient and shorten last time step if necessary
@@ -958,7 +1020,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
           perform_fct_ssprk_step(dt, old_stage_dt, n, fct, ssprk);
           break;
         default:
-          throw ExcNotImplemented();
+          AssertThrow(false, ExcNotImplemented());
           break;
       }
 
@@ -1056,6 +1118,51 @@ template <int dim>
 double ConservationLaw<dim>::compute_dt_from_cfl_condition()
 {
   return parameters.cfl * minimum_cell_diameter / max_flux_speed;
+}
+
+/**
+ * \brief Computes time step size using the DMP CFL condition.
+ *
+ * The DMP CFL condition for the explicit Euler method is the following:
+ * \f[
+ *   \Delta t^n \leq \frac{M^L_{i,i}}{A^{L,n}_{i,i}} \quad \forall i \,,
+ * \f]
+ * where \f$\mathbf{M}^L\f$ is the lumped mass matrix,
+ * and \f$\mathbf{A}^{L,n}\f$ is the low-order steady-state matrix evaluated
+ * at time \f$n\f$. This function computes the time step size as
+ * \f[
+ *   \Delta t^n = \nu\min\limits_i\frac{M^L_{i,i}}{A^{L,n}_{i,i}} \,,
+ * \f]
+ * where \f$\nu\f$ is the user-specified CFL number.
+ *
+ * \pre This function assumes that the lumped mass matrix and the low-order
+ * steady-state matrix have been computed. If the low-order steady-state
+ * matrix depends on the solution or explicitly on time, this function
+ * assumes it has computed for this time step.
+ */
+template <int dim>
+double ConservationLaw<dim>::compute_dt_from_dmp_cfl_condition()
+{
+  // initialize CFL time step size to arbitrary large number before min()
+  double dt = 1.0e15;
+  for (unsigned int i = 0; i < this->n_dofs; ++i)
+    dt = std::min(dt, lumped_mass_matrix(i, i) / low_order_ss_matrix(i, i));
+
+  // multiply by user-specified CFL number
+  dt *= parameters.cfl;
+
+  return dt;
+}
+
+/**
+ * \brief Computes time step size using the DI CFL condition.
+ */
+template <int dim>
+double ConservationLaw<dim>::compute_dt_from_di_cfl_condition()
+{
+  AssertThrow(false, ExcNotImplemented());
+
+  return 0.0;
 }
 
 /** \brief Computes the CFL number.
@@ -1302,7 +1409,7 @@ void ConservationLaw<dim>::compute_inviscid_ss_matrix(const Vector<double> &,
   // throw exception if this base version is called; if a derived class needs
   // this function (i.e., it is a scalar conservation law), it should override
   // this function
-  throw ExcInvalidState();
+  AssertThrow(false, ExcInvalidState());
 }
 
 /**
@@ -1342,7 +1449,7 @@ template <int dim>
 std::shared_ptr<StarState<dim>> ConservationLaw<dim>::create_star_state() const
 {
   // throw exception if not overridden by derived class
-  throw ExcNotImplemented();
+  AssertThrow(false, ExcNotImplemented());
 
   // return null pointer to avoid compiler warning about not returning anything
   return nullptr;

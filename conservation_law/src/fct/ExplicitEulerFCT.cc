@@ -181,7 +181,7 @@ std::shared_ptr<ExplicitEulerFCTFilter<dim>> ExplicitEulerFCT<dim>::create_filte
                                                        *this->fe,
                                                        *lumped_mass_matrix);
   else
-    throw ExcNotImplemented();
+    AssertThrow(false, ExcNotImplemented());
 
   // return pointer to new filter
   return filter;

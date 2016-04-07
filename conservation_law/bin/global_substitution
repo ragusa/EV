@@ -17,6 +17,6 @@ else
   # loop over *.cc and *.h files
   for file in $file_list; do
     # call substitution script
-    substitute_text $file $1 $2
+    substitute_text $file "$1" "$2"
   done
 fi

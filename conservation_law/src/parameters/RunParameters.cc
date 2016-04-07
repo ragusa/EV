@@ -89,7 +89,7 @@ void RunParameters::declare_run_parameters(ParameterHandler & prm)
   {
     prm.declare_entry("time step size option",
                       "constant",
-                      Patterns::Selection("constant|cfl"),
+                      Patterns::Selection("constant|cfl|cfl_dmp|cfl_di"),
                       "method of computing time step size");
     prm.declare_entry("cfl",
                       "0.5",
@@ -377,7 +377,7 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
       scheme = Scheme::fct;
     else
     {
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
     }
 
     // low-order scheme
@@ -394,7 +394,7 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
       low_order_scheme = LowOrderScheme::di_diff;
     else
     {
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
     }
 
     // high-order scheme
@@ -407,7 +407,7 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
       high_order_scheme = HighOrderScheme::entropy_diff;
     else
     {
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
     }
   }
   prm.leave_subsection();
@@ -436,10 +436,12 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
       time_step_size_option = TimeStepSizeOption::constant;
     else if (time_choice == "cfl")
       time_step_size_option = TimeStepSizeOption::cfl;
+    else if (time_choice == "cfl_dmp")
+      time_step_size_option = TimeStepSizeOption::cfl_dmp;
+    else if (time_choice == "cfl_di")
+      time_step_size_option = TimeStepSizeOption::cfl_di;
     else
-    {
-      throw ExcNotImplemented();
-    }
+      AssertThrow(false, ExcNotImplemented());
 
     cfl = prm.get_double("cfl");
     time_step_size = prm.get_double("time step size");
@@ -462,7 +464,7 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
       temporal_discretization = TemporalDiscretizationClassification::ssprk;
     else
     {
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
     }
 
     // SSPRK discretization
@@ -475,7 +477,7 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
       ssprk_discretization = SSPRKDiscretization::SSP3;
     else
     {
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
     }
 
     // theta discretization
@@ -497,7 +499,7 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
     }
     else
     {
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
     }
   }
   prm.leave_subsection();
@@ -518,7 +520,7 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
       entropy_viscosity_smoothing_option =
         EntropyViscositySmoothingOption::average;
     else
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
 
     entropy_viscosity_smoothing_weight =
       prm.get_integer("entropy viscosity smoothing weight");
@@ -544,7 +546,7 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
     else if (limiter_string == "zalesak")
       limiter_option = LimiterOption::zalesak;
     else
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
 
     use_multipass_limiting = prm.get_bool("use multipass limiting");
 
@@ -563,7 +565,7 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
     else if (synchronization_string == "compound")
       fct_synchronization_type = FCTSynchronizationType::compound;
     else
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
 
     // FCT initialization
     std::string fct_initialization_string = prm.get("fct initialization option");
@@ -574,7 +576,7 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
     else if (fct_initialization_string == "high")
       fct_initialization_option = FCTInitializationOption::high;
     else
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
 
     skip_fct_if_bounds_satisfied = prm.get_bool("skip fct if bounds satisfied");
     use_cumulative_antidiffusion_algorithm =
@@ -594,7 +596,7 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
     if (solver == "direct")
       linear_solver_type = LinearSolverType::direct;
     else
-      throw ExcNotImplemented();
+      AssertThrow(false, ExcNotImplemented());
   }
   prm.leave_subsection();
 

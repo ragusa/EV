@@ -139,7 +139,7 @@ void TransportProblem<dim>::run()
         }
         default:
         {
-          throw ExcNotImplemented();
+          AssertThrow(false, ExcNotImplemented());
           break;
         }
       }

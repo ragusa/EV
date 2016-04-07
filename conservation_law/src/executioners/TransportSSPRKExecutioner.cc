@@ -109,7 +109,7 @@ void TransportSSPRKExecutioner<dim>::compute_new_solution(const double & dt,
         perform_fct_ssprk_step(dt, old_stage_dt, n);
         break;
       default:
-        throw ExcNotImplemented();
+        AssertThrow(false, ExcNotImplemented());
         break;
     }
   }

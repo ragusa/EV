@@ -49,6 +49,7 @@
 #include "include/fct/ExplicitEulerFCT.h"
 #include "include/fe/GradientMatrix.h"
 #include "include/other/Exceptions.h"
+#include "include/other/Utilities.h"
 #include "include/parameters/RunParameters.h"
 #include "include/parameters/ProblemParameters.h"
 #include "include/postprocessing/PostProcessor.h"
@@ -159,6 +160,10 @@ protected:
   void solve_runge_kutta(PostProcessor<dim> & postprocessor);
 
   double compute_dt_from_cfl_condition();
+
+  double compute_dt_from_dmp_cfl_condition();
+
+  double compute_dt_from_di_cfl_condition();
 
   double compute_cfl_number(const double & dt) const;
 
@@ -412,6 +417,8 @@ protected:
   LocalMatrix high_order_diffusion_matrix;
   /** \brief Inviscid steady-state matrix \f$\mathbf{A}\f$ */
   LocalMatrix inviscid_ss_matrix;
+  /** \brief Low-order steady-state matrix \f$\mathbf{A}^L\f$ */
+  LocalMatrix low_order_ss_matrix;
 
   /** \brief Vector of component names */
   std::vector<std::string> component_names;
