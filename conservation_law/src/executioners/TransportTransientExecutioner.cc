@@ -108,7 +108,7 @@ void TransportTransientExecutioner<dim>::run()
       // leave time step as is
       break;
     }
-    case TimeStepSizeOption::cfl:
+    case TimeStepSizeOption::cfl_dmp:
     {
       // compute time step size from DMP CFL condition
       dt_nominal = compute_dt_from_dmp_cfl_condition();

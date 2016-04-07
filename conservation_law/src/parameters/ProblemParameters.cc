@@ -44,10 +44,10 @@ void ProblemParameters<dim>::declare_base_parameters()
                                     Patterns::Bool(),
                                     "Flag signalling problem is valid in 3-D");
     parameter_handler.declare_entry(
-      "is steady state problem",
-      "false",
+      "is transient problem",
+      "true",
       Patterns::Bool(),
-      "Flag signalling that problem is a steady-state problem");
+      "Flag signalling that problem is a transient problem only");
   }
   parameter_handler.leave_subsection();
 
@@ -90,6 +90,17 @@ void ProblemParameters<dim>::declare_base_parameters()
       "all",
       Patterns::Selection("all|incoming|left"),
       "Option for how to assign boundary ID to faces");
+  }
+  parameter_handler.leave_subsection();
+
+  // initial conditions
+  parameter_handler.enter_subsection("initial conditions");
+  {
+    parameter_handler.declare_entry("use exact solution as initial conditions",
+                                    "false",
+                                    Patterns::Bool(),
+                                    "Flag signalling that exact solution is to"
+                                    "be used as initial conditions");
   }
   parameter_handler.leave_subsection();
 
@@ -174,8 +185,8 @@ void ProblemParameters<dim>::get_base_parameters()
     valid_in_1d = parameter_handler.get_bool("valid in 1d");
     valid_in_2d = parameter_handler.get_bool("valid in 2d");
     valid_in_3d = parameter_handler.get_bool("valid in 3d");
-    is_steady_state_problem =
-      parameter_handler.get_bool("is steady state problem");
+    is_transient_problem =
+      parameter_handler.get_bool("is transient problem");
   }
   parameter_handler.leave_subsection();
 
@@ -239,8 +250,8 @@ void ProblemParameters<dim>::process_base_parameters()
     Assert(dim != 3, ExcImpossibleInDim(dim));
   }
 
-  // assert that problem is steady-state or transient
-  Assert(specified_steady_state == is_steady_state_problem,
+  // assert that problem is not transient if steady-state is specified
+  Assert(!(specified_steady_state && is_transient_problem),
          ExcNotASteadyStateProblem());
 
   // constants for function parsers
@@ -329,12 +340,16 @@ void ProblemParameters<dim>::process_shared_base_parameters(
     }
   }
 
+  // if chose to use exact solution as initial conditions
+  if (use_exact_solution_as_initial_conditions)
+    initial_conditions_strings = exact_solution_strings;
+
   // initialize initial conditions function
   initial_conditions_function.initialize(
-    FunctionParser<dim>::default_variable_names(),
+    FunctionParser<dim>::default_variable_names() + ",t",
     initial_conditions_strings,
     constants,
-    false);
+    true);
 }
 
 /**

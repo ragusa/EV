@@ -2,12 +2,13 @@ subsection validity
   set valid in 1d = true
   set valid in 2d = true
   set valid in 3d = true
+  set is transient problem = true
 end
 
 subsection physics
   set transport speed = 1.0
   set transport direction specification = 2d_angle
-  set azimuthal angle = 45.0
+  set azimuthal angle = 0.0
   set normalize transport direction = false
   set cross section = 0
   set source = 0

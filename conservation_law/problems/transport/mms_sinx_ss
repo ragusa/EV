@@ -1,7 +1,7 @@
 subsection validity
   set valid in 1d = true
-  set valid in 2d = true
-  set valid in 3d = true
+  set valid in 2d = false
+  set valid in 3d = false
   set is transient problem = false
 end
 
@@ -10,24 +10,19 @@ subsection physics
   set transport direction specification = 2d_angle
   set azimuthal angle = 0.0
   set normalize transport direction = false
-  set cross section = if(x<x_mid, 0, sigma1)
-  set source = 0
+  set cross section = 1.0
+  set source = pi*cos(pi*x) + sin(pi*x)
   set source is time dependent = false
 end
 
 subsection constants
-  set incoming =   1.0
-  set sigma1   = 100.0
+  set incoming =   0.0
 end
 
 subsection domain
   set domain shape = hyper_cube
   set x start = 0.0
   set x width = 1.0
-  set y start = 0.0
-  set y width = 1.0
-  set z start = 0.0
-  set z width = 1.0
 end
 
 subsection boundary conditions
@@ -39,5 +34,5 @@ end
 subsection exact solution
   set has exact solution = true
   set exact solution type = parsed
-  set exact solution = if(x<x_mid, incoming, incoming*exp(-sigma1*(x-x_mid)))
+  set exact solution = sin(pi*x)
 end

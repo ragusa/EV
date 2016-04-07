@@ -2,7 +2,7 @@ subsection validity
   set valid in 1d = true
   set valid in 2d = true
   set valid in 3d = true
-  set is steady state problem = true
+  set is transient problem = true
 end
 
 subsection physics

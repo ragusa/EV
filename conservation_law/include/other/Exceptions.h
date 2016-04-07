@@ -7,6 +7,12 @@
 
 using namespace dealii;
 
+/** \brief Exception for an assumption being violated */
+DeclException0(ExcAssumptionViolated);
+
+/** \brief Exception for a negative diagonal entry when not expected */
+DeclException2(ExcNegativeDiagonal, int, double, << "Row " << arg1 << ": " << arg2);
+
 /** \brief Exception for a NaN being encountered */
 DeclException0(ExcNaNEncountered);
 

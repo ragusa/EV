@@ -19,11 +19,12 @@ The following is a list of things to do:
    release mode, the statement following the conditional branch would then be
    used as the else statement - curly brackets need to surround the Assert
    statement.
-8. Move ShallowWaterFCT.cc to src folder and add it with git.
 9. Fix all of the problem parameters input files.
 10. Remove unnecessary header files/add include statements for header files
     where needed; while executables may compile, classes may in future
     be used in other executables where dependencies are not resolved by
     previous includes.
 11. Untemplate classes that do need the <dim> parameter.
-12. Replace "throw SomeException()" with "AssertThrow(false, SomeException())"
+12. Fix time step size computation in implicit_transport; Dirichlet nodes should
+    be excluded from the min() function, and no abs() should be needed on the
+    low-order steady-state diagonal entries since they should be positive.

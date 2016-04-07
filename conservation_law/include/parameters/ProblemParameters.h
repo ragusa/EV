@@ -79,8 +79,8 @@ protected:
   bool valid_in_2d;
   /** \brief Flag that problem is valid in 3-D */
   bool valid_in_3d;
-  /** \brief Flag that problem is steady-state */
-  bool is_steady_state_problem;
+  /** \brief Flag that problem is transient */
+  bool is_transient_problem;
 
   /** \brief Shape description of domain */
   std::string domain_shape;
@@ -104,6 +104,9 @@ protected:
 
   /** \brief Flag that exact solution should be used for Dirichlet BC */
   bool use_exact_solution_as_dirichlet_bc;
+
+  /** \brief Flag that exact solution should be used for initial conditions */
+  bool use_exact_solution_as_initial_conditions;
 
   /** \brief vector of initial condition function strings for each component */
   std::vector<std::string> initial_conditions_strings;

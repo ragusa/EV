@@ -1,42 +1,42 @@
 # Input file for scalar transport
 
 # Problem names:
-#   void
 #   absorber
 #   absorber_ss
 #   constant_ss
-#   void_to_absorber_1d
-#   void_to_absorber_1d_ss
+#   mms_sinx_expt  u(x,t) = sin(pi*x)*exp(-t)
+#   mms_sinx_ss    u(x)   = sin(pi*x)
+#   mms_sinx_t     u(x,t) = sin(pi*x)*t
+#   mms_x_expt     u(x,t) = x*exp(-t)
+#   mms_x_t        u(x,t) = x*t
+#   mms_t          u(x,t) = t
+#   obstruction
 #   sourcevoid_to_absorber
 #   sourcevoid_to_absorber_ss
-#   crooked_pipe
-#   obstruction
 #   three_region
-#   mms_tsinx    (TR:t*sin(pi*x)        SS:sin(pi*x))
-#   mms_xexpt    (TR:x*exp(-t)          SS:N/A      )
-#   mms_exptsinx (TR:exp(-t)*sin(pi*x)  SS:N/A      )
-#   mms_xt       (TR:x*t                SS:x        )
-#   mms_t        (TR:t                  SS:1        )
+#   void
+#   void_to_absorber_1d
+#   void_to_absorber_1d_ss
 subsection problem
-   set problem name = void_to_absorber_1d
+   set problem name = mms_sinx_t
 end
 
 subsection scheme
-   set scheme            = fct          # low|high|fct
+   set scheme            = high         # low|high|fct
    set low order scheme  = dmp          # constant|lax|dmp|di_visc|di_diff
-   set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
+   set high order scheme = galerkin     # galerkin|entropy_visc|entropy_diff
 end
 
 subsection refinement
-   set refinement cycles        = 1
+   set refinement cycles        = 4
    set refine space             = true
    set refine time              = true
-   set initial refinement level = 5
+   set initial refinement level = 3
    set use adaptive mesh refinement = false
    set time refinement factor   = 0.5
    set refinement fraction      = 0.5
    set coarsening fraction      = 0.01
-   set use cell size for convergence rates = false
+   set use cell size for convergence rates = true # otherwise, use dt
 end
 
 subsection time
@@ -44,12 +44,12 @@ subsection time
    set cfl                    = 0.5
    set time step size         = 0.001
    set use default end time   = false
-   set end time               = 0.3
+   set end time               = 0.01
    set steady state tolerance = 1.0e-6
 end
 
 subsection temporal discretization
-   set temporal discretization = ssprk # ss|ssprk|theta
+   set temporal discretization = theta # ss|ssprk|theta
    set ssprk discretization    = FE    # FE|SSP2|SSP3
    set theta discretization    = BE    # FE|CN|BE
 end
@@ -109,7 +109,7 @@ subsection output
    set output viscosity   = false
    set output viscosity transient      = false
    set exact solution refinement level = 7
-   set save convergence results        = false
+   set save convergence results        = true
    set print final solution            = false
 end
 

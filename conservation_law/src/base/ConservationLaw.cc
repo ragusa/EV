@@ -110,6 +110,7 @@ void ConservationLaw<dim>::run()
     cout1 << "  Number of degrees of freedom: " << n_dofs << std::endl;
 
     // interpolate the initial conditions to the grid, and apply constraints
+    problem_base_parameters->initial_conditions_function.set_time(0.0);
     VectorTools::interpolate(dof_handler,
                              problem_base_parameters->initial_conditions_function,
                              new_solution);
@@ -1134,6 +1135,9 @@ double ConservationLaw<dim>::compute_dt_from_cfl_condition()
  *   \Delta t^n = \nu\min\limits_i\frac{M^L_{i,i}}{A^{L,n}_{i,i}} \,,
  * \f]
  * where \f$\nu\f$ is the user-specified CFL number.
+ * Dirichlet nodes are excluded from the \f$\min\f$ because the time step
+ * restriction does not apply and the condition \f$A^{L,n} > 0\f$ is not
+ * necessarily satisfied.
  *
  * \pre This function assumes that the lumped mass matrix and the low-order
  * steady-state matrix have been computed. If the low-order steady-state
@@ -1143,10 +1147,22 @@ double ConservationLaw<dim>::compute_dt_from_cfl_condition()
 template <int dim>
 double ConservationLaw<dim>::compute_dt_from_dmp_cfl_condition()
 {
+  // iterators for determining if an index is in the list of Dirichlet indices
+  std::vector<unsigned int>::iterator it_begin = dirichlet_dof_indices.begin();
+  std::vector<unsigned int>::iterator it_end = dirichlet_dof_indices.end();
+
   // initialize CFL time step size to arbitrary large number before min()
   double dt = 1.0e15;
   for (unsigned int i = 0; i < this->n_dofs; ++i)
-    dt = std::min(dt, lumped_mass_matrix(i, i) / low_order_ss_matrix(i, i));
+  {
+    // if not a Dirichlet node
+    if (std::find(it_begin, it_end, i) == it_end)
+    {
+      const double ALii = low_order_ss_matrix(i,i);
+      Assert(ALii > 0.0, ExcNegativeDiagonal(i, ALii));
+      dt = std::min(dt, lumped_mass_matrix(i, i) / ALii);
+    }
+  }
 
   // multiply by user-specified CFL number
   dt *= parameters.cfl;
