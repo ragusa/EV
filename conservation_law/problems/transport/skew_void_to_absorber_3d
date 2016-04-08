@@ -1,0 +1,58 @@
+subsection validity
+  set valid in 1d = false
+  set valid in 2d = false
+  set valid in 3d = true
+  set is transient problem = true
+end
+
+subsection physics
+  set transport speed = 1.0
+  set transport direction specification = components
+  set transport direction x = 0.7071067811865475 # 1/sqrt(2)
+  set transport direction y = 0.5773502691896258 # 1/sqrt(3)
+  set transport direction z = 0.4082482904638631 # 1/sqrt(6)
+  set normalize transport direction = true
+  set cross section = if(x<=x1, if(y<=x1, if(z<=x1, sigma1, \
+    sigma2), sigma2), sigma2)
+  set source = 0
+  set source is time dependent = false
+end
+
+subsection constants
+  set incoming =  1.0
+  set x1       =  0.5
+  set sigma1   =  0.0
+  set sigma2   = 10.0
+  set source1  =  0.0
+  set source2  =  0.0
+end
+
+subsection domain
+  set domain shape = hyper_cube
+  set x start = 0.0
+  set x width = 1.0
+  set y start = 0.0
+  set y width = 1.0
+  set z start = 0.0
+  set z width = 1.0
+end
+
+subsection boundary conditions
+  set boundary conditions type = dirichlet
+  set dirichlet function = incoming
+  set boundary id scheme = incoming
+end
+
+subsection initial conditions
+  set initial condition = 0
+end
+
+subsection exact solution
+  set has exact solution = true
+  set exact solution type = two_region
+end
+
+subsection default end time
+  set has default end time = true
+  set default end time = 1.0
+end

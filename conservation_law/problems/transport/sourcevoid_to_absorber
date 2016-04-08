@@ -2,7 +2,7 @@ subsection validity
   set valid in 1d = true
   set valid in 2d = true
   set valid in 3d = true
-  set is transient problem = false
+  set is transient problem = true
 end
 
 subsection physics
@@ -10,8 +10,8 @@ subsection physics
   set transport direction specification = 2d_angle
   set azimuthal angle = 0.0
   set normalize transport direction = false
-  set cross section = if(x<x1, sigma1, sigma2)
-  set source = if(x<x1, source1, source2)
+  set cross section = if(x<=x1 || y<=x1 || z<=x1, sigma1, sigma2)
+  set source = if(x<=x1 || y<=x1 || z<=x1, source1, source2)
   set source is time dependent = false
 end
 
@@ -40,7 +40,16 @@ subsection boundary conditions
   set boundary id scheme = incoming
 end
 
+subsection initial conditions
+  set initial condition = 0
+end
+
 subsection exact solution
   set has exact solution = true
   set exact solution type = two_region
+end
+
+subsection default end time
+  set has default end time = true
+  set default end time = 1.0
 end

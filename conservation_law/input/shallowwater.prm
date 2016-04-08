@@ -13,8 +13,8 @@ subsection problem
 end
 
 subsection scheme
-   set scheme            = low          # low|high|fct
-   set low order scheme  = lax          # constant|lax|dmp|di_visc|di_diff
+   set scheme            = high     # low|high|fct
+   set low order scheme  = lax      # constant|lax|dmp|di_visc|di_diff
    set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
 end
 
@@ -31,7 +31,7 @@ subsection refinement
 end
 
 subsection time
-   set time step size option  = cfl # constant|cfl
+   set time step size option  = cfl # constant|cfl|cfl_di
    set cfl                    = 0.10
    set time step size         = 0.001
    set use default end time   = true
