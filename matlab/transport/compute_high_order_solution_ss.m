@@ -49,7 +49,7 @@ for iter = 1:max_iter
     % plot iteration if requested
     if (plot_iterations)
         % new figure
-        figure;
+        figure(1);
 
         % plot solution
         subplot(2,1,1);
@@ -64,8 +64,12 @@ for iter = 1:max_iter
         legend(leg_string,'Location','NorthWest');
 
         % pause
-        %pause(0.1);
-        %waitforbuttonpress;
+        if (strcmp(out_opts.pause_type,'wait'))
+            waitforbuttonpress;
+        else
+            pause(out_opts.pausetime);
+        end
+        
     end
 end
 

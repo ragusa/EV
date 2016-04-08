@@ -33,9 +33,7 @@ cE            = ev.cE;
 cJ            = ev.cJ;
 entropy       = ev.entropy;
 entropy_deriv = ev.entropy_deriv;
-
-% option to use local entropy normalization
-use_local_entropy_normalization = true;
+use_local_entropy_normalization = ev.use_local_ev_norm;
 
 % compute domain average of entropy
 E_integral = 0;
@@ -56,24 +54,26 @@ L = x(end)-x(1);        % length of domain
 E_avg = E_integral / L; % domain average of entropy
 
 % compute max entropy deviation in domain for normalization constant
-% E_dev_max = 0;
-% for iel = 1:nel
-%     % evaluate solution at quadrature points
-%     u_new_local = v' * u_new(g(iel,:));
-% 
-%     % make transformation: y(u) = u*exp(sigma*x)
-%     xq = get_quadrature_point_positions(x,iel,zq);
-%     sigma_q  = sigma(xq);
-%     y_new_local = u_new_local.*exp(xq.*sigma_q);
-% 
-%     % compute entropy and deviation from average
-%     if (high_order_scheme == 3)
-%         cnorm = entropy(y_new_local) - E_avg;
-%     else
-%         cnorm = 0.5 * u_new_local .* u_new_local - exp(-2.0*sigma_q.*xq)*E_avg;
-%     end
-%      E_dev_max = max(E_dev_max, max(abs(cnorm)));
-% end
+if (~use_local_entropy_normalization)
+    E_dev_max = 0;
+    for iel = 1:nel
+        % evaluate solution at quadrature points
+        u_new_local = v' * u_new(g(iel,:));
+        
+        % make transformation: y(u) = u*exp(sigma*x)
+        xq = get_quadrature_point_positions(x,iel,zq);
+        sigma_q  = sigma(xq);
+        y_new_local = u_new_local.*exp(xq.*sigma_q);
+        
+        % compute entropy and deviation from average
+        if (high_order_scheme == 3)
+            cnorm = entropy(y_new_local) - E_avg;
+        else
+            cnorm = 0.5 * u_new_local .* u_new_local - exp(-2.0*sigma_q.*xq)*E_avg;
+        end
+        E_dev_max = max(E_dev_max, max(abs(cnorm)));
+    end
+end
 
 % % compute entropy jumps
 % n_face = n_dof;
@@ -173,16 +173,16 @@ for iel = 1:nel
         viscE(iel) = 0.0;
         for q = 1:nq
             if abs(normalization(q)) < 1.0e-100
-               viscEq = 0.0;
+               viscEq = abs(cE*R(q));
             else
                viscEq = abs(cE*R(q) / normalization(q));
             end
             viscE(iel) = max(viscE(iel), viscEq);
         end
     else
-        R_max = max(abs(R));
+        R_max = max(abs(R))
         if abs(E_dev_max) < 1.0e-100
-           viscE(iel) = 0.0;
+           viscE(iel) = cE*R_max;
         else
            viscE(iel) = cE*R_max / E_dev_max;
         end

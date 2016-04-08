@@ -12,7 +12,7 @@ opts.impose_DirichletBC_strongly = true; % impose Dirichlet BC strongly?
 %--------------------------------------------------------------------------
 compute_low_order  = true; % compute and plot low-order solution?
 compute_high_order = true; % compute and plot high-order solution?
-compute_FCT        = true; % compute and plot FCT solution?
+compute_FCT        = false; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
 %                   2 = graph-theoretic low-order scheme
@@ -22,15 +22,16 @@ opts.low_order_scheme  = 2;
 %                    2 = Entropy viscosity
 %                    3 = Alternate Entropy viscosity 1
 %                    4 = Alternate Entropy viscosity 2 (should be same as 1)
-opts.high_order_scheme = 1;
+opts.high_order_scheme = 4;
 
 %--------------------------------------------------------------------------
 % entropy viscosity options
 %--------------------------------------------------------------------------
-ev.cE = 0.01; % coefficient for entropy residual in entropy viscosity
+ev.cE = 0.1; % coefficient for entropy residual in entropy viscosity
 ev.cJ = ev.cE*0; % coefficient for jumps in entropy viscosity
 ev.entropy       = @(u) 0.5*u.^2; % entropy function
 ev.entropy_deriv = @(u) u;        % derivative of entropy function
+ev.use_local_ev_norm = false; % option to use local entropy normalization
 ev.smooth_entropy_viscosity = false; % option to smooth entropy viscosity
 ev.smoothing_weight = 1.0; % weight for center value in smoothing
 %--------------------------------------------------------------------------
@@ -90,7 +91,7 @@ fct_opts.dirichlet_limiting_coefficient = 0.0;
 %            4: void
 %            5: MMS: TR: u = t*sin(pi*x)  SS: u = sin(pi*x)
 %            6: MMS: TR: u = x*t          SS: u = x
-problemID = 3;
+problemID = 1;
 
 % IC_option: 0: zero
 %            1: exponential pulse
@@ -111,7 +112,7 @@ phys.impose_BC_on_IC = true; % option to impose Dirichlet BC on IC
 %--------------------------------------------------------------------------
 % nonlinear solver options
 %--------------------------------------------------------------------------
-nonlin_opts.max_iter = 1000;    % maximum number of nonlinear solver iterations
+nonlin_opts.max_iter = 10;    % maximum number of nonlinear solver iterations
 nonlin_opts.nonlin_tol = 1e-10; % nonlinear solver tolerance for discrete L2 norm
 nonlin_opts.relax = 1.0; % relaxation parameter for iteration
 %--------------------------------------------------------------------------
@@ -121,10 +122,10 @@ out_opts.plot_low_order_transient  = false; % plot low-order transient?
 out_opts.plot_high_order_transient = false; % plot high-order transient?
 out_opts.plot_FCT_transient        = false; % plot FCT transient?
 
-out_opts.plot_EV_iteration         = false; % plot EV iteration?
+out_opts.plot_EV_iteration         = true; % plot EV iteration?
 out_opts.plot_FCT_iteration        = true; % plot FCT iteration?
 
-out_opts.plot_viscosity            = false; % plot viscosities?
+out_opts.plot_viscosity            = true; % plot viscosities?
 
 out_opts.pause_type                = 'wait'; % pause type: 'wait' or 'time'
 out_opts.pausetime                 = 0.01; % time to pause for transient plots
@@ -132,11 +133,11 @@ out_opts.legend_location           = 'NorthEast'; % location of plot legend
 %--------------------------------------------------------------------------
 % output options
 %--------------------------------------------------------------------------
-save_exact_solution      = true; % option to save exact solution 
-save_low_order_solution  = true; % option to save low-order solution
+save_exact_solution      = false; % option to save exact solution 
+save_low_order_solution  = false; % option to save low-order solution
 save_high_order_solution = false; % option to save high-order solution
 save_FCT_solution        = false; % option to save FCT solution
-save_antidiffusion_matrix = true; % option to save antidiffusion matrix
+save_antidiffusion_matrix = false; % option to save antidiffusion matrix
 %-------------------------------------------------------------------------
 
 %% Define Problem
@@ -1027,7 +1028,9 @@ switch opts.high_order_scheme
     case 2
         high_order_string = 'EV';
     case 3
-        high_order_string = 'AltEV';
+        high_order_string = 'AltEV1';
+    case 4
+        high_order_string = 'AltEV2';
     otherwise
         error('Invalid high-order scheme chosen');
 end
