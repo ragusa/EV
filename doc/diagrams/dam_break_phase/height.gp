@@ -1,10 +1,16 @@
-output_file = "../output/customplot.pdf"
+set terminal epslatex color
+set output "dam_break_height.tex"
 
-# create plot
-set terminal pdfcairo
-set output output_file
-set ylabel "Solution"
-set xlabel "x"
-plot "../output/solution_Gal.gpl" using 1:2 title "no viscosity" with lines,\
-     "../output/solution_low.gpl" using 1:2 title "low-order viscosity" with lines,\
-     "../output/solution_EV.gpl" using 1:2 title "entropy viscosity" with lines
+set key Left reverse bottom left
+
+set xrange [-5:5]
+
+set ylabel "$h$" offset 2,0,0
+set xlabel "$x$"
+plot \
+  "solution_exact.gpl" using 1:2 title "$\\mathbf{u}(x,t)$, Exact" \
+    lc 0 lt 1 with lines,\
+  "solution_Gal_FE.gpl" using 1:2 title "$\\mathbf{u}(x,t)$, Galerkin" \
+    lc 1 lt 1 pt 1 with linesp,\
+  "solution_DIV_FE.gpl" using 1:2 title "$\\mathbf{u}(x,t)$, DI" \
+    lc 2 lt 1 pt 2 with linesp

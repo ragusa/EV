@@ -1,3 +1,6 @@
 *.log
 *.aux
-testplot.pdf
+dam_break_height-eps-converted-to.pdf
+dam_break_phase-eps-converted-to.pdf
+makeplot_height.pdf
+makeplot_phase.pdf
