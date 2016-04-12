@@ -30,8 +30,8 @@ upper(x) = x*(2*sqrt(3) - 2*sqrt(x))
 lower(x) = x*(-2*sqrt(3) + 2*sqrt(x))
 plot '+' using 1:(upper($1)):(lower($1)) with filledcurves \
   above x2=3 notitle lc "blue", \
-  '+' using 1:(upper($1)) title "$w_{1,\\max}$" lc 0 lt 2 with lines,\
-  '+' using 1:(lower($1)) title "$w_{2,\\min}$" lc 0 lt 3 with lines,\
+  '+' using 1:(upper($1)) title "$w_1(\\mathbf{u}) = \\max_i w_1(\\mathbf{u}^0_i)$" lc 0 lt 2 with lines,\
+  '+' using 1:(lower($1)) title "$w_2(\\mathbf{u}) = \\min_i w_2(\\mathbf{u}^0_i)$" lc 0 lt 3 with lines,\
   "solution_exact.gpl" using 2:3 title "$\\mathbf{u}(x,t)$, Exact" \
     lc 0 lt 1 with lines,\
   "solution_initial.gpl" using 2:3 title "$\\mathbf{u}(x,0)$" \

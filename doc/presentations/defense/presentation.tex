@@ -980,6 +980,52 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
+\frametitle{Invariant Domain}
+
+\begin{itemize}
+  \item \hlorange{Invariant set} definition: A set such that (the entropy solution
+    of the Riemann problem
+    using any 2 elements in the set as left and right states) remains in the set.
+  \item Example: suppose the initial data belongs to the invariant set 
+    \[
+      \invariantset_{a,b} \equiv \{(\height,\height u) \,|\,
+        a \leq w_2(\height, \height u) \eqc \, w_1(\height, \height u) \leq b\} \eqc
+    \]
+    where $w_1(\vectorsolution)$ and $w_2(\vectorsolution)$ are Riemann invariants.
+\end{itemize}
+
+\begin{center}
+  \includegraphics[width=0.45\textwidth]{./figures/dam_break_height.pdf}
+  \hspace{1ex}
+  \includegraphics[width=0.45\textwidth]{./figures/dam_break_phase_without_galerkin.pdf}
+\end{center}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Invariant Domain}
+
+\begin{itemize}
+  \item \hlorange{Invariant set} definition: A set such that (the entropy solution
+    of the Riemann problem
+    using any 2 elements in the set as left and right states) remains in the set.
+  \item Example: suppose the initial data belongs to the invariant set 
+    \[
+      \invariantset_{a,b} \equiv \{(\height,\height u) \,|\,
+        a \leq w_2(\height, \height u) \eqc \, w_1(\height, \height u) \leq b\} \eqc
+    \]
+    where $w_1(\vectorsolution)$ and $w_2(\vectorsolution)$ are Riemann invariants.
+\end{itemize}
+
+\begin{center}
+  \includegraphics[width=0.45\textwidth]{./figures/dam_break_height.pdf}
+  \hspace{1ex}
+  \includegraphics[width=0.45\textwidth]{./figures/dam_break_phase_with_galerkin.pdf}
+\end{center}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
 \frametitle{Low-Order Scheme}
 
 \begin{itemize}
@@ -1505,7 +1551,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 
 \begin{itemize}
 \item Recall the DMP bounds 
-  $\DMPbound_i^-\leq \solutionletter_i^{L,\timeindex+1}\leq \DMPbound_i^+$
+  $\DMPlowerbound_i\leq \solutionletter_i^{L,\timeindex+1}\leq \DMPupperbound_i$
   for explicit Euler:
       \begin{equation}
          W_i^\pm \equiv U_{\substack{\max\\\min},i}^n\left(
@@ -1516,7 +1562,7 @@ Transport Algorithm to Hyperbolic Conservation Laws}
 \item In contrast, the DMP bounds for the $\theta$ scheme are implicit:
 \begin{subequations}
 \begin{multline}\label{eq:theta_bounds}
-   \DMPbound_i^\pm
+   \DMPbounds_i
    \equiv \frac{1}{1+\frac{\theta\timestepsize}{\massmatrixletter^L_{i,i}}
      \ssmatrixletter_{i,i}^{L,\timeindex+1}}\Bigg[\pr{1
      - \frac{(1-\theta)\timestepsize}{\massmatrixletter^L_{i,i}}
