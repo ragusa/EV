@@ -47,7 +47,7 @@ for iel = 1:nel
     Eq = entropy(u_new_local);
     E_dev_max = max(E_dev_max, max(abs(Eq-E_avg)));
 end
-fprintf('normalization = %f\n',E_dev_max);
+%fprintf('normalization = %f\n',E_dev_max);
 
 % compute entropy jumps
 n_face = n_dof;

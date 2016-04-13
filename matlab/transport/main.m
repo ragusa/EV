@@ -1,16 +1,32 @@
-close all; clear; clc; 
+% optional parameter: number of cells
+function [return_value1,return_value2] = main(n_cell)
+
+clc; close all; 
+
+% set flag if called in batch mode
+if (nargin > 0)
+  in_batch_mode = true;
+else
+  % clear all variables from workspace
+  clear;
+  in_batch_mode = false;
+end
 
 %% User Options
 %--------------------------------------------------------------------------
 % finite element options
 %--------------------------------------------------------------------------
-mesh.n_cell = 32;                    % number of elements
-quadrature.nq = 3;                  % number of quadrature points per cell
+if (nargin > 0)
+  mesh.n_cell = n_cell; % number of elements
+else
+  mesh.n_cell = 32;     % number of elements
+end
+quadrature.nq = 3;      % number of quadrature points per cell
 opts.impose_DirichletBC_strongly = true; % impose Dirichlet BC strongly?
 %--------------------------------------------------------------------------
 % spatial method options
 %--------------------------------------------------------------------------
-compute_low_order  = true; % compute and plot low-order solution?
+compute_low_order  = false; % compute and plot low-order solution?
 compute_high_order = true; % compute and plot high-order solution?
 compute_FCT        = false; % compute and plot FCT solution?
 
@@ -22,13 +38,13 @@ opts.low_order_scheme  = 2;
 %                    2 = Entropy viscosity
 %                    3 = Alternate Entropy viscosity 1
 %                    4 = Alternate Entropy viscosity 2 (should be same as 1)
-opts.high_order_scheme = 4;
+opts.high_order_scheme = 2;
 
 %--------------------------------------------------------------------------
 % entropy viscosity options
 %--------------------------------------------------------------------------
 ev.cE = 0.1; % coefficient for entropy residual in entropy viscosity
-ev.cJ = ev.cE*0; % coefficient for jumps in entropy viscosity
+ev.cJ = ev.cE*1; % coefficient for jumps in entropy viscosity
 ev.entropy       = @(u) 0.5*u.^2; % entropy function
 ev.entropy_deriv = @(u) u;        % derivative of entropy function
 ev.use_local_ev_norm = false; % option to use local entropy normalization
@@ -112,7 +128,7 @@ phys.impose_BC_on_IC = true; % option to impose Dirichlet BC on IC
 %--------------------------------------------------------------------------
 % nonlinear solver options
 %--------------------------------------------------------------------------
-nonlin_opts.max_iter = 10;    % maximum number of nonlinear solver iterations
+nonlin_opts.max_iter = 100;    % maximum number of nonlinear solver iterations
 nonlin_opts.nonlin_tol = 1e-10; % nonlinear solver tolerance for discrete L2 norm
 nonlin_opts.relax = 1.0; % relaxation parameter for iteration
 %--------------------------------------------------------------------------
@@ -122,10 +138,10 @@ out_opts.plot_low_order_transient  = false; % plot low-order transient?
 out_opts.plot_high_order_transient = false; % plot high-order transient?
 out_opts.plot_FCT_transient        = false; % plot FCT transient?
 
-out_opts.plot_EV_iteration         = true; % plot EV iteration?
+out_opts.plot_EV_iteration         = false; % plot EV iteration?
 out_opts.plot_FCT_iteration        = true; % plot FCT iteration?
 
-out_opts.plot_viscosity            = true; % plot viscosities?
+out_opts.plot_viscosity            = false; % plot viscosities?
 
 out_opts.pause_type                = 'wait'; % pause type: 'wait' or 'time'
 out_opts.pausetime                 = 0.01; % time to pause for transient plots
@@ -133,6 +149,9 @@ out_opts.legend_location           = 'NorthEast'; % location of plot legend
 %--------------------------------------------------------------------------
 % output options
 %--------------------------------------------------------------------------
+% option to output l2 norm of entropy residual
+output_entropy_residual_l2norm_ss = true;
+
 save_exact_solution      = false; % option to save exact solution 
 save_low_order_solution  = false; % option to save low-order solution
 save_high_order_solution = false; % option to save high-order solution
@@ -155,7 +174,7 @@ switch problemID
         phys.periodic_BC = false;
         phys.inc    = 1.0;
         phys.mu     = 1.0;
-        sigma_value = 100.0;
+        sigma_value = 10.0;
         phys.sigma  = @(x,t) sigma_value;
         phys.source = @(x,t) 0.0;
         phys.speed  = 1;
@@ -1057,4 +1076,28 @@ if (save_antidiffusion_matrix)
         out_file = ['output/P.csv'];
         dlmwrite(out_file,F,',');
     end
+end
+
+% output l2 norm of entropy residual if specified
+if (opts.is_steady_state && output_entropy_residual_l2norm_ss)
+  % compute l2 norm
+  l2norm = evaluate_entropy_residual_l2norm_ss(...
+    uH,mesh,phys,quadrature,ev,dof_handler);
+
+  % set return values
+  return_value1 = l2norm;
+  return_value2 = mesh.dx(1);
+  
+  % report log of mesh size and log of norm
+  fprintf(['Note: main() function return values are:\n',...
+    '  1. L2 norm of entropy residual\n',...
+    '  2. mesh size\n']);
+end
+
+% set return value if not already
+if (~in_batch_mode)
+  return_value1 = 0;
+  return_value2 = 0;
+end
+
 end
