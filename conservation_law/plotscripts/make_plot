@@ -1,0 +1,32 @@
+#!/bin/bash
+#
+# USAGE: make_plot <dir> <basename>
+
+# get directory and base name of plot files
+dir=$1
+basename=$2
+basename_with_path="$dir/$basename"
+
+# convert eps image to pdf image
+ps2pdf ${basename_with_path}_part.eps
+mv ${basename}_part.pdf ${basename_with_path}_part.pdf 
+
+# create latex file for producing combined image
+cat > ${basename_with_path}_whole.tex << EOF
+\documentclass{report}
+\usepackage{graphicx}
+\pagestyle{empty}
+\\begin{document}
+\input{${basename_with_path}_part.tex}
+\\end{document}
+EOF
+
+# run pdflatex to produce combined image
+pdflatex ${basename_with_path}_whole.tex
+
+# move output pdf file and remove .aux and .log files
+mv ${basename}_whole.pdf ${basename_with_path}_whole.pdf
+rm ${basename}_whole.aux ${basename}_whole.log
+
+# crop pdf
+pdfcrop ${basename_with_path}_whole.pdf ${basename_with_path}.pdf 

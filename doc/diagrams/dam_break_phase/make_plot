@@ -1,0 +1,5 @@
+#!/bin/bash
+
+gnuplot dam_break_phase.gp
+ps2pdf dam_break_phase.eps
+pdflatex testplot.tex

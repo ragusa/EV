@@ -44,7 +44,7 @@ my $plotscript;
 if ($plot_type eq "sol") {
    $plotscript = "solutions.gp";
 } elsif ($plot_type eq "conv") {
-   $plotscript = "convergence.gp";
+   $plotscript = "convergence_epslatex.gp";
 } elsif ($plot_type eq "visc") {
    $plotscript = "viscosity.gp";
 } else {
@@ -111,6 +111,11 @@ else
   {
      die("Invalid conservation law");
   }
+
+  # error if convergence plot specified but not scalar
+  my $n_components = @quantity;
+  die "Convergence plots only programmed for scalar case.\n"
+    if ($n_components != 1);
   
   # loop over components
   foreach my $i (0 .. $#quantity)
@@ -124,15 +129,21 @@ else
      system("sleep 1");
         
      # name of resulting plot file
-     my $output_file = "../output/$problem_name/$quantity[$i]".
-        "_$time_integrator_string.pdf";
-     
-     # crop pdf
-     if ($croppdf) {
-        system("pdfcrop $output_file $output_file");
+     my $output_file;
+     if ($plot_type eq "conv") {
+       $output_file = "../output/$problem_name/convergence_".
+         "$time_integrator_string.pdf";
+     } else {
+       $output_file = "../output/$problem_name/$quantity[$i]".
+         "_$time_integrator_string.pdf";
      }
      
+     # crop pdf
+     #if ($croppdf) {
+     #   system("pdfcrop $output_file $output_file");
+     #}
+     
      # view output
-     system("evince $output_file");
+     #system("evince $output_file");
   }
 }

@@ -30,6 +30,7 @@ my $type;
 my %arg_identity = (
   "sol" => "type",
   "visc" => "type",
+  "conv" => "type",
   "burgers" => "conservationlaw",
   "euler" => "conservationlaw",
   "shallowwater" => "conservationlaw",

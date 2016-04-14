@@ -203,6 +203,14 @@ void ProblemParameters<dim>::get_base_parameters()
   }
   parameter_handler.leave_subsection();
 
+  // initial conditions
+  parameter_handler.enter_subsection("initial conditions");
+  {
+    use_exact_solution_as_initial_conditions = parameter_handler.get_bool(
+      "use exact solution as initial conditions");
+  }
+  parameter_handler.leave_subsection();
+
   // boundary conditions
   parameter_handler.enter_subsection("boundary conditions");
   {

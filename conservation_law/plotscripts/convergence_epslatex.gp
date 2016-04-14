@@ -111,19 +111,22 @@ L2string1 = sprintf("m=%.2f slope",slope1)
 L2string2 = sprintf("m=%.2f slope",slope2)
 L2string3 = sprintf("m=%.2f slope",slope3)
 
-set terminal postscript enhanced color
+#set terminal postscript enhanced color
+set terminal epslatex color
 if (conv_mode == 1) {
-  set xlabel "Mesh Size"
+  set xlabel "Mesh Size, $\\Delta x$"
 } else {
-  set xlabel "Time Step Size"
+  set xlabel "Time Step Size, $\\Delta t$"
 }
 set logscale xy
 set key top left
-set format y "10^{%L}"
-set format x "10^{%L}"
+set format y "$10^{%L}$"
+set format x "$10^{%L}$"
 
-output_file = outdir."/convergence_".timeintegrator.".pdf"
-set output '| ps2pdf - '.output_file
+#output_file = outdir."convergence_".timeintegrator.".pdf"
+#set output '| ps2pdf - '.output_file
+output_file = outdir."convergence_".timeintegrator."_part.tex"
+set output output_file
 
 # create multiplot
 set multiplot layout 1, 2
@@ -134,7 +137,7 @@ if (L1_max > 1) {
 } else {
   set yrange[*:*]
 }
-set ylabel "L-1 Error"
+set ylabel "$L^1$ Error"
 plot for [i=1:words(existing_file_list)] outdir.word(existing_file_list,i)\
    using h_col:L1_col with linesp linetype word(existing_lt_list,i)\
    linecolor word(existing_lc_list,i)\
@@ -150,7 +153,7 @@ if (L2_max > 1) {
 } else {
   set yrange[*:*]
 }
-set ylabel "L-2 Error"
+set ylabel "$L^2$ Error"
 plot for [i=1:words(existing_file_list)] outdir.word(existing_file_list,i)\
    using h_col:L2_col with linesp linetype word(existing_lt_list,i)\
    linecolor word(existing_lc_list,i)\
