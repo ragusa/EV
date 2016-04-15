@@ -97,9 +97,9 @@ L1c3 = (1.0/h_min)**slope3 * L1_min
 L1ref1(x) = L1c1 * x**slope1
 L1ref2(x) = L1c2 * x**slope2
 L1ref3(x) = L1c3 * x**slope3
-L1string1 = sprintf("m=%.2f slope",slope1)
-L1string2 = sprintf("m=%.2f slope",slope2)
-L1string3 = sprintf("m=%.2f slope",slope3)
+L1string1 = sprintf("m = %.2f",slope1)
+L1string2 = sprintf("m = %.2f",slope2)
+L1string3 = sprintf("m = %.2f",slope3)
 
 L2c1 = (1.0/h_min)**slope1 * L2_min
 L2c2 = (1.0/h_min)**slope2 * L2_min
@@ -107,9 +107,9 @@ L2c3 = (1.0/h_min)**slope3 * L2_min
 L2ref1(x) = L2c1 * x**slope1
 L2ref2(x) = L2c2 * x**slope2
 L2ref3(x) = L2c3 * x**slope3
-L2string1 = sprintf("m=%.2f slope",slope1)
-L2string2 = sprintf("m=%.2f slope",slope2)
-L2string3 = sprintf("m=%.2f slope",slope3)
+L2string1 = sprintf("m = %.2f",slope1)
+L2string2 = sprintf("m = %.2f",slope2)
+L2string3 = sprintf("m = %.2f",slope3)
 
 set terminal postscript enhanced color
 if (conv_mode == 1) {

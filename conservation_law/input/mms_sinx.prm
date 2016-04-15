@@ -24,7 +24,7 @@ end
 subsection scheme
    set scheme            = fct          # low|high|fct
    set low order scheme  = dmp          # constant|lax|dmp|di_visc|di_diff
-   set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
+   set high order scheme = galerkin     # galerkin|entropy_visc|entropy_diff
 end
 
 subsection refinement
@@ -65,7 +65,7 @@ subsection artificial viscosity
 end
 
 subsection fct
-   set filter sequence string        = analytic # dmp|dmp_analytic|analytic
+   set filter sequence string        = dmp # dmp|dmp_analytic|analytic
    set limiter option                = zalesak # ones|zeroes|zalesak
    set use multipass limiting        = false
    set multipass limiting percent tolerance = 0.01

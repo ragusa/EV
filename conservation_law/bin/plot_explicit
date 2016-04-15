@@ -44,7 +44,7 @@ my $plotscript;
 if ($plot_type eq "sol") {
    $plotscript = "solutions.gp";
 } elsif ($plot_type eq "conv") {
-   $plotscript = "convergence_epslatex.gp";
+   $plotscript = "convergence.gp";
 } elsif ($plot_type eq "visc") {
    $plotscript = "viscosity.gp";
 } else {
@@ -139,11 +139,11 @@ else
      }
      
      # crop pdf
-     #if ($croppdf) {
-     #   system("pdfcrop $output_file $output_file");
-     #}
+     if ($croppdf) {
+        system("pdfcrop $output_file $output_file");
+     }
      
      # view output
-     #system("evince $output_file");
+     system("evince $output_file");
   }
 }
