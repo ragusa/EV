@@ -64,9 +64,10 @@ Then, $s$ is computed as follows:
    s_k=\frac{\Omega_k}{\Omega_i}s_i.
 \]
 
-Table \ref{tab:skew_void_to_absorber_run_parameters} shows the run parameters used
-to obtain these results, and Figure \ref{fig:skew_void_to_absorber_2D}
-shows 2-D and results for this problem.
+The simulation was run to time $t=1$ with a CFL of $\nu=0.5$ and 16384 cells.
+Figures \ref{fig:skew_void_to_absorber_2D_fe} and
+\ref{fig:skew_void_to_absorber_2D_ssprk33} show 2-D results for this problem
+for explicit Euler and SSPRK33 time discretizations, respectively.
 
 This test problem reveals some multidimensional effects of spurious
 oscillations, as one can see in the Galerkin and EV solutions. Comparing
@@ -88,25 +89,7 @@ in the Galerkin and EV solutions and is sharper than the low-order
 solution. The advantage of using FCT over the low-order scheme is
 less evident in these results simply because the wave front is
 in the absorber region, where the solution is already very small;
-thus the gradient is more difficult to see. Also, note that the same
-color scheme was used in
-Figures \ref{fig:skew_void_to_absorber_2D_fe} and \ref{fig:void_to_absorber_2D_fe};
-the range of values is just larger for the non-skew problem due to the
-severe oscillations along the lower edge of the absorber region.
-%-------------------------------------------------------------------------------
-\begin{table}[ht]\caption{Skew Void-to-Absorber Test Problem Run Parameters}
-\label{tab:skew_void_to_absorber_run_parameters}
-\centering
-\begin{tabular}{l l}\toprule
-\emph{Parameter} & \emph{Value}\\\midrule
-Number of Cells & $N_{cell} = 16384$\\
-End Time & $t = 1$\\
-CFL Number & $\nu = 0.5$\\\midrule
-Entropy Function & $\entropy(\scalarsolution) = \frac{1}{2}\scalarsolution^2$\\
-Entropy Residual Coefficient & $\entropyresidualcoef = 0.1$\\
-Entropy Jump Coefficient & $\entropyjumpcoef = 0.1$\\
-\bottomrule\end{tabular}
-\end{table}
+thus the gradient is more difficult to see.
 %-------------------------------------------------------------------------------
 \begin{figure}[ht]
    \centering
@@ -136,9 +119,10 @@ Entropy Jump Coefficient & $\entropyjumpcoef = 0.1$\\
       \caption{Entropy Viscosity FCT}
    \end{subfigure}
    \caption{Comparison of Solutions for Skew Void-to-Absorber Test Problem
-     Using Explicit Euler Time Discretization}
+     Using Explicit Euler Time Discretization with 16384 Cells}
    \label{fig:skew_void_to_absorber_2D_fe}
 \end{figure}
+%-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
 \begin{figure}[ht]
    \centering
@@ -173,7 +157,9 @@ Entropy Jump Coefficient & $\entropyjumpcoef = 0.1$\\
       \caption{Entropy Viscosity FCT}
    \end{subfigure}
    \caption{Comparison of Solutions for Skew Void-to-Absorber Test Problem
-     Using SSPRK33 Time Discretization}
+     Using SSPRK33 Time Discretization with 16384 Cells}
    \label{fig:skew_void_to_absorber_2D_ssprk33}
 \end{figure}
 %-------------------------------------------------------------------------------
+
+\clearpage
