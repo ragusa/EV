@@ -140,6 +140,8 @@ RunParameters.h
 ScalarConservationLawFlux.h
 ScalarEntropyFluxFEValuesCell.h
 ScalarEntropyFluxFEValuesFace.h
+ShallowWater2DDamBreakBC.cc
+ShallowWater2DDamBreakBC.h
 ShallowWaterBoundaryConditions.cc
 ShallowWaterBoundaryConditions.h
 ShallowWater.cc

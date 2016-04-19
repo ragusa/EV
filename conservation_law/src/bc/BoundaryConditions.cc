@@ -50,13 +50,20 @@ void BoundaryConditions<dim>::apply(const Cell & cell,
   {
     // determine if face is interior
     Face face = cell->face(iface);
-    if (face->at_boundary() == true)
-    {
+
       // reinitialize FE values
       fe_values_face.reinit(cell, iface);
 
+    if (face->at_boundary() == true)
+    {
       // apply boundary conditions for this boundary face
       apply_boundary_condition(
+        cell, fe_values_cell, fe_values_face, solution, dt, cell_residual);
+    }
+    else
+    {
+      // apply interior boundary conditions (if any)
+      apply_interior_boundary_condition(
         cell, fe_values_cell, fe_values_face, solution, dt, cell_residual);
     }
   }
@@ -98,6 +105,28 @@ void BoundaryConditions<dim>::apply(const Cell & cell,
         cell, fe_values_cell, fe_values_face, solution, dt, cell_matrix);
     }
   }
+}
+
+/**
+ * \brief Applies interior boundary condition for a face.
+ *
+ * \param[in] cell cell iterator
+ * \param[in] fe_values_cell FE values for cell
+ * \param[in] fe_values_face FE values for face
+ * \param[in] solution solution vector
+ * \param[in] dt time step size \f$\Delta t\f$
+ * \param[inout] cell_residual steady-state residual for cell
+ */
+template <int dim>
+void BoundaryConditions<dim>::apply_interior_boundary_condition(
+  const Cell &,
+  const FEValues<dim> &,
+  const FEFaceValues<dim> &,
+  const Vector<double> &,
+  const double &,
+  Vector<double> &)
+{
+  // do nothing
 }
 
 /**

@@ -295,6 +295,13 @@ void ShallowWaterProblemParameters<dim>::process_derived_parameters(
       std::make_shared<ShallowWaterNoBC<dim>>(fe, face_quadrature, gravity);
     this->boundary_conditions = derived_boundary_conditions;
   }
+  else if (this->boundary_conditions_type == "2d_dam_break")
+  {
+    std::shared_ptr<ShallowWater2DDamBreakBC<dim>> derived_boundary_conditions =
+      std::make_shared<ShallowWater2DDamBreakBC<dim>>(
+        fe, face_quadrature, gravity);
+    this->boundary_conditions = derived_boundary_conditions;
+  }
   else if (this->boundary_conditions_type == "characteristic_open")
   {
     std::shared_ptr<ShallowWaterSubcriticalOpenBC1D<dim>>

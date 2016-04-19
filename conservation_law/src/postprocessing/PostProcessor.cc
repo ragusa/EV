@@ -969,8 +969,8 @@ void PostProcessor<dim>::create_fine_triangulation_and_dof_handler(
 {
   // create fine mesh on which to interpolate functions
   fine_triangulation.copy_triangulation(triangulation);
-  const int n_refinements =
-    parameters.exact_solution_refinement_level - parameters.initial_refinement_level;
+  const int n_refinements = parameters.exact_solution_refinement_level -
+    parameters.initial_refinement_level;
   if (n_refinements > 0)
     fine_triangulation.refine_global(n_refinements);
 }

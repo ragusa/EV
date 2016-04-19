@@ -8,6 +8,7 @@
 #include <iostream>
 #include <string>
 #include <deal.II/base/parameter_handler.h>
+#include "include/bc/ShallowWater2DDamBreakBC.h"
 #include "include/parameters/ProblemParameters.h"
 #include "include/postprocessing/ShallowWaterRiemannSolver.h"
 

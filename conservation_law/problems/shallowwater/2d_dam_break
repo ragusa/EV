@@ -1,0 +1,44 @@
+subsection validity
+  set valid in 1d = false
+  set valid in 2d = true
+end
+
+subsection domain
+  set domain shape = hyper_box
+  set x start = -700.0
+  set x width = 1400.0
+  set y start = 0.0
+  set y width = 1400.0
+end
+
+subsection bathymetry
+  set bathymetry function = 0
+end
+
+subsection boundary conditions
+  set boundary conditions type = 2d_dam_break
+end
+
+subsection initial conditions
+  set initial conditions height = if(x > x_interface, h_right, h_left)
+  set initial conditions momentumx = if(x > x_interface, h_right*u_right, \
+    h_left*u_left)
+end
+
+subsection exact solution
+  set has exact solution = false
+end
+
+subsection default end time
+  set has default end time = true
+  set default end time = 25.0
+end
+
+subsection constants
+  set gravity = 9.8
+  set x_interface = 0.0
+  set h_left  = 10.0
+  set h_right = 9.5
+  set u_left  = 0.0
+  set u_right = 0.0
+end

@@ -185,8 +185,7 @@ void ProblemParameters<dim>::get_base_parameters()
     valid_in_1d = parameter_handler.get_bool("valid in 1d");
     valid_in_2d = parameter_handler.get_bool("valid in 2d");
     valid_in_3d = parameter_handler.get_bool("valid in 3d");
-    is_transient_problem =
-      parameter_handler.get_bool("is transient problem");
+    is_transient_problem = parameter_handler.get_bool("is transient problem");
   }
   parameter_handler.leave_subsection();
 
@@ -206,8 +205,8 @@ void ProblemParameters<dim>::get_base_parameters()
   // initial conditions
   parameter_handler.enter_subsection("initial conditions");
   {
-    use_exact_solution_as_initial_conditions = parameter_handler.get_bool(
-      "use exact solution as initial conditions");
+    use_exact_solution_as_initial_conditions =
+      parameter_handler.get_bool("use exact solution as initial conditions");
   }
   parameter_handler.leave_subsection();
 

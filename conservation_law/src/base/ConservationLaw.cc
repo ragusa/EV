@@ -1158,7 +1158,7 @@ double ConservationLaw<dim>::compute_dt_from_dmp_cfl_condition()
     // if not a Dirichlet node
     if (std::find(it_begin, it_end, i) == it_end)
     {
-      const double ALii = low_order_ss_matrix(i,i);
+      const double ALii = low_order_ss_matrix(i, i);
       Assert(ALii > 0.0, ExcNegativeDiagonal(i, ALii));
       dt = std::min(dt, lumped_mass_matrix(i, i) / ALii);
     }

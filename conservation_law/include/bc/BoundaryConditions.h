@@ -51,6 +51,14 @@ protected:
                                         const double & dt,
                                         Vector<double> & cell_residual) = 0;
 
+  virtual void apply_interior_boundary_condition(
+    const Cell & cell,
+    const FEValues<dim> & fe_values_cell,
+    const FEFaceValues<dim> & fe_values_face,
+    const Vector<double> & solution,
+    const double & dt,
+    Vector<double> & cell_residual);
+
   virtual void apply_boundary_condition_matrix(
     const Cell & cell,
     const FEValues<dim> & fe_values_cell,

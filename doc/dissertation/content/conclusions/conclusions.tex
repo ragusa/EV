@@ -21,5 +21,36 @@ them completely, and thus the entropy viscosity method is not immune to
 solution negativities.
 
 The flux corrected transport (FCT) algorithm, originally developed by Boris
-and Book \cite{borisbook}
+and Book \cite{borisbook} was implemented in conjunction with the entropy
+viscosity method, as in \cite{guermond_secondorder}. In addition to the
+family of explicit SSPRK methods, steady-state and implicit $\theta$
+time discretization methods were employed. For all time discretizations,
+the FCT algorithm could be used to guarantee the absence of solution
+negativities, and spurious oscillations are not observed in practice
+although have not been proven impossible in the FCT algorithm. The formation
+of spurious plateaus (also known as ``terracing'' or ``stair-stepping'')
+remains an open issue for FCT, particularly when using explicit Euler.
 
+The selection of the solution bounds to impose in the FCT algorithm
+was found to be vital; usage of the low-order scheme DMP was found in
+general to produce first-order spatial convergence for radiation transport.
+Using solution bounds derived from the method of characteristics allowed
+second-order spatial convergence to be achieved. These analytic solution
+bounds have the advantage of being fully explicit; however, this is only
+valid for CFL less than one. Increasing the CFL above one requires widening
+the stencil in the min/max operations in the solution bounds, thus making
+it less restrictive. Thus for large CFL numbers, one must use the low-order
+DMP solution bounds, which would be implicit. The implicitness of the
+solution bounds necessitates the usage of nonlinear iteration, which can
+be problematic; severe convergence difficulties have been noted in many
+cases, and the success of the iteration process is sometimes dependent
+on the initial guess. These issues make implicit FCT unreliable; a remedy
+to these challenges has not yet been found.
+
+The FCT algorithm was also applied to the shallow water equations,
+again in conjunction with the entropy viscosity method. In this case,
+no discrete maximum principle applies as in the scalar case. Therefore,
+the approach taken was to transform the system into characteristic variables
+to allow scalar FCT methodology to be applied. This was found to have some
+success; however, some spurious oscillations were still observed, although
+reduced.

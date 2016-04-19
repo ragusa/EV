@@ -8,12 +8,13 @@
 #   lake_at_rest_flat_perturbed
 #   lake_at_rest_2d
 #   lake_at_rest_flat_perturbed_2d
+#   2d_dam_break
 subsection problem
-   set problem name = dam_break_flat
+   set problem name = 2d_dam_break
 end
 
 subsection scheme
-   set scheme            = high     # low|high|fct
+   set scheme            = low     # low|high|fct
    set low order scheme  = lax      # constant|lax|dmp|di_visc|di_diff
    set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
 end
@@ -34,8 +35,8 @@ subsection time
    set time step size option  = cfl # constant|cfl|cfl_di
    set cfl                    = 0.10
    set time step size         = 0.001
-   set use default end time   = true
-   set end time               = 0.002
+   set use default end time   = false
+   set end time               = 10.0
    set steady state tolerance = 1.0e-6
 end
 
