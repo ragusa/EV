@@ -14,7 +14,7 @@ subsection problem
 end
 
 subsection scheme
-   set scheme            = low     # low|high|fct
+   set scheme            = high     # low|high|fct
    set low order scheme  = lax      # constant|lax|dmp|di_visc|di_diff
    set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
 end
@@ -23,7 +23,7 @@ subsection refinement
    set refinement cycles        = 1
    set refine space             = true
    set refine time              = true
-   set initial refinement level = 5
+   set initial refinement level = 3
    set use adaptive mesh refinement = false
    set time refinement factor   = 0.5
    set refinement fraction      = 0.5
@@ -35,8 +35,8 @@ subsection time
    set time step size option  = cfl # constant|cfl|cfl_di
    set cfl                    = 0.10
    set time step size         = 0.001
-   set use default end time   = false
-   set end time               = 10.0
+   set use default end time   = true
+   set end time               = 2.0
    set steady state tolerance = 1.0e-6
 end
 

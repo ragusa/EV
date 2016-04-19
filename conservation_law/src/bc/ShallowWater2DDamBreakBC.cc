@@ -86,12 +86,11 @@ void ShallowWater2DDamBreakBC<dim>::apply_interior_boundary_condition(
       // if the left half
       if (normal_vectors[q][0] < 0.0)
       {
-
-      if (points[q][1] <= 560.0 || points[q][1] >= 840.0)
-      {
-        face_on_interior_wall = true;
-        break;
-      }
+        if (points[q][1] <= 560.0 || points[q][1] >= 840.0)
+        {
+          face_on_interior_wall = true;
+          break;
+        }
       }
     }
   }
@@ -99,29 +98,29 @@ void ShallowWater2DDamBreakBC<dim>::apply_interior_boundary_condition(
   // if the face is on interior wall, apply wall boundary condition
   if (face_on_interior_wall)
   {
-  // get solution values on face
-  std::vector<double> height(this->n_quadrature_points_face);
-  fe_values_face[this->height_extractor].get_function_values(solution, height);
-  std::vector<Tensor<1, dim>> momentum(this->n_quadrature_points_face);
-  fe_values_face[this->momentum_extractor].get_function_values(solution,
-                                                               momentum);
+    // get solution values on face
+    std::vector<double> height(this->n_quadrature_points_face);
+    fe_values_face[this->height_extractor].get_function_values(solution, height);
+    std::vector<Tensor<1, dim>> momentum(this->n_quadrature_points_face);
+    fe_values_face[this->momentum_extractor].get_function_values(solution,
+                                                                 momentum);
 
-  // identity tensor
-  SymmetricTensor<2, dim> identity_tensor_sym = unit_symmetric_tensor<dim>();
-  Tensor<2, dim> identity_tensor(identity_tensor_sym);
+    // identity tensor
+    SymmetricTensor<2, dim> identity_tensor_sym = unit_symmetric_tensor<dim>();
+    Tensor<2, dim> identity_tensor(identity_tensor_sym);
 
-  for (unsigned int q = 0; q < this->n_quadrature_points_face; ++q)
-  {
-    // compute inviscid flux for momentum with v.n = 0
-    Tensor<2, dim> momentum_inviscid_flux =
-      0.5 * this->gravity * std::pow(height[q], 2) * identity_tensor;
+    for (unsigned int q = 0; q < this->n_quadrature_points_face; ++q)
+    {
+      // compute inviscid flux for momentum with v.n = 0
+      Tensor<2, dim> momentum_inviscid_flux =
+        0.5 * this->gravity * std::pow(height[q], 2) * identity_tensor;
 
-    // loop over DoFs in cell
-    for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
-      cell_residual(i) +=
-        this->fe_values_face[this->momentum_extractor].value(i, q) *
-        momentum_inviscid_flux * normal_vectors[q] * this->fe_values_face.JxW(q);
+      // loop over DoFs in cell
+      for (unsigned int i = 0; i < this->dofs_per_cell; ++i)
+        cell_residual(i) +=
+          this->fe_values_face[this->momentum_extractor].value(i, q) *
+          momentum_inviscid_flux * normal_vectors[q] *
+          this->fe_values_face.JxW(q);
+    }
   }
-  }
-
 }

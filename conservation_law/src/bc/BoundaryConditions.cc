@@ -51,8 +51,8 @@ void BoundaryConditions<dim>::apply(const Cell & cell,
     // determine if face is interior
     Face face = cell->face(iface);
 
-      // reinitialize FE values
-      fe_values_face.reinit(cell, iface);
+    // reinitialize FE values
+    fe_values_face.reinit(cell, iface);
 
     if (face->at_boundary() == true)
     {

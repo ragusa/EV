@@ -412,6 +412,50 @@ void ProblemParameters<dim>::generate_mesh_and_compute_volume(
     // generate mesh
     GridGenerator::hyper_rectangle(triangulation, point_begin, point_end);
   }
+  else if (domain_shape == "2d_dam_break")
+  {
+    AssertThrow(dim == 2, ExcImpossibleInDim(dim));
+
+    // create vertices
+    std::vector<Point<2>> vertices = {
+      Point<2>(0, 0), Point<2>(1, 0), Point<2>(2, 0), Point<2>(4, 0),
+      Point<2>(5, 0), Point<2>(6, 0), Point<2>(0, 1), Point<2>(1, 1),
+      Point<2>(2, 1), Point<2>(4, 1), Point<2>(5, 1), Point<2>(6, 1),
+      Point<2>(0, 2), Point<2>(1, 2), Point<2>(2, 2), Point<2>(3, 2),
+      Point<2>(4, 2), Point<2>(5, 2), Point<2>(6, 2), Point<2>(0, 3),
+      Point<2>(1, 3), Point<2>(2, 3), Point<2>(3, 3), Point<2>(4, 3),
+      Point<2>(5, 3), Point<2>(6, 3), Point<2>(0, 4), Point<2>(1, 4),
+      Point<2>(2, 4), Point<2>(3, 4), Point<2>(4, 4), Point<2>(5, 4),
+      Point<2>(6, 4), Point<2>(0, 5), Point<2>(1, 5), Point<2>(2, 5),
+      Point<2>(4, 5), Point<2>(5, 5), Point<2>(6, 5), Point<2>(0, 6),
+      Point<2>(1, 6), Point<2>(2, 6), Point<2>(4, 6), Point<2>(5, 6),
+      Point<2>(6, 6)};
+
+    // cells
+    const unsigned int n_cells_coarse = 28;
+    const int cell_vertices[][GeometryInfo<dim>::vertices_per_cell] = {
+      {0, 1, 6, 7},     {1, 2, 7, 8},     {3, 4, 9, 10},    {4, 5, 10, 11},
+      {6, 7, 12, 13},   {7, 8, 13, 14},   {9, 10, 16, 17},  {10, 11, 17, 18},
+      {12, 13, 19, 20}, {13, 14, 20, 21}, {14, 15, 21, 22}, {15, 16, 22, 23},
+      {16, 17, 23, 24}, {17, 18, 24, 25}, {19, 20, 26, 27}, {20, 21, 27, 28},
+      {21, 22, 28, 29}, {22, 23, 29, 30}, {23, 24, 30, 31}, {24, 25, 31, 32},
+      {26, 27, 33, 34}, {27, 28, 34, 35}, {30, 31, 36, 37}, {31, 32, 37, 38},
+      {33, 34, 39, 40}, {34, 35, 40, 41}, {36, 37, 42, 43}, {37, 38, 43, 44}};
+
+    std::vector<CellData<2>> cell_data(n_cells_coarse, CellData<2>());
+    for (unsigned int i = 0; i < n_cells_coarse; ++i)
+    {
+      for (unsigned int j = 0; j < GeometryInfo<dim>::vertices_per_cell; ++j)
+        cell_data[i].vertices[j] = cell_vertices[i][j];
+      cell_data[i].material_id = 0;
+    }
+
+    // domain volume
+    domain_volume = 28.0;
+
+    // create triangulation
+    triangulation.create_triangulation(vertices, cell_data, SubCellData());
+  }
   else
   {
     Assert(false, ExcNotImplemented());
