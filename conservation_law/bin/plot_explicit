@@ -115,7 +115,7 @@ else
   # error if convergence plot specified but not scalar
   my $n_components = @quantity;
   die "Convergence plots only programmed for scalar case.\n"
-    if ($n_components != 1);
+    if ($plot_type eq "conv" and $n_components != 1);
   
   # loop over components
   foreach my $i (0 .. $#quantity)

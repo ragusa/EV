@@ -68,7 +68,12 @@ where hereafter the nodal flux values used as interpolation values,
 $\mathbf{\consfluxletter}(\vectorsolution(\x_{\nodeindex(j)},\timevalue))$,
 will be denoted as $\consfluxinterpolant_j(\timevalue)$.
 Substituting the approximate
-solution into Equation \eqref{eq:conservation_law_system_homo} and testing with basis
+solution into the general conservation law system equation,
+\begin{equation}
+  \ppt{\vectorsolution} + \divergence\consfluxvector(\vectorsolution)
+  = \mathbf{0} \eqc
+\end{equation}
+and testing with basis
 function $\vectortestfunction_i(\x)$ gives
 \begin{equation}\label{eq:vector_weak_form_long}
    \sumj\intSij\vectortestfunction_i\transpose(\x)\vectortestfunction_j(\x) \dvolume

@@ -89,34 +89,32 @@ To arrive at an entropy equality, each conservation equation in the system
 is multiplied by the respective derivative of the entropy function and then
 summed:
 \begin{equation}
-  \highlightblue{\partial_\height\entropy\,\partial_\timevalue\height
-  + \partial_\heightmomentum\entropy\cdot\partial_\timevalue\heightmomentum}
-  + \highlightgreen{\partial_\height\entropy\,\divergence
+  \partial_\height\entropy\,\partial_\timevalue\height
+  + \partial_\heightmomentum\entropy\cdot\partial_\timevalue\heightmomentum
+  + \partial_\height\entropy\,\divergence
     \mathbf{\consfluxletter}^\height
   + \sum\limits_{d=1}^{\ndimensions}\partial_{\heightmomentumletter_d}\entropy
     \divergence\mathbf{\consfluxletter}^{\heightmomentumletter_d}
-  + \partial_\heightmomentum\entropy\cdot\gravity\height\nabla\bathymetry}
-  = 0 \eqc 
+  + \partial_\heightmomentum\entropy\cdot\gravity\height\nabla\bathymetry
+  = 0 \eqp 
 \end{equation}
-where the terms highlighted in blue show the \emph{temporal} derivative terms
-and the terms highlighted in green show the \emph{spatial} derivative terms.
 Using Equation \eqref{eq:shallowwater_chainrule}, the temporal derivatives
 can be expressed as a partial derivative of entropy:
 \begin{equation}\label{eq:shallowwater_spatial_derivative_expanded}
-  \highlightblue{\partial_\timevalue\entropy}
-  + \highlightgreen{\partial_\height\entropy\,\divergence
+  \partial_\timevalue\entropy
+  + \partial_\height\entropy\,\divergence
     \mathbf{\consfluxletter}^\height
   + \sum\limits_{d=1}^{\ndimensions}\partial_{\heightmomentumletter_d}\entropy
     \divergence\mathbf{\consfluxletter}^{\heightmomentumletter_d}
-  + \partial_\heightmomentum\entropy\cdot\gravity\height\nabla\bathymetry}
+  + \partial_\heightmomentum\entropy\cdot\gravity\height\nabla\bathymetry
   = 0 \eqp
 \end{equation}
 An \emph{entropy flux} $\mathbf{\consfluxletter}^\entropy$, is defined such
 that its divergence matches the spatial derivative terms in Equation
 \eqref{eq:shallowwater_spatial_derivative_expanded}:
 \begin{equation}\label{eq:shallowwater_entropy_equality}
-  \highlightblue{\partial_\timevalue\entropy}
-  + \highlightgreen{\divergence\mathbf{\consfluxletter}^\entropy}
+  \partial_\timevalue\entropy
+  + \divergence\mathbf{\consfluxletter}^\entropy
   = 0 \eqp
 \end{equation}
 Comparing Equations \eqref{eq:shallowwater_spatial_derivative_expanded} and
