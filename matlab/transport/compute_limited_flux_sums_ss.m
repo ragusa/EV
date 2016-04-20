@@ -14,7 +14,7 @@ if (DMP_option == 1)
 elseif (DMP_option == 2)
     [Wplus,Wminus] = compute_DMP_ss(u,AL_mod,b_mod,phys.inc);
     [Wplus_analytic,Wminus_analytic] = compute_analytic_bounds_ss(...
-        u,sigma_min,sigma_max,source_min,source_max,mesh.dx_min,phys.inc);
+        u,sigma_min,sigma_max,source_min,source_max,mesh.dx_min,phys.inc,false);
     Wplus  = max(Wplus, Wplus_analytic);
     Wminus = min(Wminus,Wminus_analytic);
 elseif (DMP_option == 3)

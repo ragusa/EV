@@ -44,7 +44,7 @@ opts.high_order_scheme = 2;
 % entropy viscosity options
 %--------------------------------------------------------------------------
 ev.cE = 0.1; % coefficient for entropy residual in entropy viscosity
-ev.cJ = ev.cE*1; % coefficient for jumps in entropy viscosity
+ev.cJ = ev.cE*0; % coefficient for jumps in entropy viscosity
 ev.entropy       = @(u) 0.5*u.^2; % entropy function
 ev.entropy_deriv = @(u) u;        % derivative of entropy function
 ev.use_local_ev_norm = false; % option to use local entropy normalization
@@ -76,13 +76,13 @@ opts.ss_tol = 1.0e-6;  % steady-state tolerance
 %             2 = widen low-order DMP to analytic
 %             3 = analytic
 %             4 = analytic upwind
-fct_opts.DMP_option = 4;
+fct_opts.DMP_option = 2;
 
 % limiter option: 0 = All 0 (no correction; low-order)
 %                 1 = All 1 (full correction; high-order)
 %                 2 = Zalesak limiter
 %                 3 = Josh limiter
-fct_opts.limiting_option = 3;
+fct_opts.limiting_option = 2;
 
 % option to enforce Q+ >= 0, Q- <= 0
 fct_opts.enforce_antidiffusion_bounds_signs = true;
@@ -139,7 +139,7 @@ out_opts.plot_high_order_transient = false; % plot high-order transient?
 out_opts.plot_FCT_transient        = false; % plot FCT transient?
 
 out_opts.plot_EV_iteration         = false; % plot EV iteration?
-out_opts.plot_FCT_iteration        = true; % plot FCT iteration?
+out_opts.plot_FCT_iteration        = false; % plot FCT iteration?
 
 out_opts.plot_viscosity            = false; % plot viscosities?
 
@@ -150,7 +150,9 @@ out_opts.legend_location           = 'NorthEast'; % location of plot legend
 % output options
 %--------------------------------------------------------------------------
 % option to output l2 norm of entropy residual
-output_entropy_residual_l2norm_ss = true;
+return_value_option = 1; % 0: nothing - just return zero
+                         % 1: L^2 norm of entropy residual
+                         % 2: L^2 norm of entropy jumps
 
 save_exact_solution      = false; % option to save exact solution 
 save_low_order_solution  = false; % option to save low-order solution
@@ -1078,26 +1080,50 @@ if (save_antidiffusion_matrix)
     end
 end
 
-% output l2 norm of entropy residual if specified
-if (opts.is_steady_state && output_entropy_residual_l2norm_ss)
-  % compute l2 norm
-  l2norm = evaluate_entropy_residual_l2norm_ss(...
-    uH,mesh,phys,quadrature,ev,dof_handler);
-
-  % set return values
-  return_value1 = l2norm;
-  return_value2 = mesh.dx(1);
-  
-  % report log of mesh size and log of norm
-  fprintf(['Note: main() function return values are:\n',...
-    '  1. L2 norm of entropy residual\n',...
-    '  2. mesh size\n']);
-end
-
-% set return value if not already
-if (~in_batch_mode)
-  return_value1 = 0;
-  return_value2 = 0;
+% compute return values
+return_value1 = 0;
+return_value2 = 0;
+switch return_value_option
+    case 0 % nothing
+        % do nothing
+    case 1 % entropy residual
+        % compute L^2 norm
+        if (opts.is_steady_state)
+            L2norm = evaluate_entropy_residual_l2norm_ss(...
+                uH,mesh,phys,quadrature,ev,dof_handler);
+        else
+            error(['Entropy residual L^2 norm calculation only ',...
+                'implemented for steady-state']);
+        end
+        
+        % set return values
+        return_value1 = L2norm;
+        return_value2 = mesh.dx(1);
+        
+        % report log of mesh size and log of norm
+        fprintf(['Note: main() function return values are:\n',...
+            '  1. L2 norm of entropy residual\n',...
+            '  2. mesh size\n']);
+    case 2 % entropy jump
+        % compute L^2 norm
+        if (opts.is_steady_state)
+            L2norm = evaluate_entropy_jump_l2norm_ss(...
+                uH,mesh,phys,quadrature,ev,dof_handler);
+        else
+            error(['Entropy residual L^2 norm calculation only ',...
+                'implemented for steady-state']);
+        end
+        
+        % set return values
+        return_value1 = L2norm;
+        return_value2 = mesh.dx(1);
+        
+        % report log of mesh size and log of norm
+        fprintf(['Note: main() function return values are:\n',...
+            '  1. L2 norm of entropy residual\n',...
+            '  2. mesh size\n']);
+    otherwise
+        error('Invalid return value option chosen');
 end
 
 end
