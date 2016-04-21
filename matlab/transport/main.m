@@ -2,14 +2,8 @@
 function [return_value1,return_value2] = main(n_cell)
 
 clc; close all; 
-
-% set flag if called in batch mode
-if (nargin > 0)
-  in_batch_mode = true;
-else
-  % clear all variables from workspace
+if (nargin == 0)
   clear;
-  in_batch_mode = false;
 end
 
 %% User Options
@@ -26,9 +20,9 @@ opts.impose_DirichletBC_strongly = true; % impose Dirichlet BC strongly?
 %--------------------------------------------------------------------------
 % spatial method options
 %--------------------------------------------------------------------------
-compute_low_order  = false; % compute and plot low-order solution?
+compute_low_order  = true; % compute and plot low-order solution?
 compute_high_order = true; % compute and plot high-order solution?
-compute_FCT        = false; % compute and plot FCT solution?
+compute_FCT        = true; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
 %                   2 = graph-theoretic low-order scheme
@@ -38,7 +32,7 @@ opts.low_order_scheme  = 2;
 %                    2 = Entropy viscosity
 %                    3 = Alternate Entropy viscosity 1
 %                    4 = Alternate Entropy viscosity 2 (should be same as 1)
-opts.high_order_scheme = 2;
+opts.high_order_scheme = 1;
 
 %--------------------------------------------------------------------------
 % entropy viscosity options
@@ -57,17 +51,17 @@ ev.smoothing_weight = 1.0; % weight for center value in smoothing
 %                  1 = SSPRK(1,1) (Explicit Euler)
 %                  2 = SSPRK(3,3) (Shu-Osher)
 %                  3 = theta method
-opts.temporal_scheme = 0; % temporal discretization scheme
+opts.temporal_scheme = 3; % temporal discretization scheme
 
 % theta parameter to use if using a theta method: 0.0 = FE
 %                                                 0.5 = CN
 %                                                 1.0 = BE
-opts.theta = 1.0;     
+opts.theta = 10.0;     
        
 opts.use_constant_dt = false; % option to use constant dt instead of CFL
 opts.constant_dt = 0.001;    % time step size to use if using constant size
-opts.CFL = 50.0;       % CFL number
-opts.t_end = 0.25;     % max time to run
+opts.CFL = 10.0;       % CFL number
+opts.t_end = 1.0;     % max time to run
 opts.ss_tol = 1.0e-6;  % steady-state tolerance
 %--------------------------------------------------------------------------
 % FCT options
@@ -76,7 +70,7 @@ opts.ss_tol = 1.0e-6;  % steady-state tolerance
 %             2 = widen low-order DMP to analytic
 %             3 = analytic
 %             4 = analytic upwind
-fct_opts.DMP_option = 2;
+fct_opts.DMP_option = 1;
 
 % limiter option: 0 = All 0 (no correction; low-order)
 %                 1 = All 1 (full correction; high-order)
@@ -85,18 +79,18 @@ fct_opts.DMP_option = 2;
 fct_opts.limiting_option = 2;
 
 % option to enforce Q+ >= 0, Q- <= 0
-fct_opts.enforce_antidiffusion_bounds_signs = true;
+fct_opts.enforce_antidiffusion_bounds_signs = false;
 
 % FCT initialization option: 1 = zeros
 %                            2 = low-order solution
 %                            3 = high-order solution
-fct_opts.FCT_initialization = 1;
+fct_opts.FCT_initialization = 3;
 
 % prelimit correction fluxes: 0 = do not prelimit, 1 = prelimit
 fct_opts.prelimit = 0;
 
 % limiting coefficient bounds for Dirichlet nodes
-fct_opts.dirichlet_limiting_coefficient = 0.0; 
+fct_opts.dirichlet_limiting_coefficient = 1.0; 
 %--------------------------------------------------------------------------
 % physics options
 %--------------------------------------------------------------------------
@@ -128,7 +122,7 @@ phys.impose_BC_on_IC = true; % option to impose Dirichlet BC on IC
 %--------------------------------------------------------------------------
 % nonlinear solver options
 %--------------------------------------------------------------------------
-nonlin_opts.max_iter = 100;    % maximum number of nonlinear solver iterations
+nonlin_opts.max_iter = 10000;    % maximum number of nonlinear solver iterations
 nonlin_opts.nonlin_tol = 1e-10; % nonlinear solver tolerance for discrete L2 norm
 nonlin_opts.relax = 1.0; % relaxation parameter for iteration
 %--------------------------------------------------------------------------
@@ -136,7 +130,7 @@ nonlin_opts.relax = 1.0; % relaxation parameter for iteration
 %--------------------------------------------------------------------------
 out_opts.plot_low_order_transient  = false; % plot low-order transient?
 out_opts.plot_high_order_transient = false; % plot high-order transient?
-out_opts.plot_FCT_transient        = false; % plot FCT transient?
+out_opts.plot_FCT_transient        = true; % plot FCT transient?
 
 out_opts.plot_EV_iteration         = false; % plot EV iteration?
 out_opts.plot_FCT_iteration        = false; % plot FCT iteration?
@@ -144,13 +138,13 @@ out_opts.plot_FCT_iteration        = false; % plot FCT iteration?
 out_opts.plot_viscosity            = false; % plot viscosities?
 
 out_opts.pause_type                = 'wait'; % pause type: 'wait' or 'time'
-out_opts.pausetime                 = 0.01; % time to pause for transient plots
+out_opts.pausetime                 = 0.5; % time to pause for transient plots
 out_opts.legend_location           = 'NorthEast'; % location of plot legend
 %--------------------------------------------------------------------------
 % output options
 %--------------------------------------------------------------------------
 % option to output l2 norm of entropy residual
-return_value_option = 1; % 0: nothing - just return zero
+return_value_option = 0; % 0: nothing - just return zero
                          % 1: L^2 norm of entropy residual
                          % 2: L^2 norm of entropy jumps
 
@@ -343,27 +337,6 @@ mesh.dx_min = min(mesh.dx);
 [quadrature.v,quadrature.dvdz] = get_lagrange_basis(quadrature.zq,2); 
 quadrature.Jac = 0.5*mesh.dx; % Jacobians of reference cell transformations
 
-%% Material properties
-
-% assert that a time-dependent source is not used; hasn't yet been
-% implemented
-assert(~phys.source_is_time_dependent,...
-    'Time-dependent source not yet implemented for DMP.');
-
-% compute min and max sigma and source in the support of i for time 0
-t = 0;
-if (fct_opts.DMP_option == 4) % upwind maximum principle
-    [sigma_min, sigma_max]  = compute_min_max_per_dof_upwind(...
-        phys.sigma, t,dof_handler.n_dof,mesh,quadrature.zq);
-    [source_min,source_max] = compute_min_max_per_dof_upwind(...
-        phys.source,t,dof_handler.n_dof,mesh,quadrature.zq);
-else
-    [sigma_min, sigma_max]  = compute_min_max_per_dof(...
-        phys.sigma, t,dof_handler.n_dof,mesh,quadrature.zq);
-    [source_min,source_max] = compute_min_max_per_dof(...
-        phys.source,t,dof_handler.n_dof,mesh,quadrature.zq);
-end
-
 %% Assembly
 
 % create connectivity array
@@ -421,6 +394,27 @@ b_mod = b;
 if opts.modify_for_strong_DirichletBC
     AL_mod(1,:)=0; AL_mod(1,1)=1;
     b_mod(1) = phys.inc;
+end
+
+%% Material properties
+
+% assert that a time-dependent source is not used; hasn't yet been
+% implemented
+assert(~phys.source_is_time_dependent,...
+    'Time-dependent source not yet implemented for DMP.');
+
+% compute min and max sigma and source in the support of i for time 0
+t = 0;
+if (fct_opts.DMP_option == 4) % upwind maximum principle
+    [sigma_min, sigma_max]  = compute_min_max_per_dof_upwind(...
+        phys.sigma, t,dof_handler.n_dof,mesh,quadrature.zq,dt_nominal*phys.speed);
+    [source_min,source_max] = compute_min_max_per_dof_upwind(...
+        phys.source,t,dof_handler.n_dof,mesh,quadrature.zq,dt_nominal*phys.speed);
+else
+    [sigma_min, sigma_max]  = compute_min_max_per_dof(...
+        phys.sigma, t,dof_handler.n_dof,mesh,quadrature.zq,dt_nominal*phys.speed);
+    [source_min,source_max] = compute_min_max_per_dof(...
+        phys.source,t,dof_handler.n_dof,mesh,quadrature.zq,dt_nominal*phys.speed);
 end
 
 %% Low-order Solution
@@ -866,7 +860,7 @@ if (compute_FCT)
                         [flim,Wminus,Wplus] = compute_limited_flux_sums(...
                             u_old,uFCT,dt,...
                             ML,AL,b,F,sigma_min,sigma_max,source_min,...
-                            source_max,opts.theta,dof_handler.n_dof,...
+                            source_max,mesh,opts.theta,dof_handler.n_dof,...
                             phys,fct_opts);
                         
                         % compute system rhs
@@ -904,7 +898,12 @@ if (compute_FCT)
                             plot(mesh.x,Wplus,'ko');
                             legend('High','Low','FCT(l+1)','W-(l)','W+(l)',...
                                 'Location',out_opts.legend_location);
-                            pause(out_opts.pausetime);
+                            % pause
+                            if (strcmp(out_opts.pause_type,'wait'))
+                                waitforbuttonpress;
+                            else
+                                pause(out_opts.pausetime);
+                            end
                         end
                     end
                     
@@ -926,9 +925,19 @@ if (compute_FCT)
             
             % plot
             if (out_opts.plot_FCT_transient)
+                figure(1);
+                clf;
+                hold on;
                 plot(mesh.x,uFCT,'g');
-                legend('FCT','Location',out_opts.legend_location);
-                pause(out_opts.pausetime);
+                plot(mesh.x,Wminus,'b--');
+                plot(mesh.x,Wplus,'r--');
+                legend('FCT','W-','W+','Location',out_opts.legend_location);
+                % pause
+                if (strcmp(out_opts.pause_type,'wait'))
+                    waitforbuttonpress;
+                else
+                    pause(out_opts.pausetime);
+                end
             end
             
             % reset u_old and u_older and advance time
