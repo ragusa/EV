@@ -14,6 +14,50 @@ by Equations
 \eqref{eq:limited_flux_bounds_explicit_euler}, and
 \eqref{eq:antidiffusion_bounds_theta},
 for steady-state, explicit Euler, and theta time discretizations, respectively.
+In the case of steady-state and theta time discretizations, the
+antidiffusion bounds are implicit, even if the solution bounds
+$\solutionbound_i^\pm$ are computed explicitly: thus the antidiffusion
+bounds for theta methods, for example, are the functions
+$\limitedfluxbound_i^\pm(\solutionbound_i^\pm,\solutionvector^{n+1})$.
+
+%------------------------------------------------------------------------------
+\begin{theorem}{Signs of Antidiffusion Bounds for Explicit Euler Scheme}
+The antidiffusion bounds $\limitedfluxbound_i^\pm$ for the explicit Euler
+scheme, given by Equation \eqref{eq:limited_flux_bounds_explicit_euler},
+satisfies the requirement given by Equation
+\eqref{eq:antidiffusion_bounds_properties} when the DMP solution bounds given
+by Equation \eqref{eq:explicit_dmp} are used.
+\end{theorem}
+
+\begin{proof}
+\end{proof}
+%------------------------------------------------------------------------------
+%------------------------------------------------------------------------------
+\begin{theorem}{Signs of Antidiffusion Bounds for Steady-State Scheme}
+The antidiffusion bounds $\limitedfluxbound_i^\pm$ for the steady-state
+scheme, given by Equation \eqref{eq:limited_flux_bounds_steady_state},
+satisfies the requirement given by Equation
+\eqref{eq:antidiffusion_bounds_properties} when the DMP solution bounds given
+by Equation \eqref{eq:DMP_ss} are used and the antidiffusion bounds are
+evaluated with the low-order solution $\solutionvector^L$:
+\end{theorem}
+
+\begin{proof}
+\end{proof}
+%------------------------------------------------------------------------------
+%------------------------------------------------------------------------------
+\begin{theorem}{Signs of Antidiffusion Bounds for Theta Scheme}
+The antidiffusion bounds $\limitedfluxbound_i^\pm$ for the theta
+scheme, given by Equation \eqref{eq:limited_flux_bounds_theta},
+satisfies the requirement given by Equation
+\eqref{eq:antidiffusion_bounds_properties} when the DMP solution bounds given
+by Equation \eqref{eq:DMP_theta} are used and the antidiffusion bounds are
+evaluated with the low-order solution $\solutionvector^{L,n+1}$:
+\end{theorem}
+
+\begin{proof}
+\end{proof}
+%------------------------------------------------------------------------------
 
 There are certain $\solutionbound_i^\pm$ that guarantee the properties given
 by Equation
@@ -71,12 +115,12 @@ For example, for steady-state, this corresponds to the following conditions:
 \begin{subequations}
 \begin{equation}
   \solutionbound_i^-
-    \leq \DMPlowerboundss_i(\DMPlowerboundss_i(\solutionvector^L))
+    \leq \DMPlowerboundss_i(\solutionvector^L)
   \eqc
 \end{equation}
 \begin{equation}
   \solutionbound_i^+
-    \geq \DMPupperboundss_i(\DMPupperboundss_i(\solutionvector^L))
+    \geq \DMPupperboundss_i(\solutionvector^L)
   \eqp
 \end{equation}
 \end{subequations}

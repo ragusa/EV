@@ -45,9 +45,11 @@ for f = 1:n_face % loop over interior faces
     dEdx_L = entropy_deriv(uF)*dudx_L(end);
     dEdx_R = entropy_deriv(uF)*dudx_R(1);
     jump(f) = abs(mu*(dEdx_L - dEdx_R));
-    integral = integral + jump(f)^2;
+    %integral = integral + jump(f)^2;
+    integral = integral + abs(jump(f));
 end
 
 % compute square root to finish L^2 norm
-l2norm = sqrt(integral);
+%l2norm = sqrt(integral);
+l2norm = integral;
 

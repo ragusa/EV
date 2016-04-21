@@ -20,9 +20,9 @@ opts.impose_DirichletBC_strongly = true; % impose Dirichlet BC strongly?
 %--------------------------------------------------------------------------
 % spatial method options
 %--------------------------------------------------------------------------
-compute_low_order  = true; % compute and plot low-order solution?
+compute_low_order  = false; % compute and plot low-order solution?
 compute_high_order = true; % compute and plot high-order solution?
-compute_FCT        = true; % compute and plot FCT solution?
+compute_FCT        = false; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
 %                   2 = graph-theoretic low-order scheme
@@ -32,7 +32,7 @@ opts.low_order_scheme  = 2;
 %                    2 = Entropy viscosity
 %                    3 = Alternate Entropy viscosity 1
 %                    4 = Alternate Entropy viscosity 2 (should be same as 1)
-opts.high_order_scheme = 1;
+opts.high_order_scheme = 2;
 
 %--------------------------------------------------------------------------
 % entropy viscosity options
@@ -51,12 +51,12 @@ ev.smoothing_weight = 1.0; % weight for center value in smoothing
 %                  1 = SSPRK(1,1) (Explicit Euler)
 %                  2 = SSPRK(3,3) (Shu-Osher)
 %                  3 = theta method
-opts.temporal_scheme = 3; % temporal discretization scheme
+opts.temporal_scheme = 0; % temporal discretization scheme
 
 % theta parameter to use if using a theta method: 0.0 = FE
 %                                                 0.5 = CN
 %                                                 1.0 = BE
-opts.theta = 10.0;     
+opts.theta = 1.0;     
        
 opts.use_constant_dt = false; % option to use constant dt instead of CFL
 opts.constant_dt = 0.001;    % time step size to use if using constant size
@@ -76,15 +76,18 @@ fct_opts.DMP_option = 1;
 %                 1 = All 1 (full correction; high-order)
 %                 2 = Zalesak limiter
 %                 3 = Josh limiter
-fct_opts.limiting_option = 2;
+fct_opts.limiting_option = 3;
 
 % option to enforce Q+ >= 0, Q- <= 0
-fct_opts.enforce_antidiffusion_bounds_signs = false;
+fct_opts.enforce_antidiffusion_bounds_signs = true;
 
 % FCT initialization option: 1 = zeros
 %                            2 = low-order solution
 %                            3 = high-order solution
 fct_opts.FCT_initialization = 3;
+
+% option to skip limitation of bounds if solution bounds are satisfied already
+fct_opts.skip_limiter_if_bounds_satisfied = true;
 
 % prelimit correction fluxes: 0 = do not prelimit, 1 = prelimit
 fct_opts.prelimit = 0;
@@ -130,7 +133,7 @@ nonlin_opts.relax = 1.0; % relaxation parameter for iteration
 %--------------------------------------------------------------------------
 out_opts.plot_low_order_transient  = false; % plot low-order transient?
 out_opts.plot_high_order_transient = false; % plot high-order transient?
-out_opts.plot_FCT_transient        = true; % plot FCT transient?
+out_opts.plot_FCT_transient        = false; % plot FCT transient?
 
 out_opts.plot_EV_iteration         = false; % plot EV iteration?
 out_opts.plot_FCT_iteration        = false; % plot FCT iteration?
@@ -144,7 +147,7 @@ out_opts.legend_location           = 'NorthEast'; % location of plot legend
 % output options
 %--------------------------------------------------------------------------
 % option to output l2 norm of entropy residual
-return_value_option = 0; % 0: nothing - just return zero
+return_value_option = 2; % 0: nothing - just return zero
                          % 1: L^2 norm of entropy residual
                          % 2: L^2 norm of entropy jumps
 
@@ -858,7 +861,7 @@ if (compute_FCT)
                     for iter = 1:nonlin_opts.max_iter
                         % compute limited flux correction sum
                         [flim,Wminus,Wplus] = compute_limited_flux_sums(...
-                            u_old,uFCT,dt,...
+                            u_old,uFCT,uL,dt,...
                             ML,AL,b,F,sigma_min,sigma_max,source_min,...
                             source_max,mesh,opts.theta,dof_handler.n_dof,...
                             phys,fct_opts);
