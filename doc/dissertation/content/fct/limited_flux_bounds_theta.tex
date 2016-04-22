@@ -3,37 +3,53 @@
   the following antidiffusion bounds $\limitedfluxbound_i^\pm$ correspond to the
   solution bounds
   $\solutionbound_i^-\le \solutionletter_i^{\timeindex+1}\le \solutionbound_i^+$:
+  \begin{subequations}
   \begin{equation}\label{eq:antidiffusion_bounds_theta}
-    \limitedfluxbound_i^\pm \equiv \lumpedmassentry\frac{\solutionbound_i^\pm
-      - \solutionletter_i^\timeindex}{\timestepsize}
-    +(1-\theta)\sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
-    +\theta\sumj \ssmatrixletter\ij^L \solutionletter_j^{\timeindex+1}
-    -(1-\theta)\ssrhsletter_i^\timeindex
-    -\theta \ssrhsletter_i^{\timeindex+1} \eqp
+    \limitedfluxbound_i^\pm \equiv
+     \pr{\frac{\lumpedmassentry}{\dt}+\theta\ssmatrixletter_{i,i}^L}
+       \solutionbound_i^\pm
+      + \pr{(1-\theta)\ssmatrixletter_{i,i}^L-\frac{\lumpedmassentry}{\dt}}
+       \solutionletter_i^n
+    +\sumjnoti \ssmatrixletter\ij^L \solutionletter_j^\theta
+    -\ssrhsletter_i^\theta
+    \eqc
   \end{equation}
+  \begin{equation}
+    \solutionletter_j^\theta \equiv
+      \theta\solutionletter_j^{n+1} + (1-\theta)\solutionletter_j^n
+    \eqc
+  \end{equation}
+  \begin{equation}
+    \ssrhsletter_i^\theta \equiv
+      \theta\ssrhsletter_i^{n+1} + (1-\theta)\ssrhsletter_i^n
+    \eqp
+  \end{equation}
+  \end{subequations}
 \end{theorem}
 
 \begin{proof}
   Starting with row $i$ of Equation \eqref{eq:fct_theta},
-   \[
-      \lumpedmassentry\frac{\solutionletter_i^{\timeindex+1}
-        - \solutionletter_i^\timeindex}{\timestepsize}
-      + (1-\theta)\sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
-      + \theta\sumj \ssmatrixletter\ij^L \solutionletter_j^{\timeindex+1}
-      = (1-\theta)\ssrhsletter_i^\timeindex
-      + \theta \ssrhsletter_i^{\timeindex+1}
-      + \limitedfluxsumi \eqp
-   \]
-   Solving for $\limitedfluxsumi$ gives
-   \[
-      \limitedfluxsumi =
-      \lumpedmassentry\frac{\solutionletter_i^{\timeindex+1}
-        - \solutionletter_i^\timeindex}{\timestepsize}
-      + (1-\theta)\sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
-      + \theta\sumj \ssmatrixletter\ij^L \solutionletter_j^{\timeindex+1}
-      - (1-\theta)\ssrhsletter_i^\timeindex
-      - \theta \ssrhsletter_i^{\timeindex+1} \eqp
-   \]
+  \[
+     \pr{\frac{\lumpedmassentry}{\dt}+\theta\ssmatrixletter_{i,i}^L}
+       \solutionletter_i^{n+1}
+      + \pr{(1-\theta)\ssmatrixletter_{i,i}^L-\frac{\lumpedmassentry}{\dt}}
+       \solutionletter_i^n
+    +\sumjnoti \ssmatrixletter\ij^L \solutionletter_j^\theta
+    = \ssrhsletter_i^\theta
+      + \limitedfluxsumi
+    \eqp
+  \]
+  Solving for $\limitedfluxsumi$ gives
+  \[
+    \limitedfluxsumi =
+     \pr{\frac{\lumpedmassentry}{\dt}+\theta\ssmatrixletter_{i,i}^L}
+       \solutionletter_i^{n+1}
+      + \pr{(1-\theta)\ssmatrixletter_{i,i}^L-\frac{\lumpedmassentry}{\dt}}
+       \solutionletter_i^n
+    +\sumjnoti \ssmatrixletter\ij^L \solutionletter_j^\theta
+    - \ssrhsletter_i^\theta
+    \eqp
+  \]
    The solution bounds for degree of freedom $i$ are
    \[
       \solutionbound_i^-\le \solutionletter_i^{\timeindex+1}\le \solutionbound_i^+ \eqp
@@ -41,24 +57,27 @@
    Through addition/subtraction and multiplication/division operations, this
    principle can be made to look like the following:
    \begin{multline*}
-   \lumpedmassentry\frac{\solutionbound_i^-
-     -\solutionletter_i^\timeindex}{\timestepsize}
-      + (1-\theta)\sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
-      + \theta\sumj \ssmatrixletter\ij^L \solutionletter_j^{\timeindex+1}
-      - (1-\theta)\ssrhsletter_i^\timeindex
-      - \theta \ssrhsletter_i^{\timeindex+1}\\
-   \le \lumpedmassentry\frac{\solutionletter_i^{\timeindex+1}
-     -\solutionletter_i^\timeindex}{\timestepsize}
-      + (1-\theta)\sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
-      + \theta\sumj \ssmatrixletter\ij^L \solutionletter_j^{\timeindex+1}
-      - (1-\theta)\ssrhsletter_i^\timeindex
-      - \theta \ssrhsletter_i^{\timeindex+1}\\
-   \le \lumpedmassentry\frac{\solutionbound_i^+
-     -\solutionletter_i^\timeindex}{\timestepsize}
-      + (1-\theta)\sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
-      + \theta\sumj \ssmatrixletter\ij^L \solutionletter_j^{\timeindex+1}
-      - (1-\theta)\ssrhsletter_i^\timeindex
-      - \theta \ssrhsletter_i^{\timeindex+1},
+     \pr{\frac{\lumpedmassentry}{\dt}+\theta\ssmatrixletter_{i,i}^L}
+       \solutionbound_i^-
+      + \pr{(1-\theta)\ssmatrixletter_{i,i}^L-\frac{\lumpedmassentry}{\dt}}
+       \solutionletter_i^n
+    +\sumjnoti \ssmatrixletter\ij^L \solutionletter_j^\theta
+    -\ssrhsletter_i^\theta\\
+   \le
+     \pr{\frac{\lumpedmassentry}{\dt}+\theta\ssmatrixletter_{i,i}^L}
+       \solutionletter_i^{n+1}
+      + \pr{(1-\theta)\ssmatrixletter_{i,i}^L-\frac{\lumpedmassentry}{\dt}}
+       \solutionletter_i^n
+    +\sumjnoti \ssmatrixletter\ij^L \solutionletter_j^\theta
+    -\ssrhsletter_i^\theta\\
+   \le
+     \pr{\frac{\lumpedmassentry}{\dt}+\theta\ssmatrixletter_{i,i}^L}
+       \solutionbound_i^+
+      + \pr{(1-\theta)\ssmatrixletter_{i,i}^L-\frac{\lumpedmassentry}{\dt}}
+       \solutionletter_i^n
+    +\sumjnoti \ssmatrixletter\ij^L \solutionletter_j^\theta
+    -\ssrhsletter_i^\theta
+   \eqc
    \end{multline*}
    which by substituting equations above gives
    \[

@@ -6,142 +6,264 @@ $\limitedfluxbound_i^\pm$ must have the following properties:
 Otherwise, there would not be a fail-safe definition of the limiting
 coefficients; the FCT solution could not necessarily revert to the low-order
 solution.
-Recall that the antidiffusion bounds have a fixed definition that take the
-imposed solution bounds as input:
-$\limitedfluxbound_i^\pm(\solutionbound_i^\pm)$, which are given
-by Equations
-\eqref{eq:antidiffusion_bounds_steady_state},
-\eqref{eq:limited_flux_bounds_explicit_euler}, and
-\eqref{eq:antidiffusion_bounds_theta},
-for steady-state, explicit Euler, and theta time discretizations, respectively.
-In the case of steady-state and theta time discretizations, the
-antidiffusion bounds are implicit, even if the solution bounds
-$\solutionbound_i^\pm$ are computed explicitly: thus the antidiffusion
-bounds for theta methods, for example, are the functions
-$\limitedfluxbound_i^\pm(\solutionbound_i^\pm,\solutionvector^{n+1})$.
+The limiter assumes these conditions are satisfied; if they are
+not satisfied, then negative limiting coefficients may be produced,
+which is highly undesirable.
+The following theorems give conditions under which Equation
+\eqref{eq:antidiffusion_bounds_properties} is satisfied for each temporal
+discretization.
 
+%Recall that the antidiffusion bounds have a fixed definition that take the
+%imposed solution bounds as input:
+%$\limitedfluxbound_i^\pm(\solutionbound_i^\pm)$, which are given
+%by Equations
+%\eqref{eq:antidiffusion_bounds_steady_state},
+%\eqref{eq:limited_flux_bounds_explicit_euler}, and
+%\eqref{eq:antidiffusion_bounds_theta},
+%for steady-state, explicit Euler, and theta time discretizations, respectively.
+%In the case of steady-state and theta time discretizations, the
+%antidiffusion bounds are implicit, even if the solution bounds
+%$\solutionbound_i^\pm$ are computed explicitly: thus the antidiffusion
+%bounds for theta methods, for example, are the functions
+%$\limitedfluxbound_i^\pm(\solutionbound_i^\pm,\solutionvector^{n+1})$.
+
+%------------------------------------------------------------------------------
+\begin{theorem}{Signs of Antidiffusion Bounds for Steady-State Scheme}
+The antidiffusion bounds $\limitedfluxbound_i^\pm$ for the steady-state
+scheme, given by Equation \eqref{eq:antidiffusion_bounds_steady_state},
+satisfy the conditions given by Equation
+\eqref{eq:antidiffusion_bounds_properties} when the DMP solution bounds given
+by Equation \eqref{eq:DMP_ss} are used
+and both the antidiffusion bounds
+and DMP solution bounds are evaluated with the same solution $\solutionvector$:
+\begin{subequations}
+\begin{equation}
+  \limitedfluxbound_i^+ = \ssmatrixletter_{i,i}^L \DMPupperbound_i(\solutionvector)
+    + \sumjnoti\ssmatrixletter\ij^L\solutionletter_j - \ssrhsletter_i \geq 0\eqc
+\end{equation}
+\begin{equation}
+  \limitedfluxbound_i^- = \ssmatrixletter_{i,i}^L \DMPlowerbound_i(\solutionvector)
+    + \sumjnoti\ssmatrixletter\ij^L\solutionletter_j - \ssrhsletter_i \leq 0\eqp
+\end{equation}
+\end{subequations}
+\end{theorem}
+
+\begin{proof}
+Starting with Equation \eqref{eq:antidiffusion_bounds_steady_state},
+\[
+     \limitedfluxbound_i^\pm \equiv \ssmatrixletter_{i,i}^L \solutionbound_i^\pm
+       + \sumjnoti\ssmatrixletter\ij^L\solutionletter_j - \ssrhsletter_i \eqp
+\]
+Evaluating Equation \eqref{eq:DMP_ss} with an arbitrary solution
+$\solutionvector$ instead of the low-order solution $\solutionvector^L$ gives
+\[
+   \DMPbounds_i(\solutionvector)
+     \equiv -\frac{1}{\ssmatrixletter^L_{i,i}}
+      \sumjnoti\ssmatrixletter^L_{i,j}
+      \solutionletter_{\substack{\max\\\min},j\ne i}
+      + \frac{\ssrhsletter_i}{\ssmatrixletter^L_{i,i}} \eqc
+\]
+where
+\[
+  \solutionletter_{\min,j\ne i} \equiv \min\limits_{j\ne i\in\indicescell[\support_i]}
+    \solutionletter_j
+  \eqc\quad
+  \solutionletter_{\max,j\ne i} \equiv \max\limits_{j\ne i\in\indicescell[\support_i]}
+    \solutionletter_j
+  \eqp
+\]
+Substituting this expression for $\solutionbound_i^\pm$ into the antidiffusion
+bounds expression gives
+\[
+     \limitedfluxbound_i^\pm =
+       - \sumjnoti\ssmatrixletter\ij^L
+         (\solutionletter_{\substack{\max\\\min},j\ne i} - \solutionletter_j) \eqp
+\]
+By Lemma \ref{lem:offdiagonalnegative}, the off-diagonal matrix entries
+$\ssmatrixletter\ij^L$ are non-positive,
+and by definition, $\solutionletter_{\max,j\ne i} \geq \solutionletter_j$ and
+$\solutionletter_{\min,j\ne i} \leq \solutionletter_j$, so the signs of
+Equation \eqref{eq:antidiffusion_bounds_properties} are verified.\qed
+\end{proof}
+%------------------------------------------------------------------------------
 %------------------------------------------------------------------------------
 \begin{theorem}{Signs of Antidiffusion Bounds for Explicit Euler Scheme}
 The antidiffusion bounds $\limitedfluxbound_i^\pm$ for the explicit Euler
 scheme, given by Equation \eqref{eq:limited_flux_bounds_explicit_euler},
-satisfies the requirement given by Equation
+satisfy the conditions given by Equation
 \eqref{eq:antidiffusion_bounds_properties} when the DMP solution bounds given
-by Equation \eqref{eq:explicit_dmp} are used.
+by Equation \eqref{eq:explicit_dmp} are used:
+\begin{subequations}
+\begin{equation}
+  \limitedfluxbound_i^+ = \lumpedmassentry
+    \frac{\DMPupperbound_i-\solutionletter_i^\timeindex}{\timestepsize}
+  + \sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
+  - \ssrhsletter_i^\timeindex \geq 0\eqc
+\end{equation}
+\begin{equation}
+  \limitedfluxbound_i^- = \lumpedmassentry
+    \frac{\DMPlowerbound_i-\solutionletter_i^\timeindex}{\timestepsize}
+  + \sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
+  - \ssrhsletter_i^\timeindex \leq 0\eqp
+\end{equation}
+\end{subequations}
 \end{theorem}
 
 \begin{proof}
-\end{proof}
-%------------------------------------------------------------------------------
-%------------------------------------------------------------------------------
-\begin{theorem}{Signs of Antidiffusion Bounds for Steady-State Scheme}
-The antidiffusion bounds $\limitedfluxbound_i^\pm$ for the steady-state
-scheme, given by Equation \eqref{eq:limited_flux_bounds_steady_state},
-satisfies the requirement given by Equation
-\eqref{eq:antidiffusion_bounds_properties} when the DMP solution bounds given
-by Equation \eqref{eq:DMP_ss} are used and the antidiffusion bounds are
-evaluated with the low-order solution $\solutionvector^L$:
-\end{theorem}
-
-\begin{proof}
+Starting with Equation \eqref{eq:limited_flux_bounds_explicit_euler},
+\[
+  \limitedfluxbound_i^\pm \equiv \lumpedmassentry
+    \frac{\solutionbound_i^\pm-\solutionletter_i^\timeindex}{\timestepsize}
+  + \sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
+  - \ssrhsletter_i^\timeindex \eqp
+\]
+Substituting Equation \eqref{eq:explicit_dmp} into this expression gives
+\[
+  \limitedfluxbound_i^\pm = \frac{\lumpedmassentry}{\dt}
+    \left(\pr{1-\frac{\timestepsize}{\massmatrixletter_{i,i}^L}
+       \sumj\ssmatrixletter^{L}_{i,j}}
+     \solutionletter_{\substack{\max\\\min},i}^\timeindex
+     + \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssrhsletter_i^\timeindex
+      -\solutionletter_i^n\right)
+  + \sumj \ssmatrixletter\ij^L \solutionletter_j^n
+  - \ssrhsletter_i^\timeindex \eqc
+\]
+\[
+  \limitedfluxbound_i^\pm = 
+    \pr{\frac{\lumpedmassentry}{\dt}
+       -\sumj\ssmatrixletter^{L}_{i,j}}
+     \solutionletter_{\substack{\max\\\min},i}^\timeindex
+      -\frac{\lumpedmassentry}{\dt}\solutionletter_i^n
+  + \sumj \ssmatrixletter\ij^L \solutionletter_j^n
+  \eqc
+\]
+\[
+  \limitedfluxbound_i^\pm = 
+    \pr{\frac{\lumpedmassentry}{\dt}
+       -\ssmatrixletter^L_{i,i}}
+     \pr{\solutionletter_{\substack{\max\\\min},i}^n-\solutionletter_i^n}
+    -\sumjnoti\ssmatrixletter^L_{i,j}
+     \pr{\solutionletter_{\substack{\max\\\min},i}^n-\solutionletter_j^n}
+  \eqp
+\]
+By the CFL condition of Equation \eqref{eq:explicit_cfl},
+\[
+  \frac{\lumpedmassentry}{\dt}
+       -\ssmatrixletter^L_{i,i} \geq 0
+  \eqc
+\]
+and by Lemma \ref{lem:offdiagonalnegative}, the off-diagonal matrix entries
+$\ssmatrixletter\ij^L$ are non-positive.
+By definition, $\solutionletter_{\max,i}^n \geq \solutionletter_j^n$ and
+$\solutionletter_{\min,i}^n \leq \solutionletter_j^n$, so the signs of
+Equation \eqref{eq:antidiffusion_bounds_properties} are verified.\qed
 \end{proof}
 %------------------------------------------------------------------------------
 %------------------------------------------------------------------------------
 \begin{theorem}{Signs of Antidiffusion Bounds for Theta Scheme}
 The antidiffusion bounds $\limitedfluxbound_i^\pm$ for the theta
-scheme, given by Equation \eqref{eq:limited_flux_bounds_theta},
-satisfies the requirement given by Equation
+scheme, given by Equation \eqref{eq:antidiffusion_bounds_theta},
+satisfy the conditions given by Equation
 \eqref{eq:antidiffusion_bounds_properties} when the DMP solution bounds given
-by Equation \eqref{eq:DMP_theta} are used and the antidiffusion bounds are
-evaluated with the low-order solution $\solutionvector^{L,n+1}$:
+by Equation \eqref{eq:theta_dmp} are used
+and both the antidiffusion bounds
+and DMP solution bounds are evaluated with the same solution $\solutionvector^{n+1}$:
+\begin{subequations}
+  \begin{multline}
+    \limitedfluxbound_i^+ =
+     \pr{\frac{\lumpedmassentry}{\dt}+\theta\ssmatrixletter_{i,i}^L}
+       \DMPupperbound_i(\solutionvector^{n+1})
+      + \pr{(1-\theta)\ssmatrixletter_{i,i}^L-\frac{\lumpedmassentry}{\dt}}
+       \solutionletter_i^n\\
+    +\sumjnoti \ssmatrixletter\ij^L \solutionletter_j^\theta
+    -\ssrhsletter_i^\theta \geq 0
+    \eqc
+  \end{multline}
+  \begin{multline}
+    \limitedfluxbound_i^- =
+     \pr{\frac{\lumpedmassentry}{\dt}+\theta\ssmatrixletter_{i,i}^L}
+       \DMPlowerbound_i(\solutionvector^{n+1})
+      + \pr{(1-\theta)\ssmatrixletter_{i,i}^L-\frac{\lumpedmassentry}{\dt}}
+       \solutionletter_i^n\\
+    +\sumjnoti \ssmatrixletter\ij^L \solutionletter_j^\theta
+    -\ssrhsletter_i^\theta \leq 0
+    \eqp
+  \end{multline}
+\end{subequations}
 \end{theorem}
 
 \begin{proof}
+Starting with Equation \eqref{eq:antidiffusion_bounds_theta},
+  \[
+    \limitedfluxbound_i^\pm =
+     \pr{\frac{\lumpedmassentry}{\dt}+\theta\ssmatrixletter_{i,i}^L}
+       \solutionbound_i^\pm
+      + \pr{(1-\theta)\ssmatrixletter_{i,i}^L-\frac{\lumpedmassentry}{\dt}}
+       \solutionletter_i^n
+    +\sumjnoti \ssmatrixletter\ij^L \solutionletter_j^\theta
+    -\ssrhsletter_i^\theta
+    \eqp
+  \]
+Substituting Equation \eqref{eq:theta_dmp} into this expression gives
+  \[
+    \limitedfluxbound_i^\pm =
+    -\sumjnoti \ssmatrixletter\ij^L \pr{
+      \theta\pr{\solutionletter_{\substack{\max\\\min},j\ne i}^{n+1} - \solutionletter_j^{n+1}}
+      + (1-\theta)\pr{\solutionletter_{\substack{\max\\\min},j\ne i}^n - \solutionletter_j^n}}
+    \eqc
+  \]
+and by Lemma \ref{lem:offdiagonalnegative}, the off-diagonal matrix entries
+$\ssmatrixletter\ij^L$ are non-positive.
+By definition, $\solutionletter_{\max,j\ne i}^n \geq \solutionletter_j^n$ and
+$\solutionletter_{\min,j\ne i}^n \leq \solutionletter_j^n$, so the signs of
+Equation \eqref{eq:antidiffusion_bounds_properties} are verified.\qed
 \end{proof}
 %------------------------------------------------------------------------------
 
-There are certain $\solutionbound_i^\pm$ that guarantee the properties given
-by Equation
-\eqref{eq:antidiffusion_bounds_properties}, for example, the
-discrete maximum principle bounds given in Equations
-\eqref{eq:DMP_ss},
-\eqref{eq:explicit_dmp},
-\eqref{eq:theta_dmp},
-for steady-state, explicit Euler, and theta time discretizations, respectively.
-However, it should be noted that the steady-state and theta methods that are
-not fully explicit (theta methods other than explicit Euler), have discrete
-maximum principle bounds that are implicit with the solution:
-$\DMPboundsss_i(\solutionvector)$ and $\DMPboundstheta_i(\solutionvector^{n+1})$,
-for steady-state and theta time discretizations, respectively.
-It is only proven that the properties given by Equation
-\eqref{eq:antidiffusion_bounds_properties}
-hold when these expressions are evaluated with the low-order solution.
-The following equations summarize these statements
-for steady-state, explicit Euler, and theta time discretizations, respectively:
-\begin{equation}
-  \antidiffusionlowerboundss_i(\DMPlowerboundss_i(\solutionvector^L))
-    \leq 0
-  \eqc \quad
-  \antidiffusionupperboundss_i(\DMPupperboundss_i(\solutionvector^L))
-    \geq 0
-  \eqc
-\end{equation}
-\begin{equation}
-  \antidiffusionlowerboundee_i(\DMPlowerboundee_i)
-    \leq 0
-  \eqc \quad
-  \antidiffusionupperboundee_i(\DMPupperboundee_i)
-    \geq 0
-  \eqc
-\end{equation}
-\begin{equation}
-  \antidiffusionlowerboundtheta_i(\DMPlowerboundtheta_i(\solutionvector^{L,n+1}))
-    \leq 0
-  \eqc \quad
-  \antidiffusionupperboundtheta_i(\DMPupperboundtheta_i(\solutionvector^{L,n+1}))
-    \geq 0
-  \eqp
-\end{equation}
 If one wishes to use solution bounds $\solutionbound_i^\pm$ other than the
-discrete maximum principle bounds evaluated with the low-order solution, then
+discrete maximum principle bounds, then
 one needs to take care to ensure that the imposed bounds yield the properties
-given by Equation
-\eqref{eq:antidiffusion_bounds_properties}.
+given by Equation \eqref{eq:antidiffusion_bounds_properties}.
 One way to achieve this is to ensure that the solution bounds
 $\solutionbound_i^\pm$ themselves bound the solution bounds for which the
 properties given by Equation
 \eqref{eq:antidiffusion_bounds_properties}
-are known to hold.
-For example, for steady-state, this corresponds to the following conditions:
+are known to hold:
 \begin{subequations}
 \begin{equation}
   \solutionbound_i^-
-    \leq \DMPlowerboundss_i(\solutionvector^L)
+    \leq \DMPlowerbound_i
   \eqc
 \end{equation}
 \begin{equation}
   \solutionbound_i^+
-    \geq \DMPupperboundss_i(\solutionvector^L)
+    \geq \DMPupperbound_i
   \eqp
 \end{equation}
 \end{subequations}
-These conditions simply may be enforced by the following operation:
+These conditions may be enforced by the following operation:
 \begin{subequations}\label{eq:solution_bounds_operation}
 \begin{equation}
-  \solutionbound_i^-
-    \gets \min(\solutionbound_i^-,
-      \DMPlowerboundss_i(\solutionvector^L))
+  \tilde{\solutionbound}_i^-
+    \equiv \min(\solutionbound_i^-,
+      \DMPlowerbound_i)
   \eqc
 \end{equation}
 \begin{equation}
-  \solutionbound_i^+
-    \gets \max(\solutionbound_i^+,
-      \DMPupperboundss_i(\solutionvector^L))
+  \tilde{\solutionbound}_i^+
+    \equiv \max(\solutionbound_i^+,
+      \DMPupperbound_i)
   \eqp
 \end{equation}
 \end{subequations}
-Similarly, an even simpler approach to enforcing the property given by Equation
-\eqref{eq:antidiffusion_bounds_properties}
-is to directly impose the properties:
+Then when the antidiffusion bounds $\limitedfluxbound_i^\pm$ are computed from
+the solution bounds $\tilde{\solutionbound}_i^\pm$, the properties of Equation
+\eqref{eq:antidiffusion_bounds_properties} will still hold.  Similarly, a more
+direct approach to enforcing the properties given by Equation
+\eqref{eq:antidiffusion_bounds_properties} is not to perform the operation
+given by Equation \eqref{eq:solution_bounds_operation} but instead to compute
+$\limitedfluxbound_i^\pm$ with the unmodified bounds $\solutionbound_i^\pm$
+and then perform the following operation:
 \begin{subequations}\label{eq:antidiffusion_bounds_operation}
 \begin{equation}
   \antidiffusionbound_i^-
@@ -154,24 +276,6 @@ is to directly impose the properties:
   \eqp
 \end{equation}
 \end{subequations}
-This operation gives tighter bounds than the operation of Equation
-\eqref{eq:solution_bounds_operation}; specifically, Equation
-\eqref{eq:antidiffusion_bounds_operation} is equivalent to performing
-the following operation on the solution bounds:
-\begin{subequations}
-\begin{equation}
-  \solutionbound_i^-
-    \gets \min(\solutionbound_i^-, \solutionletter_i^{L})
-  \eqc
-\end{equation}
-\begin{equation}
-  \solutionbound_i^+
-    \gets \max(\solutionbound_i^+, \solutionletter_i^{L})
-  \eqc
-\end{equation}
-\end{subequations}
-where in the transient case $\solutionletter_i^{L}$ represents
-$\solutionletter_i^{L,n+1}$.
-
-
+This operation potentially gives tighter bounds than the operation of Equation
+\eqref{eq:solution_bounds_operation}.
 

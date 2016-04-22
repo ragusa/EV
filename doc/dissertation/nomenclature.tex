@@ -8,7 +8,7 @@ any lowercase symbol in a boldface font is a vector (first-order tensor),
 and any uppercase symbol in a boldface font is a matrix (second-order tensor).
 One exception to this rule is the solution vector, $\solutionvector$, which
 is uppercase despite being a vector, not a matrix. This is to distinguish
-it from the continuous solution vector for vector-valued conservation laws,
+it from the symbol for a vector-valued solution function,
 $\vectorsolution$, since ``u'' is traditionally used in both circumstances.
 
 Individual matrix entries are denoted by the non-boldface equivalent of
@@ -16,26 +16,15 @@ the matrix symbol, with two subscripted indices, and individual vector entries
 are denoted by the non-boldface equivalent, with one subscripted index.
 Symbols used for degree of freedom indices include $i$, $j$, $k$, and $\ell$,
 and cell indices are usually denoted by $\cell$.
-In the case of conservation law systems, as opposed to scalar conservation laws,
-there are multiple degrees of freedom at each support point (which happens to
-be the nodes of the mesh for 1st-order Lagrangian finite elements). Thus, distinction
-is often needed between node indices and degree of freedom indices. For example,
-there are some quantities that are identical for all solution components,
-so rather than store that quantity multiple times, it can be stored once
-instead of duplicating it $\ncomponents$ times. To distinguish between
-quantities that use degree-of-freedom indexing and support-point indexing,
-the symbol for the latter is modified: $A\ij\rightarrow \nodequantity{A}\nodeij$,
-where $\nodeindex(i)$ denotes the index of the support point supporting
-degree of freedom $i$.
 Temporal indices
-use $\timeindex$ as a superscript, and iteration indices use $(\ell)$
+use $n$ as a superscript, and iteration indices use $(\ell)$
 as a superscript. Other symbols appearing in subscripts or superscripts
 are typically descriptors, e.g., to distinguish a function for different
 components of a vector-valued system, or to distinguish a low-order order
 vs. a high-order quantity.
 
 Sums often give only the summation index, with the lower/upper bounds or the
-set being understood. For example, if the set of all degrees of freedom indices
+set being understood from context. For example, if the set of all degrees of freedom indices
 is $\mathcal{I}(\domain)=\{1,\ldots,\maxdof\}$, where $\maxdof$ is the maximum
 degree of freedom index, then the sum notation
 $\sum\limits_{j\in\mathcal{I}(\domain)}$ or $\sum\limits_{j=1}^N$ is shortened
@@ -56,10 +45,14 @@ $f(\approximatescalarsolution^\timeindex)$ becomes $f^\timeindex$.
 
 \begin{mytable}{Abbreviations Used in Dissertation}{abbreviations}{l l}
 {\emph{Abbreviation} & \emph{Description}}
+BE    & backward (implicit) Euler\\
 CFEM  & continuous finite element method\\
+CN    & Crank-Nicolson\\
+DI    & domain-invariant\\
 DMP   & discrete maximum principle\\
 EV    & entropy viscosity\\
 FCT   & flux-corrected transport\\
+FE    & forward (explicit) Euler\\
 FEM   & finite element method\\
 FV    & finite volume\\
 IVP   & initial value problem\\
@@ -117,13 +110,14 @@ $\highorderdiffusionmatrix$ & high-order diffusion matrix\\
 $\loworderdiffusionmatrix$ & low-order diffusion matrix\\
 $\domain$          & problem domain\\
 $\domainboundary$  & problem domain boundary\\
+$\cellvolume$      & volume of cell $\cellindex$\\
 
 % E-K
 %------------------------------------------------------------------------------
 $\unitvector{d}$   & unit vector for dimension $d$\\
 $\totalenergy$     & total energy density\\
 $\consfluxscalar$  & conservation law flux function for scalar case\\
-$\consfluxvector$  & conservation law flux function for vector case\\
+$\consfluxvector(\vectorsolution)$  & conservation law flux function for vector case\\
 $\gravity$         & acceleration due to gravity\\
 $\height$          & height\\
 $\indicescell$     & set of degree of freedom indices with support on
@@ -136,8 +130,8 @@ $\cellindex$       & cell index\\
 $\limitermatrix$   & matrix of limiting coefficients\\
 $\limiterletter_{i,j}$ & limiting coefficient for degrees of freedom $i$
                          and $j$\\
-$\limiterletter^\pm_i$ & limiting coefficient bounds for degree of freedom $i$
-                         due to DMP of $i$ alone\\
+$\limiterletter^\pm_i$ & Zalesak intermediate limiting coefficient bounds for
+                         degree of freedom $i$\\
 $\momentum$        & momentum\\
 $\consistentmassmatrix$ & consistent mass matrix\\
 $\lumpedmassmatrix$ & lumped mass matrix\\
@@ -190,7 +184,6 @@ $\lowordersolution$ & low-order solution vector\\
 $\speed$           & speed\\
 $\velocity$        & velocity\\
 $\volume$          & volume\\
-$\cellvolume$      & volume of cell $\cellindex$\\
 $\solutionbound_i^\pm$ & upper and lower solution bounds for degree of freedom $i$\\
 $\DMPbounds_i$     & upper and lower DMP bounds for degree of freedom $i$\\
 $\x$               & spatial position\\
