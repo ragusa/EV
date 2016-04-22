@@ -20,9 +20,9 @@ opts.impose_DirichletBC_strongly = true; % impose Dirichlet BC strongly?
 %--------------------------------------------------------------------------
 % spatial method options
 %--------------------------------------------------------------------------
-compute_low_order  = false; % compute and plot low-order solution?
+compute_low_order  = true; % compute and plot low-order solution?
 compute_high_order = true; % compute and plot high-order solution?
-compute_FCT        = false; % compute and plot FCT solution?
+compute_FCT        = true; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
 %                   2 = graph-theoretic low-order scheme
@@ -38,7 +38,7 @@ opts.high_order_scheme = 2;
 % entropy viscosity options
 %--------------------------------------------------------------------------
 ev.cE = 0.1; % coefficient for entropy residual in entropy viscosity
-ev.cJ = ev.cE*0; % coefficient for jumps in entropy viscosity
+ev.cJ = ev.cE*1; % coefficient for jumps in entropy viscosity
 ev.entropy       = @(u) 0.5*u.^2; % entropy function
 ev.entropy_deriv = @(u) u;        % derivative of entropy function
 ev.use_local_ev_norm = false; % option to use local entropy normalization
@@ -70,7 +70,7 @@ opts.ss_tol = 1.0e-6;  % steady-state tolerance
 %             2 = widen low-order DMP to analytic
 %             3 = analytic
 %             4 = analytic upwind
-fct_opts.DMP_option = 1;
+fct_opts.DMP_option = 3;
 
 % limiter option: 0 = All 0 (no correction; low-order)
 %                 1 = All 1 (full correction; high-order)
@@ -84,7 +84,7 @@ fct_opts.enforce_antidiffusion_bounds_signs = true;
 % FCT initialization option: 1 = zeros
 %                            2 = low-order solution
 %                            3 = high-order solution
-fct_opts.FCT_initialization = 3;
+fct_opts.FCT_initialization = 2;
 
 % option to skip limitation of bounds if solution bounds are satisfied already
 fct_opts.skip_limiter_if_bounds_satisfied = true;
@@ -104,7 +104,7 @@ fct_opts.dirichlet_limiting_coefficient = 1.0;
 %            4: void
 %            5: MMS: TR: u = t*sin(pi*x)  SS: u = sin(pi*x)
 %            6: MMS: TR: u = x*t          SS: u = x
-problemID = 1;
+problemID = 2;
 
 % IC_option: 0: zero
 %            1: exponential pulse
@@ -147,7 +147,7 @@ out_opts.legend_location           = 'NorthEast'; % location of plot legend
 % output options
 %--------------------------------------------------------------------------
 % option to output l2 norm of entropy residual
-return_value_option = 2; % 0: nothing - just return zero
+return_value_option = 0; % 0: nothing - just return zero
                          % 1: L^2 norm of entropy residual
                          % 2: L^2 norm of entropy jumps
 
@@ -406,18 +406,27 @@ end
 assert(~phys.source_is_time_dependent,...
     'Time-dependent source not yet implemented for DMP.');
 
+% compute max distance traveled in a time step. if steady-state, take
+% some value between 0 and dx
+distance = 0.0;
+if (opts.temporal_scheme == 0)
+    distance = mesh.dx(1)*0.5;
+else
+    distance = phys.speed*dt_nominal;
+end
+    
 % compute min and max sigma and source in the support of i for time 0
 t = 0;
 if (fct_opts.DMP_option == 4) % upwind maximum principle
     [sigma_min, sigma_max]  = compute_min_max_per_dof_upwind(...
-        phys.sigma, t,dof_handler.n_dof,mesh,quadrature.zq,dt_nominal*phys.speed);
+        phys.sigma, t,dof_handler.n_dof,mesh,quadrature.zq,distance);
     [source_min,source_max] = compute_min_max_per_dof_upwind(...
-        phys.source,t,dof_handler.n_dof,mesh,quadrature.zq,dt_nominal*phys.speed);
+        phys.source,t,dof_handler.n_dof,mesh,quadrature.zq,distance);
 else
     [sigma_min, sigma_max]  = compute_min_max_per_dof(...
-        phys.sigma, t,dof_handler.n_dof,mesh,quadrature.zq,dt_nominal*phys.speed);
+        phys.sigma, t,dof_handler.n_dof,mesh,quadrature.zq,distance);
     [source_min,source_max] = compute_min_max_per_dof(...
-        phys.source,t,dof_handler.n_dof,mesh,quadrature.zq,dt_nominal*phys.speed);
+        phys.source,t,dof_handler.n_dof,mesh,quadrature.zq,distance);
 end
 
 %% Low-order Solution
@@ -695,7 +704,7 @@ if (compute_FCT)
         % iteration loop
         for iter = 1:nonlin_opts.max_iter
             % compute limited flux correction sum
-            [flim,Wminus,Wplus] = compute_limited_flux_sums_ss(uFCT,uL,F,...
+            [flim,Wminus,Wplus] = compute_limited_flux_sums_ss(uFCT,F,...
                 AL_mod,b_mod,...
                 sigma_min,sigma_max,source_min,source_max,mesh,phys,...
                 dof_handler.n_dof,fct_opts);

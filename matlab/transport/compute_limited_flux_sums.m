@@ -34,7 +34,6 @@ end
 % check if solution bounds are already satisfied
 bounds_satisfied = check_solution_bounds(uFCT,Wplus,Wminus);
 
-
 % compute limited flux bounds
 [Qplus,Qminus] = compute_Q(...
     u_old,uFCT,ML,Wplus,Wminus,AL,b,dt,theta);

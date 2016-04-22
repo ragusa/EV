@@ -1,4 +1,4 @@
-function [flim,Wminus,Wplus] = compute_limited_flux_sums_ss(u,uL,F,AL_mod,b_mod,...
+function [flim,Wminus,Wplus] = compute_limited_flux_sums_ss(u,F,AL_mod,b_mod,...
     sigma_min,sigma_max,source_min,source_max,mesh,phys,n_dof,fct_opts)
 
 % unpack options
@@ -36,6 +36,9 @@ if (enforce_antidiffusion_bounds_signs)
     Qminus = min(Qminus, 0);
     [Wplus,Wminus] = compute_W_from_Q_ss(u,Qplus,Qminus,AL_mod,b_mod);
 end
+
+% check signs of antidiffusion bounds Q
+check_antidiffusion_bounds_signs(Qplus,Qminus);
 
 % compute limiting coefficients
 switch limiting_option
