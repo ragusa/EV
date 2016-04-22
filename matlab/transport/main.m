@@ -70,13 +70,13 @@ opts.ss_tol = 1.0e-6;  % steady-state tolerance
 %             2 = widen low-order DMP to analytic
 %             3 = analytic
 %             4 = analytic upwind
-fct_opts.DMP_option = 3;
+fct_opts.DMP_option = 1;
 
 % limiter option: 0 = All 0 (no correction; low-order)
 %                 1 = All 1 (full correction; high-order)
 %                 2 = Zalesak limiter
 %                 3 = Josh limiter
-fct_opts.limiting_option = 3;
+fct_opts.limiting_option = 2;
 
 % option to enforce Q+ >= 0, Q- <= 0
 fct_opts.enforce_antidiffusion_bounds_signs = true;
@@ -84,7 +84,7 @@ fct_opts.enforce_antidiffusion_bounds_signs = true;
 % FCT initialization option: 1 = zeros
 %                            2 = low-order solution
 %                            3 = high-order solution
-fct_opts.FCT_initialization = 2;
+fct_opts.FCT_initialization = 3;
 
 % option to skip limitation of bounds if solution bounds are satisfied already
 fct_opts.skip_limiter_if_bounds_satisfied = true;

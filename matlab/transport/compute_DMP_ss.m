@@ -11,8 +11,15 @@ for i = 2:n
     i1 = max(i-1,1);
     i2 = min(i+1,n);
     % compute max and min old solution in the support of each dof
-    u_max = max(u(i1:i2));
-    u_min = min(u(i1:i2));
+    u_max = -1.0e15;
+    u_min = 1.0e15;
+    for j = i1:i2
+      if (j ~= i)
+        u_max = max(u_max,u(j));
+        u_min = min(u_min,u(j));
+      end
+    end
+       
     % compute bounds
     Wplus(i)  = -(sum(AL(i,:))-AL(i,i))/AL(i,i)*u_max + b(i)/AL(i,i);
     Wminus(i) = -(sum(AL(i,:))-AL(i,i))/AL(i,i)*u_min + b(i)/AL(i,i);
