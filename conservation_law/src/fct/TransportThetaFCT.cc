@@ -11,6 +11,7 @@
  * \param[in] problem_parameters_  problem parameters
  * \param[in] dof_handler_  degree of freedom handler
  * \param[in] fe_  finite element system
+ * \param[in] dirichlet_values_  map of DoF indices to Dirichlet values
  * \param[in] consistent_mass_matrix_  consistent mass matrix
  *   \f$\mathbf{M}^C\f$
  * \param[in] lumped_mass_matrix_  lumped mass matrix
@@ -22,11 +23,13 @@ TransportThetaFCT<dim>::TransportThetaFCT(
   const TransportProblemParameters<dim> &,
   const DoFHandler<dim> & dof_handler_,
   const FESystem<dim> & fe_,
+  const std::map<unsigned int, double> & dirichlet_values_,
   const SparseMatrix<double> & consistent_mass_matrix_,
   const SparseMatrix<double> & lumped_mass_matrix_)
   : ThetaFCT<dim>(run_parameters_,
                   dof_handler_,
                   fe_,
+                  dirichlet_values_,
                   consistent_mass_matrix_,
                   lumped_mass_matrix_)
 {

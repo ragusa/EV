@@ -12,6 +12,7 @@
  * \param[in] fe_  finite element system
  * \param[in] lumped_mass_matrix_  lumped mass matrix \f$\mathbf{M}^L\f$
  * \param[in] theta_  theta parameter \f$\theta\f$
+ * \param[in] dirichlet_values_  map of DoF indices to Dirichlet values
  */
 template <int dim>
 ThetaFCTFilter<dim>::ThetaFCTFilter(
@@ -20,8 +21,10 @@ ThetaFCTFilter<dim>::ThetaFCTFilter(
   const DoFHandler<dim> & dof_handler_,
   const FESystem<dim> & fe_,
   const SparseMatrix<double> & lumped_mass_matrix_,
-  const double & theta_)
-  : FCTFilter<dim>(run_parameters_, limiter_, dof_handler_, fe_),
+  const double & theta_,
+  const std::map<unsigned int, double> & dirichlet_values_)
+  : FCTFilter<dim>(
+      run_parameters_, limiter_, dof_handler_, fe_, dirichlet_values_),
     lumped_mass_matrix(&lumped_mass_matrix_),
     theta(theta_)
 {
@@ -72,6 +75,9 @@ void ThetaFCTFilter<dim>::filter_antidiffusive_fluxes(
   // enforce antidiffusion bounds signs if requested
   if (this->do_enforce_antidiffusion_bounds_signs)
     this->enforce_antidiffusion_bounds_signs();
+
+  // check signs of antidiffusion bounds
+  this->check_antidiffusion_bounds_signs();
 
   // limit antidiffusion fluxes
   this->limiter->compute_limiter_matrix(

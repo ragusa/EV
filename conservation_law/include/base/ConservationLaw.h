@@ -179,8 +179,7 @@ protected:
                               const std::shared_ptr<ExplicitEulerFCT<dim>> & fct,
                               SSPRKTimeIntegrator<dim> & ssprk);
 
-  void get_dirichlet_dof_indices(
-    std::vector<unsigned int> & dirichlet_dof_indices);
+  void get_dirichlet_values(std::map<unsigned int, double> & dirichlet_values);
 
   virtual void compute_inviscid_ss_matrix(const Vector<double> & solution,
                                           SparseMatrix<double> & matrix);
@@ -472,7 +471,7 @@ protected:
   Vector<float> estimated_error_per_cell;
 
   /** \brief Indices of DoFs subject to Dirichlet boundary conditions */
-  std::vector<unsigned int> dirichlet_dof_indices;
+  std::map<unsigned int, double> dirichlet_values;
 };
 
 #include "src/base/ConservationLaw.cc"

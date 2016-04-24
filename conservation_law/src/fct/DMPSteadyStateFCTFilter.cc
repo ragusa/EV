@@ -11,14 +11,17 @@
  * \param[in] limiter_  limiter
  * \param[in] dof_handler_  degree of freedom handler
  * \param[in] fe_  finite element system
+ * \param[in] dirichlet_values_  map of DoF indices to Dirichlet values
  */
 template <int dim>
 DMPSteadyStateFCTFilter<dim>::DMPSteadyStateFCTFilter(
   const RunParameters & run_parameters_,
   const std::shared_ptr<Limiter<dim>> limiter_,
   const DoFHandler<dim> & dof_handler_,
-  const FESystem<dim> & fe_)
-  : SteadyStateFCTFilter<dim>(run_parameters_, limiter_, dof_handler_, fe_)
+  const FESystem<dim> & fe_,
+  const std::map<unsigned int, double> & dirichlet_values_)
+  : SteadyStateFCTFilter<dim>(
+      run_parameters_, limiter_, dof_handler_, fe_, dirichlet_values_)
 {
 }
 

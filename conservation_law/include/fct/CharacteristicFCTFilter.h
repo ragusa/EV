@@ -19,11 +19,13 @@ public:
   /** \brief Alias for cell iterator */
   using Cell = typename DoFHandler<dim>::active_cell_iterator;
 
-  CharacteristicFCTFilter(const RunParameters & run_parameters,
-                          const std::shared_ptr<Limiter<dim>> limiter,
-                          const DoFHandler<dim> & dof_handler,
-                          const FESystem<dim> & fe,
-                          const SparseMatrix<double> & lumped_mass_matrix);
+  CharacteristicFCTFilter(
+    const RunParameters & run_parameters,
+    const std::shared_ptr<Limiter<dim>> limiter,
+    const DoFHandler<dim> & dof_handler,
+    const FESystem<dim> & fe,
+    const SparseMatrix<double> & lumped_mass_matrix,
+    const std::map<unsigned int, double> & dirichlet_values_);
 
   virtual void filter_antidiffusive_fluxes(
     const Vector<double> & old_solution,

@@ -13,6 +13,7 @@
  * \param[in] fe_  finite element system
  * \param[in] lumped_mass_matrix_  lumped mass matrix \f$\mathbf{M}^L\f$
  * \param[in] theta_  theta parameter \f$\theta\f$
+ * \param[in] dirichlet_values_  map of DoF indices to Dirichlet values
  */
 template <int dim>
 DMPThetaFCTFilter<dim>::DMPThetaFCTFilter(
@@ -21,9 +22,15 @@ DMPThetaFCTFilter<dim>::DMPThetaFCTFilter(
   const DoFHandler<dim> & dof_handler_,
   const FESystem<dim> & fe_,
   const SparseMatrix<double> & lumped_mass_matrix_,
-  const double & theta_)
-  : ThetaFCTFilter<dim>(
-      run_parameters_, limiter_, dof_handler_, fe_, lumped_mass_matrix_, theta_)
+  const double & theta_,
+  const std::map<unsigned int, double> & dirichlet_values_)
+  : ThetaFCTFilter<dim>(run_parameters_,
+                        limiter_,
+                        dof_handler_,
+                        fe_,
+                        lumped_mass_matrix_,
+                        theta_,
+                        dirichlet_values_)
 {
   // resize temporary vectors
   solution_min_new.reinit(this->n_dofs);

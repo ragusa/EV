@@ -74,7 +74,8 @@ public:
 
   FCT(const RunParameters & run_parameters,
       const DoFHandler<dim> & dof_handler,
-      const FESystem<dim> & fe);
+      const FESystem<dim> & fe,
+      const std::map<unsigned int, double> & dirichlet_values);
 
   virtual bool check_bounds(const Vector<double> & new_solution) const = 0;
 
@@ -98,6 +99,9 @@ protected:
 
   /** \brief run parameters */
   const RunParameters * const run_parameters;
+
+  /** \brief map of DoF indices to Dirichlet BC values */
+  const std::map<unsigned int, double> * const dirichlet_values;
 
   /** \brief limiter */
   std::shared_ptr<Limiter<dim>> limiter;

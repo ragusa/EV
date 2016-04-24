@@ -13,6 +13,7 @@
  * \param[in] fe_  finite element system
  * \param[in] lumped_mass_matrix_  lumped mass matrix \f$\mathbf{M}^L\f$
  * \param[in] gravity_  acceleration due to gravity \f$g\f$
+ * \param[in] dirichlet_values_  map of DoF indices to Dirichlet values
  */
 template <int dim>
 SWCharacteristicFCTFilter<dim>::SWCharacteristicFCTFilter(
@@ -21,9 +22,14 @@ SWCharacteristicFCTFilter<dim>::SWCharacteristicFCTFilter(
   const DoFHandler<dim> & dof_handler_,
   const FESystem<dim> & fe_,
   const SparseMatrix<double> & lumped_mass_matrix_,
-  const double & gravity_)
-  : CharacteristicFCTFilter<dim>(
-      run_parameters_, limiter_, dof_handler_, fe_, lumped_mass_matrix_),
+  const double & gravity_,
+  const std::map<unsigned int, double> & dirichlet_values_)
+  : CharacteristicFCTFilter<dim>(run_parameters_,
+                                 limiter_,
+                                 dof_handler_,
+                                 fe_,
+                                 lumped_mass_matrix_,
+                                 dirichlet_values_),
     gravity(gravity_)
 {
   // currently transformation matrix is limited to 1-D

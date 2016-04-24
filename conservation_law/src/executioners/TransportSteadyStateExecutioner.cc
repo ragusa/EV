@@ -177,6 +177,7 @@ void TransportSteadyStateExecutioner<dim>::compute_fct_solution()
                                    *this->problem_parameters,
                                    this->dof_handler,
                                    this->fe,
+                                   this->dirichlet_dof_indices,
                                    this->cell_quadrature);
 
   // check if high-order solution satisfies bounds - if so, do not use FCT

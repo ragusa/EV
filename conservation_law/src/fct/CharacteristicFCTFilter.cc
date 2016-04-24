@@ -12,6 +12,7 @@
  * \param[in] dof_handler_  degree of freedom handler
  * \param[in] fe_  finite element system
  * \param[in] lumped_mass_matrix_  lumped mass matrix \f$\mathbf{M}^L\f$
+ * \param[in] dirichlet_values_  map of DoF indices to Dirichlet values
  */
 template <int dim>
 CharacteristicFCTFilter<dim>::CharacteristicFCTFilter(
@@ -19,9 +20,14 @@ CharacteristicFCTFilter<dim>::CharacteristicFCTFilter(
   const std::shared_ptr<Limiter<dim>> limiter_,
   const DoFHandler<dim> & dof_handler_,
   const FESystem<dim> & fe_,
-  const SparseMatrix<double> & lumped_mass_matrix_)
-  : ExplicitEulerFCTFilter<dim>(
-      run_parameters_, limiter_, dof_handler_, fe_, lumped_mass_matrix_)
+  const SparseMatrix<double> & lumped_mass_matrix_,
+  const std::map<unsigned int, double> & dirichlet_values_)
+  : ExplicitEulerFCTFilter<dim>(run_parameters_,
+                                limiter_,
+                                dof_handler_,
+                                fe_,
+                                lumped_mass_matrix_,
+                                dirichlet_values_)
 {
   // create sparsity pattern for limiter and antidiffusion matrices
   DynamicSparsityPattern dsp(this->n_dofs);

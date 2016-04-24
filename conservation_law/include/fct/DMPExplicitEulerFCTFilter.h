@@ -16,11 +16,13 @@ template <int dim>
 class DMPExplicitEulerFCTFilter : public ExplicitEulerFCTFilter<dim>
 {
 public:
-  DMPExplicitEulerFCTFilter(const RunParameters & run_parameters,
-                            const std::shared_ptr<Limiter<dim>> limiter,
-                            const DoFHandler<dim> & dof_handler,
-                            const FESystem<dim> & fe,
-                            const SparseMatrix<double> & lumped_mass_matrix_);
+  DMPExplicitEulerFCTFilter(
+    const RunParameters & run_parameters,
+    const std::shared_ptr<Limiter<dim>> limiter,
+    const DoFHandler<dim> & dof_handler,
+    const FESystem<dim> & fe,
+    const SparseMatrix<double> & lumped_mass_matrix_,
+    const std::map<unsigned int, double> & dirichlet_values_);
 
 protected:
   virtual void compute_solution_bounds(const Vector<double> & old_solution,

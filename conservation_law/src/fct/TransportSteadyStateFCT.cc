@@ -11,6 +11,7 @@
  * \param[in] problem_parameters_  problem parameters
  * \param[in] dof_handler_  degree of freedom handler
  * \param[in] fe_  finite element system
+ * \param[in] dirichlet_values_  map of DoF indices to Dirichlet values
  * \param[in] cell_quadrature_  cell quadrature
  */
 template <int dim>
@@ -19,8 +20,9 @@ TransportSteadyStateFCT<dim>::TransportSteadyStateFCT(
   TransportProblemParameters<dim> & problem_parameters_,
   const DoFHandler<dim> & dof_handler_,
   const FESystem<dim> & fe_,
+  const std::map<unsigned int, double> & dirichlet_values_,
   const QGauss<dim> & cell_quadrature_)
-  : SteadyStateFCT<dim>(run_parameters_, dof_handler_, fe_),
+  : SteadyStateFCT<dim>(run_parameters_, dof_handler_, fe_, dirichlet_values_),
     problem_parameters(&problem_parameters_),
     cell_quadrature(&cell_quadrature_)
 {

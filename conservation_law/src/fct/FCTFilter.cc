@@ -10,12 +10,15 @@
  * \param[in] limiter_  limiter
  * \param[in] dof_handler_  degree of freedom handler
  * \param[in] fe_  finite element system
+ * \param[in] dirichlet_values_  map of DoF indices to Dirichlet values
  */
 template <int dim>
-FCTFilter<dim>::FCTFilter(const RunParameters & run_parameters_,
-                          const std::shared_ptr<Limiter<dim>> limiter_,
-                          const DoFHandler<dim> & dof_handler_,
-                          const FESystem<dim> & fe_)
+FCTFilter<dim>::FCTFilter(
+  const RunParameters & run_parameters_,
+  const std::shared_ptr<Limiter<dim>> limiter_,
+  const DoFHandler<dim> & dof_handler_,
+  const FESystem<dim> & fe_,
+  const std::map<unsigned int, double> & dirichlet_values_)
   : solution_bounds(dof_handler_, fe_),
     antidiffusion_bounds(dof_handler_, fe_),
     limiter(limiter_),
@@ -25,7 +28,8 @@ FCTFilter<dim>::FCTFilter(const RunParameters & run_parameters_,
     dofs_per_cell(dof_handler_.get_fe().dofs_per_cell),
     dofs_per_cell_per_component(dofs_per_cell / n_components),
     do_enforce_antidiffusion_bounds_signs(
-      run_parameters_.enforce_antidiffusion_bounds_signs)
+      run_parameters_.enforce_antidiffusion_bounds_signs),
+    dirichlet_values(&dirichlet_values_)
 {
 }
 
@@ -148,5 +152,26 @@ void FCTFilter<dim>::enforce_antidiffusion_bounds_signs()
   {
     antidiffusion_bounds.lower[i] = std::min(0.0, antidiffusion_bounds.lower[i]);
     antidiffusion_bounds.upper[i] = std::max(0.0, antidiffusion_bounds.upper[i]);
+  }
+}
+
+/**
+ * \briefs Checks that the signs of the antidiffusion bounds \f$Q_i^\pm\f$ are
+ *         correct.
+ */
+template <int dim>
+void FCTFilter<dim>::check_antidiffusion_bounds_signs() const
+{
+  // small number for checking sign
+  const double small = 1.0e-12;
+
+  for (unsigned int i = 0; i < n_dofs; ++i)
+  {
+    // if not a Dirichlet node
+    if (dirichlet_values.find(i) != dirichlet_values.end())
+    {
+      Assert(antidiffusion_bounds.lower[i] < small, ExcAssumptionViolated());
+      Assert(antidiffusion_bounds.upper[i] > small, ExcAssumptionViolated());
+    }
   }
 }

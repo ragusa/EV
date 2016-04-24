@@ -19,7 +19,8 @@ class SteadyStateFCT : public FCT<dim>
 public:
   SteadyStateFCT(const RunParameters & run_parameters,
                  const DoFHandler<dim> & dof_handler,
-                 const FESystem<dim> & fe);
+                 const FESystem<dim> & fe,
+                 const std::map<unsigned int, double> & dirichlet_values);
 
   void compute_antidiffusion_matrix(
     const Vector<double> & high_order_solution,

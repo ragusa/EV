@@ -13,6 +13,7 @@
  * \param[in] fe_  finite element system
  * \param[in] cell_quadrature_  cell quadrature
  * \param[in] limiter_  limiter
+ * \param[in] dirichlet_values_  map of DoF indices to Dirichlet values
  */
 template <int dim>
 TransportDMPAnalyticSSFCTFilter<dim>::TransportDMPAnalyticSSFCTFilter(
@@ -21,8 +22,10 @@ TransportDMPAnalyticSSFCTFilter<dim>::TransportDMPAnalyticSSFCTFilter(
   const DoFHandler<dim> & dof_handler_,
   const FESystem<dim> & fe_,
   const QGauss<dim> & cell_quadrature_,
-  const std::shared_ptr<Limiter<dim>> limiter_)
-  : DMPSteadyStateFCTFilter<dim>(run_parameters_, limiter_, dof_handler_, fe_),
+  const std::shared_ptr<Limiter<dim>> limiter_,
+  const std::map<unsigned int, double> & dirichlet_values_)
+  : DMPSteadyStateFCTFilter<dim>(
+      run_parameters_, limiter_, dof_handler_, fe_, dirichlet_values_),
     analytic_bounds(problem_parameters_, dof_handler_, fe_, cell_quadrature_)
 {
 }

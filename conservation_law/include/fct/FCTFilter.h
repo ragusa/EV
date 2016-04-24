@@ -28,7 +28,8 @@ public:
   FCTFilter(const RunParameters & run_parameters,
             const std::shared_ptr<Limiter<dim>> limiter,
             const DoFHandler<dim> & dof_handler,
-            const FESystem<dim> & fe);
+            const FESystem<dim> & fe,
+            const std::map<unsigned int, double> & dirichlet_values);
 
   virtual bool check_bounds(const Vector<double> & new_solution);
 
@@ -42,6 +43,8 @@ protected:
                                          Vector<double> & max_values) const;
 
   void enforce_antidiffusion_bounds_signs();
+
+  void check_antidiffusion_bounds_signs() const;
 
   /** \brief solution bounds \f$\mathbf{W}^\pm\f$ */
   DoFBounds<dim> solution_bounds;
@@ -69,6 +72,9 @@ protected:
 
   /** \brief option to force correct signs of antidiffusion bounds */
   bool do_enforce_antidiffusion_bounds_signs;
+
+  /** \brief map of DoF indices to Dirichlet BC values */
+  const std::map<unsigned int, double> * const dirichlet_values;
 };
 
 #include "src/fct/FCTFilter.cc"

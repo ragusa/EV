@@ -27,6 +27,7 @@ public:
                           TransportProblemParameters<dim> & problem_parameters,
                           const DoFHandler<dim> & dof_handler,
                           const FESystem<dim> & fe,
+                          const std::map<unsigned int, double> & dirichlet_values,
                           const QGauss<dim> & cell_quadrature);
 
 protected:

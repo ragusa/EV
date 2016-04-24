@@ -24,6 +24,7 @@ public:
     const ShallowWaterProblemParameters<dim> & problem_parameters,
     const DoFHandler<dim> & dof_handler_,
     const FESystem<dim> & fe,
+    const std::map<unsigned int, double> & dirichlet_values,
     const SparseMatrix<double> & consistent_mass_matrix,
     const SparseMatrix<double> & lumped_mass_matrix);
 

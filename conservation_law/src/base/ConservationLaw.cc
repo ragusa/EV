@@ -675,7 +675,7 @@ void ConservationLaw<dim>::setup_system()
   high_order_diffusion = create_artificial_diffusion(high_order_diffusion_type);
 
   // get list of Dirichlet DoF indices
-  get_dirichlet_dof_indices(dirichlet_dof_indices);
+  get_dirichlet_values(dirichlet_values);
 }
 
 /**
@@ -1379,14 +1379,11 @@ void ConservationLaw<dim>::perform_fct_ssprk_step(
  *             boundary conditions
  */
 template <int dim>
-void ConservationLaw<dim>::get_dirichlet_dof_indices(
-  std::vector<unsigned int> & dirichlet_dof_indices)
+void ConservationLaw<dim>::get_dirichlet_values(
+  std::map<unsigned int, double> & values)
 {
   if (problem_base_parameters->boundary_conditions_type == "dirichlet")
   {
-    // get map of Dirichlet dof indices to Dirichlet values
-    std::map<unsigned int, double> boundary_values;
-
     // loop over components
     for (unsigned int component = 0; component < n_components; ++component)
     {
@@ -1399,16 +1396,9 @@ void ConservationLaw<dim>::get_dirichlet_dof_indices(
         dof_handler,
         0, // boundary ID for Dirichlet boundary
         *(problem_base_parameters->dirichlet_function),
-        boundary_values,
+        values,
         component_mask);
     }
-
-    // extract dof indices from map
-    dirichlet_dof_indices.clear();
-    for (std::map<unsigned int, double>::iterator it = boundary_values.begin();
-         it != boundary_values.end();
-         ++it)
-      dirichlet_dof_indices.push_back(it->first);
   }
 }
 

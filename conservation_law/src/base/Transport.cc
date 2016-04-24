@@ -475,6 +475,7 @@ std::shared_ptr<ExplicitEulerFCT<dim>> Transport<dim>::create_fct() const
                                                      problem_parameters,
                                                      this->dof_handler,
                                                      this->fe,
+                                                     this->dirichlet_dof_indices,
                                                      this->consistent_mass_matrix,
                                                      this->lumped_mass_matrix);
 

@@ -9,6 +9,7 @@
  * \param[in] run_parameters_  run parameters
  * \param[in] dof_handler_  degree of freedom handler
  * \param[in] fe_  finite element system
+ * \param[in] dirichlet_values_  map of DoF indices to Dirichlet values
  * \param[in] consistent_mass_matrix_  consistent mass matrix
  *   \f$\mathbf{M}^C\f$
  * \param[in] lumped_mass_matrix_  lumped mass matrix
@@ -18,9 +19,10 @@ template <int dim>
 ThetaFCT<dim>::ThetaFCT(const RunParameters & run_parameters_,
                         const DoFHandler<dim> & dof_handler_,
                         const FESystem<dim> & fe_,
+                        const std::map<unsigned int, double> & dirichlet_values_,
                         const SparseMatrix<double> & consistent_mass_matrix_,
                         const SparseMatrix<double> & lumped_mass_matrix_)
-  : FCT<dim>(run_parameters_, dof_handler_, fe_),
+  : FCT<dim>(run_parameters_, dof_handler_, fe_, dirichlet_values_),
     consistent_mass_matrix(&consistent_mass_matrix_),
     lumped_mass_matrix(&lumped_mass_matrix_),
     theta(run_parameters_.theta),

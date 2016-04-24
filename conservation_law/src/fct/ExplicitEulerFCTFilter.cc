@@ -11,6 +11,7 @@
  * \param[in] dof_handler_  degree of freedom handler
  * \param[in] fe_  finite element system
  * \param[in] lumped_mass_matrix_  lumped mass matrix \f$\mathbf{M}^L\f$
+ * \param[in] dirichlet_values_  map of DoF indices to Dirichlet values
  */
 template <int dim>
 ExplicitEulerFCTFilter<dim>::ExplicitEulerFCTFilter(
@@ -18,8 +19,10 @@ ExplicitEulerFCTFilter<dim>::ExplicitEulerFCTFilter(
   const std::shared_ptr<Limiter<dim>> limiter_,
   const DoFHandler<dim> & dof_handler_,
   const FESystem<dim> & fe_,
-  const SparseMatrix<double> & lumped_mass_matrix_)
-  : FCTFilter<dim>(run_parameters_, limiter_, dof_handler_, fe_),
+  const SparseMatrix<double> & lumped_mass_matrix_,
+  const std::map<unsigned int, double> & dirichlet_values_)
+  : FCTFilter<dim>(
+      run_parameters_, limiter_, dof_handler_, fe_, dirichlet_values_),
     lumped_mass_matrix(&lumped_mass_matrix_)
 {
 }
@@ -65,6 +68,9 @@ void ExplicitEulerFCTFilter<dim>::filter_antidiffusive_fluxes(
   // enforce antidiffusion bounds signs if requested
   if (this->do_enforce_antidiffusion_bounds_signs)
     this->enforce_antidiffusion_bounds_signs();
+
+  // check signs of antidiffusion bounds
+  this->check_antidiffusion_bounds_signs();
 
   // limit antidiffusion fluxes
   this->limiter->compute_limiter_matrix(

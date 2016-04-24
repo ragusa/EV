@@ -19,12 +19,14 @@ public:
   /** \brief Alias for cell iterator */
   using Cell = typename DoFHandler<dim>::active_cell_iterator;
 
-  SWCharacteristicFCTFilter(const RunParameters & run_parameters,
-                            const std::shared_ptr<Limiter<dim>> limiter,
-                            const DoFHandler<dim> & dof_handler,
-                            const FESystem<dim> & fe,
-                            const SparseMatrix<double> & lumped_mass_matrix,
-                            const double & gravity);
+  SWCharacteristicFCTFilter(
+    const RunParameters & run_parameters,
+    const std::shared_ptr<Limiter<dim>> limiter,
+    const DoFHandler<dim> & dof_handler,
+    const FESystem<dim> & fe,
+    const SparseMatrix<double> & lumped_mass_matrix,
+    const double & gravity,
+    const std::map<unsigned int, double> & dirichlet_values);
 
 protected:
   FullMatrix<double> compute_transformation_matrix(
