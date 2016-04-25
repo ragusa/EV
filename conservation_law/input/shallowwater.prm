@@ -10,11 +10,11 @@
 #   lake_at_rest_flat_perturbed_2d
 #   2d_dam_break
 subsection problem
-   set problem name = lake_at_rest_perturbed
+   set problem name = dam_break_flat
 end
 
 subsection scheme
-   set scheme            = high     # low|high|fct
+   set scheme            = fct     # low|high|fct
    set low order scheme  = lax      # constant|lax|dmp|di_visc|di_diff
    set high order scheme = galerkin # galerkin|entropy_visc|entropy_diff
 end

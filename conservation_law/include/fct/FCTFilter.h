@@ -10,6 +10,7 @@
 
 #include "include/fct/DoFBounds.h"
 #include "include/fct/Limiter.h"
+#include "include/other/Exceptions.h"
 #include "include/parameters/RunParameters.h"
 
 using namespace dealii;

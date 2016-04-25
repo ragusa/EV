@@ -24,7 +24,8 @@ public:
     const DoFHandler<dim> & dof_handler,
     const FESystem<dim> & fe,
     const QGauss<dim> & cell_quadrature,
-    const std::shared_ptr<Limiter<dim>> limiter);
+    const std::shared_ptr<Limiter<dim>> limiter,
+    const std::map<unsigned int, double> & dirichlet_values);
 
   virtual void filter_antidiffusive_fluxes(
     const Vector<double> & solution,

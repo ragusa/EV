@@ -163,15 +163,19 @@ template <int dim>
 void FCTFilter<dim>::check_antidiffusion_bounds_signs() const
 {
   // small number for checking sign
-  const double small = 1.0e-12;
+  const double small = 1.0e-15;
 
   for (unsigned int i = 0; i < n_dofs; ++i)
   {
     // if not a Dirichlet node
-    if (dirichlet_values.find(i) != dirichlet_values.end())
+    if (dirichlet_values->find(i) == dirichlet_values->end())
     {
-      Assert(antidiffusion_bounds.lower[i] < small, ExcAssumptionViolated());
-      Assert(antidiffusion_bounds.upper[i] > small, ExcAssumptionViolated());
+      Assert(
+        antidiffusion_bounds.lower[i] < small,
+        ExcAntidiffusionLowerBoundPositive(i, antidiffusion_bounds.lower[i]));
+      Assert(
+        antidiffusion_bounds.upper[i] > -small,
+        ExcAntidiffusionUpperBoundNegative(i, antidiffusion_bounds.upper[i]));
     }
   }
 }

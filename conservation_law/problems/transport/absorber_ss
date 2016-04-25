@@ -19,7 +19,7 @@ end
 
 subsection constants
   set incoming = 1.0
-  set sigma1   = 10.0
+  set sigma1   = 1.0 # note: for regression test, set to 1
   set source1  = 0.0
 end
 

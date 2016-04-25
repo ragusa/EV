@@ -177,7 +177,7 @@ void TransportSteadyStateExecutioner<dim>::compute_fct_solution()
                                    *this->problem_parameters,
                                    this->dof_handler,
                                    this->fe,
-                                   this->dirichlet_dof_indices,
+                                   this->dirichlet_values,
                                    this->cell_quadrature);
 
   // check if high-order solution satisfies bounds - if so, do not use FCT
@@ -224,7 +224,7 @@ void TransportSteadyStateExecutioner<dim>::compute_fct_solution()
       }
       default:
       {
-        Assert(false, ExcNotImplemented());
+        AssertThrow(false, ExcNotImplemented());
       }
     }
     this->nonlinear_solver.initialize(this->new_solution);
@@ -239,6 +239,7 @@ void TransportSteadyStateExecutioner<dim>::compute_fct_solution()
                                        this->ss_rhs,
                                        this->antidiffusion_vector);
 
+      this->antidiffusion_vector.print(std::cout, 3, false, false);
       // create system rhs: s^(l) = b + p^(l+1)
       this->system_rhs = this->ss_rhs;
       this->system_rhs.add(1.0, this->antidiffusion_vector);

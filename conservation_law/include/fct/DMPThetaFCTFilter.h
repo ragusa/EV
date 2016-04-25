@@ -21,7 +21,8 @@ public:
                     const DoFHandler<dim> & dof_handler,
                     const FESystem<dim> & fe,
                     const SparseMatrix<double> & lumped_mass_matrix,
-                    const double & theta);
+                    const double & theta,
+                    const std::map<unsigned int, double> & dirichlet_values);
 
 protected:
   virtual void compute_solution_bounds(

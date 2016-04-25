@@ -26,7 +26,8 @@ public:
     TransportProblemParameters<dim> & problem_parameters,
     const DoFHandler<dim> & dof_handler,
     const FESystem<dim> & fe,
-    const QGauss<dim> & cell_quadrature);
+    const QGauss<dim> & cell_quadrature,
+    const std::map<unsigned int, double> & dirichlet_values);
 
   void update(const Vector<double> & solution,
               const double & dt,
@@ -41,6 +42,9 @@ protected:
 
   /** \brief transport speed \f$v\f$ */
   const double speed;
+
+  /** \brief map of DoF indices to Dirichlet BC values */
+  const std::map<unsigned int, double> * const dirichlet_values;
 };
 
 #include "src/fct/TransportAnalyticSolutionBounds.cc"

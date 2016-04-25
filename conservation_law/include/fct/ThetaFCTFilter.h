@@ -23,7 +23,8 @@ public:
                  const DoFHandler<dim> & dof_handler,
                  const FESystem<dim> & fe,
                  const SparseMatrix<double> & lumped_mass_matrix,
-                 const double & theta);
+                 const double & theta,
+                 const std::map<unsigned int, double> & dirichlet_values);
 
   virtual void filter_antidiffusive_fluxes(
     const Vector<double> & new_solution,

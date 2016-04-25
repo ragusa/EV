@@ -12,13 +12,15 @@
  * \param[in] fe_  finite element system
  * \param[in] cell_quadrature_  cell quadrature
  * \param[in] n_dofs_  number of degrees of freedom
+ * \param[in] dirichlet_values_  map of DoF indices to Dirichlet values
  */
 template <int dim>
 TransportAnalyticSolutionBounds<dim>::TransportAnalyticSolutionBounds(
   TransportProblemParameters<dim> & problem_parameters_,
   const DoFHandler<dim> & dof_handler_,
   const FESystem<dim> & fe_,
-  const QGauss<dim> & cell_quadrature_)
+  const QGauss<dim> & cell_quadrature_,
+  const std::map<unsigned int, double> & dirichlet_values_)
   : DoFBounds<dim>(dof_handler_, fe_),
     cross_section_bounds(problem_parameters_.cross_section_function,
                          false,
@@ -30,7 +32,8 @@ TransportAnalyticSolutionBounds<dim>::TransportAnalyticSolutionBounds(
                   dof_handler_,
                   fe_,
                   cell_quadrature_),
-    speed(problem_parameters_.transport_speed)
+    speed(problem_parameters_.transport_speed),
+    dirichlet_values(&dirichlet_values_)
 {
 }
 
@@ -60,30 +63,49 @@ void TransportAnalyticSolutionBounds<dim>::update(const Vector<double> & solutio
 
   for (unsigned int i = 0; i < this->n_dofs; ++i)
   {
-    // branch on minimum reaction coefficient to avoid division by zero
-    double min_source_term;
-    if (std::abs(cross_section_bounds.upper[i]) <
-        1.0e-15) // equal to zero within precision
-      min_source_term = vdt * source_bounds.lower[i];
-    else
-      min_source_term = source_bounds.lower[i] / cross_section_bounds.upper[i] *
-        (1.0 - std::exp(-vdt * cross_section_bounds.upper[i]));
+    // if not a Dirichlet value
+    if (dirichlet_values->find(i) == dirichlet_values->end())
+    {
+      // branch on minimum reaction coefficient to avoid division by zero
+      double min_source_term;
+      if (std::abs(cross_section_bounds.upper[i]) <
+          1.0e-15) // equal to zero within precision
+        min_source_term = vdt * source_bounds.lower[i];
+      else
+        min_source_term = source_bounds.lower[i] / cross_section_bounds.upper[i] *
+          (1.0 - std::exp(-vdt * cross_section_bounds.upper[i]));
 
-    // branch on maximum reaction coefficient to avoid division by zero
-    double max_source_term;
-    if (std::abs(cross_section_bounds.lower[i]) <
-        1.0e-15) // equal to zero within precision
-      max_source_term = vdt * source_bounds.upper[i];
-    else
-      max_source_term = source_bounds.upper[i] / cross_section_bounds.lower[i] *
-        (1.0 - std::exp(-vdt * cross_section_bounds.lower[i]));
+      // branch on maximum reaction coefficient to avoid division by zero
+      double max_source_term;
+      if (std::abs(cross_section_bounds.lower[i]) <
+          1.0e-15) // equal to zero within precision
+        max_source_term = vdt * source_bounds.upper[i];
+      else
+        max_source_term = source_bounds.upper[i] / cross_section_bounds.lower[i] *
+          (1.0 - std::exp(-vdt * cross_section_bounds.lower[i]));
 
-    // compute bounds
-    this->lower[i] =
-      this->lower[i] * std::exp(-vdt * cross_section_bounds.upper[i]) +
-      min_source_term;
-    this->upper[i] =
-      this->upper[i] * std::exp(-vdt * cross_section_bounds.lower[i]) +
-      max_source_term;
+      // compute bounds
+      this->lower[i] =
+        this->lower[i] * std::exp(-vdt * cross_section_bounds.upper[i]) +
+        min_source_term;
+      this->upper[i] =
+        this->upper[i] * std::exp(-vdt * cross_section_bounds.lower[i]) +
+        max_source_term;
+    }
+    else
+    {
+      // get Dirichlet value
+      const double value = dirichlet_values->at(i);
+      this->lower[i] = value;
+      this->upper[i] = value;
+    }
   }
+
+  /*
+    for (unsigned int i = 0; i < this->n_dofs; ++i)
+  std::cout << this->upper[i] << std::endl;
+  std::cout << std::endl;
+    for (unsigned int i = 0; i < this->n_dofs; ++i)
+  std::cout << this->lower[i] << std::endl;
+  */
 }

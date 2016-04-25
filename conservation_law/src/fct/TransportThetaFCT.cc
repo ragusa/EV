@@ -56,7 +56,8 @@ std::shared_ptr<ThetaFCTFilter<dim>> TransportThetaFCT<dim>::create_filter(
                                                       *this->dof_handler,
                                                       *this->fe,
                                                       *this->lumped_mass_matrix,
-                                                      this->theta);
+                                                      this->theta,
+                                                      *this->dirichlet_values);
   else
     AssertThrow(false, ExcNotImplemented());
 

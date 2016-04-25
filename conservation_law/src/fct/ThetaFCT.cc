@@ -254,7 +254,8 @@ std::shared_ptr<ThetaFCTFilter<dim>> ThetaFCT<dim>::create_filter(
                                                       *this->dof_handler,
                                                       *this->fe,
                                                       *lumped_mass_matrix,
-                                                      theta);
+                                                      theta,
+                                                      *this->dirichlet_values);
   else
     AssertThrow(false, ExcNotImplemented());
 

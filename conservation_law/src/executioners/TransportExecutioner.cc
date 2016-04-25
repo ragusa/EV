@@ -513,7 +513,7 @@ void TransportExecutioner<dim>::setBoundaryIndicators()
 }
 
 /**
- * Gets a list of dofs subject to Dirichlet boundary conditions.
+ * \brief Gets a list of dofs subject to Dirichlet boundary conditions.
  *
  * Max principle checks are not valid for Dirichlet nodes, so these nodes
  * must be excluded from limiting and DMP checks.
@@ -521,17 +521,24 @@ void TransportExecutioner<dim>::setBoundaryIndicators()
 template <int dim>
 void TransportExecutioner<dim>::getDirichletNodes()
 {
-  // get map of Dirichlet dof indices to Dirichlet values
-  std::map<unsigned int, double> boundary_values;
-  VectorTools::interpolate_boundary_values(
-    dof_handler, 0, ZeroFunction<dim>(), boundary_values);
+  if (problem_parameters->boundary_conditions_type == "dirichlet")
+  {
+    // loop over components
+    for (unsigned int component = 0; component < 1; ++component)
+    {
+      // mask other components
+      std::vector<bool> component_mask(1, false);
+      component_mask[component] = true;
 
-  // extract dof indices from map
-  dirichlet_nodes.clear();
-  for (std::map<unsigned int, double>::iterator it = boundary_values.begin();
-       it != boundary_values.end();
-       ++it)
-    dirichlet_nodes.push_back(it->first);
+      // fill boundary_values with boundary values
+      VectorTools::interpolate_boundary_values(
+        dof_handler,
+        0, // boundary ID for Dirichlet boundary
+        *(problem_parameters->dirichlet_function),
+        dirichlet_values,
+        component_mask);
+    }
+  }
 }
 
 /**

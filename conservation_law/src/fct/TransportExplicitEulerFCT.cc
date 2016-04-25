@@ -56,7 +56,8 @@ std::shared_ptr<ExplicitEulerFCTFilter<dim>> TransportExplicitEulerFCT<
                                                        this->limiter,
                                                        *this->dof_handler,
                                                        *this->fe,
-                                                       *this->lumped_mass_matrix);
+                                                       *this->lumped_mass_matrix,
+                                                       *this->dirichlet_values);
   else
     AssertThrow(false, ExcNotImplemented());
 

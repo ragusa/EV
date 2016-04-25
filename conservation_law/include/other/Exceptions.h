@@ -58,4 +58,16 @@ DeclException2(
 DeclException1(
   ExcMaxIterationReached, unsigned int, << "Max iteration reached: " << arg1);
 
+/** \brief Exception for antidiffusion upper bound being negative */
+DeclException2(ExcAntidiffusionUpperBoundNegative,
+               int,
+               double,
+               << "Q+[" << arg1 << "] = " << arg2 << " < 0");
+
+/** \brief Exception for antidiffusion lower bound being positive */
+DeclException2(ExcAntidiffusionLowerBoundPositive,
+               int,
+               double,
+               << "Q-[" << arg1 << "] = " << arg2 << " > 0");
+
 #endif

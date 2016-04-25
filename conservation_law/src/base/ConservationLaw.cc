@@ -1148,15 +1148,14 @@ template <int dim>
 double ConservationLaw<dim>::compute_dt_from_dmp_cfl_condition()
 {
   // iterators for determining if an index is in the list of Dirichlet indices
-  std::vector<unsigned int>::iterator it_begin = dirichlet_dof_indices.begin();
-  std::vector<unsigned int>::iterator it_end = dirichlet_dof_indices.end();
+  std::map<unsigned int, double>::iterator it_end = dirichlet_values.end();
 
   // initialize CFL time step size to arbitrary large number before min()
   double dt = 1.0e15;
   for (unsigned int i = 0; i < this->n_dofs; ++i)
   {
     // if not a Dirichlet node
-    if (std::find(it_begin, it_end, i) == it_end)
+    if (dirichlet_values.find(i) == it_end)
     {
       const double ALii = low_order_ss_matrix(i, i);
       Assert(ALii > 0.0, ExcNegativeDiagonal(i, ALii));

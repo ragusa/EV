@@ -62,30 +62,41 @@ void DMPSteadyStateFCTFilter<dim>::compute_solution_bounds(
   // compute the upper and lower bounds for the FCT solution
   for (unsigned int i = 0; i < this->n_dofs; ++i)
   {
-    double diagonal_term = 0.0;
-    double off_diagonal_sum = 0.0;
-
-    SparseMatrix<double>::const_iterator it = low_order_ss_matrix.begin(i);
-    SparseMatrix<double>::const_iterator it_end = low_order_ss_matrix.end(i);
-    for (; it != it_end; ++it)
+    // if not a Dirichlet value
+    if (this->dirichlet_values->find(i) == this->dirichlet_values->end())
     {
-      // get column index
-      const unsigned int j = it->column();
+      double diagonal_term = 0.0;
+      double off_diagonal_sum = 0.0;
 
-      // get value
-      const double ALij = it->value();
+      SparseMatrix<double>::const_iterator it = low_order_ss_matrix.begin(i);
+      SparseMatrix<double>::const_iterator it_end = low_order_ss_matrix.end(i);
+      for (; it != it_end; ++it)
+      {
+        // get column index
+        const unsigned int j = it->column();
 
-      // add nonzero entries to get the row sum
-      if (j == i)
-        diagonal_term = ALij;
-      else
-        off_diagonal_sum += ALij;
+        // get value
+        const double ALij = it->value();
+
+        // add nonzero entries to get the row sum
+        if (j == i)
+          diagonal_term = ALij;
+        else
+          off_diagonal_sum += ALij;
+      }
+
+      // compute bounds
+      solution_max(i) = -off_diagonal_sum / diagonal_term * solution_max(i) +
+        ss_rhs(i) / diagonal_term;
+      solution_min(i) = -off_diagonal_sum / diagonal_term * solution_min(i) +
+        ss_rhs(i) / diagonal_term;
     }
-
-    // compute bounds
-    solution_max(i) = -off_diagonal_sum / diagonal_term * solution_max(i) +
-      ss_rhs(i) / diagonal_term;
-    solution_min(i) = -off_diagonal_sum / diagonal_term * solution_min(i) +
-      ss_rhs(i) / diagonal_term;
+    else
+    {
+      // get Dirichlet value
+      const double value = (*this->dirichlet_values).at(i);
+      solution_max(i) = value;
+      solution_min(i) = value;
+    }
   }
 }

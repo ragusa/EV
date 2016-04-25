@@ -16,10 +16,12 @@ template <int dim>
 class DMPSteadyStateFCTFilter : public SteadyStateFCTFilter<dim>
 {
 public:
-  DMPSteadyStateFCTFilter(const RunParameters & run_parameters,
-                          const std::shared_ptr<Limiter<dim>> limiter,
-                          const DoFHandler<dim> & dof_handler,
-                          const FESystem<dim> & fe);
+  DMPSteadyStateFCTFilter(
+    const RunParameters & run_parameters,
+    const std::shared_ptr<Limiter<dim>> limiter,
+    const DoFHandler<dim> & dof_handler,
+    const FESystem<dim> & fe,
+    const std::map<unsigned int, double> & dirichlet_values);
 
 protected:
   void compute_solution_bounds(const Vector<double> & solution,

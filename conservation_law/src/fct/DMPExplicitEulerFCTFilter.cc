@@ -115,13 +115,24 @@ void DMPExplicitEulerFCTFilter<dim>::compute_solution_bounds(
   // compute the upper and lower bounds for the FCT solution
   for (unsigned int i = 0; i < this->n_dofs; ++i)
   {
-    solution_max(i) =
-      solution_max(i) * (1.0 - dt / lumped_mass_matrix(i, i) * ss_reaction(i)) +
-      dt / lumped_mass_matrix(i, i) * ss_rhs(i);
+    // if not a Dirichlet value
+    if (this->dirichlet_values->find(i) == this->dirichlet_values->end())
+    {
+      solution_max(i) =
+        solution_max(i) * (1.0 - dt / lumped_mass_matrix(i, i) * ss_reaction(i)) +
+        dt / lumped_mass_matrix(i, i) * ss_rhs(i);
 
-    solution_min(i) =
-      solution_min(i) * (1.0 - dt / lumped_mass_matrix(i, i) * ss_reaction(i)) +
-      dt / lumped_mass_matrix(i, i) * ss_rhs(i);
+      solution_min(i) =
+        solution_min(i) * (1.0 - dt / lumped_mass_matrix(i, i) * ss_reaction(i)) +
+        dt / lumped_mass_matrix(i, i) * ss_rhs(i);
+    }
+    else
+    {
+      // get Dirichlet value
+      const double value = (*this->dirichlet_values).at(i);
+      solution_max(i) = value;
+      solution_min(i) = value;
+    }
   }
 }
 

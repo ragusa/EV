@@ -217,6 +217,8 @@ public:
   LimiterOption limiter_option;
   /** \brief flag to use multi-pass limiting */
   bool use_multipass_limiting;
+  /** \brief max value for Dirichlet node limiting coefficients */
+  double dirichlet_limiter_value;
   /** \brief percent tolerance for multi-pass limiting */
   double multipass_limiting_percent_tolerance;
   /** \brief option to force correct signs of antidiffusion bounds */

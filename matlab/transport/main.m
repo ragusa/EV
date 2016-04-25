@@ -20,9 +20,9 @@ opts.impose_DirichletBC_strongly = true; % impose Dirichlet BC strongly?
 %--------------------------------------------------------------------------
 % spatial method options
 %--------------------------------------------------------------------------
-compute_low_order  = true; % compute and plot low-order solution?
+compute_low_order  = false; % compute and plot low-order solution?
 compute_high_order = true; % compute and plot high-order solution?
-compute_FCT        = true; % compute and plot FCT solution?
+compute_FCT        = false; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
 %                   2 = graph-theoretic low-order scheme
@@ -70,7 +70,7 @@ opts.ss_tol = 1.0e-6;  % steady-state tolerance
 %             2 = widen low-order DMP to analytic
 %             3 = analytic
 %             4 = analytic upwind
-fct_opts.DMP_option = 1;
+fct_opts.DMP_option = 2;
 
 % limiter option: 0 = All 0 (no correction; low-order)
 %                 1 = All 1 (full correction; high-order)
@@ -79,7 +79,7 @@ fct_opts.DMP_option = 1;
 fct_opts.limiting_option = 2;
 
 % option to enforce Q+ >= 0, Q- <= 0
-fct_opts.enforce_antidiffusion_bounds_signs = true;
+fct_opts.enforce_antidiffusion_bounds_signs = false;
 
 % FCT initialization option: 1 = zeros
 %                            2 = low-order solution
@@ -87,13 +87,13 @@ fct_opts.enforce_antidiffusion_bounds_signs = true;
 fct_opts.FCT_initialization = 3;
 
 % option to skip limitation of bounds if solution bounds are satisfied already
-fct_opts.skip_limiter_if_bounds_satisfied = true;
+fct_opts.skip_limiter_if_bounds_satisfied = false;
 
 % prelimit correction fluxes: 0 = do not prelimit, 1 = prelimit
 fct_opts.prelimit = 0;
 
 % limiting coefficient bounds for Dirichlet nodes
-fct_opts.dirichlet_limiting_coefficient = 1.0; 
+fct_opts.dirichlet_limiting_coefficient = 0.0; 
 %--------------------------------------------------------------------------
 % physics options
 %--------------------------------------------------------------------------
@@ -104,7 +104,7 @@ fct_opts.dirichlet_limiting_coefficient = 1.0;
 %            4: void
 %            5: MMS: TR: u = t*sin(pi*x)  SS: u = sin(pi*x)
 %            6: MMS: TR: u = x*t          SS: u = x
-problemID = 2;
+problemID = 1;
 
 % IC_option: 0: zero
 %            1: exponential pulse
@@ -147,9 +147,9 @@ out_opts.legend_location           = 'NorthEast'; % location of plot legend
 % output options
 %--------------------------------------------------------------------------
 % option to output l2 norm of entropy residual
-return_value_option = 0; % 0: nothing - just return zero
+return_value_option = 2; % 0: nothing - just return zero
                          % 1: L^2 norm of entropy residual
-                         % 2: L^2 norm of entropy jumps
+                         % 2: sum of h*(L^1 norm of entropy jump on cell)
 
 save_exact_solution      = false; % option to save exact solution 
 save_low_order_solution  = false; % option to save low-order solution

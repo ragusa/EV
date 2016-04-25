@@ -81,46 +81,57 @@ void DMPThetaFCTFilter<dim>::compute_solution_bounds(
   // compute the upper and lower bounds for the FCT solution
   for (unsigned int i = 0; i < this->n_dofs; ++i)
   {
-    // compute off diagonal row sum and diagonal term
-    double off_diagonal_row_sum = 0.0;
-    double diagonal_term = 0.0;
-
-    SparseMatrix<double>::const_iterator it = low_order_ss_matrix.begin(i);
-    SparseMatrix<double>::const_iterator it_end = low_order_ss_matrix.end(i);
-    for (; it != it_end; ++it)
+    // if not a Dirichlet value
+    if (this->dirichlet_values->find(i) == this->dirichlet_values->end())
     {
-      // get column index
-      const unsigned int j = it->column();
+      // compute off diagonal row sum and diagonal term
+      double off_diagonal_row_sum = 0.0;
+      double diagonal_term = 0.0;
 
-      // get value
-      const double value = it->value();
+      SparseMatrix<double>::const_iterator it = low_order_ss_matrix.begin(i);
+      SparseMatrix<double>::const_iterator it_end = low_order_ss_matrix.end(i);
+      for (; it != it_end; ++it)
+      {
+        // get column index
+        const unsigned int j = it->column();
 
-      // add to sums
-      if (j == i)
-        diagonal_term = value;
-      else
-        off_diagonal_row_sum += value;
+        // get value
+        const double value = it->value();
+
+        // add to sums
+        if (j == i)
+          diagonal_term = value;
+        else
+          off_diagonal_row_sum += value;
+      }
+
+      // compute full row sum
+      const double row_sum = off_diagonal_row_sum + diagonal_term;
+
+      // lumped mass matrix entry
+      const double m_i = lumped_mass_matrix(i, i);
+
+      // compute the max and min values for the maximum principle
+      solution_max(i) =
+        ((1.0 - (1.0 - this->theta) * dt / m_i * row_sum) * solution_max_old(i) -
+         this->theta * dt / m_i * off_diagonal_row_sum * solution_max_new(i) +
+         dt / m_i *
+           ((1 - this->theta) * ss_rhs_old(i) + this->theta * ss_rhs_new(i))) /
+        (1.0 + this->theta * dt / m_i * diagonal_term);
+      solution_min(i) =
+        ((1.0 - (1.0 - this->theta) * dt / m_i * row_sum) * solution_min_old(i) -
+         this->theta * dt / m_i * off_diagonal_row_sum * solution_min_new(i) +
+         dt / m_i *
+           ((1 - this->theta) * ss_rhs_old(i) + this->theta * ss_rhs_new(i))) /
+        (1.0 + this->theta * dt / m_i * diagonal_term);
     }
-
-    // compute full row sum
-    const double row_sum = off_diagonal_row_sum + diagonal_term;
-
-    // lumped mass matrix entry
-    const double m_i = lumped_mass_matrix(i, i);
-
-    // compute the max and min values for the maximum principle
-    solution_max(i) =
-      ((1.0 - (1.0 - this->theta) * dt / m_i * row_sum) * solution_max_old(i) -
-       this->theta * dt / m_i * off_diagonal_row_sum * solution_max_new(i) +
-       dt / m_i *
-         ((1 - this->theta) * ss_rhs_old(i) + this->theta * ss_rhs_new(i))) /
-      (1.0 + this->theta * dt / m_i * diagonal_term);
-    solution_min(i) =
-      ((1.0 - (1.0 - this->theta) * dt / m_i * row_sum) * solution_min_old(i) -
-       this->theta * dt / m_i * off_diagonal_row_sum * solution_min_new(i) +
-       dt / m_i *
-         ((1 - this->theta) * ss_rhs_old(i) + this->theta * ss_rhs_new(i))) /
-      (1.0 + this->theta * dt / m_i * diagonal_term);
+    else
+    {
+      // get Dirichlet value
+      const double value = (*this->dirichlet_values).at(i);
+      solution_max(i) = value;
+      solution_min(i) = value;
+    }
   }
 }
 

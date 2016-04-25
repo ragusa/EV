@@ -198,8 +198,12 @@ std::shared_ptr<SteadyStateFCTFilter<dim>> SteadyStateFCT<dim>::create_filter(
   // create filter
   std::shared_ptr<SteadyStateFCTFilter<dim>> filter;
   if (filter_string == "dmp")
-    filter = std::make_shared<DMPSteadyStateFCTFilter<dim>>(
-      *this->run_parameters, this->limiter, *this->dof_handler, *this->fe);
+    filter =
+      std::make_shared<DMPSteadyStateFCTFilter<dim>>(*this->run_parameters,
+                                                     this->limiter,
+                                                     *this->dof_handler,
+                                                     *this->fe,
+                                                     *this->dirichlet_values);
   else
     AssertThrow(false, ExcNotImplemented());
 

@@ -18,11 +18,11 @@
 #   void_to_absorber_1d
 #   void_to_absorber_1d_ss
 subsection problem
-   set problem name = absorber_ss
+   set problem name = void_to_absorber_1d_ss
 end
 
 subsection scheme
-   set scheme            = high          # low|high|fct
+   set scheme            = fct          # low|high|fct
    set low order scheme  = dmp          # constant|lax|dmp|di_visc|di_diff
    set high order scheme = galerkin     # galerkin|entropy_visc|entropy_diff
 end
@@ -69,15 +69,15 @@ subsection fct
    set limiter option                = zalesak # ones|zeroes|zalesak
    set use multipass limiting        = false
    set multipass limiting percent tolerance = 0.01
-   set enforce antidiffusion bounds signs = true
+   set enforce antidiffusion bounds signs = false
    set fct synchronization type      = none    # none|min|compound
-   set fct initialization option     = zero    # zero|low|high
+   set fct initialization option     = high    # zero|low|high
    set skip fct if bounds satisfied  = false
    set use cumulative antidiffusion algorithm = false
    set use star states in fct bounds = false
    set check fct bounds              = true
    set output limiter matrix         = false
-   set output final fct bounds       = false
+   set output final fct bounds       = true
    set output transient fct bounds   = false
 end
 
@@ -87,7 +87,7 @@ end
 
 subsection nonlinear solver
    set nonlinear tolerance      = 1.0e-10
-   set nonlinear max iterations = 1000
+   set nonlinear max iterations = 2
    set relaxation factor        = 1.0
 end
 
@@ -110,6 +110,6 @@ subsection output
    set output viscosity transient      = false
    set exact solution refinement level = 7
    set save convergence results        = true
-   set print final solution            = false
+   set print final solution            = true
 end
 

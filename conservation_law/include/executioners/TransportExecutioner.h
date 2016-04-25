@@ -107,7 +107,8 @@ protected:
   Vector<double> new_solution;
   Vector<double> antidiffusion_vector;
 
-  std::vector<unsigned int> dirichlet_nodes;
+  /** \brief Indices of DoFs subject to Dirichlet boundary conditions */
+  std::map<unsigned int, double> dirichlet_values;
 
   LinearSolver<dim> linear_solver;
 

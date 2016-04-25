@@ -19,6 +19,7 @@ class ZalesakLimiter : public Limiter<dim>
 {
 public:
   ZalesakLimiter(const unsigned int & n_dofs,
+                 const std::map<unsigned int, double> & dirichlet_values,
                  const bool & report_antidiffusion = false);
 
   void compute_limiter_matrix(
@@ -37,6 +38,9 @@ protected:
              a node, without consideration of neighbor antidiffusion bounds,
              \f$\mathbf{L}^+\f$, commonly denoted as \f$\mathbf{R}^+\f$ */
   Vector<double> positive_limiter_vector;
+
+  /** \brief map of DoF indices to Dirichlet BC values */
+  const std::map<unsigned int, double> * const dirichlet_values;
 };
 
 #include "src/fct/ZalesakLimiter.cc"

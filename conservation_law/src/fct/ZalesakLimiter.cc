@@ -7,13 +7,17 @@
  * \brief Constructor.
  *
  * \param[in] n_dofs_  number of degrees of freedom
+ * \param[in] dirichlet_values_  map of DoF indices to Dirichlet values
  * \param[in] report_antidiffusion_  flag to report amount of accepted
  *            antidiffusion
  */
 template <int dim>
-ZalesakLimiter<dim>::ZalesakLimiter(const unsigned int & n_dofs_,
-                                    const bool & report_antidiffusion_)
-  : Limiter<dim>(n_dofs_, report_antidiffusion_)
+ZalesakLimiter<dim>::ZalesakLimiter(
+  const unsigned int & n_dofs_,
+  const std::map<unsigned int, double> & dirichlet_values_,
+  const bool & report_antidiffusion_)
+  : Limiter<dim>(n_dofs_, report_antidiffusion_),
+  dirichlet_values(&dirichlet_values_)
 {
   // resize limiter vectors
   negative_limiter_vector.reinit(this->n_dofs);
@@ -102,6 +106,16 @@ void ZalesakLimiter<dim>::compute_limiter_matrix(
           P_positive);
     else
       positive_limiter_vector[i] = 1.0;
+  }
+
+  // iterate over Dirichlet indices to force L+ and L-
+  std::map<unsigned int, double>::const_iterator it_dir = dirichlet_values->begin();
+  std::map<unsigned int, double>::const_iterator it_dir_end = dirichlet_values->end();
+  for (; it_dir != it_dir_end; ++it_dir)
+  {
+    const unsigned int i = it_dir->first;
+    positive_limiter_vector[i] = 1.0;
+    negative_limiter_vector[i] = 1.0;
   }
 
   // compute limited flux correction sum

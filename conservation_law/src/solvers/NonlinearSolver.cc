@@ -113,6 +113,7 @@ bool NonlinearSolver<dim>::update(const SparseMatrix<double> & A,
   residual *= -1.0;
   residual.add(1.0, b);
 
+  residual.print(std::cout, 3, false, false);
   // check convergence
   bool converged = check_convergence(residual);
   if (converged)

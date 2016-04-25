@@ -26,7 +26,8 @@ TransportAnalyticSSFCTFilter<dim>::TransportAnalyticSSFCTFilter(
   const std::map<unsigned int, double> & dirichlet_values_)
   : SteadyStateFCTFilter<dim>(
       run_parameters_, limiter_, dof_handler_, fe_, dirichlet_values_),
-    analytic_bounds(problem_parameters_, dof_handler_, fe_, cell_quadrature_)
+    analytic_bounds(
+      problem_parameters_, dof_handler_, fe_, cell_quadrature_, dirichlet_values_)
 {
 }
 

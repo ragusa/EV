@@ -46,7 +46,8 @@ FCT<dim>::FCT(const RunParameters & run_parameters_,
   switch (run_parameters_.limiter_option)
   {
     case LimiterOption::ones: // no limiter; all L_{i,j} are one
-      limiter = std::make_shared<OnesLimiter<dim>>(n_dofs, report_antidiffusion);
+      limiter = std::make_shared<OnesLimiter<dim>>(
+        n_dofs, report_antidiffusion);
       break;
     case LimiterOption::zeroes: // full limiter; all L_{i,j} are zero
       limiter =
@@ -54,7 +55,7 @@ FCT<dim>::FCT(const RunParameters & run_parameters_,
       break;
     case LimiterOption::zalesak: // Zalesak limiter
       limiter =
-        std::make_shared<ZalesakLimiter<dim>>(n_dofs, report_antidiffusion);
+        std::make_shared<ZalesakLimiter<dim>>(n_dofs, dirichlet_values_, report_antidiffusion);
       break;
     default:
       AssertThrow(false, ExcNotImplemented());
