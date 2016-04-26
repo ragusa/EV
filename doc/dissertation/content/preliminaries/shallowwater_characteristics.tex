@@ -150,9 +150,9 @@ is denoted by $\jacobiann(\vectorsolution)$ and is given by
 \end{subequations}
 The eigenvalues and corresponding eigenvectors of this matrix are
 \begin{equation}
-  \eigenvalue_1(\vectorsolution) = \velocityn + \speedofsound \eqc \quad
-  \eigenvalue_2(\vectorsolution) = \velocityn \eqc \quad
-  \eigenvalue_3(\vectorsolution) = \velocityn - \speedofsound \eqc \quad
+  \eigenvalue_1(\vectorsolution) = \velocity\cdot\normalvector + \speedofsound \eqc \quad
+  \eigenvalue_2(\vectorsolution) = \velocity\cdot\normalvector \eqc \quad
+  \eigenvalue_3(\vectorsolution) = \velocity\cdot\normalvector - \speedofsound \eqc \quad
 \end{equation}
 \begin{equation}
   \eigenvector_1(\vectorsolution) = \sq{\begin{array}{c}
@@ -194,5 +194,6 @@ gives the characteristic variables to be
       \vn + 2\speedofsound\\
       \ny\vx - \nx\vy\\
       \vn - 2\speedofsound\\
-    \end{array}} \eqp
+    \end{array}} \eqc
 \end{equation}
+where $\vn\equiv\velocity\cdot\normalvector$.
