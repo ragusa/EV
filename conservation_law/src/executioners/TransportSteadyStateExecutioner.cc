@@ -239,7 +239,6 @@ void TransportSteadyStateExecutioner<dim>::compute_fct_solution()
                                        this->ss_rhs,
                                        this->antidiffusion_vector);
 
-      this->antidiffusion_vector.print(std::cout, 3, false, false);
       // create system rhs: s^(l) = b + p^(l+1)
       this->system_rhs = this->ss_rhs;
       this->system_rhs.add(1.0, this->antidiffusion_vector);

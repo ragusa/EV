@@ -20,6 +20,7 @@ class ZalesakLimiter : public Limiter<dim>
 public:
   ZalesakLimiter(const unsigned int & n_dofs,
                  const std::map<unsigned int, double> & dirichlet_values,
+                 const double & dirichlet_limiting_coefficient,
                  const bool & report_antidiffusion = false);
 
   void compute_limiter_matrix(
@@ -41,6 +42,9 @@ protected:
 
   /** \brief map of DoF indices to Dirichlet BC values */
   const std::map<unsigned int, double> * const dirichlet_values;
+
+  /** \brief max value for limiting coefficient on Dirichlet nodes */
+  const double dirichlet_limiting_coefficient;
 };
 
 #include "src/fct/ZalesakLimiter.cc"

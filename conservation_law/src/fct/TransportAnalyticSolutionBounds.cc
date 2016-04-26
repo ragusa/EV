@@ -100,12 +100,4 @@ void TransportAnalyticSolutionBounds<dim>::update(const Vector<double> & solutio
       this->upper[i] = value;
     }
   }
-
-  /*
-    for (unsigned int i = 0; i < this->n_dofs; ++i)
-  std::cout << this->upper[i] << std::endl;
-  std::cout << std::endl;
-    for (unsigned int i = 0; i < this->n_dofs; ++i)
-  std::cout << this->lower[i] << std::endl;
-  */
 }

@@ -217,10 +217,10 @@ public:
   LimiterOption limiter_option;
   /** \brief flag to use multi-pass limiting */
   bool use_multipass_limiting;
-  /** \brief max value for Dirichlet node limiting coefficients */
-  double dirichlet_limiter_value;
   /** \brief percent tolerance for multi-pass limiting */
   double multipass_limiting_percent_tolerance;
+  /** \brief max value for Dirichlet node limiting coefficients */
+  double dirichlet_limiting_coefficient;
   /** \brief option to force correct signs of antidiffusion bounds */
   bool enforce_antidiffusion_bounds_signs;
   /** \brief type of synchronization to apply for FCT */

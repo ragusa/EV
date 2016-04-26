@@ -184,6 +184,10 @@ void RunParameters::declare_run_parameters(ParameterHandler & prm)
                       "0.01",
                       Patterns::Double(),
                       "percent tolerance for multi-pass limiting");
+    prm.declare_entry("dirichlet limiting coefficient",
+                      "1.0",
+                      Patterns::Double(),
+                      "max value for Dirichlet node limiting coefficients");
     prm.declare_entry(
       "enforce antidiffusion bounds signs",
       "false",
@@ -552,6 +556,9 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
 
     multipass_limiting_percent_tolerance =
       prm.get_double("multipass limiting percent tolerance");
+
+    dirichlet_limiting_coefficient =
+      prm.get_double("dirichlet limiting coefficient");
 
     enforce_antidiffusion_bounds_signs =
       prm.get_bool("enforce antidiffusion bounds signs");

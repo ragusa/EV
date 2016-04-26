@@ -190,10 +190,13 @@ ThetaFCT.cc
 ThetaFCTFilter.cc
 ThetaFCTFilter.h
 ThetaFCT.h
+TransportAnalyticFEFCTFilter.h
 TransportAnalyticSolutionBounds.cc
 TransportAnalyticSolutionBounds.h
 TransportAnalyticSSFCTFilter.cc
 TransportAnalyticSSFCTFilter.h
+TransportAnalyticThetaFCTFilter.cc
+TransportAnalyticThetaFCTFilter.h
 Transport.cc
 TransportDMPAnalyticSSFCTFilter.cc
 TransportDMPAnalyticSSFCTFilter.h
