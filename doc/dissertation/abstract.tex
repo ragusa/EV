@@ -6,16 +6,21 @@
 \setcounter{page}{2}
 
 \indent
-The Flux-Corrected Transport (FCT) algorithm in conjunction with the
-entropy viscosity method was applied to scalar radiation transport and
-the shallow water equations with the continuous finite element method.
+The Flux-Corrected Transport (FCT) algorithm, in conjunction with the
+entropy viscosity method, was applied with the continuous finite element method
+to (a) a scalar transport equation that includes reaction and source terms and
+(b) the shallow water equations.
 For smooth problems, second-order spatial accuracy is achieved if adequate
 solution bounds are used in the FCT algorithm. The resulting scheme is
 positivity-preserving and reduces the onset of spurious oscillations.
 Explicit SSPRK time discretizations are considered for both scalar
-radiation transport and the shallow water equations, and additionally
-for scalar radiation transport, $\theta$ time discretizations and
-steady-state are considered. Implicit FCT is shown to have significant
-convergence issues.
+transport and the shallow water equations, and additionally
+for scalar transport, $\theta$ time discretizations and
+steady-state are considered. Explicit FCT schemes are shown to
+be relatively robust; positivity preservation is guaranteed and spurious
+oscillations are reduced, if not eliminated entirely.
+Implicit/steady-state FCT schemes, however, are shown to have
+significant nonlinear convergence issues in many cases, as is noted by
+Kuzmin \cite{kuzmin_FCT}.
 
 \pagebreak{}

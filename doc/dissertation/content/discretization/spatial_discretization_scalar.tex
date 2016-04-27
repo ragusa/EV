@@ -31,7 +31,16 @@ with the elements of $\ssmatrix$ being the following:
   \reactioncoef(\x)\testfunction_j(\x)\right)\testfunction_i(\x) \dvolume \eqc
 \end{equation}
 where $\support\ij$ is the shared support of $\testfunction_i(\x)$ and
-$\testfunction_j(\x)$.
+$\testfunction_j(\x)$. Figure \ref{fig:shared_support} illustrates an
+example of this definition.
+%-------------------------------------------------------------------------------
+\begin{figure}[ht]
+   \centering
+     \input{../diagrams/shared_support/shared_support.tex}
+      \caption{Illustration of Shared Support between Test Functions}
+   \label{fig:shared_support}
+\end{figure}
+%-------------------------------------------------------------------------------
 If the flux function $\consfluxscalar$ is nonlinear, then the system is
 nonlinear, but it may be expressed in a quasilinear form:
 \begin{equation}\label{eq:semi_quasilinear}

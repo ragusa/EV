@@ -4,6 +4,8 @@
 #   absorber
 #   absorber_ss
 #   constant_ss
+#   glance_in_void
+#   glance_in_void_ss
 #   mms_sinx_expt  u(x,t) = sin(pi*x)*exp(-t)
 #   mms_sinx_ss    u(x)   = sin(pi*x)
 #   mms_sinx_t     u(x,t) = sin(pi*x)*t
@@ -18,20 +20,20 @@
 #   void_to_absorber_1d
 #   void_to_absorber_1d_ss
 subsection problem
-   set problem name = sourcevoid_to_absorber_ss
+   set problem name = glance_in_void_ss
 end
 
 subsection scheme
    set scheme            = fct          # low|high|fct
    set low order scheme  = dmp          # constant|lax|dmp|di_visc|di_diff
-   set high order scheme = galerkin     # galerkin|entropy_visc|entropy_diff
+   set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
 end
 
 subsection refinement
    set refinement cycles        = 1
    set refine space             = true
    set refine time              = true
-   set initial refinement level = 5
+   set initial refinement level = 6
    set use adaptive mesh refinement = false
    set time refinement factor   = 0.5
    set refinement fraction      = 0.5
@@ -65,11 +67,11 @@ subsection artificial viscosity
 end
 
 subsection fct
-   set filter sequence string        = analytic # dmp|dmp_analytic|analytic
+   set filter sequence string        = dmp # dmp|dmp_analytic|analytic
    set limiter option                = zalesak # ones|zeroes|zalesak
    set use multipass limiting        = false
    set multipass limiting percent tolerance = 0.01
-   set dirichlet limiting coefficient = 0.0
+   set dirichlet limiting coefficient = 1.0
    set enforce antidiffusion bounds signs = false
    set fct synchronization type      = none    # none|min|compound
    set fct initialization option     = low     # zero|low|high
@@ -88,7 +90,7 @@ end
 
 subsection nonlinear solver
    set nonlinear tolerance      = 1.0e-10
-   set nonlinear max iterations = 1000
+   set nonlinear max iterations = 10000
    set relaxation factor        = 1.0
 end
 
