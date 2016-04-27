@@ -84,6 +84,19 @@ A = A*speed;
 % computed lumped mass matrix
 ML = diag(sum(MC));
 
+% modify steady-state inviscid matrix
+if (opts.use_penalty_bc)
+    % currently this is only implemented for steady-state; if not steady-
+    % state, then one will need to perform this modification on the total
+    % system matrix, not just the steady-state matrix
+    if (opts.temporal_scheme ~= 0)
+        error('Penalty BC implemented only for steady-state');
+    end
+    
+    % modify matrix
+    A(1,1) = A(1,1) + opts.penalty_bc_coef;
+end
+
 %--------------------------------------------------------------------------
 % Compute low-order viscosity
 %--------------------------------------------------------------------------

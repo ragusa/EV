@@ -5,8 +5,8 @@ n = length(Qplus);
 
 small = 1.0e-12;
 
-% skip the first node because it's assumed to be Dirichlet
-for i = 2:n
+% may need to skip first node when using strong Dirichlet BC
+for i = 1:n
   % check upper bound
   if (Qplus(i) < -small)
     error('Q+(%i) < 0: Q+(%i) = %f',i,i,Qplus(i));

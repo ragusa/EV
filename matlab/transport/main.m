@@ -16,13 +16,15 @@ else
   mesh.n_cell = 32;     % number of elements
 end
 quadrature.nq = 3;      % number of quadrature points per cell
-opts.impose_DirichletBC_strongly = true; % impose Dirichlet BC strongly?
+opts.impose_DirichletBC_strongly = false; % impose Dirichlet BC strongly?
+opts.use_penalty_bc = true; % add penalty BC?
+opts.penalty_bc_coef = 1000.0; % penalty BC coef: alpha*A(i,i) = alpha*inc
 %--------------------------------------------------------------------------
 % spatial method options
 %--------------------------------------------------------------------------
-compute_low_order  = false; % compute and plot low-order solution?
+compute_low_order  = true; % compute and plot low-order solution?
 compute_high_order = true; % compute and plot high-order solution?
-compute_FCT        = false; % compute and plot FCT solution?
+compute_FCT        = true; % compute and plot FCT solution?
 
 % low_order_scheme: 1 = algebraic low-order scheme
 %                   2 = graph-theoretic low-order scheme
@@ -60,7 +62,7 @@ opts.theta = 1.0;
        
 opts.use_constant_dt = false; % option to use constant dt instead of CFL
 opts.constant_dt = 0.001;    % time step size to use if using constant size
-opts.CFL = 10.0;       % CFL number
+opts.CFL = 0.5;       % CFL number
 opts.t_end = 1.0;     % max time to run
 opts.ss_tol = 1.0e-6;  % steady-state tolerance
 %--------------------------------------------------------------------------
@@ -76,15 +78,15 @@ fct_opts.DMP_option = 2;
 %                 1 = All 1 (full correction; high-order)
 %                 2 = Zalesak limiter
 %                 3 = Josh limiter
-fct_opts.limiting_option = 2;
+fct_opts.limiting_option = 3;
 
 % option to enforce Q+ >= 0, Q- <= 0
-fct_opts.enforce_antidiffusion_bounds_signs = false;
+fct_opts.enforce_antidiffusion_bounds_signs = true;
 
 % FCT initialization option: 1 = zeros
 %                            2 = low-order solution
 %                            3 = high-order solution
-fct_opts.FCT_initialization = 3;
+fct_opts.FCT_initialization = 2;
 
 % option to skip limitation of bounds if solution bounds are satisfied already
 fct_opts.skip_limiter_if_bounds_satisfied = false;
@@ -93,7 +95,7 @@ fct_opts.skip_limiter_if_bounds_satisfied = false;
 fct_opts.prelimit = 0;
 
 % limiting coefficient bounds for Dirichlet nodes
-fct_opts.dirichlet_limiting_coefficient = 0.0; 
+fct_opts.dirichlet_limiting_coefficient = 1.0; 
 %--------------------------------------------------------------------------
 % physics options
 %--------------------------------------------------------------------------
@@ -104,7 +106,7 @@ fct_opts.dirichlet_limiting_coefficient = 0.0;
 %            4: void
 %            5: MMS: TR: u = t*sin(pi*x)  SS: u = sin(pi*x)
 %            6: MMS: TR: u = x*t          SS: u = x
-problemID = 1;
+problemID = 3;
 
 % IC_option: 0: zero
 %            1: exponential pulse
@@ -147,7 +149,7 @@ out_opts.legend_location           = 'NorthEast'; % location of plot legend
 % output options
 %--------------------------------------------------------------------------
 % option to output l2 norm of entropy residual
-return_value_option = 2; % 0: nothing - just return zero
+return_value_option = 0; % 0: nothing - just return zero
                          % 1: L^2 norm of entropy residual
                          % 2: sum of h*(L^1 norm of entropy jump on cell)
 
@@ -363,6 +365,19 @@ dof_handler.n_cell = mesh.n_cell;
 t = 0;
 b = assemble_ss_rhs(t,quadrature,mesh,dof_handler,phys,...
     opts.modify_for_weak_DirichletBC);
+
+% modify steady-state RHS
+if (opts.use_penalty_bc)
+    % currently this is only implemented for steady-state; if not steady-
+    % state, then one will need to perform this modification on the total
+    % system RHS, not just the steady-state RHS
+    if (opts.temporal_scheme ~= 0)
+        error('Penalty BC implemented only for steady-state');
+    end
+    
+    % modify RHS
+    b(1) = b(1) + opts.penalty_bc_coef * phys.inc;
+end
 
 % check that speed is nonzero; otherwise, infinite dt will be computed
 assert(phys.speed ~= 0,'Speed cannot be zero.');
@@ -707,7 +722,7 @@ if (compute_FCT)
             [flim,Wminus,Wplus] = compute_limited_flux_sums_ss(uFCT,F,...
                 AL_mod,b_mod,...
                 sigma_min,sigma_max,source_min,source_max,mesh,phys,...
-                dof_handler.n_dof,fct_opts);
+                dof_handler.n_dof,fct_opts,opts);
             
             % plot
             if (out_opts.plot_FCT_iteration)
