@@ -20,13 +20,13 @@
 #   void_to_absorber_1d
 #   void_to_absorber_1d_ss
 subsection problem
-   set problem name = glance_in_void_ss
+   set problem name = glance_in_void
 end
 
 subsection scheme
    set scheme            = fct          # low|high|fct
    set low order scheme  = dmp          # constant|lax|dmp|di_visc|di_diff
-   set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
+   set high order scheme = galerkin     # galerkin|entropy_visc|entropy_diff
 end
 
 subsection refinement
@@ -42,17 +42,17 @@ subsection refinement
 end
 
 subsection time
-   set time step size option  = constant # constant|cfl|cfl_dmp|cfl_di
+   set time step size option  = cfl_dmp # constant|cfl|cfl_dmp|cfl_di
    set cfl                    = 0.5
    set time step size         = 0.001
-   set use default end time   = false
+   set use default end time   = true
    set end time               = 0.01
    set steady state tolerance = 1.0e-6
 end
 
 subsection temporal discretization
-   set temporal discretization = ss    # ss|ssprk|theta
-   set ssprk discretization    = FE    # FE|SSP2|SSP3
+   set temporal discretization = ssprk # ss|ssprk|theta
+   set ssprk discretization    = SSP3  # FE|SSP2|SSP3
    set theta discretization    = BE    # FE|CN|BE
 end
 

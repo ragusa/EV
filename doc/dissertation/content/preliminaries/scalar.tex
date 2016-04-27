@@ -51,8 +51,8 @@ Boundary conditions will depend on the chosen conservation law and
 the particular problem. 
 This research assumes an incoming flux boundary condition, which is strongly
 imposed as a Dirichlet boundary condition:
-\begin{equation}
-   \scalarsolution\xt = \scalarsolution^{inc}\xt \quad \forall \x
+\begin{equation}\label{eq:incoming_flux}
+   \scalarsolution\xt = \scalarsolution^{\text{inc}}\xt \quad \forall \x
    \in \domainboundary^-,
      \quad \domainboundary^- = \{\x\in\domainboundary:
      \velocity\cdot\normalvector(\x)<0\} \eqp

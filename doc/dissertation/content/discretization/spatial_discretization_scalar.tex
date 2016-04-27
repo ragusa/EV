@@ -1,6 +1,23 @@
 The continuous Galerkin (CG) finite element method (FEM) is used for spatial
-discretization.  The numerical solution is thus approximated using an
-expansion of basis functions $\testfunction_j(\x)$:
+discretization.
+In this research, linear piecewise polynomials are used to approximate
+the solution; formally, the approximation space is the following:
+\begin{equation}
+  \approximationspace = \left\{v\in C^0(\domain;\realspace);
+    \, v|_K\circ\referenceelementmap_K \in \qonespace
+    \quad \forall K \in \triangulation\right\} \eqc
+\end{equation}
+where $\referenceelementmap_K$ is a map from the reference element
+to an element $K$, and $\triangulation$ is the triangulation.
+When the incoming flux boundary condition of Equation \eqref{eq:incoming_flux}
+is strongly imposed, the approximation space reduces to
+\begin{equation}
+  \approximationspaceinc = \left\{v\in \approximationspace;
+    \, v(\x) = u^{\text{inc}}(\x)
+    \quad \forall \x \in \domainboundary^-\right\} \eqc
+\end{equation}
+where $u^{\text{inc}}(\x)$ is the incoming flux function.
+The approximate solution is an expansion of basis functions $\testfunction_j(\x)$:
 \begin{equation}
   \approximatescalarsolution\xt = \sumj \solutionletter_j(\timevalue)
   \testfunction_j(\x) \eqc
