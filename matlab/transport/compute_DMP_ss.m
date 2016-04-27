@@ -1,12 +1,11 @@
-function [Wplus,Wminus] = compute_DMP_ss(u,AL,b,inc)
+function [Wplus,Wminus] = compute_DMP_ss(u,AL,b,inc,opts)
 
 n = length(u);
 
 Wplus = zeros(n,1);
 Wminus = zeros(n,1);
-Wplus(1)  = inc;
-Wminus(1) = inc;
-for i = 2:n
+
+for i = 1:n
     % compute index range of support of i
     i1 = max(i-1,1);
     i2 = min(i+1,n);
@@ -23,6 +22,16 @@ for i = 2:n
     % compute bounds
     Wplus(i)  = -(sum(AL(i,:))-AL(i,i))/AL(i,i)*u_max + b(i)/AL(i,i);
     Wminus(i) = -(sum(AL(i,:))-AL(i,i))/AL(i,i)*u_min + b(i)/AL(i,i);
+end
+
+% if using strong Dirichlet BC, then no DMP applies
+if (opts.modify_for_strong_DirichletBC)
+    Wplus(1)  = inc;
+    Wminus(1) = inc;
+else
+    if (AL(1,1) < 0.0)
+        error('DMP does not apply because AL(1,1) < 0');
+    end
 end
 
 end

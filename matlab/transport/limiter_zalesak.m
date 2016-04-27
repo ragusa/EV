@@ -1,4 +1,4 @@
-function flim = limiter_zalesak(F,Qplus,Qminus,periodic_BC,...
+function flim = limiter_zalesak(F,Qplus,Qminus,opts,...
     dirichlet_limiting_coefficient)
 
 n = length(Qplus);
@@ -30,7 +30,7 @@ for i = 1:n
 end
 
 % force some bounds for limiting coefficients of dirichlet node
-if ~periodic_BC
+if (opts.impose_DirichletBC_strongly)
     Rplus(1)  = dirichlet_limiting_coefficient;
     Rminus(1) = dirichlet_limiting_coefficient;
 end
