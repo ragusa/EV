@@ -10,12 +10,11 @@ Wminus = zeros(n,1);
 range = ceil(s/mesh.dx(1));
 
 % compute bounds
-for i = 1:n
+Wplus(1)  = inc;
+Wminus(1) = inc;
+for i = 2:n
     % compute index range of support of i
-    if ~periodic_BC
-        iL = max(i-range,1);
-        iR = min(i+range,n);
-    else
+    if (periodic_BC)
         if i == 1
             iL = n;
             iR = 2;
@@ -26,6 +25,9 @@ for i = 1:n
             iL = i-1;
             iR = i+1;
         end
+    else
+        iL = max(i-range,1);
+        iR = min(i+range,n);
     end
     % compute max and min old solution in the support of each dof
     u_max = max(u(iL:iR));

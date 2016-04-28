@@ -78,10 +78,10 @@ fct_opts.DMP_option = 2;
 %                 1 = All 1 (full correction; high-order)
 %                 2 = Zalesak limiter
 %                 3 = Josh limiter
-fct_opts.limiting_option = 3;
+fct_opts.limiting_option = 2;
 
 % option to enforce Q+ >= 0, Q- <= 0
-fct_opts.enforce_antidiffusion_bounds_signs = true;
+fct_opts.enforce_antidiffusion_bounds_signs = false;
 
 % FCT initialization option: 1 = zeros
 %                            2 = low-order solution
@@ -91,11 +91,11 @@ fct_opts.FCT_initialization = 2;
 % option to skip limitation of bounds if solution bounds are satisfied already
 fct_opts.skip_limiter_if_bounds_satisfied = false;
 
-% prelimit correction fluxes: 0 = do not prelimit, 1 = prelimit
-fct_opts.prelimit = 0;
+% option to prelimit correction fluxes
+fct_opts.prelimit = true;
 
 % limiting coefficient bounds for Dirichlet nodes
-fct_opts.dirichlet_limiting_coefficient = 1.0; 
+fct_opts.dirichlet_limiting_coefficient = 0.0; 
 %--------------------------------------------------------------------------
 % physics options
 %--------------------------------------------------------------------------
@@ -157,6 +157,7 @@ save_exact_solution      = false; % option to save exact solution
 save_low_order_solution  = false; % option to save low-order solution
 save_high_order_solution = false; % option to save high-order solution
 save_FCT_solution        = false; % option to save FCT solution
+save_FCT_bounds          = false; % option to save FCT bounds
 save_antidiffusion_matrix = false; % option to save antidiffusion matrix
 %-------------------------------------------------------------------------
 
@@ -797,10 +798,10 @@ if (compute_FCT)
                         ev,opts);
                     
                     % perform FCT step
-                    uFCT = FCT_step_explicit(u_old,uH,dt,...
+                    [uFCT,Wminus,Wplus] = FCT_step_explicit(u_old,uH,dt,...
                         ML,MC,AL,DH,DL,b,phys.inc,phys.speed,...
-                        sigma_min,sigma_max,source_min,source_max,fct_opts,...
-                        phys.periodic_BC,opts.modify_for_strong_DirichletBC);
+                        sigma_min,sigma_max,source_min,source_max,mesh,fct_opts,...
+                        opts,phys.periodic_BC);
                 case 2 % SSP3
                     % stage 1
                     u_old_stage = u_old;
@@ -811,10 +812,10 @@ if (compute_FCT)
                     [uH_stage,DH] = high_order_step(u_older_stage,...
                         u_old_stage,dt_old,dt,A,b,MC,0,viscL,mesh,phys,...
                         quadrature,dof_handler,ev,opts);
-                    uFCT_stage = FCT_step_explicit(u_old_stage,uH_stage,dt,...
+                    [uFCT_stage,Wminus,Wplus] = FCT_step_explicit(u_old_stage,uH_stage,dt,...
                         ML,MC,AL,DH,DL,b,phys.inc,phys.speed,...
-                        sigma_min,sigma_max,source_min,source_max,fct_opts,...
-                        phys.periodic_BC,opts.modify_for_strong_DirichletBC);
+                        sigma_min,sigma_max,source_min,source_max,mesh,fct_opts,...
+                        opts,phys.periodic_BC);
                     
                    % stage 2
                     u_old_stage = uFCT_stage;
@@ -825,10 +826,10 @@ if (compute_FCT)
                     [uH_stage,DH] = high_order_step(u_older_stage,...
                         u_old_stage,dt_old,dt,A,b,MC,0,viscL,mesh,phys,...
                         quadrature,dof_handler,ev,opts);
-                    uFCT_stage = FCT_step_explicit(u_old_stage,uH_stage,dt,...
+                    [uFCT_stage,Wminus,Wplus] = FCT_step_explicit(u_old_stage,uH_stage,dt,...
                         ML,MC,AL,DH,DL,b,phys.inc,phys.speed,...
-                        sigma_min,sigma_max,source_min,source_max,fct_opts,...
-                        phys.periodic_BC,opts.modify_for_strong_DirichletBC);
+                        sigma_min,sigma_max,source_min,source_max,mesh,fct_opts,...
+                        opts,phys.periodic_BC);
                     
                     % stage 3
                     u_old_stage = 0.75*u_old + 0.25*uFCT_stage;
@@ -839,11 +840,10 @@ if (compute_FCT)
                     [uH_stage,DH] = high_order_step(u_older_stage,...
                         u_old_stage,dt_old,dt,A,b,MC,0,viscL,mesh,phys,...
                         quadrature,dof_handler,ev,opts);
-                    uFCT_stage = FCT_step_explicit(u_old_stage,uH_stage,dt,...
+                    [uFCT_stage,Wminus,Wplus] = FCT_step_explicit(u_old_stage,uH_stage,dt,...
                         ML,MC,AL,DH,DL,b,phys.inc,phys.speed,...
-                        sigma_min,sigma_max,source_min,source_max,...
-                        fct_opts,phys.periodic_BC,...
-                        opts.modify_for_strong_DirichletBC);
+                        sigma_min,sigma_max,source_min,source_max,mesh,...
+                        fct_opts,opts,phys.periodic_BC);
                     
                     % final combination
                     uFCT = 1/3*u_old + 2/3*uFCT_stage;
@@ -1105,6 +1105,16 @@ if (save_FCT_solution)
     if (compute_FCT)
         FCT_file = ['output/uFCT_',high_order_string,'_',time_string,'.csv'];
         dlmwrite(FCT_file,[mesh.x,uFCT],',');
+    end
+end
+
+% save FCT bounds
+if (save_FCT_bounds)
+    if (compute_FCT)
+        file = ['output/Umin_',high_order_string,'_',time_string,'.csv'];
+        dlmwrite(file,[mesh.x,Wminus],',');
+        file = ['output/Umax_',high_order_string,'_',time_string,'.csv'];
+        dlmwrite(file,[mesh.x,Wplus],',');
     end
 end
 
