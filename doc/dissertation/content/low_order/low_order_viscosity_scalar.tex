@@ -1,6 +1,30 @@
-In this section, a graph-theoretic approach is taken to define a low-order
-scheme that is monotone and maximum principle preserving. The following
-bilinear form is employed in the low-order scheme:
+In this section, definitions of a graph-theoretic local viscous bilinear form
+and a low-order viscosity from Guermond \cite{guermond_firstorder} are given.
+First, some preliminary definitions are given.
+
+Let $\indicescell$ denote the set of degree of freedom indices associated with
+cell $\cell$, which is defined to be those degrees of freedom $j$ for which the
+corresponding test function $\testfunction_j$ has nonzero support on cell
+$\cell$:
+\begin{equation}
+  \indicescell \equiv \{j\in\{1,\ldots,N\}: |\support_j\cap \celldomain|\ne 0\}
+  \eqc
+\end{equation}
+where $\celldomain[\cell]$ is the domain of cell $\cell$. An illustration of
+this definition is given in Figure \ref{fig:cell_indices}.
+Let $\cardinality$ denote the number of elements in the set $\indicescell$.
+%-------------------------------------------------------------------------------
+\begin{figure}[ht]
+   \centering
+     \input{../diagrams/cell_indices/cell_indices.tex}
+      \caption{Illustration of Cell Degree of Freedom Indices $\indicescell$}
+   \label{fig:cell_indices}
+\end{figure}
+%-------------------------------------------------------------------------------
+The following graph-theoretic local viscous bilinear form from
+\cite{guermond_firstorder} is employed in computation of the artificial
+diffusion terms, which are expressed in matrix form in Section
+\ref{sec:low_order_scheme_scalar}:
 %--------------------------------------------------------------------------------
 \begin{definition}{Local Viscous Bilinear Form}
    The local viscous bilinear form for cell $\cell$ is defined as follows:
@@ -10,23 +34,25 @@ bilinear form is employed in the low-order scheme:
        \quad i,j\in \indicescell\eqc \\
        \cellvolume\eqc & i = j \eqc \quad i,j\in \indicescell\eqc \\
        0          \eqc & \mbox{otherwise}\eqc
-     \end{array}\right.
+     \end{array}\right. \eqc
    \end{equation}
-   with $\indicescell$ being the set of indices corresponding to degrees of
-   freedom in the support of cell $\cell$:
-   \begin{equation}
-     \indicescell \equiv \{j\in\{1,\ldots,N\}: |\support_j\cap \celldomain|\ne 0\}
-     \eqc
-   \end{equation}
-   $\cardinality$ being the number of elements in the set $\indicescell$,
-   i.e., the set's cardinality:
-   \begin{equation}
-     \cardinality \equiv \textup{card}(\indicescell) \eqc
-   \end{equation} 
-   and $\cellvolume$ being the cell volume.
+   with $\cellvolume$ defined as the volume of cell $\cell$.
 \end{definition}
 %--------------------------------------------------------------------------------
-The definition of the low-order viscosity follows.
+Note some properties of this definition: the diagonal entries
+$\localviscbilinearform{\cell}{i}{i}$ are positive, the off-diagonal entries
+are negative, and the row-sum $\sum_j\localviscbilinearform{\cell}{i}{j}$
+is zero. The signs of the entries are important in Section \ref{sec:m_matrix},
+where this knowledge is invoked in the proof of inverse-positivity of the
+system matrix. The zero row-sum is important in proving that the method
+is conservative, and it is also used when defining antidiffusive fluxes
+in the FCT scheme in Section \ref{sec:fct_scheme_scalar}; specifically, it
+allows the antidiffusive source for a node $i$ to be decomposed into
+skew-symmetric antidiffusive fluxes between adjacent nodes.
+
+The definition of the low-order viscosity, also taken from
+\cite{guermond_firstorder}, follows. The resulting piecewise
+viscosity is constant over each cell.
 %--------------------------------------------------------------------------------
 \begin{definition}{Low-Order Viscosity}
    The low-order viscosity for cell $\cell$ is defined as follows:

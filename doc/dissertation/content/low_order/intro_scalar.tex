@@ -1,0 +1,21 @@
+In this section, a first-order, positivity-preserving scheme for
+scalar conservation laws will be described. This scheme is adapted from
+Guermond \cite{guermond_firstorder}, in which a general scalar conservation
+law of the form
+\begin{equation}
+  \ppt{\scalarsolution} + \divergence\consfluxscalar = 0 \eqc
+\end{equation}
+is considered; this section additionally considers the presence of a
+reaction term and source term as given by Equation \eqref{eq:scalar_transport}.
+This scheme will be shown to preserve non-negativity of the solution and
+to satisfy a local discrete maximum principle (DMP). DMP-satisfaction
+is a key property in the prevention of spurious oscillations.
+
+This section is organized as follows: Section \ref{sec:low_order_viscosity_scalar}
+makes some definitions that are necessary to define the low-order scheme, including
+a low-order artificial viscosity and a local graph-theoretic viscous bilinear form.
+Section \ref{sec:low_order_scheme_scalar} defines the low-order system in a number
+of temporal discretizations. Section \ref{sec:m_matrix} gives a theoretical proof that the
+definitions of the low-order scheme yield an inverse-positive system matrix,
+thus proving positivity-preservation. Finally, Section \ref{sec:DMP} lists and
+proves local DMPs for each considered temporal discretization.

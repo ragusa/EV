@@ -1,0 +1,19 @@
+\begin{tikzpicture}[
+  scale=1]
+
+\input{\diagramdirectory/mesh.tex}
+
+\draw[draw=none, fill=red, fill opacity=0.5] (p15)--(p16)--(p17)--(j)
+  --(p21)--(p22)--cycle;
+\draw[draw=none, fill=blue, fill opacity=0.5] (p17)--(p18)--(p19)--(p20)
+  --(p21)--(i)--cycle;
+\draw[draw=none, fill=yellow, fill opacity=0.5] (p16)--(i)--(j)--(p18)
+  --(p4)--cycle;
+
+\node at ($0.333*(i) + 0.333*(j) + 0.333*(p17)$) {\Large $K$};
+
+\fill[black] (i) circle (\pointsize);
+\fill[black] (j) circle (\pointsize);
+\fill[black] (p17) circle (\pointsize);
+
+\end{tikzpicture}

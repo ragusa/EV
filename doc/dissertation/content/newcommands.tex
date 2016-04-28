@@ -14,6 +14,9 @@
 \def\dummy@environ{}
 \makeatother
 
+% directories
+\newcommand{\diagramdirectory}{../diagrams}
+
 % general
 \newcommand{\x}{\mathbf{x}}
 \newcommand{\qpoint}{\x_q}
@@ -78,7 +81,7 @@
 
 % domain and FEM
 \newcommand{\domain}{\mathcal{D}}
-\newcommand{\celldomain}[1][\cell]{\domain_#1}
+\newcommand{\celldomain}[1][\cell]{\mathcal{X}_#1}
 \newcommand{\facedomain}{\domain}
 \newcommand{\domainboundary}{\partial\domain}
 \newcommand{\incomingdomainboundary}{\domainboundary^{\text{inc}}}
@@ -106,8 +109,8 @@
 \newcommand{\indices}{\mathcal{I}}
 \newcommand{\cellindices}{\mathcal{K}}
 \newcommand{\indicesnode}{\indices^{\text{node}}_\cell}
-\newcommand{\indicescell}[1][]{\ifthenelse{\equal{#1}{}}{\indices(\cell)}
-  {\indices(#1)}}
+\newcommand{\indicescell}[1][]{\ifthenelse{\equal{#1}{}}{\indices_\cell}
+  {\indices_{#1}}}
 
 % entropy viscosity
 \newcommand{\entropy}{\eta}
