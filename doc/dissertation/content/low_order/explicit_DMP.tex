@@ -1,23 +1,20 @@
-\begin{theorem}[thm:explicit_dmp]{Explicit Euler Scheme Discrete
+\begin{theorem}[thm:explicit_dmp]{Explicit Euler Scheme Local Discrete
   Maximum Principle}
-If the CFL-like condition
-\begin{equation}\label{eq:explicit_cfl}
+If the time step size $\dt$ satisfies Equation \eqref{eq:explicit_cfl},
+\[
   \timestepsize \leq \frac{\massmatrixletter_{i,i}^{L}}
     {\ssmatrixletter_{i,i}^{L,\timeindex}}
-  \quad\forall i
-  \qquad\Longleftrightarrow\qquad
-  1 - \frac{\timestepsize}{\massmatrixletter_{i,i}^{L}}
-    \ssmatrixletter_{i,i}^{L,\timeindex}
-    \geq 0\quad\forall i \eqc
-\end{equation}
-is satisfied, then the low-order solution obtained using the Explicit Euler
-method satisfies the following discrete maximum principle:
+  \eqc\quad\forall i \eqc
+\]
+then the solution of the explicit Euler low-order system given
+by Equation \eqref{eq:low_explicit_euler}
+satisfies the following local discrete maximum principle:
 \begin{subequations}\label{eq:explicit_dmp}
 \begin{equation}
    \DMPlowerbound_i
      \leq \solutionletter_i^{L,\timeindex+1}
      \leq \DMPupperbound_i
-     \quad\forall i
+     \eqc\quad\forall i
    \eqc
 \end{equation}
 \begin{equation}
@@ -29,9 +26,7 @@ method satisfies the following discrete maximum principle:
 \end{equation}
 \end{subequations}
 where $\solutionletter_{\substack{\max\\\min},i}^\timeindex =
-\substack{\max\\\min\limits_{j\in\indicescell[\support_i]}}\solutionletter_j^\timeindex$,
-and $\indicescell[\support_i]$ is the set of indices of degrees of freedom in the
-support of degree of freedom $i$.
+\substack{\max\\\min\limits_{j\in\indicescell[\support_i]}}\solutionletter_j^\timeindex$.
 \end{theorem}
 
 \begin{proof}
@@ -54,7 +49,7 @@ Rearranging this equation,
        \sumjnoti \ssmatrixletter^{L,\timeindex}_{i,j}\solutionletter_j^\timeindex
    + \frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssrhsletter_i^\timeindex \eqc
 \]
-The CFL-like condition in Equation \eqref{eq:explicit_cfl} gives that
+The time step size condition in Equation \eqref{eq:explicit_cfl} gives that
 $1-\frac{\timestepsize}{\massmatrixletter_{i,i}^L}\ssmatrixletter^{L,\timeindex}_{i,i} \ge
 0$, and by Lemma \ref{lem:offdiagonalnegative}, it is known that the
 off-diagonal elements $\ssmatrixletter^{L,\timeindex}_{i,j}, j\ne i$, are non-positive.

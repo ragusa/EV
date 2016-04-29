@@ -1,6 +1,7 @@
-The low-order system uses a steady-state system matrix that is augmented
-to include the low-order diffusion matrix. Definitions of the low-order
-diffusion matrix and low-order system matrix follow.
+This section gives the low-order system for each of the considered
+temporal discretizations. First, a low-order artificial diffusion matrix
+is defined, which is built upon the definitions of the local viscous bilinear
+form and low-order viscosity defined in Section \eqref{sec:low_order_viscosity_scalar}.
 %--------------------------------------------------------------------------------
 \begin{definition}{Low-Order Artificial Diffusion Matrix}
    The low-order artificial diffusion matrix $\loworderdiffusionmatrix[\timeindex]$
@@ -13,6 +14,9 @@ diffusion matrix and low-order system matrix follow.
    \end{equation}
 \end{definition}
 %--------------------------------------------------------------------------------
+The low-order system matrix incorporates the low-order artificial diffusion
+matrix and is given in the following definition.
+%--------------------------------------------------------------------------------
 \begin{definition}{Low-Order Steady-State System Matrix}
    The low-order steady-state system matrix is the sum of the inviscid 
    steady-state system matrix $\ssmatrix[\timeindex]$ and the low-order diffusion
@@ -23,18 +27,18 @@ diffusion matrix and low-order system matrix follow.
    \end{equation}
 \end{definition}
 %--------------------------------------------------------------------------------
-For the low-order system, the mass matrix is lumped, i.e.,
+For the low-order system, the mass matrix is lumped:
 $\consistentmassmatrix\rightarrow\lumpedmassmatrix$, where
 \begin{equation}
   \massmatrixletter^L_{i,j} = \left\{\begin{array}{l l}
-    \sum\limits_k \massmatrixletter^C_{i,k} & j = i\\
-    0                                       & \mbox{otherwise}
+    \sum\limits_k \massmatrixletter^C_{i,k} \eqc & j = i\\
+    0                                       \eqc & \mbox{otherwise}
     \end{array}\right.
     \eqc
 \end{equation}
 and the low-order
 steady-state system matrix defined in Equation \eqref{eq:low_order_ss_matrix}
-is used. The low-order system for different time discretizations follows:
+is used. The low-order system is given here for different time discretizations:
 \begin{center}{\textbf{Steady-state scheme}:}\end{center}
 \begin{equation}\label{eq:low_ss}
    \loworderssmatrix\lowordersolution = \ssrhs
@@ -60,3 +64,5 @@ is used. The low-order system for different time discretizations follows:
   + \theta\loworderssmatrix[\timeindex+1]\lowordersolution
   = (1-\theta)\ssrhs^\timeindex + \theta\ssrhs^{\timeindex+1}
 \end{equation}
+Section \ref{sec:DMP} will prove that each of the fully discrete schemes
+above satisfy a local discrete maximum principle.

@@ -21,6 +21,13 @@ Let $\cardinality$ denote the number of elements in the set $\indicescell$.
    \label{fig:cell_indices}
 \end{figure}
 %-------------------------------------------------------------------------------
+Let $\cellindices(\support\ij)$ denote the set of cell indices corresponding
+to cells that lie in the shared support $\support\ij$:
+\begin{equation}
+  \cellindices(\support\ij) \equiv \{\cell: \celldomain \subset \support\ij\}
+  \eqp
+\end{equation}
+
 The following graph-theoretic local viscous bilinear form from
 \cite{guermond_firstorder} is employed in computation of the artificial
 diffusion terms, which are expressed in matrix form in Section
@@ -52,7 +59,11 @@ skew-symmetric antidiffusive fluxes between adjacent nodes.
 
 The definition of the low-order viscosity, also taken from
 \cite{guermond_firstorder}, follows. The resulting piecewise
-viscosity is constant over each cell.
+viscosity is constant over each cell. This definition is designed to
+introduce the smallest amount of artificial diffusion possible such that
+the inverse-positivity of the system matrix can be guaranteed;
+specifically, this definition allows Lemma \ref{lem:offdiagonalnegative}
+in Section \ref{sec:m_matrix} to be proven.
 %--------------------------------------------------------------------------------
 \begin{definition}{Low-Order Viscosity}
    The low-order viscosity for cell $\cell$ is defined as follows:
@@ -63,8 +74,6 @@ viscosity is constant over each cell.
      \eqc
    \end{equation}
    where $\ssmatrixletter\ij^\timeindex$ is the $i,j$th entry of the Galerkin
-   steady-state matrix given by Equation \eqref{eq:Aij}, and
-   $\support\ij=\support_i\cap \support_j$ is the dual-support of test
-   functions $\testfunction_i$ and $\testfunction_j$.
+   steady-state matrix given by Equation \eqref{eq:Aij}.
 \end{definition}
 %--------------------------------------------------------------------------------

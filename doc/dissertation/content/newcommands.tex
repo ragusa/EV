@@ -42,7 +42,7 @@
 \newcommand{\ny}{\normaly}
 
 \newcommand{\ndimensions}{N_\text{dim}}
-\newcommand{\ncomponents}{N_\text{comp}}
+\newcommand{\ncomponents}{m}
 \newcommand{\ndofs}{N_\text{dof}}
 \newcommand{\nnodes}{N_\text{node}}
 \newcommand{\dofindex}{j}
@@ -71,7 +71,7 @@
 % math
 \newcommand{\triangulation}{\mathcal{K}_h}
 \newcommand{\approximationspace}{\mathcal{U}_h}
-\newcommand{\approximationspaceinc}{\approximationspace^{\text{inc}}}
+\newcommand{\approximationspaceinc}{\approximationspace^{\textup{inc}}}
 \newcommand{\referenceelementmap}{\Phi}
 \newcommand{\qonespace}{\mathbb{Q}_1}
 
@@ -84,7 +84,7 @@
 \newcommand{\celldomain}[1][\cell]{\mathcal{X}_#1}
 \newcommand{\facedomain}{\domain}
 \newcommand{\domainboundary}{\partial\domain}
-\newcommand{\incomingdomainboundary}{\domainboundary^{\text{inc}}}
+\newcommand{\incomingdomainboundary}{\domainboundary^{\textup{inc}}}
 \newcommand{\cellindex}{K}
 \newcommand{\cell}{K}
 \newcommand{\celldiameter}{\Delta x}
@@ -111,6 +111,8 @@
 \newcommand{\indicesnode}{\indices^{\text{node}}_\cell}
 \newcommand{\indicescell}[1][]{\ifthenelse{\equal{#1}{}}{\indices_\cell}
   {\indices_{#1}}}
+\newcommand{\incomingindices}{\indices^{\textup{inc}}}
+\newcommand{\notincomingindices}{\indices(\triangulation)\setminus\incomingindices}
 
 % entropy viscosity
 \newcommand{\entropy}{\eta}
@@ -338,11 +340,11 @@
 % sums and integrals
 \newcommand{\sumj}{\sum\limits_j}
 \newcommand{\sumjnoti}{\sum\limits_{j\ne i}}
-\newcommand{\sumKSi}{\sum\limits_{\cell:\celldomain\subset\support_i}}
+\newcommand{\sumKSi}{\sum\limits_{\cell\in\cellindices(\support_i)}}
 %\newcommand{\sumKSij}[1][\cell]
 %  {\sum\limits_{#1:\celldomain[#1]\subset\support_{i,j}}}
 \newcommand{\sumKSij}[1][\cell]
-  {\sum\limits_{#1\in\cellindices_{i,j}}}
+  {\sum\limits_{#1\in\cellindices(\support\ij)}}
 \newcommand{\sumallcells}{\sum\limits_{\cell}}
 \newcommand{\intdomain}[1]{\int\limits_\domain #1 \,\dvolume}
 \newcommand{\intboundary}[1]{\int\limits_{\domainboundary} #1 \,d\area}

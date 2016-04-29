@@ -1,12 +1,29 @@
 In this section, it will be shown that the low-order steady-state system matrix
-defined in Equation \eqref{eq:low_order_ss_matrix} is an M-matrix, which allows
-a discrete maximum principle for the low-order solution to be proven in Section
-\ref{sec:DMP}.
+$\loworderssmatrix$ defined in Equation \eqref{eq:low_order_ss_matrix} is an M-matrix, also
+called an inverse-positive matrix or a monotone matrix. An inverse-positive
+matrix $\mathbf{A}$ has the property
+\begin{equation}\label{eq:m_matrix}
+  \mathbf{A}\mathbf{x} \geq \mathbf{0} \Rightarrow \mathbf{x} \geq \mathbf{0} \eqp
+\end{equation}
+Thus if one has a linear system $\mathbf{A}\mathbf{x} = \mathbf{b}$ with
+$\mathbf{b} \geq \mathbf{0}$, then the solution $\mathbf{x}$
+is known to be non-negative.
+This property is used in Section \ref{sec:positivity_preservation}
+to prove the positivity-preservation of the low-order scheme in each
+temporal discretization.
+
+The non-positivity off-diagonal elements of $\loworderssmatrix$ and
+positivity of its diagonal elements are proven in the following
+lemmas. These properties are used in the proof that $\loworderssmatrix$
+is an M-matrix, and are also used in Section \ref{sec:DMP} to
+prove local discrete maximum principles for each temporal discretization
+of the low-order scheme.
 %--------------------------------------------------------------------------------
 \begin{lemma}[lem:offdiagonalnegative]{Non-Positivity of Off-Diagonal Elements}
-   The off-diagonal elements of the linear system matrix are non-positive:
+   The off-diagonal elements of the matrix $\loworderssmatrix[n]$ are non-positive:
    \[
-     \ssmatrixletter^{L,\timeindex}\ij\le 0, \quad j\ne i \eqp
+     \ssmatrixletter^{L,\timeindex}\ij\le 0 \eqc \quad j\ne i
+       \eqc \quad \forall i\eqp
    \]
 \end{lemma}
 
@@ -18,12 +35,16 @@ This proof begins by bounding the term $\diffusionmatrixletter\ij^{L,\timeindex}
    \localviscbilinearform{\cell}{j}{i}
    & = & \sumKSij\max\limits_{k\ne \ell\in \indicescell}
      \pr{\frac{\max(0,\ssmatrixletter_{k,\ell}^\timeindex)}
-       {\mkern10mu-\mkern-20mu\sum\limits_{T:\celldomain[T]\subset\support_{k,\ell}}
+       {-\sum\limits_{T\in\cellindices(\support_{k,\ell})}
        \mkern-20mu\localviscbilinearform{T}{\ell}{k}}}
      \localviscbilinearform{\cell}{j}{i} \eqp
 \end{eqnarray*}
-Since $\localviscbilinearform{\cell}{j}{i} < 0$ for $j\ne i$ and $y_i \leq
-\max_j y_j$,
+Recall $\localviscbilinearform{\cell}{j}{i} < 0$ for $j\ne i$.
+For an arbitrary quantity $c_{k,\ell} \geq 0 \eqc \forall k\ne\ell\in\indices$,
+the following is true for $i\ne j\in\indices$:
+$\max\limits_{k\ne\ell\in\indices}c_{k,\ell} \geq c\ij$, and thus for $a\leq 0$,
+$a\max\limits_{k\ne\ell\in\indices}c_{k,\ell} \leq a c\ij$.
+Thus,
 \begin{eqnarray*}
    \diffusionmatrixletter\ij^{L,\timeindex} & \le &
      \sumKSij \frac{\max(0,\ssmatrixletter\ij^\timeindex)}
@@ -47,55 +68,90 @@ Applying this inequality to Equation \eqref{eq:low_order_ss_matrix} gives
 \end{eqnarray*}
 \end{proof}
 %--------------------------------------------------------------------------------
-\begin{lemma}[lem:diagonalpositive]{Non-Negativity of Diagonal Elements}
-   The diagonal elements  of the linear system matrix are non-negative:
-   \[
-     \ssmatrixletter^{L,\timeindex}_{i,i}\ge 0 \eqp
-   \]
-\end{lemma}
-
-\begin{proof}
-The diagonal elements of the low-order system matrix are
-\[
-  \ssmatrixletter^{L,\timeindex}_{i,i} =
-    \intSi\mathbf{\consfluxletter}'(\approximatescalarsolution^\timeindex)\cdot
-    \nabla\testfunction_i(\x)\testfunction_i(\x)\dvolume
-  + \intSi\sigma(\x)\testfunction_i^2(\x)\dvolume
-  + \sumKSi\mkern-15mu\lowordercellviscosity[\timeindex]
-    \localviscbilinearform{\cell}{i}{i}
-  \eqp
-\]
-To prove that $\ssmatrixletter^{L,\timeindex}_{i,i}$ is non-negative, it is sufficient to
-prove that each term in the above expression is non-negative. The
-non-negativity of the interaction term and viscous term are obvious
-($\reactioncoef \ge 0, \, \lowordercellviscosity[\timeindex]\ge 0, \,
-\localviscbilinearform{\cell}{i}{i}>0$), but the non-negativity of the divergence
-term is not necessarily obvious. On the interior of the domain, the divergence
-term gives zero contribution because the divergence integral may be transformed
-into a surface integral
-$\intSi\mathbf{\consfluxletter}'(\approximatescalarsolution^\timeindex)
-\cdot\normalvector\frac{\testfunction_i^2}{2} d\area$ via the
-divergence theorem; one can then recognize that the basis function
-$\testfunction_i$ evaluates to zero on the boundary of its support
-$\support_i$. On the outflow boundary of the domain, the term
-$\mathbf{\consfluxletter}'(\approximatescalarsolution^\timeindex)
-\cdot\normalvector \frac{\testfunction_i^2}{2}$ is positive because
-$\mathbf{\consfluxletter}'(\approximatescalarsolution^\timeindex)
-\cdot\normalvector > 0$ for an outflow boundary. This quantity is of
-course negative for the inflow boundary, so one must consider the boundary
-conditions applied for incoming boundary nodes to determine if this condition
-is true and a discrete maximum principle applies. For instance, if a Dirichlet boundary condition is
-applied, then a discrete maximum principle does not apply.
-strongly imposed on the incoming boundary, so for degrees of freedom $i$ on the
-incoming boundary, $\ssmatrixletter^{L,\timeindex}_{i,i}$ will be set equal to some positive
-value such as 1 with a corresponding incoming value accounted for in the right
-hand side $\ssrhs$ of the linear system.\qed
-\end{proof}
+%The following lemma proves that the diagonal elements of the low-order system
+%matrix are non-negative.
+%; however, this proof uses the assumption that the
+%conservation law flux is linear with a uniform velocity field:
+%$\consfluxscalar = \velocity\scalarsolution$, where $\velocity$ is some
+%constant velocity field. This assumption is valid for the linear transport
+%equation given by Equation \eqref{eq:rad_transport}, where
+%$\consfluxscalar = \speed\directionvector\scalarsolution$.
+%In addition, the proof of this lemma only applies for degrees of freedom
+%that are not on the incoming boundary. Let $\indices(\triangulation)$
+%denote the set of all degree of freedom indices in the domain
+%($\triangulation$ is the triangulation), $\incomingindices$
+%denote the subset of indices corresponding to degrees on freedom on the
+%incoming boundary, and $\notincomingindices$ denote the remaining
+%indices (those corresponding to degrees of freedom not on the incoming
+%boundary):
+%\begin{equation}
+%  \notincomingindices = \left\{j\in\indices(\triangulation)
+%    \, | \, j\notin \incomingindices \right\} \eqp
+%\end{equation}
 %--------------------------------------------------------------------------------
-\begin{lemma}{Non-Negativity of Row Sums}
-   The sum of all elements in a row $i$ is non-negative:
+%\begin{lemma}[lem:diagonalpositive]{Non-Negativity of Diagonal Elements}
+%  If the conservation law flux function  is
+%  linear with a uniform velocity field $\velocity$:
+%  $\consfluxscalar = \velocity\scalarsolution$, then
+%   the diagonal elements of the linear system matrix are non-negative:
+%   \[
+%     \ssmatrixletter^{L,\timeindex}_{i,i}
+%       = \ssmatrixletter^{L}_{i,i}\ge 0
+%     \eqc \quad \forall i\notin\incomingindices\eqp
+%   \]
+%\end{lemma}
+%
+%\begin{proof}
+%For $\consfluxscalar = \velocity\scalarsolution$,
+%the diagonal elements of the low-order system matrix are
+%\[
+%  \ssmatrixletter^{L}_{i,i} =
+%    \intSi\velocity\cdot
+%    \nabla\testfunction_i(\x)\testfunction_i(\x)\dvolume
+%  + \intSi\sigma(\x)\testfunction_i^2(\x)\dvolume
+%  + \sumKSi\mkern-15mu\lowordercellviscosity[\timeindex]
+%    \localviscbilinearform{\cell}{i}{i}
+%  \eqp
+%\]
+%To prove that $\ssmatrixletter^{L}_{i,i}$ is non-negative, it is sufficient to
+%prove that each term in the above expression is non-negative. The
+%non-negativity of the interaction term and viscous term are obvious
+%($\reactioncoef \ge 0, \, \lowordercellviscosity[\timeindex]\ge 0, \,
+%\localviscbilinearform{\cell}{i}{i}>0$), but the non-negativity of the divergence
+%term is not necessarily obvious.
+%The divergence integral may be transformed into a surface integral via the
+%divergence theorem:
+%\begin{align*}
+%  \intSi\velocity\cdot
+%    \nabla\testfunction_i(\x)\testfunction_i(\x)\dvolume
+%  &= \intSi\nabla\cdot\pr{
+%    \velocity\testfunction_i(\x)}\testfunction_i(\x)\dvolume\\
+%  &= \intSi\nabla\cdot\pr{
+%    \velocity\frac{1}{2}\testfunction_i(\x)^2}\dvolume\\
+%  &= \int\limits_{\partial \support_i}
+%    \frac{1}{2}\testfunction_i(\x)^2 \velocity\cdot\normalvector d\area \eqp
+%\end{align*}
+%On the interior of the domain, 
+% the basis function
+%$\testfunction_i$ evaluates to zero on the boundary of its support
+%$\support_i$. On the outflow boundary of the domain, the term
+%$\frac{1}{2}\testfunction_i(\x)^2\velocity\cdot\normalvector$ is positive because
+%$\velocity\cdot\normalvector > 0$ for an outflow boundary.
+%Conversely, this quantity is
+%negative for the inflow boundary, so one must consider the boundary
+%conditions applied for incoming boundary nodes to determine if this condition
+%is true.
+%If the system corresponds to steady-state and a Dirichlet boundary condition
+%is strongly imposed, then this proof
+%is automatic, provided a positive value is chosen for the diagonal entry
+%$\ssmatrixletter^L_{i,i}$.\qed
+%\end{proof}
+%--------------------------------------------------------------------------------
+\begin{lemma}[lem:rowsumspositive]{Non-Negativity of Row Sums}
+   The row-sums of the matrix $\loworderssmatrix[n]$ are non-negative:
    \[
-     \sumj \ssmatrixletter^{L,\timeindex}\ij \ge 0 \eqp
+     \sumj \ssmatrixletter^{L,\timeindex}\ij \ge 0
+       \eqc \quad \forall i \eqp
    \]
 \end{lemma}
 
@@ -121,11 +177,37 @@ $\sumj \localviscbilinearform{\cell}{j}{i}=0$,
 \end{eqnarray*}
 \end{proof}
 %--------------------------------------------------------------------------------
+\begin{lemma}[lem:diagonalpositive]{Non-Negativity of Diagonal Elements}
+   The diagonal elements of the matrix $\loworderssmatrix[n]$ are non-negative:
+   \[
+     \ssmatrixletter^{L,n}_{i,i} \ge 0
+       \eqc \quad \forall i\eqp
+   \]
+\end{lemma}
+
+\begin{proof}
+Using Lemma \ref{lem:rowsumspositive},
+\[
+  \sumj \ssmatrixletter^{L,n}\ij \ge 0 \eqp
+\]
+Thus,
+\[
+  \ssmatrixletter^{L,n}_{i,i} \ge -\sumjnoti \ssmatrixletter^{L,n}\ij \eqp
+\]
+From Lemma \ref{lem:offdiagonalnegative}, the off-diagonal elements are known
+to be non-positive: $\ssmatrixletter^{L,n}\ij \leq 0$. Thus,
+$-\ssmatrixletter^{L,n}\ij \geq 0$ and finally,
+\[
+  \ssmatrixletter^{L,n}_{i,i} \ge 0 \eqp \qed
+\]
+\end{proof}
+%--------------------------------------------------------------------------------
 \begin{lemma}[lem:diagonallydominant]{Diagonal Dominance}
-   $\loworderssmatrix[\timeindex]$ is strictly diagonally dominant:
+   The matrix $\loworderssmatrix[\timeindex]$ is strictly diagonally dominant:
    \[
      \left|\ssmatrixletter^{L,\timeindex}_{i,i}\right|
-     \ge \sumjnoti \left|\ssmatrixletter^{L,\timeindex}\ij\right| \eqp
+     \ge \sumjnoti \left|\ssmatrixletter^{L,\timeindex}\ij\right|
+     \eqc \quad \forall i\eqp
    \]
 \end{lemma}
 \begin{proof}
@@ -144,17 +226,19 @@ $\loworderssmatrix[\timeindex]$ is strictly diagonally dominant:
 \end{eqnarray*}
 \end{proof}
 %--------------------------------------------------------------------------------
-\begin{lemma}{M-Matrix}
-  $\loworderssmatrix[\timeindex]$ is an M-Matrix.
-\end{lemma}
+\begin{theorem}[thm:m_matrix]{M-Matrix}
+  The matrix $\loworderssmatrix[\timeindex]$ is an M-Matrix.
+\end{theorem}
 \begin{proof}
 To prove that a matrix is an M-Matrix, it is sufficient to prove that
 the following 3 statements are true:
 \begin{enumerate}
-\item $\ssmatrixletter^{L,\timeindex}\ij\le 0, j\ne i$,
-\item $\ssmatrixletter^{L,\timeindex}_{i,i}\ge 0$,
+\item $\ssmatrixletter^{L,\timeindex}\ij\le 0
+      \eqc \quad j\ne i \eqc \forall i$,
+\item $\ssmatrixletter^{L,\timeindex}_{i,i}\ge 0 \eqc \quad \forall i$,
 \item $\left|\ssmatrixletter^{L,\timeindex}_{i,i}\right|
-      \ge \sumjnoti \left|\ssmatrixletter^{L,\timeindex}\ij\right|$.
+      \ge \sumjnoti \left|\ssmatrixletter^{L,\timeindex}\ij\right|
+      \eqc \quad \forall i$.
 \end{enumerate}
 These conditions are proven by Lemmas \ref{lem:offdiagonalnegative},
 \ref{lem:diagonalpositive}, and \ref{lem:diagonallydominant}, respectively.\qed

@@ -1,6 +1,8 @@
-\begin{theorem}{Steady-State Scheme Discrete Maximum Principle}
-The low-order solution $\lowordersolution$ satisfies the following maximum
-principle:
+\begin{theorem}{Steady-State Scheme Local Discrete Maximum Principle}
+The solution of the steady-state low-order system given
+by Equation \eqref{eq:low_ss}
+satisfies the following
+local discrete maximum principle:
 \begin{subequations}\label{eq:DMP_ss}
 \begin{equation}
    \DMPlowerbound_i(\solutionvector^L)
@@ -23,10 +25,8 @@ where
   \eqc\quad
   \solutionletter_{\max,j\ne i}^L \equiv \max\limits_{j\ne i\in\indicescell[\support_i]}
     \solutionletter_j^L
-  \eqc
+  \eqp
 \]
-and $\indicescell[\support_i]$ is the set of indices of degrees of freedom in
-the support of degree of freedom $i$.
 \end{theorem}
 
 \begin{proof}

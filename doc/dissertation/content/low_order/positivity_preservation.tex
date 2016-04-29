@@ -1,0 +1,128 @@
+In this section, it will be shown that the low-order scheme for each temporal
+discretization preserves non-negativity of the solution. This section
+builds upon the results of Section \ref{sec:m_matrix}, which proved that the
+low-order system matrix $\loworderssmatrix[n]$ is an M-matrix, which to
+recall Equation \eqref{eq:m_matrix}, has the property
+\[
+  \mathbf{A}\mathbf{x} \geq \mathbf{0} \Rightarrow \mathbf{x} \geq \mathbf{0} \eqc
+\]
+and thus for a linear system $\mathbf{A}\mathbf{x} = \mathbf{b}$,
+proof of non-negativity of the right-hand-side vector proves non-negativity
+of the solution $\mathbf{x}$. For each temporal discretization, it will be
+shown that the system matrix inverted for the corresponding low-order system
+is also an M-matrix and that the right-hand-side vector for each system is
+non-negative. Thus positivity-preservation of the solution will be proven.
+%--------------------------------------------------------------------------------
+\begin{theorem}{Non-Negativity of the Steady-State Low-Order Solution}
+  The solution of the steady-state low-order system given by Equation
+  \eqref{eq:low_ss} is non-negative:
+  \[
+    \solutionletter^L_i \geq 0 \eqc \quad \forall i\eqp
+  \]
+\end{theorem}
+
+\begin{proof}
+By Theorem \ref{thm:m_matrix}, the system matrix $\loworderssmatrix$ is an
+M-matrix, and by assumption in Section \ref{sec:scalar}, the source $\scalarsource$
+is non-negative, and thus the steady-state right-hand-side vector entries
+$\ssrhsletter_i$ are non-negative. Invoking the M-matrix property
+concludes the proof.\qed
+\end{proof}
+%--------------------------------------------------------------------------------
+\begin{theorem}{Non-Negativity Preservation of the Explicit Euler Low-Order Solution}
+  If the old solution $\solutionvector^n$ is non-negative and
+  the time step size $\dt$ satisfies
+\begin{equation}\label{eq:explicit_cfl}
+  \timestepsize \leq \frac{\massmatrixletter_{i,i}^{L}}
+    {\ssmatrixletter_{i,i}^{L,\timeindex}}
+  \eqc\quad\forall i \eqc
+\end{equation}
+  then the new solution $\solutionvector^{L,n+1}$ of the explicit Euler low-order
+  system given by Equation \eqref{eq:low_explicit_euler} is non-negative:
+  \[
+    \solutionletter^{L,n+1}_i \geq 0 \eqc \quad \forall i\eqp
+  \]
+\end{theorem}
+
+\begin{proof}
+Rearranging Equation \eqref{eq:low_explicit_euler},
+\[
+  \lumpedmassmatrix\solutionvector^{L,n+1}
+    = \dt\ssrhs^n
+      + \lumpedmassmatrix\solutionvector^{n}
+      + \dt\loworderssmatrix[n]\solutionvector^{n}
+  \eqp
+\]
+Thus the system matrix to invert is the lumped mass matrix, which is
+an M-matrix since it is diagonal and positive. The right-hand-side
+vector $\mathbf{y}$ of this system has the entries
+\[
+  y_i
+    = \dt\ssrhsletter^n_i
+      + \pr{\lumpedmassentry - \dt\ssmatrixletter^{L,n}_{i,i}}
+        \solutionletter^n_i
+      - \dt\sumjnoti\ssmatrixletter^{L,n}\solutionletter^n_j
+  \eqp
+\]
+It now just remains to prove that these entries are non-negative.
+As stated previously, the source function $\scalarsource$ is assumed
+to be non-negative and thus the steady-state right-hand-side
+vector is non-negative. Due to the time step size assumption
+given by Equation \eqref{eq:explicit_cfl} and Lemma \ref{lem:diagonalpositive},
+\[
+  \lumpedmassentry - \dt\ssmatrixletter^{L,n}_{i,i} \geq 0 \eqc
+\]
+and by Lemma \ref{lem:offdiagonalnegative}, the off-diagonal
+sum term is also non-negative. Thus $y_i$ is a sum of non-negative
+terms. Invoking the M-matrix property concludes the proof.\qed
+\end{proof}
+%--------------------------------------------------------------------------------
+\begin{theorem}{Non-Negativity Preservation of the Theta Low-Order Solution}
+  If the old solution $\solutionvector^n$ is non-negative and
+  the time step size $\dt$ satisfies
+\begin{equation}\label{eq:theta_cfl}
+   \timestepsize \leq \frac{\massmatrixletter^L_{i,i}}{(1-\theta)
+     \ssmatrixletter_{i,i}^{L,\timeindex}}
+   \eqc\quad\forall i \eqc
+\end{equation}
+  then the new solution $\solutionvector^{L,n+1}$ of the Theta low-order
+  system given by Equation \eqref{eq:low_theta} is non-negative:
+  \[
+    \solutionletter^{L,n+1}_i \geq 0 \eqc \quad \forall i\eqp
+  \]
+\end{theorem}
+
+\begin{proof}
+Rearranging Equation \eqref{eq:low_theta},
+\[
+  \pr{\lumpedmassmatrix+\theta\dt\loworderssmatrix[n+1]}\solutionvector^{L,n+1}
+    = \dt\pr{(1-\theta)\ssrhs^n + \theta\ssrhs^{n+1}}
+      + \lumpedmassmatrix\solutionvector^{n}
+      - (1-\theta)\dt\loworderssmatrix[n]\solutionvector^n
+  \eqp
+\]
+Thus the system matrix to invert is
+$\lumpedmassmatrix+\dt\theta\loworderssmatrix[n+1]$, which is
+an M-matrix since it is a linear combination of two M-matrices.
+The right-hand-side vector $\mathbf{y}$ of this system has the entries
+\[
+  y_i
+    = \dt\pr{(1-\theta)\ssrhsletter^n_i + \theta\ssrhsletter^{n+1}_i}
+      + \pr{\lumpedmassentry - (1-\theta)\dt\ssmatrixletter^{L,n}_{i,i}}
+        \solutionletter^n_i
+      - (1-\theta)\dt\sumjnoti\ssmatrixletter^{L,n}\solutionletter^n_j
+  \eqp
+\]
+It now just remains to prove that these entries are non-negative.
+As stated previously, the source function $\scalarsource$ is assumed
+to be non-negative and thus the steady-state right-hand-side
+vector is non-negative. Due to the time step size assumption
+given by Equation \eqref{eq:theta_cfl} and Lemma \ref{lem:diagonalpositive},
+\[
+  \lumpedmassentry - (1-\theta)\dt\ssmatrixletter^{L,n}_{i,i} \geq 0 \eqc
+\]
+and by Lemma \ref{lem:offdiagonalnegative}, the off-diagonal
+sum term is also non-negative. Thus $y_i$ is a sum of non-negative
+terms. Invoking the M-matrix property concludes the proof.\qed
+\end{proof}
+%--------------------------------------------------------------------------------
