@@ -43,20 +43,62 @@ Equation \eqref{eq:shallowwater_entropy_equality}:
       (\vectorsolution^\timeindex,\bathymetry)
   \eqp
 \end{equation}
-The entropy jump for a face $F$ is defined to be
+As in the scalar case, it can be helpful to define an \emph{entropy jump}
+for an interior face $F$:
 \begin{equation}
   \entropyjump_F(\vectorsolution)
   \equiv \left|
     \jumpbrackets{\nabla\mathbf{\consfluxletter}^\entropy(\vectorsolution)}
     \cdot\normalvector_F\cdot\normalvector_F
-  \right| \eqp
+  \right| \eqc
 \end{equation}
-For the conservation law system case, opposed to the scalar conservation
-law case, an entropy \emph{viscosity} is not computed; instead an entropy diffusion
-matrix is computed directly. This is because the domain-invariant low-order scheme
-described in Section \ref{sec:low_order_scheme_system} also makes
-this approach, and the low-order scheme diffusion must be used as an upper bound
-for the high-order diffusion. The entropy diffusion matrix is computed as
+which can be interpreted as the jump in the gradient in the normal direction
+of the normal component of the entropy flux.
+
+To compute the high-order diffusion matrix, one option is to follow the approach
+of the scalar case and compute a cell-wise entropy viscosity as in Equation
+\eqref{eq:entropy_viscosity}:
+\begin{equation}
+   \entropycellviscosity[\timeindex] = \frac{\entropyresidualcoef
+   \entropyresidual_\cellindex^\timeindex
+   + \entropyjumpcoef\entropyjump_\cell^\timeindex}
+   {\entropynormalization^n_\cell}
+   \eqc
+\end{equation}
+where here $\entropynormalization^n_\cell$ represents a more general
+normalization coefficient for a cell $\cell$ than the global normalization
+presented for the scalar case,
+\begin{equation}
+  \entropynormalization^n_\cell = \entropynormalization^n =
+    \|\entropy(\approximatescalarsolution^n)
+   -\bar{\entropy}(\approximatescalarsolution^n)\|_{L^\infty(\domain)} \eqp
+\end{equation}
+For the shallow water equations, a possible alternative normalization
+is the following:
+\begin{equation}
+  \entropynormalization^n_\cell =
+    \max\limits_{\x_q\in\quadraturepoints_\cell} \gravity \approximate{\height}_q^2
+  \eqc
+\end{equation}
+where $\x_q$ denotes a quadrature point in the set $\quadraturepoints_\cell$
+of quadrature points in a cell $\cell$ and
+$\approximate{h}_q$ denotes $\approximate{h}(\x_q)$. The high-order diffusion matrix
+could then be assembled as in Equation \eqref{eq:high_order_Dij}.
+
+Alternatively, one could compute an artificial diffusion matrix without
+computing cell-wise entropy viscosities, as was presented for the low-order
+case for systems in Equation \eqref{eq:low_order_Dij_system}.
+For example, one could define an entry of the high-order diffusion matrix
+as
+\begin{equation}
+  \diffusionmatrixletter^{\high,\timeindex}\ij \equiv
+    \min\pr{\diffusionmatrixletter^{\entropy,\timeindex}\ij,
+      \diffusionmatrixletter^{\low,\timeindex}\ij}
+  \eqc
+\end{equation}
+where similar to before, the low-order diffusion is used as an upper
+bound of the entropy diffusion $\diffusionmatrixletter^{\entropy,\timeindex}\ij$,
+which could be defined in the form
 \begin{equation}
   \diffusionmatrixletter^{\entropy,\timeindex}\ij \equiv
     \frac{\entropyresidualcoef\entropyresidual\ij^n +
@@ -64,7 +106,7 @@ for the high-order diffusion. The entropy diffusion matrix is computed as
       {\entropynormalization^\timeindex\ij}
   \eqc
 \end{equation}
-where
+where for example $\entropyresidual\ij^\timeindex$ might be defined as
 \begin{equation}
   \entropyresidual\ij^\timeindex \equiv \left|
     \int\limits_{\support\ij}
@@ -72,32 +114,26 @@ where
       \testfunction_i(\x)
       \testfunction_j(\x) \dvolume
     \right|
-  \eqc
-\end{equation}
-% TODO: I think the following quantity is always zero because the product
-% of the supports on the faces are zero, so the jumps may need
-% to be redefined or omitted.
-\begin{equation}
-  \entropyjump\ij^\timeindex \equiv \maxcelldiameter
-    \sum\limits_{F:\facedomain_F\subset\support\ij} \,
-    \int\limits_{\facedomain_F}\entropyjump_F(\vectorsolution^\timeindex)
-      \testfunction_i(\x)
-      \testfunction_j(\x) \darea
-  \eqc
-\end{equation}
-\begin{equation}
-  \entropynormalization^\timeindex\ij \equiv
-    \max\limits_{\cell:\celldomain\subset\support\ij}
-    \max\limits_{\qpoint\in\quadraturepoints(\celldomain)}
-    \entropynormalization(\vectorsolution^\timeindex(\qpoint))
   \eqp
 \end{equation}
-Similarly to the scalar case, the high-order diffusion uses the low-order
-diffusion as an upper bound:
-\begin{equation}
-  \diffusionmatrixletter^{\high,\timeindex}\ij \equiv
-    \min\pr{\diffusionmatrixletter^{\entropy,\timeindex}\ij,
-      \diffusionmatrixletter^{\low,\timeindex}\ij}
-  \eqc
-\end{equation}
+Possible definitions of $\entropyjump\ij^n$ and
+$\entropynormalization^\timeindex\ij$ are omitted here.
+The results obtained in this dissertation used the first approach, in
+which cell-wise entropy viscosities were computed.
+
+%\begin{equation}
+%  \entropyjump\ij^\timeindex \equiv \maxcelldiameter
+%    \sum\limits_{F:\facedomain_F\subset\support\ij} \,
+%    \int\limits_{\facedomain_F}\entropyjump_F(\vectorsolution^\timeindex)
+%      \testfunction_i(\x)
+%      \testfunction_j(\x) \darea
+%  \eqc
+%\end{equation}
+%\begin{equation}
+%  \entropynormalization^\timeindex\ij \equiv
+%    \max\limits_{\cell:\celldomain\subset\support\ij}
+%    \max\limits_{\qpoint\in\quadraturepoints(\celldomain)}
+%    \entropynormalization(\vectorsolution^\timeindex(\qpoint))
+%  \eqp
+%\end{equation}
 

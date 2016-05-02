@@ -1,14 +1,33 @@
 The FCT algorithm requires that the antidiffusion bounds
-$\limitedfluxbound_i^\pm$ must have the following properties:
+$\limitedfluxbound_i^\pm$,
+\[
+  \limitedfluxbound_i^- \leq \limitedfluxsumi \leq \limitedfluxbound_i^+ \eqc
+\]
+must have the following properties:
 \begin{equation}\label{eq:antidiffusion_bounds_properties}
   \limitedfluxbound_i^-\leq 0 \eqc \quad \limitedfluxbound_i^+\geq 0 \eqp
 \end{equation}
 Otherwise, there would not be a fail-safe definition of the limiting
 coefficients; the FCT solution could not necessarily revert to the low-order
-solution.
-The limiter assumes these conditions are satisfied; if they are
-not satisfied, then negative limiting coefficients may be produced,
-which is highly undesirable.
+solution, which corresponds to $\limiterletter\ij = 0 \;\forall i,j$.
+If either of the conditions are violated, then the default choice
+$\limiterletter\ij = 0 \;\forall i,j$ does not even satisfy the
+antidiffusion bounds, so there is no guarantee that there is any
+combination of limiting coefficients that could satisfy the bounds.
+
+Most limiters assume these conditions are satisfied; if they are
+used despite the conditions not being satisfied, then negative limiting
+coefficients may be produced.
+While one may decide that negative limiting coefficients are acceptable,
+this is usually considered undesirable because it is usually the goal
+to produce limiting coefficients between 0 and 1:
+\begin{equation}
+  0 \leq \limiterletter\ij \leq 1 \eqc \quad \forall i,j \eqc
+\end{equation}
+representing a scale between complete rejection and complete acceptance
+of an antidiffusion flux, respectively. A negative limiting coefficient
+would represent a \emph{reversal} of an antidiffusive flux.
+
 The following theorems give conditions under which Equation
 \eqref{eq:antidiffusion_bounds_properties} is satisfied for each temporal
 discretization.
@@ -88,7 +107,13 @@ Equation \eqref{eq:antidiffusion_bounds_properties} are verified.\qed
 %------------------------------------------------------------------------------
 %------------------------------------------------------------------------------
 \begin{theorem}{Signs of Antidiffusion Bounds for Explicit Euler Scheme}
-The antidiffusion bounds $\limitedfluxbound_i^\pm$ for the explicit Euler
+If the time step size $\dt$ satisfies Equation \eqref{eq:explicit_cfl},
+\[
+  \timestepsize \leq \frac{\massmatrixletter_{i,i}^{L}}
+    {\ssmatrixletter_{i,i}^{L,\timeindex}}
+  \eqc\quad\forall i \eqc
+\]
+then the antidiffusion bounds $\limitedfluxbound_i^\pm$ for the explicit Euler
 scheme, given by Equation \eqref{eq:limited_flux_bounds_explicit_euler},
 satisfy the conditions given by Equation
 \eqref{eq:antidiffusion_bounds_properties} when the DMP solution bounds given
@@ -146,7 +171,7 @@ Substituting Equation \eqref{eq:explicit_dmp} into this expression gives
      \pr{\solutionletter_{\substack{\max\\\min},i}^n-\solutionletter_j^n}
   \eqp
 \]
-By the CFL condition of Equation \eqref{eq:explicit_cfl},
+Due to the time step size restriction of Equation \eqref{eq:explicit_cfl},
 \[
   \frac{\lumpedmassentry}{\dt}
        -\ssmatrixletter^L_{i,i} \geq 0
@@ -161,7 +186,13 @@ Equation \eqref{eq:antidiffusion_bounds_properties} are verified.\qed
 %------------------------------------------------------------------------------
 %------------------------------------------------------------------------------
 \begin{theorem}{Signs of Antidiffusion Bounds for Theta Scheme}
-The antidiffusion bounds $\limitedfluxbound_i^\pm$ for the theta
+If the time step size $\dt$ satisfies Equation \eqref{eq:theta_cfl},
+\[
+   \timestepsize \leq \frac{\massmatrixletter^L_{i,i}}{(1-\theta)
+     \ssmatrixletter_{i,i}^{L,\timeindex}}
+   \eqc\quad\forall i \eqc
+\]
+then the antidiffusion bounds $\limitedfluxbound_i^\pm$ for the theta
 scheme, given by Equation \eqref{eq:antidiffusion_bounds_theta},
 satisfy the conditions given by Equation
 \eqref{eq:antidiffusion_bounds_properties} when the DMP solution bounds given
@@ -266,16 +297,16 @@ $\limitedfluxbound_i^\pm$ with the unmodified bounds $\solutionbound_i^\pm$
 and then perform the following operation:
 \begin{subequations}\label{eq:antidiffusion_bounds_operation}
 \begin{equation}
-  \antidiffusionbound_i^-
-    \gets \min(\antidiffusionbound_i^-, 0)
+  \tilde{\antidiffusionbound}_i^-
+    \equiv \min(\antidiffusionbound_i^-, 0)
   \eqc
 \end{equation}
 \begin{equation}
-  \antidiffusionbound_i^+
-    \gets \max(\antidiffusionbound_i^+, 0)
+  \tilde{\antidiffusionbound}_i^+
+    \equiv \max(\antidiffusionbound_i^+, 0)
   \eqp
 \end{equation}
 \end{subequations}
-This operation potentially gives tighter bounds than the operation of Equation
-\eqref{eq:solution_bounds_operation}.
+%This operation potentially gives tighter bounds than the operation of Equation
+%\eqref{eq:solution_bounds_operation}.
 

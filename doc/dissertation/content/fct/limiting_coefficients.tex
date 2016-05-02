@@ -1,14 +1,29 @@
-\begin{theorem}{Discrete Maximum Principle-Satisfying Limiting Coefficients}
-   Suppose that that a discrete maximum principle
+A classic multi-dimensional limiter used in the FCT algorithm is the
+limiter of Zalesak \cite{zalesak}.
+Zalesak's limiter separately considers positive and negative antidiffusive
+fluxes $\correctionfluxij$ for a degree of freedom $i$ and makes the conservative choice that
+the upper antidiffusion bound $\antidiffusionbound_i^+$ does not consider
+the possibility of negative fluxes when assigning limiting coefficients
+for the positive fluxes, and similarly for the lower antidiffusion bound
+$\antidiffusionbound_i^-$.
+The following theorem states and proves that the classic Zalesak
+limiter produces limiting coefficients that satisfy the imposed solution
+bounds.
+\begin{theorem}{Zalesak Limiting Coefficients}
+   Suppose that that the solution bounds
    $\solutionbound_i^+\le \solutionletter_i^{n+1}\le \solutionbound_i^-$
-   corresponds to the following inequality for the antidiffusion fluxes:
+   correspond to the following inequality for the antidiffusion fluxes:
    \begin{equation}
       \limitedfluxbound_i^- \le \limitedfluxsumi \le \limitedfluxbound_i^+ \eqc
    \end{equation}
    where $\limitedfluxbound_i^\pm$ are bounds that depend on the temporal
-   discretization. Then,
-   the following limiter coefficient definitions satisfy the discrete maximum
-   principle:
+   discretization and satisfy the conditions of Equation
+   \eqref{eq:antidiffusion_bounds_properties}:
+\[
+  \limitedfluxbound_i^-\leq 0 \eqc \quad \limitedfluxbound_i^+\geq 0 \eqp
+\]
+   Then
+   the following limiting coefficient definitions satisfy the solution bounds:
    \begin{equation}\label{eq:flux_sums}
       \correctionfluxletter_i^+ \equiv \sumj\max(0,\correctionfluxij) \eqc\qquad
       \correctionfluxletter_i^- \equiv \sumj\min(0,\correctionfluxij) \eqc
@@ -53,22 +68,19 @@
       = \sum\limits_{j:\correctionfluxij\geq 0}
         \min(\limiterletter_i^+,\limiterletter_j^-)\correctionfluxij
       \leq \sum\limits_{j:\correctionfluxij\geq 0}
-        \limiterletter_i^+\correctionfluxij \eqp
+        \limiterletter_i^+\correctionfluxij
+      =\limiterletter_i^+\correctionfluxletter_i^+ \eqp
    \]
    For the case $\correctionfluxletter_i^+ = 0$,
    \[
-      \sum\limits_{j:\correctionfluxij\geq 0}
-        \limiterletter_i^+ \correctionfluxij = 0 \leq \limitedfluxbound_i^+ \eqp
+     \limiterletter_i^+\correctionfluxletter_i^+
+       = 0 \leq \limitedfluxbound_i^+ \eqp
    \]
    For the case $\correctionfluxletter_i^+ \ne 0$,
    \[
-      \sum\limits_{j:\correctionfluxij\geq 0} \limiterletter_i^+\correctionfluxij
-      \leq \sum\limits_{j:\correctionfluxij\geq 0}\frac{\limitedfluxbound_i^+}
-        {\correctionfluxletter_i^+}\correctionfluxij
-      = \frac{\limitedfluxbound_i^+}{\correctionfluxletter_i^+}
-        \sum\limits_{j:\correctionfluxij\geq 0} \correctionfluxij
-      = \frac{\limitedfluxbound_i^+}{\correctionfluxletter_i^+}
-        \sum\limits_{j:\correctionfluxij\geq 0} \max(0,\correctionfluxij)
+      \limiterletter_i^+\correctionfluxletter_i^+
+      \leq \frac{\limitedfluxbound_i^+}{\correctionfluxletter_i^+}
+        \correctionfluxletter_i^+
       = \limitedfluxbound_i^+ \eqp
    \]
    Thus,

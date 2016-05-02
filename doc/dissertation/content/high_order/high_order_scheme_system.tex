@@ -9,29 +9,12 @@ artificial diffusion matrix $\highorderdiffusionmatrix$:
 Unlike the low-order system, the high-order system does not lump the
 mass matrix, and it uses the high-order steady-state system matrix
 defined in Equation \eqref{eq:high_order_ss_matrix_system}. The high-order
-system for different time discretizations follows:
-\begin{center}{\textbf{Steady-state scheme}:}\end{center}
-\begin{equation}\label{eq:high_ss_system}
-   \highorderssmatrix\highordersolution = \ssrhs
-\end{equation}
-\begin{center}{\textbf{Semidiscrete scheme}:}\end{center}
-\begin{equation}\label{eq:high_semidiscrete_system}
-   \consistentmassmatrix\ddt{\highordersolution}
-    + \highorderssmatrix(\timevalue)\highordersolution(\timevalue) 
-    = \ssrhs(\timevalue)
-\end{equation}
-\begin{center}{\textbf{Explicit Euler scheme}:}\end{center}
+system for explicit Euler time discretization is the following:
 \begin{equation}\label{eq:high_FE_system}
-  \consistentmassmatrix\frac{\highordersolution-\solutionvector^{\timeindex}}
-  {\timestepsize}
-  + \highorderssmatrix[\timeindex]\solutionvector^{\timeindex}
-  = \ssrhs^\timeindex
-\end{equation}
-\begin{center}{\textbf{Theta scheme}:}\end{center}
-\begin{equation}\label{eq:high_theta_system}
-  \consistentmassmatrix\frac{\highordersolution-\solutionvector^\timeindex}
-  {\timestepsize}
-  + (1-\theta)\highorderssmatrix[\timeindex]\solutionvector^\timeindex
-  + \theta\highorderssmatrix[\timeindex+1]\highordersolution
-  = (1-\theta)\ssrhs^\timeindex + \theta\ssrhs^{\timeindex+1}
+  \sumj\consistentmassentry
+    \frac{\highordersolution_j-\solutionvector_j^n}{\dt}
+    + \sum_j\gradiententry\cdot\consfluxinterpolant_j^n
+    + \sum_j\diffusionmatrixletter\ij^{H,n}\solutionvector_j^n
+    = \ssrhs_i^n
+  \eqp
 \end{equation}

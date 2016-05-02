@@ -4,10 +4,15 @@
    the following antidiffusion bounds $\limitedfluxbound_i^\pm$ correspond to the
    solution bounds
    $\solutionbound_i^-\le \solutionletter_i\le \solutionbound_i^+$:
-   \begin{equation}\label{eq:antidiffusion_bounds_steady_state}
+   \begin{subequations}\label{eq:antidiffusion_bounds_steady_state}
+   \begin{equation}
+     \limitedfluxbound_i^- \leq \limitedfluxsumi \leq \limitedfluxbound_i^+ \eqc
+   \end{equation}
+   \begin{equation}
      \limitedfluxbound_i^\pm \equiv \ssmatrixletter_{i,i}^L \solutionbound_i^\pm
        + \sumjnoti\ssmatrixletter\ij^L\solutionletter_j - \ssrhsletter_i \eqp
    \end{equation}
+   \end{subequations}
 \end{theorem}
 
 \begin{proof}
@@ -27,15 +32,14 @@
    \]
    Through addition/subtraction and multiplication/division operations, this
    principle can be made to look like the following:
-   \[
+   \begin{multline*}
    \ssmatrixletter_{i,i}^L \solutionbound_i^-
-     + \sumjnoti\ssmatrixletter\ij^L\solutionletter_j - \ssrhsletter_i
+     + \sumjnoti\ssmatrixletter\ij^L\solutionletter_j - \ssrhsletter_i 
+     = \limitedfluxbound_i^-\\
    \le \sumj \ssmatrixletter\ij^L \solutionletter_j - \ssrhsletter_i
+     = \limitedfluxsumi\\
    \le \ssmatrixletter_{i,i}^L \solutionbound_i^+
-     + \sumjnoti\ssmatrixletter\ij^L \solutionletter_j - \ssrhsletter_i \eqc
-   \]
-   which by substituting equations above gives
-   \[
-      \limitedfluxbound_i^-\le\limitedfluxsumi\le \limitedfluxbound_i^+ \eqp\qed
-   \]
+     + \sumjnoti\ssmatrixletter\ij^L \solutionletter_j - \ssrhsletter_i
+     = \limitedfluxbound_i^+ \eqp\qed
+   \end{multline*}
 \end{proof}

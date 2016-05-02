@@ -8,7 +8,7 @@ artificial diffusion matrix $\highorderdiffusionmatrix$:
 where the high-order diffusion matrix is assembled in an identical manner as
 the low-order diffusion matrix but using the high-order viscosity defined in
 Equation \eqref{eq:high_order_viscosity} instead of the low-order viscosity:
-\begin{equation}
+\begin{equation}\label{eq:high_order_Dij}
   \diffusionmatrixletter^{H,\timeindex}_{i,j}
   = \sumKSij\highordercellviscosity[\timeindex]
   \localviscbilinearform{\cellindex}{j}{i} \eqp

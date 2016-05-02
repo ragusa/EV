@@ -79,16 +79,20 @@
 %===============================================================================
 \section{FCT Scheme for Scalar Conservation Laws\label{sec:fct_scalar}}
 %===============================================================================
+\input{content/fct/intro_scalar}
 \subsection{FCT System\label{sec:fct_scheme_scalar}}
   \input{content/fct/fct_scheme_scalar}
 \subsection{Solution Bounds\label{sec:fct_bounds}}
   \input{content/fct/fct_bounds}
 \subsection{Antidiffusion Bounds\label{sec:antidiffusion_bounds}}
-  \subsubsection{Definition of Antidiffusion Bounds}
+  \input{content/fct/antidiffusion_intro}
+  \subsubsection{Definition of Antidiffusion Bounds
+    \label{sec:antidiffusion_bounds_def}}
     \input{content/fct/limited_flux_bounds_steady_state}
     \input{content/fct/limited_flux_bounds_explicit_euler}
     \input{content/fct/limited_flux_bounds_theta}
-  \subsubsection{Conditions on Antidiffusion Bounds}
+  \subsubsection{Conditions on Antidiffusion Bounds
+    \label{sec:antidiffusion_bounds_signs}}
     \input{content/fct/antidiffusion_bounds_signs}
 \subsection{Limiting Coefficients\label{sec:limiting_coefficients_scalar}}
   \input{content/fct/limiting_coefficients}
@@ -107,7 +111,7 @@
 \subsection{FCT Nonlinear Iteration
   \label{sec:fct_nonlinear_iteration}}
   \input{content/implementation/fct_nonlinear_iteration.tex}
-\subsection{Cumulative Antidiffusion FCT Nonlinear Iteration Scheme
-  \label{sec:cumulative_antidiffusion}}
-  \input{content/implementation/cumulative_antidiffusion.tex}
+%\subsection{Cumulative Antidiffusion FCT Nonlinear Iteration Scheme
+%  \label{sec:cumulative_antidiffusion}}
+%  \input{content/implementation/cumulative_antidiffusion.tex}
 

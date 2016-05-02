@@ -83,8 +83,16 @@ which follow.
 These definitions suggest convenient decompositions because
 $\consistentmassmatrix-\lumpedmassmatrix$ and
 $\loworderdiffusionmatrix-\highorderdiffusionmatrix$ are symmetric
-and feature zero row and column sums; these decompositions follow
-for each temporal discretization.
+and feature zero row sums:
+\begin{align*}
+  \sumj\pr{\massmatrixletter^L\ij - \consistentmassentry} &= 0 \eqc\\
+  \lumpedmassentry - \sumj\consistentmassentry      &= 0 \eqc
+\end{align*}
+and
+\[
+  \sumj\pr{\diffusionmatrixletter^L\ij - \diffusionmatrixletter^H\ij} = 0 \eqp
+\]
+The following decompositions result for each temporal discretization:
 \begin{center}{\textbf{Steady-state scheme}:}\end{center}
 \begin{equation}
   \MakeUppercase{\correctionfluxletter}\ij
@@ -123,6 +131,22 @@ for each temporal discretization.
     - \diffusionmatrixletter\ij^{H,\timeindex+1}}
     \pr{\solutionletter_j^H - \solutionletter_i^H}
 \end{multline}
+Note that the decompositions for the time-dependent schemes above use the fact
+\[
+  \sumj\consistentmassentry\ddt{\solutionletter_i}
+    = \lumpedmassentry\ddt{\solutionletter_i} \eqp
+\]
+\begin{remark}
+If Dirichlet boundary conditions are strongly imposed on a degree of freedom
+$i$, then antidiffusive flux decompositions above do not apply. The total
+antidiffusive flux into $i$ is $\correctionfluxletter_i=0$, and the antidiffusive
+flux decomposition for degrees of freedom $j$ neighboring $i$ are no longer
+valid because there is no longer an equal and opposite antidiffusive flux
+$\MakeUppercase{\correctionfluxletter}\ij$ to cancel
+$\MakeUppercase{\correctionfluxletter}\ji$. Therefore, one must either accept
+the lack of the conservation property, or one must completely cancel
+$\MakeUppercase{\correctionfluxletter}\ji$.
+\end{remark}
 Up until this point, no limiting has been applied; using the schemes as defined
 in Equations \eqref{eq:correction_flux_definition_steady_state}
 - \eqref{eq:correction_flux_definition_theta} would simply reproduce the
@@ -138,7 +162,6 @@ limited correction flux sum
 $\sumj\limiterletter\ij\MakeUppercase{\correctionfluxletter}\ij$ is added. In
 vector form, this row-wise product is denoted by $\limitedfluxsum$, i.e.,
 $(\limitedfluxsum)_i =
-\limiterletter_{i,:}\MakeUppercase{\correctionfluxletter}_{i,:}^T =
 \limitedfluxsumi$.
 The FCT scheme for each temporal discretization follows.
 \begin{center}{\textbf{Steady-state scheme}:}\end{center}

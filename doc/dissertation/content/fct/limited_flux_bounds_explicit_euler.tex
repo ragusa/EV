@@ -4,12 +4,17 @@
    the following antidiffusion bounds $\limitedfluxbound_i^\pm$ correspond to the
    solution bounds
    $\solutionbound_i^-\le \solutionletter_i^{\timeindex+1}\le \solutionbound_i^+$:
-   \begin{equation}\label{eq:limited_flux_bounds_explicit_euler}
+   \begin{subequations}\label{eq:limited_flux_bounds_explicit_euler}
+   \begin{equation}
+     \limitedfluxbound_i^- \leq \limitedfluxsumi \leq \limitedfluxbound_i^+ \eqc
+   \end{equation}
+   \begin{equation}
      \limitedfluxbound_i^\pm \equiv \lumpedmassentry
        \frac{\solutionbound_i^\pm-\solutionletter_i^\timeindex}{\timestepsize}
      + \sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
      - \ssrhsletter_i^\timeindex \eqp
    \end{equation}
+   \end{subequations}
 \end{theorem}
 
 \begin{proof}
@@ -40,17 +45,16 @@
        {\timestepsize}
      + \sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
      - \ssrhsletter_i^\timeindex
+     = \limitedfluxbound_i^-\\
      \le \lumpedmassentry\frac{\solutionletter_i^{\timeindex+1}
        - \solutionletter_i^\timeindex}{\timestepsize}
      + \sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
      - \ssrhsletter_i^\timeindex
-     \\\le \lumpedmassentry\frac{\solutionbound_i^+
+     = \limitedfluxsumi\\
+     \le \lumpedmassentry\frac{\solutionbound_i^+
        - \solutionletter_i^\timeindex}{\timestepsize}
      + \sumj \ssmatrixletter\ij^L \solutionletter_j^\timeindex
-     - \ssrhsletter_i^\timeindex \eqc
+     - \ssrhsletter_i^\timeindex
+     = \limitedfluxbound_i^+ \eqp\qed
    \end{multline*}
-   which by substituting equations above gives
-   \[
-      \limitedfluxbound_i^-\le\limitedfluxsumi\le \limitedfluxbound_i^+\eqp\qed
-   \]
 \end{proof}

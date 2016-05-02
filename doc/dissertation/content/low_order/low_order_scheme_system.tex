@@ -1,6 +1,6 @@
 Starting with Equation \eqref{eq:vector_weak_form}, the low-order scheme
 lumps the mass matrix and adds a low-order artificial diffusion term:
-\begin{equation}
+\begin{equation}\label{eq:low_order_system_system}
   \lumpedmassentry
     \frac{\solutionvector_i^{L,n+1}-\solutionvector_i^n}{\dt}
     + \sum_j\gradiententry\cdot\consfluxinterpolant_j^n
@@ -16,7 +16,7 @@ possible to give the invariant domain property described in Section
 \begin{definition}{Low-Order Artificial Diffusion Matrix}
    The low-order artificial diffusion matrix $\loworderdiffusionmatrix[\timeindex]$
    is defined as
-    \begin{equation}
+    \begin{equation}\label{eq:low_order_Dij_system}
       \diffusionmatrixletter^{L,n}\ij \equiv
         \max(\maxwavespeed\ij\ltwonorm{\mathbf{\gradientmatrixletter}\ij},
           \maxwavespeed\ji\ltwonorm{\mathbf{\gradientmatrixletter}\ji})
