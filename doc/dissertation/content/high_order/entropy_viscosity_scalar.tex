@@ -1,5 +1,6 @@
-To construct a high-order scheme, the concept of entropy viscosity is used in
-conjunction with the bilinear form introduced in Equation
+To construct a high-order scheme, the concept of entropy viscosity
+\cite{guermond_ev} is used in
+conjunction with the local viscous bilinear form introduced in Equation
 \eqref{eq:bilinearform}.  The high-order viscosity
 $\highordercellviscosity[\timeindex]$ is computed as the minimum of the
 low-order viscosity $\lowordercellviscosity[\timeindex]$ and the entropy viscosity
@@ -56,14 +57,14 @@ component of the entropy flux across the cell interface:
   \equiv \|\mathbf{\consfluxletter}'(\scalarsolution)
     \cdot\normalvector_F
   [\![\partial_n \entropy(\scalarsolution)
-  ]\!]\|_{L^\infty(F)} \eqc
+  ]\!]_F\|_{L^\infty(F)} \eqc
 \end{equation}
 where $\normalvector_F$ is the outward unit vector for face $F$, the
 $L^\infty(F)$ norm is approximated as the maximum of the norm operand evaluated
 at each quadrature point on $F$, and the term $[\![\partial_n \entropy(
-\approximatescalarsolution^\timeindex)]\!]$ is computed as
+\approximatescalarsolution^\timeindex)]\!]_F$ is computed as
 \begin{eqnarray}
-  [\![\partial_n \entropy(\approximatescalarsolution^\timeindex)]\!]
+  [\![\partial_n \entropy(\approximatescalarsolution^\timeindex)]\!]_F
   & = & [\![\nabla\entropy(\approximatescalarsolution^\timeindex)
     \cdot\normalvector_F]\!]\\
   & = & [\![\entropy'(\approximatescalarsolution^\timeindex)
@@ -74,6 +75,6 @@ at each quadrature point on $F$, and the term $[\![\partial_n \entropy(
     |_{\cellindex'})\nabla\approximatescalarsolution^\timeindex|_{\cellindex'})
     \cdot\normalvector_F
 \end{eqnarray}
-where $\cdot|_\cellindex$ denotes the computation of $\cdot$ from $\cellindex$,
-and $\cdot|_{\cellindex'}$ denotes the computation of $\cdot$ from the neighbor
+where $a|_\cellindex$ denotes the computation of $a$ from cell $\cellindex$,
+and $a|_{\cellindex'}$ denotes the computation of $a$ from the neighbor cell
 $\cellindex'$ sharing the face $F$.
