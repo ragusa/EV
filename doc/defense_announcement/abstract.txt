@@ -1,11 +1,3 @@
-\chapter*{ABSTRACT}
-\addcontentsline{toc}{chapter}{ABSTRACT}
-
-\pagestyle{plain} % No headers, just page numbers
-%\pagenumbering{roman} % Roman numerals
-\setcounter{page}{2}
-
-\indent
 The Flux-Corrected Transport (FCT) algorithm, in conjunction with the
 entropy viscosity method, was applied with the continuous finite element method
 to (a) a scalar transport equation that includes reaction and source terms; and
@@ -23,7 +15,4 @@ transport and the shallow water equations, and additionally
 for scalar transport, Theta time discretizations and
 steady-state are considered. Explicit FCT schemes are shown to
 be relatively robust, but implicit/steady-state FCT schemes, however,
-are shown to have significant nonlinear convergence issues in many cases,
-as is noted by Kuzmin \cite{kuzmin_FCT}.
-
-\pagebreak{}
+are shown to have significant nonlinear convergence issues in many cases.

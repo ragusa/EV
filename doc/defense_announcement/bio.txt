@@ -1,0 +1,12 @@
+Joshua has been a student in Texas A\&M's Nuclear Engineering
+Department for almost 9 years, receiving his Bachelor of Science in 2011
+and his Master of Science in 2013.
+Joshua started research for Dr. Ragusa as an undergraduate, writing
+a Senior Scholar's thesis on Rosenbrock time discretization methods,
+and continued with Ragusa as a Master's student, writing a
+Master's thesis on solution techniques for single-phase subchannel
+equations. His present dissertation work aims to eliminate
+negativities and spurious oscillations that arise in the solution
+of hyperbolic conservation laws with the continuous finite element
+method. After graduation, Joshua plans to obtain a postdoctoral
+or staff position in computational physics at one of the national laboratories.

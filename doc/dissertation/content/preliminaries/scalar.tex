@@ -1,4 +1,5 @@
-The primary application of this research is radiation transport;
+The primary application of this research is radiation transport,
+as given by Equation \eqref{eq:rad_transport};
 however, most of the analysis performed is valid
 for any scalar conservation law of the following form:
 \begin{equation}\label{eq:scalar_transport}
@@ -20,13 +21,10 @@ $\consfluxscalar$, hereafter it is assumed that
 $\consfluxscalar\equiv\velocity\scalarsolution$, where $\velocity$ is a constant
 velocity.
 
-The following scalar radiation transport equation then fits the model of
-Equation \eqref{eq:scalar_transport}:
-\begin{equation}\label{eq:rad_transport}
-  \frac{1}{\speed}\ppt{\angularflux} + \directionvector\cdot\nabla\angularflux\xt
-  + \totalcrosssection(\x)\angularflux\xt = \radiationsource\xt \eqc
-\end{equation}
-by making the following definitions:
+The radiation transport equation given by Equation
+\eqref{eq:rad_transport} fits the model of
+Equation \eqref{eq:scalar_transport}
+by making the following substitutions:
 \[
   \scalarsolution\rightarrow\angularflux
   \eqc \quad
@@ -37,10 +35,6 @@ by making the following definitions:
   \scalarsource\rightarrow\speed\radiationsource
   \eqc
 \]
-where $\angularflux\xt$ is the angular flux in direction $\directionvector$,
-$\speed$ is the transport speed, $\totalcrosssection(\x)$
-is the macroscopic total cross-section, and $\radiationsource\xt$ is the
-total source (extraneous plus scattering).
 
 Initial conditions are included if the problem is transient:
 \begin{equation}

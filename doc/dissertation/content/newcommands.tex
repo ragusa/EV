@@ -278,9 +278,12 @@
 \newcommand{\angularflux}{\psi}
 \newcommand{\scalarflux}{\phi}
 \newcommand{\speedoflight}{c}
-\newcommand{\totalcrosssection}{\Sigma_t}
+\newcommand{\totalcrosssection}{\Sigma_\text{t}}
 \newcommand{\reactioncoef}{\sigma}
 \newcommand{\directionvector}{\mathbf{\Omega}}
+\newcommand{\di}{\directionvector}
+\newcommand{\xdet}{(\x,\di,E,t)}
+\newcommand{\xet}{(\x,E,t)}
 \newcommand{\scalarsource}{q}
 \newcommand{\radiationsource}{Q}
 
@@ -366,6 +369,8 @@
 \newcommand{\dd}[2]{\frac{d #1}{d #2}}               % ordinary derivative
 \newcommand{\pd}[2]{\frac{\partial #1}{\partial #2}} % partial derivative
 \newcommand{\ppt}[1]{\pd{#1}{t}}                     % partial d/dt
+\newcommand{\ppx}[1]{\pd{#1}{x}}                     % partial d/dx
+\newcommand{\ppy}[1]{\pd{#1}{y}}                     % partial d/dy
 \newcommand{\ddt}[1]{\frac{d#1}{dt}}                 % ordinary d/dt
 
 % typesetting

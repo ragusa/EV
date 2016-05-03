@@ -1,0 +1,92 @@
+This research considers two physical models, both of which are of
+great importance in the field of nuclear engineering:
+linear transport, and the shallow water equations (SWE).
+The linear transport model considered in this research is the following:
+\begin{equation}\label{eq:rad_transport}
+  \frac{1}{\speed}\ppt{\angularflux} + \directionvector\cdot\nabla\angularflux\xt
+  + \totalcrosssection(\x)\angularflux\xt = \radiationsource\xt \eqc
+\end{equation}
+where $\angularflux\xt$ is the angular flux in direction $\directionvector$,
+$\speed$ is the transport speed, $\totalcrosssection(\x)$
+is the macroscopic total cross-section, and $\radiationsource\xt$ is an
+extraneous source.
+This model is a special case of the full neutron transport equation,
+\begin{multline}
+  \frac{1}{\speed(E)}\ppt{\angularflux} + \directionvector\cdot\nabla\angularflux\xdet
+    + \totalcrosssection\xet\angularflux\xdet = \radiationsource\xdet\\
+    + \frac{\chi_\text{p}(E)}{4\pi}\int\limits_0^\infty
+      dE'\nu_\text{p}(\x,E',t)\Sigma_\text{f}(\x,E',t)\phi(\x,\di,E',t)
+    + \sum\limits_{i=1}^{n_\text{d}}\frac{\chi_{\text{d},i}(E)}{4\pi}\lambda_i C_i\xt\\
+    + \int\limits_0^\infty dE'\int\limits_{4\pi}d\di'
+      \Sigma_\text{s}(\x,E'\rightarrow E,\di'\rightarrow\di,t)\angularflux(\x,\di',E',t)
+  \eqc
+\end{multline}
+where $E$ is energy, $\Sigma_\text{f}$ is the fission cross section, $\Sigma_\text{s}$ is the
+double-differential scattering cross section, $\chi_\text{p}$ is the prompt
+neutron energy spectrum, $\nu_\text{p}$ is the prompt
+neutron yield, $n_\text{d}$ is the number of delayed neutron precursors,
+and $\chi_{\text{d},i}$, $\lambda_i$, and $C_i$ are the delayed neutron
+energy spectrum, decay constant, and concentration of precursor $i$, respectively.
+Equation \eqref{eq:rad_transport} is obtained by assuming that the transport
+medium does not scatter, fission, or change with time. The arguments
+$E$ and $\di$ are dropped for the remainder of the dissertation
+because this dependence is not important since the omission of scattering
+and fission terms decouples the equation in energy and direction.
+The units are thus intentionally left ambiguous.
+
+The transport equation is often referred to as the Boltzmann equation
+due to its resemblance to the transport theory developed by Boltzmann
+in the 1800s to study kinetic theory of gases \cite{duderstadt}\cite{glasstone}.
+In general, transport theory is used in describing the transport of particles
+or waves through some background media. Such particles might include neutrons,
+electrons, ions, gas molecules, or photons.
+Since its origination, transport theory has evolved indepedently in many
+different disciplines and applications such as nuclear reactors,
+atmospheric science, radiation therapy, radiation shielding, and stars.
+In fact, much of the early transport theory was developed to meet the needs
+of astrophysical research in the study of stellar and planetary
+atmospheres \cite{duderstadt}.
+In the field of nuclear engineering, the transport equation is
+especially important, as the transport equation is used to guide nuclear
+reactor design and operation as well as design and analysis of
+radiation shielding.
+
+This research also considers the shallow water equations (SWE):
+\begin{subequations}
+\begin{align}
+  \ppt{\height} + \ppx{(\height\velocityx)} + \ppy{(\height\velocityy)} &= 0
+  \eqc\\
+  \ppt{(\height\velocityx)}
+    + \ppx{}\pr{\height\velocityx^2 + \frac{1}{2}\gravity\height^2}
+    + \ppy{}\pr{\height\velocityx\velocityy} &= 0
+  \eqc\\
+  \ppt{(\height\velocityy)}
+    + \ppx{}\pr{\height\velocityx\velocityy}
+    + \ppy{}\pr{\height\velocityy^2 + \frac{1}{2}\gravity\height^2} &= 0
+  \eqc
+\end{align}
+\end{subequations}
+where $\height$ is the height, $\velocityx$ is the x-velocity,
+$\velocityy$ is the y-velocity, and $\gravity$ is acceleration due to
+gravity.
+The SWE are derived from the Navier-Stokes
+equations by making the assumption that the horizontal length
+scale is much larger than the vertical length scale. Under this
+assumption, the vertical velocity is small (not necessarily zero),
+and upon depth-integrating the equations, the vertical velocity
+is removed. The SWE have many applications, including coastal
+flows, lakes, rivers, dam breaks, and tsunamis \cite{kirby}.
+
+The importance of the tsunami modelling in nuclear engineering has unfortunately
+become very clear in recent years.
+The magnitude 9.0 earthquake that occurred off the coast of Tohoku in 2011,
+often referred to as the Great East Japan earthquake \cite{USGS_tohoku},
+produced a tsunami that not only
+resulted in an enormous loss of life and infrastructure, but
+also resulted in the most severe nuclear accident since the Chernobyl
+disaster in 1986 \cite{IAEAfukushima}, becoming only the second
+accident in history to receive the highest rating of 7 on the International
+Nuclear and Radiological Event Scale (INES) \cite{IAEA_fukushima_scale}.
+Kanayama \cite{Kanayama2013} performed a tsunami simulation of
+Hakata Bay using the viscous shallow water equations, which was
+used to evaluate damage to coastal areas of the Tohoku district.
