@@ -154,7 +154,7 @@ void ProblemParameters<dim>::get_and_process_parameters(
   // assert that parameters input file exists
   struct stat buffer;
   const bool file_exists = stat(parameters_file.c_str(), &buffer) == 0;
-  Assert(file_exists, ExcFileDoesNotExist(parameters_file));
+  AssertThrow(file_exists, ExcFileDoesNotExist(parameters_file));
 
   // read parameters input file
   parameter_handler.read_input(parameters_file);
@@ -246,19 +246,19 @@ void ProblemParameters<dim>::process_base_parameters()
   // assert number of dimensions is valid
   if (!valid_in_1d)
   {
-    Assert(dim != 1, ExcImpossibleInDim(dim));
+    AssertThrow(dim != 1, ExcImpossibleInDim(dim));
   }
   if (!valid_in_2d)
   {
-    Assert(dim != 2, ExcImpossibleInDim(dim));
+    AssertThrow(dim != 2, ExcImpossibleInDim(dim));
   }
   if (!valid_in_3d)
   {
-    Assert(dim != 3, ExcImpossibleInDim(dim));
+    AssertThrow(dim != 3, ExcImpossibleInDim(dim));
   }
 
   // assert that problem is not transient if steady-state is specified
-  Assert(!(specified_steady_state && is_transient_problem),
+  AssertThrow(!(specified_steady_state && is_transient_problem),
          ExcNotASteadyStateProblem());
 
   // constants for function parsers
@@ -462,7 +462,7 @@ void ProblemParameters<dim>::generate_mesh_and_compute_volume(
   }
 
   // assert that domain volume be nonzero
-  Assert(std::fabs(domain_volume) > 1.0e-15, ExcInvalidState());
+  AssertThrow(std::fabs(domain_volume) > 1.0e-15, ExcInvalidState());
 }
 
 /**
@@ -515,7 +515,7 @@ void ProblemParameters<dim>::set_boundary_ids(
           // "incoming" boundary ID scheme is the only scheme implemented in
           // a derived class, so if the selected scheme does not match any scheme
           // in this branch, it should mean that the scheme is "incoming"
-          Assert(boundary_id_scheme == "incoming", ExcNotImplemented());
+          AssertThrow(boundary_id_scheme == "incoming", ExcNotImplemented());
         }
       }
 }
