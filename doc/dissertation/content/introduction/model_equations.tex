@@ -34,6 +34,20 @@ because this dependence is not important since the omission of scattering
 and fission terms decouples the equation in energy and direction.
 The units are thus intentionally left ambiguous.
 
+Note that fission and scattering sources still can be included in Equation
+\eqref{eq:rad_transport} in a source iteration scheme:
+\begin{equation}
+  \frac{1}{\speed}\ppt{\angularflux^{(\ell)}}
+    + \directionvector\cdot\nabla\angularflux^{(\ell)}
+    + \totalcrosssection\angularflux^{(\ell)} = \radiationsource^{(\ell-1)} \eqc
+\end{equation}
+where now $\radiationsource^{(\ell-1)}$ includes not only extraneous
+sources, but fission and scattering sources evaluated with the previous
+solution iterate $\angularflux^{(\ell-1)}$. The multigroup
+method may still be used for discretization in energy, and the
+Discrete Ordinates, $S_N$, method may be used for discretization
+in angle, without invalidating the methodology developed in this dissertation.
+
 The transport equation is often referred to as the Boltzmann equation
 due to its resemblance to the transport theory developed by Boltzmann
 in the 1800s to study kinetic theory of gases \cite{duderstadt}\cite{glasstone}.

@@ -1,0 +1,22 @@
+Negativities have long been an outstanding issue in the numerical solution
+of the neutron transport equation \cite{lanthrop}. While negativities
+may not significantly degrade the accuracy of a method, they may cause
+drastic, unintended consequences where assumptions of non-negativity
+are employed.
+
+There have been a number of attempts to address this issue for various
+spatial discretizations. Many rely on ad-hoc fixups, such as the classic
+set-to-zero fixup for the diamond difference scheme \cite{lewis}.
+Hamilton \cite{hamilton} introduced a similar fixup method for the
+linear discontinuous (LD) finite element method (FEM) that conserves local
+particle balance and keeps the third-order accuracy of the standard
+LD FEM. Walters and Wareing \cite{walters} developed a nonlinear
+spatial differencing scheme for one-dimensional slab geometry.
+So-called characteristic methods were developed by Walters and Wareing
+\cite{walters_NC} and Minor \cite{minor}.
+Wareing notes in \cite{wareing} that these characteristic methods
+are difficult to derive and implement and offers instead
+a nonlinear positive spatial differencing scheme called
+the exponential discontinuous scheme, which was applicable in 1-D,
+2-D, and 3-D cartesian meshes. More recently, Maginot has
+developed a consistent set-to-zero method for LD FEM \cite{maginot}.

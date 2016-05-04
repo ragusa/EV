@@ -1244,7 +1244,7 @@ void ConservationLaw<dim>::output_viscosity(PostProcessor<dim> & postprocessor,
   }
   if (entropy_viscosity_type != ViscosityType::none)
   {
-    viscosities.push_back(low_order_viscosity);
+    viscosities.push_back(entropy_viscosity);
     viscosity_names.push_back("entropy_viscosity");
   }
   if (high_order_viscosity_type != ViscosityType::none)

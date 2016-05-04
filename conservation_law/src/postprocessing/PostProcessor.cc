@@ -202,6 +202,9 @@ PostProcessor<dim>::PostProcessor(
     output_dir_ss << problem_name << "/";
   output_dir = output_dir_ss.str();
 
+  // create directory
+  create_directory(output_dir);
+
   // create fine triangulation and dof handler
   create_fine_triangulation_and_dof_handler(triangulation_);
 
