@@ -20,11 +20,11 @@
 #   void_to_absorber_1d
 #   void_to_absorber_1d_ss
 subsection problem
-   set problem name = mms_sinx_ss
+   set problem name = sourcevoid_to_absorber_ss
 end
 
 subsection scheme
-   set scheme            = high         # low|high|fct
+   set scheme            = high          # low|high|fct
    set low order scheme  = dmp          # constant|lax|dmp|di_visc|di_diff
    set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
 end
@@ -67,11 +67,11 @@ subsection artificial viscosity
 end
 
 subsection fct
-   set filter sequence string        = dmp # dmp|dmp_analytic|analytic
+   set filter sequence string        = dmp_analytic # dmp|dmp_analytic|analytic
    set limiter option                = zalesak # ones|zeroes|zalesak
-   set use multipass limiting        = false
+   set use multipass limiting        = true
    set multipass limiting percent tolerance = 0.01
-   set dirichlet limiting coefficient = 1.0
+   set dirichlet limiting coefficient = 0.0
    set enforce antidiffusion bounds signs = false
    set fct synchronization type      = none    # none|min|compound
    set fct initialization option     = low     # zero|low|high
@@ -103,7 +103,7 @@ subsection quadrature
 end
 
 subsection output
-   set verbosity level    = 1    # 0|1|2 (0 is least verbose)
+   set verbosity level    = 2    # 0|1|2 (0 is least verbose)
    set output exact solution = true
    set output period      = 0
    set transient output size limit = 1e9

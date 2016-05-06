@@ -27,8 +27,9 @@ The coarsest mesh size in this study uses 8 cells, and each successive mesh
 size is halved, with the finest mesh in the study using 256 cells.
 
 Figure \ref{fig:absorber_ss_solution} shows a comparison of the solutions with
-32 cells.
-The entropy viscosity and Galerkin FCT methods use the analytic solution bounds
+32 cells, and Figure \ref{fig:absorber_ss_visc} shows the corresponding
+viscosity profiles.
+The FCT methods use the analytic solution bounds
 given by Equation \eqref{eq:analyticDMP_ss} with the antidiffusion bounds fix given by
 Equation \eqref{eq:antidiffusion_bounds_operation}.
 
@@ -41,13 +42,24 @@ Equation \eqref{eq:antidiffusion_bounds_operation}.
    \label{fig:absorber_ss_solution}
 \end{figure}
 %-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{figure}[ht]
+   \centering
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/absorber_ss/images/viscosity_SS.pdf}
+      \caption{Viscosity Profiles for Convergence Test Problem 2 with 32 Cells}
+   \label{fig:absorber_ss_visc}
+\end{figure}
+%-------------------------------------------------------------------------------
 
 Figure \ref{fig:absorber_ss_convergence} shows a comparison of
 errors with different methods. The DMP low-order method achieves first-order
-spatial convergence as expected, and all other methods achieve second-order
-spatial convergence. The entropy viscosity method and the FCT method employing
-it both start with more error for the coarsest mesh than the Galerkin method,
-but upon refinement, the differences in error diminish.
+spatial convergence as expected, and the Galerkin and Galerkin-FCT methods achieve
+second-order accuracy. The entropy viscosity and entropy-viscosity-FCT
+(EV-FCT) methods start out with more error than the Galerkin methods
+in the coarse meshes, but converge with order greater than 2 until
+the finer meshes, where the convergence of the EV methods 
+asymptotically approach that of the Galerkin methods.
 
 %-------------------------------------------------------------------------------
 \begin{figure}[ht]
@@ -56,6 +68,41 @@ but upon refinement, the differences in error diminish.
         {\contentdir/results/transport/absorber_ss/images/convergence_SS.pdf}
       \caption{Comparison of Errors for Convergence Test Problem 2}
    \label{fig:absorber_ss_convergence}
+\end{figure}
+%-------------------------------------------------------------------------------
+
+Figure \ref{fig:absorber_ss_entropy_convergence} shows the convergence of the
+$L^2$ norm entropy residual $\entropyresidual$ and entropy jumps $\entropyjump$,
+which are computed as
+\begin{equation}
+  \|\entropyresidual\|_{L^2(\domain)} = \sqrt{\int\limits_\domain
+    \entropyresidual(\x)^2\dvolume
+  } \eqc
+\end{equation}
+\begin{equation}
+  \|\entropyjump\|_{L^2(\domain)} = \sqrt{\int\limits_\domain
+    \entropyjump(\x)^2\dvolume
+  } = 
+  \sqrt{\sum_\cell \entropyjump_\cell^2\cellvolume} 
+  \eqc
+\end{equation}
+where $\entropyjump(\x)$ is the piecewise constant function such that
+$\entropyjump(\x)=\entropyjump_\cell$ for $\x\in\celldomain$.
+For this study, the coarsest mesh consists of 2 cells, and there are a total of
+12 refinement levels, so the final refinement level corresponds to
+$2^12$ cells. The entropy residual $L^2$ norm converges first-order
+as expected. The entropy jumps $L^2$ norm actually increases for the coarsest
+meshes, until meshes finer than roughly 32 cells, where it transitions
+to first-order convergence.
+
+%-------------------------------------------------------------------------------
+\begin{figure}[ht]
+   \centering
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/absorber_ss/images/entropy_convergence.pdf}
+      \caption{Convergence of Entropy Residual and Entropy Jumps for
+        Convergence Test Problem 2}
+   \label{fig:absorber_ss_entropy_convergence}
 \end{figure}
 %-------------------------------------------------------------------------------
 

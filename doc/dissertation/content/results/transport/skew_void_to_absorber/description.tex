@@ -35,7 +35,8 @@ Exact Solution & $u(\x,t)=\left\{\begin{array}{l l}
        \left\{\begin{array}{l l}
          e^{-10s}, & x\ge\frac{1}{2}, y\ge\frac{1}{2}, z\ge\frac{1}{2}\\
          1,        & \mbox{otherwise}
-       \end{array}\right.$\\
+       \end{array}\right. \eqc$\\
+   & with $s$ given by Equation \eqref{eq:s_distance}.\\
 \bottomrule\end{tabular}
 \end{table}
 %-------------------------------------------------------------------------------
@@ -57,12 +58,12 @@ two by $j$ and $k$. This is determined as follows:
       \frac{x_j-\frac{1}{2}}{\Omega_j}\right).
 \]
 Then, $s$ is computed as follows:
-\[
+\begin{equation}\label{eq:s_distance}
    s=\sqrt{s_i^2 + s_j^2 + s_k^2}, \quad
    s_i=x_i-\frac{1}{2}, \quad
    s_j=\frac{\Omega_j}{\Omega_i}s_i, \quad
    s_k=\frac{\Omega_k}{\Omega_i}s_i.
-\]
+\end{equation}
 
 The simulation was run to time $t=1$ with a CFL of $\nu=0.5$ and 16384 cells.
 Figures \ref{fig:skew_void_to_absorber_2D_fe} and

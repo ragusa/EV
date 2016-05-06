@@ -56,11 +56,9 @@ for iel = 1:nel
     jump_max = max(jump(faceL),jump(faceR));
     
     % add to integral
-    %integral = integral + sum(wq) * jump_max^2 * Jac(iel);
-    integral = integral + sum(wq) * abs(jump_max) * Jac(iel);
+    integral = integral + sum(wq) * jump_max^2 * Jac(iel);
 end
 
 % compute square root to finish L^2 norm
-l2norm = integral;
-%l2norm = sqrt(integral);
+l2norm = sqrt(integral);
 

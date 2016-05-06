@@ -16,8 +16,8 @@ else
   mesh.n_cell = 32;     % number of elements
 end
 quadrature.nq = 3;      % number of quadrature points per cell
-opts.impose_DirichletBC_strongly = false; % impose Dirichlet BC strongly?
-opts.use_penalty_bc = true; % add penalty BC?
+opts.impose_DirichletBC_strongly = true; % impose Dirichlet BC strongly?
+opts.use_penalty_bc = false; % add penalty BC?
 opts.penalty_bc_coef = 1000.0; % penalty BC coef: alpha*A(i,i) = alpha*inc
 %--------------------------------------------------------------------------
 % spatial method options
@@ -81,7 +81,7 @@ fct_opts.DMP_option = 2;
 fct_opts.limiting_option = 2;
 
 % option to enforce Q+ >= 0, Q- <= 0
-fct_opts.enforce_antidiffusion_bounds_signs = false;
+fct_opts.enforce_antidiffusion_bounds_signs = true;
 
 % FCT initialization option: 1 = zeros
 %                            2 = low-order solution
@@ -92,7 +92,7 @@ fct_opts.FCT_initialization = 2;
 fct_opts.skip_limiter_if_bounds_satisfied = false;
 
 % option to prelimit correction fluxes
-fct_opts.prelimit = true;
+fct_opts.prelimit = false;
 
 % limiting coefficient bounds for Dirichlet nodes
 fct_opts.dirichlet_limiting_coefficient = 0.0; 
@@ -151,7 +151,7 @@ out_opts.legend_location           = 'NorthEast'; % location of plot legend
 % option to output l2 norm of entropy residual
 return_value_option = 0; % 0: nothing - just return zero
                          % 1: L^2 norm of entropy residual
-                         % 2: sum of h*(L^1 norm of entropy jump on cell)
+                         % 2: L^2 norm of entropy jumps
 
 save_exact_solution      = false; % option to save exact solution 
 save_low_order_solution  = false; % option to save low-order solution
