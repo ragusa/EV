@@ -1334,17 +1334,17 @@ void ConservationLaw<dim>::perform_fct_ssprk_step(
   // perform FCT
   // form rhs: system_rhs = M*u_old + dt*(ss_rhs - ss_flux - D*u_old + f)
   system_rhs = 0;
-  lumped_mass_matrix.vmult(tmp_vector, old_solution);
+  lumped_mass_matrix.vmult(tmp_vector, old_stage_solution);
   system_rhs.add(1.0, tmp_vector);
   system_rhs.add(dt, ss_rhs);
   system_rhs.add(-dt, ss_flux);
-  low_order_diffusion_matrix.vmult(tmp_vector, old_solution);
+  low_order_diffusion_matrix.vmult(tmp_vector, old_stage_solution);
   system_rhs.add(-dt, tmp_vector);
 
   // compute antidiffusion vector
   Vector<double> & antidiffusion_vector = tmp_vector;
   fct->compute_antidiffusion_vector(new_solution,
-                                    old_solution,
+                                    old_stage_solution,
                                     dt,
                                     ss_flux,
                                     ss_reaction,

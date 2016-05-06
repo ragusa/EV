@@ -2,7 +2,33 @@ In this test problem, an initially flat fluid surface is perturbed, and waves
 from this perturbation travel to the boundary and reflect back into the
 domain. This problem might, for example, simulate a droplet of water in
 a bathtub.
-Table \ref{tab:bathtub} summarizes the problem parameters.
+Figure \ref{fig:bathtub_initial} shows this initial perturbation on the fluid
+surface, representing the droplet of water falling into the bathtub.
+
+%-------------------------------------------------------------------------------
+\begin{figure}[ht]
+   \centering
+   \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/shallowwater/bathtub/images/initial_shape.png}
+      \caption{Surface plot of $\height_0$}
+   \end{subfigure}
+   \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/shallowwater/bathtub/images/initial.png}
+      \caption{Color map of $\height_0$}
+   \end{subfigure}
+   \caption{Initial Height Profile for the Bathtub Test Problem}
+   \label{fig:bathtub_initial}
+\end{figure}
+%-------------------------------------------------------------------------------
+
+The problem parameters are summarized in Table \ref{tab:bathtub}.
+The simulations were performed on a $64\times 64$-cell mesh, with
+a constant time step size of $\dt = 0.002$, run until $t = 0.5$.
+For the entropy viscosity method, the entropy residual coefficient
+and entropy jump coefficient were set to $\entropyresidualcoef=1$
+and $\entropyjumpcoef=1$, respectively.
 
 %-------------------------------------------------------------------------------
 \begin{table}[htb]\caption{Bathtub Test Problem Summary}
@@ -22,146 +48,65 @@ Bathymetry & $\bathymetry(\x)=0$\\
 \end{table}
 %-------------------------------------------------------------------------------
 
-%Table \ref{tab:void_to_absorber_run_parameters} shows the run parameters used
-%to obtain the results in this section, Figures \ref{fig:void_to_absorber_2D_fe}
-%and \ref{fig:void_to_absorber_2D_ssprk33} show 2-D results for explicit Euler
-%and SSPRK33 time discretizations, respectively, and Figure
-%\ref{fig:void_to_absorber_3D} shows 3-D results.
-%
-%From Figure \ref{fig:void_to_absorber_2D_ssprk33}, one can see that the
-%Galerkin scheme (which has no artificial dissipation) generates significant
-%spurious oscillations perpindicular to the transport direction, even below the
-%absorber region. The oscillations are particularly severe along the lower edge
-%of the absorber region, where particles/photons are travelling parallel to the
-%absorber; this edge has a sharper gradient in the solution than the left edge
-%of the absorber region due to the lack of attenuation in this direction, which
-%is present for the left edge. Figure \ref{fig:void_to_absorber_2D_ssprk33},
-%which uses explicit Euler instead of SSPRK33 does not show the Galerkin plot
-%because the oscillations grew without bound, leading to infinite solution
-%values. The entropy viscosity scheme is also vulnerable to spurious
-%oscillations, although to a lesser extent than the Galerkin scheme.
-%
-%Note that all numerical schemes except the Galerkin scheme involve some
-%dissipation; this can be seen at the outgoing (right) boundary of the void
-%region, where there is a solution gradient despite the lack of
-%absorption. This is because the simulation was run to $t=1$, and the transport
-%speed is $\speed=1$, so the wave front should be located at the right
-%boundary of the domain since the domain width is equal to 1;
-%the diffusivity at the right boundary is due to artificial diffusion
-%along the wave front.
-%For steady-state computations, where there is no transient and
-%thus no wave front, one would not see this diffusivity
-%at the right boundary.
-%
-%One can visually compare the width of the diffusive region to infer the
-%diffusivity of each numerical scheme. For example, one can see that the
-%low-order solution is a bit more diffusive than the high-order schemes and FCT
-%schemes.  Both the Galerkin-FCT and EV-FCT solutions show a lack of
-%oscillations and less diffusivity than the low-order solution.
-%
-%The 3-D results are included here to show a proof of principle
-%that the FCT algorithm used is not restricted to 1-D or 2-D.
-%
-%%-------------------------------------------------------------------------------
-%\begin{table}[ht]\caption{Normal Void-to-Absorber Test Problem Run Parameters}
-%\label{tab:void_to_absorber_run_parameters}
-%\centering
-%\begin{tabular}{l l}\toprule
-%\emph{Parameter} & \emph{Value}\\\midrule
-%Number of Cells & $N_{cell} = 16384$\\
-%End Time & $t = 1$\\
-%CFL Number & $\nu = 0.5$\\\midrule
-%Entropy Function & $\entropy(\scalarsolution) = \frac{1}{2}\scalarsolution^2$\\
-%Entropy Residual Coefficient & $\entropyresidualcoef = 0.1$\\
-%Entropy Jump Coefficient & $\entropyjumpcoef = 0.1$\\
-%\bottomrule\end{tabular}
-%\end{table}
-%%-------------------------------------------------------------------------------
-%\begin{figure}[ht]
-%   \centering
-%   \begin{subfigure}{0.3\textwidth}
-%      \includegraphics[width=\textwidth]
-%        {\contentdir/results/transport/void_to_absorber/images/Exact.png}
-%      \caption{Exact}
-%   \end{subfigure}
-%   \begin{subfigure}{0.3\textwidth}
-%      \includegraphics[width=\textwidth]
-%        {\contentdir/results/transport/void_to_absorber/images/GalFCT_FE.png}
-%      \caption{Galerkin FCT}
-%   \end{subfigure}
-%   \begin{subfigure}{0.3\textwidth}
-%      \includegraphics[width=\textwidth]
-%        {\contentdir/results/transport/void_to_absorber/images/Low_FE.png}
-%      \caption{Low-Order}
-%   \end{subfigure}
-%   \begin{subfigure}{0.3\textwidth}
-%      \includegraphics[width=\textwidth]
-%        {\contentdir/results/transport/void_to_absorber/images/EV_FE.png}
-%      \caption{Entropy Viscosity}
-%   \end{subfigure}
-%   \begin{subfigure}{0.3\textwidth}
-%      \includegraphics[width=\textwidth]
-%        {\contentdir/results/transport/void_to_absorber/images/EVFCT_FE.png}
-%      \caption{Entropy Viscosity FCT}
-%   \end{subfigure}
-%   \caption{Comparison of Solutions for 2-D Normal Void-to-Absorber Test
-%     Problem Using Explicit Euler Time Discretization}
-%   \label{fig:void_to_absorber_2D_fe}
-%\end{figure}
-%%-------------------------------------------------------------------------------
-%\begin{figure}[ht]
-%   \centering
-%   \begin{subfigure}{0.3\textwidth}
-%      \includegraphics[width=\textwidth]
-%        {\contentdir/results/transport/void_to_absorber/images/Exact.png}
-%      \caption{Exact}
-%   \end{subfigure}
-%   \begin{subfigure}{0.3\textwidth}
-%      \includegraphics[width=\textwidth]
-%        {\contentdir/results/transport/void_to_absorber/images/Gal_SSPRK33.png}
-%      \caption{Galerkin}
-%   \end{subfigure}
-%   \begin{subfigure}{0.3\textwidth}
-%      \includegraphics[width=\textwidth]
-%        {\contentdir/results/transport/void_to_absorber/images/GalFCT_SSPRK33.png}
-%      \caption{Galerkin FCT}
-%   \end{subfigure}
-%   \begin{subfigure}{0.3\textwidth}
-%      \includegraphics[width=\textwidth]
-%        {\contentdir/results/transport/void_to_absorber/images/Low_SSPRK33.png}
-%      \caption{Low-Order}
-%   \end{subfigure}
-%   \begin{subfigure}{0.3\textwidth}
-%      \includegraphics[width=\textwidth]
-%        {\contentdir/results/transport/void_to_absorber/images/EV_SSPRK33.png}
-%      \caption{Entropy Viscosity}
-%   \end{subfigure}
-%   \begin{subfigure}{0.3\textwidth}
-%      \includegraphics[width=\textwidth]
-%        {\contentdir/results/transport/void_to_absorber/images/EVFCT_SSPRK33.png}
-%      \caption{Entropy Viscosity FCT}
-%   \end{subfigure}
-%   \caption{Comparison of Solutions for 2-D Normal Void-to-Absorber Test
-%     Problem Using SSPRK33 Time Discretization}
-%   \label{fig:void_to_absorber_2D_ssprk33}
-%\end{figure}
-%%-------------------------------------------------------------------------------
-%\begin{figure}[ht]
-%   \centering
-%   \begin{subfigure}{0.45\textwidth}
-%      \includegraphics[width=\textwidth]
-%        {\contentdir/results/transport/void_to_absorber/images/Gal_3D.png}
-%      \caption{Galerkin}
-%   \end{subfigure}
-%   \begin{subfigure}{0.45\textwidth}
-%      \includegraphics[width=\textwidth]
-%        {\contentdir/results/transport/void_to_absorber/images/GalFCT_3D.png}
-%      \caption{Galerkin with FCT}
-%   \end{subfigure}
-%   \caption{Comparison of Solutions for the 3-D Normal Void-to-Absorber Test
-%     Problem Using SSPRK33 Time Discretization}
-%   \label{fig:void_to_absorber_3D}
-%\end{figure}
-%%-------------------------------------------------------------------------------
+Figure \ref{fig:bathtub} shows a comparison of the solutions of the low-order
+invariant domain method vs. the entropy viscosity method. Solutions were obtained
+using explicit Euler time discretization and are compared at $t = 0.1$ and
+$t = 0.5$.
+
+The entropy viscosity solution is shown here to be much sharper than
+the low-order method. It is already
+clear at $t = 1$ how much diffusion the low-order scheme introduces; by
+$t = 5$, wave forms are hardly visible, as opposed to the results shown
+by the entropy viscosity method, where the reflected wave forms are
+clearly visible: four waves can be identified in Figure \ref{fig:bathtub_EV_t05}:
+\begin{enumerate}
+  \item the main, largest wave, going from roughly (0,0.75) to (0.75,0),
+  \item a wave going from roughly (0,0.25) to (0.75,0),
+  \item a wave going from roughly (0,0.75) to (0.25,0), and
+  \item the smallest wave, going from roughly (0,0.25) to (0.25,0).
+\end{enumerate}
+If one reflects wave 2 about $y=0$, wave 3 about $x=0$, and wave 4 about
+both $y=0$ and $x=0$, then one constructs the circular wave form
+that would have formed from the droplet in an infinite domain.
+The Galerkin method was also applied to this problem, but
+when the initial circular wave from the droplet crashed into the boundary,
+severe oscillations developed and grew. This was also the case using
+SSPRK33, although the oscillations grew more slowly.
+
+As of yet, no FCT method for the 2-D shallow water equations has
+been developed in this research because the characteristic transformation performed by the
+limiter described in this dissertation cannot simultaneously be applied in
+both $x$ and $y$ directions. In this case, the entropy viscosity method
+does not encounter noticeable oscillations, but more challenging test
+problems, such as a 2-D dam break, could reveal oscillations.
+
+%-------------------------------------------------------------------------------
+\begin{figure}[ht]
+   \centering
+   \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/shallowwater/bathtub/images/low_t01.png}
+      \caption{Low-Order, $t=0.1$}
+   \end{subfigure}
+   \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/shallowwater/bathtub/images/low_t05.png}
+      \caption{Low-Order, $t=0.5$}
+   \end{subfigure}
+   \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/shallowwater/bathtub/images/EV_t01.png}
+      \caption{EV, $t=0.1$}
+   \end{subfigure}
+   \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/shallowwater/bathtub/images/EV_t05.png}
+      \caption{EV, $t=0.5$\label{fig:bathtub_EV_t05}}
+   \end{subfigure}
+   \caption{Comparison of Low-Order and High-Order Solutions for the
+     Bathtub Test Problem Using Explicit Euler Time Discretization}
+   \label{fig:bathtub}
+\end{figure}
+%-------------------------------------------------------------------------------
 
 \clearpage

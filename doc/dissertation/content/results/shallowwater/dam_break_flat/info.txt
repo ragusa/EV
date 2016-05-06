@@ -1,6 +1,0 @@
-FCT bounds: wonky
-CFL = 0.1
-Ncells = 256
-cE = 1
-cJ = 1
-normalization = local

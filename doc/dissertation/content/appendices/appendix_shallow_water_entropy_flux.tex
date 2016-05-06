@@ -50,8 +50,17 @@ of the momentum component fluxes:
 Here the dependence of the flux functions on $\vectorsolution$
 will be dropped for brevity.
 
-The objective here is to derive an entropy balance equation, which gives the
-rate of change of entropy, $\partial_\timevalue\entropy$. To yield such an
+Recall from Equation \eqref{eq:entropy_swe} the definition of the
+entropy function for the SWE:
+\[
+  \entropy(\height,\heightmomentum,\bathymetry)
+  = \half\frac{\heightmomentum\cdot\heightmomentum}
+  {\height} + \half\gravity\height\pr{\height+\bathymetry}
+  \eqp
+\]
+The objective here is to derive an entropy equation, which gives the
+time rate of change of entropy $\partial_t\entropy$.
+To yield such an
 equation, one can take advantage of the derivative chain rule:
 \begin{equation}\label{eq:shallowwater_chainrule}
   \partial_\timevalue\entropy

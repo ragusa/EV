@@ -10,10 +10,10 @@ where $\angularflux\xt$ is the angular flux in direction $\directionvector$,
 $\speed$ is the transport speed, $\totalcrosssection(\x)$
 is the macroscopic total cross-section, and $\radiationsource\xt$ is an
 extraneous source.
-This model is a special case of the full neutron transport equation,
+This model is a special case of the energy-dependent neutron transport equation,
 \begin{multline}
   \frac{1}{\speed(E)}\ppt{\angularflux} + \directionvector\cdot\nabla\angularflux\xdet
-    + \totalcrosssection\xet\angularflux\xdet = \radiationsource\xdet\\
+    + \totalcrosssection\xet\angularflux\xdet = \radiationsource_{\text{ext}}\xdet\\
     + \frac{\chi_\text{p}(E)}{4\pi}\int\limits_0^\infty
       dE'\nu_\text{p}(\x,E',t)\Sigma_\text{f}(\x,E',t)\phi(\x,\di,E',t)
     + \sum\limits_{i=1}^{n_\text{d}}\frac{\chi_{\text{d},i}(E)}{4\pi}\lambda_i C_i\xt\\
@@ -21,35 +21,46 @@ This model is a special case of the full neutron transport equation,
       \Sigma_\text{s}(\x,E'\rightarrow E,\di'\rightarrow\di,t)\angularflux(\x,\di',E',t)
   \eqc
 \end{multline}
-where $E$ is energy, $\Sigma_\text{f}$ is the fission cross section, $\Sigma_\text{s}$ is the
-double-differential scattering cross section, $\chi_\text{p}$ is the prompt
+where $E$ is energy,
+$\radiationsource_{\text{ext}}$ is the extraneous source,
+$\Sigma_\text{f}$ is the fission cross section,
+$\Sigma_\text{s}$ is the double-differential scattering cross section,
+$\chi_\text{p}$ is the prompt
 neutron energy spectrum, $\nu_\text{p}$ is the prompt
 neutron yield, $n_\text{d}$ is the number of delayed neutron precursors,
 and $\chi_{\text{d},i}$, $\lambda_i$, and $C_i$ are the delayed neutron
 energy spectrum, decay constant, and concentration of precursor $i$, respectively.
-Equation \eqref{eq:rad_transport} is obtained by assuming that the transport
-medium does not scatter, fission, or change with time. The arguments
-$E$ and $\di$ are dropped for the remainder of the dissertation
-because this dependence is not important since the omission of scattering
-and fission terms decouples the equation in energy and direction.
-The units are thus intentionally left ambiguous.
-
-Note that fission and scattering sources still can be included in Equation
-\eqref{eq:rad_transport} in a source iteration scheme:
+Equation \eqref{eq:rad_transport} is obtained by lumping the extraneous source,
+fission source, and scattering source into a single source term
+$\radiationsource$:
+\begin{multline}
+  \radiationsource\xdet \equiv \radiationsource_{\text{ext}}\xdet\\
+    + \frac{\chi_\text{p}(E)}{4\pi}\int\limits_0^\infty
+      dE'\nu_\text{p}(\x,E',t)\Sigma_\text{f}(\x,E',t)\phi(\x,\di,E',t)
+    + \sum\limits_{i=1}^{n_\text{d}}\frac{\chi_{\text{d},i}(E)}{4\pi}\lambda_i C_i\xt\\
+    + \int\limits_0^\infty dE'\int\limits_{4\pi}d\di'
+      \Sigma_\text{s}(\x,E'\rightarrow E,\di'\rightarrow\di,t)\angularflux(\x,\di',E',t)
+  \eqp
+\end{multline}
+This approach is representative of a typical approach in the iterative solution
+of the transport equation, known as source iteration:
 \begin{equation}
   \frac{1}{\speed}\ppt{\angularflux^{(\ell)}}
     + \directionvector\cdot\nabla\angularflux^{(\ell)}
     + \totalcrosssection\angularflux^{(\ell)} = \radiationsource^{(\ell-1)} \eqc
 \end{equation}
-where now $\radiationsource^{(\ell-1)}$ includes not only extraneous
-sources, but fission and scattering sources evaluated with the previous
+where $\radiationsource^{(\ell-1)}$ is evaluated with the previous
 solution iterate $\angularflux^{(\ell-1)}$. The multigroup
 method may still be used for discretization in energy, and the
 Discrete Ordinates, $S_N$, method may be used for discretization
 in angle, without invalidating the methodology developed in this dissertation.
+Note that the arguments $E$ and $\di$ are dropped for the remainder of the dissertation
+because this dependence is not important since the omission of scattering
+and fission terms decouples the equation in energy and direction.
+The units are thus intentionally left ambiguous.
 
 The transport equation is often referred to as the Boltzmann equation
-due to its resemblance to the transport theory developed by Boltzmann
+because it is a linearized form of the equation developed by Boltzmann
 in the 1800s to study kinetic theory of gases \cite{duderstadt}\cite{glasstone}.
 In general, transport theory is used in describing the transport of particles
 or waves through some background media. Such particles might include neutrons,
@@ -65,7 +76,13 @@ especially important, as the transport equation is used to guide nuclear
 reactor design and operation as well as design and analysis of
 radiation shielding.
 
-This research also considers the shallow water equations (SWE):
+The transport equation is classified as a hyperbolic partial differential
+equation (PDE). Hyperbolic PDEs are characterized by finite wave speeds
+in the solution and share a common body of methodology; the methodology
+presented in this dissertation is largely applicable to other systems of
+hyperbolic equations. In addition to the transport equation, this
+dissertation considers the shallow water equations (SWE), which are
+also hyperbolic:
 \begin{subequations}
 \begin{align}
   \ppt{\height} + \ppx{(\height\velocityx)} + \ppy{(\height\velocityy)} &= 0
@@ -80,7 +97,7 @@ This research also considers the shallow water equations (SWE):
   \eqc
 \end{align}
 \end{subequations}
-where $\height$ is the height, $\velocityx$ is the x-velocity,
+where $\height$ is fluid the height, $\velocityx$ is the x-velocity,
 $\velocityy$ is the y-velocity, and $\gravity$ is acceleration due to
 gravity.
 The SWE are derived from the Navier-Stokes
@@ -91,8 +108,9 @@ and upon depth-integrating the equations, the vertical velocity
 is removed. The SWE have many applications, including coastal
 flows, lakes, rivers, dam breaks, and tsunamis \cite{kirby}.
 
-The importance of the tsunami modelling in nuclear engineering has unfortunately
-become very clear in recent years.
+
+The importance of the tsunami modelling in nuclear engineering has
+been highlighted in recent years.
 The magnitude 9.0 earthquake that occurred off the coast of Tohoku in 2011,
 often referred to as the Great East Japan earthquake \cite{USGS_tohoku},
 produced a tsunami that not only

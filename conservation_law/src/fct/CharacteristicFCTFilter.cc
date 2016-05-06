@@ -174,6 +174,10 @@ void CharacteristicFCTFilter<dim>::compute_solution_bounds(
  * \brief Computes the characteristic antidiffusion bounds
  *        \f$\hat{\mathbf{Q}}^\pm\f$.
  *
+ * \pre This function assumes that the old solution has been transformed
+ *      into characteristic variables and stored in
+ *      \c old_solution_characteristic.
+ *
  * \param[in] old_solution  old solution \f$\mathbf{U}^n\f$
  * \param[in] dt  time step size \f$\Delta t\f$
  * \param[in] inviscid_ss_flux  inviscid steady-state flux vector
@@ -185,7 +189,7 @@ void CharacteristicFCTFilter<dim>::compute_solution_bounds(
  */
 template <int dim>
 void CharacteristicFCTFilter<dim>::compute_antidiffusion_bounds(
-  const Vector<double> & old_solution,
+  const Vector<double> &,
   const double & dt,
   const Vector<double> &,
   const SparseMatrix<double> &,
@@ -201,12 +205,8 @@ void CharacteristicFCTFilter<dim>::compute_antidiffusion_bounds(
 
   // start computing Q+
   Q_plus = 0;
-  lumped_mass_matrix.vmult(tmp, old_solution);
+  lumped_mass_matrix.vmult(tmp, old_solution_characteristic);
   Q_plus.add(-1.0 / dt, tmp);
-  // Q_plus.add(1.0, inviscid_ss_flux);
-  // low_order_diffusion_matrix.vmult(tmp, old_solution);
-  // Q_plus.add(1.0, tmp);
-  // Q_plus.add(-1.0, ss_rhs);
 
   // copy current contents of Q+ as these components are identical
   Q_minus = Q_plus;

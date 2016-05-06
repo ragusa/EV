@@ -1,0 +1,20 @@
+\begin{tikzpicture}[
+  scale=1]
+
+\def\pointsize{2pt}
+\def\radius{2}
+
+\coordinate (mycenter) at (0,0);
+\fill (mycenter) circle (\pointsize);
+\draw[draw=red, fill=red, fill opacity=0.25] (mycenter) circle (\radius);
+\draw (mycenter) node[below] {$\x$};
+\draw[-latex] (mycenter) -- (-30:\radius) node[pos=0.5,sloped,above] {$\speed\tau$};
+\draw[blue,line width=1.5pt] (mycenter) -- (210:\radius)
+  node[pos=0.5,sloped,above] {$L(\x,\tau)$};
+\draw[dashed] (mycenter) -- (30:\radius);
+\node[red] at ($0.5*(0,\radius)$) {$N(\x,\tau)$};
+\coordinate (dircenter) at (1.2*\radius,0.3*\radius);
+\draw[|-latex,shift=(dircenter)] (0,0) -- (30:0.75)
+  node[pos=0.5,sloped,above] {$\di$};
+
+\end{tikzpicture}

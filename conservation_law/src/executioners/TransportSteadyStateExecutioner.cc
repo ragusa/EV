@@ -60,6 +60,10 @@ void TransportSteadyStateExecutioner<dim>::run()
   this->postprocessor->output_results_if_last_cycle(
     this->new_solution, this->dof_handler, *this->triangulation);
 
+  // output viscosity if requested
+  if (this->parameters.output_viscosity)
+    this->output_viscosity(*this->postprocessor,false,0.0);
+
   // print final solution if specified
   if (this->parameters.print_final_solution)
   {

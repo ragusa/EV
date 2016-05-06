@@ -566,3 +566,49 @@ void TransportExecutioner<dim>::applyDirichletBC(SparseMatrix<double> & A,
   // apply boundary values to system
   MatrixTools::apply_boundary_values(boundary_values, A, x, b);
 }
+
+/**
+ * \brief Outputs viscosities.
+ *
+ * \param[in] postprocessor postprocessor
+ * \param[in] is_transient flag signalling that this is to output as an
+ *            item in a transient
+ * \param[in] time current time value, which is used if this is output as an
+ *            item in a transient
+ */
+template <int dim>
+void TransportExecutioner<dim>::output_viscosity(PostProcessor<dim> & postprocessor,
+                                            const bool & is_transient,
+                                            const double & time)
+{
+  // create vector of pointers to cell maps of viscosity
+  std::vector<std::shared_ptr<Viscosity<dim>>> viscosities;
+  std::vector<std::string> viscosity_names;
+
+  // output final viscosities if non-constant viscosity used
+  if (low_order_viscosity_type != ViscosityType::none)
+  {
+    viscosities.push_back(low_order_viscosity);
+    viscosity_names.push_back("low_order_viscosity");
+  }
+  if (entropy_viscosity_type != ViscosityType::none)
+  {
+    viscosities.push_back(entropy_viscosity);
+    viscosity_names.push_back("entropy_viscosity");
+  }
+  if (high_order_viscosity_type != ViscosityType::none)
+  {
+    viscosities.push_back(high_order_viscosity);
+    viscosity_names.push_back("high_order_viscosity");
+  }
+
+  // output the  viscosities
+  if (viscosities.size() > 0)
+    if (is_transient)
+      postprocessor.output_viscosity_transient(
+        viscosities, viscosity_names, time, dof_handler);
+    else
+      postprocessor.output_viscosity(
+        viscosities, viscosity_names, time, dof_handler);
+}
+

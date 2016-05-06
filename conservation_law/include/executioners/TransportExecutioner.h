@@ -61,6 +61,10 @@ protected:
                         Vector<double> & b,
                         Vector<double> & x,
                         const double & t = 0.0);
+  void output_viscosity(PostProcessor<dim> & postprocessor,
+                        const bool & is_transient = false,
+                        const double & time = 0.0);
+
 
   /** \brief Conditional output stream 1 */
   ConditionalOStream cout1;
