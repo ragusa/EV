@@ -12,7 +12,8 @@ $\cell$:
 \end{equation}
 where $\celldomain[\cell]$ is the domain of cell $\cell$. An illustration of
 this definition is given in Figure \ref{fig:cell_indices}.
-Let $\cardinality$ denote the number of elements in the set $\indicescell$.
+Let $\cardinality$ denote the number of elements in the set $\indicescell$;
+for example, in Figure \ref{fig:cell_indices}, $\cardinality=3$.
 %-------------------------------------------------------------------------------
 \begin{figure}[ht]
    \centering
@@ -27,6 +28,8 @@ to cells that lie in the shared support $\support\ij$:
   \cellindices(\support\ij) \equiv \{\cell: \celldomain \subset \support\ij\}
   \eqp
 \end{equation}
+For example, in Figure \ref{fig:shared_support}, $\cellindices(\support\ij)$
+would consist of the indices of the two cells in $\support\ij$.
 
 The following graph-theoretic local viscous bilinear form from
 \cite{guermond_firstorder} is employed in computation of the artificial

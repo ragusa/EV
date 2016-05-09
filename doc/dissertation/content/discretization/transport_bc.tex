@@ -1,0 +1,144 @@
+In this section, some options for the implementation of the incoming flux
+boundary condition, given by Equation \eqref{eq:incoming_flux}, are
+presented. This research considers three options for this task:
+\begin{enumerate}
+  \item Strongly impose the Dirichlet boundary conditions,
+  \item Weakly impose the Dirichlet boundary conditions, and
+  \item Weakly impose the Dirichlet boundary conditions with the boundary
+    penalty method.
+\end{enumerate}
+Most of the scalar results in this dissertation will use strongly imposed
+Dirichlet boundary conditions, but for some cases, the other two approaches
+are considered.
+
+Consider the linear system $\mathbf{B}\solutionvector = \mathbf{r}$.
+To strongly impose Dirichlet boundary conditions on this linear system,
+the system matrix and system right-hand-side vector are directly
+modified:
+\begin{subequations}
+\begin{equation}
+  \tilde{\mathbf{B}}\solutionvector = \tilde{\mathbf{r}} \eqc
+\end{equation}
+\begin{equation}
+  \tilde{B}\ij = \left\{\begin{array}{l l}
+    \left\{\begin{array}{c l}
+      \alpha_i & j   = i\\
+      0        & j \ne i\\
+    \end{array}\right. & i \in \incomingindices\\
+    B\ij & i \notin \incomingindices
+  \end{array}\right. \eqc
+\end{equation}
+\begin{equation}
+  \tilde{r}_i = \left\{\begin{array}{l l}
+    \alpha_i u^{\textup{inc}}_i & i \in    \incomingindices\\
+    r_i                         & i \notin \incomingindices
+  \end{array}\right. \eqc
+\end{equation}
+\end{subequations}
+where $\alpha_i$ is some positive value, $u^{\textup{inc}}_i$ is the incoming
+value to be imposed, and $\incomingindices$ is the set of
+indices of degrees of freedom (DoF) for which incoming boundary conditions apply.
+To summarize, for an incoming DoF $i$, the row $i$ of the system matrix
+$\mathbf{B}$ is zeroed, except for the diagonal value $\tilde{B}_{i,i}$,
+which is set to some positive value $\alpha_i$. The right-hand-side value
+$r_i$ is then replaced with $\tilde{r}_i=\alpha u^{\textup{inc}}_i$.
+In this way, the $i$th equation is replaced with the equation
+$\alpha_i\solutionletter_i = \alpha_i u^{\textup{inc}}_i$. Optionally, one
+may also eliminate all of the off-diagonal entries corresponding to $i$
+by bringing them over to the right-hand-side:
+\begin{subequations}
+\begin{equation}
+  \tilde{B}\ij = \left\{\begin{array}{l l}
+    \left\{\begin{array}{c l}
+      \alpha_i & j   = i\\
+      0        & j \ne i\\
+    \end{array}\right. & i \in \incomingindices\\
+    \left\{\begin{array}{c l}
+      0        & j \in \incomingindices\\
+      B\ij     & j \notin \incomingindices\\
+    \end{array}\right. & i \notin \incomingindices\\
+  \end{array}\right. \eqp
+\end{equation}
+\begin{equation}
+  \tilde{r}_i = \left\{\begin{array}{l l}
+    \alpha_i u^{\textup{inc}}_i & i \in    \incomingindices\\
+    r_i - \sum\limits_{j\in\incomingindices}B\ij u^{\textup{inc}}_j
+      & i \notin \incomingindices
+  \end{array}\right. \eqp
+\end{equation}
+\end{subequations}
+This approach has the advantage of preserving symmetry of the original
+matrix $\mathbf{B}$.
+
+To weakly impose the incoming boundary conditions for a degree
+of freedom $i\in\incomingindices$, one starts by
+integrating the advection term in Equation \eqref{eq:Aij} by parts:
+\begin{align}
+  \intSij \testfunction_i\velocity\cdot\nabla\testfunction_j\dvolume
+    &= -\int\limits_{\support\ij} \testfunction_j\velocity
+      \cdot\nabla\testfunction_i\dvolume + 
+    \int\limits_{\partial\support\ij} \testfunction_j\testfunction_i
+      \velocity\cdot\normalvector d\area\\
+    &= -\int\limits_{\support\ij} \testfunction_j\velocity
+      \cdot\nabla\testfunction_i\dvolume
+    + \sum\limits_{F\in\partial\support\ij}\int\limits_F \testfunction_j\testfunction_i
+      \velocity\cdot\normalvector d\area
+\end{align}
+The interior face terms cancel with their skew-symmetric counterparts
+and can thus be ignore, leaving only face terms for exterior faces
+$F\in\partial\support\ij^{\textup{ext}}$:
+\begin{align}
+  \intSij \testfunction_i\velocity\cdot\nabla\testfunction_j\dvolume
+    &= -\int\limits_{\support\ij} \testfunction_j\velocity
+      \cdot\nabla\testfunction_i\dvolume
+    + \sum\limits_{F\in\partial\support\ij^{\textup{ext}}}
+      \int\limits_F \testfunction_j\testfunction_i
+      \velocity\cdot\normalvector d\area
+\end{align}
+One then brings these terms to the right-hand-side, multiplied by the boundary
+data at $\x_j$. In summary, the modified steady-state matrix and
+steady-state right-hand-side vector are
+\begin{subequations}
+\begin{equation}
+  \tilde{\ssmatrixletter}\ij = \intSij\left(-\testfunction_j\velocity
+    \cdot\nabla\testfunction_i +
+  \reactioncoef\testfunction_j\testfunction_i\right) \dvolume \eqc
+\end{equation}
+\begin{equation}
+  \tilde{b}_i = \left\{\begin{array}{l l}
+    b_i - \sumj\pr{\sum\limits_{F\in\partial\support\ij^{\textup{ext}}}
+          \int\limits_F \testfunction_j\testfunction_i
+            \velocity\cdot\normalvector d\area}
+          u^{\textup{inc}}_j $$ & i \in    \incomingindices\\
+    b_i                         & i \notin \incomingindices
+  \end{array}\right. \eqp
+\end{equation}
+\end{subequations}
+
+For the boundary penalty method, to impose a Dirichlet boundary condition
+for degree of freedom $i$, instead of replacing equation $i$ with
+$\alpha_i\solutionletter_i=\alpha_i u^{\textup{inc}}_i$, as is done
+with strongly imposed Dirichlet boundary conditions, this equation is
+\emph{added} to the existing equation. The strength of the imposition
+of the boundary condition increases with increasing $\alpha_i$. The
+modified system matrix and right-hand-side vector are the following:
+\begin{subequations}
+\begin{equation}
+  \tilde{B}\ij = \left\{\begin{array}{l l}
+    \left\{\begin{array}{c l}
+      B_{i,i} + \alpha_i & j   = i\\
+      B\ij               & j \ne i\\
+    \end{array}\right. & i \in \incomingindices\\
+    B\ij & i \notin \incomingindices
+  \end{array}\right. \eqc
+\end{equation}
+\begin{equation}
+  \tilde{r}_i = \left\{\begin{array}{l l}
+    r_i + \alpha_i u^{\textup{inc}}_i & i \in    \incomingindices\\
+    r_i                               & i \notin \incomingindices
+  \end{array}\right. \eqp
+\end{equation}
+\end{subequations}
+This approach may be used with or without applying weak Dirichlet
+boundary conditions.
+

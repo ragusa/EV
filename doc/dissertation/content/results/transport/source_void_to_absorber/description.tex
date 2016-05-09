@@ -84,8 +84,60 @@ The steady-state results for this test problem revealed some significant
 FCT issues regarding the antidiffusion from Dirichlet nodes.
 When Dirichlet boundary conditions are strongly imposed, solution
 bounds do not apply, and it becomes unclear how to limit antidiffusion
-fluxes from these nodes.
+fluxes from these nodes. Consider symmetric limiters, i.e., those such that
+$L\ij=L\ji$, such as Zalesak's limiter, for which
+\begin{equation}
+  L\ij = \left\{\begin{array}{c c}
+    \min(L_i^+,L_j^-) & P\ij > 0\\
+    \min(L_i^-,L_j^+) & P\ij < 0\\
+  \end{array}\right. \eqp
+\end{equation}
+Suppose $i$ corresponds to a degree of freedom for which Dirichlet
+boundary conditions are strongly imposed. The uncertainty
+is the correct way to decide $L_i^+$ and $L_i^-$ since there
+are no valid bounds from which to compute these values.
 Figures \ref{fig:source_void_to_absorber_strong1} and 
+\ref{fig:source_void_to_absorber_strong0} show the solutions obtained
+using strongly imposed Dirichlet boundary conditions with these
+values set to $L_i^+=L_i^-=1$ and $L_i^+=L_i^-=0$, respectively.
+When $L_i^+=L_i^-=1$, the correction flux from the Dirichlet
+DoF $i$, which is positive, has only the upper bound for $j$
+to consider. The upper bound for $j$, which is inflated above the
+analytical solution due to the source, does not restrict this
+antidiffusion flux, and thus it is accepted fully to the unphysical
+value. Due to the implicitness of the solution bounds, the lower solution
+bound for $j$ is computed from this unphysical value and excludes the
+possibility of antidiffusion back to the analytical solution. This
+process continues with all of the other degrees of freedom.
+When instead, $L_i^+=L_i^-=0$, the solution does not lie above
+the analytical solution in the source region, but significant peak
+clipping appears at the interface between the source and absorber
+regions. It should be noted that there are combinations of limiting
+coefficient values, each in the range $(0,1)$, that produce a more
+accurate solution to this problem (without the peak clipping
+and resulting inaccuracy in the absorber region); the problem is that Zalesak's
+limiter (and in general, any practical limiter) is not optimal
+in the sense that it maximizes the magnitude of antidiffusive flux.
+One could in principle solve an optimization problem to select
+limiting coefficients that maximize the antidiffusive flux, but this
+is very expensive and thus not recommended for general use.
+
+For weakly imposed Dirichlet boundary conditions, solution bounds
+still apply, so limiting coefficients may be computed without special
+consideration. However, one must now consider the possibility of
+inaccurate boundary values.
+Figures \ref{fig:source_void_to_absorber_weak} shows the steady-state 
+solutions obtained using weakly imposed Dirichlet boundary conditions.
+In this case, the antidiffusion flux from the boundary gets limited
+(but not fully) due to the lower solution bound of the Dirichlet node.
+Because some antidiffusion was accepted here, the peak reaches
+a higher value than with the $L_i^+=L_i^-=0$ case.
+Finally, Figure \ref{fig:source_void_to_absorber_penalty} shows
+the steady-state solution obtained with weakly imposed Dirichlet
+boundary conditions and a boundary penalty (see Section \ref{sec:transport_bc}).
+The FCT solution looks very similar to the case without any penalty,
+but the effect on the low-order and entropy viscosity solutions is
+clear.
 
 %-------------------------------------------------------------------------------
 \begin{figure}[ht]

@@ -259,7 +259,7 @@ void ProblemParameters<dim>::process_base_parameters()
 
   // assert that problem is not transient if steady-state is specified
   AssertThrow(!(specified_steady_state && is_transient_problem),
-         ExcNotASteadyStateProblem());
+              ExcNotASteadyStateProblem());
 
   // constants for function parsers
   constants["pi"] = numbers::PI;

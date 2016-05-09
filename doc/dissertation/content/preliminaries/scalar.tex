@@ -43,8 +43,7 @@ Initial conditions are included if the problem is transient:
 \end{equation}
 Boundary conditions will depend on the chosen conservation law and
 the particular problem. 
-This research assumes an incoming flux boundary condition, which is strongly
-imposed as a Dirichlet boundary condition:
+This research assumes an incoming flux boundary condition:
 \begin{equation}\label{eq:incoming_flux}
    \scalarsolution\xt = \scalarsolution^{\text{inc}}\xt \quad \forall \x
    \in \domainboundary^-,
@@ -54,3 +53,6 @@ imposed as a Dirichlet boundary condition:
 These conditions together make the problem well-posed, but for general
 nonlinear conservation laws, care must be taken to ensure that the
 boundary conditions used result in a well-posed problem.
+
+Some options for the implementation of the incoming flux boundary condition
+are presented in Section \ref{sec:transport_bc}.

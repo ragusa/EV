@@ -55,6 +55,12 @@ protected:
 
   Vector<double> tmp_vector;
 
+  /** \brief total number of entropy viscosity iterations */
+  double total_entropy_viscosity_iterations;
+
+  /** \brief total number of FCT iterations */
+  double total_fct_iterations;
+
 private:
   void assembleMassMatrices();
 

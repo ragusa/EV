@@ -16,8 +16,8 @@ subsection physics
 end
 
 subsection constants
-  set incoming =   1.0
-  set sigma1   = 100.0
+  set incoming =  1.0
+  set sigma1   = 10.0
 end
 
 subsection domain
@@ -44,7 +44,7 @@ subsection exact solution
   set has exact solution = true
   set exact solution type = parsed
   set exact solution = if(x-t<x_min, if(x>=x_mid, \
-    if(y>=x_mid, incoming*exp(-sigma*(x-x_mid)), incoming), \
+    if(y>=x_mid, incoming*exp(-sigma1*(x-x_mid)), incoming), \
     incoming), 0)
 end
 

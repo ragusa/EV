@@ -65,7 +65,6 @@ protected:
                         const bool & is_transient = false,
                         const double & time = 0.0);
 
-
   /** \brief Conditional output stream 1 */
   ConditionalOStream cout1;
 

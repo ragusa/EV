@@ -233,6 +233,10 @@ void TransportThetaExecutioner<dim>::compute_entropy_viscosity_solution(
     converged =
       this->nonlinear_solver.update(this->system_matrix, this->system_rhs);
   }
+
+  // add number of iterations to total
+  this->total_entropy_viscosity_iterations +=
+    this->nonlinear_solver.get_number_of_iterations();
 }
 
 /**
@@ -303,6 +307,9 @@ void TransportThetaExecutioner<dim>::compute_fct_solution(const double & dt,
     converged =
       this->nonlinear_solver.update(this->system_matrix, this->system_rhs);
   }
+
+  // add number of iterations to total
+  this->total_fct_iterations += this->nonlinear_solver.get_number_of_iterations();
 
   // check FCT solution
   if (this->parameters.check_fct_bounds)

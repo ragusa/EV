@@ -28,8 +28,12 @@ TransportAnalyticThetaFCTFilter<dim>::TransportAnalyticThetaFCTFilter(
   const SparseMatrix<double> & lumped_mass_matrix_,
   const double & theta_,
   const std::map<unsigned int, double> & dirichlet_values_)
-  : ThetaFCTFilter<dim>(
-      run_parameters_, limiter_, dof_handler_, fe_, lumped_mass_matrix_, dirichlet_values_),
+  : ThetaFCTFilter<dim>(run_parameters_,
+                        limiter_,
+                        dof_handler_,
+                        fe_,
+                        lumped_mass_matrix_,
+                        dirichlet_values_),
     analytic_bounds(
       problem_parameters_, dof_handler_, fe_, cell_quadrature_, dirichlet_values_)
 {
@@ -92,7 +96,8 @@ bool TransportAnalyticThetaFCTFilter<dim>::check_bounds(
  * \return lower solution bound vector
  */
 template <int dim>
-Vector<double> TransportAnalyticThetaFCTFilter<dim>::get_lower_solution_bound() const
+Vector<double> TransportAnalyticThetaFCTFilter<dim>::get_lower_solution_bound()
+  const
 {
   return analytic_bounds.lower;
 }
@@ -103,7 +108,8 @@ Vector<double> TransportAnalyticThetaFCTFilter<dim>::get_lower_solution_bound() 
  * \return upper solution bound vector
  */
 template <int dim>
-Vector<double> TransportAnalyticThetaFCTFilter<dim>::get_upper_solution_bound() const
+Vector<double> TransportAnalyticThetaFCTFilter<dim>::get_upper_solution_bound()
+  const
 {
   return analytic_bounds.upper;
 }

@@ -577,9 +577,10 @@ void TransportExecutioner<dim>::applyDirichletBC(SparseMatrix<double> & A,
  *            item in a transient
  */
 template <int dim>
-void TransportExecutioner<dim>::output_viscosity(PostProcessor<dim> & postprocessor,
-                                            const bool & is_transient,
-                                            const double & time)
+void TransportExecutioner<dim>::output_viscosity(
+  PostProcessor<dim> & postprocessor,
+  const bool & is_transient,
+  const double & time)
 {
   // create vector of pointers to cell maps of viscosity
   std::vector<std::shared_ptr<Viscosity<dim>>> viscosities;
@@ -611,4 +612,3 @@ void TransportExecutioner<dim>::output_viscosity(PostProcessor<dim> & postproces
       postprocessor.output_viscosity(
         viscosities, viscosity_names, time, dof_handler);
 }
-

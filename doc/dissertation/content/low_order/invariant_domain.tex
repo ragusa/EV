@@ -29,8 +29,9 @@ Consider the following Riemann initial value problem (IVP):
 \end{equation}
 where $\vectorsolution\in\realspace^\ncomponents$ is the $\ncomponents$-component solution,
 $\consfluxsystem(\vectorsolution)\equiv[\consflux(\vectorsolution)_1,\ldots,
- \consflux(\vectorsolution)_{\ncomponents}]^T$ is vector of $d$-dimensional conservation
-law fluxes for each system component, and $\normalvector$ is a unit vector
+ \consflux(\vectorsolution)_{\ncomponents}]^T$ is a matrix of size $\ncomponents\times d$,
+where each row $i$ is the $d$-dimensional conservation
+law flux for component $i$, and $\normalvector$ is a unit vector
 in $\realspace^d$.
 This problem has a unique solution which is denoted by
 $\vectorsolution(\vectorsolution_L,\vectorsolution_R,\normalvector)(x,t)$.

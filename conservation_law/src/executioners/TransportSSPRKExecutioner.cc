@@ -105,9 +105,19 @@ void TransportSSPRKExecutioner<dim>::compute_new_solution(const double & dt,
                    this->high_order_diffusion_matrix,
                    this->ss_rhs,
                    true);
+
+        // add number of entropy viscosity iterations to total
+        if (this->parameters.high_order_scheme == HighOrderScheme::entropy_visc)
+          this->total_entropy_viscosity_iterations += ssprk.n_stages;
+
         break;
       case Scheme::fct:
         perform_fct_ssprk_step(dt, old_stage_dt, n);
+
+        // add number of entropy viscosity iterations to total
+        if (this->parameters.high_order_scheme == HighOrderScheme::entropy_visc)
+          this->total_entropy_viscosity_iterations += ssprk.n_stages;
+
         break;
       default:
         AssertThrow(false, ExcNotImplemented());

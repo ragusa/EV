@@ -1,5 +1,4 @@
-# Input file for scalar transport
-
+# Input file for scalar transport 
 # Problem names:
 #   absorber
 #   absorber_ss
@@ -13,18 +12,22 @@
 #   mms_x_t        u(x,t) = x*t
 #   mms_t          u(x,t) = t
 #   obstruction
+#   obstruction_ss
 #   sourcevoid_to_absorber
 #   sourcevoid_to_absorber_ss
 #   three_region
+#   three_region_ss
 #   void
 #   void_to_absorber_1d
+#   void_to_absorber_2d
 #   void_to_absorber_1d_ss
+#   void_to_absorber_2d_ss
 subsection problem
-   set problem name = sourcevoid_to_absorber_ss
+   set problem name = sourcevoid_to_absorber
 end
 
 subsection scheme
-   set scheme            = high          # low|high|fct
+   set scheme            = fct          # low|high|fct
    set low order scheme  = dmp          # constant|lax|dmp|di_visc|di_diff
    set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
 end
@@ -43,16 +46,16 @@ end
 
 subsection time
    set time step size option  = cfl_dmp # constant|cfl|cfl_dmp|cfl_di
-   set cfl                    = 0.5
+   set cfl                    = 1.0
    set time step size         = 0.001
-   set use default end time   = true
-   set end time               = 0.01
+   set use default end time   = false
+   set end time               = 1.0
    set steady state tolerance = 1.0e-6
 end
 
 subsection temporal discretization
-   set temporal discretization = ss # ss|ssprk|theta
-   set ssprk discretization    = SSP3  # FE|SSP2|SSP3
+   set temporal discretization = theta # ss|ssprk|theta
+   set ssprk discretization    = FE    # FE|SSP2|SSP3
    set theta discretization    = BE    # FE|CN|BE
 end
 
@@ -67,18 +70,18 @@ subsection artificial viscosity
 end
 
 subsection fct
-   set filter sequence string        = dmp_analytic # dmp|dmp_analytic|analytic
+   set filter sequence string        = dmp # dmp|dmp_analytic|analytic
    set limiter option                = zalesak # ones|zeroes|zalesak
    set use multipass limiting        = true
    set multipass limiting percent tolerance = 0.01
-   set dirichlet limiting coefficient = 0.0
+   set dirichlet limiting coefficient = 1.0
    set enforce antidiffusion bounds signs = false
    set fct synchronization type      = none    # none|min|compound
    set fct initialization option     = low     # zero|low|high
    set skip fct if bounds satisfied  = false
    set use cumulative antidiffusion algorithm = false
    set use star states in fct bounds = false
-   set check fct bounds              = true
+   set check fct bounds              = false
    set output limiter matrix         = false
    set output final fct bounds       = true
    set output transient fct bounds   = false
@@ -103,7 +106,7 @@ subsection quadrature
 end
 
 subsection output
-   set verbosity level    = 2    # 0|1|2 (0 is least verbose)
+   set verbosity level    = 1    # 0|1|2 (0 is least verbose)
    set output exact solution = true
    set output period      = 0
    set transient output size limit = 1e9

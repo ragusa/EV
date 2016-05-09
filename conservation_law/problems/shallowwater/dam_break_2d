@@ -16,8 +16,8 @@ subsection boundary conditions
 end
 
 subsection initial conditions
-  set initial conditions height = if(x > x_interface, h_right, h_left)
-  set initial conditions momentumx = if(x > x_interface, h_right*u_right, \
+  set initial conditions height = if(x >= x_interface, h_right, h_left)
+  set initial conditions momentumx = if(x >= x_interface, h_right*u_right, \
     h_left*u_left)
 end
 
@@ -27,12 +27,12 @@ end
 
 subsection default end time
   set has default end time = true
-  set default end time = 25.0
+  set default end time = 10.0
 end
 
 subsection constants
   set gravity = 0.05
-  set x_interface = 3.0
+  set x_interface = 4.0
   set h_left  = 0.05
   set h_right = 0.01
   set u_left  = 0.0

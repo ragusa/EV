@@ -63,6 +63,13 @@ For steady-state computations, where there is no transient and
 thus no wave front, one would not see this diffusivity
 at the right boundary.
 
+Figure \ref{fig:void_to_absorber_visc} shows the low-order and entropy
+viscosity profiles using SSPRK33, both on linear scales but separately
+scaled. One can see that the entropy viscosity
+is highest along the incident edge of the absorber region, and in
+particular, the corner of the absorber region in the center of the
+domain.
+
 One can visually compare the width of the diffusive region to infer the
 diffusivity of each numerical scheme. For example, one can see that the
 low-order solution is a bit more diffusive than the high-order schemes and FCT
@@ -171,6 +178,23 @@ Entropy Jump Coefficient & $\entropyjumpcoef = 0.1$\\
    \caption{Comparison of Solutions for the 3-D Normal Void-to-Absorber Test
      Problem Using SSPRK33 Time Discretization}
    \label{fig:void_to_absorber_3D}
+\end{figure}
+%-------------------------------------------------------------------------------
+\begin{figure}[ht]
+   \centering
+   \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/void_to_absorber/images/low_viscosity_SSP3_linearscale.png}
+      \caption{Low-order viscosity}
+   \end{subfigure}
+   \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/void_to_absorber/images/entropy_viscosity_SSP3_linearscale.png}
+      \caption{Entropy viscosity}
+   \end{subfigure}
+   \caption{Viscosity Profiles for the 2-D Void-to-Absorber Test
+     Problem Using SSPRK33 Time Discretization}
+   \label{fig:void_to_absorber_visc}
 \end{figure}
 %-------------------------------------------------------------------------------
 

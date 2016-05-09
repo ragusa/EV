@@ -130,3 +130,15 @@ bool NonlinearSolver<dim>::update(const SparseMatrix<double> & A,
   // return convergence flag
   return converged;
 }
+
+/**
+ * \brief Returns the number of nonlinear iterations since the last
+ *        \c initialize() call
+ *
+ * \return  number of nonlinear iterations since the last \c initialize() call
+ */
+template <int dim>
+unsigned int NonlinearSolver<dim>::get_number_of_iterations() const
+{
+  return iteration_number;
+}

@@ -10,8 +10,10 @@ subsection physics
   set transport direction specification = 2d_angle
   set azimuthal angle = 0.0
   set normalize transport direction = false
-  set cross section = if(x<=x1 || y<=x1 || z<=x1, sigma1, sigma2)
-  set source = if(x<=x1 || y<=x1 || z<=x1, source1, source2)
+  #set cross section = if(x<=x1 || y<=x1 || z<=x1, sigma1, sigma2)
+  set cross section = if(x<=x1, sigma1, sigma2)
+  #set source = if(x<=x1 || y<=x1 || z<=x1, source1, source2)
+  set source = if(x<=x1, source1, source2)
   set source is time dependent = false
 end
 

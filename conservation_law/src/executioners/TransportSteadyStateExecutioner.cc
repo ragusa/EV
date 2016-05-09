@@ -62,7 +62,7 @@ void TransportSteadyStateExecutioner<dim>::run()
 
   // output viscosity if requested
   if (this->parameters.output_viscosity)
-    this->output_viscosity(*this->postprocessor,false,0.0);
+    this->output_viscosity(*this->postprocessor, false, 0.0);
 
   // print final solution if specified
   if (this->parameters.print_final_solution)

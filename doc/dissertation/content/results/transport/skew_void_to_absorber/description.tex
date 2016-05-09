@@ -91,6 +91,13 @@ solution. The advantage of using FCT over the low-order scheme is
 less evident in these results simply because the wave front is
 in the absorber region, where the solution is already very small;
 thus the gradient is more difficult to see.
+
+Figure \ref{fig:skew_void_to_absorber_visc} shows the low-order
+and entropy viscosity profiles for SSPRK33. As in the normally-incident
+void-to-absorber test problem, the highest entropy viscosity occurs
+at the corner of the absorber region, and is otherwise large on
+the boundaries of the absorber region.
+
 %-------------------------------------------------------------------------------
 \begin{figure}[ht]
    \centering
@@ -160,6 +167,24 @@ thus the gradient is more difficult to see.
    \caption{Comparison of Solutions for Skew Void-to-Absorber Test Problem
      Using SSPRK33 Time Discretization with 16384 Cells}
    \label{fig:skew_void_to_absorber_2D_ssprk33}
+\end{figure}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{figure}[ht]
+   \centering
+   \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/skew_void_to_absorber/images/low_viscosity_SSP3_linearscale.png}
+      \caption{Low-order viscosity}
+   \end{subfigure}
+   \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/skew_void_to_absorber/images/entropy_viscosity_SSP3_linearscale.png}
+      \caption{Entropy viscosity}
+   \end{subfigure}
+   \caption{Viscosity Profiles for the Skew Void-to-Absorber Test Problem
+     Using SSPRK33 Time Discretization}
+   \label{fig:skew_void_to_absorber_visc}
 \end{figure}
 %-------------------------------------------------------------------------------
 

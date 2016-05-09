@@ -24,7 +24,7 @@ public:
     const FESystem<dim> & fe,
     const QGauss<dim> & cell_quadrature,
     const std::shared_ptr<Limiter<dim>> limiter,
-                 const SparseMatrix<double> & lumped_mass_matrix,
+    const SparseMatrix<double> & lumped_mass_matrix,
     const std::map<unsigned int, double> & dirichlet_values);
 
   virtual void filter_antidiffusive_fluxes(
@@ -44,11 +44,10 @@ public:
   Vector<double> get_upper_solution_bound() const override;
 
 protected:
-  void compute_solution_bounds(
-    const Vector<double> & old_solution,
-    const double & dt,
-    const Vector<double> & ss_reaction,
-    const Vector<double> & ss_rhs) override;
+  void compute_solution_bounds(const Vector<double> & old_solution,
+                               const double & dt,
+                               const Vector<double> & ss_reaction,
+                               const Vector<double> & ss_rhs) override;
 
   /** \brief analytic transport solution bounds */
   TransportAnalyticSolutionBounds<dim> analytic_bounds;

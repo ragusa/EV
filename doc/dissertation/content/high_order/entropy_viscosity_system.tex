@@ -48,8 +48,8 @@ for an interior face $F$:
 \begin{equation}
   \entropyjump_F(\vectorsolution)
   \equiv \left|
-    \jumpbrackets{\nabla\mathbf{\consfluxletter}^\entropy(\vectorsolution)}
-    \cdot\normalvector_F\cdot\normalvector_F
+    (\jumpbrackets{\nabla\mathbf{\consfluxletter}^\entropy(\vectorsolution)}
+    \cdot\normalvector_F)\cdot\normalvector_F
   \right| \eqc
 \end{equation}
 which can be interpreted as the jump in the gradient in the normal direction
@@ -74,7 +74,7 @@ presented for the scalar case,
    -\bar{\entropy}(\approximatescalarsolution^n)\|_{L^\infty(\domain)} \eqp
 \end{equation}
 For the shallow water equations, a possible alternative normalization
-is the following:
+is the following, which unlike the above normalization, is \emph{local}:
 \begin{equation}
   \entropynormalization^n_\cell =
     \max\limits_{\x_q\in\quadraturepoints_\cell} \gravity \approximate{\height}_q^2

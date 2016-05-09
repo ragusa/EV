@@ -35,6 +35,8 @@ public:
 
   bool update(const SparseMatrix<double> & A, const Vector<double> & b);
 
+  unsigned int get_number_of_iterations() const;
+
 protected:
   bool check_convergence(const Vector<double> & residual);
 

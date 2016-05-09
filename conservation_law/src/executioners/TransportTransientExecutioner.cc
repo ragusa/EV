@@ -55,6 +55,10 @@ TransportTransientExecutioner<dim>::TransportTransientExecutioner(
   older_solution.reinit(this->n_dofs);
   ss_rhs_new.reinit(this->n_dofs);
   tmp_vector.reinit(this->n_dofs);
+
+  // initial total iteration counts
+  total_entropy_viscosity_iterations = 0;
+  total_fct_iterations = 0;
 }
 
 /**
@@ -135,10 +139,13 @@ void TransportTransientExecutioner<dim>::run()
   older_solution = this->new_solution;
 
   // time loop
-  unsigned int n = 1; // time step index
+  unsigned int n = 0; // time step index
   bool in_transient = true;
   while (in_transient)
   {
+    // increment time step index
+    n++;
+
     // shorten time step size if new time would overshoot end time
     dt = dt_nominal;
     if (t_old + dt >= t_end)
@@ -164,9 +171,6 @@ void TransportTransientExecutioner<dim>::run()
     old_solution = this->new_solution;
     dt_old = dt;
     t_old = t_new;
-
-    // increment time step index
-    n++;
   }
 
   // evaluate errors for convergence study
@@ -201,6 +205,19 @@ void TransportTransientExecutioner<dim>::run()
     for (unsigned int j = 0; j < this->n_dofs; ++j)
       std::cout << this->new_solution[j] << std::endl;
   }
+
+  // evaluate average number of iterations per time step
+  const double avg_ev_iterations_per_step =
+    total_entropy_viscosity_iterations / n;
+  const double avg_fct_iterations_per_step = total_fct_iterations / n;
+  this->cout1 << std::endl;
+  this->cout1 << "Total EV  iterations: " << total_entropy_viscosity_iterations
+              << std::endl;
+  this->cout1 << "Total FCT iterations: " << total_fct_iterations << std::endl;
+  this->cout1 << "Average EV  iterations per time step: "
+              << avg_ev_iterations_per_step << std::endl;
+  this->cout1 << "Average FCT iterations per time step: "
+              << avg_fct_iterations_per_step << std::endl;
 }
 
 /**

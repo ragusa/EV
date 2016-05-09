@@ -30,9 +30,10 @@ of the low-order scheme.
 \begin{proof}
 This proof begins by bounding the term $\diffusionmatrixletter\ij^{L,\timeindex}$:
 \begin{eqnarray*}
-   \diffusionmatrixletter\ij^{L,\timeindex}=
+   \diffusionmatrixletter\ij^{L,\timeindex}
+   & = &
      \sumKSij\lowordercellviscosity[\timeindex]
-   \localviscbilinearform{\cell}{j}{i}
+   \localviscbilinearform{\cell}{j}{i}\\
    & = & \sumKSij\max\limits_{k\ne \ell\in \indicescell}
      \pr{\frac{\max(0,\ssmatrixletter_{k,\ell}^\timeindex)}
        {-\sum\limits_{T\in\cellindices(\support_{k,\ell})}
