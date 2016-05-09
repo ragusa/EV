@@ -53,7 +53,7 @@ ev.smoothing_weight = 1.0; % weight for center value in smoothing
 %                  1 = SSPRK(1,1) (Explicit Euler)
 %                  2 = SSPRK(3,3) (Shu-Osher)
 %                  3 = theta method
-opts.temporal_scheme = 0; % temporal discretization scheme
+opts.temporal_scheme = 3; % temporal discretization scheme
 
 % theta parameter to use if using a theta method: 0.0 = FE
 %                                                 0.5 = CN
@@ -62,7 +62,7 @@ opts.theta = 1.0;
        
 opts.use_constant_dt = false; % option to use constant dt instead of CFL
 opts.constant_dt = 0.001;    % time step size to use if using constant size
-opts.CFL = 0.5;       % CFL number
+opts.CFL = 10.0;       % CFL number
 opts.t_end = 1.0;     % max time to run
 opts.ss_tol = 1.0e-6;  % steady-state tolerance
 %--------------------------------------------------------------------------
@@ -72,7 +72,7 @@ opts.ss_tol = 1.0e-6;  % steady-state tolerance
 %             2 = widen low-order DMP to analytic
 %             3 = analytic
 %             4 = analytic upwind
-fct_opts.DMP_option = 2;
+fct_opts.DMP_option = 4;
 
 % limiter option: 0 = All 0 (no correction; low-order)
 %                 1 = All 1 (full correction; high-order)
@@ -888,7 +888,7 @@ if (compute_FCT)
                             u_old,uFCT,uL,dt,...
                             ML,AL,b,F,sigma_min,sigma_max,source_min,...
                             source_max,mesh,opts.theta,dof_handler.n_dof,...
-                            phys,fct_opts);
+                            phys,fct_opts,opts);
                         
                         % compute system rhs
                         system_rhs = ML*u_old + (1-opts.theta)*dt*ss_res ...

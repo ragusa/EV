@@ -23,11 +23,11 @@
 #   void_to_absorber_1d_ss
 #   void_to_absorber_2d_ss
 subsection problem
-   set problem name = sourcevoid_to_absorber
+   set problem name = obstruction
 end
 
 subsection scheme
-   set scheme            = fct          # low|high|fct
+   set scheme            = fct         # low|high|fct
    set low order scheme  = dmp          # constant|lax|dmp|di_visc|di_diff
    set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
 end
@@ -36,7 +36,7 @@ subsection refinement
    set refinement cycles        = 1
    set refine space             = true
    set refine time              = true
-   set initial refinement level = 5
+   set initial refinement level = 4
    set use adaptive mesh refinement = false
    set time refinement factor   = 0.5
    set refinement fraction      = 0.5
@@ -46,10 +46,10 @@ end
 
 subsection time
    set time step size option  = cfl_dmp # constant|cfl|cfl_dmp|cfl_di
-   set cfl                    = 1.0
+   set cfl                    = 10.0
    set time step size         = 0.001
    set use default end time   = false
-   set end time               = 1.0
+   set end time               = 10.0
    set steady state tolerance = 1.0e-6
 end
 
@@ -72,10 +72,10 @@ end
 subsection fct
    set filter sequence string        = dmp # dmp|dmp_analytic|analytic
    set limiter option                = zalesak # ones|zeroes|zalesak
-   set use multipass limiting        = true
+   set use multipass limiting        = false
    set multipass limiting percent tolerance = 0.01
-   set dirichlet limiting coefficient = 1.0
-   set enforce antidiffusion bounds signs = false
+   set dirichlet limiting coefficient = 0.0
+   set enforce antidiffusion bounds signs = true
    set fct synchronization type      = none    # none|min|compound
    set fct initialization option     = low     # zero|low|high
    set skip fct if bounds satisfied  = false

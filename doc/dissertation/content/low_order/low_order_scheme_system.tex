@@ -7,7 +7,9 @@ lumps the mass matrix and adds a low-order artificial diffusion term:
     + \sum_j\diffusionmatrixletter\ij^{L,n}\solutionvector_j^n
     = \ssrhs_i^n \eqc
 \end{equation}
-where the low-order artificial diffusion matrix $\loworderdiffusionmatrix$
+where the quantities $\gradiententry$ and $\consfluxinterpolant_j$
+are defined in Section \ref{sec:spatial_discretization_system}
+and the low-order artificial diffusion matrix $\loworderdiffusionmatrix$
 is given in the following definition, which is designed in
 \cite{guermond_invariantdomain} to be the smallest amount of artificial
 possible to give the invariant domain property described in Section

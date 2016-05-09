@@ -174,5 +174,9 @@ conditions of another component \cite{kuzmin_FCT}.
 
 After these limiting coefficients $\hat{\limitermatrix}\ij$ for the transformed
 system are computed, one simply uses $\limitermatrix\ij=\hat{\limitermatrix}\ij$
-in Equation \eqref{eq:fct_scheme_conservative} to solve for the FCT solution
-in the original variables.
+in the original, conservative scheme given by Equation \eqref{eq:fct_scheme_conservative}.
+In this way, the transformed fluxes $\hat{\correctionfluxmatrix}\ij$,
+which do not have the conservative property
+$\hat{\correctionfluxmatrix}\ij = -\hat{\correctionfluxmatrix}\ji$,
+are only used to compute $\limitermatrix\ij$,
+and the resulting scheme is still conservative.

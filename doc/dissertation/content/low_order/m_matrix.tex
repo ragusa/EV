@@ -69,6 +69,14 @@ Applying this inequality to Equation \eqref{eq:low_order_ss_matrix} gives
 \end{eqnarray*}
 \end{proof}
 %--------------------------------------------------------------------------------
+\begin{remark}
+If boundary conditions are weakly imposed, as discussed in Section
+\ref{sec:transport_bc}, then the steady-state system matrix is modified
+and $\tilde{\ssmatrix}\ij \geq \ssmatrix\ij$. In this case, the low-order
+viscosity is computed with the \emph{modified} steady-state matrix. Then
+Lemma \ref{lem:offdiagonalnegative} still holds.
+\end{remark}
+%--------------------------------------------------------------------------------
 %The following lemma proves that the diagonal elements of the low-order system
 %matrix are non-negative.
 %; however, this proof uses the assumption that the
@@ -177,6 +185,17 @@ $\sumj \localviscbilinearform{\cell}{j}{i}=0$,
    &\ge& 0 \eqp \qed
 \end{eqnarray*}
 \end{proof}
+%--------------------------------------------------------------------------------
+\begin{remark}
+If boundary conditions are weakly imposed, as discussed in Section
+\ref{sec:transport_bc}, then the steady-state system matrix is modified
+and $\tilde{\ssmatrix}\ij \geq \ssmatrix\ij$.
+Thus
+\begin{equation}
+  \sum_j\tilde{\ssmatrix}\ij \geq \sum_j\ssmatrix\ij \geq 0 \eqc
+\end{equation}
+and Lemma \ref{lem:rowsumspositive} still holds.
+\end{remark}
 %--------------------------------------------------------------------------------
 \begin{lemma}[lem:diagonalpositive]{Non-Negativity of Diagonal Elements}
    The diagonal elements of the matrix $\loworderssmatrix[n]$ are non-negative:

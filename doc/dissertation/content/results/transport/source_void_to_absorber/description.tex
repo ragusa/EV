@@ -41,33 +41,33 @@ shows the results for this problem using SSPRK time discretization,
 a CFL of 0.5, and 32 cells.
 Entropy residual and jump coefficients $\entropyresidualcoef$ and
 $\entropyjumpcoef$ are both 1.
+Table \ref{tab:source_void_to_absorber_run_parameters} summarizes the
+run parameters to generate the results in this section.
 Figure \ref{fig:source_void_to_absorber_fine} shows results
 for a finer mesh (256 cells) that illustrates the shortcomings of Galerkin-FCT
 vs. EV-FCT: Galerkin-FCT does not necessarily converge to the
 entropy solution.
 
-%%-------------------------------------------------------------------------------
-%\begin{table}[ht]\caption{Source-Void-to-Absorber Test Problem Run Parameters}
-%\label{tab:source_void_to_absorber_run_parameters}
-%\centering
-%\begin{tabular}{l l}\toprule
-%\emph{Parameter} & \emph{Value}\\\midrule
-%Number of Cells & $N_{cell} = 2^5, 2^8$\\
-%End Time & $t = 1$\\
-%CFL Number & $\nu = 0.5$\\
-%Time Integrator & SSPRK33\\\midrule
-%Entropy Function & $E(u) = \frac{1}{2}u^2$\\
-%Entropy Residual Coefficient & $c_E = 1.0$\\
-%Entropy Jump Coefficient & $c_J = 1.0$\\
-%Entropy Time Integrator & BE\\
-%\bottomrule\end{tabular}
-%\end{table}
+%-------------------------------------------------------------------------------
+\begin{table}[ht]\caption{Source-Void-to-Absorber Test Problem Run Parameters}
+\label{tab:source_void_to_absorber_run_parameters}
+\centering
+\begin{tabular}{l l}\toprule
+\emph{Parameter} & \emph{Value}\\\midrule
+Number of Cells & $N_{cell} = 32, 256$\\
+End Time & $t = 1$\\
+CFL Number & $\nu = 0.5$\\\midrule
+Entropy Function & $\entropy(u) = \frac{1}{2}u^2$\\
+Entropy Residual Coefficient & $\entropyresidualcoef = 1$\\
+Entropy Jump Coefficient & $\entropyjumpcoef = 1$\\
+\bottomrule\end{tabular}
+\end{table}
 %-------------------------------------------------------------------------------
 \begin{figure}[ht]
    \includegraphics[width=\textwidth]
      {\contentdir/results/transport/source_void_to_absorber/coarse.pdf}
    \caption{Comparison of Solutions for Source-Void-to-Absorber Problem
-     with $2^5$ Cells}
+     Using SSPRK33 with 32 Cells}
    \label{fig:source_void_to_absorber}
 \end{figure}
 %-------------------------------------------------------------------------------
@@ -75,7 +75,7 @@ entropy solution.
    \includegraphics[width=\textwidth]
      {\contentdir/results/transport/source_void_to_absorber/fine.pdf}
    \caption{Comparison of Solutions for Source-Void-to-Absorber Problem
-     with $2^8$ Cells}
+     Using SSPRK33 with 256 Cells}
    \label{fig:source_void_to_absorber_fine}
 \end{figure}
 %-------------------------------------------------------------------------------
@@ -143,7 +143,7 @@ clear.
 \begin{figure}[ht]
    \includegraphics[width=\textwidth]
      {\contentdir/results/transport/source_void_to_absorber/images/strong1.pdf}
-   \caption{Solutions for Source-Void-to-Absorber Problem
+   \caption{Steady-State Solutions for Source-Void-to-Absorber Problem
      with Strongly Imposed Dirichlet Boundary Conditions and $L^-=L^+=1$}
    \label{fig:source_void_to_absorber_strong1}
 \end{figure}
@@ -152,7 +152,7 @@ clear.
 \begin{figure}[ht]
    \includegraphics[width=\textwidth]
      {\contentdir/results/transport/source_void_to_absorber/images/strong0.pdf}
-   \caption{Solutions for Source-Void-to-Absorber Problem
+   \caption{Steady-State Solutions for Source-Void-to-Absorber Problem
      with Strongly Imposed Dirichlet Boundary Conditions and $L^-=L^+=0$}
    \label{fig:source_void_to_absorber_strong0}
 \end{figure}
@@ -161,7 +161,7 @@ clear.
 \begin{figure}[ht]
    \includegraphics[width=\textwidth]
      {\contentdir/results/transport/source_void_to_absorber/images/weak.pdf}
-   \caption{Solutions for Source-Void-to-Absorber Problem
+   \caption{Steady-State Solutions for Source-Void-to-Absorber Problem
      with Weakly Imposed Dirichlet Boundary Conditions}
    \label{fig:source_void_to_absorber_weak}
 \end{figure}
@@ -170,9 +170,48 @@ clear.
 \begin{figure}[ht]
    \includegraphics[width=\textwidth]
      {\contentdir/results/transport/source_void_to_absorber/images/weak_with_penalty.pdf}
-   \caption{Solutions for Source-Void-to-Absorber Problem
+   \caption{Steady-State Solutions for Source-Void-to-Absorber Problem
      with Weakly Imposed Dirichlet Boundary Conditions and Boundary Penalty}
    \label{fig:source_void_to_absorber_penalty}
+\end{figure}
+%-------------------------------------------------------------------------------
+
+Table \ref{tab:source_void_to_absorber_be_iterations_cfl} shows
+the results of a study of nonlinear iterations vs. CFL number for
+implicit Euler time discretization and 32 cells. The general
+trend shows that entropy viscosity iterations per time step gradually increase
+with increasing CFL, while FCT iterations per time step increases
+much more quickly. Even more problematic is that the EV-FCT solution
+error jumps very quickly from CFLs $\nu=5$ to $\nu=10$. The solutions
+corresponding to a CFL of 10 are shown in Figure
+\ref{fig:sourcevoidtoabsorber_be_cfl10}. This terrible solution
+is possible because for high CFL numbers, the bounds are relatively large.
+
+%-------------------------------------------------------------------------------
+\begin{table}[htb]\caption{Source-Void-to-Absorber Test Problem Implicit Euler
+  Nonlinear Iterations vs. CFL Number Results}
+\label{tab:source_void_to_absorber_be_iterations_cfl}
+\centering
+\begin{tabular}{c c c c c c c}\toprule
+\emph{CFL}, $\nu$ & $N_{steps}$ & \multicolumn{2}{c}{\emph{EV}}
+  & \multicolumn{2}{c}{\emph{FCT}} & $L^2$ \emph{error}\\
+  & & \emph{Total} & \emph{Avg.} &  \emph{Total} & \emph{Avg.} & \\\midrule
+0.1 & 741 & 6762 &  9.13 & 4321 &  5.83 & $1.19\times 10^{-2}$\\
+0.5 & 148 & 1547 & 10.45 & 1996 & 13.49 & $1.21\times 10^{-2}$\\
+1.0 &  75 &  844 & 11.25 & 1526 & 20.35 & $1.23\times 10^{-2}$\\
+5.0 &  15 &  261 & 17.40 & 1941 & 129.40 & $1.54\times 10^{-2}$\\ 
+10.0 &  8 &  127 & 15.88 & 1389 & 173.63 & $2.72\times 10^{-2}$\\ 
+\bottomrule\end{tabular}
+\end{table}
+%-------------------------------------------------------------------------------
+
+%-------------------------------------------------------------------------------
+\begin{figure}[ht]
+   \includegraphics[width=\textwidth]
+     {\contentdir/results/transport/source_void_to_absorber/images/solution_BE_CFL10.pdf}
+   \caption{Solutions for Source-Void-to-Absorber Problem
+     Using Implicit Euler and CFL of 10}
+   \label{fig:sourcevoidtoabsorber_be_cfl10}
 \end{figure}
 %-------------------------------------------------------------------------------
 
