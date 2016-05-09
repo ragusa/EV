@@ -78,42 +78,95 @@ integrating the advection term in Equation \eqref{eq:Aij} by parts:
     &= -\int\limits_{\support\ij} \testfunction_j\velocity
       \cdot\nabla\testfunction_i\dvolume + 
     \int\limits_{\partial\support\ij} \testfunction_j\testfunction_i
-      \velocity\cdot\normalvector d\area\\
+      \velocity\cdot\normalvector d\area \eqc\\
     &= -\int\limits_{\support\ij} \testfunction_j\velocity
       \cdot\nabla\testfunction_i\dvolume
-    + \sum\limits_{F\in\partial\support\ij}\int\limits_F \testfunction_j\testfunction_i
+    + \sum\limits_{F\subset\partial\support\ij}\int\limits_F \testfunction_j\testfunction_i
       \velocity\cdot\normalvector d\area
+  \eqc
 \end{align}
+where $\partial\support\ij$ denotes the boundary of the shared support
+$\support\ij$.
 The interior face terms cancel with their skew-symmetric counterparts
-and can thus be ignore, leaving only face terms for exterior faces
-$F\in\partial\support\ij^{\textup{ext}}$:
-\begin{align}
+and can thus be ignored, leaving only face terms for exterior faces.
+Let $\partial\support\ij^{\textup{ext}}$ denote the portion of the boundary
+of the shared support
+$\partial\support\ij$ that lies on the external boundary of the triangulation:
+$\partial\support\ij^{\textup{ext}} = \partial\support\ij\cap\partial\triangulation$. Then
+the advection term above can be expressed as
+\begin{equation}\label{eq:adv_ext}
   \intSij \testfunction_i\velocity\cdot\nabla\testfunction_j\dvolume
-    &= -\int\limits_{\support\ij} \testfunction_j\velocity
+    = -\int\limits_{\support\ij} \testfunction_j\velocity
       \cdot\nabla\testfunction_i\dvolume
-    + \sum\limits_{F\in\partial\support\ij^{\textup{ext}}}
+    + \sum\limits_{F\subset\partial\support\ij^{\textup{ext}}}
       \int\limits_F \testfunction_j\testfunction_i
       \velocity\cdot\normalvector d\area
-\end{align}
-One then brings these terms to the right-hand-side, multiplied by the boundary
-data at $\x_j$. In summary, the modified steady-state matrix and
+  \eqp
+\end{equation}
+Furthermore, let $\partial\support\ij^{-}$ denote the portion of $\partial\support\ij$
+on the \emph{incoming} portion of the boundary of the triangulation
+and $\partial\support\ij^{+}$ denote the portion on the \emph{outgoing} portion:
+\begin{equation}
+  \partial\support\ij^{-} \equiv \{
+    \x\in\partial\support\ij^{\textup{ext}} \,:\,
+    \velocity\cdot\normalvector(\x) < 0\} \eqc
+\end{equation}
+\begin{equation}
+  \partial\support\ij^{+} \equiv \{
+    \x\in\partial\support\ij^{\textup{ext}} \,:\,
+    \velocity\cdot\normalvector(\x) > 0\} \eqp
+\end{equation}
+Then Equation \eqref{eq:adv_ext} becomes
+\begin{multline}
+  \intSij \testfunction_i\velocity\cdot\nabla\testfunction_j\dvolume
+    = -\int\limits_{\support\ij} \testfunction_j\velocity
+      \cdot\nabla\testfunction_i\dvolume\\
+    + \sum\limits_{F^-\subset\partial\support\ij^{-}}
+      \int\limits_{F^-} \testfunction_j\testfunction_i
+      \velocity\cdot\normalvector_{F^-} d\area
+    + \sum\limits_{F^+\subset\partial\support\ij^{+}}
+      \int\limits_{F^+} \testfunction_j\testfunction_i
+      \velocity\cdot\normalvector_{F^+} d\area
+  \eqp
+\end{multline}
+The complete expression for $\ssmatrixletter\ij$ is then
+\begin{multline}
+  \ssmatrixletter\ij = \intSij\left(-\testfunction_j\velocity
+    \cdot\nabla\testfunction_i +
+  \reactioncoef\testfunction_j\testfunction_i\right) \dvolume\\
+    + \sum\limits_{F^-\subset\partial\support\ij^{-}}
+      \int\limits_{F^-} \testfunction_j\testfunction_i
+      \velocity\cdot\normalvector_{F^-} d\area
+    + \sum\limits_{F^+\subset\partial\support\ij^{+}}
+      \int\limits_{F^+} \testfunction_j\testfunction_i
+      \velocity\cdot\normalvector_{F^+} d\area
+\end{multline}
+One then brings the incoming boundary terms to the right-hand-side,
+multiplied by the boundary data evaluated at $\x_j$.
+In summary, the modified steady-state matrix and
 steady-state right-hand-side vector are
 \begin{subequations}
 \begin{equation}
   \tilde{\ssmatrixletter}\ij = \intSij\left(-\testfunction_j\velocity
     \cdot\nabla\testfunction_i +
-  \reactioncoef\testfunction_j\testfunction_i\right) \dvolume \eqc
+  \reactioncoef\testfunction_j\testfunction_i\right) \dvolume
+    + \sum\limits_{F^+\subset\partial\support\ij^{+}}
+      \int\limits_{F^+} \testfunction_j\testfunction_i
+      \velocity\cdot\normalvector_{F^+} d\area \eqc
 \end{equation}
 \begin{equation}
-  \tilde{b}_i = \left\{\begin{array}{l l}
-    b_i - \sumj\pr{\sum\limits_{F\in\partial\support\ij^{\textup{ext}}}
-          \int\limits_F \testfunction_j\testfunction_i
-            \velocity\cdot\normalvector d\area}
-          u^{\textup{inc}}_j $$ & i \in    \incomingindices\\
-    b_i                         & i \notin \incomingindices
-  \end{array}\right. \eqp
+  \tilde{b}_i = 
+    b_i - \sumj\pr{\sum\limits_{F^-\subset\partial\support\ij^{-}}
+          \int\limits_{F^-} \testfunction_j\testfunction_i
+            \velocity\cdot\normalvector_{F^-} d\area}
+          u^{\textup{inc}}_j \eqc
 \end{equation}
 \end{subequations}
+where $u^{\textup{inc}}_j$ denotes $u^{\textup{inc}}(\x_j)$.
+Note that since $\velocity\cdot\normalvector<0$ for incoming boundaries
+and the boundary data $u^{\textup{inc}}$ is assumed to
+be non-negative, $\tilde{\ssmatrixletter}\ij \geq \ssmatrixletter\ij$
+and $\tilde{b}_i \geq b_i$.
 
 For the boundary penalty method, to impose a Dirichlet boundary condition
 for degree of freedom $i$, instead of replacing equation $i$ with
