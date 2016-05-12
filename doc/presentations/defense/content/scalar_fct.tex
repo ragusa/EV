@@ -56,7 +56,7 @@
           + \ssmatrix^L\solutionvector^n = \ssrhs
           + \hlorange{\bar{\correctionfluxvector}} \eqc
       \end{equation}
-      where $\bar{\correctionfluxletter}_i \equiv \hlorange{L\ij}\correctionfluxij$.
+      where $\bar{\correctionfluxletter}_i \equiv \sumj\hlorange{L\ij}\correctionfluxij$.
    \item Each limiting coefficient is between zero and unity:
      \hlorange{$0\leq L\ij\leq 1$}.
    \begin{itemize}
@@ -142,7 +142,7 @@
 
     \begin{quote}
       Find $0\leq \{L\ij\} \leq 1$ such that
-      $\sum_i\bar{\correctionfluxletter}_i$ is maximized, subject to
+      $\sum_i\bar{\correctionfluxletter}_i$ is maximized, subject
       to the constraints $Q_i^-\leq \bar{\correctionfluxletter}_i\leq Q_i^+$,
       $\forall i$.
     \end{quote}

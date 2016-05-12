@@ -172,45 +172,108 @@
 %\end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Discrete Maximum Principle Bounds for a Theta-Scheme}
+\frametitle{2-D Void-to-Absorber Test Problem}
+\framesubtitle{Number of Cells vs. Iterations Study, Steady-State}
 
-\begin{itemize}
-\item Recall the DMP bounds 
-  $\DMPlowerbound_i\leq \solutionletter_i^{L,\timeindex+1}\leq \DMPupperbound_i$
-  for explicit Euler:
-      \begin{equation}
-         W_i^\pm \equiv U_{\substack{\max\\\min},i}^n\left(
-         1-\frac{\dt}{M_{i,i}^L}
-         \sum\limits_j A\ij^{L,n}\right)
-         + \frac{\Delta t}{M_{i,i}^L}b_i^n \eqp
-      \end{equation}
-\item In contrast, the DMP bounds for the $\theta$ scheme are implicit:
-\begin{subequations}
-\begin{multline}\label{eq:theta_bounds}
-   \DMPbounds_i
-   \equiv \frac{1}{1+\frac{\theta\timestepsize}{\massmatrixletter^L_{i,i}}
-     \ssmatrixletter_{i,i}^{L,\timeindex+1}}\Bigg[\pr{1
-     - \frac{(1-\theta)\timestepsize}{\massmatrixletter^L_{i,i}}
-       \sumj\ssmatrixletter_{i,j}^{L,\timeindex}}
-       \solutionletter_{\substack{\max\\\min},i}^\timeindex\\
-     - \frac{\theta\timestepsize}{\massmatrixletter^L_{i,i}}
-       \sumjnoti\ssmatrixletter_{i,j}^{L,\timeindex+1}
-       \solutionletter_{\substack{\max\\\min},i}^{L,\timeindex+1}
-     + \frac{\timestepsize}{\massmatrixletter^L_{i,i}}\pr{(1-\theta)
-       \ssrhsletter_i^\timeindex + \theta\ssrhsletter_i^{\timeindex+1}}\Bigg] \eqc
-\end{multline}
-\begin{equation}
-  \solutionletter_{\substack{\max\\\min},i}^\timeindex
-  = \substack{\max\\\min\limits_{j\in\indices(\support_i)}}
-    \solutionletter_j^\timeindex
-  \eqc \quad
-  \solutionletter_{\substack{\max\\\min},i}^{L,\timeindex+1}
-  = \substack{\max\\\min\limits_{j\in\indices(\support_i)}}
-  \solutionletter_j^{L,\timeindex+1}
-  \eqp
-\end{equation}
-\end{subequations}
-\end{itemize}
+\begin{center}
+\begin{table}[h]
+\caption{EV and FCT Iterations Required for EV-FCT Solution}
+\begin{tabular}{c c c}\toprule
+$N_{cell}$ & \emph{EV} & \emph{FCT}\\\midrule
+ 64 & 97 & 716\\
+256 & -- & \textcolor{red}{\textbf{FAIL}}\\
+\bottomrule\end{tabular}
+\end{table}
+\end{center}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{3-D Void-to-Absorber Test Problem}
+\framesubtitle{Normally-Incident Wave from Void to Absorber Octant, FE}
+
+\begin{figure}[h]
+   \centering
+   \begin{subfigure}{0.45\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{./figures/Gal_3D.png}
+      \caption{Galerkin}
+   \end{subfigure}
+   \begin{subfigure}{0.45\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{./figures/GalFCT_3D.png}
+      \caption{Galerkin-FCT}
+   \end{subfigure}
+\end{figure}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Skew-Incident Void-to-Absorber Test Problem}
+\framesubtitle{Skew-Incident Wave from Void to Absorber Quadrant}
+
+\begin{figure}[h]
+   \centering
+   \begin{subfigure}{0.3\textwidth}
+      \centering
+      \includegraphics[width=0.8\textwidth]{./figures/skew_exact.png}
+      \caption{Exact}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \centering
+      \includegraphics[width=0.8\textwidth]{./figures/skew_Gal.png}
+      \caption{Galerkin}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \centering
+      \includegraphics[width=0.8\textwidth]{./figures/skew_GalFCT.png}
+      \caption{Galerkin-FCT}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \centering
+      \includegraphics[width=0.8\textwidth]{./figures/skew_low.png}
+      \caption{Low-order}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \centering
+      \includegraphics[width=0.8\textwidth]{./figures/skew_EV.png}
+      \caption{EV}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \centering
+      \includegraphics[width=0.8\textwidth]{./figures/skew_EVFCT.png}
+      \caption{EV-FCT}
+   \end{subfigure}
+\end{figure}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Glance-in-Void Test Problem}
+\framesubtitle{Number of Cells vs. Iterations Study, Steady-State}
+
+\begin{center}
+\begin{table}[h]
+\caption{EV and FCT Iterations Required for EV-FCT Solution}
+\begin{tabular}{c c c}\toprule
+$N_{cell}$ & \emph{EV} & \emph{FCT}\\\midrule
+  64 &   32 & 9284\\
+ 256 &   59 &  440\\
+1024 & 1072 & 3148\\
+4096 &   -- & \textcolor{red}{\textbf{FAIL}}\\
+\bottomrule\end{tabular}
+\end{table}
+\end{center}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Source-Void-to-Absorber Test Problem}
+\framesubtitle{Left Half: Source in Vacuum, Right Half: No Source in Absorber}
+
+\begin{center}
+\includegraphics[height=0.8\textheight]{./figures/sourcevoid_FCT_comparison.pdf}
+\end{center}
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%

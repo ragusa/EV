@@ -17,12 +17,12 @@
   \item For example, $\radiationsource\xt$ can include extraneous sources
     and scattering sources in a source iteration scheme:
     \begin{equation}
-      \frac{1}{\speed}\ppt{\angularflux}^{(\ell+1)}
-        + \directionvector\cdot\nabla\angularflux^{(\ell+1)}
-        + \totalcrosssection(\x)\angularflux^{(\ell+1)}
-        = \radiationsource^{(\ell)} \eqc
+      \frac{1}{\speed}\ppt{\angularflux_d}^{(\ell+1)}
+        + \directionvector_d\cdot\nabla\angularflux_d^{(\ell+1)}
+        + \totalcrosssection(\x)\angularflux_d^{(\ell+1)}
+        = \radiationsource_d^{(\ell)} \eqc
     \end{equation}
-    with for example, $\radiationsource^{(\ell)}=
+    with for example, $\radiationsource_d^{(\ell)}=
     \frac{Q_{ext}}{4\pi} + \frac{\Sigma_s}{4\pi}\scalarflux^{(\ell)}$.
 %  \item Consider a more general case of a scalar conservation law:
 %    \begin{equation}
@@ -139,7 +139,7 @@
       \scalarsolution_t + \consfluxletter(\scalarsolution)_x
       = 0
     \end{equation}
-    does not admit discontinuous solutions, so an integral, or \hlorange{weak} form
+    does not hold for discontinuous solutions, so an integral, or \hlorange{weak} form
     is used:
     \begin{equation}
       \int\scalarsolution_t\phi dx
