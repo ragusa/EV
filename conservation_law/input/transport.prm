@@ -46,10 +46,10 @@ end
 
 subsection time
    set time step size option  = cfl_dmp # constant|cfl|cfl_dmp|cfl_di
-   set cfl                    = 10.0
+   set cfl                    = 20.0
    set time step size         = 0.001
    set use default end time   = false
-   set end time               = 10.0
+   set end time               = 1.0
    set steady state tolerance = 1.0e-6
 end
 

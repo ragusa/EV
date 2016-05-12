@@ -1,0 +1,29 @@
+\begin{tikzpicture}[
+  scale=1]
+
+\def\mylength{3}
+
+% axes
+\draw[-latex] (0,0) -- (\mylength,0);
+\draw[-latex] (0,0) -- (-\mylength,0);
+\draw[-latex] (0,0) -- (0,\mylength);
+\node at (0.15,\mylength) {$t$};
+\node at (\mylength,-0.15) {$x$};
+
+% characteristics
+\draw (0,0) -- (30:\mylength);
+\draw (0,0) -- (32:\mylength);
+\draw (0,0) -- (34:\mylength);
+\draw (0,0) -- (36:\mylength);
+\draw (0,0) -- (38:\mylength) node[pos=0.5,sloped,above] {2-rarefaction};
+\draw (0,0) -- (135:\mylength) node[pos=0.5,sloped,above] {1-shock};
+\node at ($(135:\mylength)+(-0.2,0.2)$) {$\lambda_1$};
+\node at ($(38:\mylength)+(0.2,0.2)$) {$\lambda_2^-$};
+\node at ($(30:\mylength)+(0.25,0.1)$) {$\lambda_2^+$};
+
+% solution values
+\node at (155.5:0.75*\mylength) {$\mathbf{u}_L$};
+\node at (15:0.75*\mylength) {$\mathbf{u}_R$};
+\node at (64:0.75*\mylength) {$\mathbf{u}_*$};
+
+\end{tikzpicture}

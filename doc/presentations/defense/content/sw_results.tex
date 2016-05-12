@@ -1,0 +1,152 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Shallow Water Equations Results}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{1-D Dam Break Test Problem}
+\framesubtitle{Height, 256 cells, FE}
+
+\begin{center}
+\includegraphics[height=0.8\textheight]{./figures/dambreak1d_Height_FE_256cells.pdf}
+\end{center}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{1-D Dam Break Test Problem}
+\framesubtitle{Discharge, 256 cells, FE}
+
+\begin{center}
+\includegraphics[height=0.8\textheight]{./figures/dambreak1d_Momentum_FE_256cells.pdf}
+\end{center}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{1-D Dam Break Test Problem}
+\framesubtitle{Height, 256 cells, SSPRK33}
+
+\begin{center}
+\includegraphics[height=0.8\textheight]{./figures/dambreak1d_Height_SSP3_256cells.pdf}
+\end{center}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{1-D Dam Break Test Problem}
+\framesubtitle{Discharge, 256 cells, SSPRK33}
+
+\begin{center}
+\includegraphics[height=0.8\textheight]{./figures/dambreak1d_Momentum_SSP3_256cells.pdf}
+\end{center}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Bathtub Test Problem}
+\framesubtitle{Height, 4096 cells, FE}
+
+\begin{figure}[h]
+   \centering
+   \begin{subfigure}{0.3\textwidth}
+      \centering
+      \includegraphics[width=0.8\textwidth]{./figures/bathtub_initial_shape.png}
+      \caption{Initial Shape}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \centering
+      \includegraphics[width=0.8\textwidth]{./figures/bathtub_low_t01.png}
+      \caption{Low-order, $t=0.1$}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \centering
+      \includegraphics[width=0.8\textwidth]{./figures/bathtub_low_t05.png}
+      \caption{Low-order, $t=0.5$}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \centering
+      \includegraphics[width=0.8\textwidth]{./figures/bathtub_initial.png}
+      \caption{$t=0$}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \centering
+      \includegraphics[width=0.8\textwidth]{./figures/bathtub_EV_t01.png}
+      \caption{EV, $t=0.1$}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \centering
+      \includegraphics[width=0.8\textwidth]{./figures/bathtub_EV_t05.png}
+      \caption{EV, $t=0.5$}
+   \end{subfigure}
+\end{figure}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{2-D Dam Break Test Problem}
+\framesubtitle{Initial Height}
+
+\begin{center}
+\includegraphics[height=0.8\textheight]{./figures/dambreak2d_initial.png}
+\end{center}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{2-D Dam Break Test Problem}
+\framesubtitle{Height, $t=50$, SSPRK33}
+
+\begin{figure}[h]
+   \centering
+   \begin{subfigure}{0.49\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{./figures/dambreak2d_height_Low.png}
+      \caption{Low-order}
+   \end{subfigure}
+   \begin{subfigure}{0.49\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{./figures/dambreak2d_height_EV.png}
+      \caption{EV}
+   \end{subfigure}
+\end{figure}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{2-D Dam Break Test Problem}
+\framesubtitle{Height Surface, Colored by Discharge, $t=50$, SSPRK33}
+
+\begin{figure}[h]
+   \centering
+   \begin{subfigure}{0.49\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{./figures/dambreak2d_height_Low_surface.png}
+      \caption{Low-order}
+   \end{subfigure}
+   \begin{subfigure}{0.49\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{./figures/dambreak2d_height_EV_surface.png}
+      \caption{EV}
+   \end{subfigure}
+\end{figure}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{2-D Dam Break Test Problem}
+\framesubtitle{Viscosity Profiles, $t=50$, SSPRK33}
+
+\begin{figure}[h]
+   \centering
+   \begin{subfigure}{0.49\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{./figures/dambreak2d_low_order_viscosity_logscale.png}
+      \caption{Low-order}
+   \end{subfigure}
+   \begin{subfigure}{0.49\textwidth}
+      \centering
+      \includegraphics[width=\textwidth]{./figures/dambreak2d_entropy_viscosity_logscale.png}
+      \caption{EV}
+   \end{subfigure}
+\end{figure}
+
+\end{frame}

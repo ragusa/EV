@@ -1,0 +1,32 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Nonlinear Iteration}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Nonlinear Iteration}
+
+\begin{itemize}
+  \item \hlorange{Implicit} and \hlorange{steady-state} time discretizations
+    have \hlorange{nonlinear} EV and FCT schemes.
+  \item A \hlorange{fixed-point} iteration scheme is used.
+  \item The entropy viscosity scheme for implicit methods must iterate on
+    the nonlinear entropy viscosities in the high-order diffusion matrix:
+  \begin{equation}
+    (\ssmatrix + \diffusionmatrix^{H,(\ell)})\solutionvector^{(\ell+1)}
+      = \ssrhs \eqc
+  \end{equation}
+  \item The FCT scheme for implicit methods must iterate on the nonlinear
+    limiting coefficients:
+  \begin{subequations}
+  \begin{equation}
+    (\ssmatrix + \diffusionmatrix^L)\solutionvector^{(\ell+1)}
+      = \ssrhs + \bar{\correctionfluxvector}^{(\ell)} \eqc
+  \end{equation}
+  \begin{equation}
+    \bar{\correctionfluxletter}_i^{(\ell)} = \sumj L\ij^{(\ell)} \correctionfluxij \eqc
+  \end{equation}
+  \end{subequations}
+  where $L\ij^{(\ell)}$ depends nonlinearly on $Q_i^{\pm,(\ell)}$, which depends
+  on $W_i^{\pm,(\ell)}$.
+\end{itemize}
+
+\end{frame}

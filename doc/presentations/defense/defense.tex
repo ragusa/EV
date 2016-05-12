@@ -1,0 +1,121 @@
+\documentclass{beamer} \useoutertheme{infolines}
+\usefonttheme{default}
+
+\usepackage{xcolor}     % for defining colors
+\usepackage{multicol}   % for multiple columns
+\usepackage{etoolbox}   % for toggles
+\usepackage{subcaption} % for subplots
+\usepackage{listings}   % for colored verbatim
+\usepackage{ifthen}     % for conditionals
+\usepackage{booktabs}   % for different table rules (lines)
+\usepackage{tikz}       % for tikz pictures
+\usetikzlibrary{calc}   % for computing points in tikz pictures
+\input{../../dissertation/content/newcommands} % macros file
+\renewcommand{\diagramdirectory}{../../diagrams}
+
+\newcommand{\contentdir}{../../dissertation/content}
+
+% create toggle for print-friendly mode (no colored heading and sidebar)
+\newtoggle{PRINTMODE}
+\togglefalse{PRINTMODE} %\toggletrue or \togglefalse
+
+% add sidebar if not in print mode
+\setbeamertemplate{items}[square]
+\setbeamertemplate{navigation symbols}{}
+
+% define colors
+\definecolor{myblue}{RGB}{60,140,230}
+\definecolor{myorangelight}{RGB}{255,220,0}
+\definecolor{myorangemedium}{RGB}{255,190,50}
+\definecolor{myorangeheavy}{RGB}{255,150,0}
+\definecolor{myorangered}{RGB}{255,100,30}
+\definecolor{mygray}{RGB}{100,100,100}
+
+\colorlet{primarycolor}{myblue}
+\colorlet{secondarycolorlight}{myorangelight}
+\colorlet{secondarycolormedium}{myorangemedium}
+\colorlet{secondarycolorheavy}{myorangeheavy}
+\colorlet{secondarytextcolor}{myorangered}
+
+% make headers black on white if in print mode, colored otherwise
+\iftoggle{PRINTMODE}{
+   \setbeamercolor{title}{fg=black,bg=white}
+   \setbeamercolor{frametitle}{fg=black,bg=white}
+}{
+   \setbeamercolor{title}{fg=primarycolor,bg=white}
+   \setbeamercolor{frametitle}{fg=white,bg=primarycolor}
+}
+
+% colors
+\setbeamercolor{normal text}{fg=mygray}
+\setbeamercolor{item projected}{fg=white,bg=secondarycolorheavy}
+\setbeamercolor{itemize item}{fg=secondarycolorheavy}
+\setbeamercolor{itemize subitem}{fg=secondarycolormedium}
+\setbeamercolor{itemize subsubitem}{fg=secondarycolorlight}
+%\setbeamercolor{author in head/foot}{fg=secondarytextcolor,bg=secondarycolorlight}
+%\setbeamercolor{title in head/foot}{fg=secondarytextcolor,bg=secondarycolormedium}
+%\setbeamercolor{date in head/foot}{fg=white,bg=secondarycolorheavy}
+\setbeamercolor{author in head/foot}{fg=white,bg=secondarycolormedium}
+\setbeamercolor{title in head/foot}{fg=white,bg=secondarycolormedium}
+\setbeamercolor{date in head/foot}{fg=white,bg=secondarycolormedium}
+
+% no header
+\setbeamertemplate{headline}{}
+
+% custom footer
+\makeatletter
+\setbeamertemplate{footline}
+{
+  \leavevmode%
+  \hbox{%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{author in head/foot}%
+    \usebeamerfont{author in head/foot}\insertsection
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,center]{title in head/foot}%
+    \usebeamerfont{title in head/foot}\insertsubsection
+  \end{beamercolorbox}%
+  \begin{beamercolorbox}[wd=.333333\paperwidth,ht=2.25ex,dp=1ex,right]{date in head/foot}%
+    \usebeamerfont{date in head/foot}\insertshortdate{}\hspace*{2em}
+    \insertframenumber{} / \inserttotalframenumber\hspace*{2ex} 
+  \end{beamercolorbox}}%
+  \vskip0pt%
+}
+\makeatother
+
+% title, author, date, etc.
+\title[]{Application of the Entropy Viscosity Method and the Flux-Corrected
+Transport Algorithm to Scalar Transport Equations and the Shallow Water
+Equations}
+\author[]{\hlorange{Joshua E. Hansel}
+  \vspace{1ex}\\\tiny{ADVISED BY}\\\small{Jean C. Ragusa}}
+\institute{
+  Department of Nuclear Engineering\\
+  Texas A\&M University}
+\date[]{\hlorange{Ph.D. Defense}\\May 13th, 2016}
+
+\begin{document}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}[plain]
+  \titlepage
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\input{content/intro}
+
+\input{content/scalar_discretization}
+\input{content/scalar_low}
+\input{content/scalar_high}
+\input{content/scalar_fct}
+\input{content/nonlinear_iteration}
+\input{content/scalar_results}
+
+\input{content/systems_discretization}
+\input{content/sw_low}
+\input{content/sw_high}
+\input{content/systems_fct}
+\input{content/sw_results}
+
+\input{content/conclusions}
+\input{content/acknowledgments}
+\input{content/backup}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\end{document}

@@ -1,0 +1,65 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{High-Order Scheme}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{High-Order Scheme}
+
+\begin{itemize}
+  \item The high-order scheme adds a high-order diffusion term:
+    \begin{equation}
+      \sum_j\consistentmassentry
+        \frac{\solutionvector_j^{H,n+1}-\solutionvector_j^n}{\dt}
+        + \sum_j\gradiententry\cdot\consfluxinterpolant_j^n
+        + \textcolor{secondarycolorheavy}{
+          \sum_j\diffusionmatrixletter\ij^{H,n}\solutionvector_j^n}
+        = \ssrhs_i^n \eqc
+    \end{equation}
+  \item The high-order diffusion matrix is proportional to an entropy diffusion matrix
+    and uses the low-order diffusion matrix as an upper bound:
+    \begin{equation}
+      \diffusionmatrixletter^{H,n}\ij \equiv \min(
+        \diffusionmatrixletter^{\entropy,n}\ij,\diffusionmatrixletter^{L,n}\ij) \eqc
+    \end{equation}
+    where the entropy diffusion matrix is proportional to an entropy residual and
+    entropy jump:
+    \begin{equation}
+      \diffusionmatrixletter^{\entropy,n}\ij \equiv
+        \frac{\entropyresidualcoef\entropyresidual\ij^n
+          + \entropyjumpcoef\entropyjump\ij^n}{\entropynormalization\ij^n} \eqp
+    \end{equation}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Entropy for the Shallow Water Equations}
+
+\begin{itemize}
+  \item For the SWE, the entropy is chosen to be the sum of kinetic and
+    potential energy terms:
+    \begin{equation}
+      \entropy(\vectorsolution,\bathymetry)
+        = \half\frac{\heightmomentum\cdot\heightmomentum}{\height}
+          + \half\gravity\height\pr{\height+\bathymetry}
+      \eqp
+    \end{equation}
+  \item The entropy flux is
+    \begin{equation}
+      \mathbf{\consfluxletter}^\entropy(\vectorsolution,\bathymetry)
+        = \gravity(\height + \bathymetry)\heightmomentum
+        + \half\frac{\pr{\heightmomentum\cdot\heightmomentum}\heightmomentum} 
+        {\height^2}
+      \eqp
+    \end{equation}
+  \item The entropy residual is
+    \begin{equation}
+      \entropyresidual(\vectorsolution^\timeindex, \vectorsolution^{\timeindex-1})
+        \equiv \frac{\entropy(\vectorsolution^\timeindex)
+        - \entropy(\vectorsolution^{\timeindex-1})}{\timestepsize^{\timeindex-1}}
+        + \divergence\mathbf{\consfluxletter}^\entropy(\vectorsolution^\timeindex,
+          \bathymetry)
+      \eqp
+    \end{equation}
+\end{itemize}
+
+\end{frame}
