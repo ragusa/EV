@@ -172,51 +172,6 @@
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-\begin{frame}
-\frametitle{Entropy in Conservation Laws}
-
-\begin{itemize}
-  \item Additional conditions/physics are required to filter out
-    spurious weak solutions to obtain the physically correct solution.
-    \begin{itemize}
-      \item Gas dynamics has the second law of thermodynamics
-        $\rightarrow$ entropy conditions.
-      \item Other PDE systems frequently have similar conditions.
-    \end{itemize}
-  \item Scalar conservation law \hlorange{entropy condition}:
-    \begin{equation}
-      \entropy(u)_t + \psi(u)_x \leq 0 \eqc
-    \end{equation}
-    for all convex entropy $\entropy(u)$ and corresponding flux $\psi(u)$.
-  \item The idea of the \hlorange{entropy viscosity} method is to enforce
-    the entropy condition with dissipation proportional to the violation
-    of the condition.
-\end{itemize}
-
-\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\subsection{Motivation}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%\begin{frame}
-%\frametitle{Motivation}
-%
-%\begin{itemize}
-%  \item The issue of spurious oscillations in conservation law problems has
-%    been extensively addressed in other spatial discretizations (finite difference,
-%    finite volume) via slope limiters, flux limiters, etc.
-%  \item Recently, efforts addressing this issue for the continuous finite
-%    element method (CFEM) have begun.
-%  \begin{itemize}
-%    \item CFEM is attractive due to the ability to model complex domains.
-%  \end{itemize}
-%  \item These oscillations give rise to unstable algorithms, where they grow
-%    without bound.
-%  \item Negativities can wreak havoc in a numerical algorithm and often
-%    cause simulations to terminate prematurely.
-%\end{itemize}
-%
-%\end{frame}
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{Objectives}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
@@ -245,10 +200,35 @@
 
 \end{frame}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Entropy Viscosity}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Entropy Viscosity Method}
+
+\begin{itemize}
+  \item Additional conditions/physics are required to filter out
+    spurious weak solutions to obtain the physically correct solution.
+    \begin{itemize}
+      \item Gas dynamics has the second law of thermodynamics
+        $\rightarrow$ entropy conditions.
+      \item Other PDE systems frequently have similar conditions.
+    \end{itemize}
+  \item Scalar conservation law \hlorange{entropy condition}:
+    \begin{equation}
+      \entropy(u)_t + \psi(u)_x \leq 0 \eqc
+    \end{equation}
+    for all convex entropy $\entropy(u)$ and corresponding flux $\psi(u)$.
+  \item The idea of the \hlorange{entropy viscosity} method is to enforce
+    the entropy condition with dissipation proportional to the violation
+    of the condition.
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \subsection{FCT}
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{frame}
-\frametitle{Introduction to Flux-Corrected Transport (FCT)}
+\frametitle{Flux-Corrected Transport (FCT)}
 
 \begin{itemize}
    \item FCT initially developed in 1973 for finite difference methods
