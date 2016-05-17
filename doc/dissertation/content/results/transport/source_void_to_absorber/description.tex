@@ -7,7 +7,7 @@ domain. The test problem description is given by Table
 \ref{tab:source_void_to_absorber}.
 
 %-------------------------------------------------------------------------------
-\begin{table}[htb]\caption{Source Void-to-Absorber Test Problem Summary}
+\begin{table}[htb]\caption{Source-Void-to-Absorber Test Problem Summary}
 \label{tab:source_void_to_absorber}
 \centering
 \begin{tabular}{l l}\toprule
@@ -66,7 +66,7 @@ Entropy Jump Coefficient & $\entropyjumpcoef = 1$\\
 \begin{figure}[ht]
    \includegraphics[width=\textwidth]
      {\contentdir/results/transport/source_void_to_absorber/coarse.pdf}
-   \caption{Comparison of Solutions for Source-Void-to-Absorber Problem
+   \caption{Comparison of Solutions for the Source-Void-to-Absorber Problem
      Using SSPRK33 with 32 Cells}
    \label{fig:source_void_to_absorber}
 \end{figure}
@@ -74,7 +74,7 @@ Entropy Jump Coefficient & $\entropyjumpcoef = 1$\\
 \begin{figure}[ht]
    \includegraphics[width=\textwidth]
      {\contentdir/results/transport/source_void_to_absorber/fine.pdf}
-   \caption{Comparison of Solutions for Source-Void-to-Absorber Problem
+   \caption{Comparison of Solutions for the Source-Void-to-Absorber Problem
      Using SSPRK33 with 256 Cells}
    \label{fig:source_void_to_absorber_fine}
 \end{figure}
@@ -143,7 +143,7 @@ clear.
 \begin{figure}[ht]
    \includegraphics[width=\textwidth]
      {\contentdir/results/transport/source_void_to_absorber/images/strong1.pdf}
-   \caption{Steady-State Solutions for Source-Void-to-Absorber Problem
+   \caption{Steady-State Solutions for the Source-Void-to-Absorber Problem
      with Strongly Imposed Dirichlet Boundary Conditions and $L^-=L^+=1$}
    \label{fig:source_void_to_absorber_strong1}
 \end{figure}
@@ -152,7 +152,7 @@ clear.
 \begin{figure}[ht]
    \includegraphics[width=\textwidth]
      {\contentdir/results/transport/source_void_to_absorber/images/strong0.pdf}
-   \caption{Steady-State Solutions for Source-Void-to-Absorber Problem
+   \caption{Steady-State Solutions for the Source-Void-to-Absorber Problem
      with Strongly Imposed Dirichlet Boundary Conditions and $L^-=L^+=0$}
    \label{fig:source_void_to_absorber_strong0}
 \end{figure}
@@ -161,7 +161,7 @@ clear.
 \begin{figure}[ht]
    \includegraphics[width=\textwidth]
      {\contentdir/results/transport/source_void_to_absorber/images/weak.pdf}
-   \caption{Steady-State Solutions for Source-Void-to-Absorber Problem
+   \caption{Steady-State Solutions for the Source-Void-to-Absorber Problem
      with Weakly Imposed Dirichlet Boundary Conditions}
    \label{fig:source_void_to_absorber_weak}
 \end{figure}
@@ -170,49 +170,71 @@ clear.
 \begin{figure}[ht]
    \includegraphics[width=\textwidth]
      {\contentdir/results/transport/source_void_to_absorber/images/weak_with_penalty.pdf}
-   \caption{Steady-State Solutions for Source-Void-to-Absorber Problem
+   \caption{Steady-State Solutions for the Source-Void-to-Absorber Problem
      with Weakly Imposed Dirichlet Boundary Conditions and Boundary Penalty}
    \label{fig:source_void_to_absorber_penalty}
 \end{figure}
 %-------------------------------------------------------------------------------
 
+Table \ref{tab:source_void_to_absorber_be_iterations_cells} shows the
+results of a study of the number of EV and FCT iterations for
+BE time discretization, required in
+a transient with a constant CFL of 1 and varying mesh sizes. The
+results in the table show a decrease in the number of EV iterations
+per time step, and a relatively constant number of FCT iterations per
+time step.
+
+%-------------------------------------------------------------------------------
+\begin{center}
+\begin{table}[ht]
+\caption{Nonlinear Iterations vs. Number of Cells for the
+  Source-Void-to-Absorber Test Problem Using Implicit Euler Time Discretization
+  with CFL = 1}
+\label{tab:source_void_to_absorber_be_iterations_cells}
+\begin{tabular}{c c c c c}\toprule
+$N_{cell}$ & \multicolumn{2}{c}{\emph{EV}} & \multicolumn{2}{c}{\emph{FCT}}\\
+           & \emph{Total} & \emph{Avg.}    &  \emph{Total} & \emph{Avg.}\\\midrule
+  8 &  661 & 24.48 &   244 &  9.04\\
+ 16 &  807 & 19.21 &   655 & 15.60\\
+ 32 &  844 & 11.25 &  1194 & 15.92\\
+ 64 & 1204 &  8.72 &  2024 & 14.67\\
+128 & 1752 &  6.59 &  3675 & 13.82\\
+256 & 2713 &  5.20 &  6673 & 12.78\\
+512 & 4284 &  4.14 & 12098 & 11.69\\
+\bottomrule\end{tabular}
+\end{table}
+\end{center}
+%-------------------------------------------------------------------------------
+
 Table \ref{tab:source_void_to_absorber_be_iterations_cfl} shows
 the results of a study of nonlinear iterations vs. CFL number for
-implicit Euler time discretization and 32 cells. The general
+implicit Euler time discretization and 128 cells. The general
 trend shows that entropy viscosity iterations per time step gradually increase
 with increasing CFL, while FCT iterations per time step increases
 much more quickly. Even more problematic is that the EV-FCT solution
-error jumps very quickly from CFLs $\nu=5$ to $\nu=10$. The solutions
-corresponding to a CFL of 10 are shown in Figure
-\ref{fig:sourcevoidtoabsorber_be_cfl10}. This terrible solution
-is possible because for high CFL numbers, the bounds are relatively large.
+error jumps very quickly from CFLs $\nu=5$ to $\nu=10$.
 
 %-------------------------------------------------------------------------------
-\begin{table}[htb]\caption{Source-Void-to-Absorber Test Problem Implicit Euler
-  Nonlinear Iterations vs. CFL Number Results}
+\begin{table}[htb]
+\caption{Nonlinear Iterations vs. CFL Number for the
+ Source-Void-to-Absorber Test Problem Using Implicit Euler Time Discretization
+ with 128 Cells}
 \label{tab:source_void_to_absorber_be_iterations_cfl}
 \centering
-\begin{tabular}{c c c c c c c}\toprule
-\emph{CFL}, $\nu$ & $N_{steps}$ & \multicolumn{2}{c}{\emph{EV}}
-  & \multicolumn{2}{c}{\emph{FCT}} & $L^2$ \emph{error}\\
-  & & \emph{Total} & \emph{Avg.} &  \emph{Total} & \emph{Avg.} & \\\midrule
-0.1 & 741 & 6762 &  9.13 & 4321 &  5.83 & $1.19\times 10^{-2}$\\
-0.5 & 148 & 1547 & 10.45 & 1996 & 13.49 & $1.21\times 10^{-2}$\\
-1.0 &  75 &  844 & 11.25 & 1526 & 20.35 & $1.23\times 10^{-2}$\\
-5.0 &  15 &  261 & 17.40 & 1941 & 129.40 & $1.54\times 10^{-2}$\\ 
-10.0 &  8 &  127 & 15.88 & 1389 & 173.63 & $2.72\times 10^{-2}$\\ 
+\begin{tabular}{c c c c c c c }\toprule
+ & & \multicolumn{2}{c}{\emph{EV}}
+  & \multicolumn{2}{c}{\emph{FCT}} &\\
+\emph{CFL} & $N_{step}$ & \emph{Total} & \emph{Avg.}
+  & \emph{Total} & \emph{Avg.} & $L^2$ \emph{err.}\\\midrule
+0.1 & 2661 & 15006 &  5.64 & 14036 &   5.27 & $3.013\times10^{-3}$\\
+0.5 &  533 &  3445 &  6.46 &  5000 &   9.38 & $3.033\times10^{-3}$\\
+1.0 &  266 &  1752 &  6.59 &  3675 &  13.82 & $3.023\times10^{-3}$\\
+5.0 &   54 &   471 &  8.72 & 12208 & 226.07 & $2.979\times10^{-3}$\\
+10.0 &  27 &   232 &  8.59 &  6126 & 226.89 & $3.325\times10^{-3}$\\
+20.0 &  14 &   133 &  9.50 &  3713 & 265.21 & $3.727\times10^{-3}$\\
+50.0 &   6 &    62 & 10.33 &  2077 & 346.17 & $7.191\times10^{-3}$\\
 \bottomrule\end{tabular}
 \end{table}
-%-------------------------------------------------------------------------------
-
-%-------------------------------------------------------------------------------
-\begin{figure}[ht]
-   \includegraphics[width=\textwidth]
-     {\contentdir/results/transport/source_void_to_absorber/images/solution_BE_CFL10.pdf}
-   \caption{Solutions for Source-Void-to-Absorber Problem
-     Using Implicit Euler and CFL of 10}
-   \label{fig:sourcevoidtoabsorber_be_cfl10}
-\end{figure}
 %-------------------------------------------------------------------------------
 
 \clearpage

@@ -162,38 +162,43 @@ in the EV-FCT solution are represented by the \emph{EV} and \emph{FCT} columns.
 The subcolumns \emph{Total} and \emph{Avg.} correspond to the total
 number of iterations in the transient and the average number of iterations
 per time step, respectively. Entries of -- denote that convergence failed
-during the transient for either EV or FCT. The results in the table
+during the transient for either EV or FCT, and the entry
+``\textcolor{red}{\textbf{FAIL}}'' denotes which of the nonlinear
+iterations (EV or FCT) caused the failure.
+The results in the table
 indicate that both EV and FCT iterations increase with increasing CFL
-number but that the increase is more drastic with FCT. At a CFL of 5.0,
+number but that the increase is more drastic with FCT. At a CFL of 20.0,
 the FCT scheme fails to converge. As a general rule, the solution bounds
 are larger with larger time steps, and there is more opportunity for
 antidiffusive flux limiting coefficients to vary.
 
 %-------------------------------------------------------------------------------
-\begin{table}[htb]\caption{Obstruction Test Problem Implicit Euler
-  Nonlinear Iterations vs. CFL Number Results}
+\begin{table}[htb]\caption{Nonlinear Iterations vs. CFL Number for the
+  Obstruction Test Problem Using Implicit Euler Time Discretization with 256 Cells}
 \label{tab:obstruction_be_iterations_cfl}
 \centering
 \begin{tabular}{c c c c c}\toprule
-\emph{CFL}, $\nu$ & \multicolumn{2}{c}{\emph{EV}} & \multicolumn{2}{c}{\emph{FCT}}\\
-                  & \emph{Total} & \emph{Avg.} &  \emph{Total} & \emph{Avg.}\\\midrule
-0.1 & 3999 &  8.14 & 3949 & 8.04\\
-0.5 & 896  &  9.05 & 1634 & 16.51\\
-1.0 & 501  & 10.02 & 1053 & 21.06\\
-5.0 & --   & --    & --   & --\\
-10.0 & --   & --    & --   & --\\
+\emph{CFL} & \multicolumn{2}{c}{\emph{EV}} & \multicolumn{2}{c}{\emph{FCT}}\\
+           & \emph{Total} & \emph{Avg.}    &  \emph{Total} & \emph{Avg.}\\\midrule
+0.1  & 3999 &  8.14 & 3585 &   7.30\\
+0.5  &  896 &  9.05 & 1499 &  15.14\\
+1.0  &  501 & 10.02 &  970 &  19.40\\
+5.0  &  157 & 15.70 & 1130 & 113.00\\
+10.0 &   79 & 15.80 &  753 & 150.60\\
+20.0 &   -- &    -- & \multicolumn{2}{c}{\textcolor{red}{\textbf{FAIL}}}\\
 \bottomrule\end{tabular}
 \end{table}
 %-------------------------------------------------------------------------------
 
-Table \ref{tab:obstruction_be_iterations_mesh} shows a study for BE with a
+Table \ref{tab:obstruction_be_iterations_mesh} shows a study for backward
+Euler (BE) time discretization with a
 constant CFL of $\nu=1$, but a varying mesh size. This shows that the average
 number of iterations per time step decreases with increasing mesh refinement,
 although this effect is not drastic.
 
 %-------------------------------------------------------------------------------
-\begin{table}[htb]\caption{Obstruction Test Problem Implicit Euler
-  Nonlinear Iterations vs. Mesh Size Results}
+\begin{table}[htb]\caption{Nonlinear Iterations vs. Number of Cells for the
+  Obstruction Test Problem Using Implicit Euler Time Discretization with CFL = 1}
 \label{tab:obstruction_be_iterations_mesh}
 \centering
 \begin{tabular}{c c c c c}\toprule
@@ -215,8 +220,8 @@ the mesh size. For very fine mesh refinements, the EV solution does not even
 converge.
 
 %-------------------------------------------------------------------------------
-\begin{table}[htb]\caption{Obstruction Test Problem Steady-State
-  Nonlinear Iterations vs. Mesh Size Results}
+\begin{table}[htb]\caption{Nonlinear Iterations vs. Number of Cells for the
+  Steady-State Obstruction Test Problem}
 \label{tab:obstruction_ss_iterations_mesh}
 \centering
 \begin{tabular}{c c c}\toprule
