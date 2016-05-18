@@ -31,7 +31,7 @@ Speed & $\speed=1$\\
 
 This test problem was run with a number of time discretizations, including
 explicit (forward) Euler (FE), implicit (backward) Euler (BE), and steady-state (SS).
-Run parameters are given in Table \ref{tab:obstruction_run}.
+Run parameters are summarized in Table \ref{tab:obstruction_run}.
 
 %-------------------------------------------------------------------------------
 \begin{table}[htb]\caption{Obstruction Test Problem Run Parameters}
@@ -42,13 +42,16 @@ Run parameters are given in Table \ref{tab:obstruction_run}.
 Number of Cells & FE: $N_{cell} = 4096$\\
                 & BE: $N_{cell} = 1024$\\
                 & SS: $N_{cell} = 1024$\\
+Time Discretization & Explicit Euler, Implicit Euler, Steady-State\\
 End Time & $t = 2$ (or to steady-state)\\
 CFL Number & FE: $\nu = 0.1$\\
            & BE: $\nu = 1.0$\\
 \midrule
 Entropy Function & $\entropy(\scalarsolution) = \frac{1}{2}\scalarsolution^2$\\
 Entropy Residual Coefficient & $\entropyresidualcoef = 0.1$\\
-Entropy Jump Coefficient & $\entropyjumpcoef = 0.1$\\
+Entropy Jump Coefficient & $\entropyjumpcoef = 0.1$\\\midrule
+FCT Solution Bounds & DMP\\
+FCT Initial Guess & $\scalarsolution^{(0)} = \scalarsolution^{L}$\\
 \bottomrule\end{tabular}
 \end{table}
 %-------------------------------------------------------------------------------

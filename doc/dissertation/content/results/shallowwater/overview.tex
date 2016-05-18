@@ -1,0 +1,25 @@
+This section presents the results for the shallow water equations.
+For transient simulations, the time step size used is given as a
+``CFL'' number $\nu$:
+\begin{subequations}
+\begin{equation}
+  \nu \equiv \frac{\dt}{\dt_{\textup{CFL}}} \eqc \quad
+  \dt_{\textup{CFL}} \equiv \frac{\dx_{\textup{min}}}
+    {\wavespeed_{\textup{max}}} \eqc
+  \eqp
+\end{equation}
+\begin{equation}
+  \dx_{\textup{min}} \equiv \min\limits_\cell \dx_\cell \eqc
+\end{equation}
+\begin{equation}
+  \wavespeed_{\textup{max}} \equiv \max\limits_{\x\in\domain}
+    \pr{\|\velocity(\x)\| + \speedofsound(\x)} \eqc
+\end{equation}
+\end{subequations}
+where the maximum over the domain is approximated by the maximum over
+all quadrature points in the domain.
+
+Note that to guarantee the invariant domain property for the low-order
+scheme, one still needs to verify the time step size requirement given by Equation
+\eqref{eq:dt_invariant_domain}; the condition $\nu < 1$ is not
+sufficient.

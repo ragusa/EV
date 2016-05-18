@@ -66,6 +66,27 @@ Then, $s$ is computed as follows:
 \end{equation}
 
 The simulation was run to time $t=1$ with a CFL of $\nu=0.5$ and 16384 cells.
+Table \ref{tab:skew_void_to_absorber_run_parameters} summarizes the run parameters
+for this test problem.
+
+%-------------------------------------------------------------------------------
+\begin{table}[ht]\caption{Skew Void-to-Absorber Test Problem Run Parameters}
+\label{tab:skew_void_to_absorber_run_parameters}
+\centering
+\begin{tabular}{l l}\toprule
+\emph{Parameter} & \emph{Value}\\\midrule
+Number of Cells & $N_{cell} = 16384$\\
+Time Discretization & Explicit Euler, SSPRK33\\
+End Time & $t = 1$\\
+CFL Number & $\nu = 0.5$\\\midrule
+Entropy Function & $\entropy(\scalarsolution) = \frac{1}{2}\scalarsolution^2$\\
+Entropy Residual Coefficient & $\entropyresidualcoef = 0.1$\\
+Entropy Jump Coefficient & $\entropyjumpcoef = 0.1$\\\midrule
+FCT Solution Bounds & DMP\\
+\bottomrule\end{tabular}
+\end{table}
+%-------------------------------------------------------------------------------
+
 Figures \ref{fig:skew_void_to_absorber_2D_fe} and
 \ref{fig:skew_void_to_absorber_2D_ssprk33} show 2-D results for this problem
 for explicit Euler and SSPRK33 time discretizations, respectively.

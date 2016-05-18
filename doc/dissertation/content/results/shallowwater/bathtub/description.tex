@@ -53,6 +53,23 @@ Figure \ref{fig:bathtub} shows a comparison of the solutions of the low-order
 invariant domain method vs. the entropy viscosity method. Solutions were obtained
 using explicit Euler time discretization and are compared at $t = 0.1$ and
 $t = 0.5$.
+Run parameters are summarized in Table \ref{tab:bathtub_run_parameters}.
+
+%-------------------------------------------------------------------------------
+\begin{table}[ht]\caption{Bathtub Test Problem Run Parameters}
+\label{tab:bathtub_run_parameters}
+\centering
+\begin{tabular}{l l}\toprule
+\emph{Parameter} & \emph{Value}\\\midrule
+Number of Cells & $N_{cell} = 4096$\\
+Time Discretization & Explicit Euler\\
+End Time & $t = 0.1, 0.5$\\
+Time Step Size & $\dt = 0.002$\\\midrule
+Entropy Residual Coefficient & $\entropyresidualcoef = 1$\\
+Entropy Jump Coefficient & $\entropyjumpcoef = 1$\\
+\bottomrule\end{tabular}
+\end{table}
+%-------------------------------------------------------------------------------
 
 The entropy viscosity solution is shown here to be much sharper than
 the low-order method. It is already

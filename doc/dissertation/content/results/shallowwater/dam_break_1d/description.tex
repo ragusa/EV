@@ -22,16 +22,41 @@ Gravity    & $\gravity=1$\\
 \end{table}
 %-------------------------------------------------------------------------------
 
-The simulations were run using a CFL of 0.1 to a final time of $t=2$,
-using explicit Euler and SSPRK33.
+The simulations were run using explicit Euler and SSPRK33
+to a final time of $t=2$, both methods using a CFL of 0.1.
 For the entropy viscosity method, the entropy residual coefficient
 and entropy jump coefficient were set to $\entropyresidualcoef=1$
 and $\entropyjumpcoef=1$, respectively.
+Run parameters are summarized in Table \ref{tab:dam_break_1d_run_parameters}.
+
 Figures \ref{fig:height_FE_32} and \ref{fig:momentum_FE_32} 
 show the height and momentum solutions, respectively, obtained using explicit Euler
 and 32 cells, and Figures \ref{fig:height_FE_256} and \ref{fig:momentum_FE_256} 
-show the solutions for 256 cells.
+show the solutions for 256 cells. In both cases, there are a significant number of
+oscillations present in the entropy viscosity solutions. The FCT solution lacks
+most of these oscillations, but there is a significant amount of stair-stepping
+behavior seen in the rarefaction wave.
+Figures \ref{fig:height_SSPRK33_256} and \ref{fig:momentum_SSPRK33_256} show
+the solutions obtained using SSPRK33 time discretization with 256 cells.
+In this case, the entropy viscosity solution is without oscillation; the
+FCT solution not only adds unnecessary artificial diffusion, but also degrades
+the quality of the solution with respect to the entropy viscosity solution.
 
+%-------------------------------------------------------------------------------
+\begin{table}[ht]\caption{1-D Dam Break Test Problem Run Parameters}
+\label{tab:dam_break_1d_run_parameters}
+\centering
+\begin{tabular}{l l}\toprule
+\emph{Parameter} & \emph{Value}\\\midrule
+Number of Cells & $N_{cell} = 32, 256$\\
+Time Discretization & Explicit Euler, SSPRK33\\
+End Time & $t = 2$\\
+CFL Number & $\nu = 0.1$\\\midrule
+Entropy Residual Coefficient & $\entropyresidualcoef = 0.1$\\
+Entropy Jump Coefficient & $\entropyjumpcoef = 0.1$\\
+\bottomrule\end{tabular}
+\end{table}
+%-------------------------------------------------------------------------------
 %-------------------------------------------------------------------------------
 \begin{figure}[ht]
    \centering
@@ -67,6 +92,24 @@ show the solutions for 256 cells.
    \caption{Comparison of Momentum Solutions for the 1-D Dam Break Test Problem
      Using Explicit Euler Time Discretization with 256 Cells}
    \label{fig:momentum_FE_256}
+\end{figure}
+%-------------------------------------------------------------------------------
+\begin{figure}[ht]
+   \centering
+   \includegraphics[width=\textwidth]
+     {\contentdir/results/shallowwater/dam_break_1d/images/Height_SSP3_256cells.pdf}
+   \caption{Comparison of Height Solutions for the 1-D Dam Break Test Problem
+     Using SSPRK33 Time Discretization with 256 Cells}
+   \label{fig:height_SSPRK33_256}
+\end{figure}
+%-------------------------------------------------------------------------------
+\begin{figure}[ht]
+   \centering
+   \includegraphics[width=\textwidth]
+     {\contentdir/results/shallowwater/dam_break_1d/images/Momentum_SSP3_256cells.pdf}
+   \caption{Comparison of Momentum Solutions for the 1-D Dam Break Test Problem
+     Using SSPRK33 Time Discretization with 256 Cells}
+   \label{fig:momentum_SSPRK33_256}
 \end{figure}
 %-------------------------------------------------------------------------------
 

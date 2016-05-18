@@ -25,13 +25,32 @@ This problem was run in steady-state to avoid temporal error so that spatial
 convergence rates could accurately be measured.
 The coarsest mesh size in this study uses 8 cells, and each successive mesh
 size is halved, with the finest mesh in the study using 256 cells.
+The run parameters for this test problem are given in Table
+\ref{tab:absorber_ss_run_parameters}.
+
+%-------------------------------------------------------------------------------
+\begin{table}[htb]
+\caption{Convergence Test Problem 2 Run Parameters}
+\label{tab:absorber_ss_run_parameters}
+\centering
+\begin{tabular}{l l}\toprule
+\emph{Parameter} & \emph{Value}\\\midrule
+Number of Cells & $N_{cell} = 8,16,\mathbf{32},64,128,256$\\
+Time Discretization & Steady-State\\\midrule
+Entropy Function & $\entropy(\scalarsolution) = \frac{1}{2}\scalarsolution^2$\\
+Entropy Residual Coefficient & $\entropyresidualcoef = 0.1$\\
+Entropy Jump Coefficient & $\entropyjumpcoef = 0.1$\\\midrule
+FCT Solution Bounds & Analytic\\
+FCT Initial Guess & $\scalarsolution^{(0)} = \scalarsolution^H$\\
+\bottomrule\end{tabular}
+\end{table}
+%-------------------------------------------------------------------------------
 
 Figure \ref{fig:absorber_ss_solution} shows a comparison of the solutions with
 32 cells, and Figure \ref{fig:absorber_ss_visc} shows the corresponding
 viscosity profiles.
 The FCT methods use the analytic solution bounds
-given by Equation \eqref{eq:analyticDMP_ss} with the antidiffusion bounds fix given by
-Equation \eqref{eq:antidiffusion_bounds_operation}.
+given by Equation \eqref{eq:analyticDMP_ss}.
 
 %-------------------------------------------------------------------------------
 \begin{figure}[ht]

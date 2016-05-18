@@ -53,9 +53,9 @@ The run parameters for this test problem are summarized in Table
 \begin{tabular}{l l}\toprule
 \emph{Parameter} & \emph{Value}\\\midrule
 Number of Cells & $N_{cell} = 7168$\\
+Time Discretization & SSPRK33\\\midrule
 End Time        & $t=50$\\
 CFL Number      & $\nu=0.05$\\
-Time Integrator & SSPRK33\\\midrule
 Entropy Residual Coefficient & $\entropyresidualcoef=1$\\
 Entropy Jump Coefficient & $\entropyjumpcoef=1$\\
 \bottomrule\end{tabular}
@@ -73,7 +73,11 @@ However, note the presence of some spurious oscillations at the interior corners
 along $x=2$ in the surface plot of the entropy viscosity solution. These
 interior corners, and especially the interior corners along $x=4$, where
 the initial discontinuity lies, are challenging regions and tend to give rise to
-severe oscillations if the time step size is too large. In these simulations,
+severe oscillations if the time step size is too large.
+Note that these corner effects should be able to be mitigated by smoothing out
+the corner in the mesh; however, this was not performed here.
+
+In these simulations,
 a CFL as small as $\nu=0.1$ was shown to give an unstable solution, so a
 CFL of $\nu=0.05$ was used. Figures \ref{fig:dam_break_2d_visc} shows
 the low-order and entropy viscosity profiles, both on logscales (but separately

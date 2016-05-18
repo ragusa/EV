@@ -1,5 +1,4 @@
-In this section, results are presented for the
-source-void-to-absorber test problem. This is a 1-D test problem
+In this section, results are presented for the source-void-to-absorber test problem. This is a 1-D test problem
 with zero incoming flux incident on the left boundary,
 a constant source in a void in the left half of the
 domain, and an absorber with no source in the right half of the
@@ -54,12 +53,15 @@ entropy solution.
 \centering
 \begin{tabular}{l l}\toprule
 \emph{Parameter} & \emph{Value}\\\midrule
-Number of Cells & $N_{cell} = 32, 256$\\
+Number of Cells & (varies by run)\\
+Time Discretization & SSPRK33, Steady-State, Implicit Euler\\
 End Time & $t = 1$\\
 CFL Number & $\nu = 0.5$\\\midrule
 Entropy Function & $\entropy(u) = \frac{1}{2}u^2$\\
 Entropy Residual Coefficient & $\entropyresidualcoef = 1$\\
-Entropy Jump Coefficient & $\entropyjumpcoef = 1$\\
+Entropy Jump Coefficient & $\entropyjumpcoef = 1$\\\midrule
+FCT Solution Bounds & DMP\\
+FCT Initial Guess & $\scalarsolution^{(0)} = \scalarsolution^L$\\
 \bottomrule\end{tabular}
 \end{table}
 %-------------------------------------------------------------------------------
@@ -185,12 +187,12 @@ per time step, and a relatively constant number of FCT iterations per
 time step.
 
 %-------------------------------------------------------------------------------
-\begin{center}
 \begin{table}[ht]
 \caption{Nonlinear Iterations vs. Number of Cells for the
   Source-Void-to-Absorber Test Problem Using Implicit Euler Time Discretization
   with CFL = 1}
 \label{tab:source_void_to_absorber_be_iterations_cells}
+\centering
 \begin{tabular}{c c c c c}\toprule
 $N_{cell}$ & \multicolumn{2}{c}{\emph{EV}} & \multicolumn{2}{c}{\emph{FCT}}\\
            & \emph{Total} & \emph{Avg.}    &  \emph{Total} & \emph{Avg.}\\\midrule
@@ -203,7 +205,6 @@ $N_{cell}$ & \multicolumn{2}{c}{\emph{EV}} & \multicolumn{2}{c}{\emph{FCT}}\\
 512 & 4284 &  4.14 & 12098 & 11.69\\
 \bottomrule\end{tabular}
 \end{table}
-\end{center}
 %-------------------------------------------------------------------------------
 
 Table \ref{tab:source_void_to_absorber_be_iterations_cfl} shows

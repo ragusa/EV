@@ -100,5 +100,55 @@ the following approach:
     is an invariant domain for the process $\discreteprocess$.
 \end{enumerate}
 These proofs are given in detail in \cite{guermond_invariantdomain} and
-will not be reproduced here.
+will not be reproduced here. The time step size requirement is the
+following:
+\begin{subequations}
+\label{eq:dt_invariant_domain}
+\begin{equation}
+  \dt \leq \frac{1}{2}\frac{\underline{\dx}}{\wavespeed_{\textup{max}}(\invariantset)}
+    \frac{\mu_{\textup{min}}\vartheta_{\textup{min}}}{\mu_{\textup{max}}} \eqc
+\end{equation}
+\begin{equation}
+  \underline{\dx} \equiv \min\limits_\cell \underline{\dx}_\cell \eqc \quad
+    \underline{\dx}_\cell \equiv \frac{1}{\max\limits_{i\ne j\in\indicescell}
+      \|\nabla\testfunction_i\|_{L^\infty(\support\ij)}} \eqc
+\end{equation}
+\begin{equation}
+  \vartheta_{\textup{min}} \equiv \min\limits_\cell \vartheta_\cell \eqc \quad
+    \vartheta_\cell \equiv \frac{1}{\cardinality-1} \eqc
+\end{equation}
+\begin{equation}
+  \mu_{\textup{min}} \equiv \min\limits_\cell \min\limits_{i\in\indicescell}
+    \frac{1}{\cellvolume}\int\limits_\cell \testfunction_i \dvolume \eqc \quad
+  \mu_{\textup{max}} \equiv \max\limits_\cell \max\limits_{i\in\indicescell}
+    \frac{1}{\cellvolume}\int\limits_\cell \testfunction_i \dvolume \eqc
+\end{equation}
+\begin{equation}
+  \wavespeed^{\textup{max}}(\invariantset) \equiv
+    \max\limits_{\normalvector\in S^d(\mathbf{0},1)}
+    \max\limits_{\vectorsolution_L,\vectorsolution_R\in\invariantset}
+    \wavespeed^{\textup{max}}(\normalvector,\vectorsolution_L,\vectorsolution_R) \eqc
+\end{equation}
+\end{subequations}
+where $S^d(\mathbf{0},1)$ is the unit sphere in dimension $d$. For example, in 1-D,
+$\underline{\dx}=\dx_{\textup{min}}\equiv\min_\cell\dx_\cell$, and
+$\vartheta_{\textup{min}}=\mu_{\textup{min}}=\mu_{\textup{max}}=1$, so the
+time step size requirement becomes
+\begin{equation}
+  \dt \leq \frac{1}{2}\frac{\dx_{\textup{min}}}{\wavespeed_{\textup{max}}(\invariantset)}
+    \eqp
+\end{equation}
+From this expression, it is easier to see the underlying requirement: for a given
+time step step, the elementary waves generated from each Riemann problem between
+neighboring nodal data must not travel far enough such that they can interact.
+Each of these Riemann problems is separated by a distance $\geq \dx_{\textup{min}}$,
+so if for example for a pair of adjacent Riemann problems, a wave is travelling
+to the right from the left Riemann problem and to the left from the right Riemann
+problem, then they could interact at half the distance between them.
+In practice, to determine $\wavespeed_{\textup{max}}(\invariantset)$ for a
+transient, one needs to loop over all pairs of initial data $\vectorsolution_i$
+and $\vectorsolution_j$ for which the associated test functions have
+nonempty shared support $\support\ij$, and compute the maximum wave speeds
+from the associated Riemann problem (or some upper bound to them).
+
 

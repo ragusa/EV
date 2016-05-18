@@ -1,5 +1,15 @@
-This section presents the results for scalar transport. Unless otherwise
-specified, the entropy viscosity method uses the entropy function
-$\entropy(\scalarsolution)=\frac{1}{2}\scalarsolution^2$ with the residual
-and jump coefficients $\entropyresidualcoef$ and $\entropyjumpcoef$ both
-equal to 0.1.
+This section presents the results for scalar transport.
+For transient simulations, the time step size used is given as a
+``CFL'' number $\nu$, which is defined in terms of the maximum
+time step size for Explicit Euler time discretization of the
+low-order scheme, given by Equation \eqref{eq:explicit_cfl}:
+\begin{equation}
+  \nu \equiv \frac{\dt}{\dt_{\textup{CFL}}} \eqc \quad
+  \dt_{\textup{CFL}} \equiv \min\limits_i
+    \frac{\massmatrixletter_{i,i}^{L}}{\ssmatrixletter_{i,i}^{L,n}}
+  \eqp
+\end{equation}
+Note that the time step size for the Theta method is less
+restrictive for $\theta > 0$ (see Equation \eqref{eq:theta_cfl});
+however, for Theta method results, the definition of $\nu$ above is
+still used.

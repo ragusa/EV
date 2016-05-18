@@ -26,45 +26,25 @@ Speed & $\speed=1$\\
 \end{table}
 %-------------------------------------------------------------------------------
 
-This test problem was run on a 64-cell$\times$64-cell mesh.
+This test problem was run on a 64$\times$64-cell mesh.
+The run parameters are summarized in Table \ref{tab:glance_in_void_run_parameters}.
 
-%with the time step
-%size set equal to 
-
-
-%Table \ref{tab:void_to_absorber_run_parameters} shows the run parameters used
-%to obtain the results in this section, Figures \ref{fig:void_to_absorber_2D_fe}
-%and \ref{fig:void_to_absorber_2D_ssprk33} show 2-D results for explicit Euler
-%and SSPRK33 time discretizations, respectively, and Figure
-%\ref{fig:void_to_absorber_3D} shows 3-D results.
-%
-%From Figure \ref{fig:void_to_absorber_2D_ssprk33}, one can see that the
-%Galerkin scheme (which has no artificial dissipation) generates significant
-%spurious oscillations perpindicular to the transport direction, even below the
-%absorber region. The oscillations are particularly severe along the lower edge
-%of the absorber region, where particles/photons are travelling parallel to the
-%absorber; this edge has a sharper gradient in the solution than the left edge
-%of the absorber region due to the lack of attenuation in this direction, which
-%is present for the left edge. Figure \ref{fig:void_to_absorber_2D_ssprk33},
-%which uses explicit Euler instead of SSPRK33 does not show the Galerkin plot
-%because the oscillations grew without bound, leading to infinite solution
-%values. The entropy viscosity scheme is also vulnerable to spurious
-%oscillations, although to a lesser extent than the Galerkin scheme.
-%
-%%-------------------------------------------------------------------------------
-%\begin{table}[ht]\caption{Normal Void-to-Absorber Test Problem Run Parameters}
-%\label{tab:void_to_absorber_run_parameters}
-%\centering
-%\begin{tabular}{l l}\toprule
-%\emph{Parameter} & \emph{Value}\\\midrule
-%Number of Cells & $N_{cell} = 16384$\\
-%End Time & $t = 1$\\
-%CFL Number & $\nu = 0.5$\\\midrule
-%Entropy Function & $\entropy(\scalarsolution) = \frac{1}{2}\scalarsolution^2$\\
-%Entropy Residual Coefficient & $\entropyresidualcoef = 0.1$\\
-%Entropy Jump Coefficient & $\entropyjumpcoef = 0.1$\\
-%\bottomrule\end{tabular}
-%\end{table}
+%-------------------------------------------------------------------------------
+\begin{table}[ht]\caption{Normal Void-to-Absorber Test Problem Run Parameters}
+\label{tab:glance_in_void_run_parameters}
+\centering
+\begin{tabular}{l l}\toprule
+\emph{Parameter} & \emph{Value}\\\midrule
+Number of Cells & $N_{cell} = 4096$\\
+Time Discretization & Explicit Euler, SSPRK33\\
+End Time & $t = 2$\\
+CFL Number & $\nu = 0.5$\\\midrule
+Entropy Function & $\entropy(\scalarsolution) = \frac{1}{2}\scalarsolution^2$\\
+Entropy Residual Coefficient & $\entropyresidualcoef = 0.1, 0.5, 1.0$\\
+Entropy Jump Coefficient & $\entropyjumpcoef = 0.1, 0.5, 1.0$\\\midrule
+FCT Solution Bounds & DMP\\
+\bottomrule\end{tabular}
+\end{table}
 %-------------------------------------------------------------------------------
 \begin{figure}[ht]
    \centering
