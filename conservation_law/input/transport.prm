@@ -23,11 +23,11 @@
 #   void_to_absorber_1d_ss
 #   void_to_absorber_2d_ss
 subsection problem
-   set problem name = obstruction
+   set problem name = void_to_absorber_2d_ss
 end
 
 subsection scheme
-   set scheme            = fct         # low|high|fct
+   set scheme            = fct          # low|high|fct
    set low order scheme  = dmp          # constant|lax|dmp|di_visc|di_diff
    set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
 end
@@ -36,7 +36,7 @@ subsection refinement
    set refinement cycles        = 1
    set refine space             = true
    set refine time              = true
-   set initial refinement level = 4
+   set initial refinement level = 6
    set use adaptive mesh refinement = false
    set time refinement factor   = 0.5
    set refinement fraction      = 0.5
@@ -54,7 +54,7 @@ subsection time
 end
 
 subsection temporal discretization
-   set temporal discretization = theta # ss|ssprk|theta
+   set temporal discretization = ss    # ss|ssprk|theta
    set ssprk discretization    = FE    # FE|SSP2|SSP3
    set theta discretization    = BE    # FE|CN|BE
 end
@@ -70,7 +70,8 @@ subsection artificial viscosity
 end
 
 subsection fct
-   set filter sequence string        = dmp # dmp|dmp_analytic|analytic
+   # dmp|dmp_analytic|analytic|dmp_exact|analytic_exact
+   set filter sequence string        = dmp_exact
    set limiter option                = zalesak # ones|zeroes|zalesak
    set use multipass limiting        = false
    set multipass limiting percent tolerance = 0.01
@@ -106,7 +107,7 @@ subsection quadrature
 end
 
 subsection output
-   set verbosity level    = 1    # 0|1|2 (0 is least verbose)
+   set verbosity level    = 2    # 0|1|2 (0 is least verbose)
    set output exact solution = true
    set output period      = 0
    set transient output size limit = 1e9

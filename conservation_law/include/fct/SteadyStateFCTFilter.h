@@ -32,12 +32,12 @@ public:
     SparseMatrix<double> & limiter_matrix,
     SparseMatrix<double> & antidiffusion_matrix);
 
-protected:
   virtual void compute_solution_bounds(
     const Vector<double> & solution,
     const SparseMatrix<double> & low_order_ss_matrix,
     const Vector<double> & ss_rhs) = 0;
 
+protected:
   void compute_antidiffusion_bounds(
     const DoFBounds<dim> & solution_bounds,
     const Vector<double> & solution,

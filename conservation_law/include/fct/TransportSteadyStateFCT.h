@@ -11,6 +11,8 @@
 #include "include/fct/SteadyStateFCT.h"
 #include "include/fct/TransportAnalyticSSFCTFilter.h"
 #include "include/fct/TransportDMPAnalyticSSFCTFilter.h"
+#include "include/fct/TransportExactAnalyticSSFCTFilter.h"
+#include "include/fct/TransportExactDMPSSFCTFilter.h"
 #include "include/parameters/TransportRunParameters.h"
 #include "include/parameters/TransportProblemParameters.h"
 

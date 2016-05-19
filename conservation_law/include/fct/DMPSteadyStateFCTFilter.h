@@ -23,7 +23,6 @@ public:
     const FESystem<dim> & fe,
     const std::map<unsigned int, double> & dirichlet_values);
 
-protected:
   void compute_solution_bounds(const Vector<double> & solution,
                                const SparseMatrix<double> & low_order_ss_matrix,
                                const Vector<double> & ss_rhs) override;

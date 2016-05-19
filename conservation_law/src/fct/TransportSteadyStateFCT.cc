@@ -68,6 +68,23 @@ std::shared_ptr<SteadyStateFCTFilter<dim>> TransportSteadyStateFCT<
       *cell_quadrature,
       this->limiter,
       *this->dirichlet_values);
+  else if (filter_string == "dmp_exact")
+    filter =
+      std::make_shared<TransportExactDMPSSFCTFilter<dim>>(*this->run_parameters,
+                                                          this->limiter,
+                                                          *this->dof_handler,
+                                                          *this->fe,
+                                                          *this->dirichlet_values,
+                                                          *problem_parameters);
+  else if (filter_string == "analytic_exact")
+    filter = std::make_shared<TransportExactAnalyticSSFCTFilter<dim>>(
+      *this->run_parameters,
+      *problem_parameters,
+      *this->dof_handler,
+      *this->fe,
+      *cell_quadrature,
+      this->limiter,
+      *this->dirichlet_values);
   else
     AssertThrow(false, ExcNotImplemented());
 

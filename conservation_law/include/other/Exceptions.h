@@ -14,6 +14,10 @@ DeclException0(ExcAssumptionViolated);
 DeclException2(
   ExcNegativeDiagonal, int, double, << "Row " << arg1 << ": " << arg2);
 
+/** \brief Exception for exact solution function being called when problem
+ *         has no exact solution */
+DeclException0(ExcNoExactSolution);
+
 /** \brief Exception for a NaN being encountered */
 DeclException0(ExcNaNEncountered);
 

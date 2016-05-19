@@ -40,11 +40,12 @@ public:
 
   Vector<double> get_upper_solution_bound() const override;
 
-protected:
-  void compute_solution_bounds(const Vector<double> & solution,
-                               const SparseMatrix<double> & low_order_ss_matrix,
-                               const Vector<double> & ss_rhs) override;
+  virtual void compute_solution_bounds(
+    const Vector<double> & solution,
+    const SparseMatrix<double> & low_order_ss_matrix,
+    const Vector<double> & ss_rhs) override;
 
+protected:
   /** \brief analytic transport solution bounds */
   TransportAnalyticSolutionBounds<dim> analytic_bounds;
 };
