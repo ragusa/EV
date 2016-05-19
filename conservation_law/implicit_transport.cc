@@ -19,7 +19,7 @@
 
 using namespace dealii;
 
-const unsigned int dim = 2; // number of spatial dimensions
+const unsigned int dim = 1; // number of spatial dimensions
 
 /**
  * Reads input file and runs problem.

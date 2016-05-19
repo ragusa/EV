@@ -7,7 +7,8 @@
 
 #include <deal.II/base/parameter_handler.h>
 #include "include/parameters/ProblemParameters.h"
-#include "include/postprocessing/MultiRegionExactSolution.h"
+#include "include/postprocessing/SteadyStateMultiRegionExactSolution.h"
+#include "include/postprocessing/TransientMultiRegionExactSolution.h"
 
 using namespace dealii;
 

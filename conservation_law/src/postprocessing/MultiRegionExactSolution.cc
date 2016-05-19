@@ -1,5 +1,11 @@
 /**
  * \brief Constructor.
+ *
+ * \param[in] interface_positions  positions interfaces between regions
+ * \param[in] source  source values in each region
+ * \param[in] sigma  sigma values in each region
+ * \param[in] direction  transport direction vector
+ * \param[in] incoming  incoming boundary value
  */
 template <int dim>
 MultiRegionExactSolution<dim>::MultiRegionExactSolution(
@@ -23,15 +29,17 @@ MultiRegionExactSolution<dim>::MultiRegionExactSolution(
   ri[Nr] = 1.0;
 }
 
-/** Computes exact solution at a single point.
+/**
+ * \brief Computes exact solution at a single point.
+ *
+ * \param[in] p  point at which to evaluate exact solution
+ *
+ * return exact solution value at point
  */
 template <int dim>
 double MultiRegionExactSolution<dim>::value(const Point<dim> & p,
                                             const unsigned int) const
 {
-  // get time
-  double t = this->get_time();
-
   // copy point
   Point<dim> x(p);
 
@@ -62,47 +70,11 @@ double MultiRegionExactSolution<dim>::value(const Point<dim> & p,
     }
   }
 
-  // the above computations assume that x-c*Omega*t is outside the
-  // domain, so distances need to be adjusted if this is not true
-  // first, compute sum of distances
-  double s_sum = 0.0;
-  for (unsigned int i = 0; i < Nr; ++i)
-    s_sum += s[i];
-  // compute excess distance
-  double excess_distance = s_sum - c * t;
-  // if there is an excess, adjust distances
-  if (excess_distance > 0.0)
-  {
-    for (unsigned int i = 0; i < Nr; ++i)
-    {
-      if (excess_distance > s[i])
-      {
-        excess_distance -= s[i];
-        s[i] = 0.0;
-      }
-      else
-      {
-        s[i] -= excess_distance;
-        excess_distance = 0.0;
-        break;
-      }
-    }
-  }
+  // adjust distances in region
+  adjust_distances(s);
 
-  // determine if x-c*Omega*t lies within domain; if not,
-  // then solution hasn't reached x yet
-  bool not_in_domain = false;
-  for (unsigned int d = 0; d < dim; ++d)
-    if (p[d] - direction[d] * c * t < 0.0)
-      not_in_domain = true;
-
-  // compute solution component due to boundary flux
-  // initialize to reference solution
-  double ub;
-  if (not_in_domain)
-    ub = incoming;
-  else
-    ub = 0.0;
+  // compute reference solution value
+  double ub = compute_reference_solution(p);
 
   // compute the number of mean free paths from xref to x
   double ub_mfp = 0.0;
@@ -135,8 +107,12 @@ double MultiRegionExactSolution<dim>::value(const Point<dim> & p,
   return ub + uq;
 }
 
-/** Given that a point is in a region, determines the distance
- *  travelled in that region.
+/**
+ * \brief Given that a point is in a region, determines the distance
+ *        travelled in that region.
+ *
+ * \param[in] p  point
+ * \param[in] r
  */
 template <int dim>
 double MultiRegionExactSolution<dim>::computeDistanceTravelledInRegion(
@@ -184,17 +160,6 @@ double MultiRegionExactSolution<dim>::computeDistanceTravelledInRegion(
     }
   }
 
-  /*
-    // if number of dimensions for this problem is less than 3, compute
-    // distance components for remaining dimensions up to 3
-    for (unsigned int d = dim; d < 3; ++d)
-    {
-      s[d] = direction[d] / direction[d_min] * s[d_min];
-    }
-
-    // compute total distance
-    return std::sqrt(std::pow(s[0], 2) + std::pow(s[1], 2) + std::pow(s[2], 2));
-  */
   // compute total distance
   double total_distance;
   if (dim == 1)

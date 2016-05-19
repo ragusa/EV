@@ -303,17 +303,34 @@ void TransportProblemParameters<dim>::process_derived_parameters(
       std::vector<double> region_sources = {this->constants["source1"],
                                             this->constants["source2"]};
 
-      // create multi-region exact solution object
-      std::shared_ptr<MultiRegionExactSolution<dim>>
-        exact_solution_function_derived =
-          std::make_shared<MultiRegionExactSolution<dim>>(
-            interface_positions,
-            region_sources,
-            region_sigmas,
-            transport_direction,
-            this->constants["incoming"]);
-      // point base class shared pointer to derived class function object
-      this->exact_solution_function = exact_solution_function_derived;
+      if (this->is_transient_problem) // transient problem
+      {
+        // create multi-region exact solution object
+        std::shared_ptr<TransientMultiRegionExactSolution<dim>>
+          exact_solution_function_derived =
+            std::make_shared<TransientMultiRegionExactSolution<dim>>(
+              interface_positions,
+              region_sources,
+              region_sigmas,
+              transport_direction,
+              this->constants["incoming"]);
+        // point base class shared pointer to derived class function object
+        this->exact_solution_function = exact_solution_function_derived;
+      }
+      else // steady-state problem
+      {
+        // create multi-region exact solution object
+        std::shared_ptr<SteadyStateMultiRegionExactSolution<dim>>
+          exact_solution_function_derived =
+            std::make_shared<SteadyStateMultiRegionExactSolution<dim>>(
+              interface_positions,
+              region_sources,
+              region_sigmas,
+              transport_direction,
+              this->constants["incoming"]);
+        // point base class shared pointer to derived class function object
+        this->exact_solution_function = exact_solution_function_derived;
+      }
     }
     if (this->exact_solution_type == "three_region")
     {
@@ -327,17 +344,34 @@ void TransportProblemParameters<dim>::process_derived_parameters(
                                             this->constants["source2"],
                                             this->constants["source3"]};
 
-      // create multi-region exact solution object
-      std::shared_ptr<MultiRegionExactSolution<dim>>
-        exact_solution_function_derived =
-          std::make_shared<MultiRegionExactSolution<dim>>(
-            interface_positions,
-            region_sources,
-            region_sigmas,
-            transport_direction,
-            this->constants["incoming"]);
-      // point base class shared pointer to derived class function object
-      this->exact_solution_function = exact_solution_function_derived;
+      if (this->is_transient_problem) // transient problem
+      {
+        // create multi-region exact solution object
+        std::shared_ptr<TransientMultiRegionExactSolution<dim>>
+          exact_solution_function_derived =
+            std::make_shared<TransientMultiRegionExactSolution<dim>>(
+              interface_positions,
+              region_sources,
+              region_sigmas,
+              transport_direction,
+              this->constants["incoming"]);
+        // point base class shared pointer to derived class function object
+        this->exact_solution_function = exact_solution_function_derived;
+      }
+      else // steady-state problem
+      {
+        // create multi-region exact solution object
+        std::shared_ptr<SteadyStateMultiRegionExactSolution<dim>>
+          exact_solution_function_derived =
+            std::make_shared<SteadyStateMultiRegionExactSolution<dim>>(
+              interface_positions,
+              region_sources,
+              region_sigmas,
+              transport_direction,
+              this->constants["incoming"]);
+        // point base class shared pointer to derived class function object
+        this->exact_solution_function = exact_solution_function_derived;
+      }
     }
     else // assumed to be function parser
     {

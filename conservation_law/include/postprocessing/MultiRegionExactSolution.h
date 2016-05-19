@@ -22,10 +22,7 @@ public:
   double value(const Point<dim> & p,
                const unsigned int component = 0) const override;
 
-private:
-  double computeDistanceTravelledInRegion(const Point<dim> & p,
-                                          const double & r) const;
-
+protected:
   /** number of regions */
   const unsigned int Nr;
 
@@ -46,6 +43,14 @@ private:
 
   /** incoming flux value */
   const double incoming;
+
+private:
+  double computeDistanceTravelledInRegion(const Point<dim> & p,
+                                          const double & r) const;
+
+  virtual void adjust_distances(std::vector<double> & s) const = 0;
+
+  virtual double compute_reference_solution(const Point<dim> & p) const = 0;
 };
 
 #include "src/postprocessing/MultiRegionExactSolution.cc"

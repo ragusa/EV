@@ -1,10 +1,11 @@
-In this section, a class of test problems is described that use a unit
-hypercube $(0,1)^d$ as the domain, where $d$ is the number of
-spatial dimensions. The hypercube has a number $N_r$ of uniform regions
-in which the source $q$ and reaction cross section $\sigma$ are
-constant. Thus each of the test problems that fit in this
-category can be fully described by:
+This section describes a class of test problems in which a $d$-dimensional unit
+hypercube $(0,1)^d$ domain is divided into $N_r$ regions of uniform
+source $\scalarsource$ and reaction coefficient $\reactioncoef$,
+Each of the test problems that fit this description are fully described by:
 \begin{itemize}
+  \item the incoming flux $u^{\textup{inc}}$,
+  \item the transport direction $\di$,
+  \item the transport speed $\speed$,
   \item the positions of the interfaces between the regions,
     $[r_1,\ldots,r_{N_r-1}]$ (the positions $r_0$ and $r_{N_r}$
     refer to the hypercube boundaries 0 and 1, respectively),
@@ -12,30 +13,40 @@ category can be fully described by:
     $q(\x) = q_i,\qquad $
   \item the cross sections in each region, $\sigma_0,\ldots,\sigma_{N_r-1}$,
 \end{itemize}
+In sections that follow, exact solutions may reference the form of the
+exact solution described in this section instead of rewriting the exact
+solution for each case.
 
-The exact solution is the following:
-\[
+The exact solution can be described as having two components:
+\begin{enumerate}
+  \item the component $u_b$ associated with the upstream reference solution value, which may be
+the incident boundary value, and
+  \item the component $u_q$ associated with the source.
+\end{enumerate}
+The exact solution has the following form:
+\begin{subequations}\label{eq:multiregion_exactsolution}
+\begin{equation}
   u(\x,t) = u_b + u_q \eqc
-\]
-where
-\[
+\end{equation}
+\begin{equation}
   u_b=\tilde{u_0}(x-ct)e^{-\tau} \eqc
         \quad N_r=3\eqc\quad
         \tau = \sum\limits_{i=0}^{N_r-1} \sigma_i s_i \eqc
-\]
-\[
+\end{equation}
+\begin{equation}
   \tilde{u_0}(x) = \left\{\begin{array}{l l}
         u_{inc}, & x<x_0\\
         0,       & x\geq 0
      \end{array}\right. \eqc
-\]
-\[
+\end{equation}
+\begin{equation}
   u_q=\sum\limits_{i=0}^{N_r-1}u_{q,i}e^{-\tau_i},\quad
         \tau_i = \sum\limits_{j=i+1}^{N_r-1} \sigma_j s_j \eqc
-\]
-\[
+\end{equation}
+\begin{equation}
   u_{q,i} = \left\{\begin{array}{l l}
         \frac{q_i}{\sigma_i}\left(1-e^{-\sigma_i s_i}\right), & \sigma_i\neq 0\\
         q_i s_i, & \sigma_i = 0
         \end{array}\right. \eqp
-\]
+\end{equation}
+\end{subequations}

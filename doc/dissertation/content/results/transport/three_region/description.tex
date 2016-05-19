@@ -10,10 +10,8 @@ Table \ref{tab:three_region} summarizes the test parameters.
 \begin{tabular}{l l}\toprule
 \emph{Parameter} & \emph{Value}\\\midrule
 Domain & $\mathcal{D} = (0,1)$\\
-Initial Conditions & $u_0(\x)=0$\\
-Boundary Conditions & $u(\x,t)=u_{inc}=1,\quad \x\in\partial\mathcal{D}^-,\quad t>0,$\\
-   & $\partial\mathcal{D}^-=\{\x\in\partial\mathcal{D}:\mathbf{n}(\x)
-     \cdot\mathbf{\Omega}<0\}$\\
+Initial Conditions & $u_0(x)=0$\\
+Boundary Conditions & $u(x,t)=u_{inc}=1$\\
 Direction & $\mathbf{\Omega} = \mathbf{e}_x$\\
 Cross Section & $\sigma(\x)=\left\{\begin{array}{c l}
    \sigma_0, & x\in[x_0,x_1]\\
@@ -31,24 +29,8 @@ Source & $q(\x,t)=\left\{\begin{array}{c l}
    \end{array}\right.,\quad
    \left[\begin{array}{c}q_0\\q_1\\q_2\end{array}\right] =
       \left[\begin{array}{c}1\\5\\20\end{array}\right]$\\
-Speed & $c=1$\\
-Exact Solution & $u(\x,t) = u_b + u_q$\\
-   & $u_b=\tilde{u_0}(x-ct)e^{-\tau},
-        \quad N_r=3,\quad
-        \tau = \sum\limits_{i=0}^{N_r-1} \sigma_i s_i,$\\
-   & $\tilde{u_0}(x) = \left\{\begin{array}{l l}
-        u_{inc}, & x<x_0\\
-        0,       & x\geq 0
-     \end{array}\right.$,\\
-   & $u_q=\sum\limits_{i=0}^{N_r-1}u_{q,i}e^{-\tau_i},\quad
-        \tau_i = \sum\limits_{j=i+1}^{N_r-1} \sigma_j s_j,$\\
-   & $u_{q,i} = \left\{\begin{array}{l l}
-        \frac{q_i}{\sigma_i}\left(1-e^{-\sigma_i s_i}\right), & \sigma_i\neq 0\\
-        q_i s_i, & \sigma_i = 0
-        \end{array}\right.$,\\
-   & $s_i = \max(s^+_i-s^-_i,0)$,\\
-   & $s^+_i = \min(x,x_{i+1}),\quad
-     s^-_i = \max(x-ct,x_i)$ \\
+Speed & $\speed=1$\\
+Exact Solution & (Equation \eqref{eq:multiregion_exactsolution})\\
 \bottomrule\end{tabular}
 \end{table}
 %-------------------------------------------------------------------------------

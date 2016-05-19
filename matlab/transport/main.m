@@ -53,7 +53,7 @@ ev.smoothing_weight = 1.0; % weight for center value in smoothing
 %                  1 = SSPRK(1,1) (Explicit Euler)
 %                  2 = SSPRK(3,3) (Shu-Osher)
 %                  3 = theta method
-opts.temporal_scheme = 3; % temporal discretization scheme
+opts.temporal_scheme = 0; % temporal discretization scheme
 
 % theta parameter to use if using a theta method: 0.0 = FE
 %                                                 0.5 = CN
@@ -72,7 +72,7 @@ opts.ss_tol = 1.0e-6;  % steady-state tolerance
 %             2 = widen low-order DMP to analytic
 %             3 = analytic
 %             4 = analytic upwind
-fct_opts.DMP_option = 4;
+fct_opts.DMP_option = 3;
 
 % limiter option: 0 = All 0 (no correction; low-order)
 %                 1 = All 1 (full correction; high-order)
@@ -106,7 +106,7 @@ fct_opts.dirichlet_limiting_coefficient = 0.0;
 %            4: void
 %            5: MMS: TR: u = t*sin(pi*x)  SS: u = sin(pi*x)
 %            6: MMS: TR: u = x*t          SS: u = x
-problemID = 3;
+problemID = 0;
 
 % IC_option: 0: zero
 %            1: exponential pulse
@@ -118,12 +118,18 @@ mesh.x_max = 1.0;         % right end of domain
 
 phys.periodic_BC = false; % option for periodic BC; otherwise Dirichlet
 phys.mu     = 1;          % cos(angle)
-phys.sigma  = @(x,t) 0;   % cross section function
-phys.source = @(x,t) 0;   % source function
-phys.inc    = 1;          % incoming flux
+sigma_value  = 100.0;
+source_value = 10.0;
+phys.sigma  = @(x,t) sigma_value; % cross section function
+phys.source = @(x,t) (x<0.5)*source_value; % source function
+phys.inc    = 0;          % incoming flux
 phys.speed  = 1;          % advection speed
 phys.source_is_time_dependent = false; % is source time-dependent?
 phys.impose_BC_on_IC = true; % option to impose Dirichlet BC on IC
+exact_solution_known = true;
+exact = @(x,t) (x<0.5).*(source_value/sigma_value*(1.0-exp(-sigma_value*x)))...
+  + (x>=0.5).*(source_value/sigma_value*(1.0-exp(-sigma_value*0.5))...
+  * exp(-sigma_value*(x-0.5)));
 %--------------------------------------------------------------------------
 % nonlinear solver options
 %--------------------------------------------------------------------------
@@ -153,11 +159,11 @@ return_value_option = 0; % 0: nothing - just return zero
                          % 1: L^2 norm of entropy residual
                          % 2: L^2 norm of entropy jumps
 
-save_exact_solution      = false; % option to save exact solution 
-save_low_order_solution  = false; % option to save low-order solution
-save_high_order_solution = false; % option to save high-order solution
-save_FCT_solution        = false; % option to save FCT solution
-save_FCT_bounds          = false; % option to save FCT bounds
+save_exact_solution      = true; % option to save exact solution 
+save_low_order_solution  = true; % option to save low-order solution
+save_high_order_solution = true; % option to save high-order solution
+save_FCT_solution        = true; % option to save FCT solution
+save_FCT_bounds          = true; % option to save FCT bounds
 save_antidiffusion_matrix = false; % option to save antidiffusion matrix
 %-------------------------------------------------------------------------
 
