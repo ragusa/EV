@@ -184,12 +184,16 @@ SteadyStateFCT.cc
 SteadyStateFCTFilter.cc
 SteadyStateFCTFilter.h
 SteadyStateFCT.h
+SteadyStateMultiRegionExactSolution.cc
+SteadyStateMultiRegionExactSolution.h
 SWCharacteristicFCTFilter.cc
 SWCharacteristicFCTFilter.h
 ThetaFCT.cc
 ThetaFCTFilter.cc
 ThetaFCTFilter.h
 ThetaFCT.h
+TransientMultiRegionExactSolution.cc
+TransientMultiRegionExactSolution.h
 TransportAnalyticFEFCTFilter.h
 TransportAnalyticSolutionBounds.cc
 TransportAnalyticSolutionBounds.h

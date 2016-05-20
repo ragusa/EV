@@ -1,9 +1,9 @@
 function [flim,Wminus,Wplus] = compute_limited_flux_sums_ss(u,F,AL_mod,b_mod,...
-    sigma_min,sigma_max,source_min,source_max,mesh,phys,n_dof,fct_opts,opts)
+    sigma_min,sigma_max,source_min,source_max,mesh,phys,n_dof,fct_opts,opts,...
+    source_over_sigma_min, source_over_sigma_max)
 
 % unpack options
 DMP_option = fct_opts.DMP_option;
-limiting_option = fct_opts.limiting_option;
 enforce_antidiffusion_bounds_signs = ...
     fct_opts.enforce_antidiffusion_bounds_signs;
 dirichlet_limiting_coefficient = fct_opts.dirichlet_limiting_coefficient;
@@ -23,6 +23,9 @@ elseif (DMP_option == 3)
 elseif (DMP_option == 4)
     [Wplus,Wminus] = compute_analytic_bounds_ss(...
         u,sigma_min,sigma_max,source_min,source_max,mesh.dx_min,phys.inc,true);
+elseif (DMP_option == 5)
+    [Wplus,Wminus] = compute_analytic_bounds_ss_alternate(...
+        u,sigma_min,sigma_max,source_over_sigma_min,source_over_sigma_max,mesh.dx_min,phys.inc,true);
 else
     error('Invalid FCT solution bounds option');
 end
@@ -40,20 +43,12 @@ end
 % check signs of antidiffusion bounds Q
 check_antidiffusion_bounds_signs(Qplus,Qminus);
 
-% compute limiting coefficients
-switch limiting_option
-    case 0 % Full limiter
-        flim = zeros(n_dof,1);
-    case 1 % No limiter
-        flim = sum(F,2);
-    case 2 % Zalesak limiter
-        flim = limiter_zalesak(F,Qplus,Qminus,opts,...
-            dirichlet_limiting_coefficient);
-    case 3 % Josh limiter
-        flim = limiter_josh(F,Qplus,Qminus,opts,...
-            dirichlet_limiting_coefficient);
-    otherwise
-        error('Invalid limiting option');
+% compute limited antidiffusion sums
+if (fct_opts.use_multipass_limiting)
+    flim = multipass_limiter(F,Qplus,Qminus,opts,fct_opts);
+else
+    [flim,~] = fct_opts.limiter(F,Qplus,Qminus,zeros(n_dof,1),...
+        opts,dirichlet_limiting_coefficient);
 end
 
 end

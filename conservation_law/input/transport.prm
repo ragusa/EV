@@ -15,6 +15,8 @@
 #   obstruction_ss
 #   sourcevoid_to_absorber
 #   sourcevoid_to_absorber_ss
+#   source_in_absorber
+#   source_in_absorber_ss
 #   three_region
 #   three_region_ss
 #   void
@@ -23,7 +25,7 @@
 #   void_to_absorber_1d_ss
 #   void_to_absorber_2d_ss
 subsection problem
-   set problem name = void_to_absorber_2d_ss
+   set problem name = source_in_absorber_ss
 end
 
 subsection scheme
@@ -36,7 +38,7 @@ subsection refinement
    set refinement cycles        = 1
    set refine space             = true
    set refine time              = true
-   set initial refinement level = 6
+   set initial refinement level = 5
    set use adaptive mesh refinement = false
    set time refinement factor   = 0.5
    set refinement fraction      = 0.5
@@ -71,11 +73,11 @@ end
 
 subsection fct
    # dmp|dmp_analytic|analytic|dmp_exact|analytic_exact
-   set filter sequence string        = dmp_exact
+   set filter sequence string        = analytic
    set limiter option                = zalesak # ones|zeroes|zalesak
    set use multipass limiting        = false
    set multipass limiting percent tolerance = 0.01
-   set dirichlet limiting coefficient = 0.0
+   set dirichlet limiting coefficient = 1.0
    set enforce antidiffusion bounds signs = true
    set fct synchronization type      = none    # none|min|compound
    set fct initialization option     = low     # zero|low|high

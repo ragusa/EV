@@ -15,7 +15,7 @@ for i = 2:n
     if (upwind_only)
         % upwind range, assuming flow is in +x direction
         i1 = max(i-1,1);
-        i2 = min(i,n);
+        i2 = max(i-1,1);%i;
     else
         i1 = max(i-1,1);
         i2 = min(i+1,n);

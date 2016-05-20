@@ -49,8 +49,8 @@ title_list = "Initial\
               EV\
               EV-FCT\
               Galerkin-FCT\
-              DMP-min\
-              DMP-max\
+              Lower-bound\
+              Upper-bound\
               DMP-min-Gal-FCT\
               DMP-max-Gal-FCT\
               DMP-min-EV-FCT\

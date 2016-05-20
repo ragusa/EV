@@ -7,7 +7,6 @@ function [flim,Wminus,Wplus] = compute_limited_flux_sums(...
 speed = phys.speed;
 inc = phys.inc;
 periodic_BC = phys.periodic_BC;
-limiting_option = fct_opts.limiting_option;
 DMP_option = fct_opts.DMP_option;
 enforce_antidiffusion_bounds_signs = ...
     fct_opts.enforce_antidiffusion_bounds_signs;
@@ -52,20 +51,12 @@ end
 % check signs of antidiffusion bounds Q
 check_antidiffusion_bounds_signs(Qplus,Qminus);
 
-% compute limited fluxes
-switch limiting_option
-    case 0 % no correction
-        flim = zeros(n_dof,1);
-    case 1 % full correction (no limiting)
-        flim = sum(F,2);
-    case 2 % Zalesak's limiter
-        flim = limiter_zalesak(F,Qplus,Qminus,opts,...
-            dirichlet_limiting_coefficient);
-    case 3 % Josh's limiter
-        flim = limiter_josh(F,Qplus,Qminus,opts,...
-            dirichlet_limiting_coefficient);
-    otherwise
-        error('Invalid limiting option');
+% compute limited antidiffusion sums
+if (fct_opts.use_multipass_limiting)
+    flim = multipass_limiter(F,Qplus,Qminus,opts,fct_opts);
+else
+    [flim,~] = fct_opts.limiter(F,Qplus,Qminus,zeros(n_dof,1),...
+        opts,dirichlet_limiting_coefficient);
 end
 
 end
