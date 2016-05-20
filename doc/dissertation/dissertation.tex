@@ -24,7 +24,10 @@
 \usepackage{algpseudocode}
 \usepackage{algorithm}
 \usepackage{tikz}     % for tikz pictures
+%\usetikzlibrary{backgrounds}
 \usetikzlibrary{calc} % for computing points in tikz pictures
+%\usetikzlibrary{shapes.multipart}
+\usetikzlibrary{shapes.geometric}
 \usepackage[mathscr]{euscript} % for \mathscr{} in math mode
 \usepackage[hidelinks]{hyperref}
 
@@ -34,6 +37,7 @@
 % input user-defined commands
 \input{\contentdir/newcommands}
 \input{\contentdir/theorems_dissertation}
+\input{../diagrams/lengths.tex} % lengths for diagrams
 
 % create black bar where there are "Overfull"s
 %\overfullrule=15cm

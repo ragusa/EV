@@ -1,0 +1,99 @@
+In this section, a novel approach for FCT limitation is desribed, in which
+multiple passes are taken through any limiter to maximize the amount of
+antidiffusion that is accepted without violating the imposed bounds.
+
+To date, no practical limiter has been developed that perfectly solves
+the optimization problem; solving an optimization problem exactly would
+be too computationally expensive to be used in practical calculations.
+Thus all limiters are suboptimal; additional antidiffusion can be accepted
+without violating the imposed bounds. For example, recall that the Zalesak
+limiter described in Section \ref{sec:zalesak_limiter} makes the safe
+choice that when considering the upper antidiffusion bound
+$\antidiffusionbound_i^+$ for node $i$, the limiting coefficients
+for the positive antidiffusive fluxes, $\limiterletter_i^+$, are computed
+while assuming that there is no contribution to the limited antidiffusion sum
+$\limitedcorrectionfluxletter_i$ from \emph{negative} antidiffusive fluxes:
+\[
+  \limiterletter_i^+ = \min\pr{1,\frac{\antidiffusionbound_i^+}
+    {\correctionfluxletter_i^+}} \eqp
+\]
+A more optimal limiter would consider the negative fluxes here, for example
+by the following approach:
+\[
+  \limiterletter_i^+ = \min\pr{1,\frac{\antidiffusionbound_i^+
+    - \limitedcorrectionfluxletter_i^-}
+    {\correctionfluxletter_i^+}} \eqc
+\]
+where
+\[
+  \limitedcorrectionfluxletter_i^- = \sum\limits_{j:\correctionfluxij<0}
+    \limiterletter\ij\correctionfluxij \eqp
+\]
+Of course, the problem with this hypothetical limiter is that one does not
+know the limiting coefficients for the negative antidiffusive fluxes yet;
+thus Zalesak designed the limiter to assume those limiting coefficients
+are all zero. Zalesak's limiter is suboptimal whenever
+positive antidiffusive fluxes are limited
+(this happens when $\correctionfluxletter_i^+ > \antidiffusionbound^+$)
+and there are some nonzero limiting coefficients for the negative antidiffusive
+fluxes. Furthermore, in the end, symmetry is enforced on the limiting
+coefficients, and thus the actual limiting coefficients applied to the
+positive antidiffusive fluxes are not $\limiterletter_i^+$ but instead,
+$\limiterletter\ij$, which is either lesser or equal:
+$\limiterletter\ij \leq\limiterletter_i^+$ (see Equation
+\eqref{eq:limiting_coefficients} to see why). With these arguments considered
+(and they apply similarly to the lower bound), Zalesak's limiter has
+room for improvement.
+
+The idea of multi-pass limiting is to take multiple passes through a
+limiter to overcome the suboptimality.
+A limiter may be considered as a black box in which the inputs are the
+antidiffusive fluxes $\{\correctionfluxij\}\ij$ and the antidiffusion bounds
+$\{\antidiffusionbound_i^\pm\}_i$ and the outputs are the limiting coefficients
+$\{\limiterletter\ij\}\ij$. See Figure \ref{eq:limiting_coefficients} for
+an illustration of this concept.
+
+%-------------------------------------------------------------------------------
+\begin{figure}[htb]
+   \centering
+     \input{../diagrams/limiter.tex}
+      \caption{Limiter Input and Output}
+   \label{fig:limiting_coefficients}
+\end{figure}
+%-------------------------------------------------------------------------------
+
+In multi-pass limiting, a loop is formed around the limiter. After each pass
+through the limiter, the remainder of the antidiffusive fluxes
+$\correctionfluxmatrixremainder$ is computed and passed back to the limiter
+in place of the original antidiffusive fluxes $\correctionfluxmatrix$. In
+this next iteration, some antidiffusion $\limitedcorrectionfluxletter_i$
+has now already been accepted, and thus in the limiter, one does not start
+from $\limitedcorrectionfluxletter_i=0$ when considering antidiffusion bounds but instead
+starts from $\limitedcorrectionfluxletter_i=\limitedcorrectionfluxletter_i^{(\ell-1)}$.
+For example if $\limitedcorrectionfluxletter_i>0$, then the remaining positive
+antidiffusion fluxes have less room to be accepted, and the remaining negative
+fluxes have \emph{more} room to be accepted. For example, Zalesak's limiter
+would be modified as
+\[
+  \limiterletter_i^+ = \min\pr{1,\frac{\antidiffusionbound_i^+
+    - \limitedcorrectionfluxletter_i^{(\ell-1)}}
+    {\correctionfluxletter_i^+}} \eqp
+\]
+Perhaps a better approach is simply to pass into the limiter
+$\{\antidiffusionbound_i^\pm-\limitedcorrectionfluxletter_i^{(\ell-1)}\}_i$ 
+in place of $\{\antidiffusionbound_i^\pm\}_i$. This achieves the same effect but
+avoids any modification of the limiter function.
+With each iteration, the accepted antidiffusion becomes smaller,
+and the iteration is terminated when the change in the total accepted
+antidiffusion source becomes sufficiently small. This is illustrated in
+Figure \ref{fig:multipass_limiting}.
+
+%-------------------------------------------------------------------------------
+\begin{figure}[htb]
+   \centering
+     \input{../diagrams/multipass_limiter.tex}
+      \caption{Multi-Pass Limiting Diagram}
+   \label{fig:multipass_limiting}
+\end{figure}
+%-------------------------------------------------------------------------------
+
