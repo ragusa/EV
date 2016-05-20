@@ -22,8 +22,8 @@ for iel = 1:n_cell
     f_cell_max = max(f_cell);
     
     % update max/min for each dof on cell
-    iL = max(iel-range+1,1);
-    iR = iel;
+    iL = iel+1;
+    iR = min(iel+range,n_dof);
     f_min(iL:iR) = min(f_min(iL:iR),f_cell_min);
     f_max(iL:iR) = max(f_max(iL:iR),f_cell_max);
 end

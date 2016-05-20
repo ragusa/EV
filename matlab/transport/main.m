@@ -16,8 +16,8 @@ else
   mesh.n_cell = 32;     % number of elements
 end
 quadrature.nq = 3;      % number of quadrature points per cell
-opts.impose_DirichletBC_strongly = true; % impose Dirichlet BC strongly?
-opts.use_penalty_bc = false; % add penalty BC?
+opts.impose_DirichletBC_strongly = false; % impose Dirichlet BC strongly?
+opts.use_penalty_bc = true; % add penalty BC?
 opts.penalty_bc_coef = 1000.0; % penalty BC coef: alpha*A(i,i) = alpha*inc
 %--------------------------------------------------------------------------
 % spatial method options
@@ -72,13 +72,17 @@ opts.ss_tol = 1.0e-6;  % steady-state tolerance
 %             2 = widen low-order DMP to analytic
 %             3 = analytic
 %             4 = analytic upwind
-fct_opts.DMP_option = 3;
+%             5 = analytic alternate
+fct_opts.DMP_option = 4;
 
 % limiter option: 0 = All 0 (no correction; low-order)
 %                 1 = All 1 (full correction; high-order)
 %                 2 = Zalesak limiter
 %                 3 = Josh limiter
 fct_opts.limiting_option = 2;
+
+fct_opts.use_multipass_limiting = false; % option to use multi-pass limiting
+fct_opts.multipass_tol = 0.01; % percentage tolerance for multi-pass
 
 % option to enforce Q+ >= 0, Q- <= 0
 fct_opts.enforce_antidiffusion_bounds_signs = true;
@@ -106,7 +110,9 @@ fct_opts.dirichlet_limiting_coefficient = 0.0;
 %            4: void
 %            5: MMS: TR: u = t*sin(pi*x)  SS: u = sin(pi*x)
 %            6: MMS: TR: u = x*t          SS: u = x
-problemID = 0;
+%            7: source_in_absorber
+%            8: interface
+problemID = 2;
 
 % IC_option: 0: zero
 %            1: exponential pulse
@@ -288,6 +294,52 @@ switch problemID
           phys.source = @(x,t) x + t + x*t;
           exact = @(x,t) x*t;
         end
+    case 7 % source_in_absorber
+         mesh.x_min = 0.0;
+        mesh.x_max = 1.0;
+        phys.periodic_BC = false;
+        phys.inc    = 0;
+        phys.mu     = 1;
+        source_value = 10.0;
+        sigma_value  = 100.0;
+        phys.source = @(x,t) (x<0.5)*source_value;
+        phys.sigma  = @(x,t) sigma_value;
+        phys.speed  = 1;
+        IC_option = 0;
+        phys.source_is_time_dependent = false;
+        exact_solution_known = true;
+        if opts.is_steady_state % steady-state
+            exact = @(x,t) (x<0.5).*(source_value/sigma_value*(1.0-exp(-sigma_value*x)))...
+                + (x>=0.5).*(source_value/sigma_value*(1.0-exp(-sigma_value*0.5))...
+                * exp(-sigma_value*(x-0.5)));
+        else
+            error('Exact solution not written for transient case');
+        end
+    case 8 % interface
+        mesh.x_min = 0.0;
+        mesh.x_max = 1.0;
+        phys.periodic_BC = false;
+        phys.inc    = 0;
+        phys.mu     = 1;
+        x1 = 0.5;
+        source_value1 = 10.0;
+        source_value2 = 20.0;
+        sigma_value1  = 10.0;
+        sigma_value2  = 40.0;
+        phys.source = @(x,t) (x<x1)*source_value1 + (x>=x1)*source_value2;
+        phys.sigma  = @(x,t) (x<x1)*sigma_value1  + (x>=x1)*sigma_value2;
+        phys.speed  = 1;
+        IC_option = 0;
+        phys.source_is_time_dependent = false;
+        exact_solution_known = true;
+        if opts.is_steady_state % steady-state
+            exact = @(x,t) (x<x1).*(source_value1/sigma_value1*(1.0-exp(-sigma_value1*x)))...
+                + (x>=x1).*((source_value1/sigma_value1*(1.0-exp(-sigma_value1*x1))...
+                * exp(-sigma_value2*(x-x1)))...
+                + source_value2/sigma_value2*(1.0-exp(-sigma_value2*(x-x1))));
+        else
+            error('Exact solution not written for transient case');
+        end
     otherwise
         error('Invalid problem ID chosen');
 end
@@ -315,6 +367,20 @@ assert(~(opts.is_steady_state & phys.periodic_BC),...
 % assert that time-dependent source is not used for a steady-state problem
 assert(~(opts.is_steady_state & phys.source_is_time_dependent),...
     'Cannot have a time-dependent source in a steady-state problem.');
+
+% compute limiting coefficients
+switch fct_opts.limiting_option
+    case 0 % Full limiter
+        fct_opts.limiter = @limiter_zeroes;
+    case 1 % No limiter
+        fct_opts.limiter = @limiter_ones;
+    case 2 % Zalesak limiter
+        fct_opts.limiter = @limiter_zalesak;
+    case 3 % Josh limiter
+        fct_opts.limiter = @limiter_josh;
+    otherwise
+        error('Invalid limiting option');
+end
 
 %% Setup
 
@@ -436,6 +502,9 @@ if (opts.temporal_scheme == 0)
 else
     distance = phys.speed*dt_nominal;
 end
+
+% create source/sigma function
+source_over_sigma = @(x,t) phys.source(x,t) ./ phys.sigma(x,t);
     
 % compute min and max sigma and source in the support of i for time 0
 t = 0;
@@ -444,11 +513,17 @@ if (fct_opts.DMP_option == 4) % upwind maximum principle
         phys.sigma, t,dof_handler.n_dof,mesh,quadrature.zq,distance);
     [source_min,source_max] = compute_min_max_per_dof_upwind(...
         phys.source,t,dof_handler.n_dof,mesh,quadrature.zq,distance);
+    [source_over_sigma_min, source_over_sigma_max] = ...
+        compute_min_max_per_dof_upwind(...
+        source_over_sigma,t,dof_handler.n_dof,mesh,quadrature.zq,distance);
 else
     [sigma_min, sigma_max]  = compute_min_max_per_dof(...
         phys.sigma, t,dof_handler.n_dof,mesh,quadrature.zq,distance);
     [source_min,source_max] = compute_min_max_per_dof(...
         phys.source,t,dof_handler.n_dof,mesh,quadrature.zq,distance);
+    [source_over_sigma_min, source_over_sigma_max] = ...
+        compute_min_max_per_dof(...
+        source_over_sigma,t,dof_handler.n_dof,mesh,quadrature.zq,distance);
 end
 
 %% Low-order Solution
@@ -729,7 +804,8 @@ if (compute_FCT)
             [flim,Wminus,Wplus] = compute_limited_flux_sums_ss(uFCT,F,...
                 AL_mod,b_mod,...
                 sigma_min,sigma_max,source_min,source_max,mesh,phys,...
-                dof_handler.n_dof,fct_opts,opts);
+                dof_handler.n_dof,fct_opts,opts,...
+                source_over_sigma_min, source_over_sigma_max);
             
             % plot
             if (out_opts.plot_FCT_iteration)
