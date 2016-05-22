@@ -86,7 +86,7 @@ that the FCT algorithm used is not restricted to 1-D or 2-D.
 \begin{tabular}{l l}\toprule
 \emph{Parameter} & \emph{Value}\\\midrule
 Number of Cells & $N_{cell} = 16384$\\
-Time Discretization & Explicit Euler, SSPRK33\\
+Time Discretization & Explicit Euler, SSPRK33, Steady-State\\
 End Time & $t = 1$\\
 CFL Number & $\nu = 0.5$\\\midrule
 Entropy Function & $\entropy(\scalarsolution) = \frac{1}{2}\scalarsolution^2$\\
@@ -197,6 +197,116 @@ FCT Solution Bounds & DMP\\
    \caption{Comparison of Solutions for the 3-D Normal Void-to-Absorber Test
      Problem Using SSPRK33 Time Discretization}
    \label{fig:void_to_absorber_3D}
+\end{figure}
+%-------------------------------------------------------------------------------
+
+The steady-state FCT solution was found to have significant convergence
+difficulties, and for example, the steady-state solution with 4096 cells
+did not converge. The main difficulty of implicit and steady-state FCT is
+that in general the solution bounds, such as those given by
+Equation \eqref{eq:analyticDMP}, are implicit:
+\begin{subequations}
+  \begin{equation}
+      \solutionbound_i^- \le \solutionletter_i
+        \le \solutionbound_i^+ \eqc
+  \end{equation}
+  \begin{equation}
+      \solutionbound_i^-
+        \equiv \left\{\begin{array}{l l}
+          \solutionletter_{\min,i} e^{-\dx\reactioncoef_{\max,i}}
+            + \frac{\scalarsource_{\min,i}}{\reactioncoef_{\max,i}}
+            (1 - e^{-\dx\reactioncoef_{\max,i}}) \eqc
+          & \reactioncoef_{\max,i} \ne 0 \\
+          \solutionletter_{\min,i}
+            + \dx\scalarsource_{\min,i} \eqc
+          & \reactioncoef_{\max,i} = 0
+        \end{array}\right.\eqc
+  \end{equation}
+  \begin{equation}
+      \solutionbound_i^+
+        \equiv \left\{\begin{array}{l l}
+          \solutionletter_{\max,i} e^{-\dx\reactioncoef_{\min,i}}
+            + \frac{\scalarsource_{\max,i}}{\reactioncoef_{\min,i}}
+            (1 - e^{-\dx\reactioncoef_{\min,i}}) \eqc
+          & \reactioncoef_{\min,i} \ne 0 \\
+          \solutionletter_{\max,i}
+            + \dx\scalarsource_{\max,i} \eqc
+          & \reactioncoef_{\min,i} = 0
+        \end{array}\right.\eqp
+  \end{equation}
+\end{subequations}
+To illustrate the issue of using implicit solution bounds,
+the problem was run again but with \emph{explicitly}
+computed solution bounds, which use the known exact solution for this problem
+instead of the numerical solution values:
+\begin{subequations}
+  \begin{equation}
+      \solutionbound_i^- \le \solutionletter_i
+        \le \solutionbound_i^+ \eqc
+  \end{equation}
+  \begin{equation}
+      \solutionbound_i^-
+        \equiv \left\{\begin{array}{l l}
+          u_{\min,i}^{\textup{exact}} e^{-\dx\reactioncoef_{\max,i}}
+            + \frac{\scalarsource_{\min,i}}{\reactioncoef_{\max,i}}
+            (1 - e^{-\dx\reactioncoef_{\max,i}}) \eqc
+          & \reactioncoef_{\max,i} \ne 0 \\
+          u_{\min,i}^{\textup{exact}}
+            + \dx\scalarsource_{\min,i} \eqc
+          & \reactioncoef_{\max,i} = 0
+        \end{array}\right.\eqc
+  \end{equation}
+  \begin{equation}
+      \solutionbound_i^+
+        \equiv \left\{\begin{array}{l l}
+          u_{\max,i}^{\textup{exact}} e^{-\dx\reactioncoef_{\min,i}}
+            + \frac{\scalarsource_{\max,i}}{\reactioncoef_{\min,i}}
+            (1 - e^{-\dx\reactioncoef_{\min,i}}) \eqc
+          & \reactioncoef_{\min,i} \ne 0 \\
+          u_{\max,i}^{\textup{exact}}
+            + \dx\scalarsource_{\max,i} \eqc
+          & \reactioncoef_{\min,i} = 0
+        \end{array}\right.\eqp
+  \end{equation}
+  \begin{equation}
+    u_{\min,i}^{\textup{exact}} \equiv \min\limits_{j\in\indices(\support_i)}
+      u^{\textup{exact}}(\x_j) \eqc \quad
+    u_{\max,i}^{\textup{exact}} \equiv \max\limits_{j\in\indices(\support_i)}
+      u^{\textup{exact}}(\x_j) \eqp
+  \end{equation}
+\end{subequations}
+When these bounds were used, the steady-state FCT solution did converge,
+with 50 iterations.
+Figure \ref{fig:void_to_absorber_ss} compares the steady-state solutions
+computed with 4096 cells, with the FCT solution using the exact solution
+bounds given above. 
+
+%-------------------------------------------------------------------------------
+\begin{figure}[ht]
+   \centering
+   \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/void_to_absorber_ss/images/exact.png}
+      \caption{Exact}
+   \end{subfigure}
+   \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/void_to_absorber_ss/images/low.png}
+      \caption{Low-Order}
+   \end{subfigure}
+   \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/void_to_absorber_ss/images/EV.png}
+      \caption{Entropy Viscosity}
+   \end{subfigure}
+   \begin{subfigure}{0.49\textwidth}
+      \includegraphics[width=\textwidth]
+        {\contentdir/results/transport/void_to_absorber_ss/images/EVFCT.png}
+      \caption{Entropy Viscosity FCT}
+   \end{subfigure}
+   \caption{Comparison of Steady-State Solutions for 2-D Normal Void-to-Absorber Test
+     Problem with 4096 Cells}
+   \label{fig:void_to_absorber_ss}
 \end{figure}
 %-------------------------------------------------------------------------------
 
