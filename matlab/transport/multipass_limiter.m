@@ -13,9 +13,13 @@ total_antidiffusion = 0.5*sum(sum(abs(F),1));
 % initialize
 Flim = zeros(n,1);
 F_remainder = F;
+iter = 0;
 
 % loop until very little antidiffusion accepted
 while (true)
+    % increment iteration number
+    iter = iter + 1;
+
     % compute limiting coefficients and antidiffusion source
     [Flim_new,L] = fct_opts.limiter(F_remainder,Qplus,Qminus,Flim,...
         opts,dirichlet_limiting_coefficient);
@@ -27,6 +31,10 @@ while (true)
     F_accepted = F_remainder.*L;
     accepted_antidiffusion = 0.5*sum(sum(abs(F_accepted),1));
     percent_accepted = accepted_antidiffusion / total_antidiffusion * 100;
+
+    % report
+    fprintf('          limiter pass %i: %f%% antidiffusion accepted\n',...
+      iter,percent_accepted);
     
     % check accepted antidiffusion against tolerance
     if (percent_accepted < tol)

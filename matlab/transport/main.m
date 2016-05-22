@@ -73,7 +73,7 @@ opts.ss_tol = 1.0e-6;  % steady-state tolerance
 %             3 = analytic
 %             4 = analytic upwind
 %             5 = analytic alternate
-fct_opts.DMP_option = 4;
+fct_opts.DMP_option = 3;
 
 % limiter option: 0 = All 0 (no correction; low-order)
 %                 1 = All 1 (full correction; high-order)
@@ -81,7 +81,7 @@ fct_opts.DMP_option = 4;
 %                 3 = Josh limiter
 fct_opts.limiting_option = 2;
 
-fct_opts.use_multipass_limiting = false; % option to use multi-pass limiting
+fct_opts.use_multipass_limiting = true; % option to use multi-pass limiting
 fct_opts.multipass_tol = 0.01; % percentage tolerance for multi-pass
 
 % option to enforce Q+ >= 0, Q- <= 0
@@ -112,7 +112,7 @@ fct_opts.dirichlet_limiting_coefficient = 0.0;
 %            6: MMS: TR: u = x*t          SS: u = x
 %            7: source_in_absorber
 %            8: interface
-problemID = 2;
+problemID = 8;
 
 % IC_option: 0: zero
 %            1: exponential pulse
