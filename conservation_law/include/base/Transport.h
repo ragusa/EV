@@ -80,7 +80,7 @@ private:
 
   std::shared_ptr<MaxWaveSpeed<dim>> create_max_wave_speed() const override;
 
-  std::shared_ptr<ExplicitEulerFCT<dim>> create_fct() const override;
+  std::shared_ptr<ExplicitEulerFCT<dim>> create_fct() override;
 
   /** \brief Run parameters */
   TransportRunParameters transport_parameters;

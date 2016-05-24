@@ -52,6 +52,7 @@ ExplicitEulerFCT<dim>::ExplicitEulerFCT(
  * \param[in] high_order_diffusion_matrix  high-order diffusion matrix
  *            \f$\mathbf{D}^H\f$
  * \param[in] ss_rhs  steady-state right hand side vector \f$\mathbf{b}^n\f$
+ * \param[in] t_old  old time
  * \param[out] antidiffusion_vector  the antidiffusion vector
  *             \f$\bar{\mathbf{p}}\f$
  */
@@ -65,6 +66,7 @@ void ExplicitEulerFCT<dim>::compute_antidiffusion_vector(
   const SparseMatrix<double> & low_order_diffusion_matrix,
   const SparseMatrix<double> & high_order_diffusion_matrix,
   const Vector<double> & ss_rhs,
+  const double & t_old,
   Vector<double> & antidiffusion_vector)
 {
   // compute antidiffusive fluxes
@@ -82,6 +84,7 @@ void ExplicitEulerFCT<dim>::compute_antidiffusion_vector(
                               ss_reaction,
                               low_order_diffusion_matrix,
                               ss_rhs,
+                              t_old,
                               this->limiter_matrix,
                               this->antidiffusion_matrix);
 
@@ -265,6 +268,7 @@ void ExplicitEulerFCT<dim>::compute_antidiffusion_matrix(
  * \param[in] low_order_diffusion_matrix  low-order diffusion matrix
  *            \f$\mathbf{D}^L\f$
  * \param[in] ss_rhs  steady-state right hand side vector \f$\mathbf{b}^n\f$
+ * \param[in] t_old  old time
  * \param[inout] limiter_matrix  limiter matrix \f$\mathbf{L}\f$
  * \param[inout] antidiffusion_matrix  antidiffusion matrix \f$\mathbf{P}\f$
  */
@@ -276,6 +280,7 @@ void ExplicitEulerFCT<dim>::filter_antidiffusive_fluxes(
   const Vector<double> & ss_reaction,
   const SparseMatrix<double> & low_order_diffusion_matrix,
   const Vector<double> & ss_rhs,
+  const double & t_old,
   SparseMatrix<double> & limiter_matrix,
   SparseMatrix<double> & antidiffusion_matrix)
 {
@@ -287,6 +292,7 @@ void ExplicitEulerFCT<dim>::filter_antidiffusive_fluxes(
                                             ss_reaction,
                                             low_order_diffusion_matrix,
                                             ss_rhs,
+                                            t_old,
                                             limiter_matrix,
                                             antidiffusion_matrix);
 }

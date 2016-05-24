@@ -29,8 +29,6 @@ DMPExplicitEulerFCTFilter<dim>::DMPExplicitEulerFCTFilter(
                                 lumped_mass_matrix_,
                                 dirichlet_values_)
 {
-  // resize temporary vector
-  tmp_vector.reinit(this->n_dofs);
 }
 
 /**
@@ -59,13 +57,15 @@ DMPExplicitEulerFCTFilter<dim>::DMPExplicitEulerFCTFilter(
  *            = \sum\limits_j\int\limits_{S_{i,j}}
  *            \varphi_i(\mathbf{x})\varphi_j(\mathbf{x})\sigma(\mathbf{x})dV \f$
  * \param[in] ss_rhs  old steady-state right hand side vector \f$\mathbf{b}^n\f$
+ * \param[in] t_old  old time
  */
 template <int dim>
 void DMPExplicitEulerFCTFilter<dim>::compute_solution_bounds(
   const Vector<double> & old_solution,
   const double & dt,
   const Vector<double> & ss_reaction,
-  const Vector<double> & ss_rhs)
+  const Vector<double> & ss_rhs,
+  const double &)
 {
   // create references
   Vector<double> & solution_min = this->solution_bounds.lower;
@@ -134,51 +134,4 @@ void DMPExplicitEulerFCTFilter<dim>::compute_solution_bounds(
       solution_min(i) = value;
     }
   }
-}
-
-/**
- * \brief Computes the antidiffusion bounds \f$\mathbf{Q}^\pm\f$.
- *
- * \param[in] old_solution  old solution \f$\mathbf{U}^n\f$
- * \param[in] dt  time step size \f$\Delta t\f$
- * \param[in] inviscid_ss_flux  inviscid steady-state flux vector
- *   (entries are \f$(\mathbf{A}\mathbf{U}^n)_i\f$ for scalar case,
- *   \f$\sum\limits_j\mathbf{c}_{i,j}\cdot\mathrm{F}^n_j\f$ for systems case)
- * \param[in] low_order_diffusion_matrix  low-order diffusion matrix
- *            \f$\mathbf{D}^L\f$
- * \param[in] ss_rhs  steady-state right hand side vector \f$\mathbf{b}^n\f$
- */
-template <int dim>
-void DMPExplicitEulerFCTFilter<dim>::compute_antidiffusion_bounds(
-  const Vector<double> & old_solution,
-  const double & dt,
-  const Vector<double> & inviscid_ss_flux,
-  const SparseMatrix<double> & low_order_diffusion_matrix,
-  const Vector<double> & ss_rhs)
-{
-  // create references
-  Vector<double> & Q_minus = this->antidiffusion_bounds.lower;
-  Vector<double> & Q_plus = this->antidiffusion_bounds.upper;
-  const Vector<double> & solution_min = this->solution_bounds.lower;
-  const Vector<double> & solution_max = this->solution_bounds.upper;
-  Vector<double> & tmp = this->tmp_vector;
-  const SparseMatrix<double> & lumped_mass_matrix = *this->lumped_mass_matrix;
-
-  // start computing Q+
-  Q_plus = 0;
-  lumped_mass_matrix.vmult(tmp, old_solution);
-  Q_plus.add(-1.0 / dt, tmp);
-  Q_plus.add(1.0, inviscid_ss_flux);
-  low_order_diffusion_matrix.vmult(tmp, old_solution);
-  Q_plus.add(1.0, tmp);
-  Q_plus.add(-1.0, ss_rhs);
-
-  // copy current contents of Q+ as these components are identical
-  Q_minus = Q_plus;
-
-  // finish computing Q+ and Q-
-  lumped_mass_matrix.vmult(tmp, solution_max);
-  Q_plus.add(1.0 / dt, tmp);
-  lumped_mass_matrix.vmult(tmp, solution_min);
-  Q_minus.add(1.0 / dt, tmp);
 }

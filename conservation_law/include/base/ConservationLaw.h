@@ -177,6 +177,7 @@ protected:
                               const double & old_stage_dt,
                               const unsigned int & n,
                               const std::shared_ptr<ExplicitEulerFCT<dim>> & fct,
+                              const double & t_stage,
                               SSPRKTimeIntegrator<dim> & ssprk);
 
   void get_dirichlet_values(std::map<unsigned int, double> & dirichlet_values);
@@ -263,7 +264,7 @@ protected:
 
   virtual std::shared_ptr<StarState<dim>> create_star_state() const;
 
-  virtual std::shared_ptr<ExplicitEulerFCT<dim>> create_fct() const = 0;
+  virtual std::shared_ptr<ExplicitEulerFCT<dim>> create_fct() = 0;
 
   /**
    * \brief Returns the names of each component.

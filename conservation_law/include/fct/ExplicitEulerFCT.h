@@ -33,6 +33,7 @@ public:
     const SparseMatrix<double> & low_order_diffusion_matrix,
     const SparseMatrix<double> & high_order_diffusion_matrix,
     const Vector<double> & ss_rhs,
+    const double & t_old,
     Vector<double> & antidiffusion_vector);
 
   bool check_bounds(const Vector<double> & new_solution) const override;
@@ -62,6 +63,7 @@ protected:
     const Vector<double> & ss_reaction,
     const SparseMatrix<double> & low_order_diffusion_matrix,
     const Vector<double> & ss_rhs,
+    const double & t_old,
     SparseMatrix<double> & limiter_matrix,
     SparseMatrix<double> & antidiffusion_matrix);
 

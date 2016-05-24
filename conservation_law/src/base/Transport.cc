@@ -462,7 +462,7 @@ std::shared_ptr<MaxWaveSpeed<dim>> Transport<dim>::create_max_wave_speed() const
  * \return pointer to new FCT object
  */
 template <int dim>
-std::shared_ptr<ExplicitEulerFCT<dim>> Transport<dim>::create_fct() const
+std::shared_ptr<ExplicitEulerFCT<dim>> Transport<dim>::create_fct()
 {
   // determine if star states are to be used in FCT bounds
   const bool use_star_states_in_fct_bounds =
@@ -477,7 +477,8 @@ std::shared_ptr<ExplicitEulerFCT<dim>> Transport<dim>::create_fct() const
                                                      this->fe,
                                                      this->dirichlet_values,
                                                      this->consistent_mass_matrix,
-                                                     this->lumped_mass_matrix);
+                                                     this->lumped_mass_matrix,
+ this->cell_quadrature);
 
   return fct;
 }

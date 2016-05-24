@@ -32,6 +32,7 @@ public:
     const Vector<double> & ss_reaction,
     const SparseMatrix<double> & low_order_diffusion_matrix,
     const Vector<double> & ss_rhs,
+    const double & t_old,
     SparseMatrix<double> & limiter_matrix,
     SparseMatrix<double> & antidiffusion_matrix);
 
@@ -39,17 +40,22 @@ protected:
   virtual void compute_solution_bounds(const Vector<double> & old_solution,
                                        const double & dt,
                                        const Vector<double> & ss_reaction,
-                                       const Vector<double> & ss_rhs) = 0;
+                                       const Vector<double> & ss_rhs,
+                                       const double & t_old) = 0;
 
-  virtual void compute_antidiffusion_bounds(
+  void compute_antidiffusion_bounds(
+    const DoFBounds<dim> & solution_bounds,
     const Vector<double> & old_solution,
     const double & dt,
     const Vector<double> & inviscid_ss_flux,
     const SparseMatrix<double> & low_order_diffusion_matrix,
-    const Vector<double> & ss_rhs) = 0;
+    const Vector<double> & ss_rhs);
 
   /** \brief lumped mass matrix \f$\mathbf{M}^L\f$ */
   const SparseMatrix<double> * const lumped_mass_matrix;
+
+  /** \brief temporary vector */
+  Vector<double> tmp_vector;
 };
 
 #include "src/fct/ExplicitEulerFCTFilter.cc"

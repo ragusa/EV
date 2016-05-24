@@ -14,7 +14,7 @@ using namespace dealii;
  * \brief Class for analytic transport bounds filter for forward Euler.
  */
 template <int dim>
-class TransportAnalyticFEFCTFilter : public FEFCTFilter<dim>
+class TransportAnalyticFEFCTFilter : public ExplicitEulerFCTFilter<dim>
 {
 public:
   TransportAnalyticFEFCTFilter(
@@ -34,6 +34,7 @@ public:
     const Vector<double> & ss_reaction,
     const SparseMatrix<double> & low_order_diffusion_matrix,
     const Vector<double> & ss_rhs,
+    const double & t_old,
     SparseMatrix<double> & limiter_matrix,
     SparseMatrix<double> & antidiffusion_matrix) override;
 
@@ -47,7 +48,8 @@ protected:
   void compute_solution_bounds(const Vector<double> & old_solution,
                                const double & dt,
                                const Vector<double> & ss_reaction,
-                               const Vector<double> & ss_rhs) override;
+                               const Vector<double> & ss_rhs,
+                               const double & t_old) override;
 
   /** \brief analytic transport solution bounds */
   TransportAnalyticSolutionBounds<dim> analytic_bounds;

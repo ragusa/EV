@@ -194,6 +194,7 @@ ThetaFCTFilter.h
 ThetaFCT.h
 TransientMultiRegionExactSolution.cc
 TransientMultiRegionExactSolution.h
+TransportAnalyticFEFCTFilter.cc
 TransportAnalyticFEFCTFilter.h
 TransportAnalyticSolutionBounds.cc
 TransportAnalyticSolutionBounds.h

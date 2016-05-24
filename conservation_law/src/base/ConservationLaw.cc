@@ -1018,7 +1018,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
                      true);
           break;
         case Scheme::fct:
-          perform_fct_ssprk_step(dt, old_stage_dt, n, fct, ssprk);
+          perform_fct_ssprk_step(dt, old_stage_dt, n, fct, t_stage, ssprk);
           break;
         default:
           AssertThrow(false, ExcNotImplemented());
@@ -1298,6 +1298,7 @@ std::shared_ptr<ViscosityMultiplier<dim>> ConservationLaw<
  * \param[in] old_stage_dt time step size of previous SSPRK stage
  * \param[in] n time index
  * \param[in] fct FCT
+ * \param[in] t_stage  stage time
  * \param[in,out] ssprk SSPRK time integrator
  */
 template <int dim>
@@ -1306,6 +1307,7 @@ void ConservationLaw<dim>::perform_fct_ssprk_step(
   const double & old_stage_dt,
   const unsigned int & n,
   const std::shared_ptr<ExplicitEulerFCT<dim>> & fct,
+  const double & t_stage,
   SSPRKTimeIntegrator<dim> & ssprk)
 {
   // update star states
@@ -1351,6 +1353,7 @@ void ConservationLaw<dim>::perform_fct_ssprk_step(
                                     low_order_diffusion_matrix,
                                     high_order_diffusion_matrix,
                                     ss_rhs,
+                                    t_stage,
                                     antidiffusion_vector);
 
   // add antidiffusion vector
