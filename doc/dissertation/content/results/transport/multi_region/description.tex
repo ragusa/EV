@@ -29,14 +29,14 @@ The exact solution has the following form:
   u(\x,t) = u_b + u_q \eqc
 \end{equation}
 \begin{equation}
-  u_b=\tilde{u_0}(x-ct)e^{-\tau} \eqc
-        \quad N_r=3\eqc\quad
+  u_b=\tilde{u}_0(\x-\speed\di t)e^{-\tau}
+        \eqc \quad
         \tau = \sum\limits_{i=0}^{N_r-1} \sigma_i s_i \eqc
 \end{equation}
 \begin{equation}
-  \tilde{u_0}(x) = \left\{\begin{array}{l l}
-        u_{inc}, & x<x_0\\
-        0,       & x\geq 0
+  \tilde{u}_0(\x) = \left\{\begin{array}{l l}
+        u^{\textup{inc}}, & \x\notin\domain\\
+        u_0(\x),          & \x\in\domain
      \end{array}\right. \eqc
 \end{equation}
 \begin{equation}
@@ -47,6 +47,7 @@ The exact solution has the following form:
   u_{q,i} = \left\{\begin{array}{l l}
         \frac{q_i}{\sigma_i}\left(1-e^{-\sigma_i s_i}\right), & \sigma_i\neq 0\\
         q_i s_i, & \sigma_i = 0
-        \end{array}\right. \eqp
+        \end{array}\right. \eqc
 \end{equation}
 \end{subequations}
+where $s_i$ is the distance travelled in region $i$.

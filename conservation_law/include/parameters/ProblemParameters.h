@@ -7,9 +7,11 @@
 
 #include <string>
 #include <sys/stat.h>
+
 #include <deal.II/base/parameter_handler.h>
-#include "include/other/CMakeVars.h"
+
 #include "include/bc/DirichletBoundaryConditions.h"
+#include "include/other/CMakeVars.h"
 
 using namespace dealii;
 

@@ -10,6 +10,7 @@
 
 #include "include/fct/SteadyStateFCT.h"
 #include "include/fct/TransportAnalyticSSFCTFilter.h"
+#include "include/fct/TransportUpwindAnalyticSSFCTFilter.h"
 #include "include/fct/TransportDMPAnalyticSSFCTFilter.h"
 #include "include/fct/TransportExactAnalyticSSFCTFilter.h"
 #include "include/fct/TransportExactDMPSSFCTFilter.h"
@@ -30,7 +31,8 @@ public:
                           const DoFHandler<dim> & dof_handler,
                           const FESystem<dim> & fe,
                           const std::map<unsigned int, double> & dirichlet_values,
-                          const QGauss<dim> & cell_quadrature);
+                          const QGauss<dim> & cell_quadrature,
+                          const double & dx_min);
 
 protected:
   virtual std::shared_ptr<SteadyStateFCTFilter<dim>> create_filter(
@@ -41,6 +43,9 @@ protected:
 
   /** \brief cell quadrature */
   const QGauss<dim> * const cell_quadrature;
+
+  /** \brief minimum cell diameter */
+  const double dx_min;
 };
 
 #include "src/fct/TransportSteadyStateFCT.cc"

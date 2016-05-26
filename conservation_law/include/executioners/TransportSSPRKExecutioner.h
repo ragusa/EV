@@ -37,7 +37,8 @@ protected:
 private:
   void perform_fct_ssprk_step(const double & dt,
                               const double & old_stage_dt,
-                              const unsigned int & n);
+                              const unsigned int & n,
+                              const double & t_stage);
 
   Vector<double> old_stage_solution;
 

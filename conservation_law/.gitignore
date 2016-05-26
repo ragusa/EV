@@ -39,6 +39,8 @@ ArtificialDiffusion.cc
 ArtificialDiffusion.h
 BoundaryConditions.cc
 BoundaryConditions.h
+BoundaryDistance.cc
+BoundaryDistance.h
 Burgers.cc
 Burgers.h
 BurgersMaxWaveSpeed.cc
@@ -105,6 +107,8 @@ GroupFEValuesFace.cc
 GroupFEValuesFace.h
 HighOrderViscosity.cc
 HighOrderViscosity.h
+HyperboxBoundaryDistance.cc
+HyperboxBoundaryDistance.h
 InterpolatedFluxEntropy.cc
 InterpolatedFluxEntropy.h
 LaplacianDiffusion.cc
@@ -234,6 +238,10 @@ TransportThetaFCT.cc
 TransportThetaFCT.h
 TransportTransientExecutioner.cc
 TransportTransientExecutioner.h
+TransportUpwindAnalyticSolutionBounds.cc
+TransportUpwindAnalyticSolutionBounds.h
+TransportUpwindAnalyticSSFCTFilter.cc
+TransportUpwindAnalyticSSFCTFilter.h
 Utilities.h
 Viscosity.cc
 Viscosity.h

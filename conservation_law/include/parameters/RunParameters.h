@@ -233,6 +233,8 @@ public:
   bool use_cumulative_antidiffusion_algorithm;
   /** \brief Flag to include star states in FCT bounds */
   bool use_star_states_in_fct_bounds;
+  /** \brief number of sampling points for min/max in upwind solution bounds */
+  unsigned int upwind_bounds_sampling_points;
   /** \brief Flag to check FCT bounds */
   bool check_fct_bounds;
   /** \brief Flag to output the limiter matrix */

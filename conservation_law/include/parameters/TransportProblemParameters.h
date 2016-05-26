@@ -6,6 +6,8 @@
 #define TransportProblemParameters_h
 
 #include <deal.II/base/parameter_handler.h>
+#include "include/geometry/BoundaryDistance.h"
+#include "include/geometry/HyperboxBoundaryDistance.h"
 #include "include/parameters/ProblemParameters.h"
 #include "include/postprocessing/SteadyStateMultiRegionExactSolution.h"
 #include "include/postprocessing/TransientMultiRegionExactSolution.h"
@@ -37,6 +39,12 @@ public:
 
   /** \brief Flag that source is time-dependent */
   bool source_is_time_dependent;
+
+  /** \brief Incoming flux value constant for function parsers */
+  double incoming;
+
+  /** \brief boundary distance function */
+  std::shared_ptr<BoundaryDistance<dim>> boundary_distance;
 
 protected:
   /** \brief Specification type for transport direction */
@@ -74,9 +82,6 @@ protected:
 
   /** \brief String for function parser of exact solution */
   std::string exact_solution_angularflux;
-
-  /** \brief Incoming flux value constant for function parsers */
-  double incoming;
 
   /** \brief Cross section value 1 */
   double sigma1;

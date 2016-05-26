@@ -13,6 +13,7 @@
  * \param[in] fe_  finite element system
  * \param[in] dirichlet_values_  map of DoF indices to Dirichlet values
  * \param[in] cell_quadrature_  cell quadrature
+ * \param[in] dx_min_  minimum cell diameter
  */
 template <int dim>
 TransportSteadyStateFCT<dim>::TransportSteadyStateFCT(
@@ -21,10 +22,12 @@ TransportSteadyStateFCT<dim>::TransportSteadyStateFCT(
   const DoFHandler<dim> & dof_handler_,
   const FESystem<dim> & fe_,
   const std::map<unsigned int, double> & dirichlet_values_,
-  const QGauss<dim> & cell_quadrature_)
+  const QGauss<dim> & cell_quadrature_,
+  const double & dx_min_)
   : SteadyStateFCT<dim>(run_parameters_, dof_handler_, fe_, dirichlet_values_),
     problem_parameters(&problem_parameters_),
-    cell_quadrature(&cell_quadrature_)
+    cell_quadrature(&cell_quadrature_),
+    dx_min(dx_min_)
 {
   // create FCT filters
   this->create_filters();
@@ -68,6 +71,15 @@ std::shared_ptr<SteadyStateFCTFilter<dim>> TransportSteadyStateFCT<
       *cell_quadrature,
       this->limiter,
       *this->dirichlet_values);
+  else if (filter_string == "upwind_analytic")
+    filter = std::make_shared<TransportUpwindAnalyticSSFCTFilter<dim>>(
+      *this->run_parameters,
+      *problem_parameters,
+      *this->dof_handler,
+      *this->fe,
+      this->limiter,
+      *this->dirichlet_values,
+      dx_min);
   else if (filter_string == "dmp_exact")
     filter =
       std::make_shared<TransportExactDMPSSFCTFilter<dim>>(*this->run_parameters,

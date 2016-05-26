@@ -176,13 +176,22 @@ void TransportSteadyStateExecutioner<dim>::compute_entropy_viscosity_solution()
 template <int dim>
 void TransportSteadyStateExecutioner<dim>::compute_fct_solution()
 {
+  // compute minimum cell diameter, used by some FCT bounds
+  typename DoFHandler<dim>::active_cell_iterator cell = this->dof_handler
+                                                          .begin_active(),
+                                                 endc = this->dof_handler.end();
+  double dx_min = cell->diameter();
+  for (; cell != endc; ++cell)
+    dx_min = std::min(dx_min, cell->diameter());
+
   // create FCT object
   TransportSteadyStateFCT<dim> fct(this->parameters,
                                    *this->problem_parameters,
                                    this->dof_handler,
                                    this->fe,
                                    this->dirichlet_values,
-                                   this->cell_quadrature);
+                                   this->cell_quadrature,
+                                   dx_min);
 
   // check if high-order solution satisfies bounds - if so, do not use FCT
   bool skip_fct = false;

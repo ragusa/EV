@@ -28,7 +28,8 @@ TransportSSPRKExecutioner<dim>::TransportSSPRKExecutioner(
       this->fe,
       this->dirichlet_values,
       this->consistent_mass_matrix,
-      this->lumped_mass_matrix);
+      this->lumped_mass_matrix,
+      this->cell_quadrature);
   }
 
   // vector for old stage solution
@@ -112,7 +113,7 @@ void TransportSSPRKExecutioner<dim>::compute_new_solution(const double & dt,
 
         break;
       case Scheme::fct:
-        perform_fct_ssprk_step(dt, old_stage_dt, n);
+        perform_fct_ssprk_step(dt, old_stage_dt, n, t_stage);
 
         // add number of entropy viscosity iterations to total
         if (this->parameters.high_order_scheme == HighOrderScheme::entropy_visc)
@@ -146,10 +147,12 @@ std::shared_ptr<FCT<dim>> TransportSSPRKExecutioner<dim>::get_derived_fct() cons
  * \param[in] dt current time step size
  * \param[in] old_stage_dt time step size of previous SSPRK stage
  * \param[in] n time index
+ * \param[in] t_stage  stage time
  */
 template <int dim>
 void TransportSSPRKExecutioner<dim>::perform_fct_ssprk_step(
-  const double & dt, const double & old_stage_dt, const unsigned int & n)
+  const double & dt, const double & old_stage_dt, const unsigned int & n,
+  const double & t_stage)
 {
   // update low-order diffusion
   this->low_order_viscosity->update(
@@ -198,6 +201,7 @@ void TransportSSPRKExecutioner<dim>::perform_fct_ssprk_step(
                                     this->low_order_diffusion_matrix,
                                     this->high_order_diffusion_matrix,
                                     this->ss_rhs,
+                                    t_stage,
                                     antidiffusion_vector);
 
   // add antidiffusion vector

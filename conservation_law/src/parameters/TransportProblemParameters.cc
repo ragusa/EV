@@ -384,6 +384,42 @@ void TransportProblemParameters<dim>::process_derived_parameters(
   // set boundary IDs if using the incoming boundary specification
   if (this->boundary_id_scheme == "incoming")
     set_boundary_ids_incoming(triangulation, fe, face_quadrature);
+
+  // create boundary distance function object
+  if (this->domain_shape == "hyper_cube")
+  {
+    auto boundary_distance_derived =
+      std::make_shared<HyperboxBoundaryDistance<dim>>(transport_direction,
+                                                      this->constants["x_min"],
+                                                      this->constants["x_min"],
+                                                      this->constants["x_min"]);
+    boundary_distance = boundary_distance_derived;
+  }
+  else if (this->domain_shape == "hyper_box")
+  {
+    std::shared_ptr<HyperboxBoundaryDistance<dim>> boundary_distance_derived;
+    if (dim == 1)
+      boundary_distance_derived = std::make_shared<HyperboxBoundaryDistance<dim>>(
+        transport_direction, this->constants["x_min"], 0.0, 0.0);
+    else if (dim == 2)
+      boundary_distance_derived =
+        std::make_shared<HyperboxBoundaryDistance<dim>>(transport_direction,
+                                                        this->constants["x_min"],
+                                                        this->constants["y_min"],
+                                                        0.0);
+    else // dim == 3
+      boundary_distance_derived =
+        std::make_shared<HyperboxBoundaryDistance<dim>>(transport_direction,
+                                                        this->constants["x_min"],
+                                                        this->constants["y_min"],
+                                                        this->constants["z_min"]);
+
+    boundary_distance = boundary_distance_derived;
+  }
+  else
+  {
+    AssertThrow(false, ExcNotImplemented());
+  }
 }
 
 /**

@@ -217,6 +217,10 @@ void RunParameters::declare_run_parameters(ParameterHandler & prm)
                       "false",
                       Patterns::Bool(),
                       "Option to include star states in FCT bounds");
+    prm.declare_entry("upwind bounds sampling points",
+                      "3",
+                      Patterns::Integer(),
+                      "Number of points to use in determining min/max in bounds");
     prm.declare_entry("check fct bounds",
                       "false",
                       Patterns::Bool(),
@@ -589,6 +593,8 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
     use_cumulative_antidiffusion_algorithm =
       prm.get_bool("use cumulative antidiffusion algorithm");
     use_star_states_in_fct_bounds = prm.get_bool("use star states in fct bounds");
+    upwind_bounds_sampling_points =
+      prm.get_integer("upwind bounds sampling points");
     check_fct_bounds = prm.get_bool("check fct bounds");
     output_limiter_matrix = prm.get_bool("output limiter matrix");
     output_final_fct_bounds = prm.get_bool("output final fct bounds");

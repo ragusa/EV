@@ -75,11 +75,11 @@ void TransportAnalyticFEFCTFilter<dim>::filter_antidiffusive_fluxes(
 
   // compute antidiffusion bounds Q- and Q+
   this->compute_antidiffusion_bounds(analytic_bounds,
-                               old_solution,
-                               dt,
-                               inviscid_ss_flux,
-                               low_order_diffusion_matrix,
-                               ss_rhs);
+                                     old_solution,
+                                     dt,
+                                     inviscid_ss_flux,
+                                     low_order_diffusion_matrix,
+                                     ss_rhs);
 
   // enforce antidiffusion bounds signs if requested
   if (this->do_enforce_antidiffusion_bounds_signs)

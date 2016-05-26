@@ -478,7 +478,7 @@ std::shared_ptr<ExplicitEulerFCT<dim>> Transport<dim>::create_fct()
                                                      this->dirichlet_values,
                                                      this->consistent_mass_matrix,
                                                      this->lumped_mass_matrix,
- this->cell_quadrature);
+                                                     this->cell_quadrature);
 
   return fct;
 }

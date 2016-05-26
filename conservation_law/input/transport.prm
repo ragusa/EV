@@ -25,7 +25,7 @@
 #   void_to_absorber_1d_ss
 #   void_to_absorber_2d_ss
 subsection problem
-   set problem name = void_to_absorber_1d
+   set problem name = sourcevoid_to_absorber_ss
 end
 
 subsection scheme
@@ -56,7 +56,7 @@ subsection time
 end
 
 subsection temporal discretization
-   set temporal discretization = ssprk # ss|ssprk|theta
+   set temporal discretization = ss    # ss|ssprk|theta
    set ssprk discretization    = FE    # FE|SSP2|SSP3
    set theta discretization    = BE    # FE|CN|BE
 end
@@ -72,18 +72,19 @@ subsection artificial viscosity
 end
 
 subsection fct
-   # dmp|dmp_analytic|analytic|dmp_exact|analytic_exact
-   set filter sequence string        = analytic
+   # dmp|dmp_analytic|analytic|upwind_analytic|dmp_exact|analytic_exact
+   set filter sequence string        = upwind_analytic
    set limiter option                = zalesak # ones|zeroes|zalesak
-   set use multipass limiting        = false
+   set use multipass limiting        = true
    set multipass limiting percent tolerance = 0.01
-   set dirichlet limiting coefficient = 1.0
+   set dirichlet limiting coefficient = 0.0
    set enforce antidiffusion bounds signs = true
    set fct synchronization type      = none    # none|min|compound
    set fct initialization option     = low     # zero|low|high
    set skip fct if bounds satisfied  = false
    set use cumulative antidiffusion algorithm = false
    set use star states in fct bounds = false
+   set upwind bounds sampling points = 4
    set check fct bounds              = false
    set output limiter matrix         = false
    set output final fct bounds       = true
