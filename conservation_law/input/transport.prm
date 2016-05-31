@@ -25,7 +25,7 @@
 #   void_to_absorber_1d_ss
 #   void_to_absorber_2d_ss
 subsection problem
-   set problem name = sourcevoid_to_absorber_ss
+   set problem name = source_in_absorber_ss
 end
 
 subsection scheme
@@ -77,7 +77,7 @@ subsection fct
    set limiter option                = zalesak # ones|zeroes|zalesak
    set use multipass limiting        = true
    set multipass limiting percent tolerance = 0.01
-   set dirichlet limiting coefficient = 0.0
+   set dirichlet limiting coefficient = 1.0
    set enforce antidiffusion bounds signs = true
    set fct synchronization type      = none    # none|min|compound
    set fct initialization option     = low     # zero|low|high

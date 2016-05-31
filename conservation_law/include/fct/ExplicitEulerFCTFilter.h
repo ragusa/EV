@@ -43,7 +43,7 @@ protected:
                                        const Vector<double> & ss_rhs,
                                        const double & t_old) = 0;
 
-  void compute_antidiffusion_bounds(
+  virtual void compute_antidiffusion_bounds(
     const DoFBounds<dim> & solution_bounds,
     const Vector<double> & old_solution,
     const double & dt,

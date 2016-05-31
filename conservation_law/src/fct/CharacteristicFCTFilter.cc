@@ -62,6 +62,7 @@ CharacteristicFCTFilter<dim>::CharacteristicFCTFilter(
  * \param[in] low_order_diffusion_matrix  low-order diffusion matrix
  *            \f$\mathbf{D}^L\f$
  * \param[in] ss_rhs  steady-state right hand side vector \f$\mathbf{b}^n\f$
+ * \param[in] t_old  old time
  * \param[inout] limiter_matrix  limiter matrix \f$\mathbf{L}\f$
  * \param[inout] antidiffusion_matrix  antidiffusion matrix \f$\mathbf{P}\f$
  */
@@ -73,15 +74,16 @@ void CharacteristicFCTFilter<dim>::filter_antidiffusive_fluxes(
   const Vector<double> & ss_reaction,
   const SparseMatrix<double> & low_order_diffusion_matrix,
   const Vector<double> & ss_rhs,
+  const double & t_old,
   SparseMatrix<double> & limiter_matrix,
   SparseMatrix<double> & antidiffusion_matrix)
 {
   // compute characteristic solution bounds \hat{W}- and \hat{W}+
-  compute_solution_bounds(old_solution, dt, ss_reaction, ss_rhs);
+  compute_solution_bounds(old_solution, dt, ss_reaction, ss_rhs, t_old);
 
   // compute characteristic antidiffusion bounds \hat{Q}- and \hat{Q}+
   compute_antidiffusion_bounds(
-    old_solution, dt, inviscid_ss_flux, low_order_diffusion_matrix, ss_rhs);
+    this->solution_bounds, old_solution, dt, inviscid_ss_flux, low_order_diffusion_matrix, ss_rhs);
 
   // enforce antidiffusion bounds signs if requested
   if (this->do_enforce_antidiffusion_bounds_signs)
@@ -150,13 +152,15 @@ bool CharacteristicFCTFilter<dim>::check_bounds(
  *            = \sum\limits_j\int\limits_{S_{i,j}}
  *            \varphi_i(\mathbf{x})\varphi_j(\mathbf{x})\sigma(\mathbf{x})dV \f$
  * \param[in] ss_rhs  old steady-state right hand side vector \f$\mathbf{b}^n\f$
+ * \param[in] t_old  old time
  */
 template <int dim>
 void CharacteristicFCTFilter<dim>::compute_solution_bounds(
   const Vector<double> & old_solution,
   const double &,
   const Vector<double> &,
-  const Vector<double> &)
+  const Vector<double> &,
+  const double &)
 {
   // create references
   Vector<double> & solution_min = this->solution_bounds.lower;
@@ -178,6 +182,7 @@ void CharacteristicFCTFilter<dim>::compute_solution_bounds(
  *      into characteristic variables and stored in
  *      \c old_solution_characteristic.
  *
+ * \param[in] solution_bounds  solution bounds \f$\mathbf{W}^\pm\f$
  * \param[in] old_solution  old solution \f$\mathbf{U}^n\f$
  * \param[in] dt  time step size \f$\Delta t\f$
  * \param[in] inviscid_ss_flux  inviscid steady-state flux vector
@@ -189,6 +194,7 @@ void CharacteristicFCTFilter<dim>::compute_solution_bounds(
  */
 template <int dim>
 void CharacteristicFCTFilter<dim>::compute_antidiffusion_bounds(
+  const DoFBounds<dim> & solution_bounds,
   const Vector<double> &,
   const double & dt,
   const Vector<double> &,
@@ -198,8 +204,8 @@ void CharacteristicFCTFilter<dim>::compute_antidiffusion_bounds(
   // create references
   Vector<double> & Q_minus = this->antidiffusion_bounds.lower;
   Vector<double> & Q_plus = this->antidiffusion_bounds.upper;
-  const Vector<double> & solution_min = this->solution_bounds.lower;
-  const Vector<double> & solution_max = this->solution_bounds.upper;
+  const Vector<double> & solution_min = solution_bounds.lower;
+  const Vector<double> & solution_max = solution_bounds.upper;
   Vector<double> & tmp = this->tmp_vector;
   const SparseMatrix<double> & lumped_mass_matrix = *this->lumped_mass_matrix;
 

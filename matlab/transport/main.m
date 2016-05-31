@@ -16,8 +16,8 @@ else
   mesh.n_cell = 32;     % number of elements
 end
 quadrature.nq = 3;      % number of quadrature points per cell
-opts.impose_DirichletBC_strongly = false; % impose Dirichlet BC strongly?
-opts.use_penalty_bc = true; % add penalty BC?
+opts.impose_DirichletBC_strongly = true; % impose Dirichlet BC strongly?
+opts.use_penalty_bc = false; % add penalty BC?
 opts.penalty_bc_coef = 1000.0; % penalty BC coef: alpha*A(i,i) = alpha*inc
 %--------------------------------------------------------------------------
 % spatial method options
@@ -73,7 +73,7 @@ opts.ss_tol = 1.0e-6;  % steady-state tolerance
 %             3 = analytic
 %             4 = analytic upwind
 %             5 = analytic alternate
-fct_opts.DMP_option = 3;
+fct_opts.DMP_option = 4;
 
 % limiter option: 0 = All 0 (no correction; low-order)
 %                 1 = All 1 (full correction; high-order)
@@ -99,7 +99,7 @@ fct_opts.skip_limiter_if_bounds_satisfied = false;
 fct_opts.prelimit = false;
 
 % limiting coefficient bounds for Dirichlet nodes
-fct_opts.dirichlet_limiting_coefficient = 0.0; 
+fct_opts.dirichlet_limiting_coefficient = 1.0; 
 %--------------------------------------------------------------------------
 % physics options
 %--------------------------------------------------------------------------
@@ -112,7 +112,7 @@ fct_opts.dirichlet_limiting_coefficient = 0.0;
 %            6: MMS: TR: u = x*t          SS: u = x
 %            7: source_in_absorber
 %            8: interface
-problemID = 8;
+problemID = 7;
 
 % IC_option: 0: zero
 %            1: exponential pulse
@@ -295,7 +295,7 @@ switch problemID
           exact = @(x,t) x*t;
         end
     case 7 % source_in_absorber
-         mesh.x_min = 0.0;
+        mesh.x_min = 0.0;
         mesh.x_max = 1.0;
         phys.periodic_BC = false;
         phys.inc    = 0;

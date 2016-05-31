@@ -34,6 +34,7 @@ public:
     const Vector<double> & ss_reaction,
     const SparseMatrix<double> & low_order_diffusion_matrix,
     const Vector<double> & ss_rhs,
+    const double & t_old,
     SparseMatrix<double> & limiter_matrix,
     SparseMatrix<double> & antidiffusion_matrix) override;
 
@@ -43,9 +44,11 @@ protected:
   virtual void compute_solution_bounds(const Vector<double> & old_solution,
                                        const double & dt,
                                        const Vector<double> & ss_reaction,
-                                       const Vector<double> & ss_rhs) override;
+                                       const Vector<double> & ss_rhs,
+                                       const double & t_old) override;
 
   virtual void compute_antidiffusion_bounds(
+    const DoFBounds<dim> & solution_bounds,
     const Vector<double> & old_solution,
     const double & dt,
     const Vector<double> & inviscid_ss_flux,
