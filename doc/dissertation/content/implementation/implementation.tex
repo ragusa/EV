@@ -2,8 +2,8 @@
 %================================================================================
 \subsection{Galerkin Scheme Using SSPRK}\label{gal_ssprk}
 %================================================================================
-Pseudocode for an $s$-stage SSPRK scheme
-implentation of the Galerkin scheme is as follows,
+Pseudo-code for an $s$-stage SSPRK scheme
+implementation of the Galerkin scheme is as follows,
 where notation is given in Section \ref{ssprk}:
 
 {\noindent\\
@@ -31,8 +31,8 @@ The function \texttt{step}$()$ is the following:
 %================================================================================
 \subsection{Low-Order Scheme Using SSPRK}
 %================================================================================
-Pseudocode for an $s$-stage SSPRK scheme
-implentation of a low-order scheme is as follows:
+Pseudo-code for an $s$-stage SSPRK scheme
+implementation of a low-order scheme is as follows:
 
 {\noindent\\
 $\hat{\mathbf{U}}^0 = \mathbf{U}^n$\\
@@ -47,7 +47,7 @@ for $i=1:s$\\
 $\mathbf{U}^{n+1} = \hat{\mathbf{U}}^s$\\
 }
 
-This is the same as the pseudocode for the Galerkin scheme
+This is the same as the pseudo-code for the Galerkin scheme
 given in Section \ref{gal_ssprk} except that the lumped
 mass matrix $\mathbf{M}^L$ and low-order steady-state
 matrix $\mathbf{A}^L$ are passed to the \texttt{step}()

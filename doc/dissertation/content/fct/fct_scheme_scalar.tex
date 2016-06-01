@@ -11,7 +11,7 @@ follow.
 \begin{equation}\label{eq:correction_flux_definition_steady_state}
   \loworderssmatrix\highordersolution = \ssrhs + \correctionfluxvector
 \end{equation}
-\begin{center}{\textbf{Semidiscrete scheme}:}\end{center}
+\begin{center}{\textbf{Semi-discrete scheme}:}\end{center}
 \begin{equation}\label{eq:correction_flux_definition_semidiscrete}
   \lumpedmassmatrix\ddt{\highordersolution}
   + \loworderssmatrix\highordersolution(\timevalue)
@@ -42,7 +42,7 @@ a correction flux matrix, denoted by $\correctionfluxmatrix$, e.g., entry
 $\MakeUppercase{\correctionfluxletter}\ij$ is the correction flux going into node
 $i$ from node $j$, and $\sumj\MakeUppercase{\correctionfluxletter}\ij =
 \correctionfluxletter_i$. Thus the question remains of how to distribute, or
-\emph{decompose}, the correction flux $\correctionfluxletter_i$ amongst its
+\emph{decompose}, the correction flux $\correctionfluxletter_i$ among its
 neighbors.  A convenient decomposition reveals itself when the correction flux
 definitions given by Equations
 \eqref{eq:correction_flux_definition_steady_state}
@@ -55,7 +55,7 @@ which follow.
   \correctionfluxvector \equiv \pr{\loworderdiffusionmatrix
     - \highorderdiffusionmatrix}\highordersolution
 \end{equation}
-\begin{center}{\textbf{Semidiscrete scheme}:}\end{center}
+\begin{center}{\textbf{Semi-discrete scheme}:}\end{center}
 \begin{equation}\label{eq:correction_flux_semidiscrete}
   \correctionfluxvector \equiv -\pr{\consistentmassmatrix
     - \lumpedmassmatrix}\ddt{\highordersolution}
@@ -99,7 +99,7 @@ The following decompositions result for each temporal discretization:
   = \pr{\diffusionmatrixletter\ij^L-\diffusionmatrixletter\ij^H}
     \pr{\solutionletter_j^H - \solutionletter_i^H}
 \end{equation}
-\begin{center}{\textbf{Semidiscrete scheme}:}\end{center}
+\begin{center}{\textbf{Semi-discrete scheme}:}\end{center}
 \begin{equation}
   \MakeUppercase{\correctionfluxletter}\ij
   = -\massmatrixletter^C\ij\pr{\ddt{\solutionletter_j^H}
@@ -168,7 +168,7 @@ The FCT scheme for each temporal discretization follows.
 \begin{equation}\label{eq:fct_steady_state}
   \loworderssmatrix\solutionvector = \ssrhs + \limitedfluxsum
 \end{equation}
-\begin{center}{\textbf{Semidiscrete scheme}:}\end{center}
+\begin{center}{\textbf{Semi-discrete scheme}:}\end{center}
 \begin{equation}\label{eq:fct_semidiscrete}
   \lumpedmassmatrix\ddt{\solutionvector}
   + \loworderssmatrix\solutionvector(\timevalue)
@@ -193,9 +193,9 @@ The FCT scheme for each temporal discretization follows.
 Each of these limiting coefficients is a number from zero to one; if the
 coefficient is one, then no limiting is applied, and if it is zero, then full
 limiting is applied, i.e., the internodal correction flux
-$\MakeUppercase{\correctionfluxletter}\ij$ is completely cancelled. If all of
+$\MakeUppercase{\correctionfluxletter}\ij$ is completely canceled. If all of
 the limiting coefficients are zero, then the low-order solution
-$\lowordersolution$ is recovered, and if all of the limiting coeffients are
+$\lowordersolution$ is recovered, and if all of the limiting coefficients are
 one, then the high-order solution $\highordersolution$ is recovered. The
 definition of the limiting coefficients is given in Section
 \ref{sec:limiting_coefficients_scalar}.

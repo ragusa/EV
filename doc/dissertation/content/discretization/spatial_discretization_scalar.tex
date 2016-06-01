@@ -59,14 +59,14 @@ example of this definition.
 \end{figure}
 %-------------------------------------------------------------------------------
 If the flux function $\consfluxscalar$ is nonlinear, then the system is
-nonlinear, but it may be expressed in a quasilinear form:
+nonlinear, but it may be expressed in a quasi-linear form:
 \begin{equation}\label{eq:semi_quasilinear}
    \consistentmassmatrix\ddt{\solutionvector}
    + \ssmatrix(\approximatescalarsolution)\solutionvector(\timevalue)
    = \ssrhs(\timevalue) \eqc
 \end{equation}
 where $\approximatescalarsolution\xt$ is the numerical solution, and the
-quasilinear matrix (i.e., the Jacobian matrix) entries are
+quasi-linear matrix (i.e., the Jacobian matrix) entries are
 \begin{equation}\label{eq:Aij_nonlinear}
   \ssmatrixletter\ij(\approximatescalarsolution) \equiv \intSij\left(
   \mathbf{\consfluxletter}'(\approximatescalarsolution)\cdot\nabla

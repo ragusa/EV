@@ -1,11 +1,11 @@
-In this section, a novel approach for FCT limitation is desribed, in which
+In this section, a novel approach for FCT limitation is described, in which
 multiple passes are taken through any limiter to maximize the amount of
 antidiffusion that is accepted without violating the imposed bounds.
 
 To date, no practical limiter has been developed that perfectly solves
 the optimization problem; solving an optimization problem exactly would
 be too computationally expensive to be used in practical calculations.
-Thus all limiters are suboptimal; additional antidiffusion can be accepted
+Thus all limiters are sub-optimal; additional antidiffusion can be accepted
 without violating the imposed bounds. For example, recall that the Zalesak
 limiter described in Section \ref{sec:zalesak_limiter} makes the safe
 choice that when considering the upper antidiffusion bound
@@ -32,7 +32,7 @@ where
 Of course, the problem with this hypothetical limiter is that one does not
 know the limiting coefficients for the negative antidiffusive fluxes yet;
 thus Zalesak designed the limiter to assume those limiting coefficients
-are all zero. Zalesak's limiter is suboptimal whenever
+are all zero. Zalesak's limiter is sub-optimal whenever
 positive antidiffusive fluxes are limited
 (this happens when $\correctionfluxletter_i^+ > \antidiffusionbound^+$)
 and there are some nonzero limiting coefficients for the negative antidiffusive
@@ -46,7 +46,7 @@ $\limiterletter\ij \leq\limiterletter_i^+$ (see Equation
 room for improvement.
 
 The idea of multi-pass limiting is to take multiple passes through a
-limiter to overcome the suboptimality.
+limiter to overcome the sub-optimality.
 A limiter may be considered as a black box in which the inputs are the
 antidiffusive fluxes $\{\correctionfluxij\}\ij$ and the antidiffusion bounds
 $\{\antidiffusionbound_i^\pm\}_i$ and the outputs are the limiting coefficients

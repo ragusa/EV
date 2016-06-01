@@ -35,11 +35,27 @@ Exact Solution & (Equation \eqref{eq:multiregion_exactsolution})\\
 \end{table}
 %-------------------------------------------------------------------------------
 
-Table \ref{tab:three_region_run_parameters} shows the run parameters used,
-and Figure \ref{fig:three_region} compares the solutions computed
-for each scheme for this problem. The FCT solution lacks the spurious
-oscillations shown in the EV and Galerkin solutions, but is not so diffusive
-as the low-order solution.
+Table \ref{tab:three_region_run_parameters} shows the run parameters used.
+The boundary conditions are chosen to be strong Dirichlet with $L^+=L^-=1$
+for the Dirichlet node. A comparison of FCT solutions for different imposed
+solution bounds are given by Figures \ref{fig:three_region_dmp} through
+\ref{fig:three_region_upwind}, which respectively, correspond to the
+DMP solution bounds, the analytic bounds given by Equation
+\eqref{eq:interface_nonupwind_bounds},
+the modification to those analytic bounds, given by Equation
+\eqref{eq:modified_analytic_bounds}, and the upwind bounds given by Equation
+\eqref{eq:upwind_bounds}. These results show that for this test problem,
+the low-order DMP solution bounds
+give a better result than the analytic bounds: the analytic bounds have the
+overly conservative $\scalarsource/\reactioncoef$ bound in them, as discussed
+in Section \ref{sec:interface}, and as a result, over the course of the transient,
+the upper bound is increased due to the presence of the source, eventually fully
+allowing the oscillation occurring at the interface of the first and second
+region. The modification to the analytic bounds suggested in Section
+\ref{sec:interface} avoids this issue, and produces results superior to those
+obtained using the low-order DMP bounds. Using upwind bounds for this problem
+proves overly restrictive for this test problem; the resulting FCT solution
+is only marginally improved over the low-order solution.
 
 %-------------------------------------------------------------------------------
 \begin{table}[ht]\caption{Three-Region Test Problem Run Parameters}
@@ -53,17 +69,47 @@ End Time & $t = 1$\\
 CFL Number & $\nu = 0.5$\\\midrule
 Entropy Function & $\entropy(u) = \frac{1}{2}u^2$\\
 Entropy Residual Coefficient & $\entropyresidualcoef = 0.1$\\
-Entropy Jump Coefficient & $\entropyjumpcoef = 0.1$\\\midrule
-FCT Solution Bounds & Analytic\\
+Entropy Jump Coefficient & $\entropyjumpcoef = 0.1$\\
 \bottomrule\end{tabular}
 \end{table}
 %-------------------------------------------------------------------------------
 \begin{figure}[ht]
    \centering
    \includegraphics[width=0.9\textwidth]
-     {\contentdir/results/transport/three_region/three_region.pdf}
-   \caption{Comparison of Solutions for the 3-Region Test Problem Using SSPRK33 with 32 Cells}
-   \label{fig:three_region}
+     {\contentdir/results/transport/three_region/angularflux_SSP3_dmp.pdf}
+   \caption{Comparison of Solutions for the 3-Region Test Problem Using SSPRK33
+     and DMP Solution Bounds}
+   \label{fig:three_region_dmp}
+\end{figure}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{figure}[ht]
+   \centering
+   \includegraphics[width=0.9\textwidth]
+     {\contentdir/results/transport/three_region/angularflux_SSP3_analytic.pdf}
+   \caption{Comparison of Solutions for the 3-Region Test Problem Using SSPRK33
+     and Analytic Solution Bounds}
+   \label{fig:three_region_analytic}
+\end{figure}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{figure}[ht]
+   \centering
+   \includegraphics[width=0.9\textwidth]
+     {\contentdir/results/transport/three_region/angularflux_SSP3_modified_analytic.pdf}
+   \caption{Comparison of Solutions for the 3-Region Test Problem Using SSPRK33
+     and Modified Analytic Solution Bounds}
+   \label{fig:three_region_modified_analytic}
+\end{figure}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{figure}[ht]
+   \centering
+   \includegraphics[width=0.9\textwidth]
+     {\contentdir/results/transport/three_region/angularflux_SSP3_upwind.pdf}
+   \caption{Comparison of Solutions for the 3-Region Test Problem Using SSPRK33
+     and Upwind Analytic Solution Bounds}
+   \label{fig:three_region_upwind}
 \end{figure}
 %-------------------------------------------------------------------------------
 

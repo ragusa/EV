@@ -73,9 +73,9 @@ end
 
 subsection fct
    # dmp|dmp_analytic|analytic|upwind_analytic|dmp_exact|analytic_exact
-   set filter sequence string        = analytic
+   set filter sequence string        = dmp
    set limiter option                = zalesak # ones|zeroes|zalesak
-   set use multipass limiting        = true
+   set use multipass limiting        = false
    set multipass limiting percent tolerance = 1.0
    set dirichlet limiting coefficient = 1.0
    set enforce antidiffusion bounds signs = true

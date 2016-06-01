@@ -26,10 +26,14 @@ viscosity method, as in \cite{guermond_secondorder}. In addition to the
 family of explicit SSPRK methods, steady-state and implicit $\theta$
 time discretization methods were employed. For all time discretizations,
 the FCT algorithm could be used to guarantee the absence of solution
-negativities, and spurious oscillations are not observed in practice
-although have not been proven impossible in the FCT algorithm. The formation
-of spurious plateaus (also known as ``terracing'' or ``stair-stepping'')
-remains an open issue for FCT, particularly when using explicit Euler.
+negativities, and spurious oscillations are significantly reduced, if
+not eliminated entirely. The only case in which oscillations have been
+observed in the FCT solution is when an extraneous source is present, which
+contributes the upper solution bound. 
+The formation of spurious plateaus (also known as ``terracing'' or
+``stair-stepping'') remains an open issue for FCT. This effect is generally
+observed when oscillations are particularly large, typically when using
+explicit Euler time discretization.
 
 The selection of the solution bounds to impose in the FCT algorithm
 was found to be vital; usage of the low-order scheme DMP was found in
@@ -53,4 +57,4 @@ no discrete maximum principle applies as in the scalar case. Therefore,
 the approach taken was to transform the system into characteristic variables
 to allow scalar FCT methodology to be applied. This was found to have some
 success; however, this approach was limited to 1-D because characteristic
-transformations could not be applied simulatenously in multiple directions.
+transformations could not be applied simultaneously in multiple directions.

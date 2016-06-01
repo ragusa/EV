@@ -5,9 +5,9 @@ drastic, unintended consequences where assumptions of non-negativity
 are employed.
 
 There have been a number of attempts to address this issue for various
-spatial discretizations. Many rely on ad-hoc fixups, such as the classic
-set-to-zero fixup for the diamond difference scheme \cite{lewis}.
-Hamilton \cite{hamilton} introduced a similar fixup method for the
+spatial discretizations. Many rely on ad-hoc fix-ups, such as the classic
+set-to-zero fix-up for the diamond difference scheme \cite{lewis}.
+Hamilton \cite{hamilton} introduced a similar fix-up method for the
 linear discontinuous (LD) finite element method (FEM) that conserves local
 particle balance and keeps the third-order accuracy of the standard
 LD FEM. Walters and Wareing \cite{walters} developed a nonlinear
@@ -18,7 +18,7 @@ Wareing notes in \cite{wareing} that these characteristic methods
 are difficult to derive and implement and offers instead
 a nonlinear positive spatial differencing scheme called
 the exponential discontinuous scheme, which was applicable in 1-D,
-2-D, and 3-D cartesian meshes. More recently, Maginot has
+2-D, and 3-D Cartesian meshes. More recently, Maginot has
 developed a consistent set-to-zero method for LD FEM \cite{maginot},
 as well as a non-negative, Bilinear Discontinuous (BLD) method
 \cite{maginot_mc2015}.

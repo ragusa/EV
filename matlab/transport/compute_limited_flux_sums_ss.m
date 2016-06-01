@@ -25,7 +25,8 @@ elseif (DMP_option == 4)
         u,sigma_min,sigma_max,source_min,source_max,mesh.dx_min,phys.inc,true);
 elseif (DMP_option == 5)
     [Wplus,Wminus] = compute_analytic_bounds_ss_alternate(...
-        u,sigma_min,sigma_max,source_over_sigma_min,source_over_sigma_max,mesh.dx_min,phys.inc,true);
+        u,sigma_min,sigma_max,source_over_sigma_min,source_over_sigma_max,...
+        mesh.dx_min,phys.inc,true);
 else
     error('Invalid FCT solution bounds option');
 end
