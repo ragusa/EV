@@ -42,5 +42,13 @@ subsection boundary conditions
 end
 
 subsection exact solution
-  set has exact solution = false
+  set has exact solution = true
+  set exact solution type = parsed
+  set exact solution = if(x <= 0.33333, incoming, \
+    if (y <= 0.33333, incoming, \
+    if (x <= 0.66666 && y <= 0.66666, \
+      if (y >= x, incoming*exp(-sigma1*sqrt(2)*(x-0.33333)), \
+        incoming*exp(-sigma1*sqrt(2)*(y-0.33333))), \
+    if (y >= x, incoming*exp(-sigma1*max(0,sqrt(2)*(0.33333-y+x))), \
+    incoming*exp(-sigma1*max(0,sqrt(2)*(0.33333+y-x)))))))
 end
