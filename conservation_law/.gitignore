@@ -238,6 +238,8 @@ TransportThetaFCT.cc
 TransportThetaFCT.h
 TransportTransientExecutioner.cc
 TransportTransientExecutioner.h
+TransportUpwindAnalyticFEFCTFilter.cc
+TransportUpwindAnalyticFEFCTFilter.h
 TransportUpwindAnalyticSolutionBounds.cc
 TransportUpwindAnalyticSolutionBounds.h
 TransportUpwindAnalyticSSFCTFilter.cc

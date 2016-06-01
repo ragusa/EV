@@ -82,8 +82,12 @@ void CharacteristicFCTFilter<dim>::filter_antidiffusive_fluxes(
   compute_solution_bounds(old_solution, dt, ss_reaction, ss_rhs, t_old);
 
   // compute characteristic antidiffusion bounds \hat{Q}- and \hat{Q}+
-  compute_antidiffusion_bounds(
-    this->solution_bounds, old_solution, dt, inviscid_ss_flux, low_order_diffusion_matrix, ss_rhs);
+  compute_antidiffusion_bounds(this->solution_bounds,
+                               old_solution,
+                               dt,
+                               inviscid_ss_flux,
+                               low_order_diffusion_matrix,
+                               ss_rhs);
 
   // enforce antidiffusion bounds signs if requested
   if (this->do_enforce_antidiffusion_bounds_signs)

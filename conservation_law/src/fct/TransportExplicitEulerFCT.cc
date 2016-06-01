@@ -72,6 +72,15 @@ std::shared_ptr<ExplicitEulerFCTFilter<dim>> TransportExplicitEulerFCT<
       this->limiter,
       *this->lumped_mass_matrix,
       *this->dirichlet_values);
+  else if (filter_string == "upwind_analytic")
+    filter = std::make_shared<TransportUpwindAnalyticFEFCTFilter<dim>>(
+      *this->run_parameters,
+      *this->problem_parameters,
+      *this->dof_handler,
+      *this->fe,
+      this->limiter,
+      *this->lumped_mass_matrix,
+      *this->dirichlet_values);
   else
     AssertThrow(false, ExcNotImplemented());
 
