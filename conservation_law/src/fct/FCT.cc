@@ -138,6 +138,12 @@ template <int dim>
 void FCT<dim>::output_bounds_transient(PostProcessor<dim> & postprocessor,
                                        const double & time)
 {
+  // hard-coded bounds names
+  lower_bound_component_names.resize(1);
+  lower_bound_component_names[0] = "lowerbound";
+  upper_bound_component_names.resize(1);
+  upper_bound_component_names[0] = "upperbound";
+
   // output lower bound
   postprocessor.output_dof_transient(get_lower_solution_bound(),
                                      time,

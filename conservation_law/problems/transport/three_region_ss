@@ -45,5 +45,6 @@ subsection boundary conditions
 end
 
 subsection exact solution
-  set has exact solution = false
+  set has exact solution = true
+  set exact solution type = three_region
 end

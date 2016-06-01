@@ -19,12 +19,12 @@ subsection constants
   set incoming = 1.0
   set x1 = 0.3
   set x2 = 0.6
-  set sigma1 =    1.0
-  set sigma2 =  400.0
-  set sigma3 =  200.0
-  set source1 =   1.0
-  set source2 =  50.0
-  set source3 = 200.0
+  set sigma1 =   1.0
+  set sigma2 =  40.0
+  set sigma3 =  20.0
+  set source1 =  1.0
+  set source2 =  5.0
+  set source3 = 20.0
 end
 
 subsection domain

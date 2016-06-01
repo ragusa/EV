@@ -7,6 +7,7 @@
 
 #include "include/fct/ExplicitEulerFCT.h"
 #include "include/fct/TransportAnalyticFEFCTFilter.h"
+#include "include/fct/TransportUpwindAnalyticFEFCTFilter.h"
 #include "include/parameters/TransportRunParameters.h"
 #include "include/parameters/TransportProblemParameters.h"
 

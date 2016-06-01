@@ -28,8 +28,7 @@ TransportUpwindAnalyticSolutionBounds<dim>::TransportUpwindAnalyticSolutionBound
 {
   // get vector of positions of each DoF
   x.resize(this->n_dofs);
-  DoFTools::map_dofs_to_support_points(
-    MappingQ1<dim>(), *this->dof_handler, x);
+  DoFTools::map_dofs_to_support_points(MappingQ1<dim>(), *this->dof_handler, x);
 
   // resize sampling vectors and compute sample fractions
   x_sample.resize(n_samples);

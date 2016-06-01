@@ -62,7 +62,7 @@ opts.theta = 1.0;
        
 opts.use_constant_dt = false; % option to use constant dt instead of CFL
 opts.constant_dt = 0.001;    % time step size to use if using constant size
-opts.CFL = 10.0;       % CFL number
+opts.CFL = 0.5;       % CFL number
 opts.t_end = 1.0;     % max time to run
 opts.ss_tol = 1.0e-6;  % steady-state tolerance
 %--------------------------------------------------------------------------
@@ -81,8 +81,8 @@ fct_opts.DMP_option = 4;
 %                 3 = Josh limiter
 fct_opts.limiting_option = 2;
 
-fct_opts.use_multipass_limiting = true; % option to use multi-pass limiting
-fct_opts.multipass_tol = 0.01; % percentage tolerance for multi-pass
+fct_opts.use_multipass_limiting = false; % option to use multi-pass limiting
+fct_opts.multipass_tol = 1.0; % percentage tolerance for multi-pass
 
 % option to enforce Q+ >= 0, Q- <= 0
 fct_opts.enforce_antidiffusion_bounds_signs = true;
@@ -112,7 +112,8 @@ fct_opts.dirichlet_limiting_coefficient = 1.0;
 %            6: MMS: TR: u = x*t          SS: u = x
 %            7: source_in_absorber
 %            8: interface
-problemID = 7;
+%            9: three_region
+problemID = 9;
 
 % IC_option: 0: zero
 %            1: exponential pulse
@@ -340,6 +341,30 @@ switch problemID
         else
             error('Exact solution not written for transient case');
         end
+    case 9 % three-region
+        mesh.x_min = 0.0;
+        mesh.x_max = 1.0;
+        phys.periodic_BC = false;
+        phys.inc    = 1;
+        phys.mu     = 1;
+        x1 = 0.3;
+        x2 = 0.6;
+        source_value1 = 1.0;
+        source_value2 = 5.0;
+        source_value3 = 20.0;
+        sigma_value1  = 1.0;
+        sigma_value2  = 40.0;
+        sigma_value3  = 20.0;
+        phys.source = @(x,t) (x<x1)*source_value1 ...
+          + (x>=x1&x<x2)*source_value2 ...
+          + (x>=x2)*source_value3;
+        phys.sigma  = @(x,t) (x<x1)*sigma_value1 ...
+          + (x>=x1&x<x2)*sigma_value2 ...
+          + (x>=x2)*sigma_value3;
+        phys.speed  = 1;
+        IC_option = 0;
+        phys.source_is_time_dependent = false;
+        exact_solution_known = false;
     otherwise
         error('Invalid problem ID chosen');
 end
@@ -881,9 +906,9 @@ if (compute_FCT)
                     
                     % perform FCT step
                     [uFCT,Wminus,Wplus] = FCT_step_explicit(u_old,uH,dt,...
-                        ML,MC,AL,DH,DL,b,phys.inc,phys.speed,...
-                        sigma_min,sigma_max,source_min,source_max,mesh,fct_opts,...
-                        opts,phys.periodic_BC);
+                        ML,MC,AL,DH,DL,b,...
+                        sigma_min,sigma_max,source_min,source_max,mesh,phys,fct_opts,...
+                        opts);
                 case 2 % SSP3
                     % stage 1
                     u_old_stage = u_old;
@@ -895,9 +920,9 @@ if (compute_FCT)
                         u_old_stage,dt_old,dt,A,b,MC,0,viscL,mesh,phys,...
                         quadrature,dof_handler,ev,opts);
                     [uFCT_stage,Wminus,Wplus] = FCT_step_explicit(u_old_stage,uH_stage,dt,...
-                        ML,MC,AL,DH,DL,b,phys.inc,phys.speed,...
-                        sigma_min,sigma_max,source_min,source_max,mesh,fct_opts,...
-                        opts,phys.periodic_BC);
+                        ML,MC,AL,DH,DL,b,...
+                        sigma_min,sigma_max,source_min,source_max,mesh,phys,fct_opts,...
+                        opts);
                     
                    % stage 2
                     u_old_stage = uFCT_stage;
@@ -909,9 +934,9 @@ if (compute_FCT)
                         u_old_stage,dt_old,dt,A,b,MC,0,viscL,mesh,phys,...
                         quadrature,dof_handler,ev,opts);
                     [uFCT_stage,Wminus,Wplus] = FCT_step_explicit(u_old_stage,uH_stage,dt,...
-                        ML,MC,AL,DH,DL,b,phys.inc,phys.speed,...
-                        sigma_min,sigma_max,source_min,source_max,mesh,fct_opts,...
-                        opts,phys.periodic_BC);
+                        ML,MC,AL,DH,DL,b,...
+                        sigma_min,sigma_max,source_min,source_max,mesh,phys,fct_opts,...
+                        opts);
                     
                     % stage 3
                     u_old_stage = 0.75*u_old + 0.25*uFCT_stage;
@@ -923,9 +948,9 @@ if (compute_FCT)
                         u_old_stage,dt_old,dt,A,b,MC,0,viscL,mesh,phys,...
                         quadrature,dof_handler,ev,opts);
                     [uFCT_stage,Wminus,Wplus] = FCT_step_explicit(u_old_stage,uH_stage,dt,...
-                        ML,MC,AL,DH,DL,b,phys.inc,phys.speed,...
-                        sigma_min,sigma_max,source_min,source_max,mesh,...
-                        fct_opts,opts,phys.periodic_BC);
+                        ML,MC,AL,DH,DL,b,...
+                        sigma_min,sigma_max,source_min,source_max,mesh,phys,...
+                        fct_opts,opts);
                     
                     % final combination
                     uFCT = 1/3*u_old + 2/3*uFCT_stage;
@@ -1126,8 +1151,10 @@ end
 
 % save exact solution
 if (save_exact_solution)
-    exact_file = 'output/uexact.csv';
-    dlmwrite(exact_file,[xx,u_exact],',');
+    if (exact_solution_known)
+        exact_file = 'output/uexact.csv';
+        dlmwrite(exact_file,[xx,u_exact],',');
+    end
 end
 
 % determine string to be appended to results for time discretization

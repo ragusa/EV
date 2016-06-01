@@ -151,7 +151,9 @@ std::shared_ptr<FCT<dim>> TransportSSPRKExecutioner<dim>::get_derived_fct() cons
  */
 template <int dim>
 void TransportSSPRKExecutioner<dim>::perform_fct_ssprk_step(
-  const double & dt, const double & old_stage_dt, const unsigned int & n,
+  const double & dt,
+  const double & old_stage_dt,
+  const unsigned int & n,
   const double & t_stage)
 {
   // update low-order diffusion

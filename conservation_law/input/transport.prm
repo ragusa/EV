@@ -25,7 +25,7 @@
 #   void_to_absorber_1d_ss
 #   void_to_absorber_2d_ss
 subsection problem
-   set problem name = source_in_absorber_ss
+   set problem name = three_region
 end
 
 subsection scheme
@@ -56,8 +56,8 @@ subsection time
 end
 
 subsection temporal discretization
-   set temporal discretization = ss    # ss|ssprk|theta
-   set ssprk discretization    = FE    # FE|SSP2|SSP3
+   set temporal discretization = ssprk # ss|ssprk|theta
+   set ssprk discretization    = SSP3  # FE|SSP2|SSP3
    set theta discretization    = BE    # FE|CN|BE
 end
 
@@ -73,10 +73,10 @@ end
 
 subsection fct
    # dmp|dmp_analytic|analytic|upwind_analytic|dmp_exact|analytic_exact
-   set filter sequence string        = upwind_analytic
+   set filter sequence string        = analytic
    set limiter option                = zalesak # ones|zeroes|zalesak
    set use multipass limiting        = true
-   set multipass limiting percent tolerance = 0.01
+   set multipass limiting percent tolerance = 1.0
    set dirichlet limiting coefficient = 1.0
    set enforce antidiffusion bounds signs = true
    set fct synchronization type      = none    # none|min|compound
@@ -88,7 +88,7 @@ subsection fct
    set check fct bounds              = false
    set output limiter matrix         = false
    set output final fct bounds       = true
-   set output transient fct bounds   = false
+   set output transient fct bounds   = true
 end
 
 subsection linear solver
@@ -112,7 +112,7 @@ end
 subsection output
    set verbosity level    = 2    # 0|1|2 (0 is least verbose)
    set output exact solution = true
-   set output period      = 0
+   set output period      = 1
    set transient output size limit = 1e9
    set output mesh        = false
    set output mass matrix = false
