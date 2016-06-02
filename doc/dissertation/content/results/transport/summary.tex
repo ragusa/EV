@@ -1,0 +1,132 @@
+This section provides a summary of the scalar transport results.
+As discussed in Section \ref{sec:scalar_overview}, there are a number
+of parameters that influence the success of the scalar FCT algorithm,
+so this section attempts to analyze what the optimal FCT configuration
+might be.
+
+Firstly, it is strongly recommended to use the entropy viscosity method
+as the high-order scheme instead of the standard Galerkin method that
+lacks any artificial dissipation. It should be noted that entropy-based
+artificial viscosity is the main component of a successful CFEM
+scalar conservation law solution; this is the component which ensures
+convergence to the entropy solution. The FCT algorithm is best viewed
+as a conservative clean-up procedure for mitigating spurious oscillations
+and preventing negativities. As the mesh is refined, the entropy viscosity
+solution converges to the entropy solution, which lacks any spurious
+oscillations or negativities, but for coarser meshes, some of these
+artifacts are still present, hence the need for FCT. Thus it is preferred
+to use EV-FCT over Galerkin-FCT. One can find cases/configurations in which
+the Galerkin-FCT solution is more accurate EV-FCT solution, but this is
+not the general case. Also, one might find that an oscillatory solution
+has a smaller $L^1$ and/or $L^2$ error than a non-oscillatory solution,
+but that the non-oscillatory is more favorable qualitatively. Galerkin-FCT
+is more vulnerable to the well-known FCT phenomenon known as ``terracing'',
+``stair-stepping'', or ``plateauing''; this effect is associated with
+the limitation of large oscillations. The EV method mitigates or eliminates
+oscillations that the Galerkin method encounters, and thus the FCT
+algorithm for EV encounters smaller magnitude oscillations in the
+high-order solution, and the stair-stepping effect is decreased from
+that of Galerkin FCT.
+
+For explicit time discretizations, it is strongly recommended to use a
+higher-order SSPRK scheme as opposed to explicit Euler. Explicit Euler
+is particularly vulnerable to the formation of spurious oscillations
+of large magnitude and thus FCT solutions are more vulnerable to stair-stepping.
+High-order SSPRK schemes such as SSPRK33 are expressed as a sequence of
+explicit Euler steps so that the same methodology can be used in each
+step, and usage of these high-order time discretizations reduces spurious
+oscillations even without artificial viscosity or FCT.
+
+Implicit time discretizations and steady-state often suffer from convergence
+difficulties. The nonlinear scheme used for the EV solution and the FCT
+solution is a type of fixed-point iteration, which is arguably the simplest
+and slowest-converging nonlinear iteration scheme, but the lack of convergence
+in some cases is due to the fact that the imposed solution bounds are implicit.
+When the FCT solution iterate changes, the solution bounds change as well.
+In some cases an FCT solution iterate produces solution bounds that lead to
+a reversal of antidiffusive fluxes made in the previous iteration, and then
+this can repeat indefinitely, preventing convergence. One can try using
+a relaxation factor in solution updates, but this is not a solution to
+the underlying issue, and thus it may or may not be a successful approach
+for a particular problem. For implicit time discretizations, convergence
+difficulties are most prominent when high CFL numbers are used; in this
+case, the solution bounds are wider, and the limiting coefficient values
+have more opportunity to vary. For both implicit time discretizations and
+steady-state, convergence difficulties are most prominent for multi-dimensional
+problems; this is because the solution bounds have a greater number of
+degrees of freedom coupled for a given node - the neighborhoods around
+each node are larger. With these issues considered, implicit FCT
+currently requires more research to become a reliable method.
+
+Recall that there were a number of different approaches for imposing
+incoming flux boundary conditions. Strong Dirichlet BC for example
+have the issue in FCT that the conservation property is not satisfied
+unless the antidiffusive fluxes from Dirichlet nodes are completely
+canceled. Accurate solutions can still be obtained by ignoring this
+requirement, and often the cancellation of Dirichlet antidiffusive fluxes
+leads to less accurate solutions.
+Weak Dirichlet BC are found to be very inaccurate,
+especially when the values in the vicinity are deemed very important;
+thus they are not recommended for general use. However, using weak
+Dirichlet BC with a boundary penalty was found to be effective, without
+sacrificing the conservation property or the opportunity to accept
+antidiffusion from incoming boundary nodes. It is thus recommended
+for general use to use weak Dirichlet BC with a boundary penalty.
+
+There were a number of different solution bounds considered. The
+low-order DMP bounds were initially considered because for fully
+explicit time discretization, they automatically satisfied the
+fail-safe conditions on the antidiffusion bounds, as discussed in Section
+\ref{sec:antidiffusion_bounds_signs}; however, they were found to prevent
+second-order spatial accuracy in many cases because these bounds
+were proven to be inaccurate when a reaction term is present.
+It was found that the fail-safe condition could be enforced, no
+matter what solution bounds are imposed, by using Equation
+\eqref{eq:antidiffusion_bounds_operation}, and the bounds derived
+using the method of characteristics (MoC) were found to overcome
+the issues of the low-order DMP bounds and thus obtain second-order
+accuracy. For general use, it is recommended to use the MoC bounds
+in favor of the low-order DMP bounds. For the MoC bounds, there
+are two additional dimensions. Dimension one is the possibility of only
+evaluating the bounds along the upwind line segment instead of the spherical
+neighborhood, and dimension two is the modification presented by
+Equation \eqref{eq:modified_analytic_bounds}. Usage of upwind solution
+bounds gave mixed results. The upwind line solution bounds are very
+tight; for some cases, the only reason that the upper and lower bounds
+differ is due to the enforcement of the fail-safe condition, which
+effectively enforces that the lower bound is not greater than the low-order
+solution and that the upper bound is not lesser than the low-order
+solution. Tight solution bounds have advantages and disadvantages. The
+obvious advantage is that there is less room for unphysical oscillations,
+so these remaining artifacts, including the stair-stepping effect,
+are reduced. Also, tighter bounds give smaller ranges for limiting
+coefficient values, which leads to a decrease in nonlinear iterations
+for implicit and steady-state FCT. However, a disadvantage of tight
+solution bounds is that sub-optimal limiters (all known single-pass limiters)
+will not be able to accept as much antidiffusion, even though there
+may be a combination of limiting coefficients that produce superior
+results. Thus in some cases the FCT solution can look only marginally
+better than the low-order solution. A remedy to this fact is to use
+a more optimal limiter; to achieve this, one can employ the multi-pass
+limiting procedure introduced in Section \ref{sec:multipass_limiting}.
+This usually produces the best results; however, the computational
+expense of the additional passes may need to be considered.
+In summary, for general use, the upwind MoC solution bounds
+are recommended, especially if multi-pass limiting is able to be applied.
+The second dimension of the solution bounds is to make the modification
+presented by Equation \eqref{eq:modified_analytic_bounds}, which
+gives a less conservative estimate for the bounds of $\scalarsource/\reactioncoef$.
+This modification is not supported by an analytic proof, but for the
+test problems in which it is applied, the solution bounds appear much
+more sensible. The modification only makes a difference for nodes for
+which both the reaction coefficient and source vary in the surrounding
+neighborhood. Without the modification, there are large peaks in the
+solution bounds of such nodes, but these peaks disappear with the
+modification. In some cases studied, the modification of the solution
+bounds had little or no effect because limitation requirements of
+nodes adjacent to these interface nodes were the bottleneck; however,
+in other test problems, this modification makes a significant difference.
+The recommendation here is to make the modification if the rigorous
+mathematical support of the solution bounds is deemed less important.
+
+

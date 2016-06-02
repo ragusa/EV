@@ -1,4 +1,97 @@
-This section presents the results for scalar transport.
+This section presents results for scalar transport.
+Section \ref{sec:convergence} shows convergence results that
+demonstrate second-order spatial accuracy for the entropy
+viscosity (EV) method, as well as the FCT scheme.
+Results in subsequent sections give various results exploring a number of
+dimensions of EV and FCT schemes.
+
+The FCT algorithm can be built on either the entropy viscosity
+method or the standard Galerkin high-order scheme given in
+Section \ref{sec:spatial_discretization_scalar}. The resulting
+schemes will be referred to in this section as the EV-FCT scheme
+and the Galerkin-FCT scheme, respectively.
+
+Incoming flux boundary conditions can be applied in a number of
+different ways, as discussed in Section \ref{sec:transport_bc}.
+When these boundary conditions are applied as strong Dirichlet,
+recall from Section \ref{sec:fct_scheme_scalar} that the antidiffusion
+flux decomposition does not apply in the neighborhood of nodes
+for which Dirichlet boundary conditions are strongly imposed.
+Therefore, to keep the conservation property, antidiffusive fluxes
+involving Dirichlet nodes must be completely canceled:
+\begin{equation}
+  \limiterletter\ij \gets 0 \eqc \quad \forall j \eqc
+    \forall i \in \incomingindices \eqp
+\end{equation}
+Recall from Section \ref{sec:zalesak_limiter} that Zalesak's limiter
+computes upper bounds on the limiting coefficients for all positive
+and negative antidiffusive fluxes for a node $i$: $\limiterletter_i^+$
+and $\limiterletter_i^-$. Then for a positive antidiffusive flux
+$\antidiffusiveflux\ij$, the limiting coefficient is
+$\limiterletter\ij=\min(\limiterletter_i^+,\limiterletter_j^-)$.
+Thus to cancel the antidiffusive fluxes for Dirichlet nodes, one can
+perform the following operation:
+\begin{equation}
+  \limiterletter_i^+ \gets 0 \eqc \quad
+  \limiterletter_i^- \gets 0 \eqc \quad
+    \forall i \in \incomingindices \eqp
+\end{equation}
+If one does not deem the conservation property important, then one may
+instead decide that antidiffusive fluxes from Dirichlet nodes should
+not necessarily be canceled and thus may instead perform the following:
+\begin{equation}
+  \limiterletter_i^+ \gets 1 \eqc \quad
+  \limiterletter_i^- \gets 1 \eqc \quad
+    \forall i \in \incomingindices \eqp
+\end{equation}
+This has the advantage that more antidiffusion can be accepted and
+thus that the solution may have greater accuracy. These two
+paradigms are considered for a number of test problems and will
+typically be labeled as
+``strong Dirichlet BC with $\limiterletter_i^-=\limiterletter_i^+=0$''
+and ``strong Dirichlet BC with $\limiterletter_i^-=\limiterletter_i^+=1$'',
+respectively. Other options considered include weak Dirichlet and
+weak Dirichlet with a boundary penalty. When results in this
+section use a boundary penalty, the penalty coefficient (as described
+in Section \ref{sec:transport_bc} takes the value $\alpha=1000$.
+
+A number of options for the solution bounds to impose in FCT
+will be considered. Firstly, the low-order DMP bounds given in
+Section \ref{sec:DMP} for each temporal discretization are
+considered. Alternatively, analytic bounds derived from the
+method of characteristics (MoC) in Appendix \ref{sec:analytic_dmp}
+are used. The analytic bounds are derived along an upwind line
+segment $L(\x,\x-\speed\dt\di)$; this is referred to as the
+``\emph{upwind} analytic solution bounds''. However, a more relaxed
+set of solution bounds are used as the default solution bounds,
+which considers a spherical
+neighborhood around each node instead of just the upwind line
+segment; this will be referred to as the ``analytic solution bounds''.
+Certain sections will also consider a modification of these bounds,
+referred to as the ``modified analytic solution bounds'',
+which as of yet has no analytic proof. These modified bounds are
+discussed when used. Note that the corresponding antidiffusion
+bounds $\antidiffusionbound_i^\pm$ for a given set of solution
+bounds $\solutionbound_i^\pm$ must obey the conditions discussed
+in Section \ref{sec:antidiffusion_bounds_signs}, and thus the
+following operation given by Equation \eqref{eq:antidiffusion_bounds_operation}
+is performed for all results in this section:
+\begin{subequations}
+\begin{equation*}
+  \antidiffusionbound_i^-
+    \gets \min(\antidiffusionbound_i^-, 0)
+  \eqc
+\end{equation*}
+\begin{equation*}
+  \antidiffusionbound_i^+
+    \gets \max(\antidiffusionbound_i^+, 0)
+  \eqp
+\end{equation*}
+\end{subequations}
+
+Some results in this section also try the multi-pass limiting
+procedure described in Section \ref{sec:multipass_limiting}.
+
 For transient simulations, the time step size used is given as a
 ``CFL'' number $\nu$, which is defined in terms of the maximum
 time step size for Explicit Euler time discretization of the
@@ -13,3 +106,39 @@ Note that the time step size for the Theta method is less
 restrictive for $\theta > 0$ (see Equation \eqref{eq:theta_cfl});
 however, for Theta method results, the definition of $\nu$ above is
 still used.
+
+In summary, results in this section have the following dimensions, where
+the default options in this section are given in bold:
+\begin{itemize}
+  \item temporal discretization
+  \item time step size/CFL number
+  \item mesh size
+  \item BC method:
+    \begin{itemize}
+      \item strong Dirichlet BC with $\limiterletter_i^-=\limiterletter_i^+=0$
+      \item \textbf{strong Dirichlet BC with $\limiterletter_i^-=\limiterletter_i^+=1$}
+      \item weak Dirichlet BC
+      \item weak Dirichlet BC with a boundary penalty
+    \end{itemize}
+  \item FCT type:
+    \begin{itemize}
+      \item \textbf{EV-FCT}
+      \item Galerkin-FCT
+    \end{itemize}
+  \item FCT solution bounds:
+    \begin{itemize}
+      \item low-order DMP bounds
+      \item \textbf{analytic bounds from method of characteristics}
+      \item \emph{modified} analytic bounds from method of characteristics
+      \item upwind analytic bounds from method of characteristics
+    \end{itemize}
+  \item FCT limiter:
+    \begin{itemize}
+      \item \textbf{single-pass Zalesak}
+      \item multi-pass Zalesak
+    \end{itemize}
+\end{itemize}
+
+Section \ref{sec:scalar_summary} will attempt to make some conclusions about
+some of these options.
+

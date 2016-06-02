@@ -36,7 +36,7 @@ Exact Solution & (Equation \eqref{eq:multiregion_exactsolution})\\
 %-------------------------------------------------------------------------------
 
 Table \ref{tab:three_region_run_parameters} shows the run parameters used.
-The boundary conditions are chosen to be strong Dirichlet with $L^+=L^-=1$
+The boundary conditions are chosen to be strong Dirichlet with $L_i^+=L_i^-=1$
 for the Dirichlet node. A comparison of FCT solutions for different imposed
 solution bounds are given by Figures \ref{fig:three_region_dmp} through
 \ref{fig:three_region_upwind}, which respectively, correspond to the
@@ -66,10 +66,13 @@ is only marginally improved over the low-order solution.
 Number of Cells & $N_{cell} = 32$\\
 Time Discretization & SSPRK33\\
 End Time & $t = 1$\\
-CFL Number & $\nu = 0.5$\\\midrule
+CFL Number & $\nu = 0.5$\\
+Boundary Conditions & Strong Dirichlet with
+  $\limiterletter_i^-=\limiterletter_i^+=1$\\\midrule
 Entropy Function & $\entropy(u) = \frac{1}{2}u^2$\\
 Entropy Residual Coefficient & $\entropyresidualcoef = 0.1$\\
-Entropy Jump Coefficient & $\entropyjumpcoef = 0.1$\\
+Entropy Jump Coefficient & $\entropyjumpcoef = 0.1$\\\midrule
+FCT Solution Bounds & (varies by run)\\
 \bottomrule\end{tabular}
 \end{table}
 %-------------------------------------------------------------------------------

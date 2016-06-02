@@ -88,7 +88,9 @@ that the FCT algorithm used is not restricted to 1-D or 2-D.
 Number of Cells & $N_{cell} = 16384$\\
 Time Discretization & Explicit Euler, SSPRK33, Steady-State\\
 End Time & $t = 1$\\
-CFL Number & $\nu = 0.5$\\\midrule
+CFL Number & $\nu = 0.5$\\
+Boundary Conditions & Strong Dirichlet with
+  $\limiterletter_i^-=\limiterletter_i^+=1$\\\midrule
 Entropy Function & $\entropy(\scalarsolution) = \frac{1}{2}\scalarsolution^2$\\
 Entropy Residual Coefficient & $\entropyresidualcoef = 0.1$\\
 Entropy Jump Coefficient & $\entropyjumpcoef = 0.1$\\\midrule
@@ -124,7 +126,8 @@ FCT Solution Bounds & DMP\\
       \caption{Entropy Viscosity FCT}
    \end{subfigure}
    \caption{Comparison of Solutions for 2-D Normal Void-to-Absorber Test
-     Problem Using Explicit Euler Time Discretization}
+     Problem Using Explicit Euler Time Discretization and Low-Order DMP
+     Solution Bounds}
    \label{fig:void_to_absorber_2D_fe}
 \end{figure}
 %-------------------------------------------------------------------------------
@@ -161,7 +164,8 @@ FCT Solution Bounds & DMP\\
       \caption{Entropy Viscosity FCT}
    \end{subfigure}
    \caption{Comparison of Solutions for 2-D Normal Void-to-Absorber Test
-     Problem Using SSPRK33 Time Discretization}
+     Problem Using SSPRK33 Time Discretization and Low-Order DMP
+     Solution Bounds}
    \label{fig:void_to_absorber_2D_ssprk33}
 \end{figure}
 %-------------------------------------------------------------------------------
@@ -195,7 +199,8 @@ FCT Solution Bounds & DMP\\
       \caption{Galerkin with FCT}
    \end{subfigure}
    \caption{Comparison of Solutions for the 3-D Normal Void-to-Absorber Test
-     Problem Using SSPRK33 Time Discretization}
+     Problem Using SSPRK33 Time Discretization and Low-Order DMP
+     Solution Bounds}
    \label{fig:void_to_absorber_3D}
 \end{figure}
 %-------------------------------------------------------------------------------
@@ -308,7 +313,7 @@ bounds given above.
       \caption{Entropy Viscosity FCT}
    \end{subfigure}
    \caption{Comparison of Steady-State Solutions for 2-D Normal Void-to-Absorber Test
-     Problem with 4096 Cells}
+     Problem with 4096 Cells with Exact Solution Bounds}
    \label{fig:void_to_absorber_ss}
 \end{figure}
 %-------------------------------------------------------------------------------

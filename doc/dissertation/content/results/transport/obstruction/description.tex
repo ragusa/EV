@@ -46,6 +46,8 @@ Time Discretization & Explicit Euler, Implicit Euler, Steady-State\\
 End Time & $t = 2$ (or to steady-state)\\
 CFL Number & FE: $\nu = 0.1$\\
            & BE: $\nu = 1.0$\\
+Boundary Conditions & Strong Dirichlet with
+  $\limiterletter_i^-=\limiterletter_i^+=1$\\
 \midrule
 Entropy Function & $\entropy(\scalarsolution) = \frac{1}{2}\scalarsolution^2$\\
 Entropy Residual Coefficient & $\entropyresidualcoef = 0.1$\\
@@ -85,7 +87,7 @@ large along the edges of the unattenuated beam.
       \caption{EV-FCT scheme}
    \end{subfigure}
    \caption{Comparison of Solutions for the Obstruction Test
-     Problem Using Explicit Euler Time Discretization}
+     Problem Using Explicit Euler Time Discretization with DMP Solution Bounds}
    \label{fig:obstruction_fe}
 \end{figure}
 %-------------------------------------------------------------------------------
@@ -103,7 +105,7 @@ large along the edges of the unattenuated beam.
       \caption{EV-FCT scheme}
    \end{subfigure}
    \caption{Comparison of Solutions for the Obstruction Test
-     Problem Using Explicit Euler Time Discretization}
+     Problem Using Explicit Euler Time Discretization with DMP Solution Bounds}
    \label{fig:obstruction_fe_visc}
 \end{figure}
 %-------------------------------------------------------------------------------
@@ -124,7 +126,7 @@ steady-state discretization.
    \includegraphics[width=\textwidth]
      {\contentdir/results/transport/obstruction/images/solution_BE.png}
    \caption{EV-FCT Solution for the Obstruction Test
-     Problem Using Implicit Euler Time Discretization}
+     Problem Using Implicit Euler Time Discretization with DMP Solution Bounds}
    \label{fig:obstruction_be}
 \end{figure}
 %-------------------------------------------------------------------------------
@@ -134,7 +136,7 @@ steady-state discretization.
    \includegraphics[width=\textwidth]
      {\contentdir/results/transport/obstruction/images/solution_SS.png}
    \caption{EV-FCT Solution for the Obstruction Test
-     Problem Using Steady-State Time Discretization}
+     Problem Using Steady-State Time Discretization with DMP Solution Bounds}
    \label{fig:obstruction_ss}
 \end{figure}
 %-------------------------------------------------------------------------------

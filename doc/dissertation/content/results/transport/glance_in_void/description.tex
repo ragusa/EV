@@ -28,6 +28,19 @@ Speed & $\speed=1$\\
 
 This test problem was run on a 64$\times$64-cell mesh.
 The run parameters are summarized in Table \ref{tab:glance_in_void_run_parameters}.
+Figure \ref{fig:glance_in_void_fe} compares the solutions obtained
+for explicit Euler. This shows that the Galerkin-FCT solution contains
+many FCT artifacts, but these artifacts largely disappear when using
+EV-FCT instead. Figure \ref{fig:glance_in_void_fe_cE} shows a comparison
+of EV and EV-FCT solutions for different values of the 
+entropy residual coefficient $\entropyresidualcoef$; this shows that FCT
+artifacts gradually disappear with increasing $\entropyresidualcoef$.
+Finally, Figure \ref{fig:glance_in_void_fe_vs_ssprk} shows a comparison
+of EV-FCT and Galerkin-FCT solutions using explicit Euler vs. SSPRK33,
+which shows that usage of SSPRK33 essentially eliminates the FCT artifacts
+present in the explicit Euler solutions. However, one can still see that
+the Galerkin-FCT solution has some artifacts not present in the EV-FCT
+solution, even when using SSPRK33.
 
 %-------------------------------------------------------------------------------
 \begin{table}[ht]\caption{Normal Void-to-Absorber Test Problem Run Parameters}
@@ -38,7 +51,9 @@ The run parameters are summarized in Table \ref{tab:glance_in_void_run_parameter
 Number of Cells & $N_{cell} = 4096$\\
 Time Discretization & Explicit Euler, SSPRK33\\
 End Time & $t = 2$\\
-CFL Number & $\nu = 0.5$\\\midrule
+CFL Number & $\nu = 0.5$\\
+Boundary Conditions & Strong Dirichlet with
+  $\limiterletter_i^-=\limiterletter_i^+=1$\\\midrule
 Entropy Function & $\entropy(\scalarsolution) = \frac{1}{2}\scalarsolution^2$\\
 Entropy Residual Coefficient & $\entropyresidualcoef = 0.1, 0.5, 1.0$\\
 Entropy Jump Coefficient & $\entropyjumpcoef = 0.1, 0.5, 1.0$\\\midrule
@@ -69,7 +84,7 @@ FCT Solution Bounds & DMP\\
       \caption{EV-FCT, $\entropyresidualcoef=1.0$}
    \end{subfigure}
    \caption{Comparison of Solutions for the Glance-in-Void Test
-     Problem Using Explicit Euler Time Discretization with 4096 Cells}
+     Problem Using Explicit Euler Time Discretization and DMP Solution Bounds with 4096 Cells}
    \label{fig:glance_in_void_fe}
 \end{figure}
 %-------------------------------------------------------------------------------
@@ -106,7 +121,7 @@ FCT Solution Bounds & DMP\\
       \caption{EV-FCT, $\entropyresidualcoef=1.0$}
    \end{subfigure}
    \caption{Comparison of EV and EV-FCT Solutions for the Glance-in-Void Test
-     Problem Using Explicit Euler Time Discretization with 4096 Cells
+     Problem Using Explicit Euler Time Discretization and DMP Solution Bounds with 4096 Cells
      and Various $\entropyresidualcoef$ Values}
    \label{fig:glance_in_void_fe_cE}
 \end{figure}
@@ -134,7 +149,7 @@ FCT Solution Bounds & DMP\\
       \caption{Galerkin-FCT, SSPRK33}
    \end{subfigure}
    \caption{Comparison of Solutions for the Glance-in-Void Test
-     Problem Using Explicit Euler vs. SSPRK33 with 4096 Cells}
+     Problem Using Explicit Euler vs. SSPRK33 with DMP Solution Bounds with 4096 Cells}
    \label{fig:glance_in_void_fe_vs_ssprk}
 \end{figure}
 %-------------------------------------------------------------------------------

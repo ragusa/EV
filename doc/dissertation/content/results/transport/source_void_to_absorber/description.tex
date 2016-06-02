@@ -56,7 +56,10 @@ entropy solution.
 Number of Cells & (varies by run)\\
 Time Discretization & SSPRK33, Steady-State, Implicit Euler\\
 End Time & $t = 1$\\
-CFL Number & $\nu = 0.5$\\\midrule
+CFL Number & $\nu = 0.5$\\
+Boundary Conditions & Strong Dirichlet with
+  $\limiterletter_i^-=\limiterletter_i^+=1$,\\
+  & unless otherwise specified\\\midrule
 Entropy Function & $\entropy(u) = \frac{1}{2}u^2$\\
 Entropy Residual Coefficient & $\entropyresidualcoef = 1$\\
 Entropy Jump Coefficient & $\entropyjumpcoef = 1$\\\midrule
@@ -69,7 +72,7 @@ FCT Initial Guess & $\scalarsolution^{(0)} = \scalarsolution^L$\\
    \includegraphics[width=\textwidth]
      {\contentdir/results/transport/source_void_to_absorber/coarse.pdf}
    \caption{Comparison of Solutions for the Source-Void-to-Absorber Problem
-     Using SSPRK33 with 32 Cells}
+     Using SSPRK33 with DMP Solution Bounds with 32 Cells}
    \label{fig:source_void_to_absorber}
 \end{figure}
 %-------------------------------------------------------------------------------
@@ -77,7 +80,7 @@ FCT Initial Guess & $\scalarsolution^{(0)} = \scalarsolution^L$\\
    \includegraphics[width=\textwidth]
      {\contentdir/results/transport/source_void_to_absorber/fine.pdf}
    \caption{Comparison of Solutions for the Source-Void-to-Absorber Problem
-     Using SSPRK33 with 256 Cells}
+     Using SSPRK33 with DMP Solution Bounds with 256 Cells}
    \label{fig:source_void_to_absorber_fine}
 \end{figure}
 %-------------------------------------------------------------------------------
@@ -146,7 +149,8 @@ clear.
    \includegraphics[width=\textwidth]
      {\contentdir/results/transport/source_void_to_absorber/images/strong1.pdf}
    \caption{Steady-State Solutions for the Source-Void-to-Absorber Problem
-     with Strongly Imposed Dirichlet Boundary Conditions and $L^-=L^+=1$}
+     with Strongly Imposed Dirichlet Boundary Conditions with $L_i^-=L_i^+=1$
+     and DMP Solution Bounds}
    \label{fig:source_void_to_absorber_strong1}
 \end{figure}
 %-------------------------------------------------------------------------------
@@ -155,7 +159,8 @@ clear.
    \includegraphics[width=\textwidth]
      {\contentdir/results/transport/source_void_to_absorber/images/strong0.pdf}
    \caption{Steady-State Solutions for the Source-Void-to-Absorber Problem
-     with Strongly Imposed Dirichlet Boundary Conditions and $L^-=L^+=0$}
+     with Strongly Imposed Dirichlet Boundary Conditions with $L_i^-=L_i^+=0$
+     and DMP Solution Bounds}
    \label{fig:source_void_to_absorber_strong0}
 \end{figure}
 %-------------------------------------------------------------------------------
@@ -164,7 +169,8 @@ clear.
    \includegraphics[width=\textwidth]
      {\contentdir/results/transport/source_void_to_absorber/images/weak.pdf}
    \caption{Steady-State Solutions for the Source-Void-to-Absorber Problem
-     with Weakly Imposed Dirichlet Boundary Conditions}
+     with Weakly Imposed Dirichlet Boundary Conditions
+     and DMP Solution Bounds}
    \label{fig:source_void_to_absorber_weak}
 \end{figure}
 %-------------------------------------------------------------------------------
@@ -173,7 +179,8 @@ clear.
    \includegraphics[width=\textwidth]
      {\contentdir/results/transport/source_void_to_absorber/images/weak_with_penalty.pdf}
    \caption{Steady-State Solutions for the Source-Void-to-Absorber Problem
-     with Weakly Imposed Dirichlet Boundary Conditions and Boundary Penalty}
+     with Weakly Imposed Dirichlet Boundary Conditions and Boundary Penalty
+     and DMP Solution Bounds}
    \label{fig:source_void_to_absorber_penalty}
 \end{figure}
 %-------------------------------------------------------------------------------

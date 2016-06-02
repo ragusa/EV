@@ -43,15 +43,14 @@ Table \ref{tab:interface_run_parameters} summarizes the run parameters used
 for these studies.
 
 %-------------------------------------------------------------------------------
-\begin{table}[ht]\caption{Source-in-Absorber Test Problem Run Parameters}
+\begin{table}[ht]\caption{Interface Test Problem Run Parameters}
 \label{tab:interface_run_parameters}
 \centering
 \begin{tabular}{l l}\toprule
 \emph{Parameter} & \emph{Value}\\\midrule
 Number of Cells & $N_{cell} = 32$\\
 Time Discretization & Steady-State\\
-Boundary Conditions & Weak with Penalty\\
-Penalty Coefficient & $\alpha=1000$\\\midrule
+Boundary Conditions & Weak Dirichlet with Boundary Penalty\\\midrule
 Entropy Function & $\entropy(u) = \frac{1}{2}u^2$\\
 Entropy Residual Coefficient & $\entropyresidualcoef = 0.1$\\
 Entropy Jump Coefficient & $\entropyjumpcoef = 0.1$\\\midrule

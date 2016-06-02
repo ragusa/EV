@@ -78,7 +78,9 @@ for this test problem.
 Number of Cells & $N_{cell} = 16384$\\
 Time Discretization & Explicit Euler, SSPRK33\\
 End Time & $t = 1$\\
-CFL Number & $\nu = 0.5$\\\midrule
+CFL Number & $\nu = 0.5$\\
+Boundary Conditions & Strong Dirichlet with
+  $\limiterletter_i^-=\limiterletter_i^+=1$\\\midrule
 Entropy Function & $\entropy(\scalarsolution) = \frac{1}{2}\scalarsolution^2$\\
 Entropy Residual Coefficient & $\entropyresidualcoef = 0.1$\\
 Entropy Jump Coefficient & $\entropyjumpcoef = 0.1$\\\midrule
@@ -148,7 +150,7 @@ the boundaries of the absorber region.
       \caption{Entropy Viscosity FCT}
    \end{subfigure}
    \caption{Comparison of Solutions for the Skew Void-to-Absorber Test Problem
-     Using Explicit Euler Time Discretization with 16384 Cells}
+     Using Explicit Euler Time Discretization and DMP Solution Bounds with 16384 Cells}
    \label{fig:skew_void_to_absorber_2D_fe}
 \end{figure}
 %-------------------------------------------------------------------------------
@@ -186,7 +188,7 @@ the boundaries of the absorber region.
       \caption{Entropy Viscosity FCT}
    \end{subfigure}
    \caption{Comparison of Solutions for the Skew Void-to-Absorber Test Problem
-     Using SSPRK33 Time Discretization with 16384 Cells}
+     Using SSPRK33 Time Discretization and DMP Solution Bounds with 16384 Cells}
    \label{fig:skew_void_to_absorber_2D_ssprk33}
 \end{figure}
 %-------------------------------------------------------------------------------
