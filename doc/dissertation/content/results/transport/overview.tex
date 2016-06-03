@@ -108,7 +108,7 @@ however, for Theta method results, the definition of $\nu$ above is
 still used.
 
 In summary, results in this section have the following dimensions, where
-the default options in this section are given in bold:
+the default options in this section are underlined:
 \begin{itemize}
   \item temporal discretization
   \item time step size/CFL number
@@ -116,26 +116,32 @@ the default options in this section are given in bold:
   \item BC method:
     \begin{itemize}
       \item strong Dirichlet BC with $\limiterletter_i^-=\limiterletter_i^+=0$
-      \item \textbf{strong Dirichlet BC with $\limiterletter_i^-=\limiterletter_i^+=1$}
+      \item \underline{strong Dirichlet BC with $\limiterletter_i^-=\limiterletter_i^+=1$}
       \item weak Dirichlet BC
       \item weak Dirichlet BC with a boundary penalty
     \end{itemize}
   \item FCT type:
     \begin{itemize}
-      \item \textbf{EV-FCT}
+      \item \underline{EV-FCT}
       \item Galerkin-FCT
     \end{itemize}
   \item FCT solution bounds:
     \begin{itemize}
       \item low-order DMP bounds
-      \item \textbf{analytic bounds from method of characteristics}
+      \item \underline{analytic bounds from method of characteristics}
       \item \emph{modified} analytic bounds from method of characteristics
       \item upwind analytic bounds from method of characteristics
     \end{itemize}
   \item FCT limiter:
     \begin{itemize}
-      \item \textbf{single-pass Zalesak}
+      \item \underline{single-pass Zalesak}
       \item multi-pass Zalesak
+    \end{itemize}
+  \item Initial guess for implicit FCT and steady-state FCT solutions:
+    \begin{itemize}
+      \item zeroes: $u^{(0)} = 0$
+      \item \underline{low-order solution: $u^{(0)} = u^L$}
+      \item high-order solution: $u^{(0)} = u^H$
     \end{itemize}
 \end{itemize}
 
