@@ -19,5 +19,57 @@
 \item emphasis transport = advection + reaction + source term. new as well in FCT world.
 \end{itemize}
 
-
 outline paper:
+
+
+
+
+The transport equation, also called the Boltzmann equation, describes the
+transport of particles or waves through some background media and some
+of its applications include nuclear reactors, atmospheric science, radiation
+therapy, astrophysics, radiation shielding, and high energy density physics.
+In this paper, focus is on solution techniques applicable to the first-order
+form of the transport equation, discretized in angle with discrete ordinates,
+which gives what is commonly called the $S_N$ equations:
+\begin{equation}
+  \frac{1}{v(E)}\ppt{\aflux} + \di\cdot\nabla\aflux\xdet
+    + \totalxsec\xet\aflux\xdet = \Qtot\xdet
+  \eqc
+\end{equation}
+where $\Qtot\xdet$ denotes the sum of the extraneous source, prompt and delayed
+fission sources, and scattering source:
+\begin{multline}
+  \Qtot\xdet \equiv \Qext\xdet\\
+    + \frac{\chi_\text{p}(E)}{4\pi}\int\limits_0^\infty
+      dE'\nu_\text{p}(\x,E',t)\fissionxsec(\x,E',t)\phi(\x,\di,E',t)
+    + \sum\limits_{i=1}^{n_\text{d}}\frac{\chi_{\text{d},i}(E)}{4\pi}\lambda_i C_i\xt\\
+    + \int\limits_0^\infty dE'\int\limits_{4\pi}d\di'
+      \scatteringxsec(\x,E'\rightarrow E,\di'\rightarrow\di,t)\aflux(\x,\di',E',t)
+  \eqp
+\end{multline}
+The $S_N$ equations are an attractive form of the transport equation because
+the $S_N$ equations can be decoupled by using iterative techniques for the
+scattering source, an approach called source iteration \cite{glasstone}:
+\begin{equation}
+  \frac{1}{\speed}\ppt{\angularflux^{(\ell)}}
+    + \directionvector\cdot\nabla\angularflux^{(\ell)}
+    + \totalcrosssection\angularflux^{(\ell)} = \radiationsource^{(\ell-1)} \eqc
+\end{equation}
+where $\ell$ is the iteration index. The decoupling of the equations allows
+scalar solution techniques to be leveraged.
+Traditionally, the preferred spatial discretization method for the $S_N$
+equations is the Discontinuous Galerkin finite element method (DGFEM)
+\cite{Lesaint1974}\cite{Reed_Hill_1973}. Here, however, the
+Continuous Galerkin finite element method (CGFEM) is applied. There
+has been some recent work by Guermond and Popov \cite{guermond_ev} on
+solution techniques for conservation laws with CGFEM, which addresses some
+of the main disadvantages of CGFEM versus DGFEM, including the formation
+of spurious oscillations. This work aims to demonstrate a proof of concept
+for the application of these solution techniques to the transport equation.
+Furthermore, some or all of the methodology explored in this paper may be
+later extended to DGFEM as well \cite{zingan_2013}.
+
+
+
+
+
