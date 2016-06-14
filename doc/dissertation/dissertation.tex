@@ -3,6 +3,12 @@
 \geometry{verbose,tmargin=1.25in,bmargin=1.25in,lmargin=1.4in,rmargin=1.15in}
 \usepackage[doublespacing]{setspace}
 \usepackage{tocloft}
+
+% set ragged alignment in lists
+%\usepackage{tocstyle}
+%\usetocstyle{standard}
+%\settocfeature{raggedhook}{\raggedright}
+
 \usepackage[rm, tiny, center, compact]{titlesec}
 \usepackage{indentfirst}
 \usepackage{etoolbox}
@@ -18,15 +24,13 @@
 \usepackage{alltt}
 \usepackage{amsmath}
 \usepackage{amssymb}
-\usepackage{empheq} % for emphasizing certain equations
+\usepackage{empheq}   % for emphasizing certain equations
 \usepackage{booktabs} % for different table rules (lines)
 \usepackage{subcaption}
 \usepackage{algpseudocode}
 \usepackage{algorithm}
 \usepackage{tikz}     % for tikz pictures
-%\usetikzlibrary{backgrounds}
 \usetikzlibrary{calc} % for computing points in tikz pictures
-%\usetikzlibrary{shapes.multipart}
 \usetikzlibrary{shapes.geometric}
 \usepackage[mathscr]{euscript} % for \mathscr{} in math mode
 \usepackage[hidelinks]{hyperref}
@@ -41,7 +45,9 @@
 
 % create black bar where there are "Overfull"s
 %\overfullrule=15cm
-\setlength{\emergencystretch}{0.5em}
+
+% relax emergency stretch to eliminate Overfulls
+\setlength{\emergencystretch}{2em}
 
 %===============================================================================
 % Document

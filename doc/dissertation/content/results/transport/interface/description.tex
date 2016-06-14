@@ -204,13 +204,14 @@ the number of iterations.
   for the Interface Test Problem}
 \label{tab:interface_iterations}
 \centering
-\begin{tabular}{c c c}\toprule
-\emph{Case} & \emph{Iterations} & \emph{Limiter Passes Per Iteration}\\\midrule
-Original Bounds, Single-pass Limiting & 23 & 1\\
-Original Bounds, Multi-pass Limiting  & 58 & $\approx 10$\\
-Upwind Bounds,   Single-pass Limiting & 15 & 1\\
-Upwind Bounds,   Multi-pass Limiting  & 7  & $\approx 19$\\
-Modified Bounds, Single-pass Limiting & 23 & 1\\
+\begin{tabular}{c c c c}\toprule
+\emph{Bounds} & \emph{Limiting} & \emph{Iterations}
+  & \emph{Limiter Passes Per Iteration}\\\midrule
+Original & Single-pass & 23 & 1\\
+Original & Multi-pass  & 58 & $\approx 10$\\
+Upwind   & Single-pass & 15 & 1\\
+Upwind   & Multi-pass  & 7  & $\approx 19$\\
+Modified & Single-pass & 23 & 1\\
 \bottomrule\end{tabular}
 \end{table}
 %-------------------------------------------------------------------------------

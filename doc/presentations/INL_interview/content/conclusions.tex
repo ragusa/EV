@@ -1,0 +1,34 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Conclusions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\begin{center}
+  \Huge{\textcolor{myblue}{Conclusions}}
+\end{center}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Conclusions}
+
+\begin{itemize}
+  \item Both the scalar and systems FCT schemes developed are
+    \begin{itemize}
+      \item Non-negativity-preserving
+      \item Not guaranteed monotone, but work well in practice
+      \item Entropy-inequality-enforcing
+      \item 2nd-order-accurate for smooth problems
+      \item Valid for unstructured meshes
+    \end{itemize}
+  \item The scalar scheme additionally satisfies a discrete maximum principle
+  \item \emph{Stair-stepping}, or \emph{terracing} is observed in some
+    FCT solutions, particularly when using FE
+  \item Severe nonlinear convergence difficulties have been observed for
+    implicit and steady-state FCT
+  \item Characteristic limiting for 1-D SWE was shown to have some
+    success but showed some terracing behavior
+  \item No extension of FCT to 2-D SWE has been developed
+  \item Invariant domain method has not yet been extended to non-flat
+    bottom topography
+\end{itemize}
+
+\end{frame}

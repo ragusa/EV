@@ -9,6 +9,7 @@
 %  Last updated 1/27/2013
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%       TABLE OF CONTENTS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -68,6 +69,12 @@
 \setlength{\cftbeforefigskip}{0.4cm}
 \setlength{\cftbeforetabskip}{0.4cm} 
 
+% Added these lines to prevent some Overfulls in lists.
+% These are set to be equal lengths so that dots end at the right
+% margin of the title text.
+\setlength{\cftsetpnumwidth}{2.5em} % page number width
+\setlength{\cftsetrmarg}{2.5em}     % right margin
+
 \listoffigures
 
 \end{singlespace}
@@ -102,6 +109,12 @@
 \setlength{\cftbeforesubsecskip}{0.30cm}
 \setlength{\cftbeforefigskip}{0.4cm}
 \setlength{\cftbeforetabskip}{0.4cm}
+
+% Added these lines to prevent some Overfulls in lists.
+% These are set to be equal lengths so that dots end at the right
+% margin of the title text.
+\setlength{\cftsetpnumwidth}{2.5em} % page number width
+\setlength{\cftsetrmarg}{2.5em}     % right margin
 
 \listoftables 
 

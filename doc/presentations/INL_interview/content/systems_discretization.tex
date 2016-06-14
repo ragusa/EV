@@ -1,0 +1,49 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Systems Methodology}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Discretization}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\begin{center}
+  \Huge{\textcolor{myblue}{The Shallow Water Equations}}
+\end{center}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Discretization}
+
+\begin{itemize}
+  \item A general system of conservation laws, with sources, is
+    \begin{equation}
+      \pd{\vectorsolution}{t} + \divergence\consfluxvector(\vectorsolution)
+        = \conssource(\vectorsolution) \eqp
+    \end{equation}
+  \item After doing the following:
+    \begin{itemize}
+      \item Substituting the approximate solution
+        $\approximatevectorsolution\xt =
+          \sum_j \solutionvector_j(t) \testfunction_j(\x)$,
+          where $\solutionvector_j(t)$ are vector-valued degrees of freedom,
+      \item Interpolating the flux function at the nodes,
+        $\consfluxvector(\approximatevectorsolution)\rightarrow
+          \sum_j\consfluxinterpolant_j(t)\testfunction_j(\x)$,
+      \item Testing with $\testfunction_i(\x)$, and
+      \item Evaluating with forward Euler (FE),
+    \end{itemize}
+    the discrete system becomes
+    \begin{equation}
+      \sum_j\consistentmassentry
+        \frac{\solutionvector_j^{n+1}-\solutionvector_j^n}{\dt}
+        + \sum_j\gradiententry\cdot\consfluxinterpolant_j^n
+        = \ssrhs_i^n \eqc
+    \end{equation}
+    \begin{equation}
+      \gradiententry \equiv \int_{\support\ij}
+        \testfunction_i(\x)\nabla\testfunction_j(\x) d\volume \eqc
+      \quad
+      \ssrhs_i(t) \equiv \int_{\support_i}
+        \testfunction_i(\x)\conssource(\approximatevectorsolution)d\volume \eqp
+    \end{equation}
+\end{itemize}
+
+\end{frame}

@@ -1,0 +1,152 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{FCT Scheme}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{FCT Antidiffusive Flux Definition}
+
+\begin{itemize}
+  \item The antidiffusive fluxes $\correctionfluxvector_i$ are defined such that
+    \begin{equation}
+      \lumpedmassentry
+        \frac{\textcolor{secondarycolorheavy}{\solutionvector_i^{H}}
+          -\solutionvector_i^n}{\dt}
+        + \sum_j\gradiententry\cdot\consfluxinterpolant_j^n
+        + \sum_j\diffusionmatrixletter\ij^{L,n}\solutionvector_j^n
+        = \ssrhs_i^n + \textcolor{secondarycolorheavy}{\correctionfluxvector_i}
+      \eqc
+    \end{equation}
+   \item Subtracting the high-order scheme equation from this gives the
+      definition of $\correctionfluxvector$:
+      \begin{equation}
+        \correctionfluxvector_i \equiv
+          \lumpedmassentry
+            \frac{\solutionvector_i^{H}-\solutionvector_i^n}{\dt}
+          -\sum_j\consistentmassentry
+            \frac{\solutionvector_j^{H}-\solutionvector_j^n}{\dt}
+          +\sum_j(\diffusionmatrixletter\ij^{L,n}-\diffusionmatrixletter\ij^{H,n})
+            \solutionvector_j^n
+      \end{equation}
+   \item Decomposing $\correctionfluxvector$ into internodal fluxes
+      $\correctionfluxmatrix\ij$ such that $\sum_j \correctionfluxmatrix\ij =
+      \correctionfluxvector_i$,
+      \begin{equation}
+        \correctionfluxmatrix\ij = -M\ij^C\pr{
+            \frac{\solutionvector_j^{H}-\solutionvector_j^n}{\dt}
+            -\frac{\solutionvector_i^{H}-\solutionvector_i^n}{\dt}
+          }
+          + (D\ij^{L,n}-D\ij^{H,n})(\solutionvector_j^n-\solutionvector_i^n) \eqp
+      \end{equation}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{FCT Limitation Process for Systems}
+
+\begin{itemize}
+  \item Bounds to impose on FCT solution are unclear for systems case:
+    \begin{itemize}
+      \item For scalar case, a DMP was used, but no DMP exists for systems.
+      \item The invariant domain property is not so straightforward to enforce.
+    \end{itemize}
+  \item One may want to impose physical bounds on some non-conservative
+    set of variables.
+  \item Limitation of conservative variables may not satisfy these bounds.
+  \item Consider the following sets of variables for the 1-D SWE:
+    \begin{itemize}
+      \item \textcolor{secondarycolorheavy}{Conservative}:
+        $\vectorsolution \equiv [\height,\height\velocityx]\transpose$
+      \item \textcolor{secondarycolorheavy}{Primitive}:
+        $\check{\vectorsolution} \equiv [\height,\velocityx]\transpose$
+      \item \textcolor{secondarycolorheavy}{Characteristic}:
+        $\hat{\vectorsolution} \equiv [\velocityx-2\speedofsound,
+          \velocityx+2\speedofsound]\transpose$,
+          where $\speedofsound\equiv\sqrt{\gravity\height}$
+    \end{itemize}
+  \item Results from literature suggest that limitation on a non-conservative
+    set of variables may produce superior results.
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Limitation on Non-Conservative Variables}
+
+\begin{itemize}
+  \item Consider some non-conservative set of variables
+    $\hat{\vectorsolution} = \mathbf{T}^{-1}(\vectorsolution)\vectorsolution$.
+    \begin{itemize}
+      \item For \textcolor{secondarycolorheavy}{conservative} variables,
+        $\mathbf{T}(\vectorsolution)=\mathbb{I}$.
+      \item For \textcolor{secondarycolorheavy}{characteristic} variables,
+        $\mathbf{T}(\vectorsolution)$ is the matrix with right eigenvectors
+        of the Jacobian matrix $\partial\consfluxvector/\partial\vectorsolution$
+        as its columns.
+    \end{itemize}
+  \item The FCT scheme for limitation of conservative variables is
+    \begin{equation}
+      \lumpedmassentry
+        \frac{\solutionvector_i^{n+1}-\solutionvector_i^n}{\dt}
+        + \sum_j\gradiententry\cdot\consfluxinterpolant_j^n
+        + \sum_j\diffusionmatrixletter\ij^{L,n}\solutionvector_j^n
+        = \ssrhs_i^n + \sum_j\limitermatrix\ij\odot\correctionfluxmatrix\ij \eqp
+    \end{equation}
+  \item Applying a local transformation $\mathbf{T}^{-1}(\solutionvector_i^n)$ gives
+    \begin{equation}
+      \lumpedmassentry
+        \frac{\hat{\solutionvector}_i^{n+1}-\hat{\solutionvector}_i^n}{\dt}
+        + \sum_j\gradiententry\cdot\hat{\consfluxinterpolant}_j^n
+        + \sum_j\diffusionmatrixletter\ij^{L,n}\hat{\solutionvector}_j^n
+        = \hat{\ssrhs}_i^n + \sum_j\limitermatrix\ij\odot\hat{\correctionfluxmatrix}\ij
+        \eqc
+    \end{equation}
+    where accents denote transformed quantities, for example,
+    \begin{equation}
+      \hat{\solutionvector}_j^k
+        = \mathbf{T}^{-1}(\solutionvector_i^n)\solutionvector_j^k
+      \eqc \quad
+      \hat{\correctionfluxmatrix}\ij
+        = \mathbf{T}^{-1}(\solutionvector_i^n)\correctionfluxmatrix\ij
+      \eqp
+    \end{equation}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Limiting Coefficients}
+
+\begin{itemize}
+  \item Choose $\limitermatrix\ij$ to satisfy some solution bounds
+    $\hat{\solutionvector}_{i}^\pm$ and then define corresponding
+    antidiffusive flux bounds $\hat{\mathbf{\limitedfluxbound}}_i^\pm$:
+    \begin{equation}
+      \hat{\mathbf{\limitedfluxbound}}^-_i \leq
+        \sum\limits_j \limitermatrix\ij\odot\hat{\correctionfluxmatrix}\ij \leq
+        \hat{\mathbf{\limitedfluxbound}}^+_i
+      \quad\Rightarrow\quad
+      \hat{\solutionvector}_i^- \leq
+        \hat{\solutionvector}_i^{n+1} \leq
+        \hat{\solutionvector}_i^+ \quad \forall i \eqp
+    \end{equation}
+  \item Performing some algebra gives the definition
+    \begin{equation}
+      \hat{\mathbf{\limitedfluxbound}}_i^\pm \equiv
+        \lumpedmassentry\frac{\hat{\solutionvector}_i^\pm
+          -\hat{\solutionvector}_i^n}{\dt}
+        + \sum_j\gradiententry\cdot\hat{\consfluxinterpolant}_j^n
+        + \sum_j\diffusionmatrixletter\ij^{L,n}\hat{\solutionvector}_j^n
+        - \hat{\ssrhs}_i^n \eqp
+    \end{equation}
+  \item Limiting coefficients are computed just as for scalar case, for
+    each solution component $\componentindex$:
+    $\limiterletter\ij^{\componentindex}$.
+  \item Literature suggests limiting coefficients may require
+    \hlorange{synchronization}, e.g.,
+    \begin{equation}
+      \limiterletter\ij^\componentindex \mapsfrom
+        \min\limits_\ell\limiterletter\ij^\ell \quad \forall\componentindex \eqp
+    \end{equation}
+\end{itemize}
+
+\end{frame}

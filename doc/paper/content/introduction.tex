@@ -1,29 +1,3 @@
-2-4 pages
-\begin{itemize}
-\item applications of transport equation
-\begin{itemize}
-\item reactors, medical, astrophys, HEDP (high energy density physics ....)
-\item  in this paper, we focus on solution techniques applicable to the first-order form of the TE discretized with DO (Sn) in angle. Sn because it decouples directions when using iteration techniques for scattering source (references DO, SI)
-\item usually, Sn transport people use DG (Lessaint/Raviart 1972, Reed/Hill 1973). Here, we opted for CFEM: (1) proof of concept of FCT-CFEM for transport abundant lit on this (Kuzmin), (2) recent work by JLG/Po on stabilization technique for conserva laws used CFEM, (3) once demonstrated, there are ways to pass to DG (Zingan LO, EV ingredients are there, FCT-DG  FCT algebraic ???)
-\end{itemize}
-
-\item previous work on positivity-preservation
-\begin{itemize}
-\item transport community: fix-ups, Maginots CSZ, BCSZ, Warsa LANL, 
-\item 
-\item 
-\end{itemize}
-\item FCT: hydro, old idea, new spin algebraic FCT Kuzmin. DMP. What is FCT: Lo/HO. novelty: HO -> EV
-\item entropy viscosity.
-\item a lot of FCT out there is EXPLICIT. in radiation transport, SS, Impl. new and needs to be investigated
-\item emphasis transport = advection + reaction + source term. new as well in FCT world.
-\end{itemize}
-
-outline paper:
-
-
-
-
 The transport equation, also called the Boltzmann equation, describes the
 transport of particles or waves through some background media and some
 of its applications include nuclear reactors, atmospheric science, radiation
@@ -51,9 +25,9 @@ The $S_N$ equations are an attractive form of the transport equation because
 the $S_N$ equations can be decoupled by using iterative techniques for the
 scattering source, an approach called source iteration \cite{glasstone}:
 \begin{equation}
-  \frac{1}{\speed}\ppt{\angularflux^{(\ell)}}
-    + \directionvector\cdot\nabla\angularflux^{(\ell)}
-    + \totalcrosssection\angularflux^{(\ell)} = \radiationsource^{(\ell-1)} \eqc
+  \frac{1}{v}\ppt{\aflux^{(\ell)}}
+    + \di\cdot\nabla\aflux^{(\ell)}
+    + \totalxsec\aflux^{(\ell)} = \Qtot^{(\ell-1)} \eqc
 \end{equation}
 where $\ell$ is the iteration index. The decoupling of the equations allows
 scalar solution techniques to be leveraged.
@@ -69,7 +43,68 @@ for the application of these solution techniques to the transport equation.
 Furthermore, some or all of the methodology explored in this paper may be
 later extended to DGFEM as well \cite{zingan_2013}.
 
+One of the main objectives of this paper is to present a method that precludes
+the formation of spurious oscillations and the negativities that result from
+these oscillations. The occurrence of negativities in the numerical solution of
+the transport equation has been a long-standing issue \cite{lanthrop}.
+Not only are these negativities physically inaccurate, but they can cause
+simulations to terminate prematurely. Many attempts to remedy this
+issue rely on ad-hoc fix-ups, such as the set-to-zero fix-up for the
+classic diamond difference scheme \cite{lewis}. Recent work by Hamilton
+introduced a similar fix-up for the linear discontinuous finite element
+method (LDFEM) that conserves local balance and preserves third-order accuracy.
+Walters and Wareing developed characteristic methods \cite{walters_NC}, but
+Wareing later notes that these characteristic methods are difficult to
+implement and offers a nonlinear positive spatial differencing scheme
+known as the exponential discontinuous scheme \cite{wareing}.
+Maginot has recently developed a consistent set-to-zero (CSZ) LDFEM
+method \cite{maginot}, as well as a non-negative method for bilinear
+discontinuous FEM \cite{maginot_mc2015}.
 
+Traditional approaches to remedy the spurious oscillation issue included
+the flux-corrected transport (FCT) algorithm, introduced in 1973 for finite
+difference discretizations
+by Boris and Book \cite{borisbook}, which has since been applied to the finite
+element method \cite{kuzmin_FCT}. The idea of FCT is to blend a low-order scheme
+having desirable properties with a scheme of a higher order of accuracy.
 
+Recent work by Guermond and Popov addresses the issue of spurious oscillations
+for general conservation laws by using artificial dissipation based on
+local entropy production, a method known as entropy viscosity \cite{guermond_ev}.
+The idea of entropy viscosity is to enforce an entropy inequality on the weak solution,
+and thus filter out weak solutions containing spurious oscillations. However,
+entropy viscosity solutions may still contain spurious
+oscillations, albeit smaller in magnitude, and consequently negativities
+are not precluded. To circumvent this deficiency, Guermond proposed using
+the entropy viscosity method in conjunction with the FCT
+algorithm \cite{guermond_secondorder}; the high-order scheme component in FCT,
+traditionally the unmodified Galerkin scheme, is replaced with the entropy
+viscosity scheme.
+For the low-order
+scheme, Guermond also introduced
+a discrete maximum principle (DMP) preserving (and positivity-preserving)
+scheme for scalar
+conservation laws \cite{guermond_firstorder}.
 
+This paper presents an FCT scheme that is largely rooted in the work by Guermond
+and Popov, but is extended to allow application to the transport equation,
+which does not fit the prototype of a conservation law but is instead a
+balance law, which includes sinks and sources, namely the reaction term
+$\totalxsec\aflux$ and the source term $\Qtot$. The presence
+of these terms is also a novelty in the context of the FCT algorithm.
+In addition, much of the present work on FCT has been for fully explicit time
+discretizations, although there has been some work on implicit time discretizations
+as well. Because speeds in radiation transport (such as the speed of light)
+are so large, implicit and steady-state time discretization are important
+considerations, given the CFL time step size restriction for fully explicit
+methods. Thus this paper also considers implicit and steady-state FCT, which
+has been implemented in the past \cite{implicit_FCT}.
 
+This paper is organized as follows. Section \ref{sec:preliminaries} gives
+some preliminaries such as the problem formulation and discretization.
+Recall that the FCT algorithm uses a low-order scheme and a high-order scheme.
+Section \ref{sec:low} presents the low-order scheme, Section \ref{sec:high}
+presents the high-order scheme (which is based on entropy viscosity),
+and Section \ref{sec:fct} presents FCT scheme that combines the two. Then, Section
+\ref{sec:results} presents results for a number of test problems, and
+Section \ref{sec:conclusions} gives conclusions.

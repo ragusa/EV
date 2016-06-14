@@ -1,0 +1,164 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\section{Scalar Methodology}
+\subsection{Problem Formulation}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\begin{center}
+  \Huge{\textcolor{myblue}{Scalar Transport}}
+\end{center}
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Scalar Problem Formulation}
+
+\begin{itemize}
+  \item Consider a linear conservation law model
+    ($\consflux(\scalarsolution)=\velocity\scalarsolution$):
+    \begin{equation}
+      \pd{\scalarsolution}{t} + \nabla\cdot(\velocity\scalarsolution)
+      + \reactioncoef(\x)\scalarsolution\xt = \scalarsource\xt \eqc
+    \end{equation}
+    where $\reactioncoef(\x)\ge 0$ and $\scalarsource\xt\ge 0$.
+  \item Provide initial conditions and some boundary
+    condition, such as Dirichlet:
+   \begin{equation}
+      u(\x,0) = u^0(\x) \quad \forall \x\in \domain
+   \end{equation}
+   \begin{equation}
+      u\xt = u^{\text{inc}}(\x) \quad \forall \x\in \incomingdomainboundary
+   \end{equation}
+   \item CFEM solution:
+   \begin{equation}
+      \approximatescalarsolution\xt = \sum\limits_{j=1}^N U_j(t) \testfunction_j(\x) \eqc
+      \quad \testfunction_j(\x)\in P^1_h
+   \end{equation}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Discretization}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Some Notation}
+
+\begin{minipage}{0.49\textwidth}
+  \begin{itemize}
+    \item Let \hlorange{$\support\ij$} be the shared support of test functions
+      $\testfunction_i$ and $\testfunction_j$.
+    \item Let \hlorange{$\cellindices(\support\ij)$} be the set of indices of
+      cells in $\support\ij$.
+  \end{itemize}
+  \input{../../diagrams/shared_support/shared_support.tex}
+\end{minipage}
+\begin{minipage}{0.49\textwidth}
+  \begin{itemize}
+    \item Let \hlorange{$\indices(\cell)$} be the set of DoF indices on cell $\cell$.
+    \item Let \hlorange{$n_\cell$} be the number of DoFs on cell $\cell$.
+  \end{itemize}
+  \input{../../diagrams/cell_indices/cell_indices.tex}
+\end{minipage}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Discretization}
+
+\begin{itemize}
+   \item Discretizing with forward Euler (FE) in time and \hlorange{Galerkin CFEM}
+      in space gives
+   \begin{equation}
+      \consistentmassmatrix\frac{\solutionvector^{n+1}-\solutionvector^n}
+        {\dt} + \ssmatrix\solutionvector^n = \ssrhs^n \eqc
+   \end{equation}
+   where
+   \begin{equation}
+     M\ij^C \equiv \int\limits_{\support\ij}
+       \testfunction_i(\x) \testfunction_j(\x) d\x \eqc
+   \end{equation}
+   \begin{equation}
+     A\ij \equiv \int\limits_{\support\ij}\left(
+       \mathbf{v}\cdot\nabla\testfunction_j(\x) +
+		\reactioncoef(\x)\testfunction_j(\x)\right)\testfunction_i(\x) d\x \eqc
+   \end{equation}
+   \begin{equation}
+      b_i^n \equiv \int\limits_{S_i} q(\x,t^n)\testfunction_i(\x) d\x \eqp
+   \end{equation}
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Temporal Discretization}
+
+\begin{itemize}
+  \item \hlorange{Forward Euler (FE)}:
+    \begin{equation}
+      \consistentmassmatrix\frac{\solutionvector^{n+1}-\solutionvector^n}
+        {\dt} + \ssmatrix\solutionvector^n = \ssrhs^n \eqc
+    \end{equation}
+  \item \hlorange{Strong Stability Preserving Runge-Kutta (SSPRK) Methods}:
+    %\begin{itemize}
+    %  \item Can be expressed as a combination of FE-like steps:
+    %\end{itemize}
+\begin{subequations}
+\begin{align}
+  & \RKstagesolution^0 = \solutionvector^n \\
+%  & \RKstagesolution^i = \gamma_i \solutionvector^n + \zeta_i \sq{
+%      \RKstagesolution^{i-1}
+%      + \dt\mathbf{G}(t^n+c_i\dt, \RKstagesolution^{i-1})}
+  & \RKstagesolution^i = \gamma_i \solutionvector^n + \zeta_i \bar{\solutionvector}^i
+    \eqc \quad 
+      \consistentmassmatrix\frac{\bar{\solutionvector}^i-\RKstagesolution^{i-1}}
+        {\dt} + \ssmatrix\RKstagesolution^{i-1} = \ssrhs(t_i) \eqc
+    %\eqc \quad
+    %i = 1,\ldots,s \eqc
+    \\
+  & \solutionvector^{n+1} = \RKstagesolution^s
+\end{align}
+\end{subequations}
+  where $t_i \equiv t^n+c_i\dt$, and $\{\gamma_i,\zeta_i,c_i\}_{i=1}^s$
+  depend on the method.
+  \item \hlorange{Theta Method}:
+\begin{subequations}
+\begin{equation}
+  \consistentmassmatrix\frac{\solutionvector^{\timeindex+1}
+    - \solutionvector^\timeindex}{\timestepsize}
+    + \ssmatrix\solutionvector^\theta
+    = \ssrhs^\theta
+\end{equation}
+\begin{equation}
+  \solutionvector^\theta \equiv (1-\theta)\solutionvector^n
+    + \theta\solutionvector^{n+1}
+  \eqc \quad
+  \ssrhs^\theta \equiv (1-\theta)\ssrhs^n
+    + \theta\ssrhs^{n+1}
+\end{equation}
+\end{subequations}
+    where $0\leq\theta\leq1$.
+\end{itemize}
+
+\end{frame}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\subsection{Boundary Conditions}
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{frame}
+\frametitle{Boundary Conditions}
+
+\begin{itemize}
+  \item The following 3 methods for imposing incoming flux boundary conditions
+    for node $i$ are considered:
+    \begin{enumerate}
+      \item \hlorange{Strongly impose}: \emph{replace} equation $i$ with the equation
+        $U_i = u^{\textup{inc}}(\x_i)$.
+      \item \hlorange{Weakly impose}: evaluate incoming boundary fluxes 
+        in equation $i$ with values $u^{\textup{inc}}(\x_j)$ instead of values $U_j$.
+      \item Weakly impose with \hlorange{boundary penalty}: \emph{add} to
+        equation $i$ a multiple $\alpha_i$ of the equation $U_i = u^{\textup{inc}}(\x_i)$,
+        where $\alpha_i$ should be large enough such that this \emph{penalty}
+        equation dominates the original equation $i$.
+    \end{enumerate}
+  \item The choice of incoming flux boundary condition will later to
+    be shown to have consequences on conservation for FCT.
+\end{itemize}
+
+\end{frame}

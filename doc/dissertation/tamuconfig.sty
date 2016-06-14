@@ -42,6 +42,10 @@
 
 \setcounter{secnumdepth}{3}
 
+% change length between trailing dots, in mu - math units (18mu = 1em)
+\renewcommand{\cftdotsep}{0.25}
+\renewcommand{\cftsecdotsep}{\cftdotsep}
+
 \addtocontents{toc}{\protect\renewcommand{\protect\cftchapleader}
         {\protect\cftdotfill{\cftsecdotsep}}}  % puts leader dots on chapters.
 

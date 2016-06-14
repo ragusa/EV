@@ -1,50 +1,16 @@
 \chapter*{NOMENCLATURE}
 \addcontentsline{toc}{chapter}{NOMENCLATURE}  
 
-Table \ref{tab:abbreviations} lists the abbreviations used in this dissertation,
-and Table \ref{tab:symbols} lists the symbols used in this dissertation.
-In general, any symbol in non-boldface font is a scalar (zero-order tensor),
-any lowercase symbol in a boldface font is a vector (first-order tensor),
-and any uppercase symbol in a boldface font is a matrix (second-order tensor).
-One exception to this rule is the solution vector, $\solutionvector$, which
-is uppercase despite being a vector, not a matrix. This is to distinguish
-it from the symbol for a vector-valued solution function,
-$\vectorsolution$, since ``u'' is traditionally used in both circumstances.
+This section is organized as follows: 
+Section \ref{sec:abbreviations} lists the abbreviations used in this dissertation,
+Section \ref{sec:symbols} lists the symbols used in this dissertation,
+and Section \ref{sec:conventions} discusses conventions used in this dissertation.
 
-Individual matrix entries are denoted by the non-boldface equivalent of
-the matrix symbol, with two subscripted indices, and individual vector entries
-are denoted by the non-boldface equivalent, with one subscripted index.
-Symbols used for degree of freedom indices include $i$, $j$, $k$, and $\ell$,
-and cell indices are usually denoted by $\cell$.
-Temporal indices
-use $n$ as a superscript, and iteration indices use $(\ell)$
-as a superscript. Other symbols appearing in subscripts or superscripts
-are typically descriptors, e.g., to distinguish a function for different
-components of a vector-valued system, or to distinguish a low-order order
-vs. a high-order quantity.
+%==============================================================================
 
-Sums often give only the summation index, with the lower/upper bounds or the
-set being understood from context. For example, if the set of all degrees of freedom indices
-is $\mathcal{I}(\domain)=\{1,\ldots,\maxdof\}$, where $\maxdof$ is the maximum
-degree of freedom index, then the sum notation
-$\sum\limits_{j\in\mathcal{I}(\domain)}$ or $\sum\limits_{j=1}^N$ is shortened
-to $\sumj$.
+\section{Abbreviations\label{sec:abbreviations}}
 
-The notation $\mathbf{a}\otimes\mathbf{b}$ denotes a tensor product, otherwise
-known as an outer product, of column vectors $\mathbf{a}$ and $\mathbf{b}$,
-i.e., $\mathbf{a}\otimes\mathbf{b}\equiv\mathbf{a}\mathbf{b}^T$. Thus,
-$(\mathbf{a}\otimes\mathbf{b})\ij = a_i b_j$.
-
-Functions of time often omit the time argument and instead take the time index
-as a superscript, e.g., $f(\timevalue^\timeindex)$ is abbreviated as
-$f^\timeindex$. Similarly, functions of a time-dependent solution or other
-time-dependent arguments are sometimes abbreviated by dropping the dependence
-on the argument and adopting the time index as a superscript, e.g.,
-$f(\approximatescalarsolution^\timeindex)$ becomes $f^\timeindex$.
-
-
-\begin{mytable}{Abbreviations Used in Dissertation}{abbreviations}{l l}
-{\emph{Abbreviation} & \emph{Description}}
+\begin{longtable}{l l}
 BE    & backward (implicit) Euler\\
 CFEM  & continuous finite element method\\
 CN    & Crank-Nicolson\\
@@ -65,24 +31,13 @@ SS    & steady-state\\
 SSPRK & strong stability-preserving Runge-Kutta\\
 SSPRK33 & 3-stage, 3-order-accurate SSPRK scheme,\\
         & also known as the Shu-Osher method\\
-\end{mytable}
+\end{longtable}
 
-\begin{center}
+%==============================================================================
+
+\section{Symbols\label{sec:symbols}}
+
 \begin{longtable}{l p{4.8in}}
-\caption{Symbols Used in Dissertation\label{tab:symbols}}\\
-\hline
-\emph{Symbol} & \emph{Description}\\
-\hline
-\endfirsthead
-\multicolumn{2}{c}{Table \thetable\ -- Continued}\vspace{3ex}\\
-\hline
-\emph{Symbol} & \emph{Description}\\
-\hline
-\endhead
-\hline
-\endfoot
-\hline
-\endlastfoot
 %==============================================================================
 % Latin alphabet: A-Z
 %==============================================================================
@@ -218,6 +173,48 @@ $\angularflux$     & angular flux\\
 $\directionvector$ & unit transport direction vector\\
 %==============================================================================
 \end{longtable}
-\end{center}
+
+%==============================================================================
+
+\section{Conventions\label{sec:conventions}}
+
+In general, any symbol in non-boldface font is a scalar (zero-order tensor),
+any lowercase symbol in a boldface font is a vector (first-order tensor),
+and any uppercase symbol in a boldface font is a matrix (second-order tensor).
+One exception to this rule is the solution vector, $\solutionvector$, which
+is uppercase despite being a vector, not a matrix. This is to distinguish
+it from the symbol for a vector-valued solution function,
+$\vectorsolution$, since ``u'' is traditionally used in both circumstances.
+
+Individual matrix entries are denoted by the non-boldface equivalent of
+the matrix symbol, with two subscripted indices, and individual vector entries
+are denoted by the non-boldface equivalent, with one subscripted index.
+Symbols used for degree of freedom indices include $i$, $j$, $k$, and $\ell$,
+and cell indices are usually denoted by $\cell$.
+Temporal indices
+use $n$ as a superscript, and iteration indices use $(\ell)$
+as a superscript. Other symbols appearing in subscripts or superscripts
+are typically descriptors, e.g., to distinguish a function for different
+components of a vector-valued system, or to distinguish a low-order order
+vs. a high-order quantity.
+
+Sums often give only the summation index, with the lower/upper bounds or the
+set being understood from context. For example, if the set of all degrees of freedom indices
+is $\mathcal{I}(\domain)=\{1,\ldots,\maxdof\}$, where $\maxdof$ is the maximum
+degree of freedom index, then the sum notation
+$\sum\limits_{j\in\mathcal{I}(\domain)}$ or $\sum\limits_{j=1}^N$ is shortened
+to $\sumj$.
+
+The notation $\mathbf{a}\otimes\mathbf{b}$ denotes a tensor product, otherwise
+known as an outer product, of column vectors $\mathbf{a}$ and $\mathbf{b}$,
+i.e., $\mathbf{a}\otimes\mathbf{b}\equiv\mathbf{a}\mathbf{b}^T$. Thus,
+$(\mathbf{a}\otimes\mathbf{b})\ij = a_i b_j$.
+
+Functions of time often omit the time argument and instead take the time index
+as a superscript, e.g., $f(\timevalue^\timeindex)$ is abbreviated as
+$f^\timeindex$. Similarly, functions of a time-dependent solution or other
+time-dependent arguments are sometimes abbreviated by dropping the dependence
+on the argument and adopting the time index as a superscript, e.g.,
+$f(\approximatescalarsolution^\timeindex)$ becomes $f^\timeindex$.
 
 \pagebreak{}
