@@ -1,6 +1,31 @@
-\begin{itemize}
-\item second-order convergence
-\item entropy solution
-\item explicit FCT robust
-\item implicit/steady-state FCT nonlinear convergence issues
-\end{itemize}
+The FCT scheme described in this paper is second-order accurate in space,
+converges to the entropy solution, and preserves non-negativity.
+Spurious oscillations are mitigated but are not guaranteed to be
+eliminated, as smaller magnitude oscillations may exist within the imposed
+solution bounds.
+
+Local solution bounds imposed in the FCT algorithm were derived using the method
+of characteristics and integral transport equation. Two sets of solution
+bounds were considered, one considering only values along the upstream
+line segment traversed in a time step, and the other considering a spherical
+neighborhood that encompasses this line segment. The former set of solution
+bounds is much tighter, which has the advantage that there is a smaller range
+of limiting coefficient values that can be used, but has the disadvantage that
+there is less room for antidiffusion.
+
+The traditional FCT phenomenon known as ``stair-stepping'',
+``terracing'', or ``plateauing'' is still an open issue, particularly for
+fully explicit temporal discretizations; however, these effects
+have been shown to diminish or disappear when using SSPRK33 as opposed
+to forward Euler. In addition, these effects are less pronounced for EV-FCT
+than in the classic FEM-FCT scheme using the standard Galerkin method as
+the high-order method in FCT.
+
+The explicit temporal discretizations of the described FCT scheme yield a
+relatively robust algorithm; however, implicit and steady-state discretizations
+are much less robust, suffering from severe nonlinear convergence difficulties
+in some problems. Implicit schemes become increasingly divergent as the CFL
+number is increased. The main complication with implicit and steady-state
+FCT schemes is that the imposed solution bounds are implicit with the solution,
+and thus the imposed solution bounds change with each iteration of the
+nonlinear solver.

@@ -1,7 +1,114 @@
-2 pages
-\begin{itemize}
-\item model equation (one direction of Sn, Omega)
-\item problem formulation - solution space, domain, BC, IC
-\item application of CGFEM
-\item temporal discretizations - SS, FE, Theta, SSPRK
-\end{itemize}
+For the remainder of this paper, the scalar transport model given by
+Equation \eqref{eq:transport_scalar} will be generalized to a scalar
+balance equation having reaction terms and source terms, with the following
+notation:
+\begin{equation}\label{eq:scalar_model}
+  \ppt{u} + v\di\cdot\nabla u\xt
+    + \sigma(\x) u\xt = q\xt
+  \eqc
+\end{equation}
+where $u$ is the balanced quantity, $v$ is the transport speed, $\di$ is
+a constant, uniform unit direction vector, $\sigma$ is the reaction coefficient,
+and $q$ is the source function.
+
+The problem formulation is completed by supplying initial conditions
+(for transient problems):
+\begin{equation}
+  u(\x,0) = u^0(\x) \quad \x\in\domain \eqc
+\end{equation}
+where $\domain$ denotes the problem domain, as well as boundary conditions,
+which will be assumed to be incoming flux boundary conditions:
+\begin{equation}
+  u\xt = \incoming\xt \quad \x\in\partial\domain^- \eqc
+\end{equation}
+where $\incoming\xt$ is the incoming boundary data function, and
+$\partial\domain^-$ is the incoming portion of the domain boundary:
+\begin{equation}
+  \partial\domain^- \equiv \{ \x\in\partial\domain :
+  \normalvector(\x)\cdot\di \leq 0 \} \eqc
+\end{equation}
+where $\normalvector(\x)$ is the outward-pointing normal vector on the domain
+boundary at point $\x$.
+
+Application of the standard Galerkin method with linear basis functions
+gives the following semi-discrete system:
+\begin{subequations}
+  \begin{equation}
+    \M^C\ddt{\U} + \A\U(t) = \ssrhs(t) \eqc
+  \end{equation}
+  \begin{equation}
+    M^C_{i,j} \equiv \intSij \test_i(\x)\test_j(\x) dV \eqc
+  \end{equation}
+  \begin{equation}
+    A_{i,j} \equiv \intSij\left(
+    v\di\cdot\nabla\test_j(\x) +
+    \sigma(\x)\test_j(\x)\right)\test_i(\x) dV \eqc
+  \end{equation}
+  \begin{equation}
+    b_i(t) \equiv \intSi q(\x)\test_i(\x) dV \eqc
+  \end{equation}
+\end{subequations}
+where $U_j(t)$ are the degrees of freedom of the approximate solution $u_h$:
+\begin{equation}
+  u_h\xt = \sumj U_j(t) \test_j(\x) \eqp
+\end{equation}
+
+A number of temporal discretizations are considered in this paper.
+Fully explicit temporal discretizations considered include forward Euler:
+\begin{equation}
+  \M^C\frac{\U^{n+1}-U^n}{\dt} + \A\U^n = \ssrhs^n \eqc
+\end{equation}
+as well as Strong Stability Preserving Runge Kutta (SSPRK) methods that
+can be expressed in the following form:
+\begin{subequations}\label{eq:ssprk}
+\begin{align}
+  & \hat{\U}^0 = \U^n \eqc \\
+  & \hat{\U}^i = \gamma_i \U^n + \zeta_i \left[
+      \hat{\U}^{i-1}
+      + \dt\mathbf{G}(t^n+c_i\dt, \hat{\U}^{i-1})\right]
+    \eqc \quad
+    i = 1,\ldots,s
+    \eqc \\
+  & \U^{n+1} = \hat{\U}^s \eqp
+\end{align}
+\end{subequations}
+where $s$ is the number of stages, $\gamma_i$, $\zeta_i$, and $c_i$ are
+coefficients that correspond to the particular SSPRK method, and
+$\mathbf{G}$ represents the right-hand-side function of an ODE
+\begin{equation}
+  \ddt{\U} = \mathbf{G}(t,\U(t)) \eqc
+\end{equation}
+which in this case is the following:
+\begin{equation}
+  \mathbf{G}(t,\U(t)) = (\M^C)^{-1}
+    \left(\ssrhs(t) - \A\U(t)\right) \eqp
+\end{equation}
+The form given in Equation \eqref{eq:ssprk} makes it clear that these
+SSPRK methods can be expressed as a linear combination of steps resembling
+forward Euler steps, with the only difference being that the explicit
+time dependence of the source is not necessarily the old time $t^n$ but
+instead is a stage time $t^n + c_i\dt$. The 3-stage, 3rd-order accurate SSPRK
+method has the following coefficients:
+\begin{equation}
+  \gamma = \left[\begin{array}{c}
+    0\\\frac{3}{4}\\\frac{1}{3}\end{array}\right]
+  \eqc \quad
+  \zeta = \left[\begin{array}{c}
+    1\\\frac{1}{4}\\\frac{2}{3}\end{array}\right]
+  \eqc \quad
+  c = \left[\begin{array}{c}0\\1\\\frac{1}{2}\end{array}\right] \eqp
+\end{equation}
+SSPRK methods are a subclass of Runge Kutta methods that offer high-order
+accuracy while preserving stability \cite{gottlieb}\cite{macdonald}.
+The theta method is also considered for temporal discretization:
+\begin{equation}
+  \M^C\frac{\U^{n+1}-U^n}{\dt} + \A((1-\theta)\U^n + \theta\U^{n+1})
+  = (1-\theta)\ssrhs^n + \theta\ssrhs^{n+1} \eqc
+\end{equation}
+where $0\leq\theta\leq 1$ is the implicitness parameter, where for example
+$\theta$ values of $0$, $\frac{1}{2}$, and $1$ correspond to forward Euler,
+Crank-Nicolson, and backward Euler, respectively. Finally, the steady-state
+case is also considered:
+\begin{equation}
+  \A\U = \ssrhs \eqp
+\end{equation}

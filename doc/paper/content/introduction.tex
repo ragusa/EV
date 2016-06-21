@@ -5,7 +5,7 @@ therapy, astrophysics, radiation shielding, and high energy density physics.
 In this paper, focus is on solution techniques applicable to the first-order
 form of the transport equation, discretized in angle with discrete ordinates,
 which gives what is commonly called the $S_N$ equations:
-\begin{equation}
+\begin{equation}\label{eq:transport_scalar}
   \frac{1}{v(E)}\ppt{\aflux} + \di\cdot\nabla\aflux\xdet
     + \totalxsec\xet\aflux\xdet = \Qtot\xdet
   \eqc
@@ -98,13 +98,13 @@ as well. Because speeds in radiation transport (such as the speed of light)
 are so large, implicit and steady-state time discretization are important
 considerations, given the CFL time step size restriction for fully explicit
 methods. Thus this paper also considers implicit and steady-state FCT, which
-has been implemented in the past \cite{implicit_FCT}.
+has been implemented before \cite{implicit_FCT}.
 
 This paper is organized as follows. Section \ref{sec:preliminaries} gives
 some preliminaries such as the problem formulation and discretization.
 Recall that the FCT algorithm uses a low-order scheme and a high-order scheme.
 Section \ref{sec:low} presents the low-order scheme, Section \ref{sec:high}
 presents the high-order scheme (which is based on entropy viscosity),
-and Section \ref{sec:fct} presents FCT scheme that combines the two. Then, Section
+and Section \ref{sec:fct} presents the FCT scheme that combines the two. Then, Section
 \ref{sec:results} presents results for a number of test problems, and
 Section \ref{sec:conclusions} gives conclusions.
