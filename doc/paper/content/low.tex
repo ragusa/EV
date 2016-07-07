@@ -1,6 +1,99 @@
 \begin{itemize}
-  \item definitions - graph-theoretic bilinear form, viscosity, scheme
   \item M-matrix
   \item positivity preservation
   \item local DMP
 \end{itemize}
+
+The role of a low-order scheme in the context of the FCT algorithm is to
+provide a fail-safe solution, which has desirable properties such as
+positivity-preservation and lack of spurious oscillations. These properties
+come at the cost of excessive artificial diffusion and thus a lesser degree
+of accuracy. However, the idea of the FCT algorithm is to undo this disadvantage
+as much as possible without violating some physically-motivated solution bounds.
+
+Here positivity-preservation and monotonicity are achieved by satisfying
+the M-matrix property of the matrix inverted in the low-order system.
+M-matrices are a subset of inverse-positive matrices and have the monotone
+property; for the linear system $\A\x = \ssrhs$, an M-matrix $\A$ has the property
+\begin{equation}
+  \ssrhs \geq 0 \quad \Rightarrow \quad \x \geq 0 \eqp
+\end{equation}
+Thus proving positivity-preservation, given the linear system matrix is an
+M-matrix, is achieved by proving positivity of the right-hand-side vector $\ssrhs$.
+This monotonicity property of the linear system matrix is also responsible for
+the lack of spurious oscillations.
+
+In this section, the first-order viscosity method introduced by Guermond
+\cite{guermond_firstorder} will be adapted to the model equation given by
+Equation \eqref{eq:scalar_model}. This method uses an element-wise artificial
+viscosity definition in conjunction with a graph-theoretic local viscous
+bilinear form that makes the method valid for arbitrary element shapes and
+dimensions. These definitions will be shown to ensure that the system matrix
+is a non-singular M-matrix.
+
+The graph-theoretic local viscous bilinear form has the following definition.
+%-------------------------------------------------------------------------------
+\begin{defn}[Local Viscous Bilinear Form]
+   The local viscous bilinear form for element $K$ is defined as follows:
+   \begin{equation}\label{eq:bilinearform}
+     d_K(\test_j,\test_i) \equiv \left\{\begin{array}{l l}
+       -\frac{1}{n_K - 1}V_K & i\ne j\eqc \quad i,j\in \indices_K\eqc \\
+       V_K                   & i = j \eqc \quad i,j\in \indices_K\eqc \\
+       0                     & \mbox{otherwise}\eqc
+     \end{array}\right.
+   \end{equation}
+   where $V_K$ is the volume of cell $K$, $\indices_K$ is the set of degree
+   of freedom indices such that the corresponding test function has support
+   on cell $K$, and $n_K$ is the number of indices in that set.
+\end{defn}
+%-------------------------------------------------------------------------------
+This bilinear form bears resemblance to a standard Laplacian bilinear form:
+the diagonal entries are positive, the off-diagonal entries are negative, and
+the row sums are zero. These facts will be invoked in the proof of the M-matrix
+conditions later in this section.
+
+The element-wise viscosity definition from \cite{guermond_firstorder} is
+adapted to account for the reaction term in Equation \eqref{eq:scalar_model}
+but otherwise remains unchanged.
+%-------------------------------------------------------------------------------
+\begin{defn}[Low-Order Viscosity]
+  The low-order viscosity for cell $K$ is defined as follows:
+  \begin{equation}
+    \nu^L_K \equiv \max\limits_{i\ne j\in\indices_K}
+      \frac{\max(0,A_{i,j})}
+      {-\sum\limits_{T\subset S_{i,j}}d_T(\test_j,\test_i)}
+      \eqc
+  \end{equation}
+  where $A_{i,j}$ is the $i,j$th entry of the Galerkin steady-state matrix
+  given by Equation \eqref{eq:Aij}.
+\end{defn}
+%-------------------------------------------------------------------------------
+This viscosity definition is designed to give the minimum amount of artificial
+diffusion without violating the M-matrix conditions.
+
+Now the low-order system will be described.
+Consider a modification of the Galerkin scheme given in Equation \eqref{eq:galerkin_semidiscrete}
+which lumps the mass matrix ($\M^C \rightarrow \M^L$) and adds an artificial
+diffusion operator $\D^L$, called the low-order diffusion matrix:
+\begin{equation}
+  \M^L\ddt{\U^L} + (\A + \D^L)\U(t) = \ssrhs(t) \eqc
+\end{equation}
+where $\U^L(t)$ denotes the discrete low-order solution values. The low-order
+diffusion matrix is assembled element-wise using the local viscous bilinear
+form and low-order viscosity definitions:
+\begin{equation}\label{eq:low_order_diffusion_matrix}
+  D_{i,j}^L \equiv
+    \sum\limits_{K\subset S_{i,j}}\nu^L_K
+    d_K(\test_j,\test_i) \eqp
+\end{equation}
+
+Now the low-order scheme has been fully described, and some statements will be
+made on its properties. Firstly the M-matrix property will be claimed for
+the matrix $\A^L\equiv\A + \D^L$, which will hereafter be referred to as the
+low-order steady-state system matrix.
+%-------------------------------------------------------------------------------
+\begin{thm}[M-matrix property]
+  The low-order steady-state system matrix $\A^L$ is a non-singular M-matrix.
+\end{thm}
+\input{m_matrix}
+%-------------------------------------------------------------------------------

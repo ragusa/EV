@@ -1,16 +1,16 @@
 \chapter*{NOMENCLATURE}
 \addcontentsline{toc}{chapter}{NOMENCLATURE}  
 
-This section is organized as follows: 
-Section \ref{sec:abbreviations} lists the abbreviations used in this dissertation,
-Section \ref{sec:symbols} lists the symbols used in this dissertation,
-and Section \ref{sec:conventions} discusses conventions used in this dissertation.
+%This section is organized as follows: 
+%Section \ref{sec:abbreviations} lists the abbreviations used in this dissertation,
+%Section \ref{sec:symbols} lists the symbols used in this dissertation,
+%and Section \ref{sec:conventions} discusses conventions used in this dissertation.
+%
+%%==============================================================================
+%
+%\section{Abbreviations\label{sec:abbreviations}}
 
-%==============================================================================
-
-\section{Abbreviations\label{sec:abbreviations}}
-
-\begin{longtable}{l l}
+\begin{tabular}{l l}
 BE    & backward (implicit) Euler\\
 CFEM  & continuous finite element method\\
 CN    & Crank-Nicolson\\
@@ -29,192 +29,191 @@ PDE   & partial differential equation\\
 RK    & Runge-Kutta\\
 SS    & steady-state\\
 SSPRK & strong stability-preserving Runge-Kutta\\
-SSPRK33 & 3-stage, 3-order-accurate SSPRK scheme,\\
-        & also known as the Shu-Osher method\\
-\end{longtable}
+SSPRK33 & 3-stage, 3-order-accurate SSPRK scheme\\
+\end{tabular}
 
 %==============================================================================
 
-\section{Symbols\label{sec:symbols}}
-
-\begin{longtable}{l p{4.8in}}
-%==============================================================================
-% Latin alphabet: A-Z
-%==============================================================================
-% A-B
-%------------------------------------------------------------------------------
-$\speedofsound$    & speed of sound\\
-$\ssmatrix$        & steady-state matrix\\
-$\highorderssmatrix$ & high-order steady-state matrix\\
-$\loworderssmatrix$ & low-order steady-state matrix\\
-$\bathymetry$      & bathymetry (bottom topography) function for shallow
-                     water equations\\
-$\ssrhs$           & steady-state right hand side vector\\
-$\localviscbilinearform{\cellindex}{i}{j}$ &
-                     viscous bilinear form for cell $\cellindex$ and test
-                     functions $\testfunction_i$ and $\testfunction_j$\\
-
-% C
-%------------------------------------------------------------------------------
-$\speedoflight$    & speed of light\\
-$\RKtimecoef_i$    & time step size fraction for stage $i$ of a
-                     Runge-Kutta time step\\
-$\entropyjumpcoef$ & coefficient for the entropy jump term in the definition
-                     of entropy viscosity\\
-$\entropyresidualcoef$ & coefficient for the entropy residual term in the
-                         definition of entropy viscosity\\
-
-% D
-%------------------------------------------------------------------------------
-$\highorderdiffusionmatrix$ & high-order diffusion matrix\\
-$\loworderdiffusionmatrix$ & low-order diffusion matrix\\
-$\domain$          & problem domain\\
-$\domainboundary$  & problem domain boundary\\
-$\cellvolume$      & volume of cell $\cellindex$\\
-
-% E-K
-%------------------------------------------------------------------------------
-$\unitvector{d}$   & unit vector for dimension $d$\\
-$\totalenergy$     & total energy density\\
-$\consfluxscalar$  & conservation law flux function for scalar case\\
-$\consfluxvector(\vectorsolution)$  & conservation law flux function for vector case\\
-$\gravity$         & acceleration due to gravity\\
-$\height$          & height\\
-$\indicescell$     & set of degree of freedom indices with support on
-                     cell $\cellindex$\\
-$\entropyjump_F$ & entropy jump for face $F$\\
-$\cellindex$       & cell index\\
-
-% L-M
-%------------------------------------------------------------------------------
-$\limitermatrix$   & matrix of limiting coefficients\\
-$\limiterletter_{i,j}$ & limiting coefficient for degrees of freedom $i$
-                         and $j$\\
-$\limiterletter^\pm_i$ & Zalesak intermediate limiting coefficient bounds for
-                         degree of freedom $i$\\
-$\momentum$        & momentum\\
-$\consistentmassmatrix$ & consistent mass matrix\\
-$\lumpedmassmatrix$ & lumped mass matrix\\
-
-% N-P
-%------------------------------------------------------------------------------
-$\timeindex$       & time index\\
-$\normalvector$    & normal vector to a surface\\
-$\cardinality$     & cardinality of cell $\cellindex$\\
-$\pressure$        & pressure\\
-$\correctionfluxvector$ & FCT correction flux vector\\
-$\correctionfluxmatrix$ & matrix of FCT internodal correction flux entries\\
-$\correctionfluxij$ & FCT internodal correction flux for degrees of freedom
-                      $i$ and $j$\\
-$\correctionfluxsumsi$ & sum of positive ($+$) and negative ($-$) FCT internodal
-                         correction fluxes for degree of freedom $i$\\
-
-% Q-T
-%------------------------------------------------------------------------------
-$\scalarsource$    & scalar source function\\
-$\heightmomentum$  & ``momentum'' for shallow water equations,
-                     $\height\velocity$\\
-$\limitedfluxboundsi$ & upper and lower bounds for limited flux sum for degree
-                        of freedom $i$\\
-$\ssres$           & steady-state residual vector\\
-$\entropyresidual_\cellindex$ & entropy residual for cell $\cellindex$\\
-$\RKnstages$       & number of stages for a Runge-Kutta scheme\\
-$\support_i$       & support of FEM test/basis function $i$\\
-$\support\ij$      & shared support of FEM test/basis functions $i$ and $j$\\
-$\conssource(\vectorsolution)$ & conservation law source function\\
-$\timevalue$       & time\\
-
-% U
-%------------------------------------------------------------------------------
-$\RKstagetime_i$   & stage $i$ time of a Runge-Kutta time step\\
-$\scalarsolution$  & solution variable for a scalar conservation law\\
-$\vectorsolution$  & vector of solution variables for a conservation law
-                     system\\
-$\approximatescalarsolution$ & numerical approximation to $\scalarsolution$\\
-$\solutionvector$  & solution vector\\
-$\RKstagesolution^i$ & stage solution vector for stage $i$ of a Runge-Kutta time
-                       step\\
-$\RKintermediatesolution^i$ & intermediate solution vector for stage $i$ of a
-                              Runge-Kutta time step\\
-$\highordersolution$ & high-order solution vector\\
-$\lowordersolution$ & low-order solution vector\\
-
-% V-Z
-%------------------------------------------------------------------------------
-$\speed$           & speed\\
-$\velocity$        & velocity\\
-$\volume$          & volume\\
-$\solutionbound_i^\pm$ & upper and lower solution bounds for degree of freedom $i$\\
-$\DMPbounds_i$     & upper and lower DMP bounds for degree of freedom $i$\\
-$\x$               & spatial position\\
-%==============================================================================
-% Greek alphabet
-%==============================================================================
-% alpha - mu
-%------------------------------------------------------------------------------
-$\RKoldsolutioncoef_i$ & coefficient for the old solution vector in stage
-                         $i$ of a Runge-Kutta time step\\
-$\RKstagesolutioncoef_i$ & coefficient for the stage solution vector in stage
-                           $i$ of a Runge-Kutta time step\\
-$\timestepsize$    & time step size\\
-$\entropy$         & entropy function\\
-$\theta$           & parameter for $\theta$ time discretization scheme\\
-
-% nu - omega
-%------------------------------------------------------------------------------
-$\lowordercellviscosity$  & low-order viscosity for cell $\cellindex$\\
-$\highordercellviscosity$ & high-order viscosity for cell $\cellindex$\\
-$\entropycellviscosity$   & entropy viscosity for cell $\cellindex$\\
-$\density$         & density\\
-$\reactioncoef$    & reaction coefficient\\
-$\totalcrosssection$ & total macroscopic cross-section\\
-$\testfunction$    & FEM test/basis function\\
-$\angularflux$     & angular flux\\
-$\directionvector$ & unit transport direction vector\\
-%==============================================================================
-\end{longtable}
-
-%==============================================================================
-
-\section{Conventions\label{sec:conventions}}
-
-In general, any symbol in non-boldface font is a scalar (zero-order tensor),
-any lowercase symbol in a boldface font is a vector (first-order tensor),
-and any uppercase symbol in a boldface font is a matrix (second-order tensor).
-One exception to this rule is the solution vector, $\solutionvector$, which
-is uppercase despite being a vector, not a matrix. This is to distinguish
-it from the symbol for a vector-valued solution function,
-$\vectorsolution$, since ``u'' is traditionally used in both circumstances.
-
-Individual matrix entries are denoted by the non-boldface equivalent of
-the matrix symbol, with two subscripted indices, and individual vector entries
-are denoted by the non-boldface equivalent, with one subscripted index.
-Symbols used for degree of freedom indices include $i$, $j$, $k$, and $\ell$,
-and cell indices are usually denoted by $\cell$.
-Temporal indices
-use $n$ as a superscript, and iteration indices use $(\ell)$
-as a superscript. Other symbols appearing in subscripts or superscripts
-are typically descriptors, e.g., to distinguish a function for different
-components of a vector-valued system, or to distinguish a low-order order
-vs. a high-order quantity.
-
-Sums often give only the summation index, with the lower/upper bounds or the
-set being understood from context. For example, if the set of all degrees of freedom indices
-is $\mathcal{I}(\domain)=\{1,\ldots,\maxdof\}$, where $\maxdof$ is the maximum
-degree of freedom index, then the sum notation
-$\sum\limits_{j\in\mathcal{I}(\domain)}$ or $\sum\limits_{j=1}^N$ is shortened
-to $\sumj$.
-
-The notation $\mathbf{a}\otimes\mathbf{b}$ denotes a tensor product, otherwise
-known as an outer product, of column vectors $\mathbf{a}$ and $\mathbf{b}$,
-i.e., $\mathbf{a}\otimes\mathbf{b}\equiv\mathbf{a}\mathbf{b}^T$. Thus,
-$(\mathbf{a}\otimes\mathbf{b})\ij = a_i b_j$.
-
-Functions of time often omit the time argument and instead take the time index
-as a superscript, e.g., $f(\timevalue^\timeindex)$ is abbreviated as
-$f^\timeindex$. Similarly, functions of a time-dependent solution or other
-time-dependent arguments are sometimes abbreviated by dropping the dependence
-on the argument and adopting the time index as a superscript, e.g.,
-$f(\approximatescalarsolution^\timeindex)$ becomes $f^\timeindex$.
+%\section{Symbols\label{sec:symbols}}
+%
+%\begin{longtable}{l p{4.8in}}
+%%==============================================================================
+%% Latin alphabet: A-Z
+%%==============================================================================
+%% A-B
+%%------------------------------------------------------------------------------
+%$\speedofsound$    & speed of sound\\
+%$\ssmatrix$        & steady-state matrix\\
+%$\highorderssmatrix$ & high-order steady-state matrix\\
+%$\loworderssmatrix$ & low-order steady-state matrix\\
+%$\bathymetry$      & bathymetry (bottom topography) function for shallow
+%                     water equations\\
+%$\ssrhs$           & steady-state right hand side vector\\
+%$\localviscbilinearform{\cellindex}{i}{j}$ &
+%                     viscous bilinear form for cell $\cellindex$ and test
+%                     functions $\testfunction_i$ and $\testfunction_j$\\
+%
+%% C
+%%------------------------------------------------------------------------------
+%$\speedoflight$    & speed of light\\
+%$\RKtimecoef_i$    & time step size fraction for stage $i$ of a
+%                     Runge-Kutta time step\\
+%$\entropyjumpcoef$ & coefficient for the entropy jump term in the definition
+%                     of entropy viscosity\\
+%$\entropyresidualcoef$ & coefficient for the entropy residual term in the
+%                         definition of entropy viscosity\\
+%
+%% D
+%%------------------------------------------------------------------------------
+%$\highorderdiffusionmatrix$ & high-order diffusion matrix\\
+%$\loworderdiffusionmatrix$ & low-order diffusion matrix\\
+%$\domain$          & problem domain\\
+%$\domainboundary$  & problem domain boundary\\
+%$\cellvolume$      & volume of cell $\cellindex$\\
+%
+%% E-K
+%%------------------------------------------------------------------------------
+%$\unitvector{d}$   & unit vector for dimension $d$\\
+%$\totalenergy$     & total energy density\\
+%$\consfluxscalar$  & conservation law flux function for scalar case\\
+%$\consfluxvector(\vectorsolution)$  & conservation law flux function for vector case\\
+%$\gravity$         & acceleration due to gravity\\
+%$\height$          & height\\
+%$\indicescell$     & set of degree of freedom indices with support on
+%                     cell $\cellindex$\\
+%$\entropyjump_F$ & entropy jump for face $F$\\
+%$\cellindex$       & cell index\\
+%
+%% L-M
+%%------------------------------------------------------------------------------
+%$\limitermatrix$   & matrix of limiting coefficients\\
+%$\limiterletter_{i,j}$ & limiting coefficient for degrees of freedom $i$
+%                         and $j$\\
+%$\limiterletter^\pm_i$ & Zalesak intermediate limiting coefficient bounds for
+%                         degree of freedom $i$\\
+%$\momentum$        & momentum\\
+%$\consistentmassmatrix$ & consistent mass matrix\\
+%$\lumpedmassmatrix$ & lumped mass matrix\\
+%
+%% N-P
+%%------------------------------------------------------------------------------
+%$\timeindex$       & time index\\
+%$\normalvector$    & normal vector to a surface\\
+%$\cardinality$     & cardinality of cell $\cellindex$\\
+%$\pressure$        & pressure\\
+%$\correctionfluxvector$ & FCT correction flux vector\\
+%$\correctionfluxmatrix$ & matrix of FCT internodal correction flux entries\\
+%$\correctionfluxij$ & FCT internodal correction flux for degrees of freedom
+%                      $i$ and $j$\\
+%$\correctionfluxsumsi$ & sum of positive ($+$) and negative ($-$) FCT internodal
+%                         correction fluxes for degree of freedom $i$\\
+%
+%% Q-T
+%%------------------------------------------------------------------------------
+%$\scalarsource$    & scalar source function\\
+%$\heightmomentum$  & ``momentum'' for shallow water equations,
+%                     $\height\velocity$\\
+%$\limitedfluxboundsi$ & upper and lower bounds for limited flux sum for degree
+%                        of freedom $i$\\
+%$\ssres$           & steady-state residual vector\\
+%$\entropyresidual_\cellindex$ & entropy residual for cell $\cellindex$\\
+%$\RKnstages$       & number of stages for a Runge-Kutta scheme\\
+%$\support_i$       & support of FEM test/basis function $i$\\
+%$\support\ij$      & shared support of FEM test/basis functions $i$ and $j$\\
+%$\conssource(\vectorsolution)$ & conservation law source function\\
+%$\timevalue$       & time\\
+%
+%% U
+%%------------------------------------------------------------------------------
+%$\RKstagetime_i$   & stage $i$ time of a Runge-Kutta time step\\
+%$\scalarsolution$  & solution variable for a scalar conservation law\\
+%$\vectorsolution$  & vector of solution variables for a conservation law
+%                     system\\
+%$\approximatescalarsolution$ & numerical approximation to $\scalarsolution$\\
+%$\solutionvector$  & solution vector\\
+%$\RKstagesolution^i$ & stage solution vector for stage $i$ of a Runge-Kutta time
+%                       step\\
+%$\RKintermediatesolution^i$ & intermediate solution vector for stage $i$ of a
+%                              Runge-Kutta time step\\
+%$\highordersolution$ & high-order solution vector\\
+%$\lowordersolution$ & low-order solution vector\\
+%
+%% V-Z
+%%------------------------------------------------------------------------------
+%$\speed$           & speed\\
+%$\velocity$        & velocity\\
+%$\volume$          & volume\\
+%$\solutionbound_i^\pm$ & upper and lower solution bounds for degree of freedom $i$\\
+%$\DMPbounds_i$     & upper and lower DMP bounds for degree of freedom $i$\\
+%$\x$               & spatial position\\
+%%==============================================================================
+%% Greek alphabet
+%%==============================================================================
+%% alpha - mu
+%%------------------------------------------------------------------------------
+%$\RKoldsolutioncoef_i$ & coefficient for the old solution vector in stage
+%                         $i$ of a Runge-Kutta time step\\
+%$\RKstagesolutioncoef_i$ & coefficient for the stage solution vector in stage
+%                           $i$ of a Runge-Kutta time step\\
+%$\timestepsize$    & time step size\\
+%$\entropy$         & entropy function\\
+%$\theta$           & parameter for $\theta$ time discretization scheme\\
+%
+%% nu - omega
+%%------------------------------------------------------------------------------
+%$\lowordercellviscosity$  & low-order viscosity for cell $\cellindex$\\
+%$\highordercellviscosity$ & high-order viscosity for cell $\cellindex$\\
+%$\entropycellviscosity$   & entropy viscosity for cell $\cellindex$\\
+%$\density$         & density\\
+%$\reactioncoef$    & reaction coefficient\\
+%$\totalcrosssection$ & total macroscopic cross-section\\
+%$\testfunction$    & FEM test/basis function\\
+%$\angularflux$     & angular flux\\
+%$\directionvector$ & unit transport direction vector\\
+%%==============================================================================
+%\end{longtable}
+%
+%%==============================================================================
+%
+%\section{Conventions\label{sec:conventions}}
+%
+%In general, any symbol in non-boldface font is a scalar (zero-order tensor),
+%any lowercase symbol in a boldface font is a vector (first-order tensor),
+%and any uppercase symbol in a boldface font is a matrix (second-order tensor).
+%One exception to this rule is the solution vector, $\solutionvector$, which
+%is uppercase despite being a vector, not a matrix. This is to distinguish
+%it from the symbol for a vector-valued solution function,
+%$\vectorsolution$, since ``u'' is traditionally used in both circumstances.
+%
+%Individual matrix entries are denoted by the non-boldface equivalent of
+%the matrix symbol, with two subscripted indices, and individual vector entries
+%are denoted by the non-boldface equivalent, with one subscripted index.
+%Symbols used for degree of freedom indices include $i$, $j$, $k$, and $\ell$,
+%and cell indices are usually denoted by $\cell$.
+%Temporal indices
+%use $n$ as a superscript, and iteration indices use $(\ell)$
+%as a superscript. Other symbols appearing in subscripts or superscripts
+%are typically descriptors, e.g., to distinguish a function for different
+%components of a vector-valued system, or to distinguish a low-order order
+%vs. a high-order quantity.
+%
+%Sums often give only the summation index, with the lower/upper bounds or the
+%set being understood from context. For example, if the set of all degrees of freedom indices
+%is $\mathcal{I}(\domain)=\{1,\ldots,\maxdof\}$, where $\maxdof$ is the maximum
+%degree of freedom index, then the sum notation
+%$\sum\limits_{j\in\mathcal{I}(\domain)}$ or $\sum\limits_{j=1}^N$ is shortened
+%to $\sumj$.
+%
+%The notation $\mathbf{a}\otimes\mathbf{b}$ denotes a tensor product, otherwise
+%known as an outer product, of column vectors $\mathbf{a}$ and $\mathbf{b}$,
+%i.e., $\mathbf{a}\otimes\mathbf{b}\equiv\mathbf{a}\mathbf{b}^T$. Thus,
+%$(\mathbf{a}\otimes\mathbf{b})\ij = a_i b_j$.
+%
+%Functions of time often omit the time argument and instead take the time index
+%as a superscript, e.g., $f(\timevalue^\timeindex)$ is abbreviated as
+%$f^\timeindex$. Similarly, functions of a time-dependent solution or other
+%time-dependent arguments are sometimes abbreviated by dropping the dependence
+%on the argument and adopting the time index as a superscript, e.g.,
+%$f(\approximatescalarsolution^\timeindex)$ becomes $f^\timeindex$.
 
 \pagebreak{}

@@ -32,14 +32,14 @@ boundary at point $\x$.
 
 Application of the standard Galerkin method with linear basis functions
 gives the following semi-discrete system:
-\begin{subequations}
+\begin{subequations}\label{eq:galerkin_semidiscrete}
   \begin{equation}
     \M^C\ddt{\U} + \A\U(t) = \ssrhs(t) \eqc
   \end{equation}
   \begin{equation}
     M^C_{i,j} \equiv \intSij \test_i(\x)\test_j(\x) dV \eqc
   \end{equation}
-  \begin{equation}
+  \begin{equation}\label{eq:Aij}
     A_{i,j} \equiv \intSij\left(
     v\di\cdot\nabla\test_j(\x) +
     \sigma(\x)\test_j(\x)\right)\test_i(\x) dV \eqc
@@ -56,7 +56,7 @@ where $U_j(t)$ are the degrees of freedom of the approximate solution $u_h$:
 A number of temporal discretizations are considered in this paper.
 Fully explicit temporal discretizations considered include forward Euler:
 \begin{equation}
-  \M^C\frac{\U^{n+1}-U^n}{\dt} + \A\U^n = \ssrhs^n \eqc
+  \M^C\frac{\U^{n+1}-\U^n}{\dt} + \A\U^n = \ssrhs^n \eqc
 \end{equation}
 as well as Strong Stability Preserving Runge Kutta (SSPRK) methods that
 can be expressed in the following form:
@@ -102,7 +102,7 @@ SSPRK methods are a subclass of Runge Kutta methods that offer high-order
 accuracy while preserving stability \cite{gottlieb}\cite{macdonald}.
 The theta method is also considered for temporal discretization:
 \begin{equation}
-  \M^C\frac{\U^{n+1}-U^n}{\dt} + \A((1-\theta)\U^n + \theta\U^{n+1})
+  \M^C\frac{\U^{n+1}-\U^n}{\dt} + \A((1-\theta)\U^n + \theta\U^{n+1})
   = (1-\theta)\ssrhs^n + \theta\ssrhs^{n+1} \eqc
 \end{equation}
 where $0\leq\theta\leq 1$ is the implicitness parameter, where for example
