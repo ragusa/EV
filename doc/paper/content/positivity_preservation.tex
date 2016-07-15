@@ -1,0 +1,40 @@
+% !TEX root = ../paper.tex
+
+This is immediate for the steady-state case due to the assumption that the
+source $q$ is non-negative. The following theorem gives that the system
+right-hand-side vector for the theta system is non-negative. This theorem
+extends to explicit Euler discretization since explicit Euler is a case
+of the theta discretization.
+%-------------------------------------------------------------------------------
+\begin{thm}{Non-Negativity of the Theta Low-Order System Right-Hand-Side}
+  If the old solution $\U^n$ is non-negative and
+  the time step size $\dt$ satisfies
+\begin{equation}\label{eq:theta_cfl}
+   \dt \leq \frac{M^L_{i,i}}{(1-\theta)A_{i,i}^L}
+    \eqc\quad\forall i \eqc
+\end{equation}
+  then the new solution $\U^{L,n+1}$ of the Theta low-order
+  system given by Equation \eqref{eq:low_theta} is non-negative:
+  $U^{L,n+1}_i \geq 0$, $\forall i$.
+\end{thm}
+
+\begin{prf}
+The right-hand-side vector $\mathbf{y}$ of this system has the entries
+\[
+  y_i = \dt b^\theta_i + \pr{M^L_{i,i} - (1-\theta)\dt A^L_{i,i}} U^n_i
+      - (1-\theta)\dt\sumjnoti A^L_{i,j} U^n_j
+  \eqp
+\]
+It now just remains to prove that these entries are non-negative.
+As stated previously, the source function $q$ is assumed
+to be non-negative and thus the steady-state right-hand-side
+vector is non-negative. Due to the time step size assumption
+given by Equation \eqref{eq:theta_cfl},
+\[
+  M^L_{i,i} - (1-\theta)\dt A^L_{i,i} \geq 0 \eqc
+\]
+and because the off-diagonal terms of $\A^L$ are non-negative, the off-diagonal
+sum term is also non-negative. Thus $y_i$ is a sum of non-negative
+terms, and the theorem is proven.
+\end{prf}
+%-------------------------------------------------------------------------------

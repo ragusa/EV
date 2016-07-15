@@ -1,3 +1,105 @@
+% !TEX root = ../paper.tex
+
 \begin{itemize}
   \item definitions - entropy residual, entropy viscosity, scheme
 \end{itemize}
+
+This section describes the entropy viscosity method applied to the scalar
+PDE given by Equation \eqref{eq:scalar_model}. Recall that the entropy
+viscosity method is to be used as the high-order scheme in the FCT algorithm,
+instead of the standard Galerkin method, as has been done previously
+\cite{kuzmin_FCT}.
+Usage of the entropy viscosity method in the FCT algorithm ensures convergence
+to the entropy solution \cite{guermond_secondorder}.
+
+The entropy viscosity method has been applied to a number of PDEs
+such as general scalar conservation laws of the form
+\begin{equation}\label{eq:scalar_conservation_law}
+  \ppt{u} + \nabla\cdot\mathbf{f}(u) = 0
+\end{equation}
+and the inviscid Euler equations \cite{guermond_ev}. The scalar model studied
+in this paper does not fit into the category of scalar conservation laws;
+instead, it is more accurately described as a \emph{balance} law, due to
+the addition of the reaction term $\sigma u$ and source term $q$. Application
+of entropy viscosity to this equation is novel in this work.
+
+Since the weak form of the problem does not have a unique solution, one
+must supply additional conditions called \emph{admissibility} conditions or
+\emph{entropy} conditions to filter out spurious weak solutions, leaving
+only the physical weak solution, often called the entropy solution.
+A number of entropy conditions are valid, but usually the most convenient
+entropy condition for use in numerical methods takes the form of an
+\emph{entropy inequality}, such as the following, which is valid for the
+general scalar conservation law given by Equation \eqref{eq:scalar_conservation_law}:
+\begin{equation}
+  \ppt{\eta(u)} + \nabla\cdot\mathbf{\Psi}(u) \leq 0 \eqc
+\end{equation}
+which holds for any convex entropy function $\eta(u)$ and associated entropy
+flux $\mathbf{\Psi}(u) \equiv \int \eta'(u)\mathbf{f}'(u)du$.
+If one can show that this inequality holds for an arbitrary
+convex entropy function, then one proves it holds for all convex entropy
+functions  \cite{leveque2002}\cite{guermond_ev}.
+For the scalar PDE considered in this paper, the entropy inequality becomes
+the following:
+\begin{equation}
+  \ppt{\eta(u)} + \nabla\cdot\mathbf{\Psi}(u) + \eta'(u)\sigma u - \eta'(u)q
+    \leq 0 \eqp
+\end{equation}
+One can verify this inequality by multiplying the governing PDE by $\eta'(u)$
+and applying reverse chain rule.
+
+The entropy viscosity method enforces the entropy inequality by measuring
+local entropy production and dissipating accordingly. In practice, one
+defines the entropy residual:
+\begin{equation}
+  \mathcal{R} \equiv \ppt{\eta(u)} + \nabla\cdot\mathbf{\Psi}(u)
+    + \eta'(u)\sigma u - \eta'(u)q \eqc
+\end{equation}
+which can be viewed as the amount of violation of the entropy inequality.
+The entropy viscosity for an element $K$ is then defined to be proportional
+to this violation, for example:
+\begin{equation}
+  \nu^\eta_K = \frac{c_\mathcal{R}\|\mathcal{R}(u_h)\|_{L^\infty(K)}}
+    {\hat{\eta}_K}
+    \eqc
+\end{equation}
+where $\hat{\eta}_K$ is a normalization constant with the units of entropy,
+$c_\mathcal{R}$ is a proportionality constant that can be modulated for
+each problem, and $\|\mathcal{R}(u_h)\|_{L^\infty(K)}$ is the maximum of the
+entropy residual on element $K$. In addition to the entropy residual, it can
+also be beneficial to measure the jump in the gradient of the entropy flux
+across interfaces.
+Note that given the definition of the entropy flux, the gradient of the entropy
+flux is $\nabla\mathbf{\Psi}(u)=\nabla\eta(u)\mathbf{f}'(u)$. Then let
+$\mathcal{J}_F$ denote the jump of the normal component of the entropy flux
+gradient across face $F$:
+\begin{equation}
+  \mathcal{J}_F \equiv |\mathbf{f}'(u)\cdot\mathbf{n}_F|
+    [\![\nabla\eta(u)\cdot\mathbf{n}_F]\!] \eqc
+\end{equation}
+where the double square brackets denote a jump quantity. Then define the
+maximum jump on a cell:
+\begin{equation}
+  \mathcal{J}_K \equiv \max\limits_{F\in\mathcal{F}(K)} |\mathcal{J}_F| \eqp
+\end{equation}
+Finally, putting everything together, one can define the entropy viscosity
+for a cell $K$ to be
+\begin{equation}
+  \nu^\eta_K = \frac{c_\mathcal{R}\|\mathcal{R}(u_h)\|_{L^\infty(K)}
+    + c_\mathcal{J}\mathcal{J}_K}{\hat{\eta}_K}
+    \eqp
+\end{equation}
+However, it is known that the low-order viscosity for an element, as computed
+in Section \ref{sec:low}, gives enough local artificial diffusion for
+regularization; any excess of this viscosity would be excessive and further
+degrade spatial accuracy. Thus, the low-order viscosity for an element is
+imposed as the upper bound for the high-order viscosity:
+\begin{equation}
+  \nu^H_K \equiv \min(\nu^L_K, \nu^\eta_K) \eqp
+\end{equation}
+One should see that in smooth regions, this high-order viscosity should be
+relatively small, and in regions of strong gradients or discontinuities,
+the entropy viscosity should be relatively large, ideally approximately
+as large as the low-order viscosity. Note that the latter condition can
+be achieved in part by tuning the tuning parameters
+$c_\mathcal{R}$ and $c_\mathcal{J}$ for the particular problem.

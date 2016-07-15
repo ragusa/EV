@@ -72,7 +72,7 @@ Applying this inequality to Equation \eqref{eq:low_order_ss_matrix} gives
 \begin{remark}
 If boundary conditions are weakly imposed, as discussed in Section
 \ref{sec:transport_bc}, then the steady-state system matrix is modified
-and $\tilde{\ssmatrix}\ij \geq \ssmatrix\ij$. In this case, the low-order
+and $\tilde{\ssmatrixletter}\ij \geq \ssmatrixletter\ij$. In this case, the low-order
 viscosity is computed with the \emph{modified} steady-state matrix. Then
 Lemma \ref{lem:offdiagonalnegative} still holds.
 \end{remark}
@@ -140,7 +140,7 @@ Lemma \ref{lem:offdiagonalnegative} still holds.
 %  &= \int\limits_{\partial \support_i}
 %    \frac{1}{2}\testfunction_i(\x)^2 \velocity\cdot\normalvector d\area \eqp
 %\end{align*}
-%On the interior of the domain, 
+%On the interior of the domain,
 % the basis function
 %$\testfunction_i$ evaluates to zero on the boundary of its support
 %$\support_i$. On the outflow boundary of the domain, the term
@@ -189,7 +189,7 @@ $\sumj \localviscbilinearform{\cell}{j}{i}=0$,
 \begin{remark}
 If boundary conditions are weakly imposed, as discussed in Section
 \ref{sec:transport_bc}, then the steady-state system matrix is modified
-and $\tilde{\ssmatrix}\ij \geq \ssmatrix\ij$.
+and $\tilde{\ssmatrixletter}\ij \geq \ssmatrixletter\ij$.
 Thus
 \begin{equation}
   \sum_j\tilde{\ssmatrix}\ij \geq \sum_j\ssmatrix\ij \geq 0 \eqc

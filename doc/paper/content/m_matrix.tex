@@ -1,15 +1,14 @@
 % !TEX root = ../paper.tex
 
 \begin{prf}
-  There are many definitions that can be used to identify a non-singular M-matrix
-  \cite{m_matrix_fiedler}; one
-  definition gives that an M-matrix can be identified by verifying all of the
-  following three properties:
+  There are many definitions that can be used to identify a non-singular
+  M-matrix; one
+  definition gives that an M-matrix can be identified by verifying both of the
+  following properties \cite{plemmons}:
   \begin{enumerate}
-    \item positivity of diagonal entries: $A_{i,i} > 0$, $\forall i$,
+    \item strict positivity of diagonal entries: $A_{i,i} > 0$, $\forall i$ and
     \item non-positivity of off-diagonal entries: $A_{i,j} \leq 0$,
-      $\forall i$, $\forall j\ne i$, and
-    \item strict diagonal dominance: $\sumj A_{i,j} > 0$, $\forall i$ \cite{m_matrix_poole}.
+      $\forall i$, $\forall j\ne i$.
   \end{enumerate}
 %-------------------------------------------------------------------------------
 Firstly it will be shown that the off-diagonal elements of the matrix
@@ -37,113 +36,58 @@ Thus,
         & = & -\max(0,A_{i,j}) \eqc\\
         & \le & -A_{i,j} \eqp
 \end{eqnarray*}
-% Applying this inequality to Equation \eqref{eq:low_order_ss_matrix} gives
-% \begin{eqnarray*}
-%   \ssmatrixletter^{L,\timeindex}\ij &  =  &
-%     \ssmatrixletter\ij^\timeindex + \diffusionmatrixletter\ij^{L,\timeindex}
-%     \eqc\\
-%   \ssmatrixletter^{L,\timeindex}\ij & \le &
-%     \ssmatrixletter\ij^\timeindex - \ssmatrixletter\ij^\timeindex
-%     \eqc\\
-%   \ssmatrixletter^{L,\timeindex}\ij & \le & 0 \eqp \qed
-% \end{eqnarray*}
-% %-------------------------------------------------------------------------------
-% \begin{remark}
-% If boundary conditions are weakly imposed, as discussed in Section
-% \ref{sec:transport_bc}, then the steady-state system matrix is modified
-% and $\tilde{\ssmatrix}\ij \geq \ssmatrix\ij$. In this case, the low-order
-% viscosity is computed with the \emph{modified} steady-state matrix. Then
-% Lemma \ref{lem:offdiagonalnegative} still holds.
-% \end{remark}
-% %--------------------------------------------------------------------------------
-% \begin{lemma}[lem:rowsumspositive]{Non-Negativity of Row Sums}
-%    The row-sums of the matrix $\loworderssmatrix[n]$ are non-negative:
-%    \[
-%      \sumj \ssmatrixletter^{L,\timeindex}\ij \ge 0
-%        \eqc \quad \forall i \eqp
-%    \]
-% \end{lemma}
-%
-% \begin{proof}
-% Using the fact that $\sumj\testfunction_j(\x)=1$ and
-% $\sumj \localviscbilinearform{\cell}{j}{i}=0$,
-% \begin{eqnarray*}
-%    \sumj \ssmatrixletter^{L,\timeindex}\ij & = & \sumj \intSij
-%       \left(\mathbf{\consfluxletter}'(\approximatescalarsolution^\timeindex)
-%         \cdot\nabla\testfunction_j +
-%       \reactioncoef\testfunction_j\right)\testfunction_i \dvolume +
-%       \sumj\sumKSij\lowordercellviscosity[\timeindex]
-%         \localviscbilinearform{\cell}{j}{i}
-%       \eqc\\
-%    & = & \intSi\left(
-%       \mathbf{\consfluxletter}'(\approximatescalarsolution^\timeindex)\cdot
-%       \nabla\sumj\testfunction_j(\x) +
-%       \reactioncoef(\x)\sumj\testfunction_j(\x)\right)
-%       \testfunction_i(\x) \dvolume \eqc\\
-%    \label{eq:rowsum} & = & \intSi\reactioncoef(\x)\testfunction_i(\x) \dvolume
-%      \eqc\\
-%    &\ge& 0 \eqp \qed
-% \end{eqnarray*}
-% \end{proof}
-% %--------------------------------------------------------------------------------
-% \begin{remark}
-% If boundary conditions are weakly imposed, as discussed in Section
-% \ref{sec:transport_bc}, then the steady-state system matrix is modified
-% and $\tilde{\ssmatrix}\ij \geq \ssmatrix\ij$.
-% Thus
-% \begin{equation}
-%   \sum_j\tilde{\ssmatrix}\ij \geq \sum_j\ssmatrix\ij \geq 0 \eqc
-% \end{equation}
-% and Lemma \ref{lem:rowsumspositive} still holds.
-% \end{remark}
-% %--------------------------------------------------------------------------------
-% \begin{lemma}[lem:diagonalpositive]{Non-Negativity of Diagonal Elements}
-%    The diagonal elements of the matrix $\loworderssmatrix[n]$ are non-negative:
-%    \[
-%      \ssmatrixletter^{L,n}_{i,i} \ge 0
-%        \eqc \quad \forall i\eqp
-%    \]
-% \end{lemma}
-%
-% \begin{proof}
-% Using Lemma \ref{lem:rowsumspositive},
-% \[
-%   \sumj \ssmatrixletter^{L,n}\ij \ge 0 \eqp
-% \]
-% Thus,
-% \[
-%   \ssmatrixletter^{L,n}_{i,i} \ge -\sumjnoti \ssmatrixletter^{L,n}\ij \eqp
-% \]
-% From Lemma \ref{lem:offdiagonalnegative}, the off-diagonal elements are known
-% to be non-positive: $\ssmatrixletter^{L,n}\ij \leq 0$. Thus,
-% $-\ssmatrixletter^{L,n}\ij \geq 0$ and finally,
-% \[
-%   \ssmatrixletter^{L,n}_{i,i} \ge 0 \eqp \qed
-% \]
-% \end{proof}
-% %--------------------------------------------------------------------------------
-% \begin{lemma}[lem:diagonallydominant]{Diagonal Dominance}
-%    The matrix $\loworderssmatrix[\timeindex]$ is strictly diagonally dominant:
-%    \[
-%      \left|\ssmatrixletter^{L,\timeindex}_{i,i}\right|
-%      \ge \sumjnoti \left|\ssmatrixletter^{L,\timeindex}\ij\right|
-%      \eqc \quad \forall i\eqp
-%    \]
-% \end{lemma}
-%
-% Using the inequalities $\sumj \ssmatrixletter^{L,\timeindex}\ij \ge 0$ and
-% $\ssmatrixletter^{L,\timeindex}\ij\le 0, j\ne i$, it is proven that
-% $\loworderssmatrix[\timeindex]$ is strictly diagonally dominant:
-% \begin{eqnarray*}
-%   \sumj     \ssmatrixletter^{L,\timeindex}\ij       & \ge & 0 \eqc\\
-%   \sumjnoti \ssmatrixletter^{L,\timeindex}\ij
-%     + \ssmatrixletter^{L,\timeindex}_{i,i} & \ge & 0 \eqc\\
-%   \left|\ssmatrixletter^{L,\timeindex}_{i,i}\right| & \ge &
-%     \sumjnoti -\ssmatrixletter^{L,\timeindex}\ij
-%     \eqc\\
-%   \left|\ssmatrixletter^{L,\timeindex}_{i,i}\right| & \ge
-%     & \sumjnoti \left|\ssmatrixletter^{L,\timeindex}\ij\right| \eqp \qed
-% \end{eqnarray*}
-% %--------------------------------------------------------------------------------
+Then applying this relation to the definition of the low-order steady state
+matrix gives
+\begin{eqnarray*}
+  A^L_{i,j} &  =  & A_{i,j} + D_{i,j}^L \eqc\\
+  A^L_{i,j} & \le & A_{i,j} - A_{i,j}   \eqc\\
+  A^L_{i,j} & \le & 0 \eqp
+\end{eqnarray*}
+Next it will be shown that the row sums are non-negative.
+Using the fact that $\sumj\test_j(\x)=1$ and
+$\sumj d_K(\test_j,\test_i)=0$,
+\begin{eqnarray*}
+   \sumj A^L_{i,j} & = & \sumj \intSij
+      \left(\mathbf{f}'(u_h)
+        \cdot\nabla\test_j +
+      \sigma\test_j\right)\test_i dV +
+      \sumj\sumKSij\nu^L
+        d_K(\test_j,\test_i)
+      \eqc\\
+   & = & \intSi\left(
+      \mathbf{f}'(u_h)\cdot
+      \nabla\sumj\test_j(\x) +
+      \sigma(\x)\sumj\test_j(\x)\right)
+      \test_i(\x) dV \eqc\\
+   \label{eq:rowsum} & = & \intSi\sigma(\x)\test_i(\x) dV
+     \eqc\\
+   & \ge & 0 \eqp
+\end{eqnarray*}
+%-------------------------------------------------------------------------------
+\begin{rmk}
+  If incoming flux boundary conditions are weakly imposed, then the steady-state
+  system matrix is modified: $\A\rightarrow\tilde{\A}$, and the low-order
+  viscosity then uses the \emph{modified} steady-state matrix $\tilde{\A}$.
+  The the non-positivity property of the off-diagonal elements still holds.
+  The non-negativity property of the row sums also holds, owing to the relation
+  $\tilde{A}_{i,j} \geq A_{i,j}$.
+\end{rmk}
+%-------------------------------------------------------------------------------
+If the support $S_i$ is not entirely vacuum ($\sigma(\x)=0$), then the
+row sum is \emph{strictly} positive.
+Proof of strict positivity of the diagonal elements directly follows from proof
+of non-positivity of the off-diagonal elements and strict positivity of the
+row sums. Thus both conditions for the non-singular M-matrix property have
+been met.
+%-------------------------------------------------------------------------------
+\begin{rmk}
+It should be noted that a \emph{singular} M-matrix
+can result if outflow boundary elements are entirely vacuum because the
+resulting matrix may have zero rows. Arguably, this is a moot point because
+one may argue that the problem domain should not extend into a vacuum since
+the solution should not change after entering a vacuum. Nevertheless, one
+should be aware of this loss of generality.
+\end{rmk}
+%-------------------------------------------------------------------------------
 
 \end{prf}
