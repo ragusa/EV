@@ -1,0 +1,477 @@
+% !TEX root = ../paper.tex
+
+\subsubsection{Solution Bounds}\label{sec:solution_bounds}
+
+Solution bounds for the transport model given by Equation \eqref{eq:scalar_model}
+can be derived using the integral transport equation, which is obtained using
+the method of characteristics:
+\begin{multline}\label{eq:integral_transport}
+   u(\x,t) = u_0(\x - v t\di) e^{-\int\limits_0^t
+    \sigma(\x - v(t -t')\di)v dt'}\\
+    + \int\limits_0^t q(\x - v(t -t')\di,t') e^{-\int\limits_{t'}^t
+    \sigma(\x - v(t -\bar{t})\di)v d\bar{t}} v dt' \eqp
+\end{multline}
+
+% %================================================================================
+% \section{Introduction}
+% %================================================================================
+% In this section, an analytic local maximum principle is derived for
+% scalar conservation laws having a constant, linear flux $\consfluxscalar$,
+% i.e., $\consfluxscalar = \velocity u$ with $\nabla\cdot(\velocity u) =
+% \velocity\cdot\nabla u$, where $\velocity$ is the constant velocity field. This
+% analysis is valid for radiation transport, where the constant velocity field is
+% $\velocity=v\directionvector$, with $v$ being the radiation speed.
+%
+% The analytic DMPs are derived using the method of characteristics, whereby
+% paths in the $x-t$ plane are found, along which the governing PDE becomes an ODE.
+% This is simple for the case of constant linear transport because in this case
+% the characteristics are constant.
+%
+% %================================================================================
+% \section{Integral Form of the Linear Transport Equation}
+% %================================================================================
+% \begin{theorem}{Integral Form of the Linear Transport Equation}{}
+%    An implicit solution to the initial value problem
+%    \begin{equation}\label{PDE}
+%      \frac{1}{v}\ppt{\scalarsolution}
+%        + \directionvector\cdot\nabla\scalarsolution(\x,t)
+%         + \sigma(\x)\scalarsolution(\x,t)
+%         = q(\x,t),
+%      \qquad \scalarsolution(\x,0) = \scalarsolution_0(\x)
+%    \end{equation}
+%    is the following:
+%    \begin{equation}\label{eq:integral_form}
+%       \scalarsolution(\x,t) = \scalarsolution_0(\x - v t\directionvector)
+%          e^{-\int\limits_0^t \sigma(\x - v(t -t')\directionvector)v dt'} +
+%          \int\limits_0^t q(\x - v(t -t')\directionvector,t')
+%            e^{-\int\limits_{t'}^t\sigma(\x
+%              - v(t -\bar{t})\directionvector)v d\bar{t}} v dt' \eqp
+%    \end{equation}
+% \end{theorem}
+%
+% \begin{proof}
+%    This proof will proceed by using the method of characteristics. The position
+%    $\x$ will be regarded as a function of time: $\x=\x(t)$.
+%    The characteristic $\x(t)$ is the solution of the following initial value problem:
+%    \[
+%       \frac{d\x}{dt} = v\directionvector \eqc \qquad \x(0) = \x_0 \eqc
+%    \]
+%    which is
+%    \[
+%       \x(t) = \x_0 + v t\directionvector \eqp
+%    \]
+%    Taking the derivative of $\scalarsolution(\x(t),t)$ gives
+%    \begin{eqnarray*}
+%       \frac{d\scalarsolution}{dt} & = &\ppt{\scalarsolution}
+%         + \nabla\cdot\scalarsolution(\x(t),t) \frac{d\x}{dt}\\
+%         & = & \ppt{\scalarsolution}
+%         + v\directionvector\cdot\nabla\scalarsolution(\x(t),t) \eqc
+%    \end{eqnarray*}
+%    which when combined with the PDE in Equation \eqref{PDE}, gives
+%    \begin{equation}\label{eq:pre_integrating_factor}
+%       \ddt{\scalarsolution} + v\sigma(\x(t))\scalarsolution(\x(t),t)
+%         = vq(\x(t),t) \eqp
+%    \end{equation}
+%    This is a 1st-order linear ODE, which may be solved using an integrating factor
+%    \[
+%       \mu(t)=e^{\int\limits_0^t\sigma(\x(t'))v dt'}.
+%    \]
+%    Multiplying both sides of Equation \eqref{eq:pre_integrating_factor}
+%    by this integrating factor and using the product rule,
+%    \[
+%       \frac{d}{dt}\left[\scalarsolution(\x(t),t)\mu(t)\right]
+%         = vq(\x(t),t) \mu(t) \eqc
+%    \]
+%    and integrating from $0$ to $t$ gives
+%    \[
+%       \scalarsolution(\x(t),t)\mu(t)-\scalarsolution(\x(0),0)\mu(0) =
+%          \int\limits_0^t q(\x(t'),t') \mu(t') v dt' \eqp
+%    \]
+%    Simplifying,
+%    \[\begin{split}
+%       \scalarsolution(\x(t),t) &= \scalarsolution(\x(0),0)
+%          e^{-\int\limits_0^t \sigma(\x(t'))v dt'} +
+%          \left(\int\limits_0^t q(\x(t'),t')
+%            e^{\int\limits_0^{t'}\sigma(\x(\bar{t}))v d\bar{t}}
+%            v dt'\right)
+%          e^{-\int\limits_0^tv\sigma(\x(t'))dt'} \eqc\\
+%       &= \scalarsolution(\x(0),0)
+%          e^{-\int\limits_0^t \sigma(\x(t'))v dt'} +
+%          \int\limits_0^t q(\x(t'),t')
+%            e^{-\int\limits_{t'}^t\sigma(\x(\bar{t}))v d\bar{t}}
+%            v dt' \eqp
+%    \end{split}\]
+%    Finally, expressing $\x(t)$ in terms of $\x$, $v$, $\directionvector$,
+%    and $t$ gives
+%    \begin{multline*}
+%       \scalarsolution(\x,t) = \scalarsolution_0(\x - v t\directionvector)
+%          e^{-\int\limits_0^t \sigma(\x - v(t -t')\directionvector)
+%            v dt'}\\
+%          + \int\limits_0^t q(\x - v(t -t')\directionvector,t')
+%            e^{-\int\limits_{t'}^t\sigma(\x
+%              - v(t -\bar{t})\directionvector)v d\bar{t}}
+%              v dt'\eqp \qed
+%    \end{multline*}
+% \end{proof}
+% %================================================================================
+% \section{Local Maximum Principles\label{sec:local_max_principles}}
+% %================================================================================
+% Before giving an analytic local discrete maximum principle, a local maximum
+% principle applying to a general region is given by the following theorem.
+%
+% \begin{theorem}[thm:analytic_max_principle]{Analytic Local Maximum Principle}
+%    Let $L(\x,\tau)$ be the line segment that spans between
+%    $\x-v\tau\directionvector$ and $\x$:
+%    \begin{equation}
+%       L(\x,\tau)\equiv \left\{\mathbf{y}\in\mathbb{R}^d : \mathbf{y}
+%          = \x-v t\directionvector \eqc \qquad t\in(0,\tau) \right\} \eqp
+%    \end{equation}
+%    See Figure \ref{fig:neighborhood} for an illustration.
+%    The following local maximum principle is valid for the solution to the
+%    problem given by Equation \eqref{PDE}:
+%    \begin{subequations}\label{eq:local_max_principle}
+%    \begin{equation}
+%       \scalarsolution_{\text{min}} \le \scalarsolution(\x,\tau)
+%         \le \scalarsolution_{\text{max}} \eqc
+%    \end{equation}
+%    \begin{equation}
+%       \scalarsolution_{\text{min}}
+%         \equiv \left\{\begin{array}{l l}
+%           %\scalarsolution_{\min,N}^0
+%           \scalarsolution_0(\x - v \tau\directionvector)
+%              e^{-v\tau\sigma_{\max,L}}
+%             + \frac{q_{\min,L}}{\sigma_{\max,L}}
+%              (1 - e^{-v\tau\sigma_{\max,L}}) \eqc
+%           & \sigma_{\max,L} \ne 0 \\
+%           %\scalarsolution_{\min,L}^0
+%           \scalarsolution_0(\x - v \tau\directionvector)
+%             + v\tauq_{\min,L} \eqc
+%           & \sigma_{\max,L} = 0
+%         \end{array}\right.\eqc
+%    \end{equation}
+%    \begin{equation}
+%       \scalarsolution_{\text{max}}
+%         \equiv \left\{\begin{array}{l l}
+%           %\scalarsolution_{\max,N}^0
+%           \scalarsolution_0(\x - v \tau\directionvector)
+%             e^{-v\tau\sigma_{\min,L}}
+%             + \frac{q_{\max,L}}{\sigma_{\min,L}}
+%             (1 - e^{-v\tau\sigma_{\min,L}}) \eqc
+%           & \sigma_{\min,L} \ne 0 \\
+%           %\scalarsolution_{\max,N}^0
+%           \scalarsolution_0(\x - v \tau\directionvector)
+%             + v\tauq_{\max,L} \eqc
+%           & \sigma_{\min,L} = 0
+%         \end{array}\right.\eqc
+%    \end{equation}
+%    \begin{equation}
+%      \sigma_{\min,L}\equiv\min\limits_{\mathbf{y}\in L(\x,\tau)}
+%        \sigma(\mathbf{y}) \eqc \quad
+%      \sigma_{\max,L}\equiv\max\limits_{\mathbf{y}\in L(\x,\tau)}
+%        \sigma(\mathbf{y}) \eqc
+%    \end{equation}
+%    \begin{equation}
+%      q_{\min,L}\equiv\min\limits_{\mathbf{y}\in L(\x,\tau)}
+%        q(\mathbf{y}) \eqc \quad
+%      q_{\max,L}\equiv\max\limits_{\mathbf{y}\in L(\x,\tau)}
+%        q(\mathbf{y}) \eqp
+%    \end{equation}
+%    \end{subequations}
+% \end{theorem}
+% %-------------------------------------------------------------------------------
+% \begin{figure}[htb]
+%    \centering
+%      \input{../diagrams/neighborhood/neighborhood.tex}
+%       \caption{Illustration of Neighborhoods $L(\x,\tau)$ and $N(\x,\tau)$}
+%    \label{fig:neighborhood}
+% \end{figure}
+% %-------------------------------------------------------------------------------
+% \begin{proof}
+%    Rewriting Equation \eqref{eq:integral_form} with $t=\tau$ gives
+%    \begin{multline*}
+%       \scalarsolution(\x,\tau) = \scalarsolution_0(\x - v\tau\directionvector)
+%          e^{-\int\limits_0^\tau \sigma(\x
+%            - v(\tau -t')\directionvector)v dt'}\\
+%          +
+%          \int\limits_0^\tau q(\x - v(\tau -t')\directionvector,t')
+%          e^{-\int\limits_{t'}^\tau \sigma(\x
+%          - v(\tau -\bar{t})\directionvector)v d\bar{t}}v dt' \eqp
+%    \end{multline*}
+%    One can bound the first term in the right-hand-side of Equation
+%    \eqref{eq:integral_form} by considering
+%    the maximum and minimum cross section on the line segment $L(\x,\tau)$
+%    for the lower and upper bounds, respectively:
+%    \[
+%       %\scalarsolution_{\min,L}^0
+%       \scalarsolution_0(\x - v\tau\directionvector)
+%         e^{-v\tau\sigma_{\max,L}} \le
+%       \scalarsolution_0(\x - v\tau\directionvector)
+%         e^{-\int\limits_0^\tau \sigma(\x
+%            - v(\tau -t')\directionvector)v dt'} \le
+%       %\scalarsolution_{\max,L}^0
+%       \scalarsolution_0(\x - v\tau\directionvector)
+%         e^{-v\tau\sigma_{\min,L}} \eqp
+%    \]
+%    The source term can be bounded as follows:
+%    \begin{align*}
+%      \scalarsolution_q
+%       & \equiv
+%          \int\limits_0^\tau q(\x - v(\tau -t')\directionvector,t')
+%          e^{-\int\limits_{t'}^\tau \sigma(\x
+%            - v(\tau -\bar{t})\directionvector)v d\bar{t}} v dt'\\
+%       & \le
+%          q_{\max,L}\int\limits_0^\tau
+%          e^{-\int\limits_{t'}^\tau \sigma(\x
+%            - v(\tau -\bar{t})\directionvector)v d\bar{t}}v dt'\\
+%       & \le
+%          q_{\max,L}\int\limits_0^\tau
+%          e^{-\sigma_{\min,L}\int\limits_{t'}^\tau v d\bar{t}}v dt'\\
+%       & =
+%          q_{\max,L} \int\limits_0^\tau
+%          e^{-v(\tau-t')\sigma_{\min,L}}v dt'\\
+%       & =
+%          q_{\max,L}e^{-v\tau\sigma_{\min,L}}
+%          \int\limits_0^\tau e^{\sigma_{\min,L}v t'}v dt'\\
+%       & =
+%          \left\{\begin{array}{l l}
+%             \frac{q_{\max,L}}{\sigma_{\min,L}}
+%               (1 - e^{-v\tau\sigma_{\min,L}}) \eqc
+%                & \sigma_{\min,L} \ne 0\\
+%             v\tau q_{\max,L} \eqc & \sigma_{\min,L} = 0
+%             \end{array}\right.
+%    \end{align*}
+%    A similar analysis is performed for the lower bound.
+%    Putting the two components together gives the bounds given by Equation
+%    \eqref{eq:local_max_principle}.\qed
+% \end{proof}
+% %-------------------------------------------------------------------------------
+%
+% This result gives relatively tight solution bounds; however, its use as
+% solution bounds for FCT may prove difficult in practice (especially for
+% multi-dimensional problems), as one must
+% compute the solution at the point $\x-v\tau\di$ and must be able
+% to evaluate the minimum and maximum of the reaction coefficients and
+% sources on the line segment $L(\x_i,\tau)$.
+% The following corollary loosens the solution bounds for use in a
+% more simple implementation of solution bounds for FCT. It considers
+% not just the upstream line segment of length $v\tau$, but the
+% sphere of radius $v\tau$ centered at $\x_i$.
+%
+% %-------------------------------------------------------------------------------
+% \begin{corollary}[cly:loose_analytic_max_principle]
+%   {Loose Analytic Local Maximum Principle}
+% Let $N(\x,\tau)$ denote the sphere centered at $\x$ with radius
+% $v\tau$, as shown in Figure \ref{fig:neighborhood}:
+%    \begin{equation}\label{eq:neighborhood}
+%       N(\x,\tau)\equiv\left\{\mathbf{y}\in\mathbb{R}^d :
+%          \|\mathbf{y} - \x\| \le v\tau\right\} \eqp
+%    \end{equation}
+% The following, looser, local maximum principle is valid for the solution to the
+% problem given by Equation \eqref{PDE}:
+% \begin{subequations}\label{eq:loose_local_max_principle}
+%    \begin{equation}
+%       \scalarsolution_{\text{min}} \le \scalarsolution(\x,\tau)
+%         \le \scalarsolution_{\text{max}} \eqc
+%    \end{equation}
+%    \begin{equation}
+%       \scalarsolution_{\text{min}}
+%         \equiv \left\{\begin{array}{l l}
+%           \scalarsolution_{\min,N}^0 e^{-v\tau\sigma_{\max,N}}
+%             + \frac{q_{\min,N}}{\sigma_{\max,N}}
+%              (1 - e^{-v\tau\sigma_{\max,N}}) \eqc
+%           & \sigma_{\max,N} \ne 0 \\
+%           \scalarsolution_{\min,N}^0
+%             + v\tauq_{\min,N} \eqc
+%           & \sigma_{\max,N} = 0
+%         \end{array}\right.\eqc
+%    \end{equation}
+%    \begin{equation}
+%       \scalarsolution_{\text{max}}
+%         \equiv \left\{\begin{array}{l l}
+%           \scalarsolution_{\max,N}^0 e^{-v\tau\sigma_{\min,N}}
+%             + \frac{q_{\max,N}}{\sigma_{\min,N}}
+%             (1 - e^{-v\tau\sigma_{\min,N}}) \eqc
+%           & \sigma_{\min,N} \ne 0 \\
+%           \scalarsolution_{\max,N}^0
+%             + v\tauq_{\max,N} \eqc
+%           & \sigma_{\min,N} = 0
+%         \end{array}\right.\eqc
+%    \end{equation}
+%    \begin{equation}
+%      \scalarsolution_{\min,N}^0 \equiv \min\limits_{\mathbf{y}\in N(\x,\tau)}
+%        \scalarsolution(\mathbf{y},0) \eqc \quad
+%      \scalarsolution_{\max,N}^0 \equiv \max\limits_{\mathbf{y}\in N(\x,\tau)}
+%        \scalarsolution(\mathbf{y},0) \eqc
+%    \end{equation}
+%    \begin{equation}
+%      \sigma_{\min,L}\equiv\min\limits_{\mathbf{y}\in L(\x,\tau)}
+%        \sigma(\mathbf{y}) \eqc \quad
+%      \sigma_{\max,L}\equiv\max\limits_{\mathbf{y}\in L(\x,\tau)}
+%        \sigma(\mathbf{y}) \eqc
+%    \end{equation}
+%    \begin{equation}
+%      q_{\min,L}\equiv\min\limits_{\mathbf{y}\in L(\x,\tau)}
+%        q(\mathbf{y}) \eqc \quad
+%      q_{\max,L}\equiv\max\limits_{\mathbf{y}\in L(\x,\tau)}
+%        q(\mathbf{y}) \eqp
+%    \end{equation}
+% \end{subequations}
+% \end{corollary}
+% %-------------------------------------------------------------------------------
+% \begin{proof}
+% Because $\x-v\tau\di\in N(\x,\tau)$,
+% \[
+%   \scalarsolution_0(\x - v\tau\directionvector) \geq \scalarsolution_{\min,N}^0
+%   \eqc \quad
+%   \scalarsolution_0(\x - v\tau\directionvector) \leq \scalarsolution_{\max,N}^0
+%   \eqp
+% \]
+% Because $L(\x,\tau)\subset N(\x,\tau)$ (see Figure \ref{fig:neighborhood}),
+% the following is true:
+% \[
+%   q_{\min,N} \leq q_{\min,L}
+%   \eqc \quad
+%   q_{\max,N} \geq q_{\max,L}
+%   \eqc
+% \]
+% \[
+%   \sigma_{\min,N} \leq \sigma_{\min,L}
+%   \eqc \quad
+%   \sigma_{\max,N} \geq \sigma_{\max,L}
+%   \eqp
+% \]
+% Applying these inequalities to Equation \eqref{eq:local_max_principle}
+% proves Equation \eqref{eq:loose_local_max_principle}.\qed
+% \end{proof}
+% %-------------------------------------------------------------------------------
+%
+% The following theorem applies Corollary \ref{cly:loose_analytic_max_principle} to derive
+% an analytic discrete maximum principle for radiation transport.
+%
+% %-------------------------------------------------------------------------------
+% \begin{theorem}[thm:analytic_dmp]{Analytic Discrete Maximum Principle}
+If the time step size $\dt$ satisfies the condition
+\begin{equation}\label{eq:cfl_analytic_dmp}
+  v\dt \leq h_{\min} \eqc \quad h_{\min} \equiv \min\limits_K h_K \eqc
+\end{equation}
+where $h_K$ is the diameter of cell $K$, then the following discrete
+solution bounds apply:
+\begin{subequations}\label{eq:solution_bounds}
+  \begin{equation}
+      U^-_i \le U_i^{n+1} \le U^+_i \eqc
+  \end{equation}
+  \begin{equation}
+      U^-_i
+        \equiv \left\{\begin{array}{l l}
+          U_{\min,i}^n e^{-v\dt\sigma_{\max,i}}
+            + \frac{q_{\min,i}}{\sigma_{\max,i}}
+            (1 - e^{-v\dt\sigma_{\max,i}}) \eqc
+          & \sigma_{\max,i} \ne 0 \\
+          U_{\min,i}^n
+            + v\dt q_{\min,i} \eqc
+          & \sigma_{\max,i} = 0
+        \end{array}\right.\eqc
+  \end{equation}
+  \begin{equation}
+      U^+_i
+        \equiv \left\{\begin{array}{l l}
+          U_{\max,i}^n e^{-v\dt\sigma_{\min,i}}
+            + \frac{q_{\max,i}}{\sigma_{\min,i}}
+            (1 - e^{-v\dt\sigma_{\min,i}}) \eqc
+          & \sigma_{\min,i} \ne 0 \\
+          U_{\max,i}^n
+            + v\dt q_{\max,i} \eqc
+          & \sigma_{\min,i} = 0
+        \end{array}\right.\eqc
+  \end{equation}
+  \begin{equation}
+    U_{\max,i}^n \equiv\max\limits_{j\in\indices(S_i)}U_j^n \eqc \quad
+    U_{\min,i}^n \equiv\min\limits_{j\in\indices(S_i)}U_j^n \eqc
+  \end{equation}
+  \begin{equation}
+    \sigma_{\max,i} \equiv\max\limits_{\x\in S_i}\sigma(\x) \eqc \quad
+    \sigma_{\min,i} \equiv\min\limits_{\x\in S_i}\sigma(\x) \eqc
+  \end{equation}
+  \begin{equation}
+    q_{\max,i} \equiv\max\limits_{\x\in S_i}q(\x) \eqc \quad
+    q_{\min,i} \equiv\min\limits_{\x\in S_i}q(\x) \eqp
+  \end{equation}
+\end{subequations}
+% \end{theorem}
+% \begin{proof}
+% Due to the CFL condition, Equation \eqref{eq:cfl_analytic_dmp}, the support of
+% test function $i$ is a superset of the neighborhood $N(\x_i)$ defined by
+% Equation \eqref{eq:neighborhood}: $N(\x_i)\subsetS_i$. Thus
+% for an arbitrary function of space $f(\x)$,
+% \[
+%   \max\limits_{\x\in S_i}f(\x)
+%     \geq \max\limits_{\x\in N(\x_i)}f(\x) \eqc \quad
+%   \min\limits_{\x\in S_i}f(\x)
+%     \leq \min\limits_{\x\in N(\x_i)}f(\x) \eqc
+% \]
+% and
+% \[
+%   \approximatescalarsolution_{\max,S_i}
+%     \geq \approximatescalarsolution_{\max,N} \eqc \quad
+%   \approximatescalarsolution_{\min,S_i}
+%     \leq \approximatescalarsolution_{\min,N} \eqp
+% \]
+% Since $\approximatescalarsolution$ is a convex combination of nodal solution
+% values, the local extremum are obtained only at nodal values:
+% \[
+%   \approximatescalarsolution_{\max,S_i}
+%     = U_{\max,i} \eqc \quad
+%   \approximatescalarsolution_{\min,S_i}
+%     = U_{\min,i} \eqp \qed
+% \]
+% \end{proof}
+% %-------------------------------------------------------------------------------
+%
+% The following corollary extends the analytic discrete maximum principle given
+% in Theorem \ref{thm:analytic_dmp} to the steady-state case and is given
+% without proof, as it follows the same logic as Theorem \ref{thm:analytic_dmp}.
+%
+% %-------------------------------------------------------------------------------
+% \begin{corollary}{Analytic Steady-State Discrete Maximum Principle}
+% If one uses a parameter $s$ such that $s \leq \celldiameter_{\min}$, where
+% $\celldiameter_{\min}$ is defined by Equation \eqref{eq:cfl_analytic_dmp}, then
+% the following analytic discrete maximum principle bounds apply to the
+% steady-state problem:
+% \begin{subequations}\label{eq:analyticDMP_ss}
+%   \begin{equation}
+%       U^-_i \le U_i
+%         \le U^+_i \eqc
+%   \end{equation}
+%   \begin{equation}
+%       U^-_i
+%         \equiv \left\{\begin{array}{l l}
+%           U_{\min,i} e^{-s\sigma_{\max,i}}
+%             + \frac{q_{\min,i}}{\sigma_{\max,i}}
+%             (1 - e^{-s\sigma_{\max,i}}) \eqc
+%           & \sigma_{\max,i} \ne 0 \\
+%           U_{\min,i}
+%             + sq_{\min,i} \eqc
+%           & \sigma_{\max,i} = 0
+%         \end{array}\right.\eqc
+%   \end{equation}
+%   \begin{equation}
+%       U^+_i
+%         \equiv \left\{\begin{array}{l l}
+%           U_{\max,i} e^{-s\sigma_{\min,i}}
+%             + \frac{q_{\max,i}}{\sigma_{\min,i}}
+%             (1 - e^{-s\sigma_{\min,i}}) \eqc
+%           & \sigma_{\min,i} \ne 0 \\
+%           U_{\max,i}
+%             + sq_{\max,i} \eqc
+%           & \sigma_{\min,i} = 0
+%         \end{array}\right.\eqp
+%   \end{equation}
+% \end{subequations}
+% \end{corollary}
+%
+% \begin{remark}
+% In practice, one can approximate the maximum/minimum operations
+% by taking the maximum/minimum over quadrature points: e.g.,
+% $\max\limits_{\x\in S_i} \approx \max\limits_{\x\in Q(S_i)}$,
+% where $Q(S_i)$ is the set of quadrature points in $S_i$.
+% \end{remark}

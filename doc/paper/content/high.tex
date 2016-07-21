@@ -1,9 +1,5 @@
 % !TEX root = ../paper.tex
 
-\begin{itemize}
-  \item definitions - entropy residual, entropy viscosity, scheme
-\end{itemize}
-
 This section describes the entropy viscosity method applied to the scalar
 PDE given by Equation \eqref{eq:scalar_model}. Recall that the entropy
 viscosity method is to be used as the high-order scheme in the FCT algorithm,
@@ -52,7 +48,7 @@ The entropy viscosity method enforces the entropy inequality by measuring
 local entropy production and dissipating accordingly. In practice, one
 defines the entropy residual:
 \begin{equation}
-  \mathcal{R} \equiv \ppt{\eta(u)} + \nabla\cdot\mathbf{\Psi}(u)
+  \mathcal{R}(u) \equiv \ppt{\eta(u)} + \nabla\cdot\mathbf{\Psi}(u)
     + \eta'(u)\sigma u - \eta'(u)q \eqc
 \end{equation}
 which can be viewed as the amount of violation of the entropy inequality.
@@ -66,7 +62,8 @@ to this violation, for example:
 where $\hat{\eta}_K$ is a normalization constant with the units of entropy,
 $c_\mathcal{R}$ is a proportionality constant that can be modulated for
 each problem, and $\|\mathcal{R}(u_h)\|_{L^\infty(K)}$ is the maximum of the
-entropy residual on element $K$. In addition to the entropy residual, it can
+entropy residual on element $K$, which can be approximated as the maximum over
+the quadrature points of element $K$. In addition to the entropy residual, it can
 also be beneficial to measure the jump in the gradient of the entropy flux
 across interfaces.
 Note that given the definition of the entropy flux, the gradient of the entropy
@@ -101,5 +98,31 @@ One should see that in smooth regions, this high-order viscosity should be
 relatively small, and in regions of strong gradients or discontinuities,
 the entropy viscosity should be relatively large, ideally approximately
 as large as the low-order viscosity. Note that the latter condition can
-be achieved in part by tuning the tuning parameters
+be achieved in part by tuning the parameters
 $c_\mathcal{R}$ and $c_\mathcal{J}$ for the particular problem.
+
+Putting everything together, the high-order system for steady-state,
+explicit Euler, and theta time discretizations are respectively expressed
+as follows:
+\begin{equation}\label{eq:high_ss}
+  \A^H \U = \ssrhs \eqc
+\end{equation}
+\begin{equation}\label{eq:high_fe}
+  \M^C\frac{\U^{n+1} - \U^n}{\dt} + \A^{H,n}\U^n = \ssrhs^n \eqc
+\end{equation}
+\begin{equation}\label{eq:high_theta}
+  \M^C\frac{\U^{n+1} - \U^n}{\dt} + \theta\A^{H,n+1}\U^{n+1}
+    + (1-\theta)\A^{H,n}\U^n
+    = \ssrhs^\theta \eqc
+\end{equation}
+where the high-order steady-state system matrix is defined as
+$\A^H\equiv\A + \D^H$, and the high-order diffusion matrix is defined similarly
+to the low-order case but using the high-order viscosity instead of the low-order
+viscosity:
+\begin{equation}\label{eq:high_order_diffusion_matrix}
+  D_{i,j}^H \equiv
+    \sum\limits_{K\subset S_{i,j}}\nu^H_K
+    d_K(\test_j,\test_i) \eqp
+\end{equation}
+Note that unlike the low-order scheme, the high-order scheme does not lump the
+mass matrix.

@@ -1,6 +1,101 @@
+% !TEX root = ../paper.tex
+
 \begin{itemize}
-  \item definitions - antidiffusive source and fluxes, scheme
   \item solution bounds - characteristic (upwind and non-upwind)
   \item antidiffusion bounds - definition and requirements for fail-safe
   \item limiters - Zalesak, multi-pass?
 \end{itemize}
+
+\subsubsection{The FCT System}
+
+The entropy viscosity method described in Section \ref{sec:high} enforces
+the entropy condition and thus produces numerical approximations that
+converge to the entropy solution. However, numerical solutions may still
+contain spurious oscillations and negativities, although these effects are
+smaller in magnitude than for the corresponding Galerkin solution.
+In this paper, the flux-corrected transport (FCT) algorithm
+is used to further mitigate the formation of spurious oscillations and
+to guarantee the absence of negativities.
+
+The first ingredient of the FCT algorithm is the definition of the antidiffusive
+fluxes. To arrive at this definition, the low-order systems, given by Equations
+\ref{eq:low_ss}, \ref{eq:low_fe}, and \ref{eq:low_theta} for each temporal
+discretization, are augmented with the addition of the \emph{antidiffusion source}
+$\p$, which now, instead of producing the low-order solution, produces the high-order
+solution $U^H$.
+\begin{equation}\label{eq:antidiffusionsource_ss}
+  \A^L \U^H = \ssrhs + \p \eqc
+\end{equation}
+\begin{equation}\label{eq:antidiffusionsource_fe}
+  \M^L\frac{\U^H - \U^n}{\dt} + \A^L\U^n = \ssrhs^n + \p \eqc
+\end{equation}
+\begin{equation}\label{eq:antidiffusionsource_theta}
+  \M^L\frac{\U^H - \U^n}{\dt} + \A^L\pr{\theta\U^{n+1} + (1-\theta)\U^n}
+    = \ssrhs^\theta + \p \eqp
+\end{equation}
+Then the corresponding high-order systems, given by Equations \ref{eq:high_ss},
+\ref{eq:high_fe}, \ref{eq:high_theta} are subtracted from these equations
+to give the following definitions for $\p$:
+\begin{equation}\label{eq:antidiffusionsourcei_ss}
+  \p \equiv \pr{\D^L - \D^H}\U^H \eqc
+\end{equation}
+\begin{equation}\label{eq:antidiffusionsourcei_fe}
+  \p \equiv -\pr{\M^C - \M^L}\frac{\U^H - \U^n}{\dt} + \pr{\D^L - \D^H}\U^n \eqc
+\end{equation}
+\begin{multline}\label{eq:antidiffusionsourcei_theta}
+  \p \equiv -\pr{\M^C - \M^L}\frac{\U^H - \U^n}{\dt}
+    + (1-\theta)\pr{\D^L - \D^{H,n}}\U^n\\
+    + \theta    \pr{\D^L - \D^{H,n+1}}\U^{n+1} \eqc
+\end{multline}
+The next step is to decompose each antidiffusive source $p_i$ into a sum of
+antidiffusive fluxes: $p_i = \sum_j P_{i,j}$. Because the matrices $\M^C-\M^L$
+and $\D^L-\D^H$ are symmetric and feature row sums of zero, the following
+are valid antidiffusive flux decompositions:
+\begin{equation}
+  P_{i,j} = \pr{D^L_{i,j} - D^H_{i,j}}\pr{U^H_j - U^H_i} \eqc
+\end{equation}
+\begin{equation}
+  P_{i,j} = -M^C_{i,j}\pr{\frac{U^H_j - U^n_j}{\dt} - \frac{U^H_i - U^n_i}{\dt}}
+    + \pr{D^L_{i,j} - D^{H,n}_{i,j}}\pr{U^n_j - U^n_i}  \eqc
+\end{equation}
+\begin{multline}
+  P_{i,j} = -M^C_{i,j}\pr{\frac{U^H_j - U^n_j}{\dt} - \frac{U^H_i - U^n_i}{\dt}}
+    + (1-\theta)\pr{D^L_{i,j} - D^{H,n}_{i,j}}\pr{U^n_j - U^n_i}\\
+    + \theta\pr{D^L_{i,j} - D^{H,n+1}_{i,j}}\pr{U^H_j - U^H_i} \eqp
+\end{multline}
+Note that this decomposition yields equal and opposite antidiffusive flux pairs
+since the antidiffusion matrix $\P$ is skew symmetric: $P_{j,i}=-P_{i,j}$.
+Up until this point, no changes have been made to the
+high-order scheme, although it has been expressed in a different form.
+To apply the FCT algorithm, limiting coefficients $L_{i,j}$ are applied to
+each antidiffusive flux $P_{i,j}$. Thus the FCT systems are the following:
+\begin{equation}\label{eq:fct_ss}
+  \A^L \U^H = \ssrhs + \bar{p} \eqc
+\end{equation}
+\begin{equation}\label{eq:fct_fe}
+  \M^L\frac{\U^H - \U^n}{\dt} + \A^L\U^n = \ssrhs^n + \bar{p} \eqc
+\end{equation}
+\begin{equation}\label{eq:fct_theta}
+  \M^L\frac{\U^H - \U^n}{\dt} + \A^L\pr{\theta\U^{n+1} + (1-\theta)\U^n}
+    = \ssrhs^\theta + \bar{p} \eqc
+\end{equation}
+where the overbar denotes limitation: $\bar{p}_i\equiv\sum_j L_{i,j}P_{i,j}$.
+The limiting coefficients each range between zero and one, representing
+full limitation and no limitation, respectively. Setting all limiting
+coefficients to zero would result in the low-order solution, and setting
+all to one would result in the high-order solution. The actual values of the
+limiting coefficients are determined by the limiter, which operates on the
+following goal: maximize the limiting coefficients such that the imposed
+solution bounds are not violated.
+
+%===============================================================================
+\input{content/solution_bounds}
+%===============================================================================
+\subsubsection{Antidiffusion Bounds}
+
+Bounds imposed on a solution value $i$, such as the bounds described in Section
+\ref{sec:solution_bounds}, directly translate into bounds on the limited
+antidiffusion source $\bar{p}_i$.
+
+
+%===============================================================================

@@ -106,7 +106,7 @@ Before giving an analytic local discrete maximum principle, a local maximum
 principle applying to a general region is given by the following theorem.
 
 \begin{theorem}[thm:analytic_max_principle]{Analytic Local Maximum Principle}
-   Let $L(\x,\tau)$ be the line segment that spans between 
+   Let $L(\x,\tau)$ be the line segment that spans between
    $\x-\speed\tau\directionvector$ and $\x$:
    \begin{equation}
       L(\x,\tau)\equiv \left\{\mathbf{y}\in\mathbb{R}^d : \mathbf{y}
@@ -184,7 +184,7 @@ principle applying to a general region is given by the following theorem.
          - \speed(\tau -\bar{t})\directionvector)\speed d\bar{t}}\speed dt' \eqp
    \end{multline*}
    One can bound the first term in the right-hand-side of Equation
-   \eqref{eq:integral_form} by considering 
+   \eqref{eq:integral_form} by considering
    the maximum and minimum cross section on the line segment $L(\x,\tau)$
    for the lower and upper bounds, respectively:
    \[
@@ -206,19 +206,19 @@ principle applying to a general region is given by the following theorem.
          e^{-\int\limits_{t'}^\tau \reactioncoef(\x
            - \speed(\tau -\bar{t})\directionvector)\speed d\bar{t}} \speed dt'\\
       & \le
-         \scalarsource_{\max,L}\int\limits_0^\tau 
+         \scalarsource_{\max,L}\int\limits_0^\tau
          e^{-\int\limits_{t'}^\tau \reactioncoef(\x
            - \speed(\tau -\bar{t})\directionvector)\speed d\bar{t}}\speed dt'\\
       & \le
-         \scalarsource_{\max,L}\int\limits_0^\tau 
+         \scalarsource_{\max,L}\int\limits_0^\tau
          e^{-\reactioncoef_{\min,L}\int\limits_{t'}^\tau \speed d\bar{t}}\speed dt'\\
-      & = 
+      & =
          \scalarsource_{\max,L} \int\limits_0^\tau
          e^{-\speed(\tau-t')\reactioncoef_{\min,L}}\speed dt'\\
-      & = 
+      & =
          \scalarsource_{\max,L}e^{-\speed\tau\reactioncoef_{\min,L}}
          \int\limits_0^\tau e^{\reactioncoef_{\min,L}\speed t'}\speed dt'\\
-      & = 
+      & =
          \left\{\begin{array}{l l}
             \frac{\scalarsource_{\max,L}}{\reactioncoef_{\min,L}}
               (1 - e^{-\speed\tau\reactioncoef_{\min,L}}) \eqc
@@ -240,7 +240,7 @@ to evaluate the minimum and maximum of the reaction coefficients and
 sources on the line segment $L(\x_i,\tau)$.
 The following corollary loosens the solution bounds for use in a
 more simple implementation of solution bounds for FCT. It considers
-not just the upstream line segment of length $\speed\tau$, but the 
+not just the upstream line segment of length $\speed\tau$, but the
 sphere of radius $\speed\tau$ centered at $\x_i$.
 
 %-------------------------------------------------------------------------------
@@ -249,7 +249,7 @@ sphere of radius $\speed\tau$ centered at $\x_i$.
 Let $N(\x,\tau)$ denote the sphere centered at $\x$ with radius
 $\speed\tau$, as shown in Figure \ref{fig:neighborhood}:
    \begin{equation}\label{eq:neighborhood}
-      N(\x,\tau)\equiv\left\{\mathbf{y}\in\mathbb{R}^d : 
+      N(\x,\tau)\equiv\left\{\mathbf{y}\in\mathbb{R}^d :
          \|\mathbf{y} - \x\| \le \speed\tau\right\} \eqp
    \end{equation}
 The following, looser, local maximum principle is valid for the solution to the
@@ -307,9 +307,9 @@ problem given by Equation \eqref{PDE}:
 \begin{proof}
 Because $\x-\speed\tau\di\in N(\x,\tau)$,
 \[
-  \scalarsolution_0(\x - \speed\tau\directionvector) \geq \scalarsolution_{\min,N}^0 
+  \scalarsolution_0(\x - \speed\tau\directionvector) \geq \scalarsolution_{\min,N}^0
   \eqc \quad
-  \scalarsolution_0(\x - \speed\tau\directionvector) \leq \scalarsolution_{\max,N}^0 
+  \scalarsolution_0(\x - \speed\tau\directionvector) \leq \scalarsolution_{\max,N}^0
   \eqp
 \]
 Because $L(\x,\tau)\subset N(\x,\tau)$ (see Figure \ref{fig:neighborhood}),
@@ -380,8 +380,8 @@ $\reactioncoef_{\max,i}
   \equiv\max\limits_{\x\in\support_i}\reactioncoef(\x)$, and
 $\scalarsource_{\max,i}
   \equiv\max\limits_{\x\in\support_i}\scalarsource(\x)$,
-with $\solutionletter_{\min,i}^n$, $\reactioncoef_{\max,i}$,
-and $\scalarsource_{\max,i}$ defined similarly.
+with $\solutionletter_{\min,i}^n$, $\reactioncoef_{\min,i}$,
+and $\scalarsource_{\min,i}$ defined similarly.
 \end{theorem}
 \begin{proof}
 Due to the CFL condition, Equation \eqref{eq:cfl_analytic_dmp}, the support of
@@ -458,4 +458,3 @@ by taking the maximum/minimum over quadrature points: e.g.,
 $\max\limits_{\x\in\support_i} \approx \max\limits_{\x\in Q(\support_i)}$,
 where $Q(\support_i)$ is the set of quadrature points in $\support_i$.
 \end{remark}
-

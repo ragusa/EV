@@ -82,11 +82,11 @@ and theta system, respectively, are
   \A^L \U = \ssrhs \eqc
 \end{equation}
 \begin{equation}\label{eq:low_fe}
-  \M^L\U^{n+1} = \M^L\U^n + \dt\pr{\ssrhs^n - \A^L\U^n} \eqc
+  \M^L\frac{\U^{n+1} - \U^n}{\dt} + \A^L\U^n = \ssrhs^n \eqc
 \end{equation}
 \begin{equation}\label{eq:low_theta}
-  \pr{\M^L + \theta\dt\A^L}\U^{n+1} = \M^L\U^n + \dt\pr{\ssrhs^\theta
-    - (1-\theta)\A^L\U^n} \eqc
+  \M^L\frac{\U^{n+1} - \U^n}{\dt} + \A^L\pr{\theta\U^{n+1} + (1-\theta)\U^n}
+    = \ssrhs^\theta \eqc
 \end{equation}
 where $\ssrhs^\theta \equiv (1-\theta)\ssrhs^n + \theta\ssrhs^{n+1}$.
 The low-order
