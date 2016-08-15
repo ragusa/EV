@@ -1,0 +1,35 @@
+% !TEX root = ../paper.tex
+
+\subsubsection{Limiting Coefficients}
+
+The results in this paper use the classic multi-dimensional limiter introduced by Zalesak
+\cite{zalesak}. Recall that a limiter takes as input only the antidiffusion bounds
+$\bar{p}_i^\pm$ and the antidiffusive fluxes $P_{i,j}$ and outputs the
+limiting coefficients $L_{i,j}$. The Zalesak limiter gives the following
+definition of the limiting coefficients:
+\begin{subequations}
+\begin{equation}\label{eq:flux_sums}
+   p_i^+ \equiv \sumj\max(0,P_{i,j}) \eqc\qquad
+   p_i^- \equiv \sumj\min(0,P_{i,j}) \eqc
+\end{equation}
+\begin{equation}\label{eq:single_node_limiting_coefficients}
+   L_i^\pm \equiv\left\{
+      \begin{array}{l l}
+         1 & p_i^\pm = 0\\
+         \min\left(1,\frac{\bar{p}_i^\pm}
+           {p_i^\pm}\right) & p_i^\pm
+           \ne 0
+      \end{array}
+      \right. \eqc
+\end{equation}
+\begin{equation}\label{eq:limiting_coefficients}
+   L_{i,j} \equiv\left\{
+      \begin{array}{l l}
+         \min(L_i^+,L_j^-)
+           & P_{i,j} \geq 0\\
+         \min(L_i^-,L_j^+)
+           & P_{i,j} < 0
+      \end{array}
+      \right. \eqp
+\end{equation}
+\end{subequations}

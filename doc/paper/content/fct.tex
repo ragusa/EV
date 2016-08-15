@@ -1,11 +1,5 @@
 % !TEX root = ../paper.tex
 
-\begin{itemize}
-  \item solution bounds - characteristic (upwind and non-upwind)
-  \item antidiffusion bounds - definition and requirements for fail-safe
-  \item limiters - Zalesak, multi-pass?
-\end{itemize}
-
 \subsubsection{The FCT System}
 
 The entropy viscosity method described in Section \ref{sec:high} enforces
@@ -70,14 +64,14 @@ high-order scheme, although it has been expressed in a different form.
 To apply the FCT algorithm, limiting coefficients $L_{i,j}$ are applied to
 each antidiffusive flux $P_{i,j}$. Thus the FCT systems are the following:
 \begin{equation}\label{eq:fct_ss}
-  \A^L \U^H = \ssrhs + \bar{p} \eqc
+  \A^L \U^H = \ssrhs + \bar{\p} \eqc
 \end{equation}
 \begin{equation}\label{eq:fct_fe}
-  \M^L\frac{\U^H - \U^n}{\dt} + \A^L\U^n = \ssrhs^n + \bar{p} \eqc
+  \M^L\frac{\U^H - \U^n}{\dt} + \A^L\U^n = \ssrhs^n + \bar{\p} \eqc
 \end{equation}
 \begin{equation}\label{eq:fct_theta}
   \M^L\frac{\U^H - \U^n}{\dt} + \A^L\pr{\theta\U^{n+1} + (1-\theta)\U^n}
-    = \ssrhs^\theta + \bar{p} \eqc
+    = \ssrhs^\theta + \bar{\p} \eqc
 \end{equation}
 where the overbar denotes limitation: $\bar{p}_i\equiv\sum_j L_{i,j}P_{i,j}$.
 The limiting coefficients each range between zero and one, representing
@@ -91,11 +85,64 @@ solution bounds are not violated.
 %===============================================================================
 \input{content/solution_bounds}
 %===============================================================================
+
 \subsubsection{Antidiffusion Bounds}
 
 Bounds imposed on a solution value $i$, such as the bounds described in Section
 \ref{sec:solution_bounds}, directly translate into bounds on the limited
-antidiffusion source $\bar{p}_i$.
+antidiffusion source $\bar{p}_i$. These antidiffusion bounds $\bar{p}_i^\pm$ for steady-state,
+explicit Euler, and Theta discretization are respectively derived by
+solving Equations \eqref{eq:fct_ss}, \eqref{eq:fct_fe}, and \eqref{eq:fct_theta}
+for $\bar{p}_i$ and manipulating the inequality $U^-_i\leq U_i\leq U^+_i$:
+\begin{equation}
+  \bar{p}_i^\pm \equiv A_{i,i}^L U_i^\pm
+    + \sumjnoti A\ij^L U_j - b_i \eqc
+\end{equation}
+\begin{equation}
+  \bar{p}_i^\pm \equiv M^L_{i,i}
+    \frac{U_i^\pm - U_i^n}{\dt}
+  + \sumj A\ij^L U_j^n
+  - b_i^n \eqc
+\end{equation}
+\begin{equation}
+  \bar{p}_i^\pm \equiv
+   \pr{\frac{M^L_{i,i}}{\dt}+\theta A_{i,i}^L}
+     U_i^\pm
+    + \pr{(1-\theta) A_{i,i}^L-\frac{M^L_{i,i}}{\dt}}
+     U_i^n
+  +\sumjnoti A\ij^L U_j^\theta
+  -b_i^\theta
+  \eqp
+\end{equation}
+Thus if limiting coefficients $L_{i,j}$ are selected such that
+$\bar{p}_i^-\leq \bar{p}_i\leq \bar{p}_i^+$, then the solution bounds are
+satisfied: $U^-_i\leq U_i\leq U^+_i$.
 
+Limiters such as the limiter described in Section \ref{sec:limiter} can be
+viewed as black boxes which take as input only the antidiffusion bounds
+$\bar{p}_i^\pm$ and the antidiffusive fluxes $P_{i,j}$ and output the
+limiting coefficients $L_{i,j}$. It is important to note that most limiters,
+including the limiter described in this paper, assume the following:
+$\bar{p}_i^-\leq 0$, $\bar{p}_i^+\geq 0$. Recall that FCT starts from the
+low-order scheme, which is equivalent to the solution with $\bar{p}_i=0$.
+The limiter should start from this point so that there is a fail-safe solution
+for the FCT algoritm: the low-order solution. Otherwise, there is no guarantee
+that any combination of values of limiting coefficients will achieve
+the desired condition $\bar{p}_i^-\leq \bar{p}_i\leq \bar{p}_i^+$. If
+$\bar{p}_i^- > 0$ or $\bar{p}_i^+ < 0$, then the starting state, the low-order
+solution, with $\bar{p}_i=0$ is an invalid solution of the FCT algorithm.
+Some solution bounds automatically satisfy $\bar{p}_i^-\leq 0$ and $\bar{p}_i^+\geq 0$,
+but in general these conditions must be enforced. In this paper, the solution
+bounds are possibly widened by directly enforcing these assumptions:
+\begin{equation}
+  \bar{p}_i^- \gets \min(0,\bar{p}_i^-) \eqc
+\end{equation}
+\begin{equation}
+  \bar{p}_i^+ \gets \max(0,\bar{p}_i^+) \eqp
+\end{equation}
+If this step is skipped, the behavior of the limiter is undefined and for example
+negative limiting coefficients can be computed.
 
+%===============================================================================
+\input{content/limiting_coefficients}
 %===============================================================================
