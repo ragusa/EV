@@ -332,6 +332,44 @@ void TransportProblemParameters<dim>::process_derived_parameters(
         this->exact_solution_function = exact_solution_function_derived;
       }
     }
+    if (this->exact_solution_type == "two_region")
+    {
+      // create necessary vectors
+      std::vector<double> interface_positions = {this->constants["x1"]};
+      std::vector<double> region_sigmas = {this->constants["sigma1"],
+                                           this->constants["sigma2"]};
+      std::vector<double> region_sources = {this->constants["source1"],
+                                            this->constants["source2"]};
+
+      if (this->is_transient_problem) // transient problem
+      {
+        // create multi-region exact solution object
+        std::shared_ptr<TransientMultiRegionExactSolution<dim>>
+          exact_solution_function_derived =
+            std::make_shared<TransientMultiRegionExactSolution<dim>>(
+              interface_positions,
+              region_sources,
+              region_sigmas,
+              transport_direction,
+              this->constants["incoming"]);
+        // point base class shared pointer to derived class function object
+        this->exact_solution_function = exact_solution_function_derived;
+      }
+      else // steady-state problem
+      {
+        // create multi-region exact solution object
+        std::shared_ptr<SteadyStateMultiRegionExactSolution<dim>>
+          exact_solution_function_derived =
+            std::make_shared<SteadyStateMultiRegionExactSolution<dim>>(
+              interface_positions,
+              region_sources,
+              region_sigmas,
+              transport_direction,
+              this->constants["incoming"]);
+        // point base class shared pointer to derived class function object
+        this->exact_solution_function = exact_solution_function_derived;
+      }
+    }
     if (this->exact_solution_type == "three_region")
     {
       // create necessary vectors

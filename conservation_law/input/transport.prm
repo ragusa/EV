@@ -3,6 +3,7 @@
 #   absorber
 #   absorber_ss
 #   constant_ss
+#   interface
 #   glance_in_void
 #   glance_in_void_ss
 #   mms_sinx_expt  u(x,t) = sin(pi*x)*exp(-t)
@@ -25,7 +26,7 @@
 #   void_to_absorber_1d_ss
 #   void_to_absorber_2d_ss
 subsection problem
-   set problem name = three_region
+   set problem name = interface
 end
 
 subsection scheme
@@ -48,7 +49,7 @@ end
 
 subsection time
    set time step size option  = cfl_dmp # constant|cfl|cfl_dmp|cfl_di
-   set cfl                    = 0.5
+   set cfl                    = 0.1
    set time step size         = 0.001
    set use default end time   = false
    set end time               = 1.0
@@ -73,7 +74,7 @@ end
 
 subsection fct
    # dmp|dmp_analytic|analytic|upwind_analytic|dmp_exact|analytic_exact
-   set filter sequence string        = dmp
+   set filter sequence string        = analytic
    set limiter option                = zalesak # ones|zeroes|zalesak
    set use multipass limiting        = false
    set multipass limiting percent tolerance = 1.0
@@ -112,7 +113,7 @@ end
 subsection output
    set verbosity level    = 2    # 0|1|2 (0 is least verbose)
    set output exact solution = true
-   set output period      = 1
+   set output period      = 0
    set transient output size limit = 1e9
    set output mesh        = false
    set output mass matrix = false
