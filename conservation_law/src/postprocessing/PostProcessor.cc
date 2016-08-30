@@ -942,7 +942,7 @@ void PostProcessor<dim>::create_directory(const std::string & directory) const
     make_status = system(("mkdir " + directory).c_str());
   else
     make_status = 0;
-  Assert(make_status == 0, ExcInternalError());
+  AssertThrow(make_status == 0, ExcInternalError());
 }
 
 /**
