@@ -77,5 +77,5 @@ protected:
   ConditionalOStream cout1;
 };
 
-#include "NonlinearSolver.cc"
+#include "src/solvers/NonlinearSolver.cc"
 #endif
