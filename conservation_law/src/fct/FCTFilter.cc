@@ -162,8 +162,10 @@ void FCTFilter<dim>::enforce_antidiffusion_bounds_signs()
 template <int dim>
 void FCTFilter<dim>::check_antidiffusion_bounds_signs() const
 {
+#ifdef DEBUG
   // small number for checking sign
   const double small = 1.0e-15;
+#endif
 
   for (unsigned int i = 0; i < n_dofs; ++i)
   {
