@@ -1,3 +1,5 @@
+% !TEX root = ../paper.tex
+
 \begin{itemize}
   \item smooth MMS problem - second-order convergence (based on length, could be a summary at the beginning of the results section + appendix)
   \item 1-D, 2-D void-to-absorber (normally-incident)
@@ -17,21 +19,104 @@ solutions obtained using:
 \end{itemize}
 
 %===============================================================================
-\subsection{Spatial Convergence Results}
+\subsection{Spatial Convergence}
 %===============================================================================
 
+\begin{figure}[htb]
+   \centering
+      \includegraphics[width=\textwidth]
+        {images/convergence_sinx.pdf}
+      \caption{Spatial Convergence for MMS Problem}
+   \label{fig:mms_sinx_ss}
+\end{figure}
+\clearpage
 %===============================================================================
-\subsection{Void-to-Absorber Test Problem}
+\subsection{Glancing Beam in a Void}
 %===============================================================================
-
+\begin{figure}[ht]
+   \centering
+   \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\textwidth]
+        {images/glance_Low.png}
+      \caption{Low-Order}
+   \end{subfigure}
+   \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\textwidth]
+        {images/glance_EV.png}
+      \caption{EV}
+   \end{subfigure}
+   \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\textwidth]
+        {images/glance_GalFCT.png}
+      \caption{Galerkin-FCT}
+   \end{subfigure}
+   \begin{subfigure}{0.45\textwidth}
+      \includegraphics[width=\textwidth]
+        {images/glance_EVFCT.png}
+      \caption{EV-FCT}
+   \end{subfigure}
+   \caption{Comparison of Solutions for the Glance-in-Void Test
+     Problem Using Explicit Euler Time Discretization}
+   \label{fig:glance_in_void_fe}
+\end{figure}
+\clearpage
 %===============================================================================
-\subsection{Obstruction Test Problem}
+\subsection{Obstruction}
 %===============================================================================
-
+\begin{figure}[ht]
+   \centering
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]
+        {images/obstruction_low.png}
+      \caption{Low-Order}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]
+        {images/obstruction_Gal.png}
+      \caption{Galerkin}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]
+        {images/obstruction_EV.png}
+      \caption{EV}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]
+        {images/obstruction_GalFCT.png}
+      \caption{Galerkin-FCT}
+   \end{subfigure}
+   \begin{subfigure}{0.3\textwidth}
+      \includegraphics[width=\textwidth]
+        {images/obstruction_EVFCT.png}
+      \caption{EV-FCT}
+   \end{subfigure}
+   \caption{Comparison of Solutions for the Obstruction Test
+     Problem Using Implicit Euler Time Discretization}
+   \label{fig:obstruction_be}
+\end{figure}
+\clearpage
 %===============================================================================
-\subsection{Spatial Convergence Results}
+\subsection{Two-Region Interface}
 %===============================================================================
-
+\begin{figure}[htb]
+   \centering
+      \includegraphics[width=\textwidth]
+        {images/solution_interface.pdf}
+      \caption{Comparison of Solutions for the Two-Region Interface Test
+       Problem Using SSPRK33 Time Discretization}
+   \label{fig:interface}
+\end{figure}
+\clearpage
 %===============================================================================
-\subsection{Spatial Convergence Results}
+\subsection{Source in a Void}
 %===============================================================================
+%solution_source_in_void.pdf
+\begin{figure}[htb]
+   \centering
+      \includegraphics[width=\textwidth]
+        {images/solution_source_in_void.pdf}
+      \caption{Comparison of Solutions for the Source-in-Void Test
+       Problem Using Steady-State Time Discretization}
+   \label{fig:source_}
+\end{figure}
+\clearpage
