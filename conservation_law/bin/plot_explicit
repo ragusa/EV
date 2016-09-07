@@ -126,7 +126,7 @@ else
         is_ss='$is_ss';
         quantity='$quantity[$i]';
         column='$column[$i]'\" $plotscript");
-     system("sleep 1");
+     system("sleep 2");
         
      # name of resulting plot file
      my $output_file;
@@ -137,13 +137,14 @@ else
        $output_file = "../output/$problem_name/$quantity[$i]".
          "_$time_integrator_string.pdf";
      }
-     
+
      # crop pdf
      if ($croppdf) {
         system("pdfcrop $output_file $output_file");
      }
      
      # view output
+     print "Output file: $output_file\n";
      system("evince $output_file");
   }
 }

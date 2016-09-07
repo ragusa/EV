@@ -26,7 +26,7 @@
 #   void_to_absorber_1d_ss
 #   void_to_absorber_2d_ss
 subsection problem
-   set problem name = interface
+   set problem name = sourcevoid_to_absorber_ss
 end
 
 subsection scheme
@@ -57,7 +57,7 @@ subsection time
 end
 
 subsection temporal discretization
-   set temporal discretization = ssprk # ss|ssprk|theta
+   set temporal discretization = ss    # ss|ssprk|theta
    set ssprk discretization    = SSP3  # FE|SSP2|SSP3
    set theta discretization    = BE    # FE|CN|BE
 end
@@ -74,11 +74,11 @@ end
 
 subsection fct
    # dmp|dmp_analytic|analytic|upwind_analytic|dmp_exact|analytic_exact
-   set filter sequence string        = analytic
+   set filter sequence string        = dmp_analytic
    set limiter option                = zalesak # ones|zeroes|zalesak
    set use multipass limiting        = false
    set multipass limiting percent tolerance = 1.0
-   set dirichlet limiting coefficient = 1.0
+   set dirichlet limiting coefficient = 0.0
    set enforce antidiffusion bounds signs = true
    set fct synchronization type      = none    # none|min|compound
    set fct initialization option     = low     # zero|low|high
