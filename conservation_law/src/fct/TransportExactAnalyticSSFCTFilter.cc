@@ -14,6 +14,7 @@
  * \param[in] cell_quadrature_  cell quadrature
  * \param[in] limiter_  limiter
  * \param[in] dirichlet_values_  map of DoF indices to Dirichlet values
+ * \param[in] dx_min_  minimum cell diameter
  */
 template <int dim>
 TransportExactAnalyticSSFCTFilter<dim>::TransportExactAnalyticSSFCTFilter(
@@ -23,14 +24,16 @@ TransportExactAnalyticSSFCTFilter<dim>::TransportExactAnalyticSSFCTFilter(
   const FESystem<dim> & fe_,
   const QGauss<dim> & cell_quadrature_,
   const std::shared_ptr<Limiter<dim>> limiter_,
-  const std::map<unsigned int, double> & dirichlet_values_)
+  const std::map<unsigned int, double> & dirichlet_values_,
+  const double & dx_min_)
   : TransportAnalyticSSFCTFilter<dim>(run_parameters_,
                                       problem_parameters_,
                                       dof_handler_,
                                       fe_,
                                       cell_quadrature_,
                                       limiter_,
-                                      dirichlet_values_)
+                                      dirichlet_values_,
+                                      dx_min_)
 {
   // resize exact solution values vector
   exact_solution_values.reinit(dof_handler_.n_dofs());
@@ -58,5 +61,5 @@ void TransportExactAnalyticSSFCTFilter<dim>::compute_solution_bounds(
   const Vector<double> &, const SparseMatrix<double> &, const Vector<double> &)
 {
   // compute analytic solution bounds
-  this->analytic_bounds.update(exact_solution_values, 0.0, 0.0);
+  this->analytic_bounds.update(exact_solution_values, this->dx_min, 0.0);
 }

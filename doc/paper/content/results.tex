@@ -192,7 +192,20 @@ problem. A zero Dirichlet boundary condition is imposed on the incoming (left)
 boundary, and this problem is run as a steady-state problem on the domain
 $(0,1)$ with 32 cells.
 
+For this problem, the entropy residual and jump coefficients $c_\mathcal{R}$
+and $c_\mathcal{J}$ were set to 0.5; the default value of 0.1 was found
+to be too small for this problem.
 Figure \ref{fig:source_in_void} shows the results for this problem.
+The Galerkin solution has ``kinks'' along the void (left) region, but
+shows point-wise matching of the exact solution in the absorber (right)
+region. The EV solution, however, eliminates the terracing effect in
+the void region but suffers from an inflated peak at the interface, due
+to entropy production at the interface. For this test problem, the
+Galerkin-FCT scheme gives superior results to that of the EV-FCT
+scheme. However, both FCT schemes suffer from the familiar FCT
+phenomenon known as ``peak-clipping'', whereby the ``mass'' that
+should be present in the peak has been redistributed by the FCT
+limiter, flattening the peak.
 
 \begin{figure}[htb]
    \centering

@@ -31,7 +31,8 @@ public:
     const FESystem<dim> & fe,
     const QGauss<dim> & cell_quadrature,
     const std::shared_ptr<Limiter<dim>> limiter,
-    const std::map<unsigned int, double> & dirichlet_values);
+    const std::map<unsigned int, double> & dirichlet_values,
+    const double & dx_min);
 
   void compute_solution_bounds(const Vector<double> & solution,
                                const SparseMatrix<double> & low_order_ss_matrix,

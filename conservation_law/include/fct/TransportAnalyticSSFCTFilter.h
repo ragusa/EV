@@ -24,7 +24,8 @@ public:
     const FESystem<dim> & fe,
     const QGauss<dim> & cell_quadrature,
     const std::shared_ptr<Limiter<dim>> limiter,
-    const std::map<unsigned int, double> & dirichlet_values);
+    const std::map<unsigned int, double> & dirichlet_values,
+    const double & dx_min);
 
   virtual void filter_antidiffusive_fluxes(
     const Vector<double> & solution,
@@ -48,6 +49,9 @@ public:
 protected:
   /** \brief analytic transport solution bounds */
   TransportAnalyticSolutionBounds<dim> analytic_bounds;
+
+  /** \brief minimum cell diameter */
+  const double dx_min;
 };
 
 #include "src/fct/TransportAnalyticSSFCTFilter.cc"

@@ -14,6 +14,7 @@
  * \param[in] cell_quadrature_  cell quadrature
  * \param[in] limiter_  limiter
  * \param[in] dirichlet_values_  map of DoF indices to Dirichlet values
+ * \param[in] dx_min_  minimum cell diameter
  */
 template <int dim>
 TransportAnalyticSSFCTFilter<dim>::TransportAnalyticSSFCTFilter(
@@ -23,11 +24,13 @@ TransportAnalyticSSFCTFilter<dim>::TransportAnalyticSSFCTFilter(
   const FESystem<dim> & fe_,
   const QGauss<dim> & cell_quadrature_,
   const std::shared_ptr<Limiter<dim>> limiter_,
-  const std::map<unsigned int, double> & dirichlet_values_)
+  const std::map<unsigned int, double> & dirichlet_values_,
+  const double & dx_min_)
   : SteadyStateFCTFilter<dim>(
       run_parameters_, limiter_, dof_handler_, fe_, dirichlet_values_),
     analytic_bounds(
-      problem_parameters_, dof_handler_, fe_, cell_quadrature_, dirichlet_values_)
+      problem_parameters_, dof_handler_, fe_, cell_quadrature_, dirichlet_values_),
+    dx_min(dx_min_)
 {
 }
 
@@ -120,5 +123,5 @@ void TransportAnalyticSSFCTFilter<dim>::compute_solution_bounds(
   const Vector<double> &)
 {
   // compute analytic solution bounds
-  analytic_bounds.update(solution, 0.0, 0.0);
+  analytic_bounds.update(solution, dx_min, 0.0);
 }

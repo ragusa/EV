@@ -70,7 +70,8 @@ std::shared_ptr<SteadyStateFCTFilter<dim>> TransportSteadyStateFCT<
       *this->fe,
       *cell_quadrature,
       this->limiter,
-      *this->dirichlet_values);
+      *this->dirichlet_values,
+      dx_min);
   else if (filter_string == "upwind_analytic")
     filter = std::make_shared<TransportUpwindAnalyticSSFCTFilter<dim>>(
       *this->run_parameters,
@@ -96,7 +97,8 @@ std::shared_ptr<SteadyStateFCTFilter<dim>> TransportSteadyStateFCT<
       *this->fe,
       *cell_quadrature,
       this->limiter,
-      *this->dirichlet_values);
+      *this->dirichlet_values,
+      dx_min);
   else
     AssertThrow(false, ExcNotImplemented());
 

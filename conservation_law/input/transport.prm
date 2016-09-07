@@ -63,8 +63,8 @@ subsection temporal discretization
 end
 
 subsection artificial viscosity
-   set entropy residual coefficient       = 0.1
-   set entropy jump coefficient           = 0.1
+   set entropy residual coefficient       = 5.0e-1
+   set entropy jump coefficient           = 5.0e-1
    set entropy viscosity smoothing option = none # none|max|average
    set entropy viscosity smoothing weight = 4
    set constant viscosity value           = 0.02
@@ -74,7 +74,7 @@ end
 
 subsection fct
    # dmp|dmp_analytic|analytic|upwind_analytic|dmp_exact|analytic_exact
-   set filter sequence string        = dmp_analytic
+   set filter sequence string        = analytic
    set limiter option                = zalesak # ones|zeroes|zalesak
    set use multipass limiting        = false
    set multipass limiting percent tolerance = 1.0
@@ -98,7 +98,7 @@ end
 
 subsection nonlinear solver
    set nonlinear tolerance      = 1.0e-10
-   set nonlinear max iterations = 10000
+   set nonlinear max iterations = 1000
    set relaxation factor        = 1.0
 end
 
