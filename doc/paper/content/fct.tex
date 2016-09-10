@@ -13,10 +13,10 @@ to guarantee the absence of negativities.
 
 The first ingredient of the FCT algorithm is the definition of the antidiffusive
 fluxes. To arrive at this definition, the low-order systems, given by Equations
-\ref{eq:low_ss}, \ref{eq:low_fe}, and \ref{eq:low_theta} for each temporal
+\eqref{eq:low_ss}, \eqref{eq:low_fe}, and \eqref{eq:low_theta} for each temporal
 discretization, are augmented with the addition of the \emph{antidiffusion source}
 $\p$, which now, instead of producing the low-order solution, produces the high-order
-solution $U^H$.
+solution $\mathbf{U}^H$.
 \begin{equation}\label{eq:antidiffusionsource_ss}
   \A^L \U^H = \ssrhs + \p \eqc
 \end{equation}
@@ -27,8 +27,8 @@ solution $U^H$.
   \M^L\frac{\U^H - \U^n}{\dt} + \A^L\pr{\theta\U^{n+1} + (1-\theta)\U^n}
     = \ssrhs^\theta + \p \eqp
 \end{equation}
-Then the corresponding high-order systems, given by Equations \ref{eq:high_ss},
-\ref{eq:high_fe}, \ref{eq:high_theta} are subtracted from these equations
+Then the corresponding high-order systems, given by Equations \eqref{eq:high_ss},
+\eqref{eq:high_fe}, \eqref{eq:high_theta} are subtracted from these equations
 to give the following definitions for $\p$:
 \begin{equation}\label{eq:antidiffusionsourcei_ss}
   \p \equiv \pr{\D^L - \D^H}\U^H \eqc
@@ -60,8 +60,9 @@ are valid antidiffusive flux decompositions:
 Note that this decomposition yields equal and opposite antidiffusive flux pairs
 since the antidiffusion matrix $\P$ is skew symmetric: $P_{j,i}=-P_{i,j}$.
 Up until this point, no changes have been made to the
-high-order scheme, although it has been expressed in a different form.
-To apply the FCT algorithm, limiting coefficients $L_{i,j}$ are applied to
+high-order scheme: solving Equations \eqref{eq:antidiffusion_source_ss} through
+\eqref{eq:antidiffusion_source_theta} still produces the high-order solution.
+FCT is applied to these equations by applying limiting coefficients $L_{i,j}$ to
 each antidiffusive flux $P_{i,j}$. Thus the FCT systems are the following:
 \begin{equation}\label{eq:fct_ss}
   \A^L \U^H = \ssrhs + \bar{\p} \eqc
@@ -75,7 +76,8 @@ each antidiffusive flux $P_{i,j}$. Thus the FCT systems are the following:
 \end{equation}
 where the overbar denotes limitation: $\bar{p}_i\equiv\sum_j L_{i,j}P_{i,j}$.
 The limiting coefficients each range between zero and one, representing
-full limitation and no limitation, respectively. Setting all limiting
+full limitation and no limitation, respectively.
+For example, setting all limiting
 coefficients to zero would result in the low-order solution, and setting
 all to one would result in the high-order solution. The actual values of the
 limiting coefficients are determined by the limiter, which operates on the
@@ -95,7 +97,7 @@ imposed solution bounds must be computed using the previous solution iterate:
 \end{equation}
 Furthermore, the antidiffusion bounds $\bar{p}_i^\pm$, which depend on these
 lagged solution bounds $U_i^{\pm,(\ell)}$, must be further lagged because
-its definition still contains terms at iteration $(\ell+1)$ despite the lagging
+its definition still contains terms at iteration $\ell+1$ despite the lagging
 of the solution bounds. The end result is this: the solution bounds for implicit/steady-state
 FCT schemes are only satisfied upon nonlinear convergence, not at each iteration.
 

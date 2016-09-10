@@ -3,7 +3,7 @@
 This section describes the entropy viscosity method applied to the scalar
 PDE given by Equation \eqref{eq:scalar_model}. Recall that the entropy
 viscosity method is to be used as the high-order scheme in the FCT algorithm,
-instead of the standard Galerkin method, as has been done previously
+instead of the standard Galerkin method as has been used previously
 \cite{kuzmin_FCT}.
 Usage of the entropy viscosity method in the FCT algorithm ensures convergence
 to the entropy solution \cite{guermond_secondorder}.
@@ -63,7 +63,20 @@ where $\hat{\eta}_K$ is a normalization constant with the units of entropy,
 $c_\mathcal{R}$ is a proportionality constant that can be modulated for
 each problem, and $\|\mathcal{R}(u_h)\|_{L^\infty(K)}$ is the maximum of the
 entropy residual on element $K$, which can be approximated as the maximum over
-the quadrature points of element $K$. In addition to the entropy residual, it can
+the quadrature points of element $K$.
+Designing a universally appropriate normalization constant $\hat{\eta}_K$ remains
+a challenge for the entropy viscosity method; it is likely that each conservation
+law system would benefit from a specialized definition. The objective of this
+normalization coefficient is to prevent the user from needing to make significant
+adjustments to the tuning parameter $c_\mathcal{R}$ for different problems.
+A definition that produces reasonable results for a large number of problems
+is the following:
+\begin{equation}
+  \hat{\eta}_K \equiv \left\|\eta-\bar{\eta}\right\|_{L^\infty(\domain)} \eqc
+\end{equation}
+where $\bar{\eta}$ is the average entropy over the domain.
+
+In addition to the entropy residual, it can
 also be beneficial to measure the jump in the gradient of the entropy flux
 across interfaces.
 Note that given the definition of the entropy flux, the gradient of the entropy
@@ -102,7 +115,7 @@ be achieved in part by tuning the parameters
 $c_\mathcal{R}$ and $c_\mathcal{J}$ for the particular problem.
 
 Putting everything together, the high-order system for steady-state,
-explicit Euler, and theta time discretizations are respectively expressed
+explicit Euler, and Theta time discretizations are respectively expressed
 as follows:
 \begin{equation}\label{eq:high_ss}
   \A^H \U = \ssrhs \eqc
@@ -121,7 +134,7 @@ to the low-order case but using the high-order viscosity instead of the low-orde
 viscosity:
 \begin{equation}\label{eq:high_order_diffusion_matrix}
   D_{i,j}^H \equiv
-    \sum\limits_{K\subset S_{i,j}}\nu^H_K
+    \sum\limits_{K\in \mathcal{K}(S_{i,j})}\nu^H_K
     d_K(\test_j,\test_i) \eqp
 \end{equation}
 Note that unlike the low-order scheme, the high-order scheme does not lump the

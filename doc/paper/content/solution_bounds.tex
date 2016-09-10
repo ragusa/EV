@@ -401,7 +401,7 @@ Note the time step size condition given by Equation \eqref{eq:cfl_analytic_dmp}
 implies that when using CFL numbers greater than 1 with implicit time
 discretizations, these bounds no longer apply. Similar bounds can be derived
 for $v\dt > h_{min}$; however, these bounds for a node $i$ will no longer
-only depend on the solution values of the neighbors of $i$; a larger neighborhood
+only depend on the solution values of the immediate neighbors of $i$; instead, a larger neighborhood
 must be used in the bounds, making the local solution bounds wider and thus less
 restrictive and arguably less useful in the FCT algorithm. This represents a
 significant disadvantage for implicit FCT, not only because the converged

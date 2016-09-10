@@ -48,7 +48,7 @@ the diagonal entries are positive, the off-diagonal entries are negative, and
 the row sums are zero. These facts will be invoked in the proof of the M-matrix
 conditions later in this section.
 
-The element-wise viscosity definition from \cite{guermond_firstorder} is
+The element-wise low-order viscosity definition from \cite{guermond_firstorder} is
 adapted to account for the reaction term in Equation \eqref{eq:scalar_model}
 but otherwise remains unchanged.
 %-------------------------------------------------------------------------------
@@ -57,12 +57,25 @@ but otherwise remains unchanged.
   \begin{equation}
     \nu^L_K \equiv \max\limits_{i\ne j\in\indices_K}
       \frac{\max(0,A_{i,j})}
-      {-\sum\limits_{T\subset S_{i,j}}d_T(\test_j,\test_i)}
+      {-\sum\limits_{T\in \mathcal{K}(S_{i,j})}d_T(\test_j,\test_i)}
       \eqc
   \end{equation}
   where $A_{i,j}$ is the $i,j$th entry of the Galerkin steady-state matrix
-  given by Equation \eqref{eq:Aij}.
+  given by Equation \eqref{eq:Aij}, $\indices_K$ is the set of degree of freedom
+  indices corresponding to basis functions that have support on cell $K$
+  (this is illustrated in Figure \ref{fig:cell_indices} -- the indicated
+  nodes have degree of freedom indices belonging to $\indices_K$), and
+  $\mathcal{K}(S_{i,j})$ is the set of cell indices for which the cell
+  domain and the shared support $S_{i,j}$ overlap.
 \end{defn}
+%-------------------------------------------------------------------------------
+%-------------------------------------------------------------------------------
+\begin{figure}[ht]
+   \centering
+     \input{content/diagrams/cell_indices.tex}
+      \caption{Illustration of Cell Degree of Freedom Indices $\indices_K$}
+   \label{fig:cell_indices}
+\end{figure}
 %-------------------------------------------------------------------------------
 This viscosity definition is designed to give the minimum amount of artificial
 diffusion without violating the M-matrix conditions.
@@ -70,14 +83,14 @@ diffusion without violating the M-matrix conditions.
 Now the low-order system will be described.
 Consider a modification of the Galerkin scheme given in Equation \eqref{eq:galerkin_semidiscrete}
 which lumps the mass matrix ($\M^C \rightarrow \M^L$) and adds an artificial
-diffusion operator $\D^L$, called the low-order diffusion matrix:
+diffusion operator $\D^L$, hereafter called the low-order diffusion matrix:
 \begin{equation}
   \M^L\ddt{\U^L} + (\A + \D^L)\U(t) = \ssrhs(t) \eqc
 \end{equation}
 where $\U^L(t)$ denotes the discrete low-order solution values.
 Defining the low-order steady-state system matrix $\A^L\equiv\A + \D^L$,
 the low-order system for the steady-state system, explicit Euler system,
-and theta system, respectively, are
+and Theta system, respectively, are
 \begin{equation}\label{eq:low_ss}
   \A^L \U = \ssrhs \eqc
 \end{equation}
@@ -94,7 +107,7 @@ diffusion matrix is assembled element-wise using the local viscous bilinear
 form and low-order viscosity definitions:
 \begin{equation}\label{eq:low_order_diffusion_matrix}
   D_{i,j}^L \equiv
-    \sum\limits_{K\subset S_{i,j}}\nu^L_K
+    \sum\limits_{K\in \mathcal{K}(S_{i,j})}\nu^L_K
     d_K(\test_j,\test_i) \eqp
 \end{equation}
 
@@ -127,6 +140,6 @@ non-negative.
 It can also be shown that the described low-order scheme satisfies a local
 discrete maximum principle, which is easily shown given the M-matrix property.
 One may decide to use these bounds as the imposed bounds in the FCT
-algorithm; however, this approach has been found to yield less accurate
+algorithm; however, this approach has been found to yield less accurate solutions
 than the approach to be outline in Section \ref{sec:fct} and is thus omitted
 for brevity.

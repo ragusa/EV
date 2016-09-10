@@ -1,8 +1,8 @@
 The transport equation, also called the Boltzmann equation, describes the
-transport of particles or waves through some background media and some
+transport of particles or waves through some background media, and some
 of its applications include nuclear reactors, atmospheric science, radiation
 therapy, astrophysics, radiation shielding, and high energy density physics.
-In this paper, focus is on solution techniques applicable to the first-order
+This paper focuses on solution techniques applicable to the first-order
 form of the transport equation, discretized in angle with discrete ordinates,
 which gives what is commonly called the $S_N$ equations:
 \begin{equation}\label{eq:transport_scalar}
@@ -66,12 +66,13 @@ the flux-corrected transport (FCT) algorithm, introduced in 1973 as
 the SHASTA algorithm for finite difference discretizations
 by Boris and Book \cite{borisbook}, where it was applied to linear discontinuities
 and gas dynamic shock waves. The main idea of the FCT algorithm is to blend a
-low-order scheme having desirable properties with a scheme of a higher order of accuracy.
-Zalesak improved methodology of the algorithm and introduced a multi-dimensional
-limiter that remains popular today \cite{zalesak}.
+low-order scheme having desirable properties with a high-order scheme which may
+lack these properties.
+Zalesak improved methodology of the algorithm and introduced a fully
+multi-dimensional limiter \cite{zalesak}.
 Parrott and Christie extended the algorithm to the finite element method
 on unstructured grids \cite{parrott}, thus beginning the FEM-FCT methodology.
-L\:{o}hner et. al. applied FEM-FCT to the Euler and Navier-Stokes equations and
+L\"{o}hner et. al. applied FEM-FCT to the Euler and Navier-Stokes equations and
 a consequence of this work allowed FCT to be applied in modeling of complex
 geometries \cite{lohner}.
 
@@ -110,6 +111,6 @@ some preliminaries such as the problem formulation and discretization.
 Recall that the FCT algorithm uses a low-order scheme and a high-order scheme.
 Section \ref{sec:low} presents the low-order scheme, Section \ref{sec:high}
 presents the high-order scheme (which is based on entropy viscosity),
-and Section \ref{sec:fct} presents the FCT scheme that combines the two. Then, Section
+and Section \ref{sec:fct} presents the FCT scheme that combines the two. Section
 \ref{sec:results} presents results for a number of test problems, and
 Section \ref{sec:conclusions} gives conclusions.

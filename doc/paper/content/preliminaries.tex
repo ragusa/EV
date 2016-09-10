@@ -11,12 +11,12 @@ where $u$ is the balanced quantity, $v$ is the transport speed, $\di$ is
 a constant, uniform unit direction vector, $\sigma$ is the reaction coefficient,
 and $q$ is the source function.
 
-The problem formulation is completed by supplying initial conditions
-(for transient problems):
+The problem formulation is completed by supplying initial conditions on the
+problem domain $\domain$ (for transient problems):
 \begin{equation}
   u(\x,0) = u^0(\x) \quad \x\in\domain \eqc
 \end{equation}
-where $\domain$ denotes the problem domain, as well as boundary conditions,
+as well as boundary conditions,
 which will be assumed to be incoming flux boundary conditions:
 \begin{equation}
   u\xt = \incoming\xt \quad \x\in\partial\domain^- \eqc
@@ -30,7 +30,7 @@ $\partial\domain^-$ is the incoming portion of the domain boundary:
 where $\normalvector(\x)$ is the outward-pointing normal vector on the domain
 boundary at point $\x$.
 
-Application of the standard Galerkin method with linear basis functions
+Application of the standard Galerkin method with piecewise linear basis functions
 gives the following semi-discrete system:
 \begin{subequations}\label{eq:galerkin_semidiscrete}
   \begin{equation}
@@ -50,8 +50,10 @@ gives the following semi-discrete system:
 \end{subequations}
 where $U_j(t)$ are the degrees of freedom of the approximate solution $u_h$:
 \begin{equation}
-  u_h\xt = \sumj U_j(t) \test_j(\x) \eqp
+  u_h\xt = \sumj U_j(t) \test_j(\x) \eqc
 \end{equation}
+$S_i$ is the support of basis function $i$, and $S_{i,j}$
+is the shared support of basis functions $i$ and $j$.
 
 A number of temporal discretizations are considered in this paper.
 Fully explicit temporal discretizations considered include forward Euler:
@@ -83,11 +85,14 @@ which in this case is the following:
   \mathbf{G}(t,\U(t)) = (\M^C)^{-1}
     \left(\ssrhs(t) - \A\U(t)\right) \eqp
 \end{equation}
+SSPRK methods are a subclass of Runge Kutta methods that offer high-order
+accuracy while preserving stability \cite{gottlieb}\cite{macdonald}.
 The form given in Equation \eqref{eq:ssprk} makes it clear that these
 SSPRK methods can be expressed as a linear combination of steps resembling
 forward Euler steps, with the only difference being that the explicit
-time dependence of the source is not necessarily the old time $t^n$ but
-instead is a stage time $t^n + c_i\dt$. The 3-stage, 3rd-order accurate SSPRK
+time dependence of the source is not necessarily on the old time $t^n$ but
+instead is on a stage time $t^n + c_i\dt$.
+An example is the 3-stage, 3rd-order accurate SSPRK
 method has the following coefficients:
 \begin{equation}
   \gamma = \left[\begin{array}{c}
@@ -98,17 +103,17 @@ method has the following coefficients:
   \eqc \quad
   c = \left[\begin{array}{c}0\\1\\\frac{1}{2}\end{array}\right] \eqp
 \end{equation}
-SSPRK methods are a subclass of Runge Kutta methods that offer high-order
-accuracy while preserving stability \cite{gottlieb}\cite{macdonald}.
-The theta method is also considered for temporal discretization:
+
+This work also considers the Theta family temporal discretizations:
 \begin{equation}
   \M^C\frac{\U^{n+1}-\U^n}{\dt} + \A((1-\theta)\U^n + \theta\U^{n+1})
   = (1-\theta)\ssrhs^n + \theta\ssrhs^{n+1} \eqc
 \end{equation}
 where $0\leq\theta\leq 1$ is the implicitness parameter, where for example
 $\theta$ values of $0$, $\frac{1}{2}$, and $1$ correspond to forward Euler,
-Crank-Nicolson, and backward Euler, respectively. Finally, the steady-state
-case is also considered:
+Crank-Nicolson, and backward Euler, respectively.
+
+Lastly, this work considers the steady-state case:
 \begin{equation}
   \A\U = \ssrhs \eqp
 \end{equation}
