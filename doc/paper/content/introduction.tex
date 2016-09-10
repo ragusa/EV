@@ -61,12 +61,19 @@ Maginot has recently developed a consistent set-to-zero (CSZ) LDFEM
 method \cite{maginot}, as well as a non-negative method for bilinear
 discontinuous FEM \cite{maginot_mc2015}.
 
-Traditional approaches to remedy the spurious oscillation issue included
-the flux-corrected transport (FCT) algorithm, introduced in 1973 for finite
-difference discretizations
-by Boris and Book \cite{borisbook}, which has since been applied to the finite
-element method \cite{kuzmin_FCT}. The idea of FCT is to blend a low-order scheme
-having desirable properties with a scheme of a higher order of accuracy.
+Traditional approaches to remedy the issue of spurious oscillations include
+the flux-corrected transport (FCT) algorithm, introduced in 1973 as
+the SHASTA algorithm for finite difference discretizations
+by Boris and Book \cite{borisbook}, where it was applied to linear discontinuities
+and gas dynamic shock waves. The main idea of the FCT algorithm is to blend a
+low-order scheme having desirable properties with a scheme of a higher order of accuracy.
+Zalesak improved methodology of the algorithm and introduced a multi-dimensional
+limiter that remains popular today \cite{zalesak}.
+Parrott and Christie extended the algorithm to the finite element method
+on unstructured grids \cite{parrott}, thus beginning the FEM-FCT methodology.
+L\:{o}hner et. al. applied FEM-FCT to the Euler and Navier-Stokes equations and
+a consequence of this work allowed FCT to be applied in modeling of complex
+geometries \cite{lohner}.
 
 Recent work by Guermond and Popov addresses the issue of spurious oscillations
 for general conservation laws by using artificial dissipation based on
@@ -88,17 +95,15 @@ conservation laws \cite{guermond_firstorder}.
 
 This paper presents an FCT scheme that is largely rooted in the work by Guermond
 and Popov, but is extended to allow application to the transport equation,
-which does not fit the prototype of a conservation law but is instead a
-balance law, which includes sinks and sources, namely the reaction term
+which does not fit the precise definition of a conservation law but is instead a
+balance law since it includes sinks and sources, namely the reaction term
 $\totalxsec\aflux$ and the source term $\Qtot$. The presence
 of these terms is also a novelty in the context of the FCT algorithm.
-In addition, much of the present work on FCT has been for fully explicit time
-discretizations, although there has been some work on implicit time discretizations
-as well. Because speeds in radiation transport (such as the speed of light)
+In addition, much of the work on FCT to date has been for fully explicit time
+discretizations. Because speeds in radiation transport (such as the speed of light)
 are so large, implicit and steady-state time discretization are important
 considerations, given the CFL time step size restriction for fully explicit
-methods. Thus this paper also considers implicit and steady-state FCT, which
-has been implemented before \cite{implicit_FCT}.
+methods. Thus this paper also considers implicit and steady-state FCT.
 
 This paper is organized as follows. Section \ref{sec:preliminaries} gives
 some preliminaries such as the problem formulation and discretization.

@@ -33,3 +33,11 @@ definition of the limiting coefficients:
       \right. \eqp
 \end{equation}
 \end{subequations}
+The objective of a limiter is to maximize the amount of antidiffusion that
+can be accepted without violating the imposed solution constraints. Zalesak's
+limiter is one popular attempt at this objective due to its relatively
+simple form; however, there are possible alternatives to this limiter that
+could accept more antidiffusion without violating the imposed constraints.
+Also, one could pass antidiffusive fluxes through a given limiter multiple
+times, using the remainder antidiffusive flux as the input in each pass,
+to increase the total antidiffusion accepted.

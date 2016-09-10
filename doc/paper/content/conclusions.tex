@@ -4,21 +4,22 @@ Spurious oscillations are mitigated but are not guaranteed to be
 eliminated, as smaller magnitude oscillations may exist within the imposed
 solution bounds.
 
-Local solution bounds imposed in the FCT algorithm were derived using the method
-of characteristics and integral transport equation. Two sets of solution
-bounds were considered, one considering only values along the upstream
-line segment traversed in a time step, and the other considering a spherical
-neighborhood that encompasses this line segment. The former set of solution
-bounds is much tighter, which has the advantage that there is a smaller range
-of limiting coefficient values that can be used, but has the disadvantage that
-there is less room for antidiffusion.
+% Local solution bounds imposed in the FCT algorithm were derived using the method
+% of characteristics and integral transport equation.
+% Two sets of solution
+% bounds were considered, one considering only values along the upstream
+% line segment traversed in a time step, and the other considering a spherical
+% neighborhood that encompasses this line segment. The former set of solution
+% bounds is much tighter, which has the advantage that there is a smaller range
+% of limiting coefficient values that can be used, but has the disadvantage that
+% there is less room for antidiffusion.
 
 The traditional FCT phenomenon known as ``stair-stepping'',
 ``terracing'', or ``plateauing'' is still an open issue, particularly for
 fully explicit temporal discretizations; however, these effects
 have been shown to diminish or disappear when using SSPRK33 as opposed
-to forward Euler. In addition, these effects are less pronounced for EV-FCT
-than in the classic FEM-FCT scheme using the standard Galerkin method as
+to explicit Euler. In addition, these effects are less pronounced for EV-FCT
+than in the classic FEM-FCT scheme, which uses the standard Galerkin method as
 the high-order method in FCT.
 
 The explicit temporal discretizations of the described FCT scheme yield a

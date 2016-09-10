@@ -10,10 +10,11 @@ solutions obtained using:
   \item the entropy viscosity method with FCT, titled in plots as ``EV-FCT''.
 \end{itemize}
 All problems assume a speed of $v=1$ (the speed effectively just changes the
-units of $\dt$), an entropy function of $\eta(u)=\frac{1}{2}u^2$, and entropy
+units of $\dt$) and an entropy function of $\eta(u)=\frac{1}{2}u^2$. Unless
+otherwise specified, the transport direction is in the postive
+$x$ direction: $\mathbf{\Omega}=\mathbf{e}_x$, and the entropy
 viscosity tuning parameters of $c_\mathcal{R}$ and $c_\mathcal{J}$ are set
-to 0.1. Unless otherwise stated, the transport direction is in the postive
-$x$ direction: $\mathbf{\Omega}=\mathbf{e}_x$.
+to 0.1.
 
 %===============================================================================
 \subsection{Spatial Convergence}
@@ -99,7 +100,7 @@ superior due to less artificial diffusion.
 \end{figure}
 \clearpage
 %===============================================================================
-\subsection{Obstruction}
+\subsection{Obstruction}\label{sec:obstruction}
 %===============================================================================
 This is a 2-D, two-region problem on the unit square $(0,1)^2$ with a beam incident on the
 left and bottom boundaries at an angle of $45^\circ$ with the x-axis. The
@@ -148,6 +149,40 @@ has this effect but to a much smaller degree.
      Problem Using Implicit Euler Time Discretization}
    \label{fig:obstruction_be}
 \end{figure}
+
+Table \ref{tab:obstruction_iterations} shows the results for a parametric study
+on the number of nonlinear iterations required for EV and EV-FCT for various
+CFL numbers. Recall that in the FCT algorithm, one first computes the high-order
+(EV) solution, which is necessary for computation of the antidiffusive fluxes.
+The number of nonlinear iterations for this solve is given in the column
+labeled as ``EV''. The FCT limiting procedure is also nonlinear; the number
+of nonlinear iterations for this solve is given in the ``FCT'' column.
+These results indicate a trend for both EV and FCT that the number of nonlinear
+iterations increase with CFL number; however, this trend is much more drastic
+with FCT than EV. For a CFL number of 20, the FCT algorithm fails to converge
+entirely. As discussed previously, the solution bounds are implicit and change
+with each iteration. For this particular case, the problematic behavior that
+emerges is an alternation between two solutions indefinitely, with each generating
+solution bounds that produce the other. Thus the nonlinear convergence stalls
+indefinitely, thus demonstrating a severe disadvantage of implicit FCT.
+%-------------------------------------------------------------------------------
+\begin{table}[htb]\caption{Nonlinear Iterations vs. CFL Number for the
+  Obstruction Test Problems}
+\label{tab:obstruction_iterations}
+\centering
+\begin{tabular}{c c c c c}\hline
+\emph{CFL} & \multicolumn{2}{c}{\emph{EV}} & \multicolumn{2}{c}{\emph{FCT}}\\
+           & \emph{Total} & \emph{Avg.}    &  \emph{Total} & \emph{Avg.}\\\hline
+0.1  & 3999 &  8.14 & 3585 &   7.30\\
+0.5  &  896 &  9.05 & 1499 &  15.14\\
+1.0  &  501 & 10.02 &  970 &  19.40\\
+5.0  &  157 & 15.70 & 1130 & 113.00\\
+10.0 &   79 & 15.80 &  753 & 150.60\\
+20.0 &   -- &    -- & \multicolumn{2}{c}{\textbf{FAIL}}\\
+\hline\end{tabular}
+\end{table}
+%-------------------------------------------------------------------------------
+
 \clearpage
 %===============================================================================
 \subsection{Two-Region Interface}
@@ -215,4 +250,19 @@ limiter, flattening the peak.
        Problem Using Steady-State Time Discretization}
    \label{fig:source_in_void}
 \end{figure}
+
+For this particular test problem, the entropy viscosity method is particularly
+slow to converge its nonlinear iterations, requiring 147 iterations to
+converge, while the FCT solve took only 2 iterations. Recall that fixed-point
+iteration was used for both solves, although it isn't necessary to use a
+fixed-point method for the entropy viscosity solve; a more efficient alternative
+such as Newton's method could be used instead. The convergence difficulties
+here arise from the response of the entropy viscosity to the entropy profile
+of the previous iteration, which can create an ``entropy oscillation'' effect
+that can significantly slow convergence. However, it should be noted that the
+performance observed for this problem is not necessarily typical of all
+steady-state problems. For example, many problems do not require nearly as
+many EV iterations and require more iterations, sometimes converging as
+poorly as for the problem given in Section \ref{sec:obstruction}.
+
 \clearpage

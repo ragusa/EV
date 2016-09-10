@@ -126,3 +126,13 @@ viscosity:
 \end{equation}
 Note that unlike the low-order scheme, the high-order scheme does not lump the
 mass matrix.
+
+\begin{rmk}
+Note that due to the nonlinearity of the entropy viscosity, the entropy viscosity
+scheme is nonlinear for implicit and steady-state temporal discretizations, and
+thus some nonlinear solution technique must be utilized. For the results in
+this paper, a simple fixed-point iteration scheme is used. An alternative
+such as Newton's method is likely to be advantageous in terms of the number
+of nonlinear iterations; however, fixed-point is used here for comparison
+with the nonlinear FCT scheme to be described in Section \ref{sec:fct}.
+\end{rmk}

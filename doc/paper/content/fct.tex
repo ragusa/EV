@@ -82,6 +82,23 @@ limiting coefficients are determined by the limiter, which operates on the
 following goal: maximize the limiting coefficients such that the imposed
 solution bounds are not violated.
 
+As will be discussed in Section \ref{sec:solution_bounds}, the solution bounds
+for implicit FCT and steady-state FCT are implicit, and thus the systems given
+by Equations \eqref{eq:fct_theta} and \eqref{eq:fct_ss} are nonlinear, since
+the limiting coefficients contained in $\bar{\p}$ are nonlinear. Thus some
+nonlinear iteration is required. In this paper, a fixed-point iteration scheme
+is used because alternatives such as Newton's method encounter complications
+due to the limiting procedure. For any nonlinear iteration scheme, the
+imposed solution bounds must be computed using the previous solution iterate:
+\begin{equation}
+  U_i^{-,(\ell)} \leq U_i^{(\ell+1)} \leq U_i^{+,(\ell)} \eqp
+\end{equation}
+Furthermore, the antidiffusion bounds $\bar{p}_i^\pm$, which depend on these
+lagged solution bounds $U_i^{\pm,(\ell)}$, must be further lagged because
+its definition still contains terms at iteration $(\ell+1)$ despite the lagging
+of the solution bounds. The end result is this: the solution bounds for implicit/steady-state
+FCT schemes are only satisfied upon nonlinear convergence, not at each iteration.
+
 %===============================================================================
 \input{content/solution_bounds}
 %===============================================================================
@@ -94,23 +111,23 @@ antidiffusion source $\bar{p}_i$. These antidiffusion bounds $\bar{p}_i^\pm$ for
 explicit Euler, and Theta discretization are respectively derived by
 solving Equations \eqref{eq:fct_ss}, \eqref{eq:fct_fe}, and \eqref{eq:fct_theta}
 for $\bar{p}_i$ and manipulating the inequality $U^-_i\leq U_i\leq U^+_i$:
-\begin{equation}
+\begin{equation}\label{eq:antidiffusion_bounds_ss}
   \bar{p}_i^\pm \equiv A_{i,i}^L U_i^\pm
-    + \sumjnoti A\ij^L U_j - b_i \eqc
+    + \sumjnoti A_{i,j}^L U_j - b_i \eqc
 \end{equation}
-\begin{equation}
+\begin{equation}\label{eq:antidiffusion_bounds_fe}
   \bar{p}_i^\pm \equiv M^L_{i,i}
     \frac{U_i^\pm - U_i^n}{\dt}
-  + \sumj A\ij^L U_j^n
+  + \sumj A_{i,j}^L U_j^n
   - b_i^n \eqc
 \end{equation}
-\begin{equation}
+\begin{equation}\label{eq:antidiffusion_bounds_theta}
   \bar{p}_i^\pm \equiv
    \pr{\frac{M^L_{i,i}}{\dt}+\theta A_{i,i}^L}
      U_i^\pm
     + \pr{(1-\theta) A_{i,i}^L-\frac{M^L_{i,i}}{\dt}}
      U_i^n
-  +\sumjnoti A\ij^L U_j^\theta
+  +\sumjnoti A_{i,j}^L U_j^\theta
   -b_i^\theta
   \eqp
 \end{equation}
@@ -123,7 +140,8 @@ viewed as black boxes which take as input only the antidiffusion bounds
 $\bar{p}_i^\pm$ and the antidiffusive fluxes $P_{i,j}$ and output the
 limiting coefficients $L_{i,j}$. It is important to note that most limiters,
 including the limiter described in this paper, assume the following:
-$\bar{p}_i^-\leq 0$, $\bar{p}_i^+\geq 0$. Recall that FCT starts from the
+$\bar{p}_i^-\leq 0$, $\bar{p}_i^+\geq 0$; the reasoning for this assumption
+is as follows. Recall that FCT starts from the
 low-order scheme, which is equivalent to the solution with $\bar{p}_i=0$.
 The limiter should start from this point so that there is a fail-safe solution
 for the FCT algoritm: the low-order solution. Otherwise, there is no guarantee

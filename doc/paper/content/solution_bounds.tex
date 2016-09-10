@@ -397,6 +397,24 @@ solution bounds apply:
     q_{\min,i} \equiv\min\limits_{\x\in S_i}q(\x) \eqp
   \end{equation}
 \end{subequations}
+Note the time step size condition given by Equation \eqref{eq:cfl_analytic_dmp}
+implies that when using CFL numbers greater than 1 with implicit time
+discretizations, these bounds no longer apply. Similar bounds can be derived
+for $v\dt > h_{min}$; however, these bounds for a node $i$ will no longer
+only depend on the solution values of the neighbors of $i$; a larger neighborhood
+must be used in the bounds, making the local solution bounds wider and thus less
+restrictive and arguably less useful in the FCT algorithm. This represents a
+significant disadvantage for implicit FCT, not only because the converged
+FCT solution could contain more undesirable features but also because the wider
+bounds typically result in a greater number of nonlinear iterations because
+of the increased freedom in the limiting coefficients.
+
+Steady-state FCT solution bounds can be inferred from Equation \eqref{eq:solution_bounds}
+by making the substitution $v\dt\rightarrow s$, where $0\leq s \leq h_{min}$. This
+restriction of $s$ similarly ensures that only the nearest neighbors of $i$ are
+needed for the solution bounds of $i$. Steady-state FCT unfortunately suffers
+many of the same drawbacks as implicit FCT because like implicit FCT, its
+solution bounds are implicit and thus change with each iteration.
 % \end{theorem}
 % \begin{proof}
 % Due to the CFL condition, Equation \eqref{eq:cfl_analytic_dmp}, the support of
