@@ -5,6 +5,6 @@
 *.fls
 *.log
 *.out
-*.pdf
 *.spl
+paper.pdf
 *.synctex.gz
