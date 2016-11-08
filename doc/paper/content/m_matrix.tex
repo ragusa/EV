@@ -11,7 +11,7 @@
       $\forall i$, $\forall j\ne i$.
   \end{enumerate}
 %-------------------------------------------------------------------------------
-Firstly it will be shown that the off-diagonal elements of the matrix
+First, we show that the off-diagonal elements of the matrix
 $\A^L$ are non-positive.
 The diffusion matrix entry $D^L_{i,j}$ is bounded as follows:
 \begin{eqnarray*}
@@ -21,12 +21,12 @@ The diffusion matrix entry $D^L_{i,j}$ is bounded as follows:
               {-\sum\limits_{T\in\mathcal{K}(S_{k,\ell})}
               \mkern-20mu d_T(\test_\ell,\test_k)}} d_K(\test_j,\test_i) \eqp
 \end{eqnarray*}
-Recall $d_K(\test_j,\test_i) < 0$ for $j\ne i$.
 For an arbitrary quantity $c_{k,\ell} \geq 0 \eqc \forall k\ne\ell\in\indices$,
 the following is true for $i\ne j\in\indices$:
 $\max\limits_{k\ne\ell\in\indices}c_{k,\ell} \geq c_{i,j}$, and thus for $a\leq 0$,
 $a\max\limits_{k\ne\ell\in\indices}c_{k,\ell} \leq a c_{i,j}$.
-Thus,
+Recall that $d_K(\test_j,\test_i) < 0$ for $j\ne i$.
+Thus, we have:
 \begin{eqnarray*}
    D^L_{i,j} & \le & \sumKSij \frac{\max(0,A_{i,j})}
     {-\sumKSij[T] d_T(\test_j,\test_i)}
@@ -38,11 +38,14 @@ Thus,
 \end{eqnarray*}
 Then applying this relation to the definition of the low-order steady state
 matrix gives
-\begin{eqnarray*}
-  A^L_{i,j} &  =  & A_{i,j} + D_{i,j}^L \eqc\\
-  A^L_{i,j} & \le & A_{i,j} - A_{i,j}   \eqc\\
-  A^L_{i,j} & \le & 0 \eqp
-\end{eqnarray*}
+\begin{equation*}
+  A^L_{i,j}  =   A_{i,j} + D_{i,j}^L  \le 0  \eqp
+\end{equation*}
+%\begin{eqnarray*}
+%  A^L_{i,j} &  =  & A_{i,j} + D_{i,j}^L \eqc\\
+%  A^L_{i,j} & \le & A_{i,j} - A_{i,j}   \eqc\\
+%  A^L_{i,j} & \le & 0 \eqp
+%\end{eqnarray*}
 Next it will be shown that the row sums are non-negative.
 Using the fact that $\sumj\test_j(\x)=1$ and
 $\sumj d_K(\test_j,\test_i)=0$,
@@ -68,7 +71,7 @@ $\sumj d_K(\test_j,\test_i)=0$,
   If incoming flux boundary conditions are weakly imposed, then the steady-state
   system matrix is modified: $\A\rightarrow\tilde{\A}$, and the low-order
   viscosity then uses the \emph{modified} steady-state matrix $\tilde{\A}$.
-  The the non-positivity property of the off-diagonal elements still holds.
+  The non-positivity property of the off-diagonal elements still holds.
   The non-negativity property of the row sums also holds, owing to the relation
   $\tilde{A}_{i,j} \geq A_{i,j}$.
 \end{rmk}
@@ -80,14 +83,14 @@ of non-positivity of the off-diagonal elements and strict positivity of the
 row sums. Thus both conditions for the non-singular M-matrix property have
 been met.
 %-------------------------------------------------------------------------------
-\begin{rmk}
-It should be noted that a \emph{singular} M-matrix
-can result if outflow boundary elements are entirely vacuum because the
-resulting matrix may have zero rows. Arguably, this is a moot point because
-one may argue that the problem domain should not extend into a vacuum since
-the solution should not change after entering a vacuum. Nevertheless, one
-should be aware of this loss of generality.
-\end{rmk}
+%\begin{rmk}
+%It should be noted that a \emph{singular} M-matrix
+%can result if outflow boundary elements are entirely vacuum because the
+%resulting matrix may have zero rows. Arguably, this is a moot point because
+%one may argue that the problem domain should not extend into a vacuum since
+%the solution should not change after entering a vacuum. Nevertheless, one
+%should be aware of this loss of generality.
+%\end{rmk}
 %-------------------------------------------------------------------------------
 
 \end{prf}

@@ -1,3 +1,22 @@
+An FCT scheme has been proposed for the particle transport equation. It is has been applied
+to the following model equation problem, an advection problem with reaction and source terms,
+\begin{equation} \label{eq:ccl}
+  \ppt{u} + v\di\cdot\nabla u\xt + \sigma(\x) u\xt = q\xt \eqc
+\end{equation}
+which corresponds to the classic Source Iteration equation for particle transport,
+where extraneous, inscatter, and fission sources are lumped in the right-hand-side term $q$.
+%
+The FCT methodology relies on a lower-order solution and a high-order solution. For the low-order
+solution, we have used a first-order viscosity approach, based on the graph-theoric method of 
+Guermond at al. \cite{guermond_first_order} for scalar conservation laws and extents these
+previous works to situations with reaction and source terms present. The low-order scheme is shown
+to be positivity-preserving through the use of the M-matrix properties. The high-order solution
+is employs an entropy-based artificial stabilization. The entropy residual approach is derived
+for the transport equation shown in Equation~\eqref{eq:ccl}. 
+Temporal discretizations include explicit and implicit schemes in time, as well as steady state,
+the latter two cases making the FCT algorithm implicit as well. The standard Zalesak limiter is utilized
+to limit between the low- and the high-order solutions.
+
 The FCT scheme described in this paper is second-order accurate in space,
 converges to the entropy solution, and preserves non-negativity.
 Spurious oscillations are mitigated but are not guaranteed to be
@@ -30,3 +49,5 @@ number is increased. The main complication with implicit and steady-state
 FCT schemes is that the imposed solution bounds are implicit with the solution,
 and thus the imposed solution bounds change with each iteration of the
 nonlinear solver.
+
+\tcr{we also need an outlook towards future work and directions. take a first crack at it. thanks}

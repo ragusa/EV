@@ -1,37 +1,37 @@
 % !TEX root = ../paper.tex
 
 This section presents results for a number of test problems, which compare
-solutions obtained using:
+the solutions obtained using:
 \begin{itemize}
-  \item the standard Galerkin FEM, titled in plots as ``Galerkin'',
-  \item the low-order method, titled in plots as ``Low'',
-  \item the entropy viscosity method, titled in plots as ``EV'',
-  \item the standard Galerkin FEM with FCT, titled in plots as ``Galerkin-FCT'', and
-  \item the entropy viscosity method with FCT, titled in plots as ``EV-FCT''.
+  \item the standard Galerkin FEM, labelled as ``Galerkin'' in the plots,
+  \item the low-order method, labelled in plots as ``Low'',
+  \item the entropy viscosity method, labelled in plots as ``EV'',
+  \item the standard Galerkin FEM with FCT, labelled in plots as ``Galerkin-FCT'', and
+  \item the entropy viscosity method with FCT, labelled in plots as ``EV-FCT''.
 \end{itemize}
 All problems assume a speed of $v=1$ (the speed effectively just changes the
 units of $\dt$) and an entropy function of $\eta(u)=\frac{1}{2}u^2$. Unless
-otherwise specified, the transport direction is in the postive
+otherwise specified, the transport direction is in the positive
 $x$ direction: $\mathbf{\Omega}=\mathbf{e}_x$, and the entropy
 viscosity tuning parameters of $c_\mathcal{R}$ and $c_\mathcal{J}$ are set
 to 0.1.
 
 %===============================================================================
-\subsection{Spatial Convergence}
+\subsection{Spatial Convergence Tests}
 %===============================================================================
 This 1-D, steady-state test problem uses the Method of Manufactured Solutions (MMS) with
 a solution of $u(x)=\sin(\pi x)$ on the domain $x\in(0,1)$. Zero Dirichlet
 boundary conditions are imposed on both boundaries.
 With $\sigma(x)=1$,
 the MMS source becomes $q(x)=\pi\cos(\pi x) + \sin(\pi x)$.
-The number of cells in the study began as 8 in the coarsest mesh, and cells
-were refined by a factor of 2 in each cycle, ending with 256 cells.
+The number of cells in the study starts at 8 for the coarsest mesh, and cells
+are refined by a factor of 2 in each cycle, ending with 256 cells.
 
 Figure \ref{fig:mms_sinx_ss} shows the $L^2$ norm errors for this convergence study
 and indicates first-order spatial convergence for the low-order method and
 second-order spatial convergence for the entropy viscosity (EV) method
-and EV FCT method, as expected.
-
+and EV-FCT method, as expected.
+\tcr{figure missing in repo}
 \begin{figure}[htb]
    \centering
       \includegraphics[width=\textwidth]
@@ -46,32 +46,33 @@ and EV FCT method, as expected.
 This 2-D test problem is on the unit square: $\x\in(0,1)^2$ and simulates
 a beam incident on the bottom boundary of a void region
 ($\sigma(\x)= 0$, $q(\x)=0$) at a shallow angle of
-$21.94^\circ$ with respect to the x-axis.
+$21.94^\circ$ with respect to the x-axis. \tcr{what are $\Omega_x$ and $\Omega_y$ here?}
 The exact solution of this problem contains a discontinuity along the line
 $y = \frac{\Omega_y}{\Omega_x}x$, which presents opportunity for the formation
 of spurious oscillations.
-This was run as a transient problem with zero initial conditions but was run to
-steady-state. A Dirichlet
-boundary condition with a value of 1 is imposed on the bottom boundary
-and a value of 0 on the left boundary.
+This is run as a pseudo-transient problem with zero initial conditions until 
+steady-state is reached. A Dirichlet
+boundary condition is imposed on the incoming sides of the problem, with a value of 1 
+on the bottom boundary and a value of 0 on the left boundary.
 
-This problem was run with Explicit Euler time discretization and a CFL
-number of 0.5 on a $64\times64$ mesh. Figure \ref{fig:glance_in_void_fe}
+This problem is run with Explicit Euler time discretization and a CFL
+number of 0.5 on a $64\times64$ mesh. Figure~\ref{fig:glance_in_void_fe}
 compares the numerical solutions for this problem obtained with the
 low-order, EV, Galerkin-FCT, and EV-FCT schemes. The Galerkin scheme
 (without FCT) produced spurious oscillations without bound, so those
 results are omitted here. The EV solution is much less diffusive along
 the discontinuity, but contains spurious oscillations. Both FCT solutions
-keep the solution within some physical bounds, but one can see from
+keep the solution within some physical bounds \tcr{'some' sounds vague. why some???}, but one can see from
 the Galerkin-FCT results that some ``terracing'' effects are present; this
 behavior is a well-known artifact of traditional FCT schemes \cite{kuzmin_FCT}.
 The EV-FCT scheme, however, shows a significant reduction in this effect,
-as expected; the addition of the entropy-based artificial viscosity
+as expected \tcr{justify 'as expected'}; the addition of the entropy-based artificial viscosity
 lessens the burden on the limiter. This result was found to be typical
 when comparing Galerkin-FCT and EV-FCT, although there are some cases
 when the difference is minimal, or even the Galerkin-FCT solution is slightly
-superior due to less artificial diffusion.
+superior due to less artificial diffusion. \tcr{do you show a latter situation?}
 
+\tcr{is the blue color in this figure always the same numerical value? i do not think so. maybe colorbars should be added for completeness. i can imagine a reviewer complaining about this}
 \begin{figure}[ht]
    \centering
    \begin{subfigure}{0.45\textwidth}
@@ -100,7 +101,7 @@ superior due to less artificial diffusion.
 \end{figure}
 \clearpage
 %===============================================================================
-\subsection{Obstruction}\label{sec:obstruction}
+\subsection{Obstruction Test}\label{sec:obstruction}
 %===============================================================================
 This is a 2-D, two-region problem on the unit square $(0,1)^2$ with a beam incident on the
 left and bottom boundaries at an angle of $45^\circ$ with the x-axis. The
@@ -152,8 +153,8 @@ has this effect but to a much smaller degree.
 
 Table \ref{tab:obstruction_iterations} shows the results for a parametric study
 on the number of nonlinear iterations required for EV and EV-FCT for various
-CFL numbers. Recall that in the FCT algorithm, one first computes the high-order
-(EV) solution, which is necessary for computation of the antidiffusive fluxes.
+CFL numbers. Recall that in the FCT algorithm, one first computes the high-order solution
+(here, EV), which is necessary for computation of the antidiffusive fluxes.
 The number of nonlinear iterations for this solve is given in the column
 labeled as ``EV''. The FCT limiting procedure is also nonlinear; the number
 of nonlinear iterations for this solve is given in the ``FCT'' column.
@@ -162,10 +163,12 @@ iterations increase with CFL number; however, this trend is much more drastic
 with FCT than EV. For a CFL number of 20, the FCT algorithm fails to converge
 entirely. As discussed previously, the solution bounds are implicit and change
 with each iteration. For this particular case, the problematic behavior that
-emerges is an alternation between two solutions indefinitely, with each generating
+emerges is an alternation between two successive solutions indefinitely, with each generating
 solution bounds that produce the other. Thus the nonlinear convergence stalls
-indefinitely, thus demonstrating a severe disadvantage of implicit FCT.
+indefinitely, thus demonstrating a disadvantage of implicit FCT.
 %-------------------------------------------------------------------------------
+\tcr{I understand the ail in the FCT column but why are there no numbers in the last row
+for EV?}
 \begin{table}[htb]\caption{Nonlinear Iterations vs. CFL Number for the
   Obstruction Test Problems}
 \label{tab:obstruction_iterations}
@@ -189,24 +192,26 @@ indefinitely, thus demonstrating a severe disadvantage of implicit FCT.
 %===============================================================================
 This 1-D test problem simulates the interface between two regions with
 varying cross section and source values on the domain $(0,1)$.
-The left half has values $\sigma(\x)=10$ and $q(\x)=10$, giving it a
+The left half of the domain has values $\sigma(\x)=10$ and $q(\x)=10$, for which the transport
+solution will reach a
 saturation value of $\frac{q}{\sigma}=1$, while the right half has values
 of $\sigma(\x)=40$ and $q(\x)=20$, giving it a saturation value of
 $\frac{q}{\sigma}=0.5$.
 
 This problem was run using SSPRK33 time discretization with a CFL of 1 to
-steady-state with 32 cells. Figure \ref{fig:interface} shows the results
+steady-state with 32 cells. Figure~\ref{fig:interface} shows the results
 for this test problem. The low-order solution suffers from the significant
 artificial diffusion, while the Galerkin solution suffers from significant
-spurious oscillation. The EV scheme eliminates some of the first oscillations,
+spurious oscillations. The EV scheme eliminates some of the first oscillations,
 but a number of oscillations of a similar magnitude to those produced by
-the Galerkin scheme still exist to the left of the interface. Both FCT
+the Galerkin scheme still exists to the left of the interface. Both FCT
 schemes effectively eliminate spurious oscillations without approaching
 the level of unnecessary artificial diffusion achieved by the low-order
 scheme. For this test problem, the Galerkin-FCT solution is slightly
-superior to the EV-FCT solution since the classic ``terracing'' phenomenon
+superior to the EV-FCT solution and the ``terracing'' phenomenon
 of FCT is not present.
 
+\tcr{missing fig in repo}
 \begin{figure}[htb]
    \centering
       \includegraphics[width=\textwidth]
@@ -217,20 +222,22 @@ of FCT is not present.
 \end{figure}
 \clearpage
 %===============================================================================
-\subsection{Source in a Void}
+\subsection{Source in a Void Test}
 %===============================================================================
 This 1-D test problem has two regions, the left being a void but with a source:
 $\sigma(\x)=0$ and $q(\x)=1$, and the right being an absorber without a source:
-$\sigma(\x)=10$ and $q(\x)=0$. This represents a non-physical problem since
-a source is produced in a void, but nevertheless it represents a useful test
-problem. A zero Dirichlet boundary condition is imposed on the incoming (left)
+$\sigma(\x)=10$ and $q(\x)=0$. This does not represent necessairly a non-physical problem:
+due to the energy dependence of the particle distribution, it is possible to have
+a strong inscattering source term in an energy bandwidth where the interaction coefficient is 
+small; here we emphasize the weak interaction probability by zero-ing out the reaction term. 
+A zero Dirichlet boundary condition is imposed on the incoming (left)
 boundary, and this problem is run as a steady-state problem on the domain
 $(0,1)$ with 32 cells.
 
 For this problem, the entropy residual and jump coefficients $c_\mathcal{R}$
-and $c_\mathcal{J}$ were set to 0.5; the default value of 0.1 was found
+and $c_\mathcal{J}$ are set to 0.5; the default value of 0.1 was found
 to be too small for this problem.
-Figure \ref{fig:source_in_void} shows the results for this problem.
+Figure~\ref{fig:source_in_void} shows the results for this problem.
 The Galerkin solution has ``kinks'' along the void (left) region, but
 shows point-wise matching of the exact solution in the absorber (right)
 region. The EV solution, however, eliminates the terracing effect in
@@ -242,6 +249,7 @@ phenomenon known as ``peak-clipping'', whereby the ``mass'' that
 should be present in the peak has been redistributed by the FCT
 limiter, flattening the peak.
 
+\tcr{missing fig in repo}
 \begin{figure}[htb]
    \centering
       \includegraphics[width=\textwidth]
@@ -250,19 +258,19 @@ limiter, flattening the peak.
        Problem Using Steady-State Time Discretization}
    \label{fig:source_in_void}
 \end{figure}
-
-For this particular test problem, the entropy viscosity method is particularly
-slow to converge its nonlinear iterations, requiring 147 iterations to
-converge, while the FCT solve took only 2 iterations. Recall that fixed-point
-iteration was used for both solves, although it isn't necessary to use a
-fixed-point method for the entropy viscosity solve; a more efficient alternative
-such as Newton's method could be used instead. The convergence difficulties
-here arise from the response of the entropy viscosity to the entropy profile
-of the previous iteration, which can create an ``entropy oscillation'' effect
-that can significantly slow convergence. However, it should be noted that the
-performance observed for this problem is not necessarily typical of all
-steady-state problems. For example, many problems do not require nearly as
-many EV iterations and require more iterations, sometimes converging as
-poorly as for the problem given in Section \ref{sec:obstruction}.
+%
+%For this particular test problem, the entropy viscosity method is particularly
+%slow to converge its nonlinear iterations, requiring 147 iterations to
+%converge, while the FCT solve took only 2 iterations. Recall that fixed-point
+%iteration was used for both solves, although it isn't necessary to use a
+%fixed-point method for the entropy viscosity solve; a more efficient alternative
+%such as Newton's method could be used instead. The convergence difficulties
+%here arise from the response of the entropy viscosity to the entropy profile
+%of the previous iteration, which can create an ``entropy oscillation'' effect
+%that can significantly slow convergence. However, it should be noted that the
+%performance observed for this problem is not necessarily typical of all
+%steady-state problems. For example, many problems do not require nearly as
+%many EV iterations and require more iterations, sometimes converging as
+%poorly as for the problem given in Section \ref{sec:obstruction}.
 
 \clearpage

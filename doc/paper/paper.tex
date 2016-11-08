@@ -8,6 +8,7 @@
 \usetikzlibrary{shapes.geometric}
 
 \input{shortcuts}
+\newcommand{\tcr}[1]{\textcolor{red}{#1}}
 
 \begin{document}
 %------------------------------------------------------------------------------
@@ -36,6 +37,7 @@ entropy viscosity \sep FCT \sep CGFEM \sep transport equation
 
 \end{frontmatter}
 %------------------------------------------------------------------------------
+\tcr{should we ask Guermond to be a 3rd author?}
 
 \section{Introduction\label{sec:introduction}}
 \input{content/introduction}
@@ -43,7 +45,7 @@ entropy viscosity \sep FCT \sep CGFEM \sep transport equation
 \section{Preliminaries\label{sec:preliminaries}}
 \input{content/preliminaries}
 
-\section{Methodology\label{sec:methodology}}
+\section{FCT Methodology Applied to Particle Transport\label{sec:methodology}}
 \input{content/methodology}
 \subsection{Low-Order Scheme\label{sec:low}}
 \input{content/low}
@@ -58,6 +60,7 @@ entropy viscosity \sep FCT \sep CGFEM \sep transport equation
 \section{Conclusions\label{sec:conclusions}}
 \input{content/conclusions}
 
+\tcr{I think Maginot has a paper now instead of a MC publication for reference}
 \section*{References}
 \bibliographystyle{elsarticle-num}
 \bibliography{references}

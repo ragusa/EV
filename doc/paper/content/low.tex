@@ -4,23 +4,26 @@ The role of a low-order scheme in the context of the FCT algorithm is to
 provide a fail-safe solution, which has desirable properties such as
 positivity-preservation and lack of spurious oscillations. These properties
 come at the cost of excessive artificial diffusion and thus a lesser degree
-of accuracy. However, the idea of the FCT algorithm is to undo this disadvantage
-as much as possible without violating some physically-motivated solution bounds.
+of accuracy. However, the idea of the FCT algorithm is to undo some of the over-dissipation 
+of the low-order scheme as much as possible without violating some physically-motivated solution bounds.
 
-Here positivity-preservation and monotonicity are achieved by satisfying
-the M-matrix property of the matrix inverted in the low-order system.
+Here positivity-preservation and monotonicity are achieved by 
+requiring that that the matrix of the low-order system satisfies the M-matrix property.
+%satisfying
+% the M-matrix property of the matrix inverted in the low-order system.
 M-matrices are a subset of inverse-positive matrices and have the monotone
-property; for the linear system $\A\x = \ssrhs$, an M-matrix $\A$ has the property
+property. For instance, consider the linear system $\A\x = \ssrhs$;
+If $\A$ is an M-matrix $\A$, then the following property is verified:
 \begin{equation}
-  \ssrhs \geq 0 \quad \Rightarrow \quad \x \geq 0 \eqp
+\text{If }  \ssrhs \geq 0, \text{  then  }  \x \geq 0 \eqp
 \end{equation}
 Thus proving positivity-preservation, given the linear system matrix is an
 M-matrix, is achieved by proving positivity of the right-hand-side vector $\ssrhs$.
 This monotonicity property of the linear system matrix is also responsible for
 the lack of spurious oscillations.
 
-In this section, the first-order viscosity method introduced by Guermond
-\cite{guermond_firstorder} will be adapted to the model equation given by
+In this section, a first-order viscosity method introduced by Guermond
+\cite{guermond_firstorder} will be adapted to the transport equation given by
 Equation \eqref{eq:scalar_model}. This method uses an element-wise artificial
 viscosity definition in conjunction with a graph-theoretic local viscous
 bilinear form that makes the method valid for arbitrary element shapes and
@@ -49,8 +52,8 @@ the row sums are zero. These facts will be invoked in the proof of the M-matrix
 conditions later in this section.
 
 The element-wise low-order viscosity definition from \cite{guermond_firstorder} is
-adapted to account for the reaction term in Equation \eqref{eq:scalar_model}
-but otherwise remains unchanged.
+adapted to account for the reaction term in the transport equation, 
+Equation \eqref{eq:scalar_model}, but otherwise remains unchanged.
 %-------------------------------------------------------------------------------
 \begin{defn}[Low-Order Viscosity]
   The low-order viscosity for cell $K$ is defined as follows:
@@ -60,7 +63,7 @@ but otherwise remains unchanged.
       {-\sum\limits_{T\in \mathcal{K}(S_{i,j})}d_T(\test_j,\test_i)}
       \eqc
   \end{equation}
-  where $A_{i,j}$ is the $i,j$th entry of the Galerkin steady-state matrix
+  where $A_{i,j}$ is the $i,j$ entry of matrix $\A$ 
   given by Equation \eqref{eq:Aij}, $\indices_K$ is the set of degree of freedom
   indices corresponding to basis functions that have support on cell $K$
   (this is illustrated in Figure \ref{fig:cell_indices} -- the indicated
@@ -80,7 +83,8 @@ but otherwise remains unchanged.
 This viscosity definition is designed to give the minimum amount of artificial
 diffusion without violating the M-matrix conditions.
 
-Now the low-order system will be described.
+Now that the low-order artificial diffusion operator (bilinear form + viscosity definitions) 
+has been provided, we describe the low-order system.
 Consider a modification of the Galerkin scheme given in Equation \eqref{eq:galerkin_semidiscrete}
 which lumps the mass matrix ($\M^C \rightarrow \M^L$) and adds an artificial
 diffusion operator $\D^L$, hereafter called the low-order diffusion matrix:
@@ -91,16 +95,24 @@ where $\U^L(t)$ denotes the discrete low-order solution values.
 Defining the low-order steady-state system matrix $\A^L\equiv\A + \D^L$,
 the low-order system for the steady-state system, explicit Euler system,
 and Theta system, respectively, are
+\begin{subequations}
+Steady-state:
 \begin{equation}\label{eq:low_ss}
   \A^L \U = \ssrhs \eqc
 \end{equation}
+Explicit Euler:
 \begin{equation}\label{eq:low_fe}
-  \M^L\frac{\U^{n+1} - \U^n}{\dt} + \A^L\U^n = \ssrhs^n \eqc
+%  \M^L\frac{\U^{n+1} - \U^n}{\dt} + \A^L\U^n = \ssrhs^n \eqc
+   \M^L \U^{n+1} = \M^L \U^n + \dt \pr{ \ssrhs^n - \A^L\U^n } \eqc
 \end{equation}
+Theta scheme:
 \begin{equation}\label{eq:low_theta}
-  \M^L\frac{\U^{n+1} - \U^n}{\dt} + \A^L\pr{\theta\U^{n+1} + (1-\theta)\U^n}
-    = \ssrhs^\theta \eqc
+  \pr{ \M^L +\theta \dt \A^L} U^{n+1}
+    = \M^L \U^n  + \dt( \ssrhs^\theta  - \A^L (1-\theta)\U^n )\eqc
+%  \M^L\frac{\U^{n+1} - \U^n}{\dt} + \A^L\pr{\theta\U^{n+1} + (1-\theta)\U^n}
+%    = \ssrhs^\theta \eqc
 \end{equation}
+\end{subequations}
 where $\ssrhs^\theta \equiv (1-\theta)\ssrhs^n + \theta\ssrhs^{n+1}$.
 The low-order
 diffusion matrix is assembled element-wise using the local viscous bilinear
@@ -111,17 +123,17 @@ form and low-order viscosity definitions:
     d_K(\test_j,\test_i) \eqp
 \end{equation}
 
-Now the low-order scheme has been fully described, and some statements will be
-made on its properties. Firstly the M-matrix property will be claimed for
-the matrix $\A^L$.
+Now the low-order scheme has been fully described, some statements will be
+made on its properties. Firstly the M-matrix property will be shown for the low-order
+matrix $\A^L$.
 %-------------------------------------------------------------------------------
 \begin{thm}[M-matrix property]
   The low-order steady-state system matrix $\A^L$ is a non-singular M-matrix.
 \end{thm}
 \input{content/m_matrix}
 %-------------------------------------------------------------------------------
-Thus it has been proven that the system matrix for the low-order steady-state
-system is an M-matrix, and it remains to prove the same for each of the
+Thus far, we have been proven that the system matrix for the low-order steady-state
+system is an M-matrix, and it remains to demonstrate the same for each of the
 transient systems. For the explicit Euler/SSPRK systems, the system matrix
 is just the lumped mass matrix $\M^L$, which is easily shown to be an M-matrix
 since it is a positive, diagonal matrix. For the $\theta$ temporal
@@ -130,7 +142,8 @@ matrix and the low-order steady-state system matrix; this linear combination
 is also an M-matrix since it is a combination of two M-matrices with non-negative
 combination coefficients.
 
-To complete the proof of positivity preservation, it remains to show that
+To complete the proof of positivity preservation for the low-order scheme, 
+we need to show that
 the system right-hand-side vectors for each temporal discretization are
 non-negative.
 %-------------------------------------------------------------------------------
@@ -141,5 +154,5 @@ It can also be shown that the described low-order scheme satisfies a local
 discrete maximum principle, which is easily shown given the M-matrix property.
 One may decide to use these bounds as the imposed bounds in the FCT
 algorithm; however, this approach has been found to yield less accurate solutions
-than the approach to be outline in Section \ref{sec:fct} and is thus omitted
+than the approach to be outlined in Section \ref{sec:fct} and is thus not discussed here 
 for brevity.

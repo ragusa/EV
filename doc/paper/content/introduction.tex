@@ -1,55 +1,82 @@
-The transport equation, also called the Boltzmann equation, describes the
-transport of particles or waves through some background media, and some
-of its applications include nuclear reactors, atmospheric science, radiation
-therapy, astrophysics, radiation shielding, and high energy density physics.
+\tcr{Leave this comment. I want to re-read it again, after modifications. This introduction 
+is very important}
+
+The transport equation, or linear Boltzmann equation, describes the
+transport of particles interacting with a background medium \cite{add TE ref}.  Some
+of its applications include the modeling of nuclear reactors, radiation
+therapy, astrophysical applications, radiation shielding, and high energy density physics 
+\cite{add several refs here for most of the applications}.
 This paper focuses on solution techniques applicable to the first-order
-form of the transport equation, discretized in angle with discrete ordinates,
-which gives what is commonly called the $S_N$ equations:
+form of the transport equation, recalled below in Equation~\eqref{eq:transport_scalar}. The 
+transport equation is a particle balance statement in a six-dimensional phase-space volume
+where $\x$ denotes the particle's position, $\di$ its direction of flight, and $E$ its energy:
 \begin{equation}\label{eq:transport_scalar}
   \frac{1}{v(E)}\ppt{\aflux} + \di\cdot\nabla\aflux\xdet
     + \totalxsec\xet\aflux\xdet = \Qtot\xdet
-  \eqc
-\end{equation}
-where $\Qtot\xdet$ denotes the sum of the extraneous source, prompt and delayed
-fission sources, and scattering source:
-\begin{multline}
-  \Qtot\xdet \equiv \Qext\xdet\\
-    + \frac{\chi_\text{p}(E)}{4\pi}\int\limits_0^\infty
-      dE'\nu_\text{p}(\x,E',t)\fissionxsec(\x,E',t)\phi(\x,\di,E',t)
-    + \sum\limits_{i=1}^{n_\text{d}}\frac{\chi_{\text{d},i}(E)}{4\pi}\lambda_i C_i\xt\\
-    + \int\limits_0^\infty dE'\int\limits_{4\pi}d\di'
-      \scatteringxsec(\x,E'\rightarrow E,\di'\rightarrow\di,t)\aflux(\x,\di',E',t)
   \eqp
-\end{multline}
-The $S_N$ equations are an attractive form of the transport equation because
-the $S_N$ equations can be decoupled by using iterative techniques for the
-scattering source, an approach called source iteration \cite{glasstone}:
-\begin{equation}
-  \frac{1}{v}\ppt{\aflux^{(\ell)}}
-    + \di\cdot\nabla\aflux^{(\ell)}
-    + \totalxsec\aflux^{(\ell)} = \Qtot^{(\ell-1)} \eqc
 \end{equation}
-where $\ell$ is the iteration index. The decoupling of the equations allows
-scalar solution techniques to be leveraged.
-Traditionally, the preferred spatial discretization method for the $S_N$
-equations is the Discontinuous Galerkin finite element method (DGFEM)
-\cite{Lesaint1974}\cite{Reed_Hill_1973}. Here, however, the
-Continuous Galerkin finite element method (CGFEM) is applied. There
-has been some recent work by Guermond and Popov \cite{guermond_ev} on
-solution techniques for conservation laws with CGFEM, which addresses some
+$\Qtot\xdet$ denotes the total particle source gains in an infinitesimal phase-space volume
+due to particle scattering, extraneous source of particles (if any), and 
+fission sources (in the case of neutron transport in multiplying media):
+%\begin{multline}
+%  \Qtot\xdet \equiv 
+%       \int\limits_0^\infty dE'\int\limits_{4\pi}d\di'
+%      \scatteringxsec(\x,E'\rightarrow E,\di'\rightarrow\di,t)\aflux(\x,\di',E',t) \\
+%+ \Qext\xdet
+%    + \frac{\chi(E)}{4\pi}\int\limits_0^\infty dE'  \nu(\x,E',t)\fissionxsec(\x,E',t) 
+%    \int\limits_{4\pi}d\di'\aflux(\x,\di',E',t)
+%  \eqp
+%\end{multline}
+\begin{equation}
+  \Qtot\xdet \equiv \Qsca\xdet + \Qext\xdet + \Qfis\xdet
+  \eqp
+\end{equation}
+The source terms $\Qsca$ and $\Qfis$ linearly depend on the solution variable, the angular flux denoted by $\aflux$. Only simple configurations are amenable to an analytical solution of Equation~\eqref{eq:transport_scalar}. 
+In most cases of relevance, the transport equation must be solved numerically; this involves discretization 
+of the phase-space and the use of iterative techniques.
+One common angular discretization is the discrete-ordinate or $S_N$ method \cite{several sn refs}; it is a collocation method whereby the transport equation is solved only along discrete directions $\di_d$ 
+($1 \le d \le n_{\di}$, with $n_{\di}$ the total number of discrete directions). One of the
+main advantages of the $S_N$ technique is that it enables an iterative approach, called source iteration
+in the transport literature \cite{glasstone,SI refs}, to resolve
+both the particle's streaming and interaction processes and the scattering events as follows:
+%equations is that the are an attractive form of the transport equation because
+%the $S_N$ equations can be decoupled by using iterative techniques for the
+%scattering source, an approach called source iteration \cite{}:
+\begin{equation} \label{eq:SI}
+  \frac{1}{v}\ppt{\aflux_d^{(\ell)}}
+    + \di_{d}\cdot\nabla\aflux_d^{(\ell)}
+    + \totalxsec\aflux_d^{(\ell)} = Q_{\textup{tot},d}^{(\ell-1)} \quad \forall d \eqc
+\end{equation}
+where $\ell$ is the iteration index and $\aflux_d^{(\ell)}(\x,E,t) = \aflux^{(\ell)}(\xdet)$. 
+Hence, a system of $n_{\di}$ decoupled equations are to be solved
+at a given source iteration index $\ell$. This allows solution techniques for scalar conservation
+laws to be leveraged in solving Equations~\eqref{eq:SI}. For brevity, the discrete-ordinate subscript $d$
+will be omitted hereafter and our model transport equation will consist in one of the $n_{\di}$ transport
+equations for a given fixed source (right-hand-side).
+
+Traditionally, the spatial discretization method for the $S_N$
+equations has been a Discontinuous Galerkin finite element method (DGFEM) with upwind
+\cite{Lesaint1974}\cite{Reed_Hill_1973}. Here, however, 
+a Continuous Galerkin finite element method (CGFEM) is applied.
+Some recent work by Guermond and Popov \cite{guermond_ev} on
+solution techniques for conservation laws with CGFEM addresses some
 of the main disadvantages of CGFEM versus DGFEM, including the formation
-of spurious oscillations. This work aims to demonstrate a proof of concept
-for the application of these solution techniques to the transport equation.
+of spurious oscillations. The purpose of the present paper is to demonstrate a proof of concept
+for the application of such solution techniques to the transport equation.
 Furthermore, some or all of the methodology explored in this paper may be
-later extended to DGFEM as well \cite{zingan_2013}.
+later extended to DGFEM as well;see, for instance, Zingan et al. \cite{zingan_2013}
+where the techniques of Guermond and Popov \cite{guermond_ev} have been ported to DGFEM schemes.
 
 One of the main objectives of this paper is to present a method that precludes
 the formation of spurious oscillations and the negativities that result from
 these oscillations; these issues have been a long-standing issue in the
-numerical solution of the transport equation \cite{lanthrop}.
-Not only are these negativities physically inaccurate, but they can cause
-simulations to terminate prematurely. Many attempts to remedy this
-issue rely on ad-hoc fix-ups, such as the set-to-zero fix-up for the
+numerical solution of the transport equation \cite{lathrop}.
+Not only are these negativities physically incorrect 
+(a particle's distribution density must be non-negative), but they can cause
+simulations to terminate prematurely, for example in radiative transfer where
+the radiation field is nonlinearly coupled to a material energy equation. 
+Many attempts to remedy the negativities in 
+transport solutions rely on ad-hoc fix-ups, such as the set-to-zero fix-up for the
 classic diamond difference scheme \cite{lewis}. Recent work by Hamilton
 introduced a similar fix-up for the linear discontinuous finite element
 method (LDFEM) that conserves local balance and preserves third-order accuracy.
@@ -59,13 +86,15 @@ implement and offers a nonlinear positive spatial differencing scheme
 known as the exponential discontinuous scheme \cite{wareing}.
 Maginot has recently developed a consistent set-to-zero (CSZ) LDFEM
 method \cite{maginot}, as well as a non-negative method for bilinear
-discontinuous FEM \cite{maginot_mc2015}.
+discontinuous FEM \cite{maginot_mc2015}. \tcr{I think a paper with Pete is out now}
 
-Traditional approaches to remedy the issue of spurious oscillations include
+In fluid dynamics, tradiational approaches to remedy the issue of spurious oscillations include
 the flux-corrected transport (FCT) algorithm, introduced in 1973 as
 the SHASTA algorithm for finite difference discretizations
 by Boris and Book \cite{borisbook}, where it was applied to linear discontinuities
-and gas dynamic shock waves. The main idea of the FCT algorithm is to blend a
+and gas dynamic shock waves. To the best of our knowledge, these FCT techniques have not been
+applied to the particle transport equation. \tcr{concur?} 
+The main idea of the FCT algorithm is to blend a
 low-order scheme having desirable properties with a high-order scheme which may
 lack these properties.
 Zalesak improved methodology of the algorithm and introduced a fully
@@ -74,7 +103,8 @@ Parrott and Christie extended the algorithm to the finite element method
 on unstructured grids \cite{parrott}, thus beginning the FEM-FCT methodology.
 L\"{o}hner et. al. applied FEM-FCT to the Euler and Navier-Stokes equations and
 a consequence of this work allowed FCT to be applied in modeling of complex
-geometries \cite{lohner}.
+geometries \cite{lohner}. \tcr{I think there should be a couple of sentences and several
+refs to Kuzmin's work as well.}
 
 Recent work by Guermond and Popov addresses the issue of spurious oscillations
 for general conservation laws by using artificial dissipation based on
@@ -95,7 +125,7 @@ scheme for scalar
 conservation laws \cite{guermond_firstorder}.
 
 This paper presents an FCT scheme that is largely rooted in the work by Guermond
-and Popov, but is extended to allow application to the transport equation,
+and Popov \tcr{but Kuzmin's as well...}, but is extended to allow application to the transport equation,
 which does not fit the precise definition of a conservation law but is instead a
 balance law since it includes sinks and sources, namely the reaction term
 $\totalxsec\aflux$ and the source term $\Qtot$. The presence

@@ -2,14 +2,16 @@
 
 \subsubsection{Solution Bounds}\label{sec:solution_bounds}
 
+\tcr{maybe a bit more transport meat to show how one obtains the integral form of the TE would be good here}
+
 Solution bounds for the transport model given by Equation \eqref{eq:scalar_model}
-can be derived using the integral transport equation, which is obtained using
+can be derived using the integral transport equation \cite{Add_a_Ref}, which is obtained using
 the method of characteristics:
 \begin{multline}\label{eq:integral_transport}
    u(\x,t) = u_0(\x - v t\di) e^{-\int\limits_0^t
     \sigma(\x - v(t -t')\di)v dt'}\\
     + \int\limits_0^t q(\x - v(t -t')\di,t') e^{-\int\limits_{t'}^t
-    \sigma(\x - v(t -\bar{t})\di)v d\bar{t}} v dt' \eqp
+    \sigma(\x - v(t -{t''})\di)v d{t''}} v dt' \eqp
 \end{multline}
 
 % %================================================================================
@@ -350,6 +352,7 @@ the method of characteristics:
 %
 % %-------------------------------------------------------------------------------
 % \begin{theorem}[thm:analytic_dmp]{Analytic Discrete Maximum Principle}
+\noindent
 If the time step size $\dt$ satisfies the condition
 \begin{equation}\label{eq:cfl_analytic_dmp}
   v\dt \leq h_{\min} \eqc \quad h_{\min} \equiv \min\limits_K h_K \eqc
@@ -360,6 +363,7 @@ solution bounds apply:
   \begin{equation}
       U^-_i \le U_i^{n+1} \le U^+_i \eqc
   \end{equation}
+where
   \begin{equation}
       U^-_i
         \equiv \left\{\begin{array}{l l}
@@ -372,6 +376,7 @@ solution bounds apply:
           & \sigma_{\max,i} = 0
         \end{array}\right.\eqc
   \end{equation}
+and 
   \begin{equation}
       U^+_i
         \equiv \left\{\begin{array}{l l}
@@ -382,8 +387,9 @@ solution bounds apply:
           U_{\max,i}^n
             + v\dt q_{\max,i} \eqc
           & \sigma_{\min,i} = 0
-        \end{array}\right.\eqc
+        \end{array}\right.\eqp
   \end{equation}
+The other quantities used int he above expressions are:
   \begin{equation}
     U_{\max,i}^n \equiv\max\limits_{j\in\indices(S_i)}U_j^n \eqc \quad
     U_{\min,i}^n \equiv\min\limits_{j\in\indices(S_i)}U_j^n \eqc

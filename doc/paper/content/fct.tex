@@ -17,89 +17,98 @@ fluxes. To arrive at this definition, the low-order systems, given by Equations
 discretization, are augmented with the addition of the \emph{antidiffusion source}
 $\p$, which now, instead of producing the low-order solution, produces the high-order
 solution $\mathbf{U}^H$.
+\begin{subequations}
 \begin{equation}\label{eq:antidiffusionsource_ss}
   \A^L \U^H = \ssrhs + \p \eqc
 \end{equation}
 \begin{equation}\label{eq:antidiffusionsource_fe}
-  \M^L\frac{\U^H - \U^n}{\dt} + \A^L\U^n = \ssrhs^n + \p \eqc
+  \M^L\frac{\U^H - \U^n}{\dt} + \A^L\U^n = \ssrhs^n + \p^n \eqc
 \end{equation}
 \begin{equation}\label{eq:antidiffusionsource_theta}
   \M^L\frac{\U^H - \U^n}{\dt} + \A^L\pr{\theta\U^{n+1} + (1-\theta)\U^n}
-    = \ssrhs^\theta + \p \eqp
+    = \ssrhs^\theta + \p^\theta \eqp
 \end{equation}
+\end{subequations}
 Then the corresponding high-order systems, given by Equations \eqref{eq:high_ss},
 \eqref{eq:high_fe}, \eqref{eq:high_theta} are subtracted from these equations
 to give the following definitions for $\p$:
+\begin{subequations}
 \begin{equation}\label{eq:antidiffusionsourcei_ss}
   \p \equiv \pr{\D^L - \D^H}\U^H \eqc
 \end{equation}
 \begin{equation}\label{eq:antidiffusionsourcei_fe}
-  \p \equiv -\pr{\M^C - \M^L}\frac{\U^H - \U^n}{\dt} + \pr{\D^L - \D^H}\U^n \eqc
+  \p^n \equiv -\pr{\M^C - \M^L}\frac{\U^H - \U^n}{\dt} + \pr{\D^L - \D^H}\U^n \eqc
 \end{equation}
 \begin{multline}\label{eq:antidiffusionsourcei_theta}
-  \p \equiv -\pr{\M^C - \M^L}\frac{\U^H - \U^n}{\dt}
+  \p^\theta \equiv -\pr{\M^C - \M^L}\frac{\U^H - \U^n}{\dt}
     + (1-\theta)\pr{\D^L - \D^{H,n}}\U^n\\
     + \theta    \pr{\D^L - \D^{H,n+1}}\U^{n+1} \eqc
 \end{multline}
+\end{subequations}
 The next step is to decompose each antidiffusive source $p_i$ into a sum of
 antidiffusive fluxes: $p_i = \sum_j P_{i,j}$. Because the matrices $\M^C-\M^L$
 and $\D^L-\D^H$ are symmetric and feature row sums of zero, the following
 are valid antidiffusive flux decompositions:
+\begin{subequations}
 \begin{equation}
   P_{i,j} = \pr{D^L_{i,j} - D^H_{i,j}}\pr{U^H_j - U^H_i} \eqc
 \end{equation}
 \begin{equation}
-  P_{i,j} = -M^C_{i,j}\pr{\frac{U^H_j - U^n_j}{\dt} - \frac{U^H_i - U^n_i}{\dt}}
+  P^n_{i,j} = -M^C_{i,j}\pr{\frac{U^H_j - U^n_j}{\dt} - \frac{U^H_i - U^n_i}{\dt}}
     + \pr{D^L_{i,j} - D^{H,n}_{i,j}}\pr{U^n_j - U^n_i}  \eqc
 \end{equation}
 \begin{multline}
-  P_{i,j} = -M^C_{i,j}\pr{\frac{U^H_j - U^n_j}{\dt} - \frac{U^H_i - U^n_i}{\dt}}
+  P^{\theta}_{i,j} = -M^C_{i,j}\pr{\frac{U^H_j - U^n_j}{\dt} - \frac{U^H_i - U^n_i}{\dt}}
     + (1-\theta)\pr{D^L_{i,j} - D^{H,n}_{i,j}}\pr{U^n_j - U^n_i}\\
     + \theta\pr{D^L_{i,j} - D^{H,n+1}_{i,j}}\pr{U^H_j - U^H_i} \eqp
 \end{multline}
+\end{subequations}
 Note that this decomposition yields equal and opposite antidiffusive flux pairs
-since the antidiffusion matrix $\P$ is skew symmetric: $P_{j,i}=-P_{i,j}$.
+since the antidiffusion matrix $\P$ is skew symmetric: $P_{j,i}=-P_{i,j}$
+(and likewise for $P_{j,i}^n$ and $P_{j,i}^\theta$).
 Up until this point, no changes have been made to the
-high-order scheme: solving Equations \eqref{eq:antidiffusion_source_ss} through
-\eqref{eq:antidiffusion_source_theta} still produces the high-order solution.
+high-order scheme: solving Equations~\eqref{eq:antidiffusion_source_ss} through
+\eqref{eq:antidiffusion_source_theta} \tcr{these eqref do not work} still produces the high-order solution.
 FCT is applied to these equations by applying limiting coefficients $L_{i,j}$ to
 each antidiffusive flux $P_{i,j}$. Thus the FCT systems are the following:
+\begin{subequations}
 \begin{equation}\label{eq:fct_ss}
-  \A^L \U^H = \ssrhs + \bar{\p} \eqc
+  \A^L \U^H = \ssrhs + \hat{\p} \eqc
 \end{equation}
 \begin{equation}\label{eq:fct_fe}
-  \M^L\frac{\U^H - \U^n}{\dt} + \A^L\U^n = \ssrhs^n + \bar{\p} \eqc
+  \M^L\frac{\U^H - \U^n}{\dt} + \A^L\U^n = \ssrhs^n + \hat{\p}^n \eqc
 \end{equation}
 \begin{equation}\label{eq:fct_theta}
   \M^L\frac{\U^H - \U^n}{\dt} + \A^L\pr{\theta\U^{n+1} + (1-\theta)\U^n}
-    = \ssrhs^\theta + \bar{\p} \eqc
+    = \ssrhs^\theta + \hat{\p}^\theta \eqc
 \end{equation}
-where the overbar denotes limitation: $\bar{p}_i\equiv\sum_j L_{i,j}P_{i,j}$.
-The limiting coefficients each range between zero and one, representing
+\end{subequations}
+where the hat denotes limitation: $\hat{p}_i\equiv\sum_j L_{i,j}P_{i,j}$.
+The limiting coefficients range between zero and one, representing
 full limitation and no limitation, respectively.
 For example, setting all limiting
 coefficients to zero would result in the low-order solution, and setting
 all to one would result in the high-order solution. The actual values of the
 limiting coefficients are determined by the limiter, which operates on the
-following goal: maximize the limiting coefficients such that the imposed
+following goal: maximize the limiting coefficients such that the \tcr{some} imposed
 solution bounds are not violated.
 
 As will be discussed in Section \ref{sec:solution_bounds}, the solution bounds
 for implicit FCT and steady-state FCT are implicit, and thus the systems given
 by Equations \eqref{eq:fct_theta} and \eqref{eq:fct_ss} are nonlinear, since
-the limiting coefficients contained in $\bar{\p}$ are nonlinear. Thus some
-nonlinear iteration is required. In this paper, a fixed-point iteration scheme
-is used because alternatives such as Newton's method encounter complications
-due to the limiting procedure. For any nonlinear iteration scheme, the
+the limiting coefficients contained in $\hat{\p}$ are nonlinear. 
+In this paper, a fixed-point iteration scheme is used to resolved the nonlinearities. 
+For any nonlinear iteration scheme, the
 imposed solution bounds must be computed using the previous solution iterate:
 \begin{equation}
   U_i^{-,(\ell)} \leq U_i^{(\ell+1)} \leq U_i^{+,(\ell)} \eqp
 \end{equation}
-Furthermore, the antidiffusion bounds $\bar{p}_i^\pm$, which depend on these
+Furthermore, the antidiffusion bounds $\hat{p}_i^\pm$, which depend on these
 lagged solution bounds $U_i^{\pm,(\ell)}$, must be further lagged because
 its definition still contains terms at iteration $\ell+1$ despite the lagging
 of the solution bounds. The end result is this: the solution bounds for implicit/steady-state
 FCT schemes are only satisfied upon nonlinear convergence, not at each iteration.
+\tcr{feels like this paragraph needs to be rephrased and simplified}
 
 %===============================================================================
 \input{content/solution_bounds}
@@ -109,22 +118,23 @@ FCT schemes are only satisfied upon nonlinear convergence, not at each iteration
 
 Bounds imposed on a solution value $i$, such as the bounds described in Section
 \ref{sec:solution_bounds}, directly translate into bounds on the limited
-antidiffusion source $\bar{p}_i$. These antidiffusion bounds $\bar{p}_i^\pm$ for steady-state,
+antidiffusion source $\hat{p}_i$. These antidiffusion bounds $\hat{p}_i^\pm$ for steady-state,
 explicit Euler, and Theta discretization are respectively derived by
 solving Equations \eqref{eq:fct_ss}, \eqref{eq:fct_fe}, and \eqref{eq:fct_theta}
-for $\bar{p}_i$ and manipulating the inequality $U^-_i\leq U_i\leq U^+_i$:
+for $\hat{p}_i$ and manipulating the inequality $U^-_i\leq U_i\leq U^+_i$. This yields:
+\begin{subequations}
 \begin{equation}\label{eq:antidiffusion_bounds_ss}
-  \bar{p}_i^\pm \equiv A_{i,i}^L U_i^\pm
+  \hat{p}_i^\pm \equiv A_{i,i}^L U_i^\pm
     + \sumjnoti A_{i,j}^L U_j - b_i \eqc
 \end{equation}
 \begin{equation}\label{eq:antidiffusion_bounds_fe}
-  \bar{p}_i^\pm \equiv M^L_{i,i}
+  \hat{p}_i^\pm \equiv M^L_{i,i}
     \frac{U_i^\pm - U_i^n}{\dt}
   + \sumj A_{i,j}^L U_j^n
   - b_i^n \eqc
 \end{equation}
 \begin{equation}\label{eq:antidiffusion_bounds_theta}
-  \bar{p}_i^\pm \equiv
+  \hat{p}_i^\pm \equiv
    \pr{\frac{M^L_{i,i}}{\dt}+\theta A_{i,i}^L}
      U_i^\pm
     + \pr{(1-\theta) A_{i,i}^L-\frac{M^L_{i,i}}{\dt}}
@@ -133,35 +143,39 @@ for $\bar{p}_i$ and manipulating the inequality $U^-_i\leq U_i\leq U^+_i$:
   -b_i^\theta
   \eqp
 \end{equation}
-Thus if limiting coefficients $L_{i,j}$ are selected such that
-$\bar{p}_i^-\leq \bar{p}_i\leq \bar{p}_i^+$, then the solution bounds are
+\end{subequations}
+We note that, if the limiting coefficients $L_{i,j}$ are selected such that
+$\hat{p}_i^-\leq \hat{p}_i\leq \hat{p}_i^+$, then the solution bounds are
 satisfied: $U^-_i\leq U_i\leq U^+_i$.
 
-Limiters such as the limiter described in Section \ref{sec:limiter} can be
-viewed as black boxes which take as input only the antidiffusion bounds
-$\bar{p}_i^\pm$ and the antidiffusive fluxes $P_{i,j}$ and output the
+Limiters such as the Zalesak's limiter described in Section \ref{sec:limiter} are algebraic
+operator, taking as input the antidiffusion bounds
+$\hat{p}_i^\pm$ and the antidiffusive fluxes $P_{i,j}$ and returning as output the
 limiting coefficients $L_{i,j}$. It is important to note that most limiters,
 including the limiter described in this paper, assume the following:
-$\bar{p}_i^-\leq 0$, $\bar{p}_i^+\geq 0$; the reasoning for this assumption
+$\hat{p}_i^-\leq 0$, $\hat{p}_i^+\geq 0$; the reasoning for this assumption
 is as follows. Recall that FCT starts from the
-low-order scheme, which is equivalent to the solution with $\bar{p}_i=0$.
+low-order scheme, which is equivalent to the solution with $\hat{p}_i=0$.
 The limiter should start from this point so that there is a fail-safe solution
 for the FCT algoritm: the low-order solution. Otherwise, there is no guarantee
 that any combination of values of limiting coefficients will achieve
-the desired condition $\bar{p}_i^-\leq \bar{p}_i\leq \bar{p}_i^+$. If
-$\bar{p}_i^- > 0$ or $\bar{p}_i^+ < 0$, then the starting state, the low-order
-solution, with $\bar{p}_i=0$ is an invalid solution of the FCT algorithm.
-Some solution bounds automatically satisfy $\bar{p}_i^-\leq 0$ and $\bar{p}_i^+\geq 0$,
+the desired condition $\hat{p}_i^-\leq \hat{p}_i\leq \hat{p}_i^+$. If
+$\hat{p}_i^- > 0$ or $\hat{p}_i^+ < 0$, then the starting state, the low-order
+solution, with $\hat{p}_i=0$ is an invalid solution of the FCT algorithm.
+Some solution bounds automatically satisfy $\hat{p}_i^-\leq 0$ and $\hat{p}_i^+\geq 0$,
 but in general these conditions must be enforced. In this paper, the solution
 bounds are possibly widened by directly enforcing these assumptions:
 \begin{equation}
-  \bar{p}_i^- \gets \min(0,\bar{p}_i^-) \eqc
+  \hat{p}_i^- \gets \min(0,\hat{p}_i^-) \eqc
 \end{equation}
 \begin{equation}
-  \bar{p}_i^+ \gets \max(0,\bar{p}_i^+) \eqp
+  \hat{p}_i^+ \gets \max(0,\hat{p}_i^+) \eqp
 \end{equation}
 If this step is skipped, the behavior of the limiter is undefined and for example
 negative limiting coefficients can be computed.
+\tcr{I understand the details but may be missing the larger picture of the last paragraph. Is
+this in the weeds and could be removed or is this very important, in which case it needs
+to convey that importance more}
 
 %===============================================================================
 \input{content/limiting_coefficients}

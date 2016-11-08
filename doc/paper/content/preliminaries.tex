@@ -1,5 +1,5 @@
 For the remainder of this paper, the scalar transport model given by
-Equation \eqref{eq:transport_scalar} will be generalized to a scalar
+Equation~\eqref{eq:transport_scalar} will be generalized to a scalar
 balance equation having reaction terms and source terms, with the following
 notation:
 \begin{equation}\label{eq:scalar_model}
@@ -9,7 +9,9 @@ notation:
 \end{equation}
 where $u$ is the balanced quantity, $v$ is the transport speed, $\di$ is
 a constant, uniform unit direction vector, $\sigma$ is the reaction coefficient,
-and $q$ is the source function.
+and $q$ is the source function. Note that $q \ge 0$ for particle transport: the
+external source, the inscattering source, and the fission source are all particle
+production terms and hence are positive. 
 
 The problem formulation is completed by supplying initial conditions on the
 problem domain $\domain$ (for transient problems):
@@ -36,23 +38,28 @@ gives the following semi-discrete system:
   \begin{equation}
     \M^C\ddt{\U} + \A\U(t) = \ssrhs(t) \eqc
   \end{equation}
+where the consistent (i.e., not lumped) mass matrix is given by
   \begin{equation}
     M^C_{i,j} \equiv \intSij \test_i(\x)\test_j(\x) dV \eqc
   \end{equation}
+the (steady-tstate) transport matrix is  
   \begin{equation}\label{eq:Aij}
     A_{i,j} \equiv \intSij\left(
     v\di\cdot\nabla\test_j(\x) +
     \sigma(\x)\test_j(\x)\right)\test_i(\x) dV \eqc
   \end{equation}
+and the right-hand-side is
   \begin{equation}
-    b_i(t) \equiv \intSi q(\x)\test_i(\x) dV \eqc
+    b_i(t) \equiv \intSi q(\x)\test_i(\x) dV \eqp
   \end{equation}
 \end{subequations}
-where $U_j(t)$ are the degrees of freedom of the approximate solution $u_h$:
+The components of the solution vector $\U(t)$ are denoted by $U_j(t)$ and represent
+the degrees of freedom of the approximate solution $u_h$:
 \begin{equation}
   u_h\xt = \sumj U_j(t) \test_j(\x) \eqc
 \end{equation}
-$S_i$ is the support of basis function $i$, and $S_{i,j}$
+where $\test_j(\x)$ is a finite element test function.
+$S_i$ is the support of basis function $i$ and $S_{i,j}$
 is the shared support of basis functions $i$ and $j$.
 
 A number of temporal discretizations are considered in this paper.
@@ -104,16 +111,16 @@ method has the following coefficients:
   c = \left[\begin{array}{c}0\\1\\\frac{1}{2}\end{array}\right] \eqp
 \end{equation}
 
-This work also considers the Theta family temporal discretizations:
+This work also considers the Theta-family of temporal discretizations:
 \begin{equation}
   \M^C\frac{\U^{n+1}-\U^n}{\dt} + \A((1-\theta)\U^n + \theta\U^{n+1})
   = (1-\theta)\ssrhs^n + \theta\ssrhs^{n+1} \eqc
 \end{equation}
-where $0\leq\theta\leq 1$ is the implicitness parameter, where for example
+where $0\leq\theta\leq 1$ is the implicitness parameter. For example,
 $\theta$ values of $0$, $\frac{1}{2}$, and $1$ correspond to forward Euler,
-Crank-Nicolson, and backward Euler, respectively.
+Crank-Nicohlson, and backward Euler discretizations, respectively.
 
-Lastly, this work considers the steady-state case:
+Finally, in the case of a steady-state solve, we have the following system of equations:
 \begin{equation}
   \A\U = \ssrhs \eqp
 \end{equation}
