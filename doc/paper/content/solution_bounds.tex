@@ -2,11 +2,20 @@
 
 \subsubsection{Solution Bounds}\label{sec:solution_bounds}
 
-\tcr{maybe a bit more transport meat to show how one obtains the integral form of the TE would be good here}
-
-Solution bounds for the transport model given by Equation \eqref{eq:scalar_model}
-can be derived using the integral transport equation \cite{Add_a_Ref}, which is obtained using
-the method of characteristics:
+The integral form of the transport equation can be derived using the method
+of characteristics. One considers a frame of reference moving with the flow
+so that position is a function of time, resulting in a family of characteristic curves
+$\x(t)$ that solve the following ODE:
+\begin{equation}
+  \ddt{\x}=v\di\eqc \quad \x(0)=\x_0\eqp
+\end{equation}
+Then taking the time derivative of $u(\x(t),t)$ gives
+\begin{align}
+  \ddt{u} & = \ppt{u} + \nabla\cdot(u(\x(t),t))\ddt{\x}\\
+    & =  \ppt{u} + \nabla\cdot(u(\x(t),t))\ddt{\x}
+\end{align}
+Finally, combining this with Equation \eqref{eq:scalar_model} and solving
+the resulting ODE gives the integral transport equation \cite{glasstone}:
 \begin{multline}\label{eq:integral_transport}
    u(\x,t) = u_0(\x - v t\di) e^{-\int\limits_0^t
     \sigma(\x - v(t -t')\di)v dt'}\\
@@ -376,7 +385,7 @@ where
           & \sigma_{\max,i} = 0
         \end{array}\right.\eqc
   \end{equation}
-and 
+and
   \begin{equation}
       U^+_i
         \equiv \left\{\begin{array}{l l}

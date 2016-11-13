@@ -1,14 +1,15 @@
 \begin{abstract}
-\tcr{I think it is a bit too detailed, and doesn't give the main punchline. 
-1) We derived FCT for particle transport
-2) it uses a low-order positivity preserving scheme (based on M-matrix properties)
-3) we use a high-order scheme that is EV
-4) the 3 above points are the novelty of the papers
-Then you can give some details}
-The entropy viscosity method introduced by Guermond \cite{guermond_ev},
-in conjunction with the Flux-Corrected Transport (FCT) algorithm, is
+The Flux-Corrected Transport (FCT) algorithm is
 applied to the transport equation using the continuous finite element
-method. The resulting scheme is second-order accurate in space,
+method. In addition to this novelty,
+a number of components of this FCT algorithm are themselves novelties
+for the transport equation:
+1) a low-order, positivity-preserving scheme,
+based on the application of M-matrix properties,
+2) a high-order scheme based on the entropy viscosity method introduced by
+Guermond \cite{guermond_ev}, and
+3) local, discrete solution bounds derived from the integral transport equation.
+The resulting scheme is second-order accurate in space,
 enforces an entropy inequality, mitigates the formation of spurious
 oscillations, and guarantees the absence of negativities.
 Time discretizations considered include steady-state, Theta methods

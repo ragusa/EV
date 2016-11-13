@@ -3,11 +3,7 @@
 \subsubsection{Limiting Coefficients}\label{sec:limiter}
 
 The results in this paper use the classic multi-dimensional limiter introduced by Zalesak
-\cite{zalesak}. Recall that a limiter takes as input only the antidiffusion bounds
-$\bar{p}_i^\pm$ and the antidiffusive fluxes $P_{i,j}$ and outputs the
-limiting coefficients $L_{i,j}$. \tcr{that recall sentence is a repeat. remove?}
-The Zalesak limiter gives the following
-definition of the limiting coefficients:
+\cite{zalesak}:
 \begin{subequations}
 \begin{equation}\label{eq:flux_sums}
    p_i^+ \equiv \sumj\max(0,P_{i,j}) \eqc\qquad
@@ -37,10 +33,16 @@ definition of the limiting coefficients:
 The objective of a limiter is to maximize the amount of antidiffusion that
 can be accepted without violating the imposed solution constraints. Zalesak's
 limiter is one commonly used attempt at this objective due to its relatively
-simple form; however, there are possible alternatives to this limiter that
-could accept more antidiffusion without violating the imposed constraints
-\tcr{you should cite a couple of examples here. one that comes to mind is the
-PhD student from JLG from about the time you graduated}.
+simple form.
+\begin{rmk}
+Note that it is possible to devise limiters accepting more
+antidiffusion than Zalesak's limiter, but one must sacrifice the simple,
+closed form of Zalesak's limiter and adapt a sequential algorithm
+for computing the antidiffusion coefficients. This approach has not been
+found in literature, most likely because the sequential aspect of the algorithm
+makes it node-order-dependent, which reduces reproducibility between
+implementations.
+\end{rmk}
 Finally, one could pass antidiffusive fluxes through a given limiter multiple
 times, using the remainder antidiffusive flux as the input in each pass,
-to increase the total antidiffusion accepted. \tcr{another reference here. doesn't kuzmin do this as well?}
+to increase the total antidiffusion accepted \cite{kuzmin_FCT,schar}.

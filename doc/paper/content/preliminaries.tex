@@ -11,7 +11,7 @@ where $u$ is the balanced quantity, $v$ is the transport speed, $\di$ is
 a constant, uniform unit direction vector, $\sigma$ is the reaction coefficient,
 and $q$ is the source function. Note that $q \ge 0$ for particle transport: the
 external source, the inscattering source, and the fission source are all particle
-production terms and hence are positive. 
+production terms and hence are positive.
 
 The problem formulation is completed by supplying initial conditions on the
 problem domain $\domain$ (for transient problems):
@@ -42,7 +42,7 @@ where the consistent (i.e., not lumped) mass matrix is given by
   \begin{equation}
     M^C_{i,j} \equiv \intSij \test_i(\x)\test_j(\x) dV \eqc
   \end{equation}
-the (steady-tstate) transport matrix is  
+the (steady-tstate) transport matrix is
   \begin{equation}\label{eq:Aij}
     A_{i,j} \equiv \intSij\left(
     v\di\cdot\nabla\test_j(\x) +
@@ -93,7 +93,7 @@ which in this case is the following:
     \left(\ssrhs(t) - \A\U(t)\right) \eqp
 \end{equation}
 SSPRK methods are a subclass of Runge Kutta methods that offer high-order
-accuracy while preserving stability \cite{gottlieb}\cite{macdonald}.
+accuracy while preserving stability \cite{gottlieb,macdonald}.
 The form given in Equation \eqref{eq:ssprk} makes it clear that these
 SSPRK methods can be expressed as a linear combination of steps resembling
 forward Euler steps, with the only difference being that the explicit

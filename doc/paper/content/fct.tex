@@ -67,8 +67,8 @@ Note that this decomposition yields equal and opposite antidiffusive flux pairs
 since the antidiffusion matrix $\P$ is skew symmetric: $P_{j,i}=-P_{i,j}$
 (and likewise for $P_{j,i}^n$ and $P_{j,i}^\theta$).
 Up until this point, no changes have been made to the
-high-order scheme: solving Equations~\eqref{eq:antidiffusion_source_ss} through
-\eqref{eq:antidiffusion_source_theta} \tcr{these eqref do not work} still produces the high-order solution.
+high-order scheme: solving Equations \eqref{eq:antidiffusionsource_ss} through
+\eqref{eq:antidiffusionsource_theta} still produces the high-order solution.
 FCT is applied to these equations by applying limiting coefficients $L_{i,j}$ to
 each antidiffusive flux $P_{i,j}$. Thus the FCT systems are the following:
 \begin{subequations}
@@ -90,25 +90,23 @@ For example, setting all limiting
 coefficients to zero would result in the low-order solution, and setting
 all to one would result in the high-order solution. The actual values of the
 limiting coefficients are determined by the limiter, which operates on the
-following goal: maximize the limiting coefficients such that the \tcr{some} imposed
+following goal: maximize the limiting coefficients such that the imposed
 solution bounds are not violated.
 
 As will be discussed in Section \ref{sec:solution_bounds}, the solution bounds
 for implicit FCT and steady-state FCT are implicit, and thus the systems given
 by Equations \eqref{eq:fct_theta} and \eqref{eq:fct_ss} are nonlinear, since
-the limiting coefficients contained in $\hat{\p}$ are nonlinear. 
-In this paper, a fixed-point iteration scheme is used to resolved the nonlinearities. 
+the limiting coefficients contained in $\hat{\p}$ are nonlinear.
+In this paper, a fixed-point iteration scheme is used to resolved the nonlinearities.
 For any nonlinear iteration scheme, the
 imposed solution bounds must be computed using the previous solution iterate:
 \begin{equation}
   U_i^{-,(\ell)} \leq U_i^{(\ell+1)} \leq U_i^{+,(\ell)} \eqp
 \end{equation}
-Furthermore, the antidiffusion bounds $\hat{p}_i^\pm$, which depend on these
-lagged solution bounds $U_i^{\pm,(\ell)}$, must be further lagged because
-its definition still contains terms at iteration $\ell+1$ despite the lagging
-of the solution bounds. The end result is this: the solution bounds for implicit/steady-state
+Though the solution bounds are lagged, the antidiffusion bounds $\hat{p}_i^\pm$
+still contains terms at iteration $\ell+1$; these terms must be lagged as well.
+The consequence is this: the solution bounds for implicit/steady-state
 FCT schemes are only satisfied upon nonlinear convergence, not at each iteration.
-\tcr{feels like this paragraph needs to be rephrased and simplified}
 
 %===============================================================================
 \input{content/solution_bounds}
@@ -171,11 +169,13 @@ bounds are possibly widened by directly enforcing these assumptions:
 \begin{equation}
   \hat{p}_i^+ \gets \max(0,\hat{p}_i^+) \eqp
 \end{equation}
-If this step is skipped, the behavior of the limiter is undefined and for example
-negative limiting coefficients can be computed.
-\tcr{I understand the details but may be missing the larger picture of the last paragraph. Is
-this in the weeds and could be removed or is this very important, in which case it needs
-to convey that importance more}
+Omission of this step can lead to disastrous results: the assumptions of the
+limiter are violated, and thus limiting coefficients that do not satisfy the
+imposed solution bounds can be generated. Even negative limiting coefficients
+may be generated, and this is especially consequential in implicit FCT
+simulations, since the limiting coefficients are then essentially unbounded
+toward $-\infty$; iteration can lead to extremely non-physical solutions
+and severe convergence difficulties or failure.
 
 %===============================================================================
 \input{content/limiting_coefficients}

@@ -31,7 +31,6 @@ Figure \ref{fig:mms_sinx_ss} shows the $L^2$ norm errors for this convergence st
 and indicates first-order spatial convergence for the low-order method and
 second-order spatial convergence for the entropy viscosity (EV) method
 and EV-FCT method, as expected.
-\tcr{figure missing in repo}
 \begin{figure}[htb]
    \centering
       \includegraphics[width=\textwidth]
@@ -46,33 +45,33 @@ and EV-FCT method, as expected.
 This 2-D test problem is on the unit square: $\x\in(0,1)^2$ and simulates
 a beam incident on the bottom boundary of a void region
 ($\sigma(\x)= 0$, $q(\x)=0$) at a shallow angle of
-$21.94^\circ$ with respect to the x-axis. \tcr{what are $\Omega_x$ and $\Omega_y$ here?}
+$21.94^\circ$ with respect to the x-axis ($\Omega_x=\cos(21.94^\circ)$,
+$\Omega_y=\sin(21.94^\circ)$).
 The exact solution of this problem contains a discontinuity along the line
 $y = \frac{\Omega_y}{\Omega_x}x$, which presents opportunity for the formation
 of spurious oscillations.
-This is run as a pseudo-transient problem with zero initial conditions until 
+This is run as a pseudo-transient problem with zero initial conditions until
 steady-state is reached. A Dirichlet
-boundary condition is imposed on the incoming sides of the problem, with a value of 1 
+boundary condition is imposed on the incoming sides of the problem, with a value of 1
 on the bottom boundary and a value of 0 on the left boundary.
 
 This problem is run with Explicit Euler time discretization and a CFL
-number of 0.5 on a $64\times64$ mesh. Figure~\ref{fig:glance_in_void_fe}
+number of 0.5 on a $64\times64$ mesh. Figure \ref{fig:glance_in_void_fe}
 compares the numerical solutions for this problem obtained with the
-low-order, EV, Galerkin-FCT, and EV-FCT schemes. The Galerkin scheme
+low-order, EV, Galerkin-FCT, and EV-FCT schemes. The same color scale
+is used for each image. The Galerkin scheme
 (without FCT) produced spurious oscillations without bound, so those
 results are omitted here. The EV solution is much less diffusive along
-the discontinuity, but contains spurious oscillations. Both FCT solutions
-keep the solution within some physical bounds \tcr{'some' sounds vague. why some???}, but one can see from
+the discontinuity but is contaminated by spurious oscillations, as indicated
+by the darkest blues and reds. Both FCT solutions
+keep the solution within the imposed physical bounds, but one can see from
 the Galerkin-FCT results that some ``terracing'' effects are present; this
 behavior is a well-known artifact of traditional FCT schemes \cite{kuzmin_FCT}.
-The EV-FCT scheme, however, shows a significant reduction in this effect,
-as expected \tcr{justify 'as expected'}; the addition of the entropy-based artificial viscosity
-lessens the burden on the limiter. This result was found to be typical
-when comparing Galerkin-FCT and EV-FCT, although there are some cases
-when the difference is minimal, or even the Galerkin-FCT solution is slightly
-superior due to less artificial diffusion. \tcr{do you show a latter situation?}
+In this case, and in all observed cases of the terracing phenomenon,
+the EV-FCT scheme shows a reduction of this effect: the addition of the
+entropy-based artificial viscosity decreases the magnitude of the spurious
+oscillations in the high-order scheme and thus lessens the burden on the limiter.
 
-\tcr{is the blue color in this figure always the same numerical value? i do not think so. maybe colorbars should be added for completeness. i can imagine a reviewer complaining about this}
 \begin{figure}[ht]
    \centering
    \begin{subfigure}{0.45\textwidth}
@@ -161,14 +160,16 @@ of nonlinear iterations for this solve is given in the ``FCT'' column.
 These results indicate a trend for both EV and FCT that the number of nonlinear
 iterations increase with CFL number; however, this trend is much more drastic
 with FCT than EV. For a CFL number of 20, the FCT algorithm fails to converge
-entirely. As discussed previously, the solution bounds are implicit and change
+entirely. Note that in this case, no numbers are shown in the ``EV'' column,
+even though entropy viscosity iteration did not fail,
+because the total iterations could not be determined due
+to the premature termination of the simulation.
+As discussed previously, the solution bounds are implicit and change
 with each iteration. For this particular case, the problematic behavior that
 emerges is an alternation between two successive solutions indefinitely, with each generating
 solution bounds that produce the other. Thus the nonlinear convergence stalls
 indefinitely, thus demonstrating a disadvantage of implicit FCT.
 %-------------------------------------------------------------------------------
-\tcr{I understand the ail in the FCT column but why are there no numbers in the last row
-for EV?}
 \begin{table}[htb]\caption{Nonlinear Iterations vs. CFL Number for the
   Obstruction Test Problems}
 \label{tab:obstruction_iterations}
@@ -211,7 +212,6 @@ scheme. For this test problem, the Galerkin-FCT solution is slightly
 superior to the EV-FCT solution and the ``terracing'' phenomenon
 of FCT is not present.
 
-\tcr{missing fig in repo}
 \begin{figure}[htb]
    \centering
       \includegraphics[width=\textwidth]
@@ -228,8 +228,8 @@ This 1-D test problem has two regions, the left being a void but with a source:
 $\sigma(\x)=0$ and $q(\x)=1$, and the right being an absorber without a source:
 $\sigma(\x)=10$ and $q(\x)=0$. This does not represent necessairly a non-physical problem:
 due to the energy dependence of the particle distribution, it is possible to have
-a strong inscattering source term in an energy bandwidth where the interaction coefficient is 
-small; here we emphasize the weak interaction probability by zero-ing out the reaction term. 
+a strong inscattering source term in an energy bandwidth where the interaction coefficient is
+small; here we emphasize the weak interaction probability by zero-ing out the reaction term.
 A zero Dirichlet boundary condition is imposed on the incoming (left)
 boundary, and this problem is run as a steady-state problem on the domain
 $(0,1)$ with 32 cells.
@@ -249,7 +249,6 @@ phenomenon known as ``peak-clipping'', whereby the ``mass'' that
 should be present in the peak has been redistributed by the FCT
 limiter, flattening the peak.
 
-\tcr{missing fig in repo}
 \begin{figure}[htb]
    \centering
       \includegraphics[width=\textwidth]

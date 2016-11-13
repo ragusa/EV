@@ -4,8 +4,8 @@ This section describes the entropy viscosity method applied to the scalar
 conservation law given by Equation \eqref{eq:scalar_model}. Recall that the entropy
 viscosity method is to be used as the high-order scheme in the FCT algorithm,
 instead of the standard Galerkin method as has been used previously in FCT-FEM schemes;
- for Galerkin FCT-FEM examples, see, for instance, \cite{kuzmin_FCT} \tcr{can we add a few more;
- also we do not discuss this enough int he introduction; please add some there too}.
+for Galerkin FCT-FEM examples, see, for instance,
+\cite{kuzmin_FCT,moller_2008,lohner,kuzmin_failsafe,kuzmin_closepacking}.
 Usage of the entropy viscosity method in the FCT algorithm ensures convergence
 to the entropy solution \cite{guermond_secondorder}.
 
@@ -14,7 +14,7 @@ such as general scalar conservation laws of the form
 \begin{equation}\label{eq:scalar_conservation_law}
   \ppt{u} + \nabla\cdot\mathbf{f}(u) = 0 \eqc
 \end{equation}
-the inviscid Euler equations \cite{guermond_ev,marco_low_mach}, 
+the inviscid Euler equations \cite{guermond_ev,marco_low_mach},
 and the two-phase seven-equation fluid model \cite{marco_SEM}. The scalar model studied
 in this paper does not fit into the general form given by Equation~\eqref{eq:scalar_conservation_law},
 due to
@@ -36,7 +36,7 @@ which holds for any convex entropy function $\eta(u)$ and associated entropy
 flux $\mathbf{\Psi}(u) \equiv \int \eta'(u)\mathbf{f}'(u)du$.
 If one can show that this inequality holds for an arbitrary
 convex entropy function, then one proves it holds for all convex entropy
-functions  \cite{leveque2002}\cite{guermond_ev}.
+functions  \cite{leveque2002,guermond_ev}.
 For the scalar PDE considered in this paper, the entropy inequality becomes
 the following:
 \begin{equation}
@@ -70,7 +70,7 @@ Designing a universally appropriate normalization constant $\hat{\eta}_K$ remain
 a challenge for the entropy viscosity method (see \cite{marco_low_mach}
 for an alternate normalization for low-Mach flows).
 %; it is likely that each conservation
-%law system would benefit from a specialized definition. 
+%law system would benefit from a specialized definition.
 The objective of this
 normalization coefficient is to prevent the user from needing to make significant
 adjustments to the tuning parameter $c_\mathcal{R}$ for different problems.
@@ -106,7 +106,7 @@ for a cell $K$ to be
 \end{equation}
 However, it is known that the low-order viscosity for an element, as computed
 in Section \ref{sec:low}, gives enough local artificial diffusion for
-regularization; any amount of viscosity larger than this low-order viscosity would be 
+regularization; any amount of viscosity larger than this low-order viscosity would be
 excessive. Thus, the low-order viscosity for an element is
 imposed as the upper bound for the high-order viscosity:
 \begin{equation}

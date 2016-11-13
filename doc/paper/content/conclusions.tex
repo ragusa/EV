@@ -7,12 +7,12 @@ which corresponds to the classic Source Iteration equation for particle transpor
 where extraneous, inscatter, and fission sources are lumped in the right-hand-side term $q$.
 %
 The FCT methodology relies on a lower-order solution and a high-order solution. For the low-order
-solution, we have used a first-order viscosity approach, based on the graph-theoric method of 
-Guermond at al. \cite{guermond_first_order} for scalar conservation laws and extents these
+solution, we have used a first-order viscosity approach, based on the graph-theoric method of
+Guermond at al. \cite{guermond_firstorder} for scalar conservation laws and extents these
 previous works to situations with reaction and source terms present. The low-order scheme is shown
 to be positivity-preserving through the use of the M-matrix properties. The high-order solution
 is employs an entropy-based artificial stabilization. The entropy residual approach is derived
-for the transport equation shown in Equation~\eqref{eq:ccl}. 
+for the transport equation shown in Equation~\eqref{eq:ccl}.
 Temporal discretizations include explicit and implicit schemes in time, as well as steady state,
 the latter two cases making the FCT algorithm implicit as well. The standard Zalesak limiter is utilized
 to limit between the low- and the high-order solutions.
@@ -50,4 +50,12 @@ FCT schemes is that the imposed solution bounds are implicit with the solution,
 and thus the imposed solution bounds change with each iteration of the
 nonlinear solver.
 
-\tcr{we also need an outlook towards future work and directions. take a first crack at it. thanks}
+Future work on this subject should mainly focus on the implicit/steady-state
+iteration techniques because of the significant convergence difficulties
+encountered for some problems. This work used fixed-point iteration, but
+one can attempt using an alternative such as Newton's method. The main
+challenge is the evolving solution bounds, which will present difficulty
+to any nonlinear solution algorithm. Other work could be performed for
+the FCT algorithm in general: for example, the terracing phenomenon still
+deteriorates FCT solutions. Perhaps there exists a limiting strategy that
+could preclude the formation of these spurious plateaus.
