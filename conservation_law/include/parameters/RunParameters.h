@@ -250,11 +250,30 @@ public:
   /** \brief Enumeration for types of linear solvers */
   enum class LinearSolverType
   {
-    direct
+    direct,
+    gmres
+  };
+  /// preconditioner types
+  enum class PreconditionerType
+  {
+    none,
+    jacobi,
+    sor,
+    ssor
   };
 
   /** \brief type of linear solver to use */
   LinearSolverType linear_solver_type;
+  /// preconditioner type
+  PreconditionerType preconditioner_type;
+  /** \brief maximum number of linear iterations */
+  unsigned int max_linear_iterations;
+  /** \brief linear solve tolerance */
+  double linear_tolerance;
+  /// relaxation parameter for preconditioner
+  double preconditioner_relaxation;
+  /// print linear residuals
+  bool print_linear_residuals;
 
   /* -----------------------------------------------------------------------
    *                              nonlinear solver

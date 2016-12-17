@@ -8,12 +8,17 @@
  */
 template <int dim>
 LinearSolver<dim>::LinearSolver(
-  const LinearSolverType & linear_solver_type_,
+  const RunParameters & parameters_,
   const ConstraintMatrix & constraints_,
   const DoFHandler<dim> & dof_handler_,
   std::shared_ptr<Function<dim>> dirichlet_function_,
   const unsigned int & n_components_)
-  : linear_solver_type(linear_solver_type_),
+  : linear_solver_type(parameters_.linear_solver_type),
+    preconditioner_type(parameters_.preconditioner_type),
+    max_iterations(parameters_.max_linear_iterations),
+    linear_tolerance(parameters_.linear_tolerance),
+    preconditioner_relaxation(parameters_.preconditioner_relaxation),
+    print_linear_residuals(parameters_.print_linear_residuals),
     constraints(&constraints_),
     dof_handler(&dof_handler_),
     dirichlet_function(dirichlet_function_),
@@ -35,6 +40,9 @@ void LinearSolver<dim>::solve(const SparseMatrix<double> & A,
                               Vector<double> & x,
                               const Vector<double> & b) const
 {
+  // create solver control
+  SolverControl solver_control(max_iterations, linear_tolerance, print_linear_residuals, !print_linear_residuals);
+
   // solve linear system
   switch (linear_solver_type)
   {
@@ -43,6 +51,48 @@ void LinearSolver<dim>::solve(const SparseMatrix<double> & A,
       SparseDirectUMFPACK A_direct;
       A_direct.initialize(A);
       A_direct.vmult(x, b);
+      break;
+    }
+    case LinearSolverType::gmres:
+    {
+      // create solver
+      SolverGMRES<Vector<double> > solver(solver_control);
+
+      // branch on selected preconditioner
+      switch (preconditioner_type)
+      {
+        case PreconditionerType::none:
+        {
+          solver.solve(A, x, b, PreconditionIdentity());
+          break;
+        }
+        case PreconditionerType::jacobi:
+        {
+          PreconditionJacobi<SparseMatrix<double>> preconditioner;
+          preconditioner.initialize(A, PreconditionJacobi<SparseMatrix<double>>::AdditionalData(preconditioner_relaxation));
+          solver.solve(A, x, b, preconditioner);
+          break;
+        }
+        case PreconditionerType::sor:
+        {
+          PreconditionSOR<SparseMatrix<double>> preconditioner;
+          preconditioner.initialize(A, PreconditionSOR<SparseMatrix<double>>::AdditionalData(preconditioner_relaxation));
+          solver.solve(A, x, b, preconditioner);
+          break;
+        }
+        case PreconditionerType::ssor:
+        {
+          PreconditionSSOR<SparseMatrix<double>> preconditioner;
+          preconditioner.initialize(A, PreconditionSSOR<SparseMatrix<double>>::AdditionalData(preconditioner_relaxation));
+          solver.solve(A, x, b, preconditioner);
+          break;
+        }
+        default:
+        {
+          AssertThrow(false, ExcNotImplemented());
+          break;
+        }
+      }
       break;
     }
     default:

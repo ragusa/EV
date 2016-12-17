@@ -10,7 +10,7 @@
 #   lake_at_rest_flat_perturbed
 #   lake_at_rest_2d
 subsection problem
-   set problem name = lake_at_rest_flat_perturbed
+   set problem name = bathtub
 end
 
 subsection scheme
@@ -36,13 +36,13 @@ subsection time
    set cfl                    = 0.1
    set time step size         = 0.01
    set use default end time   = false
-   set end time               = 100.00
+   set end time               = 1.00
    set steady state tolerance = 1.0e-6
 end
 
 subsection temporal discretization
    set temporal discretization = ssprk # ss|ssprk|theta
-   set ssprk discretization    = FE    # FE|SSP2|SSP3
+   set ssprk discretization    = SSP3  # FE|SSP2|SSP3
    set theta discretization    = BE    # FE|CN|BE
 end
 
@@ -101,7 +101,7 @@ subsection output
    set transient output size limit = 1e9
    set output mesh        = false
    set output mass matrix = false
-   set output viscosity   = false
+   set output viscosity   = true
    set output viscosity transient      = false
    set exact solution refinement level = 7
    set save convergence results        = false

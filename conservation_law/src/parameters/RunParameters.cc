@@ -245,8 +245,28 @@ void RunParameters::declare_run_parameters(ParameterHandler & prm)
   {
     prm.declare_entry("linear solver type",
                       "direct",
-                      Patterns::Selection("direct"),
+                      Patterns::Selection("direct|gmres"),
                       "The linear solver to use.");
+    prm.declare_entry("preconditioner",
+                      "none",
+                      Patterns::Selection("none|jacobi|sor|ssor"),
+                      "The preconditioner to use.");
+    prm.declare_entry("max linear iterations",
+                      "1000",
+                      Patterns::Integer(),
+                      "Maximum number of linear iterations");
+    prm.declare_entry("linear tolerance",
+                      "1e-8",
+                      Patterns::Double(),
+                      "Linear tolerance");
+    prm.declare_entry("preconditioner relaxation",
+                      "1.0",
+                      Patterns::Double(),
+                      "Relaxation parameter for preconditioner. Should be in range (0,2)");
+    prm.declare_entry("print linear residuals",
+                      "false",
+                      Patterns::Bool(),
+                      "Print linear residuals");
   }
   prm.leave_subsection();
 
@@ -608,8 +628,27 @@ void RunParameters::get_run_parameters(ParameterHandler & prm)
     const std::string solver = prm.get("linear solver type");
     if (solver == "direct")
       linear_solver_type = LinearSolverType::direct;
+    else if (solver == "gmres")
+      linear_solver_type = LinearSolverType::gmres;
     else
       AssertThrow(false, ExcNotImplemented());
+
+    const std::string preconditioner = prm.get("preconditioner");
+    if (preconditioner == "none")
+      preconditioner_type = PreconditionerType::none;
+    else if (preconditioner == "jacobi")
+      preconditioner_type = PreconditionerType::jacobi;
+    else if (preconditioner == "sor")
+      preconditioner_type = PreconditionerType::sor;
+    else if (preconditioner == "ssor")
+      preconditioner_type = PreconditionerType::ssor;
+    else
+      AssertThrow(false, ExcNotImplemented());
+
+    max_linear_iterations = prm.get_integer("max linear iterations");
+    linear_tolerance = prm.get_double("linear tolerance");
+    preconditioner_relaxation = prm.get_double("preconditioner relaxation");
+    print_linear_residuals = prm.get_bool("print linear residuals");
   }
   prm.leave_subsection();
 

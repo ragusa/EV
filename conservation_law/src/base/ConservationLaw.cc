@@ -828,7 +828,7 @@ void ConservationLaw<dim>::solve_runge_kutta(PostProcessor<dim> & postprocessor)
 
   // create linear solver
   linear_solver = std::make_shared<LinearSolver<dim>>(
-    parameters.linear_solver_type,
+    parameters,
     constraints,
     dof_handler,
     problem_base_parameters->dirichlet_function,

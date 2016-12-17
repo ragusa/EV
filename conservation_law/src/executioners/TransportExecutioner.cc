@@ -26,7 +26,7 @@ TransportExecutioner<dim>::TransportExecutioner(
     source_function(&(problem_parameters_.source_function)),
     incoming_function(problem_parameters_.dirichlet_function),
     domain_volume(problem_parameters_.domain_volume),
-    linear_solver(parameters.linear_solver_type,
+    linear_solver(parameters,
                   constraints,
                   dof_handler,
                   incoming_function,

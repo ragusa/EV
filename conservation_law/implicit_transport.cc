@@ -28,7 +28,7 @@ int main(int argc, char * argv[])
 {
   try
   {
-    deallog.depth_console(0);
+    deallog.depth_console(2);
 
     // read input and declare problem
     ParameterHandler parameter_handler;

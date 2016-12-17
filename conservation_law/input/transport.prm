@@ -26,11 +26,11 @@
 #   void_to_absorber_1d_ss
 #   void_to_absorber_2d_ss
 subsection problem
-   set problem name = sourcevoid_to_absorber_ss
+   set problem name = absorber_ss
 end
 
 subsection scheme
-   set scheme            = fct          # low|high|fct
+   set scheme            = low          # low|high|fct
    set low order scheme  = dmp          # constant|lax|dmp|di_visc|di_diff
    set high order scheme = entropy_visc # galerkin|entropy_visc|entropy_diff
 end
@@ -50,8 +50,8 @@ end
 subsection time
    set time step size option  = cfl_dmp # constant|cfl|cfl_dmp|cfl_di
    set cfl                    = 0.1
-   set time step size         = 0.001
-   set use default end time   = false
+   set time step size         = 100.0 # large values ensure that CFL limit is used
+   set use default end time   = true
    set end time               = 1.0
    set steady state tolerance = 1.0e-6
 end
@@ -63,8 +63,8 @@ subsection temporal discretization
 end
 
 subsection artificial viscosity
-   set entropy residual coefficient       = 5.0e-1
-   set entropy jump coefficient           = 5.0e-1
+   set entropy residual coefficient       = 1.0
+   set entropy jump coefficient           = 1.0
    set entropy viscosity smoothing option = none # none|max|average
    set entropy viscosity smoothing weight = 4
    set constant viscosity value           = 0.02
@@ -93,7 +93,11 @@ subsection fct
 end
 
 subsection linear solver
-   set linear solver type = direct
+   set linear solver type        = gmres # direct|gmres
+   set preconditioner            = ssor # none|jacobi|sor|ssor
+   set max linear iterations     = 1000
+   set preconditioner relaxation = 1.0 # should be in range (0,2)
+   set print linear residuals    = false
 end
 
 subsection nonlinear solver
