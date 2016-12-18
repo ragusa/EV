@@ -1,0 +1,22 @@
+#!/bin/bash
+#
+# DESCRIPTION:
+#   Creates and views html from a markdown file.
+# USAGE:
+#   md <markdown file>
+
+# create html file
+out="./output.html"
+echo '<html>' > $out
+echo '  <head>' >> $out
+echo "    <link href=\"./bin/style.css\" type=\"text/css\" rel=\"stylesheet\" />" >> $out
+echo '  </head>' >> $out
+echo '  <body>' >> $out
+echo '' >> $out
+pandoc $1 >> $out
+echo '' >> $out
+echo '  </body>' >> $out
+echo '</html>' >> $out
+
+# view html file
+google-chrome $out

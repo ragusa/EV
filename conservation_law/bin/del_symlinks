@@ -1,8 +1,0 @@
-#!/bin/bash
-#
-# Deletes all symbolic links in current directory
-#
-# Usage: del_symlinks
-#
-
-find -type l -delete
