@@ -105,7 +105,7 @@ imposed solution bounds must be computed using the previous solution iterate:
 \end{equation}
 Though the solution bounds are lagged, the antidiffusion bounds $\hat{p}_i^\pm$
 still contains terms at iteration $\ell+1$; these terms must be lagged as well.
-The consequence is this: the solution bounds for implicit/steady-state
+As a consequence, the solution bounds for implicit/steady-state
 FCT schemes are only satisfied upon nonlinear convergence, not at each iteration.
 
 %===============================================================================
@@ -169,13 +169,13 @@ bounds are possibly widened by directly enforcing these assumptions:
 \begin{equation}
   \hat{p}_i^+ \gets \max(0,\hat{p}_i^+) \eqp
 \end{equation}
-Omission of this step can lead to disastrous results: the assumptions of the
+Omission of this step can lead to poor results: the assumptions of the
 limiter are violated, and thus limiting coefficients that do not satisfy the
 imposed solution bounds can be generated. Even negative limiting coefficients
 may be generated, and this is especially consequential in implicit FCT
 simulations, since the limiting coefficients are then essentially unbounded
 toward $-\infty$; iteration can lead to extremely non-physical solutions
-and severe convergence difficulties or failure.
+and severe convergence difficulties or failure. \tcr{does the last sentence refer to the case when this step is omitted or not?}
 
 %===============================================================================
 \input{content/limiting_coefficients}

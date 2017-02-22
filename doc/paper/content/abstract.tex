@@ -1,21 +1,19 @@
 \begin{abstract}
 The Flux-Corrected Transport (FCT) algorithm is
-applied to the transport equation using the continuous finite element
-method. In addition to this novelty,
-a number of components of this FCT algorithm are themselves novelties
-for the transport equation:
-1) a low-order, positivity-preserving scheme,
+applied to the unsteady and steady state particle transport equation. The proposed FCT method employs the following:
+(1) a low-order, positivity-preserving scheme,
 based on the application of M-matrix properties,
-2) a high-order scheme based on the entropy viscosity method introduced by
+(2) a high-order scheme based on the entropy viscosity method introduced by
 Guermond \cite{guermond_ev}, and
-3) local, discrete solution bounds derived from the integral transport equation.
+(3) local, discrete solution bounds derived from the integral transport equation.
 The resulting scheme is second-order accurate in space,
 enforces an entropy inequality, mitigates the formation of spurious
 oscillations, and guarantees the absence of negativities.
-Time discretizations considered include steady-state, Theta methods
+Space discretization is carried out using  continuous finite elements. 
+Time discretizations for unsteady problems include theta schemes
 such as explicit and implicit Euler, and strong-stability preserving
 Runge-Kutta (SSPRK) methods.
 The developed scheme is shown to be robust with explicit time discretizations
-but encounters significant nonlinear convergence difficulties for steady-state
+but encounters nonlinear convergence difficulties for steady-state
 and implicit time discretizations.
 \end{abstract}

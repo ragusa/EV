@@ -41,21 +41,20 @@ to explicit Euler. In addition, these effects are less pronounced for EV-FCT
 than in the classic FEM-FCT scheme, which uses the standard Galerkin method as
 the high-order method in FCT.
 
-The explicit temporal discretizations of the described FCT scheme yield a
-relatively robust algorithm; however, implicit and steady-state discretizations
-are much less robust, suffering from severe nonlinear convergence difficulties
-in some problems. Implicit schemes become increasingly divergent as the CFL
+The explicit temporal discretizations of the described FCT scheme yield a robust algorithm; however, implicit and steady-state discretizations
+are less robust, suffering from nonlinear convergence difficulties
+in some problems. Implicit schemes become divergent as the CFL
 number is increased. The main complication with implicit and steady-state
 FCT schemes is that the imposed solution bounds are implicit with the solution,
 and thus the imposed solution bounds change with each iteration of the
 nonlinear solver.
 
 Future work on this subject should mainly focus on the implicit/steady-state
-iteration techniques because of the significant convergence difficulties
+iteration techniques because of the convergence difficulties
 encountered for some problems. This work used fixed-point iteration, but
 one can attempt using an alternative such as Newton's method. The main
 challenge is the evolving solution bounds, which will present difficulty
 to any nonlinear solution algorithm. Other work could be performed for
 the FCT algorithm in general: for example, the terracing phenomenon still
-deteriorates FCT solutions. Perhaps there exists a limiting strategy that
-could preclude the formation of these spurious plateaus.
+deteriorates FCT solutions. %Perhaps there exists a limiting strategy that
+%could preclude the formation of these spurious plateaus.

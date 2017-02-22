@@ -35,7 +35,7 @@ The source terms $\Qsca$ and $\Qfis$ linearly depend on the solution variable, t
 In most cases of relevance, the transport equation must be solved numerically; this involves discretization
 of the phase-space and the use of iterative techniques.
 One common angular discretization is the discrete-ordinate or $S_N$ method
-\cite{glasstone,lewis,duderstadt}; it is a collocation method whereby the transport equation is solved only along discrete directions $\di_d$
+\cite{glasstone,lewis,duderstadt}; it is a collocation method in angle whereby the transport equation is solved only along discrete directions $\di_d$
 ($1 \le d \le n_{\di}$, with $n_{\di}$ the total number of discrete directions). One of the
 main advantages of the $S_N$ technique is that it enables an iterative approach, called source iteration
 in the transport literature \cite{glasstone,lewis,duderstadt}, to resolve
@@ -46,14 +46,14 @@ both the particle's streaming and interaction processes and the scattering event
 \begin{equation} \label{eq:SI}
   \frac{1}{v}\ppt{\aflux_d^{(\ell)}}
     + \di_{d}\cdot\nabla\aflux_d^{(\ell)}
-    + \totalxsec\aflux_d^{(\ell)} = Q_{\textup{tot},d}^{(\ell-1)} \quad \forall d \eqc
+    + \totalxsec\aflux_d^{(\ell)} = Q_{\textup{tot},d}^{(\ell-1)} \quad \forall d \in [1,n_{\di}]\eqc 
 \end{equation}
-where $\ell$ is the iteration index and $\aflux_d^{(\ell)}(\x,E,t) = \aflux^{(\ell)}(\xdet)$.
+where $\ell$ is the iteration index and $\aflux_d^{(\ell)}(\x,E,t) = \aflux^{(\ell)}(\x,\di_d,E,t)$.
 Hence, a system of $n_{\di}$ decoupled equations are to be solved
 at a given source iteration index $\ell$. This allows solution techniques for scalar conservation
 laws to be leveraged in solving Equations~\eqref{eq:SI}. For brevity, the discrete-ordinate subscript $d$
 will be omitted hereafter and our model transport equation will consist in one of the $n_{\di}$ transport
-equations for a given fixed source (right-hand-side).
+equations for a given fixed source (right-hand side).
 
 Traditionally, the spatial discretization method for the $S_N$
 equations has been a Discontinuous Galerkin finite element method (DGFEM) with upwinding
@@ -64,7 +64,7 @@ solution techniques for conservation laws with CGFEM addresses some
 of the main disadvantages of CGFEM versus DGFEM, including the formation
 of spurious oscillations. The purpose of the present paper is to demonstrate a proof of concept
 for the application of such solution techniques to the transport equation.
-Furthermore, some or all of the methodology explored in this paper may be
+Furthermore, some or all of the methodology explored in this paper can be
 later extended to DGFEM as well; see, for instance, Zingan et al. \cite{zingan_2013}
 where the techniques of Guermond and Popov \cite{guermond_ev} have been ported to DGFEM schemes.
 
