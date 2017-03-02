@@ -58,12 +58,13 @@ on the bottom boundary and a value of 0 on the left boundary.
 This problem is run with Explicit Euler time discretization and a CFL
 number of 0.5 on a $64\times64$ mesh. Figure \ref{fig:glance_in_void_fe}
 compares the numerical solutions for this problem obtained with the
-low-order, EV, Galerkin-FCT, and EV-FCT schemes. The same color scale
-is used for each image. The Galerkin scheme
+low-order, EV, Galerkin-FCT, and EV-FCT schemes. The Galerkin scheme
 (without FCT) produced spurious oscillations without bound, so those
-results are omitted here. The EV solution is much less diffusive along
-the discontinuity but is contaminated by spurious oscillations, as indicated
-by the darkest blues and reds. Both FCT solutions
+results are omitted here.
+The same color scale is used for each image: the dark red shown in the low-order and the two FCT
+sub-plots corresponds to the incoming value of 1, and the blue in these
+same sub-plots corresponds to zero. The darker blues and reds shown in
+the EV sub-plot indicate undershoots and overshoots, respectively. Both FCT solutions
 keep the solution within the imposed physical bounds, but one can see from
 the Galerkin-FCT results that some ``terracing'' effects are present; this
 behavior is a well-known artifact of traditional FCT schemes \cite{kuzmin_FCT}.
@@ -169,7 +170,7 @@ As discussed previously, the solution bounds are implicit and change
 with each iteration. For this particular case, the problematic behavior that
 emerges is an alternation between two successive solutions indefinitely, with each generating
 solution bounds that produce the other. Thus the nonlinear convergence stalls
-indefinitely, thus demonstrating a disadvantage of implicit FCT. 
+indefinitely, thus demonstrating a disadvantage of implicit FCT.
 \tcr{I understand the fail in the FCT column but why are there no numbers in the last row for EV?}
 %-------------------------------------------------------------------------------
 \begin{table}[htb]\caption{Nonlinear Iterations vs. CFL Number for the

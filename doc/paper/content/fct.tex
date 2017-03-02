@@ -171,7 +171,7 @@ bounds are possibly widened by directly enforcing these assumptions:
 \end{equation}
 Omission of this step can lead to poor results: the assumptions of the
 limiter are violated, and thus limiting coefficients that do not satisfy the
-imposed solution bounds can be generated. Even negative limiting coefficients
+imposed solution bounds can be generated. Without this step, even negative limiting coefficients
 may be generated, and this is especially consequential in implicit FCT
 simulations, since the limiting coefficients are then essentially unbounded
 toward $-\infty$; iteration can lead to extremely non-physical solutions
