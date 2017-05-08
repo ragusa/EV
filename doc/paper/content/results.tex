@@ -72,7 +72,6 @@ In this case, and in all observed cases of the terracing phenomenon,
 the EV-FCT scheme shows a reduction of this effect: the addition of the
 entropy-based artificial viscosity decreases the magnitude of the spurious
 oscillations in the high-order scheme and thus lessens the burden on the limiter.
-\tcr{be ready to have a review ask what the color mean. You should really try to put a colorbar to explain the numerical range of the solution}
 
 \begin{figure}[ht]
    \centering
@@ -171,7 +170,8 @@ with each iteration. For this particular case, the problematic behavior that
 emerges is an alternation between two successive solutions indefinitely, with each generating
 solution bounds that produce the other. Thus the nonlinear convergence stalls
 indefinitely, thus demonstrating a disadvantage of implicit FCT.
-\tcr{I understand the fail in the FCT column but why are there no numbers in the last row for EV?}
+\tcr{I understand the EV part. A reviewer may ask if damping the solution of the limiter coefficients would help get a solution. We may need an answer but this is the obvious remark for them to make}
+
 %-------------------------------------------------------------------------------
 \begin{table}[htb]\caption{Nonlinear Iterations vs. CFL Number for the
   Obstruction Test Problems}

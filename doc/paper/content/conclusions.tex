@@ -4,7 +4,7 @@ to the following model equation problem, an advection problem with reaction and 
   \ppt{u} + v\di\cdot\nabla u\xt + \sigma(\x) u\xt = q\xt \eqc
 \end{equation}
 which corresponds to the classic Source Iteration equation for particle transport,
-where extraneous, inscatter, and fission sources are lumped in the right-hand-side term $q$.
+where extraneous, inscatter, and fission sources are collected in the right-hand-side term $q$.
 %
 The FCT methodology relies on a lower-order solution and a high-order solution. For the low-order
 solution, we have used a first-order viscosity approach, based on the graph-theoric method of
@@ -43,8 +43,8 @@ the high-order method in FCT.
 
 The explicit temporal discretizations of the described FCT scheme yield a robust algorithm; however, implicit and steady-state discretizations
 are less robust, suffering from nonlinear convergence difficulties
-in some problems. Implicit schemes become divergent as the CFL
-number is increased. The main complication with implicit and steady-state
+in some problems. % Implicit schemes become divergent as the CFL number is increased. 
+The main complication with implicit and steady-state
 FCT schemes is that the imposed solution bounds are implicit with the solution,
 and thus the imposed solution bounds change with each iteration of the
 nonlinear solver.

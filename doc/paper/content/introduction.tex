@@ -1,7 +1,4 @@
-\tcr{Leave this comment. I want to re-read it again, after modifications. This introduction
-is very important}
-
-The transport equation, or linear Boltzmann equation, describes the
+The radiation transport equation, or linear Boltzmann equation, describes the
 transport of particles interacting with a background medium \cite{glasstone}.  Some
 of its applications include the modeling of nuclear reactors, radiation
 therapy, astrophysical applications, radiation shielding, and high energy density physics
@@ -31,7 +28,7 @@ fission sources (in the case of neutron transport in multiplying media):
   \Qtot\xdet \equiv \Qsca\xdet + \Qext\xdet + \Qfis\xdet
   \eqp
 \end{equation}
-The source terms $\Qsca$ and $\Qfis$ linearly depend on the solution variable, the angular flux denoted by $\aflux$. Only simple configurations are amenable to an analytical solution of Equation~\eqref{eq:transport_scalar}.
+The source terms $\Qsca$ and $\Qfis$ linearly depend on the solution variable, the angular flux, denoted by $\aflux$. Only simple configurations are amenable to an analytical solution of Equation~\eqref{eq:transport_scalar}.
 In most cases of relevance, the transport equation must be solved numerically; this involves discretization
 of the phase-space and the use of iterative techniques.
 One common angular discretization is the discrete-ordinate or $S_N$ method
@@ -66,7 +63,7 @@ of spurious oscillations. The purpose of the present paper is to demonstrate a p
 for the application of such solution techniques to the transport equation.
 Furthermore, some or all of the methodology explored in this paper can be
 later extended to DGFEM as well; see, for instance, Zingan et al. \cite{zingan_2013}
-where the techniques of Guermond and Popov \cite{guermond_ev} have been ported to DGFEM schemes.
+where the techniques proposed by Guermond and Popov \cite{guermond_ev} have been ported to DGFEM schemes for Euler equations.
 
 One of the main objectives of this paper is to present a method that precludes
 the formation of spurious oscillations and the negativities that result from
@@ -104,7 +101,7 @@ Parrott and Christie extended the algorithm to the finite element method
 on unstructured grids \cite{parrott}, thus beginning the FEM-FCT methodology.
 L\"{o}hner et. al. applied FEM-FCT to the Euler and Navier-Stokes equations and
 began using FCT with complex geometries \cite{lohner}.
-Kuzmin and M\:{o}ller introduced an algebraic FCT approach for scalar conservation
+Kuzmin and M\"{o}ller introduced an algebraic FCT approach for scalar conservation
 laws \cite{kuzmin_FCT} and later introduced a general-purpose FCT scheme, which
 is designed to be applicable to both steady-state and transient problems \cite{kuzmin_general}.
 In these FEM-FCT works and others \cite{moller_2008,kuzmin_failsafe,kuzmin_closepacking},
@@ -138,7 +135,8 @@ balance law since it includes sinks and sources, namely the reaction term
 $\totalxsec\aflux$ and the source term $\Qtot$. The presence
 of these terms is also a novelty in the context of the FCT algorithm.
 In addition, much of the work on FCT to date has been for fully explicit time
-discretizations. Because speeds in radiation transport (such as the speed of light)
+discretizations. Because speeds in radiation transport (such as the speed of light
+in the case of photons)
 are so large, implicit and steady-state time discretization are important
 considerations, given the CFL time step size restriction for fully explicit
 methods. Thus this paper also considers implicit and steady-state FCT.

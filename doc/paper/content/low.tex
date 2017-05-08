@@ -13,11 +13,11 @@ requiring that that the matrix of the low-order system satisfies the M-matrix pr
 % the M-matrix property of the matrix inverted in the low-order system.
 M-matrices are a subset of inverse-positive matrices and have the monotone
 property. For instance, consider the linear system $\A\x = \ssrhs$;
-If $\A$ is an M-matrix $\A$, then the following property is verified:
+If $\A$ is an M-matrix, then the following property is verified:
 \begin{equation}
 \text{If }  \ssrhs \geq 0, \text{  then  }  \x \geq 0 \eqp
 \end{equation}
-Thus proving positivity-preservation, given the linear system matrix is an
+Hence, to prove positivity-preservation, given that the linear system matrix is an
 M-matrix, is achieved by proving positivity of the right-hand-side vector $\ssrhs$.
 This monotonicity property of the linear system matrix is also responsible for
 the lack of spurious oscillations.
