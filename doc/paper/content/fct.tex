@@ -97,7 +97,7 @@ As will be discussed in Section \ref{sec:solution_bounds}, the solution bounds
 for implicit FCT and steady-state FCT are implicit, and thus the systems given
 by Equations \eqref{eq:fct_theta} and \eqref{eq:fct_ss} are nonlinear, since
 the limiting coefficients contained in $\hat{\p}$ are nonlinear.
-In this paper, a fixed-point iteration scheme is used to resolved the nonlinearities.
+In this paper, a fixed-point iteration scheme is used to resolve the nonlinearities.
 For any nonlinear iteration scheme, the
 imposed solution bounds must be computed using the previous solution iterate:
 \begin{equation}
@@ -174,8 +174,8 @@ limiter are violated, and thus limiting coefficients that do not satisfy the
 imposed solution bounds can be generated. Without this step, even negative limiting coefficients
 may be generated, and this is especially consequential in implicit FCT
 simulations, since the limiting coefficients are then essentially unbounded
-toward $-\infty$; iteration can lead to extremely non-physical solutions
-and severe convergence difficulties or failure. \tcr{does the last sentence refer to the case when this step is omitted or not?}
+toward $-\infty$, meaning that iteration can lead to extremely non-physical solutions
+and severe convergence difficulties.
 
 %===============================================================================
 \input{content/limiting_coefficients}
