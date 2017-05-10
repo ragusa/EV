@@ -169,13 +169,10 @@ bounds are possibly widened by directly enforcing these assumptions:
 \begin{equation}
   \hat{p}_i^+ \gets \max(0,\hat{p}_i^+) \eqp
 \end{equation}
-Omission of this step can lead to poor results: the assumptions of the
+We have noted that omitting this step can lead to poor results. Without this step,
+the assumptions of the
 limiter are violated, and thus limiting coefficients that do not satisfy the
-imposed solution bounds can be generated. Without this step, even negative limiting coefficients
-may be generated, and this is especially consequential in implicit FCT
-simulations, since the limiting coefficients are then essentially unbounded
-toward $-\infty$, meaning that iteration can lead to extremely non-physical solutions
-and severe convergence difficulties.
+imposed solution bounds may be generated. 
 
 %===============================================================================
 \input{content/limiting_coefficients}
