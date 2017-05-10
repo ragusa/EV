@@ -165,11 +165,16 @@ entirely. Note that in this case, no numbers are shown in the ``EV'' column,
 even though entropy viscosity iteration did not fail,
 because the total iterations could not be determined due
 to the premature termination of the simulation.
-As discussed previously, the solution bounds are implicit and change
-with each iteration. For this particular case, the problematic behavior that
-emerges is an alternation between two successive solutions indefinitely, with each generating
-solution bounds that produce the other. Thus the nonlinear convergence stalls
-indefinitely, illustrating a disadvantage of implicit FCT.
+As discussed previously, the solution bounds are implicit and thus change
+with each iteration. This challenge is compounded in the case of large time
+step sizes; as time step size increases, the solution bounds widen, and
+successive FCT solution iterates differ more than for smaller time step sizes.
+This trend is shown in the increasing number of FCT iterations per time step
+in Table \ref{tab:obstruction_iterations}. Note this issue can be mitigated
+using a relaxation factor on the iterative solution updates; for example, for
+the failing case of CFL number equal to 20, convergence can be achieved with a
+relaxation factor of 0.9, giving average iterations per time step of
+14.33 and 221.67 for EV and FCT, respectively.
 
 %-------------------------------------------------------------------------------
 \begin{table}[htb]\caption{Nonlinear Iterations vs. CFL Number for the
