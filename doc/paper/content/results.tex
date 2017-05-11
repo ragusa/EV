@@ -181,16 +181,16 @@ relaxation factor of 0.9, giving average iterations per time step of
   Obstruction Test Problems}
 \label{tab:obstruction_iterations}
 \centering
-\begin{tabular}{c c c c c}\hline
-\emph{CFL} & \multicolumn{2}{c}{\emph{EV}} & \multicolumn{2}{c}{\emph{FCT}}\\
-           & \emph{Total} & \emph{Avg.}    &  \emph{Total} & \emph{Avg.}\\\hline
-0.1  & 3999 &  8.14 & 3585 &   7.30\\
-0.5  &  896 &  9.05 & 1499 &  15.14\\
-1.0  &  501 & 10.02 &  970 &  19.40\\
-5.0  &  157 & 15.70 & 1130 & 113.00\\
-10.0 &   79 & 15.80 &  753 & 150.60\\
-20.0 &   -- &    -- & \multicolumn{2}{c}{fail}\\
-20.0 (relax=0.9) &   ??? &   14.33 &  ??? & 221.67 \\
+\begin{tabular}{c c c c c c}\hline
+\emph{CFL} & \emph{Relax} & \multicolumn{2}{c}{\emph{EV}} & \multicolumn{2}{c}{\emph{FCT}}\\
+           &              & \emph{Total} & \emph{Avg.}    &  \emph{Total} & \emph{Avg.}\\\hline
+0.1        & --  & 3999 &  8.14 & 3585 &   7.30\\
+0.5        & --  & 896  &  9.05 & 1499 &  15.14\\
+1.0        & --  & 501  & 10.02 &  970 &  19.40\\
+5.0        & --  & 157  & 15.70 & 1130 & 113.00\\
+10.0       & --  & 79   & 15.80 &  753 & 150.60\\
+20.0       & --  & --   &    -- & \multicolumn{2}{c}{(failure)}\\
+20.0       & 0.9 & 43   & 14.33 &  665 & 221.67 \\
 \hline\end{tabular}
 \end{table}
 %-------------------------------------------------------------------------------
