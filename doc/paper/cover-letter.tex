@@ -34,28 +34,28 @@ e-mail: jean.ragusa@tamu.edu \vspace{0.5cm}}
 
 Please find attached a copy of our manuscript titled ``Flux-Corrected Transport Techniques Applied to the Radiation Transport Equation Discretized with Continuous Finite Elements'' for submission to the {\em Journal of Computational Physics}. 
 
-Flux-Corrected Techniques (FCT) find their origins with the fluid dynamics community where they have been devised to combat the formation of spurious oscillations in finite-difference solution techniques. Over the last decade or so, FCT techniques have been extended to continuous finite element discretizations (e.g., the extensive archival work of D. Kuzmin on FEM-FCT). However, these techniques have not been employed in the radiation transport community and this manuscript aims at bridging this gap. Our present work combines 
+Flux-Corrected Techniques (FCT) find their origins within the fluid dynamics community where they have been devised to combat the formation of spurious oscillations in finite-difference solution techniques. Over the last decade or so, these FCT techniques have been extended to continuous finite element discretizations (e.g., the extensive archival work of D. Kuzmin on FEM-FCT). However, these techniques have not yet been employed in the radiation transport community and this manuscript aims at bridging this gap. Our present work combines 
 \begin{enumerate}
-\item first-order radiation transport solved with CFEM
-\item definition of low-order and high-order CFEM discretizations
-\item extension of FCT bounds definitions for radiation transport
-\item analysis of time-dependent (explicit and implicit) and steady-state FCT algorithms.
+\item solving the first-order radiation transport equation with CFEM;
+\item defining low-order and high-order CFEM discretizations for the first-order radiation transport, as required in the FCT method;
+\item devising FCT bounds definitions that satisfy a discrete-maximum principle for radiation transport;
+\item analyzing time-dependent (explicit and implicit) and steady-state FCT algorithms with the proposed method.
 \end{enumerate}
 %
-An FCT algorithm requires a low-order (fail-safe) solution that is often too dissipative. 
-In this paper, we derive a viscous regularization for the non-equilibrium Seven-Equation two-phase flow Model. This regularization ensures positivity of the entropy 
-residual and uniqueness of the weak solution, is consistent with the viscous regularization for Euler equations when one phase disappears, does not depend on the spatial discretization scheme chosen, and is compatible with the generalized Harten entropies. 
+Rather than employing a pure Galerkin discretization as the high-order scheme, we employ an entropy-viscosity (EV) based scheme as our high-order discretization and compare both approaches,
+Galerkin and EV, in the manuscript.
 
-We investigate the behavior of the proposed viscous regularization for two important limit-cases: a five-equation two-phase flow model (obtained via a Chapman-Enskog expansion) and in the low-Mach asymptotic regime.
+Numerous publications pertaining to FCT techniques have appeared in JCP and we feel this is
+the proper venue for this manuscript.
+
+This work follows prior works by Kuzmin (e.g., 
+``Explicit and implicit FEM-FCT algorithms with flux linearization'',
+Journal of Computational Physics, Volume 228, 2009); Guermond \& Popov 
+(e.g., ``Entropy viscosity method for nonlinear conservation laws'', 
+Journal of Computational Physics, Volume 230, 2011).
 
 
-Numerical results are provided for a shock tube problem and a multi-Mach two-phase mixture flow problem (low Mach for liquid, supersonic for vapor).
-
-
-This work follows prior works by Guermond \& Popov who proposed a viscous regularization for single-phase equations : ``Viscous regularization of the Euler equations and entropy principles'', {\it SIAM J. Appl. Math} 74 (2) (2014) 284-305.
-
-
-Thank you for considering this manuscript for publication in the {\it Journal of Scientific Computing}.
+Thank you for considering this manuscript for publication in the {\it Journal of Computational Physics}.
 
 \vspace{0.25cm}
 
