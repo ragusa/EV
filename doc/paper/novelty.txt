@@ -1,0 +1,4 @@
+Novelty:
+-	Devised an FCT technique for the first-order form of the radiation transport equation
+-	Local solution bounds derived using integral transport formalism
+-	High-order solution can use an entropy-viscosity based dissipation
