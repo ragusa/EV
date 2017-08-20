@@ -1,4 +1,4 @@
-% !TEX root = ../paper.tex
+% !TEX root = ../FCT_radiation_paper.tex
 
 This is immediate for the steady-state case due to the assumption that the
 source $q$ is non-negative. The following theorem gives that the system
@@ -26,14 +26,14 @@ The right-hand-side vector $\mathbf{y}$ of this system has the entries
   \eqp
 \]
 % It now just remains to prove that these entries are non-negative.
-As stated previously, the source function $q$ is non-negative and 
+As stated previously, the source function $q$ is non-negative and
 thus $b^\theta_i \ge 0 $. Due to the time step size assumption
 given by Equation \eqref{eq:theta_cfl},
 \[
   M^L_{i,i} - (1-\theta)\dt A^L_{i,i} \geq 0 \eqc
 \]
-and because the off-diagonal terms of $\A^L$ are non-negative, the off-diagonal
-sum term is also non-negative. Thus $y_i$ is a sum of non-negative
+and because the off-diagonal terms of $\A^L$ are non-positive, the off-diagonal
+sum term is non-negative. Thus $y_i$ is a sum of non-negative
 terms, and the theorem is proven.
 \end{prf}
 %-------------------------------------------------------------------------------

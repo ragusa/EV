@@ -1,4 +1,4 @@
-% !TEX root = ../paper.tex
+% !TEX root = ../FCT_radiation_paper.tex
 
 \begin{prf}
   There are many definitions that can be used to identify a non-singular
@@ -30,11 +30,11 @@ Thus, we have:
 \begin{eqnarray*}
    D^L_{i,j} & \le & \sumKSij \frac{\max(0,A_{i,j})}
     {-\sumKSij[T] d_T(\test_j,\test_i)}
-    d_K(\test_j,\test_i) \eqc\\
+    d_K(\test_j,\test_i) \eqc \qquad j\ne i\eqc\\
       & = & -\max(0,A_{i,j}) \frac{\sumKSij d_K(\test_j,\test_i)}
-        {\sumKSij[T] d_T(\test_j,\test_i)} \eqc\\
-        & = & -\max(0,A_{i,j}) \eqc\\
-        & \le & -A_{i,j} \eqp
+        {\sumKSij[T] d_T(\test_j,\test_i)} \eqc \qquad j\ne i\eqc\\
+        & = & -\max(0,A_{i,j}) \eqc \qquad j\ne i\eqc\\
+        & \le & -A_{i,j}\eqc \qquad j\ne i\eqp
 \end{eqnarray*}
 Then applying this relation to the definition of the low-order steady state
 matrix gives

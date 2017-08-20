@@ -1,4 +1,4 @@
-% !TEX root = ../paper.tex
+% !TEX root = ../FCT_radiation_paper.tex
 
 This section presents results for a number of test problems, which compare
 the solutions obtained using:
@@ -153,24 +153,22 @@ has this effect but to a much smaller degree.
 
 Table \ref{tab:obstruction_iterations} shows the results for a parametric study
 on the number of nonlinear iterations required for EV and EV-FCT for various
-CFL numbers. Recall that in the FCT algorithm, one first computes the high-order solution
+CFL numbers on a $16\times 16$ mesh, to an end time of $t=1.5$. Recall that in the FCT algorithm, one first computes the high-order solution
 (here, EV), which is necessary for computation of the antidiffusive fluxes.
 The number of nonlinear iterations for this solve is given in the column
 labeled as ``EV''. The FCT limiting procedure is also nonlinear; the number
 of nonlinear iterations for this solve is given in the ``FCT'' column.
-These results indicate a trend for both EV and FCT that the number of nonlinear
-iterations increase with CFL number; however, this trend is much more drastic
-with FCT than EV. For a CFL number of 20, the FCT algorithm fails to converge
-entirely. Note that in this case, no numbers are shown in the ``EV'' column,
-even though entropy viscosity iteration did not fail,
-because the total iterations could not be determined due
-to the premature termination of the simulation.
+While these results indicate that increasing the CFL number decreases the total
+computational work in reaching the end of the transient, it should be noted that
+the quality of the FCT solution deteriorates significantly for large CFL numbers;
+see the ``$L^2$ Err.'' column.
 As discussed previously, the solution bounds are implicit and thus change
 with each iteration. This challenge is compounded in the case of large time
 step sizes; as time step size increases, the solution bounds widen, and
 successive FCT solution iterates differ more than for smaller time step sizes.
-This trend is shown in the increasing number of FCT iterations per time step
-in Table \ref{tab:obstruction_iterations}. However, this issue can be easily mitigated
+This trend is suggested in the rate of increase in the number of FCT iterations per time step
+in Table \ref{tab:obstruction_iterations}, which is significantly larger than the
+rate of increase of EV iterations per time step. However, this issue can be mitigated
 using a relaxation factor on the iterative solution updates; for example, for
 the failing case of CFL number equal to 20, convergence can be achieved with a
 relaxation factor of 0.9, giving average iterations per time step of
@@ -181,16 +179,16 @@ relaxation factor of 0.9, giving average iterations per time step of
   Obstruction Test Problems}
 \label{tab:obstruction_iterations}
 \centering
-\begin{tabular}{c c c c c c}\hline
-\emph{CFL} & \emph{Relax} & \multicolumn{2}{c}{\emph{EV}} & \multicolumn{2}{c}{\emph{FCT}}\\
-           &              & \emph{Total} & \emph{Avg.}    &  \emph{Total} & \emph{Avg.}\\\hline
-0.1        & --  & 3999 &  8.14 & 3585 &   7.30\\
-0.5        & --  & 896  &  9.05 & 1499 &  15.14\\
-1.0        & --  & 501  & 10.02 &  970 &  19.40\\
-5.0        & --  & 157  & 15.70 & 1130 & 113.00\\
-10.0       & --  & 79   & 15.80 &  753 & 150.60\\
-20.0       & --  & --   &    -- & \multicolumn{2}{c}{(failure)}\\
-20.0       & 0.9 & 43   & 14.33 &  665 & 221.67 \\
+\begin{tabular}{c c c c c c c}\hline
+\emph{CFL} & \emph{Relax} & \multicolumn{2}{c}{\emph{EV}} & \multicolumn{2}{c}{\emph{FCT}} & $L^2$ \emph{Err.}\\
+           &              & \emph{Total} & \emph{Avg.}    &  \emph{Total} & \emph{Avg.}    &\\\hline
+0.1        & --  & 6204 &  8.43 & 5223 &   7.23 & $5.084\times10^{-2}$\\
+0.5        & --  & 1386 &  9.36 & 2239 &  15.13 & $5.079\times 10^{-2}$\\
+1.0        & --  & 791  & 10.69 & 1588 &  21.46 & $5.111\times 10^{-2}$\\
+5.0        & --  & 265  & 17.67 & 1780 & 118.67 & $5.980\times 10^{-2}$\\
+10.0       & --  & 150  & 18.75 & 1298 & 162.25 & $9.854\times 10^{-2}$\\
+20.0       & --  & --   &    -- & \multicolumn{2}{c}{(failure)} & --\\
+20.0       & 0.9 & 66   & 16.50 &  935 & 233.50 & $1.295\times 10^{-1}$\\
 \hline\end{tabular}
 \end{table}
 %-------------------------------------------------------------------------------
@@ -205,7 +203,8 @@ The left half of the domain has values $\sigma(\x)=10$ and $q(\x)=10$, for which
 solution will reach a
 saturation value of $\frac{q}{\sigma}=1$, while the right half has values
 of $\sigma(\x)=40$ and $q(\x)=20$, giving it a saturation value of
-$\frac{q}{\sigma}=0.5$.
+$\frac{q}{\sigma}=0.5$. The transport direction is $\di=\mathbf{e}_x$, with
+zero incident flux on the left boundary.
 
 This problem was run using SSPRK33 time discretization with a CFL of 1 to
 steady-state with 32 cells. Figure~\ref{fig:interface} shows the results
@@ -213,7 +212,10 @@ for this test problem. The low-order solution suffers from the significant
 artificial diffusion, while the Galerkin solution suffers from significant
 spurious oscillations. The EV scheme eliminates some of the first oscillations,
 but a number of oscillations of a similar magnitude to those produced by
-the Galerkin scheme still exists to the left of the interface. Both FCT
+the Galerkin scheme still exists to the left of the interface.
+The sets ``$U^-$'' and ``$U^+$'' correspond to the minimum and maximum solution
+bounds, respectively, of each FCT scheme (the differences between the bounds of the two FCT
+schemes are insignificant here).
 schemes effectively eliminate spurious oscillations without approaching
 the level of unnecessary artificial diffusion achieved by the low-order
 scheme. For this test problem, the Galerkin-FCT solution is slightly
@@ -250,7 +252,8 @@ The Galerkin solution has ``kinks'' along the void (left) region, but
 shows point-wise matching of the exact solution in the absorber (right)
 region. The EV solution, however, eliminates the terracing effect in
 the void region but suffers from an inflated peak at the interface, due
-to entropy production at the interface. For this test problem, the
+to entropy production at the interface. The EV-FCT solution bounds generated for this
+problem are denoted as ``$U^-$, EV-FCT'' and ``$U^+$, EV-FCT''. For this test problem, the
 Galerkin-FCT scheme gives superior results to that of the EV-FCT
 scheme. However, both FCT schemes suffer from the familiar FCT
 phenomenon known as ``peak-clipping'', whereby the ``mass'' that
