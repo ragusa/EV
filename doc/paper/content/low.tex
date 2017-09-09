@@ -1,13 +1,13 @@
-% !TEX root = ../paper.tex
+% !TEX root = ../FCT_radiation_paper.tex
 
 The role of a low-order scheme in the context of the FCT algorithm is to
 provide a fail-safe solution, which has desirable properties such as
 positivity-preservation and lack of spurious oscillations. These properties
 come at the cost of excessive artificial diffusion and thus a lesser degree
-of accuracy. However, the idea of the FCT algorithm is to undo some of the over-dissipation 
+of accuracy. However, the idea of the FCT algorithm is to undo some of the over-dissipation
 of the low-order scheme as much as possible without violating some physically-motivated solution bounds.
 
-Here positivity-preservation and monotonicity are achieved by 
+Here positivity-preservation and monotonicity are achieved by
 requiring that that the matrix of the low-order system satisfies the M-matrix property.
 %satisfying
 % the M-matrix property of the matrix inverted in the low-order system.
@@ -17,10 +17,10 @@ If $\A$ is an M-matrix, then the following property is verified:
 \begin{equation}
 \text{If }  \ssrhs \geq 0, \text{  then  }  \x \geq 0 \eqp
 \end{equation}
-Hence, to prove positivity-preservation, given that the linear system matrix is an
-M-matrix, is achieved by proving positivity of the right-hand-side vector $\ssrhs$.
+Hence, given that the linear system matrix is an
+M-matrix, positivity-preservation is proven by proving positivity of the right-hand-side vector $\ssrhs$.
 This monotonicity property of the linear system matrix is also responsible for
-the lack of spurious oscillations.
+the satisfaction of a discrete maximum principle \cite{guermond_firstorder}.
 
 In this section, a first-order viscosity method introduced by Guermond
 \cite{guermond_firstorder} will be adapted to the transport equation given by
@@ -52,7 +52,7 @@ the row sums are zero. These facts will be invoked in the proof of the M-matrix
 conditions later in this section.
 
 The element-wise low-order viscosity definition from \cite{guermond_firstorder} is
-adapted to account for the reaction term in the transport equation, 
+adapted to account for the reaction term in the transport equation,
 Equation \eqref{eq:scalar_model}, but otherwise remains unchanged.
 %-------------------------------------------------------------------------------
 \begin{defn}[Low-Order Viscosity]
@@ -63,7 +63,7 @@ Equation \eqref{eq:scalar_model}, but otherwise remains unchanged.
       {-\sum\limits_{T\in \mathcal{K}(S_{i,j})}d_T(\test_j,\test_i)}
       \eqc
   \end{equation}
-  where $A_{i,j}$ is the $i,j$ entry of matrix $\A$ 
+  where $A_{i,j}$ is the $i,j$ entry of matrix $\A$
   given by Equation \eqref{eq:Aij}, $\indices_K$ is the set of degree of freedom
   indices corresponding to basis functions that have support on cell $K$
   (this is illustrated in Figure \ref{fig:cell_indices} -- the indicated
@@ -83,13 +83,13 @@ Equation \eqref{eq:scalar_model}, but otherwise remains unchanged.
 This viscosity definition is designed to give the minimum amount of artificial
 diffusion without violating the M-matrix conditions.
 
-Now that the low-order artificial diffusion operator (bilinear form + viscosity definitions) 
+Now that the low-order artificial diffusion operator (bilinear form + viscosity definitions)
 has been provided, we describe the low-order system.
 Consider a modification of the Galerkin scheme given in Equation \eqref{eq:galerkin_semidiscrete}
 which lumps the mass matrix ($\M^C \rightarrow \M^L$) and adds an artificial
 diffusion operator $\D^L$, hereafter called the low-order diffusion matrix:
 \begin{equation}
-  \M^L\ddt{\U^L} + (\A + \D^L)\U(t) = \ssrhs(t) \eqc
+  \M^L\ddt{\U^L} + (\A + \D^L)\U^L(t) = \ssrhs(t) \eqc
 \end{equation}
 where $\U^L(t)$ denotes the discrete low-order solution values.
 Defining the low-order steady-state system matrix $\A^L\equiv\A + \D^L$,
@@ -98,7 +98,7 @@ and Theta system, respectively, are
 \begin{subequations}
 Steady-state:
 \begin{equation}\label{eq:low_ss}
-  \A^L \U = \ssrhs \eqc
+  \A^L \U^L = \ssrhs \eqc
 \end{equation}
 Explicit Euler:
 \begin{equation}\label{eq:low_fe}
@@ -142,7 +142,7 @@ matrix and the low-order steady-state system matrix; this linear combination
 is also an M-matrix since it is a combination of two M-matrices with non-negative
 combination coefficients.
 
-To complete the proof of positivity preservation for the low-order scheme, 
+To complete the proof of positivity preservation for the low-order scheme,
 we need to show that
 the system right-hand-side vectors for each temporal discretization are
 non-negative.
@@ -154,5 +154,5 @@ It can also be shown that the described low-order scheme satisfies a local
 discrete maximum principle, which is easily shown given the M-matrix property.
 One may decide to use these bounds as the imposed bounds in the FCT
 algorithm; however, this approach has been found to yield less accurate solutions
-than the approach to be outlined in Section \ref{sec:fct} and is thus not discussed here 
+than the approach to be outlined in Section \ref{sec:fct} and is thus not discussed here
 for brevity.

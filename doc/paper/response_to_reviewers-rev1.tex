@@ -1,0 +1,68 @@
+\documentstyle{letter}
+
+\begin{document}
+
+To the reviewer:
+
+The changes made with regard to your comments are summarized in the following
+list, with the same numbering. Page, paragraph, and line numbers reference
+the ``diff'' document (which shows both deleted and added content). The listed
+paragraph number does not necessarily correspond to the actual paragraph number
+but rather the number of the textual ``blocks''; for example, displayed equations
+separate a paragraph into multiple ``blocks''. Displayed equations and figures
+list an equation/figure number in parentheses instead of a paragraph number
+and line number. Negative line numbers denote counting from the bottom of the
+text block up.
+
+\begin{tabular}{c c c c p{3in}}
+\emph{Item} & \emph{Page} & \emph{Par.} & \emph{Line} & \emph{Change}\\\hline
+1 & 2 & 3 & 4 & mentioned Monte Carlo techniques\\
+2 & 1 & 1 & 6 & mentioned upfront that Cartesian geometries are assumed\\
+  & 2 & 4 & 3 & mentioned the lack of decoupling for curvilinear geometries\\
+3 & 2 & 5 & 1 & made requested change\\
+4 & 3 & 2 & 12 & added Hamilton citation\\
+5 & 4 & 5 & 3 & mentioned the assumption made on the source term sign, as
+  well as the possible negativity with anisotropic scattering\\
+6 & 7 & 4 & 1 & fixed mis-worded first sentence. Made second sentence more
+  precise and supported it with reference.\\
+7 & 8 & (20) & - & fixed notation in equation\\
+  & 9 & (21a) & - & fixed notation in equation\\
+8 & 10 & 1 & 2 & added $j\ne i$ to each line of equation\\
+9 & - & - & - & The changes made in addressing comment 5 included that the source
+  sign assumption was made in this work, which should address this comment as well.\\
+10 & 11 & 7 & 1 & fixed typo\\
+11 & 18 & 3 & 2 & fixed typo\\
+12 & 19 & 3 & 3 & mentioned that multiple passes through the limiter were not used in results\\
+13 & & & & ?\\
+14 & 24 & 1 & 6 & Added discussion about CFL descreasing total computational time
+  but at the expense of FCT solution quality. Added a column showing $L^2$ error
+  for each run to demonstrate decreasing FCT solution quality with increasing
+  CFL number. Also the entries in the table have all changed because the end
+  time for the study was changed from 1 to 1.5 (the end time was originally never mentioned).
+  This change was made so that the steady-state should theoretically be reached; 1 second
+  is not enough, considering the geometry, transport speed, and transport direction.
+  The steady-state is desirable because the steady-state analytical solution is
+  useful for evaluating solution error and drawing conclusions about FCT solution quality.\\
+15 & 25 & 1 & 5 & gave boundary conditions, as well as transport direction\\
+16 & 25 & 2 & 7 & mentioned $U^-$ and $U^+$\\
+17 & 28 & (6) & - & added missing Galerkin sets to plot\\
+18 & 29 & 2 & 9 & fixed typo\\
+\end{tabular}
+
+The following are additional changes made, addressing grammar, typos, poor
+wording, missing details, etc.:
+
+\begin{tabular}{c c c c p{3in}}
+\emph{Item} & \emph{Page} & \emph{Par.} & \emph{Line} & \emph{Change}\\\hline
+1 & 2 & 4 & 6 & changed ``Equations (3)'' to ``the system given by Equation (3)''\\
+2 & 18 & 3 & 1 & changed unusual grammar: ``the Zalesak's limiter'' to ``the Zalesak limiter''\\
+3 & 23 & 3 & 2 & gave the mesh size and end time used for the study\\
+4 & 24 & 1 & 16 & removed ``easily'' from ``easily mitigated''; the word was unnecessary and expressed opinion\\
+5 & 27 & 2 & 8 & added comment about $U^-$ and $U^+$, as for comment 16\\
+6 & 29 & 2 & 5 & fixed typo: ``at al.'' to ``et al.''\\
+7 & 29 & 2 & 6 & fixed typo: ``extents these'' to ``extends these''\\
+8 & 29 & 2 & -2 & improved grammar: ``the low- and the high-order'' to ``the low- and high-order''.
+  The second ``the'' interrupted the hyphenation of ``low-order''.\\
+\end{tabular}
+
+\end{document}

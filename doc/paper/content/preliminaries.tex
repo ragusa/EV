@@ -9,9 +9,14 @@ notation:
 \end{equation}
 where $u$ is the balanced quantity, $v$ is the transport speed, $\di$ is
 a constant, uniform unit direction vector, $\sigma$ is the reaction coefficient,
-and $q$ is the source function. Note that $q \ge 0$ for particle transport: the
-external source, the inscattering source, and the fission source are all particle
-production terms and hence are positive.
+and $q$ is the source function, possibly including contributions from an external
+source, inscattering, and fission. These contributions are all physically non-negative,
+but it should be noted that in practical deterministic simulations, if the scattering
+source is not isotropic, the scattering term may be negative due to its approximation
+as a truncated Legendre polynomial expansion. However, this work makes the assumption that
+the source is non-negative: $q \ge 0$; the proof of non-negativity of the solution
+relies on this assumption. With anisotropic sources, extra precautions may need
+to be taken, but this topic is not explored in this preliminary work on the subject.
 
 The problem formulation is completed by supplying initial conditions on the
 problem domain $\domain$ (for transient problems):

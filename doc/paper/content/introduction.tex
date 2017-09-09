@@ -4,7 +4,7 @@ of its applications include the modeling of nuclear reactors, radiation
 therapy, astrophysical applications, radiation shielding, and high energy density physics
 \cite{glasstone,radiotherapy,astrophysics_textbook,lewis,laser_plasmas}.
 This paper focuses on solution techniques applicable to the first-order
-form of the transport equation, recalled below in Equation~\eqref{eq:transport_scalar}. The
+form of the transport equation in Cartesian geometries, recalled below in Equation~\eqref{eq:transport_scalar}. The
 transport equation is a particle balance statement in a six-dimensional phase-space volume
 where $\x$ denotes the particle's position, $\di$ its direction of flight, and $E$ its energy:
 \begin{equation}\label{eq:transport_scalar}
@@ -28,9 +28,14 @@ fission sources (in the case of neutron transport in multiplying media):
   \Qtot\xdet \equiv \Qsca\xdet + \Qext\xdet + \Qfis\xdet
   \eqp
 \end{equation}
-The source terms $\Qsca$ and $\Qfis$ linearly depend on the solution variable, the angular flux, denoted by $\aflux$. Only simple configurations are amenable to an analytical solution of Equation~\eqref{eq:transport_scalar}.
-In most cases of relevance, the transport equation must be solved numerically; this involves discretization
-of the phase-space and the use of iterative techniques.
+The source terms $\Qsca$ and $\Qfis$ linearly depend on the solution variable, the angular flux, denoted by $\aflux$.
+Only simple configurations are amenable to an analytical solution of Equation~\eqref{eq:transport_scalar}.
+In most cases of relevance, the transport equation must be solved numerically;
+transport calculations fall under two main categories: stochastic calculations and deterministic calculations.
+The former category is referred to as Monte Carlo and relies on sampling large numbers of particle histories using random
+number generators \cite{glasstone}, and the latter involves discretization
+of the phase-space and the use of iterative techniques. This work applies to
+the latter category.
 One common angular discretization is the discrete-ordinate or $S_N$ method
 \cite{glasstone,lewis,duderstadt}; it is a collocation method in angle whereby the transport equation is solved only along discrete directions $\di_d$
 ($1 \le d \le n_{\di}$, with $n_{\di}$ the total number of discrete directions). One of the
@@ -43,16 +48,18 @@ both the particle's streaming and interaction processes and the scattering event
 \begin{equation} \label{eq:SI}
   \frac{1}{v}\ppt{\aflux_d^{(\ell)}}
     + \di_{d}\cdot\nabla\aflux_d^{(\ell)}
-    + \totalxsec\aflux_d^{(\ell)} = Q_{\textup{tot},d}^{(\ell-1)} \quad \forall d \in [1,n_{\di}]\eqc 
+    + \totalxsec\aflux_d^{(\ell)} = Q_{\textup{tot},d}^{(\ell-1)} \quad \forall d \in [1,n_{\di}]\eqc
 \end{equation}
 where $\ell$ is the iteration index and $\aflux_d^{(\ell)}(\x,E,t) = \aflux^{(\ell)}(\x,\di_d,E,t)$.
 Hence, a system of $n_{\di}$ decoupled equations are to be solved
-at a given source iteration index $\ell$. This allows solution techniques for scalar conservation
-laws to be leveraged in solving Equations~\eqref{eq:SI}. For brevity, the discrete-ordinate subscript $d$
+at a given source iteration index $\ell$. For curvilinear geometries, an angular derivative
+term is present at iteration $\ell$, and thus the equations are not decoupled; in this
+case, the scalar FCT methodology discussed in this work requires amendment. This allows solution techniques for scalar conservation
+laws to be leveraged in solving the system given by Equation~\eqref{eq:SI}. For brevity, the discrete-ordinate subscript $d$
 will be omitted hereafter and our model transport equation will consist in one of the $n_{\di}$ transport
 equations for a given fixed source (right-hand side).
 
-Traditionally, the spatial discretization method for the $S_N$
+A common spatial discretization method for the $S_N$
 equations has been a Discontinuous Galerkin finite element method (DGFEM) with upwinding
 \cite{Lesaint1974,Reed_Hill_1973}. Here, however,
 a Continuous Galerkin finite element method (CGFEM) is applied.
@@ -77,7 +84,7 @@ Many attempts to remedy the negativities in
 transport solutions rely on ad-hoc fix-ups, such as the set-to-zero fix-up for the
 classic diamond difference scheme \cite{lewis}. Recent work by Hamilton
 introduced a similar fix-up for the linear discontinuous finite element
-method (LDFEM) that conserves local balance and preserves third-order accuracy.
+method (LDFEM) that conserves local balance and preserves third-order accuracy \cite{hamilton}.
 Walters and Wareing developed characteristic methods \cite{walters_NC}, but
 Wareing later notes that these characteristic methods are difficult to
 implement and offers a nonlinear positive spatial differencing scheme

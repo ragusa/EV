@@ -1,4 +1,4 @@
-% !TEX root = ../paper.tex
+% !TEX root = ../FCT_radiation_paper.tex
 
 \subsubsection{The FCT System}
 
@@ -146,8 +146,8 @@ We note that, if the limiting coefficients $L_{i,j}$ are selected such that
 $\hat{p}_i^-\leq \hat{p}_i\leq \hat{p}_i^+$, then the solution bounds are
 satisfied: $U^-_i\leq U_i\leq U^+_i$.
 
-Limiters such as the Zalesak's limiter described in Section \ref{sec:limiter} are algebraic
-operator, taking as input the antidiffusion bounds
+Limiters such as the Zalesak limiter described in Section \ref{sec:limiter} are algebraic
+operators, taking as input the antidiffusion bounds
 $\hat{p}_i^\pm$ and the antidiffusive fluxes $P_{i,j}$ and returning as output the
 limiting coefficients $L_{i,j}$. It is important to note that most limiters,
 including the limiter described in this paper, assume the following:
@@ -172,7 +172,7 @@ bounds are possibly widened by directly enforcing these assumptions:
 We have noted that omitting this step can lead to poor results. Without this step,
 the assumptions of the
 limiter are violated, and thus limiting coefficients that do not satisfy the
-imposed solution bounds may be generated. 
+imposed solution bounds may be generated.
 
 %===============================================================================
 \input{content/limiting_coefficients}

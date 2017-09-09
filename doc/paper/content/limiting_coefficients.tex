@@ -1,4 +1,4 @@
-% !TEX root = ../paper.tex
+% !TEX root = ../FCT_radiation_paper.tex
 
 \subsubsection{Limiting Coefficients}\label{sec:limiter}
 
@@ -45,4 +45,6 @@ implementations.
 \end{rmk}
 Finally, one could pass antidiffusive fluxes through a given limiter multiple
 times, using the remainder antidiffusive flux as the input in each pass,
-to increase the total antidiffusion accepted \cite{kuzmin_FCT,schar}.
+to increase the total antidiffusion accepted \cite{kuzmin_FCT,schar}; however,
+the results presented in this paper were all produced using the traditional
+single-pass approach through the Zalesak limiter.
