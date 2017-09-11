@@ -42,7 +42,7 @@ to give the following definitions for $\p$:
 \begin{multline}\label{eq:antidiffusionsourcei_theta}
   \p^\theta \equiv -\pr{\M^C - \M^L}\frac{\U^H - \U^n}{\dt}
     + (1-\theta)\pr{\D^L - \D^{H,n}}\U^n\\
-    + \theta    \pr{\D^L - \D^{H,n+1}}\U^{n+1} \eqc
+    + \theta    \pr{\D^L - \D^{H,n+1}}\U^{H} \eqc
 \end{multline}
 \end{subequations}
 The next step is to decompose each antidiffusive source $p_i$ into a sum of
@@ -79,7 +79,7 @@ each antidiffusive flux $P_{i,j}$. Thus the FCT systems are the following:
   \M^L\frac{\U^H - \U^n}{\dt} + \A^L\U^n = \ssrhs^n + \hat{\p}^n \eqc
 \end{equation}
 \begin{equation}\label{eq:fct_theta}
-  \M^L\frac{\U^H - \U^n}{\dt} + \A^L\pr{\theta\U^{n+1} + (1-\theta)\U^n}
+  \M^L\frac{\U^H - \U^n}{\dt} + \A^L\pr{\theta\U^{H} + (1-\theta)\U^n}
     = \ssrhs^\theta + \hat{\p}^\theta \eqc
 \end{equation}
 \end{subequations}

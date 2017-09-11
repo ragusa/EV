@@ -125,15 +125,15 @@ are as follows:
 \begin{subequations}
 Steady-state:
 \begin{equation}\label{eq:high_ss}
-  \A^H \U = \ssrhs \eqc
+  \A^H \U^H = \ssrhs \eqc
 \end{equation}
 Explicit Euler:
 \begin{equation}\label{eq:high_fe}
-  \M^C\frac{\U^{n+1} - \U^n}{\dt} + \A^{H,n}\U^n = \ssrhs^n \eqc
+  \M^C\frac{\U^{H,n+1} - \U^n}{\dt} + \A^{H,n}\U^n = \ssrhs^n \eqc
 \end{equation}
 Theta scheme:
 \begin{equation}\label{eq:high_theta}
-  \M^C\frac{\U^{n+1} - \U^n}{\dt} + \theta\A^{H,n+1}\U^{n+1}
+  \M^C\frac{\U^{H,n+1} - \U^n}{\dt} + \theta\A^{H,n+1}\U^{n+1}
     + (1-\theta)\A^{H,n}\U^n
     = \ssrhs^\theta \eqc
 \end{equation}
