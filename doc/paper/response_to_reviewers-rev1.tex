@@ -33,7 +33,7 @@ text block up.
 10 & 11 & 7 & 1 & fixed typo\\
 11 & 18 & 3 & 2 & fixed typo\\
 12 & 19 & 3 & 3 & mentioned that multiple passes through the limiter were not used in results\\
-13 & & & & ?\\
+13 & 19 & 5 & -1 & Added sentence stating that 3rd-order Gauss quadrature was used for all problems\\
 14 & 24 & 1 & 6 & Added discussion about CFL descreasing total computational time
   but at the expense of FCT solution quality. Added a column showing $L^2$ error
   for each run to demonstrate decreasing FCT solution quality with increasing
@@ -55,13 +55,18 @@ wording, missing details, etc.:
 \begin{tabular}{c c c c p{3in}}
 \emph{Item} & \emph{Page} & \emph{Par.} & \emph{Line} & \emph{Change}\\\hline
 1 & 2 & 4 & 6 & changed ``Equations (3)'' to ``the system given by Equation (3)''\\
-2 & 18 & 3 & 1 & changed unusual grammar: ``the Zalesak's limiter'' to ``the Zalesak limiter''\\
-3 & 23 & 3 & 2 & gave the mesh size and end time used for the study\\
-4 & 24 & 1 & 16 & removed ``easily'' from ``easily mitigated''; the word was unnecessary and expressed opinion\\
-5 & 27 & 2 & 8 & added comment about $U^-$ and $U^+$, as for comment 16\\
-6 & 29 & 2 & 5 & fixed typo: ``at al.'' to ``et al.''\\
-7 & 29 & 2 & 6 & fixed typo: ``extents these'' to ``extends these''\\
-8 & 29 & 2 & -2 & improved grammar: ``the low- and the high-order'' to ``the low- and high-order''.
+2 & 9  & (21) & - & Added $L$ superscript to denote low-order solution, to be consistent with later sections\\
+3 & 14 & (34) & - & Added $H$ superscript to denote high-order solution, to be consistent with later sections\\
+4 & 15 & 1 & 2 & Added appositive for low-order solution, as is already done for high-order solution in this sentence\\
+5 & 15 & 1 & 2 & Changed period to colon as intended; Equation (36) is part of the statement\\
+6 & 15 & (37c) & - & Fixed superscript on ambiguous $\mathbf{U}^{n+1}$ solution to be $H$, as originally intended\\
+7 & 18 & 3 & 1 & changed unusual grammar: ``the Zalesak's limiter'' to ``the Zalesak limiter''\\
+8 & 23 & 3 & 2 & gave the mesh size and end time used for the study\\
+9 & 24 & 1 & 16 & removed ``easily'' from ``easily mitigated''; the word was unnecessary and expressed opinion\\
+10 & 27 & 2 & 8 & added comment about $U^-$ and $U^+$, as for comment 16\\
+11 & 29 & 2 & 5 & fixed typo: ``at al.'' to ``et al.''\\
+12 & 29 & 2 & 6 & fixed typo: ``extents these'' to ``extends these''\\
+13 & 29 & 2 & -2 & improved grammar: ``the low- and the high-order'' to ``the low- and high-order''.
   The second ``the'' interrupted the hyphenation of ``low-order''.\\
 \end{tabular}
 

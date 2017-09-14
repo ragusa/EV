@@ -15,8 +15,8 @@ The first ingredient of the FCT algorithm is the definition of the antidiffusive
 fluxes. To arrive at this definition, the low-order systems, given by Equations
 \eqref{eq:low_ss}, \eqref{eq:low_fe}, and \eqref{eq:low_theta} for each temporal
 discretization, are augmented with the addition of the \emph{antidiffusion source}
-$\p$, which now, instead of producing the low-order solution, produces the high-order
-solution $\mathbf{U}^H$.
+$\p$, which now, instead of producing the low-order solution $\mathbf{U}^L$, produces the high-order
+solution $\mathbf{U}^H$:
 \begin{subequations}
 \begin{equation}\label{eq:antidiffusionsource_ss}
   \A^L \U^H = \ssrhs + \p \eqc
@@ -25,7 +25,7 @@ solution $\mathbf{U}^H$.
   \M^L\frac{\U^H - \U^n}{\dt} + \A^L\U^n = \ssrhs^n + \p^n \eqc
 \end{equation}
 \begin{equation}\label{eq:antidiffusionsource_theta}
-  \M^L\frac{\U^H - \U^n}{\dt} + \A^L\pr{\theta\U^{n+1} + (1-\theta)\U^n}
+  \M^L\frac{\U^H - \U^n}{\dt} + \A^L\pr{\theta\U^H + (1-\theta)\U^n}
     = \ssrhs^\theta + \p^\theta \eqp
 \end{equation}
 \end{subequations}

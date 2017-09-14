@@ -14,7 +14,8 @@ units of $\dt$) and an entropy function of $\eta(u)=\frac{1}{2}u^2$. Unless
 otherwise specified, the transport direction is in the positive
 $x$ direction: $\mathbf{\Omega}=\mathbf{e}_x$, and the entropy
 viscosity tuning parameters of $c_\mathcal{R}$ and $c_\mathcal{J}$ are set
-to 0.1.
+to 0.1. A third-order Gauss quadrature is used for spatial integration in
+all test cases.
 
 %===============================================================================
 \subsection{Spatial Convergence Tests}
@@ -214,7 +215,7 @@ spurious oscillations. The EV scheme eliminates some of the first oscillations,
 but a number of oscillations of a similar magnitude to those produced by
 the Galerkin scheme still exists to the left of the interface.
 The sets ``$U^-$'' and ``$U^+$'' correspond to the minimum and maximum solution
-bounds, respectively, of each FCT scheme (the differences between the bounds of the two FCT 
+bounds, respectively, of each FCT scheme (the differences between the bounds of the two FCT
 schemes are insignificant here).
 Both FCT schemes effectively eliminate spurious oscillations without approaching
 the level of unnecessary artificial diffusion achieved by the low-order
