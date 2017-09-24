@@ -1,18 +1,32 @@
 \documentstyle{letter}
 
+\pagestyle{empty}
+
 \begin{document}
 
-To the reviewer:
+Review \#1:
+
+Title: ``Flux-Corrected Transport Techniques Applied to the Radiation Transport Equation Discretized with Continuous Finite Elements''\\
+Authors: Joshua Hansel, Jean Ragusa \\
+{\it Journal of Computational Physics}\\
+\vspace{3cm}
+
+Thank you for your thorough review of our manuscript.
 
 The changes made with regard to your comments are summarized in the following
-list, with the same numbering. Page, paragraph, and line numbers reference
-the ``diff'' document (which shows both deleted and added content). The listed
-paragraph number does not necessarily correspond to the actual paragraph number
+tables. Page, paragraph, and line numbers reference
+the ``diff'' PDF document (which shows both deleted and added content between the original submission and this revised submission). 
+
+In the tables on the next pages, the listed paragraph number does not necessarily correspond to the actual paragraph number
 but rather the number of the textual ``blocks''; for example, displayed equations
 separate a paragraph into multiple ``blocks''. Displayed equations and figures
 list an equation/figure number in parentheses instead of a paragraph number
 and line number. Negative line numbers denote counting from the bottom of the
 text block up.
+
+Note that the JCP submission system uses all of our uploaded latex files, so you may see the {\bf revised manuscript twice}: once without any markups and once showing the markups between the current version and the first submission.
+
+
 
 \begin{tabular}{c c c c p{3in}}
 \emph{Item} & \emph{Page} & \emph{Par.} & \emph{Line} & \emph{Change}\\\hline
@@ -34,7 +48,7 @@ text block up.
 11 & 18 & 3 & 2 & fixed typo\\
 12 & 19 & 3 & 3 & mentioned that multiple passes through the limiter were not used in results\\
 13 & 19 & 5 & -1 & Added sentence stating that 3rd-order Gauss quadrature was used for all problems\\
-14 & 24 & 1 & 6 & Added discussion about CFL descreasing total computational time
+14 & 24 & 1 & 6 & Added discussion about CFL decreasing total computational time
   but at the expense of FCT solution quality. Added a column showing $L^2$ error
   for each run to demonstrate decreasing FCT solution quality with increasing
   CFL number. Also the entries in the table have all changed because the end
