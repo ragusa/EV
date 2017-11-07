@@ -1,0 +1,2989 @@
+%BeginFileInfo
+%%Publisher=ESCH
+%%Project=YJCPH
+%%Manuscript=YJCPH7667
+%%MS position=
+%%Stage=203
+%%TID=janina
+%%Pages=17
+%%Format=2010
+%%Distribution=vtex
+%%Destination=DVI
+%%PDF type=
+%%DVI.Maker=luadvi
+%%PS.Maker=luaps
+%%Spelled=Dictionary: American, Computer: 1GSRED583, 2017.10.25 15:33
+%%History1=2017.10.24 13:03
+%EndFileInfo
+%
+%Spelling_date
+% Opcijos: [secthm,seceqn,secfloat,xxtheorem,
+% noappeqn,wwwdraft]
+%%
+\documentclass[xchauthor,chkrefs,fixeqskip,GCNS,amsmath,amsthm]{yjcphg}
+\usepackage{tabcols} %%% [debug]
+\usepackage[v5.5.0]{jadtd}
+\usepackage[hidebg]{tmultirow}
+%\usepackage{}
+\PROOF
+%\preCRC
+%\psdraft
+\aid{7667}
+\PII{S0021-9991(17)30782-9}% Updated by PTS2LaTeX.exe, 24.10.2017 13:03
+\doi{10.1016/j.jcp.2017.10.029}% Updated by PTS2LaTeX.exe, 24.10.2017
+%13:03
+\docsubty{FLA}
+\volume{00}
+%\issue{00}
+%\supplement{}
+\pubyear{2017}
+%\pagenumbering{roman}%Roman,alph,Alph
+\firstpage{1}
+\lastpage{17}
+\TID{RT}
+%
+%\doctopic[code]{??}
+%
+\crossmark{0}% Updated by PTS2LaTeX.exe, 24.10.2017 13:03
+%
+% APIBREZIMAI:
+%
+\startlocaldefs
+%
+
+\newtheorem{thm}{Theorem}
+\newtheorem{lem}[thm]{Lemma}
+
+\theoremstyle{remark}
+\newtheorem{defn}{Definition}
+\newtheorem{rmk}{Remark}
+
+
+\newcommand{\di}{\bm{\Omega}}
+%
+
+\begin{nonSGML}
+ \newcommand{\Lbrack}{[\![}
+  \newcommand{\Rbrack}{]\!]}
+  \end{nonSGML}
+\endlocaldefs
+%
+\begin{copyrightinfo}[type=standard]% Updated by PTS2LaTeX.exe,
+%24.10.2017 13:03
+\cpcopyrightNotice{\textCopyright\ 2017 Elsevier Inc. All rights reserved.}% Updated by PTS2LaTeX.exe, 26.10.2017 08:30
+%Updated by PTS2LaTeX.exe, 24.10.2017 13:03
+%\cplicenseLine{}
+%\oauserLicense{}
+\cpcopyrightYear{2017}% Updated by PTS2LaTeX.exe, 24.10.2017 13:03
+\cpcopyrightHolderDisplayName{Elsevier Inc.}% Updated by PTS2LaTeX.exe, 26.10.2017 08:30
+\cpxmlCopyrightType{limited-transfer}% Updated by PTS2LaTeX.exe, 26.10.2017 08:30
+%13:03
+\copyrt{2017}
+\CopyrightStatus{001}
+\end{copyrightinfo}
+%
+\begin{document}
+%
+\begin{frontmatter}
+%% REFERSTO
+%\dochead{}
+\title{Flux-corrected transport techniques applied to the
+radiation transport equation discretized with continuous finite elements}
+% \title{}
+%\artthanks[]{}
+%\begin{aug}
+%\runauthor{}
+%\author[A]{\inits{}\fnm{} \snm{}}
+%\corthanks[cor]{Corresponding author.}
+%\address[A]{}
+%\end{aug}
+%
+\begin{aug}
+\author{\inits{J.E.}\fnm{Joshua E.}~\snm{Hansel}\ead
+{joshua.hansel89@gmail.com}},
+\author{\inits{J.C.}\fnm{Jean C.}~\snm{Ragusa}\ead
+{jean.ragusa@tamu.edu}\orcid{0000-0001-9870-6447}}
+%
+\address{\orgname{Department of Nuclear Engineering},
+\orgname{Texas A\&M University}, \city{College Station}, \state{TX}
+\postcode{77840}, \cny{USA}}
+\end{aug}
+%
+% HISTORY:
+\received{\sday{6} \smonth{6} \syear{2017}}% Updated by
+%PTS2LaTeX.exe, 24.10.2017 13:03
+\revised{\sday{25} \smonth{9} \syear{2017}}% Updated by
+%PTS2LaTeX.exe, 24.10.2017 13:03
+\accepted{\sday{19} \smonth{10} \syear{2017}}% Updated by
+%PTS2LaTeX.exe, 24.10.2017 13:03
+%\pubonline{\sday{} \smonth{} \syear{}}
+%
+%\dedicated{}
+%
+%\begin{abstract} %%% Butinas FLA, REV tipams
+%\end{abstract} %%% Nebutinas SCO tipui
+%
+%\begin{abstract}[class=graphical] %%% Jei yra
+%\begin{figure} \includegraphics{<aid>fab} \end{figure} \abstext{}
+%\end{abstract}
+%
+%\begin{abstract}[class=author-highlights,title=Highlights] %%% Jei yra
+%\begin{itemize} %\item
+%\end{itemize}
+%\end{abstract}
+%
+\begin{abstract}
+The Flux-Corrected Transport (FCT) algorithm is applied to the unsteady
+and steady-state particle transport equation. The proposed FCT method
+employs the following: (1) a low-order, positivity-preserving scheme,
+based on the application of M-matrix properties, (2)~a~high-order scheme
+based on the entropy viscosity method introduced by Guermond
+\cite{guermond_ev}, and (3) local, discrete solution bounds derived from
+the integral transport equation. The resulting scheme is second-order
+accurate in space, enforces an entropy inequality, mitigates the
+formation of spurious oscillations, and guarantees the absence of
+negativities. Space discretization is achieved using continuous finite
+elements. Time discretizations for unsteady problems include theta
+schemes such as explicit and implicit Euler, and strong-stability
+preserving Runge--Kutta (SSPRK) methods. The developed FCT scheme is
+shown to be robust with explicit time discretizations but may require
+damping in the nonlinear iterations for steady-state and implicit time
+discretizations.
+\end{abstract}
+\begin{abstract}[class=author-highlights,title=Highlights]
+%
+\begin{itemize}
+\item
+ Devised an FCT technique for the first-order form of the radiation transport equation.
+\item Local solution bounds derived using integral transport formalism.
+\item High-order solution can use an entropy-viscosity based dissipation.
+\item Implicit FCT for steady-state and time-implicit discretizations.
+\end{itemize}
+\end{abstract}
+%
+% Opcijos: [class=KWD]
+%\begin{keyword} %%% Visada
+%\kwd{???}%\kwd{}\kwd{}
+%\end{keyword}
+%
+\begin{keyword}
+\kwd{Entropy viscosity}
+\kwd{FCT}
+\kwd{Particle transport equation}
+\end{keyword}
+%
+\end{frontmatter}
+%
+%spell_from *************** Text entry area ******************%
+
+%%% PAPILDOMI REIKALAVIMAI:
+%%% CME straipsniams:
+%%% Jei straipsnis priskirtas sekcijai CME,
+%%% o jo PIT yra FLA arba SCO, tuomet yra privaloma Introduction
+%sekcija.
+%%% Sekcijos pavadinimas turi buti "Introduction". Sekcijos turi buti
+%numeruotos.
+%%% Figure caption: Figure should be abbreviated as Fig. for all
+%%% active figure citations and figure labels.
+%%% Figuru dalys turi buti zymimos mazosiomis raidemis skliausteliuose
+%%% (pvz. Fig. 2(a)) ir pacioje figuroje, ir nuorodose tekste.
+
+%s1 #&#
+\section{Introduction}%
+\label{sec:introduction}
+
+The radiation transport equation, or linear Boltzmann equation,
+describes the transport of particles interacting with a background
+medium \cite{glasstone}. Some of its applications include the
+modeling of nuclear reactors, radiation therapy, astrophysical
+applications, radiation shielding, and high energy density physics
+\cite{glasstone,radiotherapy,astrophysics_textbook,lewis,laser_plasmas}.
+This paper focuses on solution techniques applicable to the first-order
+form of the transport equation in Cartesian geometries, recalled below
+in Equation~\reftext{\eqref{eq:transport_scalar}}. The transport equation is a
+particle balance statement in a six-dimensional phase-space volume where
+$\mathbf{x}$ denotes the particle's position, $\di$ its direction of
+flight, and $E$ its energy:
+%
+%e1 #&#
+\begin{equation}
+\label{eq:transport_scalar}
+\frac{1}{v(E)}\frac{\partial\psi}{\partial t} + \di\cdot\nabla
+\psi(\mathbf{x},\di,E,t)+ \Sigma_{\text{t}}(\mathbf{x},E,t)\psi(
+\mathbf{x},\di,E,t)= Q_{\text{tot}}(\mathbf{x},\di,E,t)\,.
+\end{equation}
+%
+$Q_{\text{tot}}(\mathbf{x},\di,E,t)$ denotes the total particle
+source gains in an infinitesimal phase-space volume due to particle
+scattering, extraneous source of particles (if any), and fission sources
+(in the case of neutron transport in multiplying media):
+%
+%e2 #&#
+\begin{equation}
+Q_{\text{tot}}(\mathbf{x},\di,E,t)\equiv Q_{\text{sca}}(
+\mathbf{x},\di,E,t)+ Q_{\text{ext}}(\mathbf{x},\di,E,t)+ Q_{
+\text{fis}}(\mathbf{x},\di,E,t)\,.
+\end{equation}
+%
+The source terms $Q_{\text{sca}}$ and $Q_{\text{fis}}$ linearly
+depend on the solution variable, the angular flux, denoted by
+$\psi$. Only simple configurations are amenable to an analytical
+solution of Equation~\reftext{\eqref{eq:transport_scalar}}. In most cases of
+relevance, the transport equation must be solved numerically; transport
+calculations fall under two main categories: stochastic calculations and
+deterministic calculations. The former category is referred to as Monte
+Carlo and relies on sampling large numbers of particle histories using
+random number generators \cite{glasstone}, and the latter involves
+discretization of the phase-space and the use of iterative techniques.
+This work applies to the latter category. One common angular
+discretization is the discrete-ordinate or $S_{N}$ method
+\cite{glasstone,lewis,duderstadt}; it is a collocation method in angle
+whereby the transport equation is solved only along discrete directions
+$\di_{d}$ ($1 \le d \le n_{\di}$, with $n_{\di}$ the total number of
+discrete directions). One of the main advantages of the $S_{N}$
+technique is that it enables an iterative approach, called source
+iteration in the transport literature
+\cite{glasstone,lewis,duderstadt}, to resolve both the particle's
+streaming and interaction processes and the scattering events as
+follows:
+%
+%e3 #&#
+\begin{equation}
+\label{eq:SI}
+\frac{1}{v}\frac{\partial\psi_{d}^{(\ell)}}{\partial t}
++ \di_{d}
+\cdot\nabla\psi_{d}^{(\ell)}
++ \Sigma_{\text{t}}\psi_{d}^{(
+\ell)} = Q_{\text{tot},d}^{(\ell-1)} \quad\forall d \in[1,n_{\di}]
+\,,
+\end{equation}
+%
+where $\ell$ is the iteration index and $\psi_{d}^{(\ell)}(
+\mathbf{x},E,t) = \psi^{(\ell)}(\mathbf{x},\di_{d},E,t)$. Hence, a
+system of $n_{\di}$ decoupled equations are to be solved at a given
+source iteration index~$\ell$. For curvilinear geometries, an angular
+derivative term is present at iteration~$\ell$, and thus the equations
+are not decoupled; in this case, the scalar FCT methodology discussed
+in this work requires amendment. This allows solution techniques for
+scalar conservation laws to be leveraged in solving the system given by
+Equation~\reftext{\eqref{eq:SI}}. For brevity, the discrete-ordinate subscript
+$d$ will be omitted hereafter and our model transport equation will
+consist in one of the $n_{\di}$ transport equations for a given fixed
+source (right-hand side).
+
+A common spatial discretization method for the $S_{N}$ equations has
+been a Discontinuous Galerkin finite element method (DGFEM) with
+upwinding \cite{Lesaint1974,Reed_Hill_1973}. Here, however, a
+Continuous Galerkin finite element method (CGFEM) is applied. Some
+recent work by Guermond and Popov \cite{guermond_ev} on solution
+techniques for conservation laws with CGFEM addresses some of the main
+disadvantages of CGFEM versus DGFEM, including the formation of spurious
+oscillations. The purpose of the present paper is to demonstrate a proof
+of concept for the application of such solution techniques to the
+transport equation. Furthermore, some or all of the methodology explored
+in this paper can be later extended to DGFEM as well; see, for instance,
+Zingan et al. \cite{zingan_2013} where the techniques proposed by
+Guermond and Popov \cite{guermond_ev} have been ported to DGFEM
+schemes for Euler equations.
+
+One of the main objectives of this paper is to present a method that
+precludes the formation of spurious oscillations and the negativities
+that result from these oscillations; these issues have been a
+long-standing issue in the numerical solution of the transport equation
+\cite{lathrop}. Not only are these negativities physically
+incorrect (a particle's distribution density must be non-negative), but
+they can cause simulations to terminate prematurely, for example in
+radiative transfer where the radiation field is nonlinearly coupled to
+a material energy equation. Many attempts to remedy the negativities in
+transport solutions rely on ad-hoc fix-ups, such as the set-to-zero
+fix-up for the classic diamond difference scheme \cite{lewis}.
+Recent work by Hamilton introduced a similar fix-up for the linear
+discontinuous finite element method (LDFEM) that conserves local balance
+and preserves third-order accuracy \cite{hamilton}. Walters and
+Wareing developed characteristic methods \cite{walters_NC}, but
+Wareing later notes that these characteristic methods are difficult to
+implement and offers a nonlinear positive spatial differencing scheme
+known as the exponential discontinuous scheme \cite{wareing}.
+Maginot has recently developed a consistent set-to-zero (CSZ) LDFEM
+method \cite{maginot}, as well as a non-negative method for
+bilinear discontinuous FEM
+\cite{maginot_mc2015,maginot_2017}.
+
+In fluid dynamics, traditional approaches to remedy the issue of
+spurious oscillations include the flux-corrected transport (FCT)
+algorithm, introduced in 1973 as the SHASTA algorithm for finite
+difference discretizations by Boris and Book \cite{borisbook},
+where it was applied to linear discontinuities and gas dynamic shock
+waves. To the best of our knowledge, these FCT techniques have not been
+applied to the particle transport equation. The main idea of the FCT
+algorithm is to blend a low-order scheme having desirable properties
+with a high-order scheme which may lack these properties. Zalesak
+improved methodology of the algorithm and introduced a fully
+multi-dimensional limiter \cite{zalesak}. Parrott and Christie
+extended the algorithm to the finite element method on unstructured
+grids \cite{parrott}, thus beginning the FEM-FCT methodology.
+L\"{o}hner et al. applied FEM-FCT to the Euler and Navier--Stokes
+equations and began using FCT with complex geometries
+\cite{lohner}. Kuzmin and M\"{o}ller introduced an algebraic FCT
+approach for scalar conservation laws \cite{kuzmin_FCT} and later
+introduced a general-purpose FCT scheme, which is designed to be
+applicable to both steady-state and transient problems
+\cite{kuzmin_general}. In these FEM-FCT works and others
+\cite{moller_2008,kuzmin_failsafe,kuzmin_closepacking}, the high-order
+scheme used in the FCT algorithm was the Galerkin finite element method,
+but this work uses the entropy viscosity method developed by Guermond
+and others \cite{guermond_ev}.
+
+Recent work by Guermond and Popov addresses the issue of spurious
+oscillations for general conservation laws by using artificial
+dissipation based on local entropy production, a method known as entropy
+viscosity \cite{guermond_ev}. The idea of entropy viscosity is to
+enforce an entropy inequality on the weak solution, and thus filter out
+weak solutions containing spurious oscillations. However, entropy
+viscosity solutions may still contain spurious oscillations, albeit
+smaller in magnitude, and consequently negativities are not precluded.
+To circumvent this deficiency, Guermond proposed using the entropy
+viscosity method in conjunction with the FCT algorithm
+\cite{guermond_secondorder}; the high-order scheme component in FCT,
+traditionally the unmodified Galerkin scheme, is replaced with the
+entropy viscosity scheme. For the low-order scheme, Guermond also
+introduced a discrete maximum principle (DMP) preserving (and
+positivity-preserving) scheme for scalar conservation laws
+\cite{guermond_firstorder}.
+
+The algorithm described in this paper takes a similar approach to the
+algorithm described in the work by Guermond and Popov for scalar
+conservation laws, but is extended to allow application to the transport
+equation, which does not fit the precise definition of a conservation
+law but is instead a balance law since it includes sinks and sources,
+namely the reaction term $\Sigma_{\text{t}}\psi$ and the source term
+$Q_{\text{tot}}$. The presence of these terms is also a novelty in the
+context of the FCT algorithm. In addition, much of the work on FCT to
+date has been for fully explicit time discretizations. Because speeds
+in radiation transport (such as the speed of light in the case of
+photons) are so large, implicit and steady-state time discretization are
+important considerations, given the CFL time step size restriction for
+fully explicit methods. Thus this paper also considers implicit and
+steady-state FCT.
+
+This paper is organized as follows. Section~\ref{sec:preliminaries}
+gives some preliminaries such as the problem formulation and
+discretization. Recall that the FCT algorithm uses a low-order scheme
+and a high-order scheme. Section~\ref{sec:low} presents the low-order
+scheme, Section~\ref{sec:high} presents the high-order scheme (which is
+based on entropy viscosity), and Section~\ref{sec:fct} presents the FCT
+scheme that combines the two. Section~\ref{sec:results} presents results
+for a number of test problems, and Section~\ref{sec:conclusions} gives
+conclusions.
+
+%s2 #&#
+\section{Preliminaries}%
+\label{sec:preliminaries}
+For the remainder of this paper, the scalar transport model given by
+Equation~\reftext{\eqref{eq:transport_scalar}} will be generalized to a scalar
+balance equation having reaction terms and source terms, with the
+following notation:
+%
+%e4 #&#
+\begin{equation}
+\label{eq:scalar_model}
+\frac{\partial u}{\partial t} + v\di\cdot\nabla u(\mathbf{x},t)+
+\sigma(\mathbf{x}) u(\mathbf{x},t)= q(\mathbf{x},t)\,,
+\end{equation}
+%
+where $u$ is the balanced quantity, $v$ is the transport speed,
+$\di$ is a constant, uniform unit direction vector, $\sigma$ is the
+reaction coefficient, and $q$ is the source function, possibly including
+contributions from an external source, inscattering, and fission. These
+contributions are all physically non-negative, but it should be noted
+that in practical deterministic simulations, if the scattering source
+is not isotropic, the scattering term may be negative due to its
+approximation as a truncated Legendre polynomial expansion. However,
+this work makes the assumption that the source is non-negative:
+$q \ge0$; the proof of non-negativity of the solution relies on this
+assumption. With anisotropic sources, extra precautions may need to be
+taken, but this topic is not explored in this preliminary work on the
+subject.
+
+The problem formulation is completed by supplying initial conditions on
+the problem domain $\mathcal{D}$ (for transient problems):
+%
+%e5 #&#
+\begin{equation}
+u(\mathbf{x},0) = u^{0}(\mathbf{x}) \quad\mathbf{x}\in\mathcal
+{D}\,,
+\end{equation}
+%
+as well as boundary conditions, which will be assumed to be incoming
+flux boundary conditions:
+%
+%e6 #&#
+\begin{equation}
+u(\mathbf{x},t)= u^{\text{inc}}(\mathbf{x},t)\quad\mathbf{x}\in
+\partial\mathcal{D}^{-} \,,
+\end{equation}
+%
+where $u^{\text{inc}}(\mathbf{x},t)$ is the incoming boundary data
+function, and $\partial\mathcal{D}^{-}$ is the incoming portion of the
+domain boundary:
+%
+%e7 #&#
+\begin{equation}
+\partial\mathcal{D}^{-} \equiv\{ \mathbf{x}\in\partial\mathcal{D}:
+\mathbf{n}(\mathbf{x})\cdot\di\leq0 \} \,,
+\end{equation}
+%
+where $\mathbf{n}(\mathbf{x})$ is the outward-pointing normal vector on
+the domain boundary at point $\mathbf{x}$.
+
+Application of the standard Galerkin method with piecewise linear basis
+functions gives the following semi-discrete system:
+%
+%e8 #&#
+\begin{subequations}
+\label{eq:galerkin_semidiscrete}
+%
+%e8.a #&#
+\begin{equation}
+\mathbf{M}^{C}\frac{d\mathbf{U}}{dt} + \mathbf{A}\mathbf{U}(t) =
+\mathbf{b}(t) \,,
+\end{equation}
+%
+where the consistent (i.e., not lumped) mass matrix is given by
+%
+%e8.b #&#
+\begin{equation}
+M^{C}_{i,j} \equiv\int\limits_{S_{i,j}}\varphi_{i}(\mathbf
+{x})\varphi
+_{j}(\mathbf{x}) dV \,,
+\end{equation}
+%
+the (steady-\xch{state}{tstate}) transport matrix is
+%
+%e8.c #&#
+\begin{equation}
+\label{eq:Aij}
+A_{i,j} \equiv\int\limits_{S_{i,j}}\left(
+v\di\cdot\nabla\varphi
+_{j}(\mathbf{x}) +
+\sigma(\mathbf{x})\varphi_{j}(\mathbf{x})\right)
+\varphi_{i}(\mathbf{x}) dV \,,
+\end{equation}
+%
+and the right-hand-side is
+%
+%e8.d #&#
+\begin{equation}
+b_{i}(t) \equiv\int\limits_{S_{i}}q(\mathbf{x})\varphi_{i}(
+\mathbf{x}) dV \,.
+\end{equation}
+%
+\end{subequations}
+%
+The components of the solution vector $\mathbf{U}(t)$ are denoted by
+$U_{j}(t)$ and represent the degrees of freedom of the approximate
+solution $u_{h}$:
+%
+%e9 #&#
+\begin{equation}
+u_{h}(\mathbf{x},t)= \sum\limits_{j}U_{j}(t) \varphi_{j}(\mathbf{x})
+\,,
+\end{equation}
+%
+where $\varphi_{j}(\mathbf{x})$ is a finite element test function.
+$S_{i}$ is the support of basis function $i$ and $S_{i,j}$ is the shared
+support of basis functions $i$ and $j$.
+
+A number of temporal discretizations are considered in this paper. Fully
+explicit temporal discretizations considered include forward Euler:
+%
+%e10 #&#
+\begin{equation}
+\mathbf{M}^{C}\frac{\mathbf{U}^{n+1}-\mathbf{U}^{n}}{\Delta t} +
+\mathbf{A}\mathbf{U}^{n} = \mathbf{b}^{n} \,,
+\end{equation}
+%
+as well as Strong Stability Preserving Runge Kutta (SSPRK) methods that
+can be expressed in the following form:
+%
+%e11 #&#
+\begin{subequations}
+\label{eq:ssprk}
+%
+%e11.a #&#
+%e11.b #&#
+%e11.c #&#
+\begin{align}
+& \hat{\mathbf{U}}^{0} = \mathbf{U}^{n} \,,
+\eqncr
+& \hat{\mathbf{U}}^{i} = \gamma_{i} \mathbf{U}^{n} + \zeta_{i}
+\left[
+\hat{\mathbf{U}}^{i-1}
++ \Delta t\mathbf{G}(t^{n}+c_{i}\Delta t,
+\hat{\mathbf{U}}^{i-1})\right]
+\,,\quad i = 1,\ldots,s
+\,,
+\eqncr
+& \mathbf{U}^{n+1} = \hat{\mathbf{U}}^{s} \,.
+\end{align}
+%
+\end{subequations}
+%
+where $s$ is the number of stages, $\gamma_{i}$, $\zeta_{i}$, and
+$c_{i}$ are coefficients that correspond to the particular SSPRK method,
+and $\mathbf{G}$ represents the right-hand-side function of an ODE
+%
+%e12 #&#
+\begin{equation}
+\frac{d\mathbf{U}}{dt} = \mathbf{G}(t,\mathbf{U}(t)) \,,
+\end{equation}
+%
+which in this case is the following:
+%
+%e13 #&#
+\begin{equation}
+\mathbf{G}(t,\mathbf{U}(t)) = (\mathbf{M}^{C})^{-1}
+\left( \mathbf{b}(t)
+- \mathbf{A}\mathbf{U}(t)\right) \,.
+\end{equation}
+%
+SSPRK methods are a subclass of Runge Kutta methods that offer
+high-order accuracy while preserving stability
+\cite{gottlieb,macdonald}. The form given in Equation \reftext{\eqref{eq:ssprk}} makes it clear that these SSPRK methods can be
+expressed as a linear combination of steps resembling forward Euler
+steps, with the only difference being that the explicit time dependence
+of the source is not necessarily on the old time $t^{n}$ but instead is
+on a stage time $t^{n} + c_{i}\Delta t$. An example is the 3-stage,
+3rd-order accurate SSPRK method has the following coefficients:
+%
+%e14 #&#
+\begin{equation}
+\gamma= \left[
+%
+\begin{array}{c}
+0
+\\
+\frac{3}{4}
+\cr \noalign{\vspace{2pt}}
+\frac{1}{3}
+\end{array}
+%
+\right]
+\,,\quad\zeta= \left[
+%
+\begin{array}{c}
+1
+\\
+\frac{1}{4}
+\cr \noalign{\vspace{2pt}}
+\frac{2}{3}
+\end{array}
+%
+\right]
+\,,\quad c = \left[
+%
+\begin{array}{c}
+0
+\\
+1
+\\
+\frac{1}{2}
+\end{array}
+%
+\right] \,.
+\end{equation}
+
+This work also considers the Theta-family of temporal discretizations:
+%
+%e15 #&#
+\begin{equation}
+\mathbf{M}^{C}\frac{\mathbf{U}^{n+1}-\mathbf{U}^{n}}{\Delta t} +
+\mathbf{A}((1-\theta)\mathbf{U}^{n} + \theta\mathbf{U}^{n+1})
+= (1-
+\theta)\mathbf{b}^{n} + \theta\mathbf{b}^{n+1} \,,
+\end{equation}
+%
+where $0\leq\theta\leq1$ is the implicitness parameter. For example,
+$\theta$ values of $0$, $\frac{1}{2}$, and $1$ correspond to forward
+Euler, Crank--\xch{Nicholson}{Nicohlson}, and backward Euler discretizations, respectively.
+
+Finally, in the case of a steady-state solve, we have the following
+system of equations:
+%
+%e16 #&#
+\begin{equation}
+\mathbf{A}\mathbf{U}= \mathbf{b}\,.
+\end{equation}
+
+%s3 #&#
+\section{FCT methodology applied to particle transport}%
+\label{sec:methodology}
+
+Recall that the FCT algorithm is built from a low-order scheme and a
+high-order scheme. Section~\ref{sec:low} describes the low-order scheme,
+and Section~\ref{sec:high} describes the high-order scheme. Section~\ref{sec:fct} describes the FCT scheme combined from these components.
+
+%s3.1 #&#
+\subsection{Low-order scheme}%
+\label{sec:low}
+
+The role of a low-order scheme in the context of the FCT algorithm is
+to provide a fail-safe solution that has desirable properties such as
+positivity-preservation and lack of spurious oscillations. These
+properties come at the cost of excessive artificial diffusion and thus
+a lesser degree of accuracy. However, the idea of the FCT algorithm is
+to undo some of the over-dissipation of the low-order scheme as much as
+possible without violating some physically-motivated solution bounds.
+
+Here positivity-preservation and monotonicity are achieved by requiring
+\xch{that}{that that} the matrix of the low-order system satisfies the M-matrix
+property. M-matrices are a subset of inverse-positive matrices and have
+the monotone property. For instance, consider the linear system
+$\mathbf{A}\mathbf{x}= \mathbf{b}$; If $\mathbf{A}$ is an M-matrix, then
+the following property is verified:
+%
+%e17 #&#
+\begin{equation}
+\text{If } \mathbf{b}\geq0, \text{ then } \mathbf{x}\geq0 \,.
+\end{equation}
+%
+Hence, given that the linear system matrix is an M-matrix,
+positivity-preservation is proven by proving positivity of the
+right-hand-side vector $\mathbf{b}$. This monotonicity property of the
+linear system matrix is also responsible for the satisfaction of a
+discrete maximum principle \cite{guermond_firstorder}.
+
+In this section, a first-order viscosity method introduced by Guermond
+\cite{guermond_firstorder} will be adapted to the transport
+equation given by Equation \reftext{\eqref{eq:scalar_model}}. This method uses an
+element-wise artificial viscosity definition in conjunction with a
+graph-theoretic local viscous bilinear form that makes the method valid
+for arbitrary element shapes and dimensions. These definitions will be
+shown to ensure that the system matrix is a non-singular M-matrix.
+
+The graph-theoretic local viscous bilinear form has the following
+definition.
+
+%d1 #&#
+\begin{defn}[Local viscous bilinear form] The local viscous bilinear form for
+element $K$ is defined as follows:
+%
+%e18 #&#
+\begin{equation}
+\label{eq:bilinearform}
+d_{K}(\varphi_{j},\varphi_{i}) \equiv\left\{
+%
+\begin{array}{l@{\quad} l}
+-\frac{1}{n_{K} - 1}V_{K} & i\ne j\,,\quad i,j\in\mathcal{I}_{K}\,,
+\\
+V_{K} & i = j \,,\quad i,j\in\mathcal{I}_{K}\,,
+\\
+0 & \mbox{otherwise}\,,
+\end{array}
+%
+\right.
+\end{equation}
+%
+where $V_{K}$ is the volume of cell $K$, $\mathcal{I}_{K}$ is the set
+of degree of freedom indices such that the corresponding test function
+has support on cell $K$, and $n_{K}$ is the number of indices in that
+set.
+\end{defn}
+
+This bilinear form bears resemblance to a standard Laplacian bilinear
+form: the diagonal entries are positive, the off-diagonal entries are
+negative, and the row sums are zero. These facts will be invoked in the
+proof of the M-matrix conditions later in this section.
+
+The element-wise low-order viscosity definition from
+\cite{guermond_firstorder} is adapted to account for the reaction term
+in the transport equation, Equation \reftext{\eqref{eq:scalar_model}}, but
+otherwise remains unchanged.
+
+%d2 #&#
+\begin{defn}[Low-order viscosity] The low-order viscosity for cell $K$ is defined
+as follows:
+%
+%e19 #&#
+\begin{equation}
+\nu^{L}_{K} \equiv\max\limits_{i\ne j\in\mathcal{I}_{K}}
+\frac{
+\max(0,A_{i,j})}{-\sum\limits_{T\in\mathcal{K}(S_{i,j})}d_{T}(
+\varphi_{j},\varphi_{i})}
+\,,
+\end{equation}
+%
+where $A_{i,j}$ is the $i,j$ entry of matrix $\mathbf{A}$ given by
+Equation \reftext{\eqref{eq:Aij}}, $\mathcal{I}_{K}$ is the set of degree of
+freedom indices corresponding to basis functions that have support on
+cell $K$ (this is illustrated in \reftext{Fig.~\ref{fig:cell_indices}} -- the
+indicated nodes have degree of freedom indices belonging to
+$\mathcal{I}_{K}$), and $\mathcal{K}(S_{i,j})$ is the set of cell
+indices for which the cell domain and the shared support $S_{i,j}$
+overlap.
+\end{defn}
+
+This viscosity definition is designed to give the minimum amount of
+artificial diffusion without violating the M-matrix conditions.
+
+%f1 #&#
+\begin{figure}
+\includegraphics{7667f01}
+\caption{Illustration of cell degree of freedom indices $\mathcal{I}_{K}$.}
+\label{fig:cell_indices}
+\end{figure}
+
+Now that the low-order artificial diffusion operator (bilinear form $+$
+viscosity definitions) has been provided, we describe the low-order
+system. Consider a modification of the Galerkin scheme given in Equation \reftext{\eqref{eq:galerkin_semidiscrete}} which lumps the mass matrix ($
+\mathbf{M}^{C} \rightarrow\mathbf{M}^{L}$) and adds an artificial
+diffusion operator $\mathbf{D}^{L}$, hereafter called the low-order
+diffusion matrix:
+%
+%e20 #&#
+\begin{equation}
+\mathbf{M}^{L}\frac{d\mathbf{U}^{L}}{dt} + (\mathbf{A}+ \mathbf{D}
+^{L})\mathbf{U}^{L}(t) = \mathbf{b}(t) \,,
+\end{equation}
+%
+where $\mathbf{U}^{L}(t)$ denotes the discrete low-order solution
+values. Defining the low-order steady-state system matrix $\mathbf{A}
+^{L}\equiv\mathbf{A}+ \mathbf{D}^{L}$, the low-order system for the
+steady-state system, explicit Euler system, and Theta system,
+respectively, are:\\
+%
+%e21 #&#
+\begin{subequations}
+Steady-state:
+%
+%e21.a #&#
+\begin{equation}
+\label{eq:low_ss}
+\mathbf{A}^{L} \mathbf{U}^{L} = \mathbf{b}\,\xch{.}{,}
+\end{equation}
+%
+Explicit Euler:
+%
+%e21.b #&#
+\begin{equation}
+\label{eq:low_fe}
+\mathbf{M}^{L} \mathbf{U}^{L,n+1} = \mathbf{M}^{L} \mathbf{U}^{n} +
+\Delta t\left( \mathbf{b}^{n} - \mathbf{A}^{L}\mathbf{U}^{n} \right)
+\,\xch{.}{,}
+\end{equation}
+%
+Theta scheme:
+%
+%e21.c #&#
+\begin{equation}
+\label{eq:low_theta}
+\left( \mathbf{M}^{L} +\theta\Delta t\mathbf{A}^{L}\right)
+\mathbf{U}^{L,n+1}
+= \mathbf{M}^{L} \mathbf{U}^{n} + \Delta t(
+\mathbf{b}^{\theta}- \mathbf{A}^{L} (1-\theta)\mathbf{U}^{n} )\,,
+\end{equation}
+%
+\end{subequations}
+%
+where $\mathbf{b}^{\theta}\equiv(1-\theta)\mathbf{b}^{n} + \theta
+\mathbf{b}^{n+1}$. The low-order diffusion matrix is assembled
+element-wise using the local viscous bilinear form and low-order
+viscosity definitions:
+%
+%e22 #&#
+\begin{equation}
+\label{eq:low_order_diffusion_matrix}
+D_{i,j}^{L} \equiv\sum\limits_{K\in\mathcal{K}(S_{i,j})}\nu^{L}_{K}
+d_{K}(\varphi_{j},\varphi_{i}) \,.
+\end{equation}
+
+Now the low-order scheme has been fully described, some statements will
+be made on its properties. Firstly the M-matrix property will be shown
+for the low-order matrix $\mathbf{A}^{L}$.
+
+%t1 #&#
+\begin{thm}[M-matrix property]
+The low-order steady-state system matrix $\mathbf{A}^{L}$ is a
+non-singular M-matrix.
+\end{thm}
+
+\begin{proof}
+There are many definitions that can be used to identify a non-singular
+M-matrix; one definition gives that an M-matrix can be identified by
+verifying both of the following properties \cite{plemmons}:
+%
+\begin{enumerate}
+%
+\item
+strict positivity of diagonal entries: $A_{i,i} > 0$, $\forall i$ and
+%
+\item
+non-positivity of off-diagonal entries: $A_{i,j} \leq0$, $\forall i$,
+$\forall j\ne i$.
+\end{enumerate}
+%
+First, we show that the off-diagonal elements of the matrix
+$\mathbf{A}^{L}$ are non-positive. The diffusion matrix entry
+$D^{L}_{i,j}$ is bounded as follows:
+%
+\begin{eqnarray*}
+D_{i,j}^{L}
+& = & \sum\limits_{K\in\mathcal{K}(S_{i,j})}\nu^{L}_{K} d
+_{K}(\varphi_{j},\varphi_{i})
+\\
+& = & \sum\limits_{K\in\mathcal{K}(S_{i,j})}\max
+\limits_{k\ne\ell\in\mathcal{I}_{K}}
+\left( \frac{\max(0,A_{k,
+\ell})}{-\sum\limits_{T\in\mathcal{K}(S_{k,\ell})}
+\mkern-20mu d
+_{T}(\varphi_{\ell},\varphi_{k})}\right) d_{K}(\varphi_{j},\varphi
+_{i}) \,.
+\end{eqnarray*}
+%
+For an arbitrary quantity $c_{k,\ell} \geq0 \,,\forall k\ne\ell
+\in\mathcal{I}$, the following is true for $i\ne j\in\mathcal{I}$:
+$\max\limits_{k\ne\ell\in\mathcal{I}}c_{k,\ell} \geq c_{i,j}$, and
+thus for $a\leq0$, $a\max\limits_{k\ne\ell\in\mathcal{I}}c_{k,
+\ell} \leq a c_{i,j}$. Recall that $d_{K}(\varphi_{j},\varphi_{i}) <
+0$ for $j\ne i$. Thus, we have:
+%
+\begin{eqnarray*}
+D^{L}_{i,j}
+& \le& \sum\limits_{K\in\mathcal{K}(S_{i,j})}\frac{
+\max(0,A_{i,j})}{-\sum\limits_{T\in\mathcal{K}(S_{i,j})} d_{T}(
+\varphi_{j},\varphi_{i})}
+d_{K}(\varphi_{j},\varphi_{i}) \,,
+\qquad
+j\ne i\,,
+\\
+& = & -\max(0,A_{i,j}) \frac{\sum\limits_{K\in\mathcal{K}(S_{i,j})}d
+_{K}(\varphi_{j},\varphi_{i})}{\sum\limits_{T\in\mathcal{K}(S_{i,j})}
+d_{T}(\varphi_{j},\varphi_{i})} \,,
+\qquad
+j\ne i\,,
+\\
+& = & -\max(0,A_{i,j}) \,,
+\qquad
+j\ne i\,,
+\\
+& \le& -A_{i,j}\,,
+\qquad
+j\ne i\,.
+\end{eqnarray*}
+%
+Then applying this relation to the definition of the low-order steady
+state matrix gives
+%
+\begin{equation*}
+A^{L}_{i,j} = A_{i,j} + D_{i,j}^{L} \le0 \,.
+\end{equation*}
+%
+Next it will be shown that the row sums are non-negative. Using the fact
+that $\sum\limits_{j}\varphi_{j}(\mathbf{x})=1$ and $\sum\limits_{j}d
+_{K}(\varphi_{j},\varphi_{i})=0$,
+%
+\begin{eqnarray*}
+\sum\limits_{j}A^{L}_{i,j}
+& = & \sum\limits_{j}\int\limits_{S_{i,j}}
+\left( \mathbf{f}'(u_{h})
+\cdot\nabla\varphi_{j} +
+\sigma\varphi
+_{j}\right) \varphi_{i} dV +
+\sum\limits_{j}\sum
+\limits_{K\in\mathcal{K}(S_{i,j})}\nu^{L}
+d_{K}(\varphi_{j},\varphi
+_{i})
+\,,
+\\
+& = & \int\limits_{S_{i}}\left(
+\mathbf{f}'(u_{h})\cdot\nabla
+\sum\limits_{j}\varphi_{j}(\mathbf{x}) +
+\sigma(\mathbf{x})\sum
+\limits_{j}\varphi_{j}(\mathbf{x})\right)
+\varphi_{i}(\mathbf{x}) dV
+\,,
+\\
+\label{eq:rowsum}
+& = & \int\limits_{S_{i}}\sigma(\mathbf{x})\varphi_{i}(\mathbf
+{x}) dV
+\,,
+\\
+& \ge& 0 \,.
+\end{eqnarray*}
+
+%r1 #&#
+\begin{rmk}
+If incoming flux boundary conditions are weakly imposed, then the
+steady-state system matrix is modified: $\mathbf{A}\rightarrow
+\tilde{\mathbf{A}}$, and the low-order viscosity then uses the
+\emph{modified} steady-state matrix $\tilde{\mathbf{A}}$. The
+non-positivity property of the off-diagonal elements still holds. The
+non-negativity property of the row sums also holds, owing to the
+relation $\tilde{A}_{i,j} \geq A_{i,j}$.
+\end{rmk}
+
+If the support $S_{i}$ is not entirely vacuum ($\sigma(\mathbf{x})
+\ge0$ with $\sigma(\mathbf{x}) > 0$ for some $\mathbf{x}$), then the
+row sum is \emph{strictly} positive. Proof of strict positivity of the
+diagonal elements directly follows from proof of non-positivity of the
+off-diagonal elements and strict positivity of the row sums. Thus both
+conditions for the non-singular M-matrix property have been met.
+\end{proof}
+
+Thus far, we have proven that the system matrix for the low-order
+steady-state system is an M-matrix, and it remains to demonstrate the
+same for each of the transient systems. For the explicit Euler/SSPRK
+systems, the system matrix is just the lumped mass matrix $\mathbf{M}
+^{L}$, which is easily shown to be an M-matrix since it is a positive,
+diagonal matrix. For the $\theta$ temporal discretization, the system
+matrix is a linear combination of the lumped mass matrix and the
+low-order steady-state system matrix; this linear combination is also
+an M-matrix since it is a combination of two M-matrices with
+non-negative combination coefficients.
+
+To complete the proof of positivity preservation for the low-order
+scheme, we need to show that the system right-hand-side vectors for each
+temporal discretization are non-negative.
+
+This is immediate for the steady-state case due to the assumption that
+the source $q$ is non-negative. The following theorem gives that the
+system right-hand-side vector for the theta system is non-negative. This
+theorem extends to explicit Euler discretization since explicit Euler
+is a special case of the Theta discretization.
+
+%t2 #&#
+\begin{thm}[Non-negativity of the theta low-order system right-hand-side] If the
+old solution $\mathbf{U}^{n}$ is non-negative and the time step size
+$\Delta t$ satisfies
+%
+%e23 #&#
+\begin{equation}
+\label{eq:theta_cfl}
+\Delta t\leq\frac{M^{L}_{i,i}}{(1-\theta)A_{i,i}^{L}}
+\,,\quad
+\forall i \,,
+\end{equation}
+%
+then the new solution $\mathbf{U}^{L,n+1}$ of the Theta low-order system
+given by Equation \reftext{\eqref{eq:low_theta}} is non-negative, i.e.,
+$U^{L,n+1}_{i} \geq0$, $\forall i$.
+\end{thm}
+
+\begin{proof}
+The right-hand-side vector $\mathbf{y}$ of this system has the entries
+%
+\begin{equation*}
+y_{i} = \Delta tb^{\theta}_{i} + \left( M^{L}_{i,i} - (1-\theta)
+\Delta tA^{L}_{i,i}\right) U^{n}_{i}
+- (1-\theta)\Delta t\sum
+\limits_{j\ne i}A^{L}_{i,j} U^{n}_{j}
+\,.
+\end{equation*}
+%
+As stated previously, the source function $q$ is non-negative and thus
+$b^{\theta}_{i} \ge0 $. Due to the time step size assumption given by
+Equation \reftext{\eqref{eq:theta_cfl}},
+%
+\begin{equation*}
+M^{L}_{i,i} - (1-\theta)\Delta tA^{L}_{i,i} \geq0 \,,
+\end{equation*}
+%
+and because the off-diagonal terms of $\mathbf{A}^{L}$ are non-positive,
+the off-diagonal sum term is non-negative. Thus $y_{i}$ is a sum of
+non-negative terms, and the theorem is proven.
+\end{proof}
+
+It can also be shown that the described low-order scheme satisfies a
+local discrete maximum principle, which is easily shown given the
+M-matrix property. One may decide to use these bounds as the imposed
+bounds in the FCT algorithm; however, this approach has been found to
+yield less accurate solutions than the approach to be outlined in
+Section~\ref{sec:fct} and is thus not discussed here for brevity.
+
+%s3.2 #&#
+\subsection{High-order scheme}%
+\label{sec:high}
+
+This section describes the entropy viscosity method applied to the
+scalar conservation law given by Equation \reftext{\eqref{eq:scalar_model}}.
+Recall that the entropy viscosity method is to be used as the high-order
+scheme in the FCT algorithm, instead of the standard Galerkin method as
+has been used previously in FCT-FEM schemes; for Galerkin FCT-FEM
+examples, see, for instance,
+\cite{kuzmin_FCT,moller_2008,lohner,kuzmin_failsafe,kuzmin_closepacking}.
+Usage of the entropy viscosity method in the FCT algorithm ensures
+convergence to the entropy solution \cite{guermond_secondorder}.
+
+The entropy viscosity method has been applied to a number of PDEs such
+as general scalar conservation laws of the form
+%
+%e24 #&#
+\begin{equation}
+\label{eq:scalar_conservation_law}
+\frac{\partial u}{\partial t} + \nabla\cdot\mathbf{f}(u) = 0 \,,
+\end{equation}
+%
+the inviscid Euler equations \cite{guermond_ev,marco_low_mach},
+and the two-phase seven-equation fluid model \cite{marco_SEM}. The
+scalar model studied in this paper does not fit into the general form
+given by Equation~\reftext{\eqref{eq:scalar_conservation_law}}, due to the
+addition of the reaction term $\sigma u$ and source term $q$.
+Application of entropy viscosity method to the transport equation model
+is novel and it is described below.
+
+Since the weak form of the problem does not have a unique solution, one
+must supply additional conditions called \emph{admissibility} conditions
+or \emph{entropy} conditions to filter out spurious weak solutions,
+leaving only the physical weak solution, often called the entropy
+solution. A number of entropy conditions are valid, but usually the most
+convenient entropy condition for use in numerical methods takes the form
+of an \emph{entropy inequality}, such as the following, which is valid
+for the general scalar conservation law given by Equation \reftext{\eqref{eq:scalar_conservation_law}}:
+%
+%e25 #&#
+\begin{equation}
+\frac{\partial\eta(u)}{\partial t} + \nabla\cdot\bm{\Psi}(u)
+\leq0 \,,
+\end{equation}
+%
+which holds for any convex entropy function $\eta(u)$ and associated
+entropy flux $\bm{\Psi}(u) \equiv\int\eta'(u)\mathbf{f}'(u)du$.
+If one can show that this inequality holds for an arbitrary convex
+entropy function, then one proves it holds for all convex entropy
+functions \cite{leveque2002,guermond_ev}. For the scalar PDE
+considered in this paper, the entropy inequality becomes the following:
+%
+%e26 #&#
+\begin{equation}
+\frac{\partial\eta(u)}{\partial t} + \nabla\cdot\bm{\Psi}(u)
++ \eta'(u)\sigma u - \eta'(u)q
+\leq0 \,.
+\end{equation}
+%
+One can verify this inequality by multiplying the governing PDE by
+$\eta'(u)$ and applying reverse chain rule.
+
+The entropy viscosity method enforces the entropy inequality by
+measuring local entropy production and dissipating accordingly. In
+practice, one defines the entropy residual:
+%
+%e27 #&#
+\begin{equation}
+\mathcal{R}(u) \equiv\frac{\partial\eta(u)}{\partial t} + \nabla
+\cdot\bm{\Psi}(u)
++ \eta'(u)\sigma u - \eta'(u)q \,,
+\end{equation}
+%
+which can be viewed as the amount of violation of the entropy
+inequality. The entropy viscosity for an element $K$ is then defined to
+be proportional to this violation, for example:
+%
+%e28 #&#
+\begin{equation}
+\nu^{\eta}_{K} = \frac{c_{\mathcal{R}}\|\mathcal{R}(u_{h})\|_{L^{
+\infty}(K)}}{\hat{\eta}_{K}}
+\,,
+\end{equation}
+%
+where $\hat{\eta}_{K}$ is a normalization constant with the units of
+entropy, $c_{\mathcal{R}}$ is a proportionality constant that can be
+modulated for each problem, and
+$\|\mathcal{R}(u_{h})\|_{L^{\infty}(K)}$ is the maximum of the entropy
+residual on element $K$, which can be approximated as the maximum over
+the quadrature points of element $K$. Designing a universally
+appropriate normalization constant $\hat{\eta}_{K}$ remains a challenge
+for the entropy viscosity method (see \cite{marco_low_mach} for
+an alternate normalization for low-Mach flows). The objective of this
+normalization coefficient is to prevent the user from needing to make
+significant adjustments to the tuning parameter $c_{\mathcal{R}}$ for
+different problems. A definition that produces reasonable results for
+a large number of problems is the following:
+%
+%e29 #&#
+\begin{equation}
+\hat{\eta}_{K} \equiv\left\| \eta-\bar{\eta}\right\|
+_{L^{\infty}(
+\mathcal{D})} \,,
+\end{equation}
+%
+where $\bar{\eta}$ is the average entropy over the entire computational
+domain.
+
+In addition to the entropy residual, it can also be beneficial to
+measure the jump in the gradient of the entropy flux across cell
+interfaces. Note that given the definition of the entropy flux, the
+gradient of the entropy flux is $\nabla\bm{\Psi}(u)=\nabla
+\eta(u)\mathbf{f}'(u)$. Then let $\mathcal{J}_{F}$ denote the jump of
+the normal component of the entropy flux gradient across face $F$:
+%
+%e30 #&#
+\begin{equation}
+\mathcal{J}_{F} \equiv|\mathbf{f}'(u)\cdot\mathbf{n}_{F}|
+\Lbrack
+\nabla\eta(u)\cdot\mathbf{n}_{F}\Rbrack \,,
+\end{equation}
+%
+where the double square brackets denote a jump quantity. Then we define
+the maximum jump on a cell:
+%
+%e31 #&#
+\begin{equation}
+\mathcal{J}_{K} \equiv\max\limits_{F\in\mathcal{F}(K)} |\mathcal{J}
+_{F}| \,.
+\end{equation}
+%
+Finally, putting everything together, one can define the entropy
+viscosity for a cell $K$ to be
+%
+%e32 #&#
+\begin{equation}
+\nu^{\eta}_{K} = \frac{c_{\mathcal{R}}\|\mathcal{R}(u_{h})\|_{L^{
+\infty}(K)}
++ c_{\mathcal{J}}\mathcal{J}_{K}}{\hat{\eta}_{K}}
+\,.
+\end{equation}
+%
+However, it is known that the low-order viscosity for an element, as
+computed in Section~\ref{sec:low}, gives enough local artificial
+diffusion for regularization; any amount of viscosity larger than this
+low-order viscosity would be excessive. Thus, the low-order viscosity
+for an element is imposed as the upper bound for the high-order
+viscosity:
+%
+%e33 #&#
+\begin{equation}
+\nu^{H}_{K} \equiv\min(\nu^{L}_{K}, \nu^{\eta}_{K}) \,.
+\end{equation}
+%
+One can note that, in smooth regions, this high-order viscosity will be
+small, and, in regions of strong gradients or discontinuities, the
+entropy viscosity can be relatively large.
+
+Finally, the high-order system of equations for the steady-state system, explicit Euler system, and Theta system, respectively, are as follows:\\
+%
+%e34 #&#
+\begin{subequations}
+Steady-state:
+%
+%e34.a #&#
+\begin{equation}
+\label{eq:high_ss}
+\mathbf{A}^{H} \mathbf{U}^{H} = \mathbf{b}\,,
+\end{equation}
+%
+Explicit Euler:
+%
+%e34.b #&#
+\begin{equation}
+\label{eq:high_fe}
+\mathbf{M}^{C}\frac{\mathbf{U}^{H,n+1} - \mathbf{U}^{n}}{\Delta t} +
+\mathbf{A}^{H,n}\mathbf{U}^{n} = \mathbf{b}^{n} \,,
+\end{equation}
+%
+Theta scheme:
+%
+%e34.c #&#
+\begin{equation}
+\label{eq:high_theta}
+\mathbf{M}^{C}\frac{\mathbf{U}^{H,n+1} - \mathbf{U}^{n}}{\Delta t} +
+\theta\mathbf{A}^{H,n+1}\mathbf{U}^{H,n+1}
++ (1-\theta)\mathbf{A}
+^{H,n}\mathbf{U}^{n}
+= \mathbf{b}^{\theta}\,,
+\end{equation}
+%
+\end{subequations}
+%
+where the high-order steady-state system matrix is defined as
+$\mathbf{A}^{H}\equiv\mathbf{A}+ \mathbf{D}^{H}$, and the high-order
+diffusion matrix $\mathbf{D}^{H}$ is defined similarly to the low-order
+case but using the high-order viscosity instead of the low-order
+viscosity:
+%
+%e35 #&#
+\begin{equation}
+\label{eq:high_order_diffusion_matrix}
+D_{i,j}^{H} \equiv\sum\limits_{K\in\mathcal{K}(S_{i,j})}\nu^{H}_{K}
+d_{K}(\varphi_{j},\varphi_{i}) \,.
+\end{equation}
+%
+Note that unlike the low-order scheme, the high-order scheme does not
+lump the mass matrix.
+
+%r2 #&#
+\begin{rmk}
+Note that due to the nonlinearity of the entropy viscosity, the entropy
+viscosity scheme is nonlinear for implicit and steady-state temporal
+discretizations, and thus some nonlinear solution technique must be
+utilized. For the results in this paper, a simple fixed-point iteration
+scheme is used. An alternative such as Newton's method is likely to be
+advantageous in terms of the number of nonlinear iterations; however,
+fixed-point is used here for comparison with the nonlinear FCT scheme
+to be described in Section~\ref{sec:fct}.
+\end{rmk}
+
+%s3.3 #&#
+\subsection{FCT scheme}%
+\label{sec:fct}
+
+%s3.3.1 #&#
+\subsubsection{The FCT system}
+
+The entropy viscosity method described in Section~\ref{sec:high}
+enforces the entropy condition and thus produces numerical
+approximations that converge to the entropy solution. However, numerical
+solutions may still contain spurious oscillations and negativities,
+although these effects are smaller in magnitude than for the
+corresponding Galerkin solution. In this paper, the flux-corrected
+transport (FCT) algorithm is used to further mitigate the formation of
+spurious oscillations and to guarantee the absence of negativities.
+
+The first ingredient of the FCT algorithm is the definition of the
+antidiffusive fluxes. To arrive at this definition, the low-order
+systems, given by Equations \reftext{\eqref{eq:low_ss}}, \reftext{\eqref{eq:low_fe}}, and \reftext{\eqref{eq:low_theta}} for each temporal discretization, are augmented
+with the addition of the \emph{antidiffusion source} $\mathbf{p}$, which
+now, instead of producing the low-order solution $\mathbf{U}^{L}$,
+produces the high-order solution $\mathbf{U}^{H}$:
+%
+%e36 #&#
+\begin{subequations}
+%
+%e36.a #&#
+%e36.b #&#
+%e36.c #&#
+\begin{eqnarray}[ll]
+\label{eq:antidiffusionsource_ss}
+\mathbf{A}^{L} \mathbf{U}^{H} = \mathbf{b}+ \mathbf{p}\,,\eqncr
+\label{eq:antidiffusionsource_fe}
+\mathbf{M}^{L}\frac{\mathbf{U}^{H} - \mathbf{U}^{n}}{\Delta t} +
+\mathbf{A}^{L}\mathbf{U}^{n} = \mathbf{b}^{n} + \mathbf{p}^{n} \,
+,\eqncr
+\label{eq:antidiffusionsource_theta}
+\mathbf{M}^{L}\frac{\mathbf{U}^{H} - \mathbf{U}^{n}}{\Delta t} +
+\mathbf{A}^{L}\left( \theta\mathbf{U}^{H} +
+(1-\theta)\mathbf{U}^{n}\right) = \mathbf{b}^{\theta}+ \mathbf{p}
+^{\theta}\,.
+\end{eqnarray}
+%
+\end{subequations}
+%
+Then the corresponding high-order systems, given by Equations \reftext{\eqref{eq:high_ss}}, \reftext{\eqref{eq:high_fe}}, \reftext{\eqref{eq:high_theta}} are
+subtracted from these equations to give the following definitions for
+$\mathbf{p}$:
+%
+%e37 #&#
+\begin{subequations}
+%
+%e37.a #&#
+%e37.b #&#
+%e37.c #&#
+\begin{eqnarray}[ll]
+\label{eq:antidiffusionsourcei_ss}
+\mathbf{p}\equiv\left( \mathbf{D}^{L} - \mathbf{D}^{H}\right)
+\mathbf{U}^{H} \,,\eqncr
+\label{eq:antidiffusionsourcei_fe}
+\mathbf{p}^{n} \equiv-\left( \mathbf{M}^{C} - \mathbf{M}^{L}\right
+) \frac{
+\mathbf{U}^{H} - \mathbf{U}^{n}}{\Delta t} + \left( \mathbf{D}^{L} -
+\mathbf{D}^{H}\right) \mathbf{U}^{n} \,,\eqncr
+\label{eq:antidiffusionsourcei_theta}
+\mathbf{p}^{\theta}\equiv-\left( \mathbf{M}^{C} - \mathbf
+{M}^{L}\right) \frac{
+\mathbf{U}^{H} - \mathbf{U}^{n}}{\Delta t}
++ (1-\theta)\left( \mathbf{D}
+^{L} - \mathbf{D}^{H,n}\right) \mathbf{U}^{n}
++ \theta\left( \mathbf{D}^{L} - \mathbf{D}^{H,n+1}\right) \mathbf{U}
+^{H} \,\xch{.}{,}
+\end{eqnarray}
+%
+\end{subequations}
+%
+The next step is to decompose each antidiffusive source $p_{i}$ into a
+sum of antidiffusive fluxes: $p_{i} = \sum_{j} P_{i,j}$. Because the
+matrices $\mathbf{M}^{C}-\mathbf{M}^{L}$ and $\mathbf{D}^{L}-
+\mathbf{D}^{H}$ are symmetric and feature row sums of zero, the
+following are valid antidiffusive flux decompositions:
+%
+%e38 #&#
+\begin{subequations}
+%
+%e38.a #&#
+%e38.b #&#
+%e38.c #&#
+\begin{eqnarray}[ll]
+P_{i,j} = \left( D^{L}_{i,j} - D^{H}_{i,j}\right) \left( U^{H}_{j} - U
+^{H}_{i}\right) \,,\eqncr
+P^{n}_{i,j} = -M^{C}_{i,j}\left( \frac{U^{H}_{j} - U^{n}_{j}}{\Delta t}
+- \frac{U^{H}_{i} - U^{n}_{i}}{\Delta t}\right)
++ \left( D^{L}_{i,j} -
+D^{H,n}_{i,j}\right) \left( U^{n}_{j} - U^{n}_{i}\right) \,,\eqncr
+P^{\theta}_{i,j} = -M^{C}_{i,j}\left( \frac{U^{H}_{j} - U^{n}_{j}}{
+\Delta t} - \frac{U^{H}_{i} - U^{n}_{i}}{\Delta t}\right)
++ (1-\theta
+)\left( D^{L}_{i,j} - D^{H,n}_{i,j}\right) \left( U^{n}_{j} -
+U^{n}_{i}\right)
++ \theta\left( D^{L}_{i,j} - D^{H,n+1}_{i,j}\right) \left(
+U^{H}_{j} -
+U^{H}_{i}\right) \,.\nonumber\\
+\end{eqnarray}
+%
+\end{subequations}
+%
+Note that this decomposition yields equal and opposite antidiffusive
+flux pairs since the antidiffusion matrix $\mathbf{P}$ is skew
+symmetric: $P_{j,i}=-P_{i,j}$ (and likewise for $P_{j,i}^{n}$ and
+$P_{j,i}^{\theta}$). Up until this point, no changes have been made to
+the high-order scheme: solving Equations \reftext{\eqref{eq:antidiffusionsource_ss}} through \reftext{\eqref{eq:antidiffusionsource_theta}} still produces the high-order
+solution. FCT is applied to these equations by applying limiting
+coefficients $L_{i,j}$ to each antidiffusive flux $P_{i,j}$. Thus the
+FCT systems are the following:
+%
+%e39 #&#
+\begin{subequations}
+%
+%e39.a #&#
+%e39.b #&#
+%e39.c #&#
+\begin{eqnarray}[ll]
+\label{eq:fct_ss}
+\mathbf{A}^{L} \mathbf{U}^{H} = \mathbf{b}+ \hat{\mathbf{p}} \,
+,\eqncr
+\label{eq:fct_fe}
+\mathbf{M}^{L}\frac{\mathbf{U}^{H} - \mathbf{U}^{n}}{\Delta t} +
+\mathbf{A}^{L}\mathbf{U}^{n} = \mathbf{b}^{n} + \hat{\mathbf{p}}^{n}
+\,,\eqncr
+\label{eq:fct_theta}
+\mathbf{M}^{L}\frac{\mathbf{U}^{H} - \mathbf{U}^{n}}{\Delta t} +
+\mathbf{A}^{L}\left( \theta\mathbf{U}^{H} +
+(1-\theta)\mathbf{U}^{n}\right) = \mathbf{b}^{\theta}+
+\hat{\mathbf{p}}^{\theta}\,,
+\end{eqnarray}
+%
+\end{subequations}
+%
+where the hat denotes limitation: $\hat{p}_{i}\equiv\sum_{j} L_{i,j}P
+_{i,j}$. The limiting coefficients range between zero and one,
+representing full limitation and no limitation, respectively. For
+example, setting all limiting coefficients to zero would result in the
+low-order solution, and setting all to one would result in the
+high-order solution. The actual values of the limiting coefficients are
+determined by the limiter, which operates on the following goal:
+maximize the limiting coefficients such that the imposed solution bounds
+are not violated.
+
+As will be discussed in Section~\ref{sec:solution_bounds}, the solution
+bounds for implicit FCT and steady-state FCT are implicit, and thus the
+systems given by Equations \reftext{\eqref{eq:fct_theta}} and \reftext{\eqref{eq:fct_ss}}
+are nonlinear, since the limiting coefficients contained in
+$\hat{\mathbf{p}}$ are nonlinear. In this paper, a fixed-point iteration
+scheme is used to resolve the nonlinearities. For any nonlinear
+iteration scheme, the imposed solution bounds must be computed using the
+previous solution iterate:
+%
+%e40 #&#
+\begin{equation}
+U_{i}^{-,(\ell)} \leq U_{i}^{(\ell+1)} \leq U_{i}^{+,(\ell)} \,.
+\end{equation}
+%
+Though the solution bounds are lagged, the antidiffusion bounds
+$\hat{p}_{i}^{\pm}$ still contains terms at iteration $\ell+1$; these
+terms must be lagged as well. As a consequence, the solution bounds for
+implicit/steady-state FCT schemes are only satisfied upon nonlinear
+convergence, not at each iteration.
+
+%s3.3.2 #&#
+\subsubsection{Solution bounds}%
+\label{sec:solution_bounds}
+
+The integral form of the transport equation can be derived using the
+method of characteristics. Consider a frame of reference moving with the
+radiation field so that position is a function of time, resulting in a
+family of characteristic curves (since the transport equation is linear,
+these curves are straight lines) $\mathbf{x}(t)$ that solve the
+following ODE:
+%
+%e41 #&#
+\begin{equation}
+\frac{d\mathbf{x}}{dt}=v\di\,,\quad\mathbf{x}(0)=\mathbf{x}_{0}\,.
+\end{equation}
+%
+Then taking the time derivative of $u(\mathbf{x}(t),t)$ gives
+%
+%e42 #&#
+%e43 #&#
+\begin{align}
+\frac{du}{dt}
+& = \frac{\partial u}{\partial t} + \nabla\cdot(u(
+\mathbf{x}(t),t))\frac{d\mathbf{x}}{dt}
+\eqncr
+& = \frac{\partial u}{\partial t} + \nabla\cdot(u(\mathbf
+{x}(t),t))\frac{d
+\mathbf{x}}{dt}
+\end{align}
+%
+Finally, combining this with Equation \reftext{\eqref{eq:scalar_model}} and
+solving the resulting ODE gives the integral transport equation
+\cite{glasstone}:
+%
+%e44 #&#
+\begin{eqnarray}
+\label{eq:integral_transport}
+u(\mathbf{x},t) = u_{0}(\mathbf{x}- v t\di) e^{-\int\limits_{0}^{t}
+\sigma(\mathbf{x}- v(t -t')\di)v dt'}
++ \int\limits_{0}^{t} q(\mathbf{x}- v(t -t')\di,t') e^{-\int
+\limits
+_{t'}^{t}
+\sigma(\mathbf{x}- v(t -{t''})\di)v d{t''}} v dt' \,.
+\end{eqnarray}
+%
+If the time step size $\Delta t$ satisfies the condition
+%
+%e45 #&#
+\begin{equation}
+\label{eq:cfl_analytic_dmp}
+v\Delta t\leq h_{\min} \,,\quad h_{\min} \equiv\min\limits_{K} h
+_{K} \,,
+\end{equation}
+%
+where $h_{K}$ is the diameter of cell $K$, then the following discrete
+solution bounds apply:
+%
+%e46 #&#
+\begin{subequations}
+\label{eq:solution_bounds}
+%
+%e46.a #&#
+\begin{equation}
+U^{-}_{i} \le U_{i}^{n+1} \le U^{+}_{i} \,,
+\end{equation}
+%
+where
+%
+%e46.b #&#
+\begin{equation}
+U^{-}_{i}
+\equiv\left\{
+%
+\begin{array}{l@{\quad} l}
+U_{\min,i}^{n} e^{-v\Delta t\sigma_{\max,i}}
++ \frac{q_{\min,i}}{
+\sigma_{\max,i}}
+(1 - e^{-v\Delta t\sigma_{\max,i}}) \,,&
+\sigma_{\max,i} \ne0
+\\
+U_{\min,i}^{n}
++ v\Delta tq_{\min,i} \,,& \sigma_{\max,i} = 0\,,
+\end{array}
+%
+\right.
+\end{equation}
+%
+and
+%
+%e46.c #&#
+\begin{equation}
+U^{+}_{i}
+\equiv\left\{
+%
+\begin{array}{l@{\quad} l}
+U_{\max,i}^{n} e^{-v\Delta t\sigma_{\min,i}}
++ \frac{q_{\max,i}}{
+\sigma_{\min,i}}
+(1 - e^{-v\Delta t\sigma_{\min,i}}) \,,&
+\sigma_{\min,i} \ne0
+\\
+U_{\max,i}^{n}
++ v\Delta tq_{\max,i} \,,& \sigma_{\min,i} = 0\,.
+\end{array}
+%
+\right.
+\end{equation}
+%
+The other quantities used in the above expressions are:
+%
+%e46.d #&#
+%e46.e #&#
+%e46.f #&#
+\begin{eqnarray}[ll]
+U_{\max,i}^{n} \equiv\max\limits_{j\in\mathcal{I}(S_{i})}U_{j}^{n}
+\,,\quad U_{\min,i}^{n} \equiv\min\limits_{j\in\mathcal{I}(S_{i})}U
+_{j}^{n} \,,\eqncr
+\sigma_{\max,i} \equiv\max\limits_{\mathbf{x}\in S_{i}}\sigma(
+\mathbf{x}) \,,\quad\sigma_{\min,i} \equiv\min
+\limits_{\mathbf{x}\in S_{i}}\sigma(\mathbf{x}) \,,\eqncr
+q_{\max,i} \equiv\max\limits_{\mathbf{x}\in S_{i}}q(\mathbf{x}) \,,
+\quad q_{\min,i} \equiv\min\limits_{\mathbf{x}\in S_{i}}q(
+\mathbf{x}) \,.
+\end{eqnarray}
+%
+\end{subequations}
+%
+Note the time step size condition given by Equation \reftext{\eqref{eq:cfl_analytic_dmp}} implies that when using CFL numbers
+greater than
+1 with implicit time discretizations, these bounds no longer apply. Similar
+bounds can be derived for $v\Delta t> h_{min}$; however, these bounds
+for a
+node $i$ will no longer only depend on the solution values of the immediate
+neighbors of $i$; instead, a larger neighborhood must be used in the bounds,
+making the local solution bounds wider and thus less restrictive and arguably
+less useful in the FCT algorithm. This represents a significant disadvantage
+for implicit FCT, not only because the converged FCT solution could contain
+more undesirable features but also because the wider bounds typically result
+in a greater number of nonlinear iterations because of the increased freedom
+in the limiting coefficients.
+
+Steady-state FCT solution bounds can be inferred from Equation \reftext{\eqref{eq:solution_bounds}} by making the substitution $v\Delta t
+\rightarrow s$, where $0\leq s \leq h_{min}$. This restriction of
+$s$ similarly ensures that only the nearest neighbors of $i$ are needed
+for the solution bounds of~$i$. Steady-state FCT unfortunately suffers
+many of the same drawbacks as implicit FCT because like implicit FCT,
+its solution bounds are implicit and thus change with each iteration.
+
+%s3.3.3 #&#
+\subsubsection{Antidiffusion bounds}
+
+Bounds imposed on a solution value $U_i$, such as the bounds described in
+Section~\ref{sec:solution_bounds}, directly translate into bounds on the
+limited antidiffusion source $\hat{p}_{i}$. These antidiffusion bounds
+$\hat{p}_{i}^{\pm}$ for steady-state, explicit Euler, and Theta
+discretization are respectively derived by solving Equations \reftext{\eqref{eq:fct_ss}}, \reftext{\eqref{eq:fct_fe}}, and \reftext{\eqref{eq:fct_theta}} for
+$\hat{p}_{i}$ and manipulating the inequality $U^{-}_{i}\leq U_{i}
+\leq U^{+}_{i}$. This yields:
+%
+%e47 #&#
+\begin{subequations}
+%
+%e47.a #&#
+%e47.b #&#
+%e47.c #&#
+\begin{eqnarray}[ll]
+\label{eq:antidiffusion_bounds_ss}
+\hat{p}_{i}^{\pm}\equiv A_{i,i}^{L} U_{i}^{\pm}+ \sum\limits_{j
+\ne i}A_{i,j}^{L} U_{j} - b_{i} \,,\eqncr
+\label{eq:antidiffusion_bounds_fe}
+\hat{p}_{i}^{\pm}\equiv M^{L}_{i,i}
+\frac{U_{i}^{\pm}- U_{i}^{n}}{
+\Delta t}
++ \sum\limits_{j}A_{i,j}^{L} U_{j}^{n}
+- b_{i}^{n} \,,\eqncr
+\label{eq:antidiffusion_bounds_theta}
+\hat{p}_{i}^{\pm}\equiv\left( \frac{M^{L}_{i,i}}{\Delta t}+\theta A
+_{i,i}^{L}\right)
+U_{i}^{\pm}+ \left( (1-\theta) A_{i,i}^{L}-\frac{M
+^{L}_{i,i}}{\Delta t}\right)
+U_{i}^{n}
++\sum\limits_{j\ne i}A_{i,j}
+^{L} U_{j}^{\theta}-b_{i}^{\theta}\,.
+\end{eqnarray}
+%
+\end{subequations}
+%
+We note that, if the limiting coefficients $L_{i,j}$ are selected such
+that $\hat{p}_{i}^{-}\leq\hat{p}_{i}\leq\hat{p}_{i}^{+}$, then the
+solution bounds are satisfied: $U^{-}_{i}\leq U_{i}\leq U^{+}_{i}$.
+
+Limiters such as the Zalesak limiter described in Section~\ref{sec:limiter}
+are algebraic operators, taking as input the antidiffusion bounds
+$\hat{p}_{i}^{\pm}$ and the antidiffusive fluxes $P_{i,j}$ and
+returning as
+output the limiting coefficients $L_{i,j}$. It is important to note
+that most
+limiters, including the limiter described in this paper, assume the
+following: $\hat{p}_{i} ^{-}\leq0$, $\hat{p}_{i}^{+}\geq0$; the reasoning
+for this assumption is as follows. Recall that FCT starts from the low-order
+scheme, which is equivalent to the solution with $\hat{p}_{i}=0$. The limiter
+should start from this point so that there is a fail-safe solution for the
+FCT \xch{algorithm}{algoritm}: the low-order solution. Otherwise, there is no guarantee that
+any combination of values of limiting coefficients will achieve the desired
+condition $\hat{p}_{i}^{-}\leq\hat{p}_{i}\leq\hat{p}_{i} ^{+}$. If
+$\hat{p}_{i}^{-} > 0$ or $\hat{p}_{i}^{+} < 0$, then the starting
+state, the
+low-order solution, with $\hat{p}_{i}=0$ is an invalid solution of the FCT
+algorithm. Some solution bounds automatically satisfy $\hat
+{p}_{i}^{-}\leq0$
+and $\hat{p}_{i}^{+} \geq0$, but in general these conditions must be
+enforced. In this paper, the solution bounds are possibly widened by directly
+enforcing these assumptions:
+%
+%e48 #&#
+%e49 #&#
+\begin{eqnarray}[ll]
+\hat{p}_{i}^{-} \gets\min(0,\hat{p}_{i}^{-}) \,,\eqncr
+\hat{p}_{i}^{+} \gets\max(0,\hat{p}_{i}^{+}) \,.
+\end{eqnarray}
+%
+We have noted that omitting this step can lead to poor results. Without this
+step, the assumptions of the limiter are violated, and thus limiting
+coefficients that do not satisfy the imposed solution bounds may be
+generated.
+
+%s3.3.4 #&#
+\subsubsection{Limiting coefficients}%
+\label{sec:limiter}
+The results in this paper use the classic multi-dimensional limiter
+introduced by Zalesak \cite{zalesak}:
+%
+%e50 #&#
+\begin{subequations}
+%
+%e50.a #&#
+%e50.b #&#
+%e50.c #&#
+\begin{eqnarray}[ll]
+\label{eq:flux_sums}
+p_{i}^{+} \equiv\sum\limits_{j}\max(0,P_{i,j}) \,,
+\qquad
+p_{i}^{-} \equiv\sum\limits_{j}\min(0,P_{i,j}) \,,\eqncr
+\label{eq:single_node_limiting_coefficients}
+L_{i}^{\pm}\equiv\left\{
+%
+\begin{array}{l@{\quad} l}
+1 & p_{i}^{\pm}= 0
+\\
+\min\left( 1,\frac{\bar{p}_{i}^{\pm}}{p_{i}^{\pm}}\right) & p_{i}
+^{\pm}\ne0\,,
+\end{array}
+%
+\right. \eqncr
+\label{eq:limiting_coefficients}
+L_{i,j} \equiv\left\{
+%
+\begin{array}{l@{\quad} l}
+\min(L_{i}^{+},L_{j}^{-})
+& P_{i,j} \geq0
+\cr \noalign{\vspace{2pt}}
+\min(L_{i}^{-},L_{j}^{+})
+& P_{i,j} < 0\,.
+\end{array}
+%
+\right.
+\end{eqnarray}
+%
+\end{subequations}
+%
+The objective of a limiter is to maximize the amount of antidiffusion
+that can be accepted without violating the imposed solution constraints.
+Zalesak's limiter is one commonly used attempt at this objective due to
+its relatively simple form.
+
+%r3 #&#
+\begin{rmk}
+Note that it is possible to devise limiters accepting more antidiffusion
+than Zalesak's limiter, but one must sacrifice the simple, closed form
+of Zalesak's limiter and adapt a sequential algorithm for computing the
+antidiffusion coefficients. This approach has not been found in
+literature, most likely because the sequential aspect of the algorithm
+makes it node-order-dependent, which reduces reproducibility between
+implementations.
+\end{rmk}
+
+Finally, one could pass antidiffusive fluxes through a given limiter
+multiple times, using the remainder antidiffusive flux as the input in
+each pass, to increase the total antidiffusion accepted
+\cite{kuzmin_FCT,schar}; however, the results presented in this paper
+were all produced using the traditional single-pass approach through the
+Zalesak limiter.
+
+%s4 #&#
+\section{Results}%
+\label{sec:results}
+This section presents results for a number of test problems, which
+compare the solutions obtained using:
+%
+\begin{itemize}
+%
+\item
+the standard Galerkin FEM, \xch{labeled}{labelled} as ``Galerkin'' in the plots,
+%
+\item
+the low-order method, \xch{labeled}{labelled} in plots as ``Low'',
+%
+\item
+the entropy viscosity method, \xch{labeled}{labelled} in plots as ``EV'',
+%
+\item
+the standard Galerkin FEM with FCT, \xch{labeled}{labelled} in plots as
+``Galerkin-FCT'', and
+%
+\item
+the entropy viscosity method with FCT, \xch{labeled}{labelled} in plots as ``EV-FCT''.
+\end{itemize}
+%
+All problems assume a speed of $v=1$ (the speed effectively just changes
+the units of $\Delta t$) and an entropy function of $\eta(u)=
+\frac{1}{2}u^{2}$. Unless otherwise specified, the transport direction
+is in the positive $x$ direction: $\bm{\Omega}=\mathbf{e}_{x}$, and
+the entropy viscosity tuning parameters of $c_{\mathcal{R}}$ and
+$c_{\mathcal{J}}$ are set to 0.1. A third-order Gauss quadrature is used
+for spatial integration in all test cases.
+
+%s4.1 #&#
+\subsection{Spatial convergence tests}
+
+This 1-D, steady-state test problem uses the Method of Manufactured
+Solutions (MMS) with a solution of $u(x)=\sin(\pi x)$ on the domain
+$x\in(0,1)$. Zero Dirichlet boundary conditions are imposed on both
+boundaries. With $\sigma(x)=1$, the MMS source becomes $q(x)=\pi
+\cos(\pi x) + \sin(\pi x)$. The number of cells in the study starts
+at 8 for the coarsest mesh, and cells are refined by a factor of 2 in
+each cycle, ending with 256 cells.
+
+\reftext{Fig.~\ref{fig:mms_sinx_ss}} shows the $L^{2}$ norm errors for this
+convergence study and indicates first-order spatial convergence for the
+low-order method and second-order spatial convergence for the entropy
+viscosity (EV) method and EV-FCT method, as expected.
+
+%f2 #&#
+\begin{figure}
+\includegraphics{7667f02}
+\caption{Spatial convergence for MMS problem.}
+\label{fig:mms_sinx_ss}
+\end{figure}
+
+%f3 #&#
+\begin{figure}
+\includegraphics{7667f03}
+\caption{Comparison of solutions for the glance-in-void test problem using
+explicit Euler time discretization\xch{. (For interpretation of the colors in this figure, the
+reader is referred to the web version of this article.)}{.}}
+\label{fig:glance_in_void_fe}
+\end{figure}
+
+
+%s4.2 #&#
+\subsection{Glancing beam in a void}
+
+This 2-D test problem is on the unit square: $\mathbf{x}\in(0,1)^{2}$
+and simulates a beam incident on the bottom boundary of a void region
+($\sigma(\mathbf{x})= 0$, $q(\mathbf{x})=0$) at a shallow angle of
+$21.94^{\circ}$ with respect to the $x$-axis ($\Omega_{x}=\cos(21.94^{
+\circ})$, $\Omega_{y}=\sin(21.94^{\circ})$). The exact solution of
+this problem contains a discontinuity along the line $y = \frac{\Omega
+_{y}}{\Omega_{x}}x$, which presents opportunity for the formation of
+spurious oscillations. This is run as a pseudo-transient problem with
+zero initial conditions until steady-state is reached. A Dirichlet
+boundary condition is imposed on the incoming sides of the problem, with
+a value of 1 on the bottom boundary and a value of 0 on the left
+boundary.
+
+This problem is run with Explicit Euler time discretization and a CFL
+number of 0.5 on a $64\times64$ mesh. \reftext{Fig.~\ref{fig:glance_in_void_fe}} compares the numerical solutions for this
+problem obtained with the low-order, EV, Galerkin-FCT, and EV-FCT
+schemes. The Galerkin scheme (without FCT) produced spurious
+oscillations without bound, so those results are omitted here. The same
+color scale is used for each image: the dark red shown in the low-order
+and the two FCT sub-plots corresponds to the incoming value of 1, and
+the blue in these same sub-plots corresponds to zero. The darker blues
+and reds shown in the EV sub-plot indicate undershoots and overshoots,
+respectively. Both FCT solutions keep the solution within the imposed
+physical bounds, but one can see from the Galerkin-FCT results that some
+``terracing'' effects are present; this behavior is a well-known
+artifact of traditional FCT schemes \cite{kuzmin_FCT}. In this
+case, and in all observed cases of the terracing phenomenon, the EV-FCT
+scheme shows a reduction of this effect: the addition of the
+entropy-based artificial viscosity decreases the magnitude of the
+spurious oscillations in the high-order scheme and thus lessens the
+burden on the limiter.
+
+
+%s4.3 #&#
+\subsection{Obstruction test}%
+\label{sec:obstruction}
+This is a 2-D, two-region problem on the unit square $(0,1)^{2}$ with
+a beam incident on the left and bottom boundaries at an angle of
+$45^{\circ}$ with the x-axis. The center region $(\frac{1}{3},
+\frac{2}{3})^{2}$ is an absorber region with $\sigma(\mathbf{x})=10$
+and $q(\mathbf{x})=0$, and the surrounding region is a void ($\sigma
+(\mathbf{x})=0$, $q(\mathbf{x})=0$).
+
+This problem was run with Implicit Euler with a CFL of 1 to steady-state
+on a $32\times32$ mesh. The results are shown in \reftext{Fig.~\ref{fig:obstruction_be}}. The low-order solution is especially diffusive
+and shows a fanning of the solution after it passes the corners of the
+obstruction, which is not present in any of the high-order schemes. The
+EV solution contains oscillations, although they are much less
+significant than in the Galerkin solution. Both FCT schemes show a lack
+of these oscillations, but the Galerkin-FCT solutions shows a terracing
+effect. The EV-FCT solution also has this effect but to a much smaller
+degree.
+
+%f4 #&#
+\begin{figure}
+\includegraphics{7667f04}
+\caption{Comparison of solutions for the obstruction test problem using implicit
+Euler time discretization.}
+\label{fig:obstruction_be}
+\end{figure}
+
+%t1 #&#
+\begin{table}[b]
+\tablewidth=8cm
+\caption{Nonlinear iterations vs. CFL number for the obstruction test problems.}
+\label{tab:obstruction_iterations}
+\thead
+%
+\begin{tabular*}{\tablewidth}{*{7}{l}}
+\hline
+\tmultirow{2}{*}{CFL} & \tmultirow{2}{*}{Relax} & \multicolumn{2}{l}{{EV}} & \multicolumn{2}{l}{{FCT}} &
+\tmultirow{2}{*}{$L^{2}$ {Err.}}\\
+\ccline{3-4,5-6}
+& & {Total} & {Avg.} & {Total} & {Avg.} &\\
+\hline
+\endthead
+0.1 & -- & 6204 & 8.43 & 5223 & 7.23 & $5.084\times10^{-2}$\\
+0.5 & -- & 1386 & 9.36 & 2239 & 15.13 & $5.079\times10^{-2}$\\
+1.0 & -- & 791 & 10.69 & 1588 & 21.46 & $5.111\times10^{-2}$\\
+5.0 & -- & 265 & 17.67 & 1780 & 118.67 & $5.980\times10^{-2}$\\
+10.0 & -- & 150 & 18.75 & 1298 & 162.25 & $9.854\times10^{-2}$\\
+20.0 & -- & -- & -- & \multicolumn{2}{c}{(failure)} & --\\
+20.0 & 0.9 & 66 & 16.50 & 935 & 233.50 & $1.295\times10^{-1}$\\
+\hline
+\end{tabular*}
+%
+\end{table}
+
+\reftext{Table~\ref{tab:obstruction_iterations}} shows the results for a
+parametric study on the number of nonlinear iterations required for EV
+and EV-FCT for various CFL numbers on a $16\times16$ mesh, to an end
+time of $t=1.5$. Recall that in the FCT algorithm, one first computes
+the high-order solution (here, EV), which is necessary for computation
+of the antidiffusive fluxes. The number of nonlinear iterations for this
+solve is given in the column labeled as ``EV''. The FCT limiting
+procedure is also nonlinear; the number of nonlinear iterations for this
+solve is given in the ``FCT'' column. While these results indicate that
+increasing the CFL number decreases the total computational work in
+reaching the end of the transient, it should be noted that the quality
+of the FCT solution deteriorates significantly for large CFL numbers;
+see the ``$L^{2}$ Err.'' column. As discussed previously, the solution
+bounds are implicit and thus change with each iteration. This challenge
+is compounded in the case of large time step sizes; as time step size
+increases, the solution bounds widen, and successive FCT solution
+iterates differ more than for smaller time step sizes. This trend is
+suggested in the rate of increase in the number of FCT iterations per
+time step in \reftext{Table~\ref{tab:obstruction_iterations}}, which is
+significantly larger than the rate of increase of EV iterations per time
+step. However, this issue can be mitigated using a relaxation factor on
+the iterative solution updates; for example, for the failing case of CFL
+number equal to 20, convergence can be achieved with a relaxation factor
+of 0.9, giving average iterations per time step of 14.33 and 221.67 for
+EV and FCT, respectively.
+
+
+%s4.4 #&#
+\subsection{Two-region interface}
+
+This 1-D test problem simulates the interface between two regions with
+varying cross section and source values on the domain $(0,1)$. The left
+half of the domain has values $\sigma(\mathbf{x})=10$ and $q(
+\mathbf{x})=10$, for which the transport solution will reach a
+saturation value of $\frac{q}{\sigma}=1$, while the right half has
+values of $\sigma(\mathbf{x})=40$ and $q(\mathbf{x})=20$, giving it a
+saturation value of $\frac{q}{\sigma}=0.5$. The transport direction is
+$\di=\mathbf{e}_{x}$, with zero incident flux on the left boundary.
+
+This problem was run using SSPRK33 time discretization with a CFL of 1
+to steady-state with 32 cells. \reftext{Fig.~\ref{fig:interface}} shows the
+results for this test problem. The low-order solution suffers from the
+significant artificial diffusion, while the Galerkin solution suffers
+from significant spurious oscillations. The EV scheme eliminates some
+of the first oscillations, but a number of oscillations of a similar
+magnitude to those produced by the Galerkin scheme still exists to the
+left of the interface. The sets ``$U^{-}$'' and ``$U^{+}$'' correspond
+to the minimum and maximum solution bounds, respectively, of each FCT
+scheme (the differences between the bounds of the two FCT schemes are
+insignificant here). Both FCT schemes effectively eliminate spurious
+oscillations without approaching the level of unnecessary artificial
+diffusion achieved by the low-order scheme. For this test problem, the
+Galerkin-FCT solution is slightly superior to the EV-FCT solution and
+the ``terracing'' phenomenon of FCT is not present.
+
+%f5 #&#
+\begin{figure}
+\includegraphics{7667f05}
+\caption{Comparison of solutions for the two-region interface test problem using
+SSPRK33 time discretization.}
+\label{fig:interface}
+\end{figure}
+
+%s4.5 #&#
+\subsection{Source in a void test}
+
+This 1-D test problem has two regions, the left being a void but with
+a source: $\sigma(\mathbf{x})=0$ and $q(\mathbf{x})=1$, and the right
+being an absorber without a source: $\sigma(\mathbf{x})=10$ and
+$q(\mathbf{x})=0$. This does not represent \xch{necessarily}{necessairly} a non-physical
+problem: due to the energy dependence of the particle distribution, it
+is possible to have a strong inscattering source term in an energy
+bandwidth where the interaction coefficient is small; here we emphasize
+the weak interaction probability by zero-ing out the reaction term. A
+zero Dirichlet boundary condition is imposed on the incoming (left)
+boundary, and this problem is run as a steady-state problem on the
+domain $(0,1)$ with 32 cells.
+
+For this problem, the entropy residual and jump coefficients
+$c_{\mathcal{R}}$ and $c_{\mathcal{J}}$ are set to 0.5; the default
+value of 0.1 was found to be too small for this problem.
+\reftext{Fig.~\ref{fig:source_in_void}} shows the results for this problem. The
+Galerkin solution has ``kinks'' along the void (left) region, but shows
+point-wise matching of the exact solution in the absorber (right)
+region. The EV solution, however, eliminates the terracing effect in the
+void region but suffers from an inflated peak at the interface, due to
+entropy production at the interface. The EV-FCT solution bounds
+generated for this problem are denoted as ``$U^{-}$, EV-FCT'' and ``$U
+^{+}$, EV-FCT''. For this test problem, the Galerkin-FCT scheme gives
+superior results to that of the EV-FCT scheme. However, both FCT schemes
+suffer from the familiar FCT phenomenon known as ``peak-clipping'',
+whereby the ``mass'' that should be present in the peak has been
+redistributed by the FCT limiter, flattening the peak.
+
+%f6 #&#
+\begin{figure}
+\includegraphics{7667f06}
+\caption{Comparison of solutions for the source-in-void test problem using
+steady-state time discretization.}
+\label{fig:source_in_void}
+\end{figure}
+
+%s5 #&#
+\section{Conclusions}%
+\label{sec:conclusions}
+An FCT scheme has been proposed for the particle transport equation. It
+is has been applied to the following model equation problem, an
+advection problem with reaction and source terms,
+%
+%e51 #&#
+\begin{equation}
+\label{eq:ccl}
+\frac{\partial u}{\partial t} + v\di\cdot\nabla u(\mathbf{x},t)+
+\sigma(\mathbf{x}) u(\mathbf{x},t)= q(\mathbf{x},t)\,,
+\end{equation}
+%
+which corresponds to the classic Source Iteration equation for particle
+transport, where extraneous, inscatter, and fission sources are
+collected in the right-hand-side term $q$. The FCT methodology relies
+on a lower-order solution and a high-order solution. For the low-order
+solution, we have used a first-order viscosity approach, based on the
+graph-\xch{theoretic}{theoric} method of Guermond et al.
+\cite{guermond_firstorder} for scalar conservation laws and extends
+these previous works to situations with reaction and source terms
+present. The low-order scheme is shown to be positivity-preserving
+through the use of the M-matrix properties. The high-order solution
+employs an entropy-based artificial stabilization. The entropy residual
+approach is derived for the transport equation shown in
+Equation~\reftext{\eqref{eq:ccl}}. Temporal discretizations include explicit and
+implicit schemes in time, as well as steady state, the latter two cases
+making the FCT algorithm implicit as well. The standard Zalesak limiter
+is utilized to limit between the low- and high-order solutions.
+
+The FCT scheme described in this paper is second-order accurate in
+space, converges to the entropy solution, and preserves non-negativity.
+Spurious oscillations are mitigated but are not guaranteed to be
+eliminated, as smaller magnitude oscillations may exist within the
+imposed solution bounds.
+
+The traditional FCT phenomenon known as ``stair-stepping'',
+``terracing'', or ``plateauing'' is still an open issue, particularly
+for fully explicit temporal discretizations; however, these effects have
+been shown to diminish or disappear when using SSPRK33 as opposed to
+explicit Euler. In addition, these effects are less pronounced for
+EV-FCT than in the classic FEM-FCT scheme, which uses the standard
+Galerkin method as the high-order method in FCT.
+
+The explicit temporal discretizations of the described FCT scheme yield
+a robust algorithm; however, implicit and steady-state discretizations
+are less robust, suffering from nonlinear convergence difficulties in
+some problems. The main complication with implicit and steady-state FCT
+schemes is that the imposed solution bounds are implicit with the
+solution, and thus the imposed solution bounds change with each
+iteration of the nonlinear solver.
+
+Future work on this subject should mainly focus on the
+implicit/steady-state iteration techniques because of the convergence
+difficulties encountered for some problems. This work used fixed-point
+iteration, but one can attempt using an alternative such as Newton's
+method. The main challenge is the evolving solution bounds, which will
+present difficulty to any nonlinear solution algorithm. Other work could
+be performed for the FCT algorithm in general: for example, the
+terracing phenomenon still deteriorates FCT solutions.
+
+\begin{acks}
+This research was carried out under the auspices of the \gsponsor[id=GS3,sponsor-id=100000015,country=United States]{\xch{U.S. Department of Energy}{US Department of Energy}} (Grant number \gnumber[refid=GS3]{DE-NE-0000112}) and the Idaho National
+Laboratory, a contractor of the \gsponsor[id=GS4]{U.S. Government} under contract No.
+\gnumber[refid=GS4]{DEAC07-05ID14517}.
+\end{acks}
+
+%\begin{appm}
+%\def\the...{}
+%\reset{}{}
+%\appendix{}
+%\appendix*{}
+%\end{appm}%
+%spell_to ********** End of text entry *****************
+%
+\begin{backmatter}%
+%
+% structpyb loaded by ritac, 2017-10-24 13:32:56
+\begin{thebibliography}{}
+
+%b1 ###
+%b1 #&#
+\bibitem{guermond_ev}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{J.-L.} \snm{Guermond}}
+\bauthor{\fnm{R.} \snm{Pasquetti}}
+\bauthor{\fnm{B.} \snm{Popov}}
+\btitle{Entropy viscosity method for nonlinear conservation laws}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{J. Comput. Phys.} \bvolumeno{230}}
+\bdate{2011}
+\end{bissue}
+\bpages{\bfirstpage{4248}\blastpage{4267}}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+J.-L. Guermond, R.~Pasquetti, B.~Popov, Entropy viscosity method for
+nonlinear conservation laws, Journal of Computational Physics 230 (2011)
+4248--4267.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b2 ###
+%b2 #&#
+\bibitem{glasstone}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{G.I.} \snm{Bell}}
+\bauthor{\fnm{S.} \snm{Glasstone}}
+\btitle{Nuclear Reactor Theory}
+\end{bcontribution}
+\begin{bhost}
+\begin{bbook}
+\bdate{1970}
+\bpublisher{\bname{Litton Educational Publishing, Inc.}}
+\end{bbook}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+G.~I. Bell, S.~Glasstone, Nuclear Reactor Theory, Litton Educational
+Publishing, Inc., 1970.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b3 ###
+%b3 #&#
+\bibitem{radiotherapy}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{M.} \snm{Sch\"{a}fer}}
+\bauthor{\fnm{M.} \snm{Frank}}
+\bauthor{\fnm{M.} \snm{Herty}}
+\btitle{Optimal treatment planning in radiotherapy based on Boltzmann transport calculations}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{Math. Models Methods Appl. Sci.} \bvolumeno{18}}
+\bissueno{4}
+\bdate{2008}
+\end{bissue}
+\bpages{\bfirstpage{573}\blastpage{592}}
+\bdoi[https://doi.org/10.1142/S0218202508002784]{10.1142/S0218202508002784}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+M.~Sch\"afer, M.~Frank, M.~Herty, Optimal treatment planning in
+radiotherapy based on {B}oltzmann transport calculations, Mathematical
+Models and Methods in Applied Sciences 18~(4) (2008) 573--592.
+\newblock
+doi:10.1142/S0218202508002784.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b4 ###
+%b4 #&#
+\bibitem{astrophysics_textbook}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{P.} \snm{Bodenheimer}} \betal
+\btitle{Numerical Methods in Astrophysics: An Introduction}
+\end{bcontribution}
+\begin{bhost}
+\begin{bbook}
+\bdate{2006}
+\bpublisher{\bname{CRC Press}}
+\end{bbook}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+P.~Bodenheimer, et~al., Numerical Methods in Astrophysics: An
+Introduction, CRC Press, 2006.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b5 ###
+%b5 #&#
+\bibitem{lewis}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{E.E.} \snm{Lewis}}
+\bauthor{\fnm{W.F.} \snm{Miller}}
+\btitle{Computational Methods of Neutron Transport}
+\end{bcontribution}
+\begin{bhost}
+\begin{bbook}
+\bdate{1993}
+\bpublisher{\bname{American Nuclear Society}\blocation{La Grange Park, IL}}
+\end{bbook}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+E.~E. Lewis, W.~F. Miller, Computational Methods of Neutron Transport,
+American Nuclear Society, La Grange Park, IL, 1993.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b6 ###
+%b6 #&#
+\bibitem{laser_plasmas}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{K.} \snm{Eidmann}}
+\btitle{Radiation transport and atomic physics modeling in high-energy-density
+laser-produced plasmas}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{Laser Part. Beams} \bvolumeno{12}}
+\bissueno{2}
+\bdate{1994}
+\end{bissue}
+\bpages{\bfirstpage{223}\blastpage{244}}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+K.~Eidmann, Radiation transport and atomic physics modeling in
+high-energy-density laser-produced plasmas, Laser and Particle Beams
+12~(2) (1994) 223--244.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b7 ###
+%b7 #&#
+\bibitem{duderstadt}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{J.J.} \snm{Duderstadt}}
+\bauthor{\fnm{W.R.} \snm{Martin}}
+\btitle{Transport Theory}
+\end{bcontribution}
+\begin{bhost}
+\begin{bbook}
+\bdate{1979}
+\bpublisher{\bname{John Wiley \& Sons}}
+\end{bbook}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+J.~J. Duderstadt, W.~R. Martin, Transport Theory, John Wiley \& Sons,
+1979.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b8 ###
+%b8 #&#
+\bibitem{Lesaint1974}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{P.} \snm{Lesaint}}
+\bauthor{\fnm{P.A.} \snm{Raviart}}
+\btitle{On a finite element method for solving the neutron transport equation}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{Publ. Math. Inf. Rennes} \bvolumeno{4}}
+\bdate{1974}
+\end{bissue}
+\bpages{\bfirstpage{1}\blastpage{40}}
+\end{bhost}
+\begin{bhost}
+\begin{behost}
+\binterref[locator-type=url]{http://eudml.\wwwbreak org/doc/273730}
+\end{behost}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+P.~Lesaint, P.~A. Raviart, On a finite
+element method for solving the neutron transport equation, Publications
+math\'ematiques et informatique de Rennes S4 (1974) 1--40.
+http://eudml.org/doc/273730
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b9 ###
+%b9 #&#
+\bibitem{Reed_Hill_1973}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{W.} \snm{Reed}}
+\bauthor{\fnm{T.} \snm{Hill}}
+\btitle{Triangular Mesh Methods for the Neutron Transport Equation}
+\end{bcontribution}
+\bcomment{Tech. Rep. LA-UR-73-479}\prnsep{,\ }
+\begin{bhost}
+\begin{bbook}[class=report]
+\bdate{1973}
+\bpublisher{\bname{Los Alamos Scientific Laboratory}}
+\end{bbook}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+W.~Reed, T.~Hill, Triangular mesh methods for the neutron transport
+equation, Tech. Rep. LA-UR-73-479, Los Alamos Scientific Laboratory
+(1973).
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b10 ###
+%b10 #&#
+\bibitem{zingan_2013}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{V.} \snm{Zingan}}
+\bauthor{\fnm{J.-L.} \snm{Guermond}}
+\bauthor{\fnm{J.} \snm{Morel}}
+\bauthor{\fnm{B.} \snm{Popov}}
+\btitle{Implementation of the entropy viscosity method with the discontinuous Galerkin method}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{Comput. Methods Appl. Mech. Eng.} \bvolumeno{253}}
+\bdate{2013}
+\end{bissue}
+\bpages{\bfirstpage{479}\blastpage{490}}
+\bdoi[https://doi.org/10.1016/j.cma.2012.08.018]{10.1016/j.cma.2012.08.018}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+V.~{Zingan}, J.-L. Guermond, J.~{Morel}, B.~{Popov}, {Implementation
+of the entropy viscosity method with the discontinuous Galerkin method},
+Computer Methods in Applied Mechanics and Engineering 253 (2013)
+479--490.
+\newblock doi:10.1016/j.cma.2012.08.018.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b11 ###
+%b11 #&#
+\bibitem{lathrop}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{K.D.} \snm{Lathrop}}
+\btitle{Spatial differencing of the transport equation: positivity vs. accuracy}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{J. Comput. Phys.} \bvolumeno{4}}
+\bdate{1969}
+\end{bissue}
+\bpages{\bfirstpage{475}\blastpage{498}}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+K.~D. Lathrop, Spatial differencing of the transport equation:
+Positivity vs. accuracy, Journal of Computational Physics 4 (1969)
+475--498.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b12 ###
+%b12 #&#
+\bibitem{hamilton}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{S.} \snm{Hamilton}}
+\bauthor{\fnm{M.} \snm{Benzi}}
+\btitle{Negative flux fixups in discontinuous finite element sn transport}
+\end{bcontribution}
+\begin{bhost}
+\begin{beditedbook}
+\btitle{International Conference on Mathematics, Computational Methods \& Reactor Physics}
+\bdate{2009}
+\end{beditedbook}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+S.~Hamilton, M.~Benzi, Negative flux fixups in discontinuous finite
+element sn transport, in: International Conference on Mathematics,
+Computational Methods \& Reactor Physics, 2009.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b13 ###
+%b13 #&#
+\bibitem{walters_NC}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{W.F.} \snm{Walters}}
+\bauthor{\fnm{T.A.} \snm{Wareing}}
+\btitle{An accurate, strictly-positive, nonlinear characteristic scheme
+for the discrete ordinates equations}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{Transp. Theory Stat. Phys.} \bvolumeno{25}}
+\bissueno{2}
+\bdate{1996}
+\end{bissue}
+\bpages{\bfirstpage{197}\blastpage{215}}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+W.~F. Walters, T.~A. Wareing, An accurate, strictly-positive, nonlinear
+characteristic scheme for the discrete ordinates equations, Transport
+Theory and Statistical Physics 25~(2) (1996) 197--215.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b14 ###
+%b14 #&#
+\bibitem{wareing}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{T.A.} \snm{Wareing}}
+\btitle{An exponential discontinuous scheme for discrete-ordinate calculations
+in cartesian geometries}
+\end{bcontribution}
+\begin{bhost}
+\begin{beditedbook}
+\btitle{Joint International Conference on Mathematical Methods and Supercomputing
+in Nuclear Applications}
+\bconference{Saratoga Springs, NY}
+\bdate{1997}
+\end{beditedbook}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+T.~A. Wareing, An exponential discontinuous scheme for discrete-ordinate
+calculations in cartesian geometries, in: Joint International Conference
+on Mathematical Methods and Supercomputing in Nuclear Applications,
+Saratoga Springs, NY, 1997.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b15 ###
+%b15 #&#
+\bibitem{maginot}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{P.} \snm{Maginot}}
+\btitle{A Nonlinear Positive Extension of the Linear Discontinuous Spatial
+Discretization of the Transport Equation}
+\end{bcontribution}
+\bcomment{Master's Thesis}\prnsep{,\ }
+\begin{bhost}
+\begin{bbook}[class=report]
+\bdate{December 2010}
+\bpublisher{\bname{Texas A\&M University}}
+\end{bbook}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+P.~Maginot, A nonlinear positive extension of the linear discontinuous
+spatial discretization of the transport equation, Master's thesis, Texas
+A\&M University (December 2010).
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b16 ###
+%b16 #&#
+\bibitem{maginot_mc2015}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{P.} \snm{Maginot}}
+\btitle{A non-negative, non-linear Petrov--Galerkin method for bilinear
+discontinuous differencing of the Sn equations}
+\end{bcontribution}
+\begin{bhost}
+\begin{beditedbook}
+\btitle{Joint International Conference on Mathematics and Computation,
+Supercomputing in Nuclear Applications, and the Monte Carlo Method}
+\bconference{M\&C 2015, Nashville, TN}
+\bdate{2015}
+\end{beditedbook}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+P.~Maginot, A non-negative, non-linear {P}etrov-{G}alerkin method for
+bilinear discontinuous differencing of the {S}n equations, in: Joint
+International Conference on Mathematics and Computation, Supercomputing
+in Nuclear Applications, and the Monte Carlo Method (M\&C 2015),
+Nashville, TN, 2015.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b17 ###
+%b17 #&#
+\bibitem{maginot_2017}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{P.G.} \snm{Maginot}}
+\bauthor{\fnm{J.C.} \snm{Ragusa}}
+\bauthor{\fnm{J.E.} \snm{Morel}}
+\btitle{Nonnegative methods for bilinear discontinuous differencing of
+the sn equations on quadrilaterals}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{Nucl. Sci. Eng.} \bvolumeno{185}}
+\bissueno{1}
+\bdate{2017}
+\end{bissue}
+\bpages{\bfirstpage{53}\blastpage{69}}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+P.~G. Maginot, J.~C. Ragusa, J.~E. Morel, Nonnegative methods for
+bilinear discontinuous differencing of the sn equations on
+quadrilaterals, Nuclear Science and Engineering 185~(1) (2017) 53--69.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b18 ###
+%b18 #&#
+\bibitem{borisbook}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{J.P.} \snm{Boris}}
+\bauthor{\fnm{D.L.} \snm{Book}}
+\btitle{Flux-corrected transport, I: SHASTA, a fluid transport algorithm that works}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{J. Comput. Phys.} \bvolumeno{11}}
+\bdate{1973}
+\end{bissue}
+\bpages{\bfirstpage{38}\blastpage{69}}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+J.~P. Boris, D.~L. Book, Flux-corrected transport i. SHASTA, a fluid
+transport algorithm that works, Journal of Computational Physics 11
+(1973) 38--69.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b19 ###
+%b19 #&#
+\bibitem{zalesak}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{S.T.} \snm{Zalesak}}
+\btitle{Fully multidimensional flux-corrected transport algorithms for fluids}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{J. Comput. Phys.} \bvolumeno{31}}
+\bdate{1979}
+\end{bissue}
+\bpages{\bfirstpage{335}\blastpage{362}}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+S.~T. Zalesak, Fully multidimensional flux-corrected transport
+algorithms for fluids, Journal of Computational Physics 31 (1979)
+335--362.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b20 ###
+%b20 #&#
+\bibitem{parrott}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{A.K.} \snm{Parrott}}
+\bauthor{\fnm{M.A.} \snm{Christie}}
+\btitle{FCT applied to the 2-d finite element solution of tracer transport
+by single phase flow in a porous medium}
+\end{bcontribution}
+\begin{bhost}
+\begin{beditedbook}
+\btitle{Proceedings on the ICFD Conference on Numerical Methods in Fluid Dynamics}
+\bdate{1986}
+\bpublisher{\bname{Oxford University Press}}
+\end{beditedbook}
+\bpages{\bfirstpage{609}}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+A.~K. Parrott, M.~A. Christie, Fct applied to the 2-d finite element
+solution of tracer transport by single phase flow in a porous medium,
+in: Proceedings on the ICFD Conference on Numerical Methods in Fluid
+Dynamics, Oxford University Press, 1986, p. 609.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b21 ###
+%b21 #&#
+\bibitem{lohner}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{R.} \snm{L\"{o}hner}}
+\bauthor{\fnm{K.} \snm{Morgan}}
+\bauthor{\fnm{J.} \snm{Peraire}}
+\bauthor{\fnm{M.} \snm{Vahdati}}
+\btitle{Finite element flux-corrected transport (FEM-{FCT}) for the Euler
+and Navier--Stokes equations}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{Int. J. Numer. Methods Fluids} \bvolumeno{7}}
+\bdate{1987}
+\end{bissue}
+\bpages{\bfirstpage{1093}\blastpage{1109}}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+R.~L\"ohner, K.~Morgan, J.~Peraire, M.~Vahdati, Finite element
+flux-corrected transport (FEM-{FCT}) for the {E}uler and
+{N}avier-{S}tokes equations, International Journal for Numerical Methods
+in Fluids 7 (1987) 1093--1109.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b22 ###
+%b22 #&#
+\bibitem{kuzmin_FCT}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{D.} \snm{Kuzmin}}
+\bauthor{\fnm{R.} \snm{L\"{o}hner}}
+\bauthor{\fnm{S.} \snm{Turek}}
+\btitle{Flux-Corrected Transport}
+\end{bcontribution}
+\begin{bhost}
+\begin{bbook}
+\bedition{1st edition}
+\bdate{2005}
+\bpublisher{\bname{Springer-Verlag}\blocation{Berlin, Heidelberg, Germany}}
+\end{bbook}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+D.~Kuzmin, R.~L\"ohner, S.~Turek, Flux-Corrected Transport, 1st
+Edition, Springer-Verlag Berlin Heidelberg, Germany, 2005.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b23 ###
+%b23 #&#
+\bibitem{kuzmin_general}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{D.} \snm{Kuzmin}}
+\btitle{On the design of general-purpose flux limiters for finite element
+schemes, I: scalar convection}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{J. Comput. Phys.} \bvolumeno{219}}
+\bdate{2006}
+\end{bissue}
+\bpages{\bfirstpage{513}\blastpage{531}}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+D.~Kuzmin, On the design of general-purpose flux limiters for finite
+element schemes. I. scalar convection, Journal of Computational
+Physics 219 (2006) 513--531.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b24 ###
+%b24 #&#
+\bibitem{moller_2008}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{M.} \snm{M\"{o}ller}}
+\bauthor{\fnm{D.} \snm{Kuzmin}}
+\bauthor{\fnm{D.} \snm{Kourounis}}
+\btitle{Implicit {FEM-FCT} algorithms and discrete Newton methods for
+transient convection problems}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{Int. J. Numer. Methods Fluids} \bvolumeno{57}}
+\bdate{2008}
+\end{bissue}
+\bpages{\bfirstpage{761}\blastpage{792}}
+\bdoi[https://doi.org/10.1002/fld.1654]{10.1002/fld.1654}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+M.~M\"oller, D.~Kuzmin, D.~Kourounis, Implicit {FEM-FCT} algorithms
+and discrete {N}ewton methods for transient convection problems,
+International Journal for Numerical Methods in Fluids 57 (2008)
+761--792.
+\newblock doi:10.1002/fld.1654.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b25 ###
+%b25 #&#
+\bibitem{kuzmin_failsafe}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{D.} \snm{Kuzmin}}
+\bauthor{\fnm{M.} \snm{M\"{o}ller}}
+\bauthor{\fnm{J.N.} \snm{Shadid}}
+\bauthor{\fnm{M.} \snm{Shashkov}}
+\btitle{Failsafe flux limiting and constrained data projections for equations of gas dynamics}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{J. Comput. Phys.}}
+\bdate{2010}
+\end{bissue}
+\bpages{\bfirstpage{761}\blastpage{792}}
+\bdoi[https://doi.org/10.1016/j.jcp.2010.08.009]{10.1016/j.jcp.2010.08.009}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+D.~Kuzmin, M.~M\"oller, J.~N. Shadid, M.~Shashkov, Failsafe flux
+limiting and constrained data projections for equations of gas dynamics,
+Journal of Computational
+Physicsdoi:10.1016/j.jcp.2010.08.009.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b26 ###
+%b26 #&#
+\bibitem{kuzmin_closepacking}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{D.} \snm{Kuzmin}}
+\bauthor{\fnm{Y.} \snm{Gorb}}
+\btitle{A flux-corrected transport algorithm for handling the close-packing
+limit in dense suspensions}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{J. Comput. Appl. Math.} \bvolumeno{236}}
+\bdate{2012}
+\end{bissue}
+\bpages{\bfirstpage{4944}\blastpage{4951}}
+\bdoi[https://doi.org/10.1016/j.cam.2011.10.019]{10.1016/j.cam.2011.10.019}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+D.~Kuzmin, Y.~Gorb, A flux-corrected transport algorithm for handling
+the close-packing limit in dense suspensions, Journal of Computational
+and Applied Mathematics 236 (2012) 4944--4951.
+\newblock doi:10.1016/j.cam.2011.10.019.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b27 ###
+%b27 #&#
+\bibitem{guermond_secondorder}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{J.-L.} \snm{Guermond}}
+\bauthor{\fnm{M.} \snm{Nazarov}}
+\bauthor{\fnm{B.} \snm{Popov}}
+\bauthor{\fnm{Y.} \snm{Yang}}
+\btitle{A second-order maximum principle preserving Lagrange finite
+element technique for nonlinear scalar conservation equations}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{SIAM J. Numer. Anal.} \bvolumeno{52}}
+\bdate{2014}
+\end{bissue}
+\bpages{\bfirstpage{2163}\blastpage{2182}}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+J.-L. Guermond, M.~Nazarov, B.~Popov, Y.~Yang, A second-order maximum
+principle preserving {L}agrange finite element technique for nonlinear
+scalar conservation equations, SIAM Journal on Numerical Analysis 52
+(2014) 2163--2182.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b28 ###
+%b28 #&#
+\bibitem{guermond_firstorder}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{J.-L.} \snm{Guermond}}
+\bauthor{\fnm{M.} \snm{Nazarov}}
+\btitle{A maximum-principle preserving {$C^0$} finite element method
+for scalar conservation equations}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{Comput. Methods Appl. Mech. Eng.} \bvolumeno{272}}
+\bdate{2014}
+\end{bissue}
+\bpages{\bfirstpage{198}\blastpage{213}}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+J.-L. Guermond, M.~Nazarov, A maximum-principle preserving {$C^{0}$}
+finite element method for scalar conservation equations, Computational
+Methods in Applied Mechanics and Engineering 272 (2014) 198--213.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b29 ###
+%b29 #&#
+\bibitem{gottlieb}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{S.} \snm{Gottlieb}}
+\btitle{On high order strong stability preserving Runge--Kutta and
+multi step time discretizations}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{J. Sci. Comput.} \bvolumeno{25}}
+\bissueno{1}
+\bdate{2005}
+\end{bissue}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+S.~Gottlieb, On high order strong stability preserving {R}unge-{K}utta
+and multi step time discretizations, Journal of Scientific Computing
+25~(1).
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b30 ###
+%b30 #&#
+\bibitem{macdonald}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{C.B.} \snm{Macdonald}}
+\btitle{Constructing High-Order Runge--Kutta Methods with Embedded
+Strong-Stability-Preserving Pairs}
+\end{bcontribution}
+\bcomment{Master's Thesis}\prnsep{,\ }
+\begin{bhost}
+\begin{bbook}[class=report]
+\bdate{August 2003}
+\bpublisher{\bname{Acadia University}}
+\end{bbook}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+C.~B. Macdonald, Constructing high-order {R}unge-{K}utta methods with
+embedded strong-stability-preserving pairs, Master's thesis, Acadia
+University (August 2003).
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b31 ###
+%b31 #&#
+\bibitem{plemmons}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{R.J.} \snm{Plemmins}}
+\btitle{M-matrix characterizations, I: nonsingular m-matrices}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{Linear Algebra Appl.} \bvolumeno{18}}
+\bissueno{2}
+\bdate{1977}
+\end{bissue}
+\bpages{\bfirstpage{175}\blastpage{188}}
+\bdoi[https://doi.org/10.1016/0024-3795\wwwbreak (77)90073-8]{10.1016/0024-3795(77)90073-8}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+R.~J. Plemmins, M-matrix characterizations I. -- nonsingular
+m-matrices, Linear Algebra and its Applications 18~(2) (1977) 175--188.
+\newblock doi:10.1016/0024-3795(77)90073-8.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b32 ###
+%b32 #&#
+\bibitem{marco_low_mach}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{M.-O.} \snm{Delchini}}
+\btitle{Entropy-based viscous regularization for the multi-dimensional Euler
+equations in low-Mach and transonic flows}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{Comput. Fluids} \bvolumeno{118}}
+\bdate{2015}
+\end{bissue}
+\bpages{\bfirstpage{225}\blastpage{244}}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+M.-O. Delchini, Entropy-based viscous regularization for the multi-d
+{E}uler equations in low-mach and transonic flows, Computers and Fluids
+118~(225--244).
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b33 ###
+%b33 #&#
+\bibitem{marco_SEM}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{M.-O.} \snm{Delchini}}
+\bauthor{\fnm{J.C.} \snm{Ragusa}}
+\bauthor{\fnm{R.A.} \snm{Berry}}
+\btitle{Viscous regularization for the non-equilibrium seven-equation two-phase flow model}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{J. Sci. Comput.} \bvolumeno{69}}
+\bissueno{2}
+\bdate{2016}
+\end{bissue}
+\bpages{\bfirstpage{764}\blastpage{804}}
+\bdoi[https://doi.org/10.1007/s10915-016-0217-6]{10.1007/s10915-016-0217-6}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+M.-O. Delchini, J.~C. Ragusa, R.~A. Berry, Viscous regularization for
+the non-equilibrium seven-equation two-phase flow model, Journal of
+Scientific
+Computing, doi:10.1007/s10915-016-0217-6.
+http://dx.doi.org/10.1007/s10915-016-0217-6
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b34 ###
+%b34 #&#
+\bibitem{leveque2002}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{R.J.} \snm{LeVeque}}
+\btitle{Finite Volume Methods for Hyperbolic Problems}
+\end{bcontribution}
+\begin{bhost}
+\begin{bbook}
+\bdate{2002}
+\bpublisher{\bname{Cambridge University Press}}
+\end{bbook}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+R.~J. LeVeque, Finite Volume Methods for Hyperbolic Problems, Cambridge
+University Press, 2002.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+%b35 ###
+%b35 #&#
+\bibitem{schar}
+\begin{bsubitem}
+\begin{bcontribution}%[language=fr]%de,it,pl,ru
+\bauthor{\fnm{C.} \snm{Sch\"{a}r}}
+\bauthor{\fnm{P.K.} \snm{Smolarkiewicz}}
+\btitle{A synchronous and iterative flux-correction formalism for coupled transport equations}
+\end{bcontribution}
+\begin{bhost}
+\begin{bissue}
+\bseries{\btitle{J. Comput. Phys.} \bvolumeno{128}}
+\bissueno{1}
+\bdate{1996}
+\end{bissue}
+\bpages{\bfirstpage{101}\blastpage{120}}
+\bdoi[https://doi.org/10.1006/jcph.1996.0198]{10.1006/jcph.1996.0198}
+\end{bhost}
+\end{bsubitem}
+%
+\OrigBibText
+C.~Sch\"ar, P.~K. Smolarkiewicz, A synchronous and iterative
+flux-correction formalism for coupled transport equations, Journal of
+Computational Physics 128~(1) (1996) 101--120.
+\newblock doi:10.1006/jcph.1996.0198.
+\endOrigBibText
+\bptok{structpyb}%
+\endbibitem
+
+\end{thebibliography}
+
+%
+\end{backmatter}
+%
+\end{document}
+%
